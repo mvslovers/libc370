@@ -28,3 +28,6 @@ CLAUDE.md
 
 # UFS disk images
 *.diskfile
+
+# host SDK build output (sdk/mklibc.py)
+/build/
