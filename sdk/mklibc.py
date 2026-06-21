@@ -169,7 +169,8 @@ def cmd_install():
     print(f"[install] {n} headers -> {inc}")
     print(f"[install] libc.a + crt0/1/m.o -> {lib}")
     print(f"[install] {m} macro files -> {mac}")
-    print(f"[install] => set AS370_MACLIB={mac}")
+    print(f"[install] => an as370 installed in {os.path.dirname(mac)}/bin finds these by default;")
+    print(f"[install]    otherwise set AS370_MACLIB={mac}")
     return 0
 
 
