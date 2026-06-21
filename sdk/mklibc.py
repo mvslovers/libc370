@@ -143,10 +143,12 @@ def cmd_build():
 
 def cmd_install():
     triple, inc, lib = sysroot()
+    mac = os.path.join(os.path.dirname(inc), "macros")   # <sysroot>/macros
     libc = f"{BUILD}/libc.a"
     if not os.path.exists(libc):
         print("[install] build first (no", libc + ")"); return 1
-    os.makedirs(inc, exist_ok=True); os.makedirs(lib, exist_ok=True)
+    for d in (inc, lib, mac):
+        os.makedirs(d, exist_ok=True)
     # headers
     n = 0
     for h in glob.glob(f"{CRENT}/include/*.h"):
@@ -155,9 +157,19 @@ def cmd_install():
     shutil.copy(libc, f"{lib}/libc.a")
     for crt in ("crt0.o", "crt1.o", "crtm.o"):
         shutil.copy(f"{BUILD}/{crt}", f"{lib}/{crt}")
+    # assembler macros: sysmac (vendored SYS1.MACLIB) THEN maclib (crent's
+    # PDPTOP/PDPPRLG/... override any collision) -> one dir as370 searches via
+    # AS370_MACLIB.  as370 needs these for hand-asm + the cc370 driver one-shot.
+    m = 0
+    for srcdir in (f"{CRENT}/sysmac", f"{CRENT}/maclib"):
+        for f in glob.glob(f"{srcdir}/*"):
+            if os.path.isfile(f):
+                shutil.copy(f, mac); m += 1
     print(f"[install] target {triple}")
     print(f"[install] {n} headers -> {inc}")
     print(f"[install] libc.a + crt0/1/m.o -> {lib}")
+    print(f"[install] {m} macro files -> {mac}")
+    print(f"[install] => set AS370_MACLIB={mac}")
     return 0
 
 
