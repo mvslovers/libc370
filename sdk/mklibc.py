@@ -145,9 +145,9 @@ def cmd_build():
 
 def cmd_install():
     triple, inc, lib = sysroot()
-    # as370's real binary lives in <prefix>/bin, so its built-in default macro
-    # path (<exedir>/../macros) resolves to <prefix>/macros -- install there.
-    mac = os.path.join(os.path.dirname(os.path.dirname(inc)), "macros")  # <prefix>/macros
+    # macros go in the sysroot beside include/lib; as370's real binary lives in
+    # <sysroot>/bin, so its default macro path <exedir>/../macros resolves here.
+    mac = os.path.join(os.path.dirname(inc), "macros")  # <sysroot>/macros = <prefix>/cc370/macros
     libc = f"{BUILD}/libc.a"
     if not os.path.exists(libc):
         print("[install] build first (no", libc + ")"); return 1
