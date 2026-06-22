@@ -24,15 +24,16 @@ make             # build only (into build/sdk)
 make clean
 ```
 
-`make install` produces and drops the four things cc370 looks for — into the
-sysroot it derives from the driver itself (`cc370 -dumpmachine`):
+`make install` produces and drops the four things cc370 looks for — all into the
+one sysroot it derives from the driver itself (`cc370 -dumpmachine` is `cc370`, so
+the sysroot is `<prefix>/cc370/`, default `~/.local/cc370/`):
 
-| Artifact | Sysroot location | Effect |
-|----------|------------------|--------|
+| Artifact | Location | Effect |
+|----------|----------|--------|
 | headers (`stdio.h` … + `clib*.h`) | `<sysroot>/include` | `cc370 -c foo.c` finds them with no `-I` |
 | `libc.a` (the runtime) | `<sysroot>/lib` | `-lc` pulls it |
 | `crt0.o` / `crt1.o` / `crtm.o` | `<sysroot>/lib` | the startup variants (separate startfiles) |
-| macros (SYS1.MACLIB + PDP) | `<sysroot>/macros` | `as370` finds them with no `-I` |
+| macros (SYS1.MACLIB + PDP) | `<sysroot>/macros` | `as370` (real binary in `<sysroot>/bin`) finds them via `<exedir>/../macros`, no `-I` |
 
 After that the toolchain is self-contained:
 
