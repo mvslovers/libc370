@@ -43,8 +43,11 @@ def run(cmd):
 
 def sysroot():
     triple = run([CC370, "-dumpmachine"]).stdout.strip()
-    cc1 = run([CC370, "-print-prog-name=cc1"]).stdout.strip()
-    prefix = os.path.normpath(os.path.join(os.path.dirname(cc1), "../../../.."))
+    # Derive <prefix> from the driver's own location (<prefix>/bin/cc370) rather
+    # than the cc1 path -- robust to the libexec layout / version depth.
+    drv = shutil.which(CC370) or os.path.join(os.path.dirname(
+        run([CC370, "-print-prog-name=cc1"]).stdout.strip()), "..", "..", "..", "bin", "cc370")
+    prefix = os.path.dirname(os.path.dirname(os.path.realpath(drv)))
     base = os.path.join(prefix, triple)
     return triple, os.path.join(base, "include"), os.path.join(base, "lib")
 
@@ -142,7 +145,9 @@ def cmd_build():
 
 def cmd_install():
     triple, inc, lib = sysroot()
-    mac = os.path.join(os.path.dirname(inc), "macros")   # <sysroot>/macros
+    # as370's real binary lives in <prefix>/bin, so its built-in default macro
+    # path (<exedir>/../macros) resolves to <prefix>/macros -- install there.
+    mac = os.path.join(os.path.dirname(os.path.dirname(inc)), "macros")  # <prefix>/macros
     libc = f"{BUILD}/libc.a"
     if not os.path.exists(libc):
         print("[install] build first (no", libc + ")"); return 1
@@ -157,8 +162,8 @@ def cmd_install():
     for crt in ("crt0.o", "crt1.o", "crtm.o"):
         shutil.copy(f"{BUILD}/{crt}", f"{lib}/{crt}")
     # assembler macros: sysmac (vendored SYS1.MACLIB) THEN maclib (crent's
-    # PDPTOP/PDPPRLG/... override any collision) -> one dir as370 searches via
-    # AS370_MACLIB.  as370 needs these for hand-asm + the cc370 driver one-shot.
+    # PDPTOP/PDPPRLG/... override any collision) -> one dir as370 finds by
+    # default (<exedir>/../macros); needed for hand-asm + the cc370 one-shot.
     m = 0
     for srcdir in (f"{ROOT}/sysmac", f"{ROOT}/maclib"):
         for f in glob.glob(f"{srcdir}/*"):
