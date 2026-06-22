@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Build crent370 as the cc370 target libc + install it into the cc370 sysroot.
+"""Build libc370 -- the cc370 target libc + install it into the cc370 sysroot.
 
 No mbt, no MVS: pure host toolchain (cc370 -S -> as370 -> ar370).  Produces the
 three artifacts a cross-libc needs and drops them where cc370 already looks:
 
   headers   -> <sysroot>/include   (cc370 finds <stdio.h> etc. with no -I)
-  libc.a    -> <sysroot>/lib       (the crent runtime; -lc pulls it)
+  libc.a    -> <sysroot>/lib       (the libc370 runtime; -lc pulls it)
   crt0/1/m.o-> <sysroot>/lib       (startup variants, SEPARATE startfiles --
                                     like glibc crt1.o, NOT inside libc.a, so the
                                     linker picks exactly one @@CRT0 and there is
@@ -20,21 +20,20 @@ Usage:  python3 sdk/mklibc.py build      # compile/assemble/archive into build/s
 """
 import os, sys, glob, subprocess, shutil, concurrent.futures as cf
 
-CRENT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-C2 = os.path.expanduser("~/repos/mvs/c2asm370")
-CC370 = "cc370"
-AS370 = f"{C2}/as/as370"
-AR370 = f"{C2}/ld/ar370"
-BUILD = f"{CRENT}/build/sdk"
-VERSION = open(f"{CRENT}/VERSION").read().strip() if os.path.exists(f"{CRENT}/VERSION") else "1.0.11-dev"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # libc370 repo root
+CC370 = "cc370"                    # the toolchain driver, on PATH
+AS370 = "as370"                    # the installed tools, by name -- no repo path baked in
+AR370 = "ar370"
+BUILD = f"{ROOT}/build/sdk"
+VERSION = open(f"{ROOT}/VERSION").read().strip() if os.path.exists(f"{ROOT}/VERSION") else "1.0.11-dev"
 
-# crent library sources (project.toml c_dirs -- NOT src/wip) + hand-asm
-C_DIRS = [f"{CRENT}/src/{d}" for d in
+# library sources (the c_dirs -- NOT src/wip) + hand-written asm
+C_DIRS = [f"{ROOT}/src/{d}" for d in
           ("clib", "cmtt", "crypto", "dyn75", "jes", "os", "racf", "smf", "thdmgr", "time64")]
-ASM_DIR = f"{CRENT}/asm"
+ASM_DIR = f"{ROOT}/asm"
 CFLAGS = ["-O1", f'-DVERSION="{VERSION}"',
-          f"-I{CRENT}/include", f"-I{CRENT}/src/thdmgr", f"-I{CRENT}/src/time64"]
-ASMINC = ["-I", f"{CRENT}/maclib", "-I", f"{CRENT}/sysmac"]   # sysmac vendors SYS1.MACLIB
+          f"-I{ROOT}/include", f"-I{ROOT}/src/thdmgr", f"-I{ROOT}/src/time64"]
+ASMINC = ["-I", f"{ROOT}/maclib", "-I", f"{ROOT}/sysmac"]   # sysmac vendors SYS1.MACLIB
 STARTUPS = ("@@crt0", "@@crt1", "@@crtm")                      # -> separate startfiles
 
 
@@ -151,7 +150,7 @@ def cmd_install():
         os.makedirs(d, exist_ok=True)
     # headers
     n = 0
-    for h in glob.glob(f"{CRENT}/include/*.h"):
+    for h in glob.glob(f"{ROOT}/include/*.h"):
         shutil.copy(h, inc); n += 1
     # libc.a + startfiles
     shutil.copy(libc, f"{lib}/libc.a")
@@ -161,7 +160,7 @@ def cmd_install():
     # PDPTOP/PDPPRLG/... override any collision) -> one dir as370 searches via
     # AS370_MACLIB.  as370 needs these for hand-asm + the cc370 driver one-shot.
     m = 0
-    for srcdir in (f"{CRENT}/sysmac", f"{CRENT}/maclib"):
+    for srcdir in (f"{ROOT}/sysmac", f"{ROOT}/maclib"):
         for f in glob.glob(f"{srcdir}/*"):
             if os.path.isfile(f):
                 shutil.copy(f, mac); m += 1
