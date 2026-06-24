@@ -134,15 +134,6 @@ EXITSIZE DS    0H
          RETURN (14,12),RC=(15)
          LTORG
          TITLE 'Dummy Sections'
-* Stack for C thread
-STK      DSECT
-STKSV    DS    18F               00 (0)  callers registers go here
-STKSVLWS DS    A                 48 (72) PL/I Language Work Space N/A
-STKSVNAB DS    A                 4C (76) next available byte -------+
-STKCTHD  DS    A                 50 (80) A(CTHDTASK)                |
-STKAVAIL DS    F                 54 (84) unused/available           |
-STKNAB   DS    0D                58 stack next available byte <-----+
-*
          IKJTCB LIST=YES
          IEZJSCB
          IHAPSA
