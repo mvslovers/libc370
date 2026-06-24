@@ -24,7 +24,7 @@
 *
 * Cleanup C main task (thread) area
          L     R15,=V(@@CRTRES)
-         BALR  R14,R15           Release CLIBCRT, reset TCBUSER
+         BALR  R14,R15           Release CLIBCRT from PPA
 *
 * Release stack storage
 *

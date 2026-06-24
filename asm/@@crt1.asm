@@ -162,9 +162,9 @@ CTHREAD  DS    0H
          LA    R0,STKNAB         next available byte in stack
          ST    R0,STKSVNAB       next available byte in stack
 *
-* Allocate CLIBCRT area in TCBUSER
+* Allocate CLIBCRT area in PPA
          L     R15,=V(@@CRTSET)
-         BALR  R14,R15           Create CLIBCRT as TCBUSER
+         BALR  R14,R15           Create CLIBCRT in PPA
 *
 * Save R13 in CRTSAVE
          L     R15,=V(@@CRTGET)
