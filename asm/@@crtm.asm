@@ -1,4 +1,4 @@
-@@CRT0   TITLE '@ @ C R T 0  ***  Mini startup routine for C main pgm'
+@@CRTM   TITLE '@ @ C R T M  ***  Mini startup routine for C main pgm'
 ***********************************************************************
 *  Provided by: Mike Rayborn                                          *
 *                                                                     *
