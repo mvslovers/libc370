@@ -67,6 +67,14 @@ get_addr(unsigned addr, char *buf)
     strcpy(buf,
         "........ ........ ........ ........ *................*");
 
+    /* Reject addresses outside 24-bit private storage so a stray
+     * register value can't fault this storage probe and nest an abend
+     * on top of the one we are reporting.  Matches the range the
+     * save-area walkers use below; residual faults stay caught by the
+     * try() wrappers around every get_addr() call.
+     */
+    if (addr < 0x00002000 || addr >= 0x00FF0000) goto quit;
+
     pos  = 0;
     pos2 = 37;
     np = (unsigned*)addr;   /* unsigned pointer to mem */
