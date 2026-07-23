@@ -41,6 +41,38 @@ def run(cmd):
     return subprocess.run(cmd, capture_output=True, text=True)
 
 
+VER_C = os.path.join(ROOT, "src", "clib", "@@ver.c")   # build-stamp TU (see compile_ver)
+
+
+def gitrev():
+    """Short HEAD commit for the build stamp; '-dirty' when a TRACKED source
+    differs from HEAD (an uncommitted edit -- the provenance case that matters);
+    untracked files (stray notes, generated .s/.o) do not count.  'unknown'
+    outside a git checkout (e.g. a tarball)."""
+    try:
+        rev = run(["git", "-C", ROOT, "rev-parse", "--short", "HEAD"]).stdout.strip()
+        if not rev:
+            return "unknown"
+        dirty = run(["git", "-C", ROOT, "status", "--porcelain",
+                     "--untracked-files=no"]).stdout.strip()
+        return rev + ("-dirty" if dirty else "")
+    except Exception:
+        return "unknown"
+
+
+def compile_ver(cfile, sfile):
+    """Compile the build-stamp TU (@@ver.c) fresh on EVERY build so its embedded
+    commit tracks HEAD.  Its -D inputs (the git rev) change without @@ver.c
+    itself changing, so the mtime cache in compile_c() would otherwise freeze
+    the stamp at whatever commit produced the first build."""
+    flags = CFLAGS + [f'-DLIBC370_REV="{gitrev()}"']
+    r = run([CC370] + flags + ["-S", cfile, "-o", sfile])
+    if not os.path.exists(sfile) or os.path.getsize(sfile) == 0:
+        return "cc370 FAIL %s: %s" % (os.path.basename(cfile),
+               "\n".join(l for l in r.stderr.splitlines() if "re-asserted" not in l)[:300])
+    return None
+
+
 def sysroot():
     triple = run([CC370, "-dumpmachine"]).stdout.strip()
     # Derive <prefix> from the driver's own location (<prefix>/bin/cc370) rather
@@ -93,7 +125,10 @@ def cmd_build():
     for d in C_DIRS:
         for c in sorted(glob.glob(f"{d}/**/*.c", recursive=True)):
             s = c[:-2] + ".s"
-            err = compile_c(c, s)
+            if os.path.abspath(c) == os.path.abspath(VER_C):
+                err = compile_ver(c, s)     # always fresh: stamp must track HEAD
+            else:
+                err = compile_c(c, s)
             if err:
                 print("  " + err); return 1
             if os.path.exists(s):
