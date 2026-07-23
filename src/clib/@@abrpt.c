@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include "clibstae.h"
+#include "clibcrt.h"
+#include "clibwto.h"
 
 typedef struct {
     unsigned u[2];
@@ -295,6 +297,23 @@ recovery(SDWA *sdwa, void *udata)
     char        abend[24];
     char        buf[80];
 
+    /* Check SDWACLUP first.  When it is on, RTM entered this exit only to
+     * clean up while the task terminates: no retry, and a full dump is
+     * pointless.  Crucially, under a terminating TCB this task's libc370
+     * CRT is often already gone, so the register/save-area walk below
+     * (each probe goes through try() -> __crtget()) would fault or spew
+     * "CRT ... not found" for every line.  Emit a single WTO from a
+     * pre-formatted buffer and continue with termination.  wto() is
+     * CRT-free (SVC 35); do no other C-runtime work on this path.
+     */
+    if (sdwa->SDWAERRD & SDWACLUP) {
+        char    msg[] = "libc370 recovery: abend during task termination, cleanup only";
+
+        wto(msg);
+        SETRP(sdwa, 0, 0, 0);   /* RC=0, continue with termination */
+        return 0;
+    }
+
 #if 0
     wtof("Enter recovery(), dump option=%d", dump);
 #endif
@@ -347,8 +366,21 @@ recovery(SDWA *sdwa, void *udata)
     try(get_addr, psw[1], buf);
     wtof(">>>:%08X:%s", psw[1], buf);
 
-    dump_regs(sdwa);
-    dump_sa(sdwa);
+    /* Guard the register/save-area walk against a missing CRT.  Even with
+     * SDWACLUP off, a late fault can arrive after this task's runtime was
+     * torn down; the walk probes storage through try() -> __crtget(),
+     * which would then fault or log "CRT ... not found" for every probe.
+     * Skip the walk rather than emit that per-probe spam.
+     */
+    if (__crtget()) {
+        dump_regs(sdwa);
+        dump_sa(sdwa);
+    }
+    else {
+        char    msg[] = "libc370 recovery: CRT unavailable, register/traceback dump skipped";
+
+        wto(msg);
+    }
 
     switch(dump) {
     case DUMP_SUPPRESS:

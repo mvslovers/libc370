@@ -1,5 +1,6 @@
 #include <clibstae.h>
 #include <clibcrt.h>
+#include <clibwto.h>
 
 typedef struct {
     unsigned    r[16];
@@ -16,6 +17,22 @@ failed(SDWA *sdwa, void *udata)
     REGS        *regs   = (REGS*)param->u[1];
     unsigned    abcode  = (*(unsigned*)&sdwa->SDWACMPF) & 0x00FFFFFF;
     unsigned    retry   = 0;
+
+    /* Check SDWACLUP first.  When RTM enters this exit only to clean up
+     * (the task is terminating) a retry is invalid - requesting one asks
+     * RTM to resume a task it is tearing down.  Emit a single WTO from a
+     * pre-formatted buffer and tell RTM to continue with termination.
+     * Do NO C-runtime work here (no try()/__crtget()/malloc): under a
+     * terminating TCB this task's libc370 CRT may already be gone, and
+     * wto() is CRT-free (SVC 35 only).
+     */
+    if (sdwa->SDWAERRD & SDWACLUP) {
+        char    msg[] = "libc370 __try: recovery cleanup-only, retry suppressed";
+
+        wto(msg);
+        SETRP(sdwa, 0, 0, 0);   /* RC=0, continue with termination */
+        return 0;
+    }
 
     if (abcode) {
         /* return abend code in R15 */
