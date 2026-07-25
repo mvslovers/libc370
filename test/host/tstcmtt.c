@@ -54,10 +54,15 @@
  *     the 24-bit target; that is the follow-up, not this file.
  * ====================================================================
  *
+ * Cases: (a) over-read, (b) backward-jump/non-termination, and (c) zero-length
+ * survival - a guard on the fix itself: the length check is >= 0 (reject only a
+ * NEGATIVE mtentlen), not > 0, so a legitimate empty entry is not silently
+ * dropped along with everything after it.
+ *
  * Build / run (host; no libc370 headers, no mbt required):
- *     cc -std=gnu99 -Wall -Wextra -o tstcmtt tstcmtt.c && ./tstcmtt   # GREEN
- *     cc -std=gnu99 -Wall -Wextra -DTSTCMTT_BUGGY_WALK -o tstcmttx \
- *         tstcmtt.c && ./tstcmttx                                     # RED
+ *     cc -std=gnu99 -Wall -Wextra -o t tstcmtt.c && ./t                # GREEN (5/5): shipped fix, len >= 0
+ *     cc -std=gnu99 -Wall -Wextra -DTSTCMTT_BUGGY_WALK -o t tstcmtt.c && ./t   # RED: shipping walk fails (a),(b)
+ *     cc -std=gnu99 -Wall -Wextra -DTSTCMTT_LEN_GT0    -o t tstcmtt.c && ./t   # fails (c): why > 0 is wrong
  * RC: 0 = all checks passed, 1 = a check failed.  #14.
  */
 #include <stdio.h>
@@ -150,8 +155,22 @@ static void a_add(MTENTRY *e)
 /* The two walks below are mirrors of cmttget.c:51-64.  Exactly one is compiled
  * (selected by -DTSTCMTT_BUGGY_WALK) so neither is flagged unused; both live
  * here adjacently so the fix reads as a diff.  RED runs walk_current (a verbatim
- * mirror of the shipping walk); GREEN runs walk_fixed (that walk + the #14 fix).
- */
+ * mirror of the shipping walk); the fixed walk runs walk_fixed.
+ *
+ * LEN_OK selects the length predicate.  The SHIPPED fix is >= 0: reject a
+ * NEGATIVE mtentlen (the backward-jump / mis-align hang) but keep a legitimate
+ * zero-length entry, which still advances +10 forward and terminates.  Build
+ * with -DTSTCMTT_LEN_GT0 to get the over-aggressive > 0 variant, which also
+ * drops a zero-length entry AND every entry after it in that segment - the
+ * silent-truncation regression pinned by case (c). */
+#ifdef TSTCMTT_LEN_GT0
+#  define LEN_OK(e)   ((e)->mtentlen > 0)
+#  define LEN_DESC    "> 0"
+#else
+#  define LEN_OK(e)   ((e)->mtentlen >= 0)
+#  define LEN_DESC    ">= 0"
+#endif
+
 #ifdef TSTCMTT_BUGGY_WALK
 
 /* === MIRROR of cmttget.c:51-64 - the CURRENT (unfixed) walk ============== */
@@ -171,31 +190,39 @@ static void walk_current(MTT *t)
 #else
 
 /* === MIRROR of cmttget.c:51-64 - WITH the #14 fix applied ================
- * Validate the WHOLE entry (start + 10 + mtentlen <= mttendpt) and require a
- * bounded POSITIVE length before advancing; a non-positive or over-long
- * length ENDS the walk instead of advancing into garbage.  This is exactly
- * the fix applied to cmttget.c, mirrored here.
- */
+ * Validate the WHOLE entry (start + 10 + mtentlen <= mttendpt) and reject a
+ * negative length (LEN_OK) before advancing; a negative length is the
+ * backward-jump / mis-align case and ENDS the walk, a non-negative length that
+ * fits is kept and advances forward.  This mirrors cmttget.c. */
 static void walk_fixed(MTT *t)
 {
     MTENTRY *e;
 
     for (e = t->cur;
-         H_INB(t, e) && e->mtentlen > 0
+         H_INB(t, e) && LEN_OK(e)
              && (uintptr_t)e + (unsigned)MT_HDR + (unsigned)e->mtentlen <= t->endpt;
          e = H_ADV(e))
         a_add(e);
 
     for (e = t->wrp;
-         H_INB(t, e) && e < t->cur && e->mtentlen > 0
+         H_INB(t, e) && e < t->cur && LEN_OK(e)
              && (uintptr_t)e + (unsigned)MT_HDR + (unsigned)e->mtentlen <= t->endpt;
          e = H_ADV(e))
         a_add(e);
 }
 #  define WALK      walk_fixed
-#  define WALK_NAME "walk_fixed (mirror of FIXED cmttget.c)"
+#  define WALK_NAME "walk_fixed (mirror of FIXED cmttget.c, len " LEN_DESC ")"
 
 #endif
+
+/* is pointer p present in the collected array? */
+static int collected(MTENTRY *p)
+{
+    unsigned n;
+    for (n = 0; n < g_count; n++)
+        if (g_slot[n] == p) return 1;
+    return 0;
+}
 
 /* run the selected walk under the runaway watchdog; 1 => did not terminate */
 static int run_walk(MTT *t)
@@ -270,6 +297,37 @@ int main(void)
            runaway, g_count, g_count == 1 ? "y" : "ies");
     CHECK(!runaway, "(b) backward-jump: walk terminates (no runaway array_add)");
     CHECK(g_count <= 8, "(b) backward-jump: array size stays bounded");
+
+    /* ---------------------------------------------------------------------
+     * Case (c) ZERO-LENGTH SURVIVAL (guards the > 0 vs >= 0 choice).  A
+     * legitimate empty entry (mtentlen == 0) sits between valid entries.  The
+     * shipped fix (>= 0) keeps walking past it (0 advances +10, forward, so
+     * the walk still terminates); the over-aggressive > 0 variant ends the
+     * walk at the empty entry and silently drops every entry after it - an
+     * abend traded for truncation.  FAILS under -DTSTCMTT_LEN_GT0, PASSES
+     * under the shipped >= 0.
+     * ------------------------------------------------------------------- */
+    {
+        MTENTRY *e2, *e3;
+        memset(buf, 0, sizeof buf);
+        t.entpt = (uintptr_t)buf;
+        t.endpt = (uintptr_t)(buf + 256);
+        put(buf,   0, 40);           /* [0,50)    valid            */
+        put(buf,  50,  0);           /* [50,60)   legitimate EMPTY */
+        e2 = put(buf,  60, 40);      /* [60,110)  must survive     */
+        e3 = put(buf, 110, 30);      /* [110,150) must survive     */
+        t.cur = (MTENTRY *)(buf + 0);
+        t.wrp = (MTENTRY *)(buf + 0);
+
+        runaway = run_walk(&t);
+        printf("  (c) runaway=%d, collected %u; entry-after-empty %s, later %s\n",
+               runaway, g_count,
+               collected(e2) ? "kept" : "DROPPED",
+               collected(e3) ? "kept" : "DROPPED");
+        CHECK(!runaway, "(c) zero-length: walk terminates");
+        CHECK(collected(e2), "(c) zero-length: entry after an empty entry survives");
+        CHECK(collected(e3), "(c) zero-length: later entries not truncated");
+    }
 
     return mbt_test_summary("TSTCMTT");
 }

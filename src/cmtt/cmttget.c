@@ -49,11 +49,15 @@ MTENTRY **cmtt_get_array(CMTT *cmtt)
 
     /* start with current point in mttable until end of table.
      * #14: validate the WHOLE entry (start + 10 + mtentlen <= mttendpt) and
-     * require a bounded positive mtentlen before advancing; a signed/over-long
-     * length would otherwise over-read the table or jump backward forever. */
+     * reject a NEGATIVE mtentlen before advancing. mtentlen is a signed
+     * halfword; a negative value makes the advance jump backward to an
+     * in-bounds address (a non-terminating walk) or land mis-aligned. Zero is
+     * allowed - it advances +10 (forward, so the walk still terminates), which
+     * matches the prior behavior and does not truncate a legitimate empty
+     * entry; only the negative/over-long cases are rejected. */
     for(mtentry = (MTENTRY*) mttable->mttcurpt;
         INBOUNDS(mttable, mtentry)
-            && mtentry->mtentlen > 0
+            && mtentry->mtentlen >= 0
             && (unsigned)mtentry + 10u + (unsigned)mtentry->mtentlen <= mttable->mttendpt;
         mtentry = (MTENTRY*)((unsigned)mtentry + mtentry->mtentlen + 10) ) {
         
@@ -61,10 +65,10 @@ MTENTRY **cmtt_get_array(CMTT *cmtt)
     }
 
     /* then use the wrap point until we reach the current point.
-     * #14: same whole-entry + bounded-positive-length guard as the loop above. */
+     * #14: same whole-entry + non-negative-length guard as the loop above. */
     for(mtentry = (MTENTRY*) mttable->mttwrppt;
         INBOUNDS(mttable, mtentry) && mtentry < mttable->mttcurpt
-            && mtentry->mtentlen > 0
+            && mtentry->mtentlen >= 0
             && (unsigned)mtentry + 10u + (unsigned)mtentry->mtentlen <= mttable->mttendpt;
         mtentry = (MTENTRY*)((unsigned)mtentry + mtentry->mtentlen + 10) ) {
 
