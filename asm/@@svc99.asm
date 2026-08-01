@@ -44,19 +44,18 @@ SUBPOOL  EQU   0                                                      *
 * the parameter in writable storage so that we can ensure that
 * we set that bit.
 *
-*
 * Build our own one-word parameter list in the work area rather than
 * setting the high bit in the caller's.  Storing into the caller's list
 * requires it to be in modifiable storage, and it is not always: when a
 * cc370 program is loaded read-only -- e.g. entered as a TSO command
-* processor -- the parameter list sits in protected storage and the store
-* takes an S0C4 with interrupt code 4 (protection exception).  The work
-* area is GETMAINed above, so it is always writable.
+* processor -- the parameter list is in protected storage and the
+* store takes an S0C4 with interrupt code 4 (protection exception).
+* The work area is GETMAINed above, so it is always writable.
 *
          L     R2,0(R1)
          O     R2,=X'80000000'
-         ST    R2,DWORK           our parmlist: A(RB) with the high bit on
-         LA    R1,DWORK           R1 -> parmlist, caller's list untouched
+         ST    R2,DWORK           A(RB) with the high bit on
+         LA    R1,DWORK           R1 -> our parmlist
          SVC   99
          LR    R2,R15
 *
