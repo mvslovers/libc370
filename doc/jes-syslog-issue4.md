@@ -4,8 +4,8 @@ Analysis of `src/jes/jesprint.c` for mvslovers/libc370#4 (blocks mvslovers/mvsmf
 
 **Result: this is not a `jesprint()` parser bug.** Measured on the live system,
 the block chain `jesprint()` is told to follow for the open SYSLOG data set does
-not lead to SYSLOG data at all - and no block anywhere on the spool volume
-belongs to that job. The instrument is `test/mvs/tstjeslg.c` (+
+not lead to SYSLOG data at all - and a validated scan of the whole spool volume
+finds no SYSLOG *data* block on it (only that job's JCT and its two IOTs). The instrument is `test/mvs/tstjeslg.c` (+
 `jcl/tstjeslg.jcl`); the raw output is in
 [`jes-syslog-issue4-measurements.txt`](jes-syslog-issue4-measurements.txt).
 
@@ -91,47 +91,72 @@ From the raw IOT dump (`PARM='SYSLOG,IOT'`):
 all `f2=08`. So SYSLOG's data set is addressed differently from every data set
 `jesprint()` reads successfully today.
 
-### 2.4 The decisive one: the data is not on this volume
+### 2.4 The decisive one: SYSLOG has no data block on this volume
 
-`PARM='SYSLOG,SCAN'` brute-forces the whole spool volume and checks the job key
-in every block header:
+`PARM='SYSLOG,SCAN'` brute-forces the whole spool volume and looks for the job
+key at every fullword offset in the first 64 bytes of each block - data blocks
+carry it at +4, `JCT`/`IOT` control records at +8:
 
 ```
   SCAN of the spool for jobkey=E2FC8F85 ...
-  SCAN done: 66480 block(s) read up to TT=16649, 0 block(s) carry jobkey E2FC8F85
+    HIT mttr=00002801 TT=40 R=1 key@+8  +0=D1C3E340 |JCT |     <- its JCT
+    HIT mttr=00002803 TT=40 R=3 key@+8  +0=C9D6E340 |IOT |     <- its IOT
+    HIT mttr=00002805 TT=40 R=5 key@+8  +0=C9D6E340 |IOT |     <- its SPIN IOT
+  SCAN done: 83100 block(s) read up to TT=16649, 3 block(s) carry jobkey E2FC8F85
 ```
 
-66,480 blocks - the entire `SYS1.HASPACE` extent, 4 records/track over 16,650
-tracks - and **not one** carries the SYSLOG job key. There is no MTTR to fix and
-no decoding of `PDBMTTR` that would find the data: on spool volume 1 it is not
-there.
+83,100 blocks - the entire `SYS1.HASPACE` extent, 5 records/track over 16,620
+tracks - and SYSLOG owns exactly **three**: its JCT and its two IOTs.
+**Not one data block.** There is no MTTR to fix and no decoding of `PDBMTTR`
+that would find the data, because on this volume the data does not exist.
+
+**Positive control for the scan** (`PARM='HTTPD,SCAN'`, same run) - without one,
+a zero result and a broken matcher look identical:
+
+```
+  SCAN of the spool for jobkey=E3032DAD ...
+    HIT mttr=0001CC01 TT=460 R=1 key@+8  |JCT |
+    HIT mttr=0001CC02 TT=460 R=2 key@+8  |IOT |
+    HIT mttr=0001CC04 TT=460 R=4 key@+4  dsid=3   records=32
+    HIT mttr=0001CC05 TT=460 R=5 key@+4  dsid=1   records=4
+    HIT mttr=0001CD02 TT=461 R=2 key@+4  dsid=2   records=49
+    ...
+  SCAN done: 83100 block(s) read up to TT=16649, 61 block(s) carry jobkey E3032DAD
+```
+
+The scan finds the control job's control records **and** its data blocks. The
+SYSLOG zero is real.
+
+> An earlier run read only R=1..4 per track and reported 66,480 blocks; R=5 does
+> occur (`0001CC05`, `00002805`), so that run missed a fifth of the volume. The
+> numbers above are from the corrected R=1..8 scan.
 
 ---
 
 ## 3. What that leaves
 
-`HCT._NUMDA = 2` - JES2 on this system is configured with **two** spool
-volumes. libc370 opens exactly one:
+**Scope of the measurement.** This system has **one** SYSLOG data set (dsid
+101), currently open, with no `WRITELOG` since IPL. Issue #4 describes dsids
+**101-105 after WRITELOG/WRITELOG H** - i.e. *spun* generations, which were not
+measured here and may behave differently: HTTPD's spun data sets (dsid 102/103,
+`records=0` in the PDDB) **do** read correctly in the control above. "Only the
+open generation is unreadable" is therefore still open, and it would change the
+fix.
 
-* `jesopen()` opens only `DD:HASPACE1` (`jesopen.c:46`) and everything uses
-  `jes->js[0]` (`jesprint.c:75`, `jesjob.c:70`)
-* `__jsrd4()` builds MBBCCHHR from bits 8-23 (TT) and 0-7 (R) and **discards the
-  high byte (M, the spool volume index)** (`@@jsrd4.c:34-45`)
-
-So a data set on the second volume is unreadable *and* mis-read silently: its
-MTTR is applied to volume 1. Two candidate root causes remain, both **outside**
-`jesprint()`:
+Candidates, in the order the evidence supports them:
 
 | | Hypothesis | How to settle it |
 |---|---|---|
-| **A** | The log data lives on the **second spool volume**, invisible to libc370. | Does a second HASPACE data set exist (JES2 PROC / `$D` output)? If yes: open all spool volumes and honour the M byte, then re-run the probe. |
-| **B** | The open log data set is only reachable through **PSO** (`PDB1PSO` is set) / the SSI, not through the checkpointed IOT - the checkpointed PDDB carries an address that is meaningless to a spool reader (consistent with `PDB2TCEL` + `recct=0`). | Read it via the PSO / SYSOUT-writer interface. libc370 already has the pieces: `jesxwrtr()` / `jesxdone()` (`clibjes2.h:165-168`) and `hasppso.h`. |
+| **B** | The open log data set's records are **not in spool blocks reachable this way**. `PDB1PSO` is set - JES2 intends it to be read through PSO / the SSI - and `PDB2TCEL` (TRAKCELL) is set on this PDDB and on no other in the sample. The checkpointed `PDBMTTR` is then not a data-block MTTR at all: it points at TT=480 R=1, which holds a ZTIMER **JCT** whose own `JCTIOT` is `0001E003` - i.e. into another job's *control record* area, not a recycled data area. | Read it via PSO / the SYSOUT-writer interface. libc370 already has the pieces: `jesxwrtr()` / `jesxdone()` (`clibjes2.h:165-168`) and `hasppso.h`. |
+| **C** | The hardcopy log is **not being spooled** on this system right now, so the open data set genuinely has no blocks yet. | One `WRITELOG`, then re-run the probe: if blocks with the SYSLOG job key appear, this was it. |
+| **A** | The log data lives on the **second spool volume**, invisible to libc370: `HCT._NUMDA = 2`, while `jesopen()` opens only `DD:HASPACE1` (`jesopen.c:46`), everything uses `jes->js[0]` (`jesprint.c:75`), and `__jsrd4()` builds MBBCCHHR from TT/R while **discarding the M byte** (`@@jsrd4.c:34-45`). | Does a second HASPACE data set exist? The evidence is *weak*: every MTTR seen in 264 walks and in all IOT dumps has `M=00`, SYSLOG's included - nothing observed encodes a second volume. |
 
-A and B are not exclusive. B is the more likely fix for mvsmf#145 in any case,
-because it is the interface JES2 intends for reading an *open* data set.
+A is last on purpose: `NUMDA=2` makes D7 a real latent bug, but nothing in the
+data points at it as the cause here.
 
-**What is settled:** no change to `jesprint()`'s record parser can fix #4, and
-`records=0` was a red herring.
+**What is settled:** no change to `jesprint()`'s record parser can fix #4;
+`records=0` and "the job is still executing" are red herrings; the failure is
+that the address in the checkpointed PDDB does not lead to SYSLOG data.
 
 ---
 
@@ -216,6 +241,7 @@ Read-only, needs no library change, uses only public API
 PARM='SYSLOG'        walk every DD's block chain, report each decision + hex dump
 PARM='SYSLOG,IOT'    + raw IOT chain, PDDB fields and track-group map
 PARM='SYSLOG,SCAN'   + brute-force scan of the spool volume for the job's blocks
+                     (~83k reads; ALWAYS pair it with a positive control)
 ```
 
 Build and run:
@@ -226,7 +252,7 @@ ld370 --pack TSTJESLG.iebcopy -o probe -xmit --dsn <LOADLIB>   # then TSO RECEIV
 ```
 
 Notes for re-running: needs `REGION=4M` (the checkpoint buffer is 140 KB here;
-the 512 K default fails), `TIME=1440` for `,SCAN` (~66 k reads), and the
+the 512 K default fails), `TIME=1440` for `,SCAN` (~83 k reads), and the
 `HASPCKPT`/`HASPACE1` DDs from `jcl/tstjeslg.jcl`. It deliberately does **not**
 call `jesopen()`: that wraps everything in `try()`/ESTAE and reports failures
 with `wtof()`, i.e. to the console - which on this system means the SYSLOG we

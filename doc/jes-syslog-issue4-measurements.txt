@@ -1,9 +1,9 @@
 TSTJESLG probe output - libc370 issue #4
 System: MVS 3.8j (MVS/CE, node MVSC) on Hercules, JES2, 2026-08-04
-Program: test/mvs/tstjeslg.c, run via jcl/tstjeslg.jcl (3 runs, JOB00298/300/302)
+Program: test/mvs/tstjeslg.c, run via jcl/tstjeslg.jcl
 Trimmed: only the sections cited by doc/jes-syslog-issue4.md are kept.
 
-==== RUN 3 (JOB00302): SYSLOG + full spool scan =================================
+==== JOB00306 S1: SYSLOG - chain walk + full spool scan ========================
 TSTJESLG - libc370 #4 probe, jobname filter 'SYSLOG' (+spool scan)
 checkpoint_open('DD:HASPCKPT') -> 00094AC0
   HCT bufsize=3664 maxjobs=1024 numjoes=3000 numtgv=3330 numda=2
@@ -29,10 +29,72 @@ JOB SYSLOG   STC00254 owner=SYSTEM   type=50 f1=01 f2=81
      STOP: jobkey MISMATCH  [jesprint.c:110]
      => jesprint() would print 0 line(s) for this DD
   SCAN of the spool for jobkey=E2FC8F85 ...
-  SCAN done: 66480 block(s) read up to TT=16649, 0 block(s) carry jobkey E2FC8F85
+  (the key is matched at every fullword offset in the first 64 bytes of a block:
+   data blocks carry it at +4, JCT/IOT control records at +8)
+    HIT mttr=00002801 TT=40 R=1 key@+8  +0=D1C3E340 +4=0EA80000 dsid=58108 records=5
+       +000 D1C3E3400EA80000E2FC8F8500002805 |JCT  y  S  e    |
+       +010 0000280300000000000000000000032C |                |
+    HIT mttr=00002803 TT=40 R=3 key@+8  +0=C9D6E340 +4=0EA80800 dsid=58108 records=2
+       +000 C9D6E3400EA80800E2FC8F8500002803 |IOT  y  S  e    |
+       +010 00000000000000000000000000000000 |                |
+    HIT mttr=00002805 TT=40 R=5 key@+8  +0=C9D6E340 +4=0EA81800 dsid=58108 records=2
+       +000 C9D6E3400EA81800E2FC8F8500002805 |IOT  y  S  e    |
+       +010 000000000000000000BCD90800000000 |          R     |
+  SCAN done: 83100 block(s) read up to TT=16649, 3 block(s) carry jobkey E2FC8F85
 TSTJESLG rc=0
 
-==== RUN 2 (JOB00300) step S1: SYSLOG, raw IOT / PDDB dump =====================
+==== JOB00306 S2: HTTPD - POSITIVE CONTROL for the scan =======================
+(per-DD block dumps trimmed; the scan section is the point)
+TSTJESLG - libc370 #4 probe, jobname filter 'HTTPD' (+spool scan)
+checkpoint_open('DD:HASPCKPT') -> 00094AC0
+  HCT bufsize=3664 maxjobs=1024 numjoes=3000 numtgv=3330 numda=2
+  pddb1=908 jqeblks=8 jotblks=27 buflen=143360 buf=00116FC8
+spool_open('DD:HASPACE1') -> 00094DF0
+  spool ddname=HASPACE1 trkcyl=30
+jesjob('HTTPD', FILTER_JOBNAME, dd=1) -> 2 job(s)
+JOB HTTPD    STC00348 owner=SYSTEM   type=50 f1=01 f2=01
+    jobkey=E3032DAD iotmttr=0001CC02 spinmttr=0001CF03 jtflg=00
+    7 DD(s)
+  DD JESJCLIN dsid=1     mttr=0001CC05 records=2      lrecl=80    recfm=80 class=Y flag=A0
+     dsname=JES2.STC00348.SI0001
+   ...
+  SCAN of the spool for jobkey=E3032DAD ...
+  (the key is matched at every fullword offset in the first 64 bytes of a block:
+   data blocks carry it at +4, JCT/IOT control records at +8)
+    HIT mttr=0001CC01 TT=460 R=1 key@+8  +0=D1C3E340 +4=0EA80000 dsid=58115 records=5
+       +000 D1C3E3400EA80000E3032DAD00000000 |JCT  y  T  �    |
+       +010 0001CC03000000000000000000000700 |                |
+    HIT mttr=0001CC02 TT=460 R=2 key@+8  +0=C9D6E340 +4=0EA80800 dsid=58115 records=4
+       +000 C9D6E3400EA80800E3032DAD0001CC02 |IOT  y  T  �    |
+       +010 00000000000000000000000000000000 |                |
+    HIT mttr=0001CC03 TT=460 R=3 key@+8  +0=C9D6E340 +4=0EA80800 dsid=58115 records=7
+       +000 C9D6E3400EA80800E3032DAD0001CC03 |IOT  y  T  �    |
+       +010 00000000000000000000000000000000 |                |
+    HIT mttr=0001CC04 TT=460 R=4 key@+4  +0=00000000 +4=E3032DAD dsid=3 records=32
+    HIT mttr=0001CC05 TT=460 R=5 key@+4  +0=00000000 +4=E3032DAD dsid=1 records=4
+    HIT mttr=0001CD01 TT=461 R=1 key@+4  +0=0001CD04 +4=E3032DAD dsid=4 records=3
+    HIT mttr=0001CD02 TT=461 R=2 key@+4  +0=0001D001 +4=E3032DAD dsid=2 records=49
+    HIT mttr=0001CD03 TT=461 R=3 key@+4  +0=0001CD02 +4=E3032DAD dsid=2 records=2
+    HIT mttr=0001CD04 TT=461 R=4 key@+4  +0=0001CF04 +4=E3032DAD dsid=4 records=74
+    HIT mttr=0001CD05 TT=461 R=5 key@+4  +0=00000000 +4=E3032DAD dsid=5 records=15
+    HIT mttr=0001CE01 TT=462 R=1 key@+8  +0=D1C3E340 +4=0EA80000 dsid=58115 records=5
+    HIT mttr=0001CE02 TT=462 R=2 key@+8  +0=C9D6E340 +4=0EA81000 dsid=58115 records=5
+    HIT mttr=0001CE03 TT=462 R=3 key@+8  +0=C9D6E340 +4=0EA81000 dsid=58115 records=6
+    HIT mttr=0001CE04 TT=462 R=4 key@+8  +0=C9D6E340 +4=0EA81000 dsid=58115 records=6
+    HIT mttr=0001CE05 TT=462 R=5 key@+8  +0=C9D6E340 +4=0EA81000 dsid=58115 records=5
+    HIT mttr=0001CF01 TT=463 R=1 key@+8  +0=C9D6E340 +4=0EA81000 dsid=58115 records=6
+    HIT mttr=0001CF02 TT=463 R=2 key@+4  +0=00000000 +4=E3032DAD dsid=102 records=0
+    HIT mttr=0001CF03 TT=463 R=3 key@+8  +0=C9D6E340 +4=0EA81000 dsid=58115 records=6
+    HIT mttr=0001CF04 TT=463 R=4 key@+4  +0=0001D003 +4=E3032DAD dsid=4 records=74
+    HIT mttr=0001CF05 TT=463 R=5 key@+4  +0=00000000 +4=E3032DAD dsid=103 records=0
+    HIT mttr=0001D001 TT=464 R=1 key@+4  +0=0001D004 +4=E3032DAD dsid=2 records=52
+    HIT mttr=0001D002 TT=464 R=2 key@+4  +0=0002E901 +4=E3032DAD dsid=4 records=74
+    HIT mttr=0001D003 TT=464 R=3 key@+4  +0=0001D005 +4=E3032DAD dsid=4 records=74
+    HIT mttr=0001D004 TT=464 R=4 key@+4  +0=0002E903 +4=E3032DAD dsid=2 records=46
+  SCAN done: 83100 block(s) read up to TT=16649, 61 block(s) carry jobkey E3032DAD
+TSTJESLG rc=0
+
+==== JOB00300 S1: SYSLOG - raw IOT / PDDB dump ================================
 TSTJESLG - libc370 #4 probe, jobname filter 'SYSLOG' (+IOT dump)
 checkpoint_open('DD:HASPCKPT') -> 00094AC0
   HCT bufsize=3664 maxjobs=1024 numjoes=3000 numtgv=3330 numda=2
@@ -81,7 +143,7 @@ al)
       PDDB#0  +908  dskey=101   mttr=0001E001 recct=0      lrecl=130   recfm=C0 class=A f1=05 f2=88
 TSTJESLG rc=0
 
-==== RUN 2 (JOB00300) step S2: HTTPD control, raw IOT / PDDB dump ==============
+==== JOB00300 S2: HTTPD - raw IOT / PDDB dump (control) =======================
 (second HTTPD instance and the per-block dumps trimmed)
 TSTJESLG - libc370 #4 probe, jobname filter 'HTTPD' (+IOT dump)
 checkpoint_open('DD:HASPCKPT') -> 00094AC0

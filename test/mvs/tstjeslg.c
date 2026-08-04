@@ -67,6 +67,9 @@
 #define MAXBLK      500 /* chain-follow cap: a stale block can chain wildly */
 #define DUMPBLKS    2   /* hex dump this many blocks per DD                 */
 #define DUMPLEN     96  /* bytes per hex dump                               */
+#define SCANHDR     64  /* scan: match the jobkey in this many leading bytes */
+#define MAXR        8   /* scan: records per track to try (R=5 DOES occur -
+                           0001CC05 / 00002805; reads past the end just fail) */
 
 /* the 10-byte spool block header jesprint.c:36-40 assumes */
 #define BLK_NEXT(b) (*(unsigned int   *)&(b)[0])
@@ -220,7 +223,7 @@ int main(int argc, char **argv)
             dumpiot(cp, js, buf, bufsize, job, job->iotmttr, "IOT");
             dumpiot(cp, js, buf, bufsize, job, job->spinmttr, "SPIN IOT");
         }
-        if (scan) scanspool(js, buf, bufsize, job);
+        if (scan) { scanspool(js, buf, bufsize, job); break; }  /* one job */
         printf("\n");
     }
 
@@ -318,26 +321,36 @@ static void scanspool(HASPJS *js, unsigned char *buf, unsigned bufsize,
     unsigned    dead    = 0;
 
     printf("  SCAN of the spool for jobkey=%08X ...\n", job->jobkey);
+    printf("  (the key is matched at every fullword offset in the first %u"
+           " bytes of a block:\n"
+           "   data blocks carry it at +4, JCT/IOT control records at +8)\n",
+           SCANHDR);
 
     for (tt = 0; tt < 65535 && dead < 100; tt++) {
         unsigned trkok = 0;
 
-        for (r = 1; r <= 4; r++) {
+        for (r = 1; r <= MAXR; r++) {
+            unsigned off;
+            unsigned found = 0xFFFFFFFF;
+
             mttr = (tt << 8) | r;
             if (spool_read(js, mttr, buf, bufsize)) continue;
             reads++;
             trkok = 1;
 
-            if (BLK_KEY(buf) != job->jobkey) continue;
+            for (off = 0; off + 4 <= SCANHDR && off + 4 <= bufsize; off += 4) {
+                if (*(unsigned *)&buf[off] == job->jobkey) { found = off; break; }
+            }
+            if (found == 0xFFFFFFFF) continue;
 
             hits++;
             if (hits <= 24) {
                 unsigned ns;
-                printf("    HIT mttr=%08X TT=%u R=%u next=%08X dsid=%u"
-                       " records=%u\n",
-                       mttr, tt, r, BLK_NEXT(buf), BLK_DSID(buf),
-                       scanblk(buf, bufsize, &ns));
-                if (hits <= 3) dump(buf, 64);
+                printf("    HIT mttr=%08X TT=%u R=%u key@+%u  +0=%08X"
+                       " +4=%08X dsid=%u records=%u\n",
+                       mttr, tt, r, found, BLK_NEXT(buf), BLK_KEY(buf),
+                       BLK_DSID(buf), scanblk(buf, bufsize, &ns));
+                if (hits <= 3) dump(buf, 32);
             }
         }
         if (trkok) { dead = 0; lasttt = tt; }
@@ -346,6 +359,11 @@ static void scanspool(HASPJS *js, unsigned char *buf, unsigned bufsize,
 
     printf("  SCAN done: %u block(s) read up to TT=%u, %u block(s) carry"
            " jobkey %08X\n", reads, lasttt, hits, job->jobkey);
+    if (!hits) {
+        printf("  NOTE: zero hits is only meaningful if the same scan finds"
+               " the control job's\n        blocks - run PARM='HTTPD,SCAN'"
+               " and compare.\n");
+    }
 }
 
 /* dump the raw IOT chain: header, track group map, and every PDDB at the
