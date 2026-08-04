@@ -3,8 +3,50 @@ System: MVS 3.8j (MVS/CE, node MVSC) on Hercules, JES2, 2026-08-04
 Program: test/mvs/tstjeslg.c, run via jcl/tstjeslg.jcl
 Trimmed: only the sections cited by doc/jes-syslog-issue4.md are kept.
 
-==== JOB00306 S1: SYSLOG - chain walk + full spool scan ========================
-TSTJESLG - libc370 #4 probe, jobname filter 'SYSLOG' (+spool scan)
+==== A. JES2 init deck SYS1.PARMLIB(JES2PM00) - the relevant lines ============
+&BUFSIZE=3664                  BUFFER SIZE (5 PER TRACK ON 3350)        00000010
+&NUMDA=2                       MAX NUMBER OF SPOOL VOLUMES              00000340
+&NUMTGV=3330                   TRACK GROUPS PER SPOOL VOLUME (3350)     00000410
+&SPOOL=SPOOL1                  SPOOL VOLUME SERIAL                      00001200
+$$A  PRINT,SYSOUT,NOHOLD,TRKCEL     STANDARD OUTPUT CLASS               00001480
+$$B  PRINT,SYSOUT,NOHOLD,TRKCEL     STANDARD PUNCH OUTPUT CLASS         00001490
+$$L  PRINT,SYSOUT,NOHOLD,TRKCEL     SYSLOG                              00001500
+$$M  PRINT,SYSOUT,NOHOLD,TRKCEL     DOCUMENTATION                       00001510
+$$X  PRINT,SYSOUT,HOLD              HELD BATCH                          00001520
+$$Y  PRINT,SYSOUT,HOLD              HELD STC/TSU                        00001530
+$$Z  PRINT,DUMMY,NOHOLD             TRASH (DISCARDED)                   00001540
+
+  -> ONE spool volume (&SPOOL=SPOOL1); &NUMDA is the MAXIMUM, not the count.
+  -> 5 buffers per track on the 3350 (validates the R=1..5 scan).
+  -> TRKCEL is an attribute of output classes A,B,L,M - not of SYSLOG as such.
+  -> class A/L are NOHOLD: a printer drains and PURGES them within seconds.
+
+==== B. hardcopy log, before ==================================================
+D C,HC ->
+    CONSOLE/ALT     COND    AUTH   ID AREA  NBUF ROUTCD
+    015/009     H      CMDS    03            ALL          <- hardcopy = device 015,
+                                                             NOT the system log
+  (restored to exactly this after the experiment)
+
+==== C. TRKCELL is NOT the cause - job TCELB, same data, two output classes ===
+(class A = NOHOLD+TRKCEL, held with HOLD=YES so it survives; class Y = HOLD)
+  DD SYSUT2   dsid=104   mttr=00041302 records=5      lrecl=80    recfm=90 class=A flag=40
+     dsname=JES2.JOB00312.SO0104
+     blk 0    mttr=00041302 M=00 TT=1043 R=2 spool_read rc=0
+       hdr next=00041304 jobkey=E314FBA6 (job E314FBA6 MATCH) dsid=104 (dd 104 MATCH)
+       records in block: 5 (0 spanned part(s))
+       +000 00041304E314FBA60068400050E3D9D2 |    T  w    &TRK|
+       +010 C3C5D3D340D7D9D6C2C540D3C9D5C540 |CELL PROBE LINE |
+       +020 F0F0F140C1C1C1C1C1C1C1C1C1C1C1C1 |001 AAAAAAAAAAAA|
+       +030 C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1 |AAAAAAAAAAAAAAAA|
+       +040 C1C1C1C1C1C1C1C1C1C1C1C140400050 |AAAAAAAAAAAA   &|
+       +050 E3D9D2C3C5D3D340D7D9D6C2C540D3C9 |TRKCELL PROBE LI|
+     blk 1    mttr=00041304 M=00 TT=1043 R=4 spool_read rc=0
+  -> PDBFLAG2=88 (PDB2TCEL) - the SAME flag SYSLOG's PDDB carries - and the
+     data set reads perfectly. TRKCELL is exonerated.
+
+==== D. SYSLOG after WRITELOG Y (held class) - IT READS =======================
+TSTJESLG - libc370 #4 probe, jobname filter 'SYSLOG' (+IOT dump)
 checkpoint_open('DD:HASPCKPT') -> 00094AC0
   HCT bufsize=3664 maxjobs=1024 numjoes=3000 numtgv=3330 numda=2
   pddb1=908 jqeblks=8 jotblks=27 buflen=143360 buf=00116FC8
@@ -12,52 +54,77 @@ spool_open('DD:HASPACE1') -> 00094DF0
   spool ddname=HASPACE1 trkcyl=30
 jesjob('SYSLOG', FILTER_JOBNAME, dd=1) -> 1 job(s)
 JOB SYSLOG   STC00254 owner=SYSTEM   type=50 f1=01 f2=81
-    jobkey=E2FC8F85 iotmttr=00002803 spinmttr=00002805 jtflg=00
-    1 DD(s)
-  DD JES00101 dsid=101   mttr=0001E001 records=0      lrecl=130   recfm=C0 class=A flag=00
+    jobkey=E2FC8F85 iotmttr=00002803 spinmttr=00002804 jtflg=00
+    3 DD(s)
+  DD JES00101 dsid=101   mttr=0001E001 records=32     lrecl=130   recfm=C0 class=A flag=00
      dsname=JES2.STC00254.SO0101
      blk 0    mttr=0001E001 M=00 TT=480 R=1 spool_read rc=0
-       hdr next=D1C3E340 jobkey=0EA80000 (job E2FC8F85 MISMATCH) dsid=58102 (dd 101 MISMATCH)
-       records in block: 5 (2 spanned part(s))
-       +000 D1C3E3400EA80000E2F6F91500000000 |JCT  y  S69     |
-       +010 0001E00300000000000000000000086C |  \            %|
+       hdr next=D1C3E340 jobkey=0EA80000 (job E2FC8F85 MISMATCH) dsid=58132 (dd 101 MISMATCH)
+       records in block: 3 (0 spanned part(s))
+       +000 D1C3E3400EA80000E314FD0C00000000 |JCT  y  T       |
+       +010 0001E003000000000000000000000F50 |  \            &|
        +020 00640000000000240000000000000000 |                |
-       +030 000040400000000000273004E2E3C340 |            STC |
-       +040 40F1F4F1E9E3C9D4C5D9404040404040 | 141ZTIMER      |
-       +050 40404040404040404040404040404040 |                |
+       +030 000040400000000000009004D1D6C240 |            JOB |
+       +040 40F3F1F5E3E2E3D1C5E2D3C7E3D9D2C3 | 315TSTJESLGTRKC|
+       +050 C5D340D7D9D6C2C54040404040404040 |EL PROBE        |
      WALK: 0 block(s) accepted, 0 record(s) (0 spanned part(s))
      STOP: jobkey MISMATCH  [jesprint.c:110]
      => jesprint() would print 0 line(s) for this DD
+  DD JES00102 dsid=102   mttr=00042901 records=32     lrecl=130   recfm=C0 class=Y flag=00
+     dsname=JES2.STC00254.SO0102
+     blk 0    mttr=00042901 M=00 TT=1065 R=1 spool_read rc=0
+       hdr next=00042903 jobkey=E2FC8F85 (job E2FC8F85 MATCH) dsid=102 (dd 102 MATCH)
+       records in block: 32 (0 spanned part(s))
+       +000 00042903E2FC8F850066570057F4F0F0 |    S  e     400|
+       +010 F040F1F64BF4F24BF1F8404040404040 |0 16.42.18      |
+       +020 4040404040C9C5C5F0F4F3C940C140E2 |     IEE043I A S|
+       +030 E8E2E3C5D440D3D6C740C4C1E3C140E2 |YSTEM LOG DATA S|
+       +040 C5E340C8C1E240C2C5C5D540D8E4C5E4 |ET HAS BEEN QUEU|
+       +050 C5C440E3D640E2E8E2D6E4E340C3D3C1 |ED TO SYSOUT CLA|
+     blk 1    mttr=00042903 M=00 TT=1065 R=3 spool_read rc=0
+       hdr next=00000000 jobkey=E2FC8F85 (job E2FC8F85 MATCH) dsid=102 (dd 102 MATCH)
+       records in block: 0 (0 spanned part(s))
+       +000 00000000E2FC8F850066FF0057F4F0F0 |    S  e     400|
+       +010 F040F1F64BF4F24BF1F8404040404040 |0 16.42.18      |
+       +020 4040404040C9C5C5F0F4F3C940C140E2 |     IEE043I A S|
+       +030 E8E2E3C5D440D3D6C740C4C1E3C140E2 |YSTEM LOG DATA S|
+       +040 C5E340C8C1E240C2C5C5D540D8E4C5E4 |ET HAS BEEN QUEU|
+       +050 C5C440E3D640E2E8E2D6E4E340C3D3C1 |ED TO SYSOUT CLA|
+     WALK: 2 block(s) accepted, 32 record(s) (0 spanned part(s))
+     STOP: chain end (next=0)
+     => jesprint() would print 32 line(s) for this DD
+  DD JES00103 dsid=103   mttr=00043301 records=0      lrecl=130   recfm=C0 class=A flag=00
+     dsname=JES2.STC00254.SO0103
+     blk 0    mttr=00043301 M=00 TT=1075 R=1 spool_read rc=0
+       hdr next=D1C3E340 jobkey=0EA80000 (job E2FC8F85 MISMATCH) dsid=58112 (dd 103 MISMATCH)
+       records in block: 2 (2 spanned part(s))
+  -> dsid 102, class Y (HELD): jobkey MATCH, dsid MATCH, 32 records, chain ends
+     cleanly, and the data is the real log text.
+  -> dsid 101 / 103, class A (NOHOLD): already printed and PURGED; the
+     checkpointed PDDB still lists them (recct=32!) and their MTTR now points
+     into a track that has been reallocated to another job's JCT.
+
+==== E. scan after WRITELOG (class A generation) - the data is really gone ====
   SCAN of the spool for jobkey=E2FC8F85 ...
   (the key is matched at every fullword offset in the first 64 bytes of a block:
    data blocks carry it at +4, JCT/IOT control records at +8)
     HIT mttr=00002801 TT=40 R=1 key@+8  +0=D1C3E340 +4=0EA80000 dsid=58108 records=5
-       +000 D1C3E3400EA80000E2FC8F8500002805 |JCT  y  S  e    |
+       +000 D1C3E3400EA80000E2FC8F8500002802 |JCT  y  S  e    |
        +010 0000280300000000000000000000032C |                |
+    HIT mttr=00002802 TT=40 R=2 key@+8  +0=C9D6E340 +4=0EA81800 dsid=58108 records=2
+       +000 C9D6E3400EA81800E2FC8F8500002802 |IOT  y  S  e    |
+       +010 00002805009C915800BCD90800000000 |      j   R     |
     HIT mttr=00002803 TT=40 R=3 key@+8  +0=C9D6E340 +4=0EA80800 dsid=58108 records=2
        +000 C9D6E3400EA80800E2FC8F8500002803 |IOT  y  S  e    |
        +010 00000000000000000000000000000000 |                |
-    HIT mttr=00002805 TT=40 R=5 key@+8  +0=C9D6E340 +4=0EA81800 dsid=58108 records=2
-       +000 C9D6E3400EA81800E2FC8F8500002805 |IOT  y  S  e    |
-       +010 000000000000000000BCD90800000000 |          R     |
-  SCAN done: 83100 block(s) read up to TT=16649, 3 block(s) carry jobkey E2FC8F85
+    HIT mttr=00002805 TT=40 R=5 key@+8  +0=C9D6E340 +4=0EA81400 dsid=58108 records=2
+  SCAN done: 83100 block(s) read up to TT=16649, 4 block(s) carry jobkey E2FC8F85
 TSTJESLG rc=0
+  -> only the JCT and the three IOTs carry the SYSLOG job key; not one data
+     block. Positive control for the same scan (job HTTPD) finds 61 blocks
+     including data blocks - see section F.
 
-==== JOB00306 S2: HTTPD - POSITIVE CONTROL for the scan =======================
-(per-DD block dumps trimmed; the scan section is the point)
-TSTJESLG - libc370 #4 probe, jobname filter 'HTTPD' (+spool scan)
-checkpoint_open('DD:HASPCKPT') -> 00094AC0
-  HCT bufsize=3664 maxjobs=1024 numjoes=3000 numtgv=3330 numda=2
-  pddb1=908 jqeblks=8 jotblks=27 buflen=143360 buf=00116FC8
-spool_open('DD:HASPACE1') -> 00094DF0
-  spool ddname=HASPACE1 trkcyl=30
-jesjob('HTTPD', FILTER_JOBNAME, dd=1) -> 2 job(s)
-JOB HTTPD    STC00348 owner=SYSTEM   type=50 f1=01 f2=01
-    jobkey=E3032DAD iotmttr=0001CC02 spinmttr=0001CF03 jtflg=00
-    7 DD(s)
-  DD JESJCLIN dsid=1     mttr=0001CC05 records=2      lrecl=80    recfm=80 class=Y flag=A0
-     dsname=JES2.STC00348.SI0001
-   ...
+==== F. scan positive control (HTTPD) =========================================
   SCAN of the spool for jobkey=E3032DAD ...
   (the key is matched at every fullword offset in the first 64 bytes of a block:
    data blocks carry it at +4, JCT/IOT control records at +8)
@@ -93,18 +160,8 @@ JOB HTTPD    STC00348 owner=SYSTEM   type=50 f1=01 f2=01
     HIT mttr=0001D004 TT=464 R=4 key@+4  +0=0002E903 +4=E3032DAD dsid=2 records=46
   SCAN done: 83100 block(s) read up to TT=16649, 61 block(s) carry jobkey E3032DAD
 TSTJESLG rc=0
-
-==== JOB00300 S1: SYSLOG - raw IOT / PDDB dump ================================
-TSTJESLG - libc370 #4 probe, jobname filter 'SYSLOG' (+IOT dump)
-checkpoint_open('DD:HASPCKPT') -> 00094AC0
-  HCT bufsize=3664 maxjobs=1024 numjoes=3000 numtgv=3330 numda=2
-  pddb1=908 jqeblks=8 jotblks=27 buflen=143360 buf=00116FC8
-spool_open('DD:HASPACE1') -> 00094DF0
-  spool ddname=HASPACE1 trkcyl=30
-jesjob('SYSLOG', FILTER_JOBNAME, dd=1) -> 1 job(s)
-JOB SYSLOG   STC00254 owner=SYSTEM   type=50 f1=01 f2=81
-    jobkey=E2FC8F85 iotmttr=00002803 spinmttr=00002805 jtflg=00
-    1 DD(s)
+==== G. first SYSLOG chain walk (before any WRITELOG) =========================
+TSTJESLG - libc370 #4 probe, jobname filter 'SYSLOG' (+spool scan)
   DD JES00101 dsid=101   mttr=0001E001 records=0      lrecl=130   recfm=C0 class=A flag=00
      dsname=JES2.STC00254.SO0101
      blk 0    mttr=0001E001 M=00 TT=480 R=1 spool_read rc=0
@@ -119,217 +176,3 @@ JOB SYSLOG   STC00254 owner=SYSTEM   type=50 f1=01 f2=81
      WALK: 0 block(s) accepted, 0 record(s) (0 spanned part(s))
      STOP: jobkey MISMATCH  [jesprint.c:110]
      => jesprint() would print 0 line(s) for this DD
-    IOT #0 mttr=00002803 id=IOT  leng=3752 flag1=08 flag2=00
-      jbkey=E2FC8F85 (job E2FC8F85 MATCH) iottrack=00002803 next=00000000 spiot=00000000 pddbp=1620 sjb=00000000
-       +000 C9D6E3400EA80800E2FC8F8500002803 |IOT  y  S  e    |
-       +010 00000000000000000000000000000000 |                |
-       +020 00000000000000000000000000000654 |                |
-       +030 00002805C00105000000000000000000 |    {           |
-      TGMAP (417 byte(s)/vol, 2 vol(s)), groups held: 0/6 0/18 0/20 0/21 0/29 0/31 0/50 0/52 0/62 0/72  (10 total)
-      PDDB#0  +908  dskey=1     mttr=00000000 recct=0      lrecl=80    recfm=80 class=A f1=40 f2=00
-      PDDB#1  +1012 dskey=2     mttr=00000000 recct=0      lrecl=133   recfm=C2 class=A f1=60 f2=00
-      PDDB#2  +1116 dskey=3     mttr=00000000 recct=0      lrecl=90    recfm=80 class=A f1=40 f2=00
-      PDDB#3  +1220 dskey=4     mttr=00000000 recct=0      lrecl=133   recfm=44 class=A f1=40 f2=00
-      PDDB#4  +1324 dskey=5     mttr=00000000 recct=0      lrecl=0     recfm=00 class=A f1=48 f2=00
-      PDDB#5  +1428 dskey=6     mttr=00000000 recct=0      lrecl=0     recfm=00 class=A f1=48 f2=00
-    SPIN IOT #0 mttr=00002805 id=IOT  leng=3752 flag1=18 flag2=00
-      jbkey=E2FC8F85 (job E2FC8F85 MATCH) iottrack=00002805 next=00000000 spiot=00000000 pddbp=1100 sjb=00BCD908
-       +000 C9D6E3400EA81800E2FC8F8500002805 |IOT  y  S  e    |
-       +010 000000000000000000BCD90800000000 |          R     |
-       +020 0000000000000000000000000000044C |               <|
-       +030 00000000C00000000000000000000000 |    {           |
-      TGMAP (417 byte(s)/vol, 2 vol(s)), groups held: 0/6 0/15 0/16 0/17 0/18 0/21 0/29 0/31 0/47 0/48 0/49 0/50 0/62 0/160  (14 tot
-al)
-      PDDB#0  +908  dskey=101   mttr=0001E001 recct=0      lrecl=130   recfm=C0 class=A f1=05 f2=88
-TSTJESLG rc=0
-
-==== JOB00300 S2: HTTPD - raw IOT / PDDB dump (control) =======================
-(second HTTPD instance and the per-block dumps trimmed)
-TSTJESLG - libc370 #4 probe, jobname filter 'HTTPD' (+IOT dump)
-checkpoint_open('DD:HASPCKPT') -> 00094AC0
-  HCT bufsize=3664 maxjobs=1024 numjoes=3000 numtgv=3330 numda=2
-  pddb1=908 jqeblks=8 jotblks=27 buflen=143360 buf=00116FC8
-spool_open('DD:HASPACE1') -> 00094DF0
-  spool ddname=HASPACE1 trkcyl=30
-jesjob('HTTPD', FILTER_JOBNAME, dd=1) -> 2 job(s)
-JOB HTTPD    STC00348 owner=SYSTEM   type=50 f1=01 f2=01
-    jobkey=E3032DAD iotmttr=0001CC02 spinmttr=0001CF03 jtflg=00
-    7 DD(s)
-  DD JESJCLIN dsid=1     mttr=0001CC05 records=2      lrecl=80    recfm=80 class=Y flag=A0
-     dsname=JES2.STC00348.SI0001
-     blk 0    mttr=0001CC05 M=00 TT=460 R=5 spool_read rc=0
-       hdr next=00000000 jobkey=E3032DAD (job E3032DAD MATCH) dsid=1 (dd 1 MATCH)
-       records in block: 4 (1 spanned part(s))
-       +000 00000000E3032DAD00015000506161C8 |    T  �  & &//H|
-       +010 E3E3D7C440404040D1D6C240D4E2C7D3 |TTPD    JOB MSGL|
-       +020 C5E5C5D37EF140404040404040404040 |EVEL=1          |
-       +030 40404040404040404040404040404040 |                |
-       +040 40404040404040404040404040404040 |                |
-       +050 4040404040E2E3C34040F3F4F8150050 |     STC  348  &|
-     WALK: 1 block(s) accepted, 4 record(s) (1 spanned part(s))
-     STOP: chain end (next=0)
-     => jesprint() would print 4 line(s) for this DD
-  DD JESMSGLG dsid=2     mttr=0001CD03 records=2      lrecl=133   recfm=C2 class=Y flag=C0
-     dsname=JES2.STC00348.SO0002
-     blk 0    mttr=0001CD03 M=00 TT=461 R=3 spool_read rc=0
-       hdr next=0001CD02 jobkey=E3032DAD (job E3032DAD MATCH) dsid=2 (dd 2 MATCH)
-       records in block: 2 (0 spanned part(s))
-       +000 0001CD02E3032DAD000200A0008B47A0 |    T  �        |
-       +010 47194040404040404040404040404040 |                |
-       +020 40404040404040404040404040404040 |                |
-       +030 40404040404040404040404040404040 |                |
-       +040 4040D140C540E240F2404040D140D640 |  J E S 2   J O |
-       +050 C2404040D340D640C7FF000000000000 |B   L O G       |
-     blk 1    mttr=0001CD02 M=00 TT=461 R=2 spool_read rc=0
-       hdr next=0001D001 jobkey=E3032DAD (job E3032DAD MATCH) dsid=2 (dd 2 MATCH)
-       records in block: 49 (0 spanned part(s))
-       +000 0001D001E3032DAD00024B004BF1F24B |  } T  �  . .12.|
-       +010 F4F44BF1F240E2E3C34040F3F4F84040 |44.12 STC  348  |
-       +020 D9C1D2C6F0F0F1F0C940E2E3C340C8E3 |RAKF0010I STC HT|
-       +030 E3D7C440404040E2E3C1D9E3C5C440E4 |TPD    STARTED U|
-       +040 E2C9D5C740C4C5C6C1E4D3E340E2E3C3 |SING DEFAULT STC|
-       +050 40C1C3C3D6E4D5E32C002CF1F24BF4F4 | ACCOUNT   12.44|
-     WALK: 6 block(s) accepted, 244 record(s) (0 spanned part(s))
-     STOP: jobkey MISMATCH  [jesprint.c:110]
-     => jesprint() would print 244 line(s) for this DD
-  DD JESJCL   dsid=3     mttr=0001CC04 records=32     lrecl=90    recfm=80 class=Y flag=C0
-     dsname=JES2.STC00348.SO0003
-     blk 0    mttr=0001CC04 M=00 TT=460 R=4 spool_read rc=0
-       hdr next=00000000 jobkey=E3032DAD (job E3032DAD MATCH) dsid=3 (dd 3 MATCH)
-       records in block: 32 (0 spanned part(s))
-       +000 00000000E3032DAD00035A005A404040 |    T  �  ! !   |
-       +010 40F140404040406161C8E3E3D7C44040 | 1     //HTTPD  |
-       +020 4040D1D6C240D4E2C7D3C5E5C5D37EF1 |  JOB MSGLEVEL=1|
-       +030 40404040404040404040404040404040 |                |
-       +040 40404040404040404040404040404040 |                |
-       +050 404040404040404040404040404040E2 |               S|
-     WALK: 1 block(s) accepted, 32 record(s) (0 spanned part(s))
-     STOP: chain end (next=0)
-     => jesprint() would print 32 line(s) for this DD
-  DD JESYSMSG dsid=4     mttr=0001CD01 records=3      lrecl=133   recfm=44 class=Y flag=C0
-     dsname=JES2.STC00348.SO0004
-     blk 0    mttr=0001CD01 M=00 TT=461 R=1 spool_read rc=0
-       hdr next=0001CD04 jobkey=E3032DAD (job E3032DAD MATCH) dsid=4 (dd 4 MATCH)
-       records in block: 3 (0 spanned part(s))
-       +000 0001CD04E3032DAD000411001140E2E3 |    T  �      ST|
-       +010 D4E340D5D64B40D4C5E2E2C1C7C50300 |MT NO. MESSAGE  |
-       +020 11604040550055404040F1F340404040 | -        13    |
-       +030 40C9C5C6F6F5F3C940E2E4C2E2E3C9E3 | IEF653I SUBSTIT|
-       +040 E4E3C9D6D540D1C3D3406040C4E2D57E |UTION JCL - DSN=|
-       +050 E2E8E2F24BD7C1D9D4D3C9C24DC8E3E3 |SYS2.PARMLIB(HTT|
-     blk 1    mttr=0001CD04 M=00 TT=461 R=4 spool_read rc=0
-       hdr next=0001CF04 jobkey=E3032DAD (job E3032DAD MATCH) dsid=4 (dd 4 MATCH)
-       records in block: 74 (0 spanned part(s))
-       +000 0001CF04E3032DAD00043A003CD9C1D2 |    T  �     RAK|
-       +010 C6F0F0F1F0C940E2E3C340C8E3E3D7C4 |F0010I STC HTTPD|
-       +020 40404040E2E3C1D9E3C5C440E4E2C9D5 |    STARTED USIN|
-       +030 C740C4C5C6C1E4D3E340E2E3C340C1C3 |G DEFAULT STC AC|
-       +040 C3D6E4D5E340401E001EC9C5C6F2F3F6 |COUNT     IEF236|
-       +050 C940C1D3D3D6C34B40C6D6D940C8E3E3 |I ALLOC. FOR HTT|
-     WALK: 38 block(s) accepted, 2950 record(s) (0 spanned part(s))
-     STOP: jobkey MISMATCH  [jesprint.c:110]
-     => jesprint() would print 2950 line(s) for this DD
-  DD JESINTXT dsid=5     mttr=0001CD05 records=0      lrecl=0     recfm=00 class=A flag=A0
-     dsname=JES2.STC00348.SI0005
-     blk 0    mttr=0001CD05 M=00 TT=461 R=5 spool_read rc=0
-       hdr next=00000000 jobkey=E3032DAD (job E3032DAD MATCH) dsid=5 (dd 5 MATCH)
-       records in block: 15 (0 spanned part(s))
-       +000 00000000E3032DAD0005250025002501 |    T  �        |
-       +010 600010B40105C8E3E3D7C4B20101E8B3 |-     HTTPD   Y |
-       +020 0201F101F1B00102F0F0AE0104F5F1F2 |  1 1   00   512|
-       +030 D2FE16001600160220940208E2E3C1D9 |K        m  STAR|
-       +040 E3C9D5C705C8E3E3D7C4FE1200120012 |TING HTTPD      |
-       +050 0828940205C8E3E3D7C404D7D9D6C3FE |  m  HTTPD PROC |
-     WALK: 1 block(s) accepted, 15 record(s) (0 spanned part(s))
-     STOP: chain end (next=0)
-     => jesprint() would print 15 line(s) for this DD
-  DD HTTPDERR dsid=102   mttr=0001CF02 records=0      lrecl=132   recfm=50 class=Y flag=40
-     dsname=JES2.STC00348.SO0102
-     blk 0    mttr=0001CF02 M=00 TT=463 R=2 spool_read rc=0
-       hdr next=00000000 jobkey=E3032DAD (job E3032DAD MATCH) dsid=102 (dd 102 MATCH)
-       records in block: 0 (0 spanned part(s))
-       +000 00000000E3032DAD0066FF0000000000 |    T  �        |
-       +010 00000000000000000000000000000000 |                |
-       +020 00000000000000000000000000000000 |                |
-       +030 00000000000000000000000000000000 |                |
-       +040 00000000000000000000000000000000 |                |
-       +050 00000000000000000000000000000000 |                |
-     WALK: 1 block(s) accepted, 0 record(s) (0 spanned part(s))
-     STOP: chain end (next=0)
-     => jesprint() would print 0 line(s) for this DD
-  DD HTTPDOUT dsid=103   mttr=0001CF05 records=0      lrecl=132   recfm=50 class=Y flag=40
-     dsname=JES2.STC00348.SO0103
-     blk 0    mttr=0001CF05 M=00 TT=463 R=5 spool_read rc=0
-       hdr next=00000000 jobkey=E3032DAD (job E3032DAD MATCH) dsid=103 (dd 103 MATCH)
-       records in block: 0 (0 spanned part(s))
-       +000 00000000E3032DAD0067FF0000000000 |    T  �        |
-       +010 00000000000000000000000000000000 |                |
-       +020 00000000000000000000000000000000 |                |
-       +030 00000000000000000000000000000000 |                |
-       +040 00000000000000000000000000000000 |                |
-       +050 00000000000000000000000000000000 |                |
-     WALK: 1 block(s) accepted, 0 record(s) (0 spanned part(s))
-     STOP: chain end (next=0)
-     => jesprint() would print 0 line(s) for this DD
-    IOT #0 mttr=0001CC02 id=IOT  leng=3752 flag1=08 flag2=00
-      jbkey=E3032DAD (job E3032DAD MATCH) iottrack=0001CC02 next=00000000 spiot=00000000 pddbp=1620 sjb=00000000
-       +000 C9D6E3400EA80800E3032DAD0001CC02 |IOT  y  T  �    |
-       +010 00000000000000000000000000000000 |                |
-       +020 00000000000000000000000000000654 |                |
-       +030 00031B01C00105020000000000000000 |    {           |
-      TGMAP (417 byte(s)/vol, 2 vol(s)), groups held: 0/6 0/14 0/15 0/19 0/20 0/21 0/22 0/23 0/29 0/31 0/46 0/47 0/51 0/52 0/54 0/55
- 0/62 0/156 0/213 0/223  (20 total)
-      PDDB#0  +908  dskey=1     mttr=0001CC05 recct=2      lrecl=80    recfm=80 class=Y f1=28 f2=08
-      PDDB#1  +1012 dskey=2     mttr=0001CD03 recct=2      lrecl=133   recfm=C2 class=Y f1=20 f2=08
-      PDDB#2  +1116 dskey=3     mttr=0001CC04 recct=32     lrecl=90    recfm=80 class=Y f1=00 f2=08
-      PDDB#3  +1220 dskey=4     mttr=0001CD01 recct=3      lrecl=133   recfm=44 class=Y f1=00 f2=08
-      PDDB#4  +1324 dskey=5     mttr=0001CD05 recct=0      lrecl=0     recfm=00 class=A f1=08 f2=00
-      PDDB#5  +1428 dskey=6     mttr=00000000 recct=0      lrecl=0     recfm=00 class=A f1=48 f2=00
-    SPIN IOT #0 mttr=0001CF03 id=IOT  leng=3752 flag1=10 flag2=00
-      jbkey=E3032DAD (job E3032DAD MATCH) iottrack=0001CF03 next=0001CF01 spiot=00000000 pddbp=1100 sjb=00BB98B0
-       +000 C9D6E3400EA81000E3032DAD0001CF03 |IOT  y  T  �    |
-       +010 0001CF01009C003000BB98B000000000 |          q     |
-       +020 0000000000000000000000000000044C |               <|
-       +030 00000000C00000000000000000000000 |    {           |
-      TGMAP (417 byte(s)/vol, 2 vol(s)), groups held:  (0 total)
-      PDDB#0  +908  dskey=106   mttr=00000000 recct=0      lrecl=0     recfm=00 class=Y f1=43 f2=08
-    SPIN IOT #1 mttr=0001CF01 id=IOT  leng=3752 flag1=10 flag2=00
-      jbkey=E3032DAD (job E3032DAD MATCH) iottrack=0001CF01 next=0001CE04 spiot=00000000 pddbp=1100 sjb=00BB98B0
-       +000 C9D6E3400EA81000E3032DAD0001CF01 |IOT  y  T  �    |
-       +010 0001CE04009C103000BB98B000000000 |          q     |
-       +020 0000000000000000000000000000044C |               <|
-       +030 00000000C00000000000000000000000 |    {           |
-      TGMAP (417 byte(s)/vol, 2 vol(s)), groups held:  (0 total)
-      PDDB#0  +908  dskey=105   mttr=00000000 recct=0      lrecl=0     recfm=00 class=Y f1=43 f2=08
-    SPIN IOT #2 mttr=0001CE04 id=IOT  leng=3752 flag1=10 flag2=00
-      jbkey=E3032DAD (job E3032DAD MATCH) iottrack=0001CE04 next=0001CE02 spiot=00000000 pddbp=1100 sjb=00BB98B0
-       +000 C9D6E3400EA81000E3032DAD0001CE04 |IOT  y  T  �    |
-       +010 0001CE02009C203000BB98B000000000 |          q     |
-       +020 0000000000000000000000000000044C |               <|
-       +030 00000000C00000000000000000000000 |    {           |
-      TGMAP (417 byte(s)/vol, 2 vol(s)), groups held:  (0 total)
-      PDDB#0  +908  dskey=104   mttr=00000000 recct=0      lrecl=0     recfm=00 class=Y f1=43 f2=08
-    SPIN IOT #3 mttr=0001CE02 id=IOT  leng=3752 flag1=10 flag2=00
-      jbkey=E3032DAD (job E3032DAD MATCH) iottrack=0001CE02 next=0001CE05 spiot=00000000 pddbp=1100 sjb=00BB98B0
-       +000 C9D6E3400EA81000E3032DAD0001CE02 |IOT  y  T  �    |
-       +010 0001CE05009C303000BB98B000000000 |          q     |
-       +020 0000000000000000000000000000044C |               <|
-       +030 00000000C00000000000000000000000 |    {           |
-      TGMAP (417 byte(s)/vol, 2 vol(s)), groups held:  (0 total)
-      PDDB#0  +908  dskey=103   mttr=0001CF05 recct=0      lrecl=132   recfm=50 class=Y f1=03 f2=08
-    SPIN IOT #4 mttr=0001CE05 id=IOT  leng=3752 flag1=10 flag2=00
-      jbkey=E3032DAD (job E3032DAD MATCH) iottrack=0001CE05 next=0001CE03 spiot=00000000 pddbp=1100 sjb=00BB98B0
-       +000 C9D6E3400EA81000E3032DAD0001CE05 |IOT  y  T  �    |
-       +010 0001CE03009D203000BB98B000000000 |          q     |
-       +020 0000000000000000000000000000044C |               <|
-       +030 00000000C00000000000000000000000 |    {           |
-      TGMAP (417 byte(s)/vol, 2 vol(s)), groups held:  (0 total)
-      PDDB#0  +908  dskey=102   mttr=0001CF02 recct=0      lrecl=132   recfm=50 class=Y f1=03 f2=08
-    SPIN IOT #5 mttr=0001CE03 id=IOT  leng=3752 flag1=10 flag2=00
-      jbkey=E3032DAD (job E3032DAD MATCH) iottrack=0001CE03 next=00000000 spiot=00000000 pddbp=1100 sjb=00BB98B0
-       +000 C9D6E3400EA81000E3032DAD0001CE03 |IOT  y  T  �    |
-       +010 000000000000000000BB98B000000000 |          q     |
-       +020 0000000000000000000000000000044C |               <|
-       +030 00000000C00000000000000000000000 |    {           |
-      TGMAP (417 byte(s)/vol, 2 vol(s)), groups held:  (0 total)
-      PDDB#0  +908  dskey=101   mttr=00000000 recct=0      lrecl=0     recfm=00 class=Y f1=43 f2=08
