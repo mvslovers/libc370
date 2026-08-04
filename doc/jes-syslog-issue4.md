@@ -183,20 +183,20 @@ is another reason it must be reported rather than swallowed.
 
 ## 4. Defects found while reading the code
 
-### D1 - Silent failure exits (`jesprint.c:107,110,111`) *[the one that matters]*
+### D1 - Silent failure exits (`jesprint.c:107,110,111`) *[the one that matters]* — #21
 
 Three distinct failures all `break` with `rc = 0`: I/O error, foreign block,
 wrong dsid. An MVS I/O error is swallowed and reported as success - the
 "Optimistic Path" pattern CLAUDE.md forbids - and a purged data set is
 indistinguishable from an empty one.
 
-### D2 - Unbounded, unvalidated chain follow (`jesprint.c:105`)
+### D2 - Unbounded, unvalidated chain follow (`jesprint.c:105`) — #22
 
 `mttr = block->next` is taken from the buffer with no iteration cap, no
 self-loop check and no cycle detection. The SYSLOG case shows exactly how a
 foreign block gets into that buffer; only the jobkey check stopped the walk.
 
-### D3 - Over-read in the record loop (`jesprint.c:116`) *[memory safety]*
+### D3 - Over-read in the record loop (`jesprint.c:116`) *[memory safety]* — #23
 
 ```c
 for (p = &buf[10], line = (PRLINE*)p; line->len != EOB && p < eob; line = (PRLINE*)p)
@@ -208,7 +208,7 @@ reach `buf + bufsize + 254` and the next `line->len` reads past the `calloc()`ed
 buffer. The conditions are in the wrong order; a real fix also checks
 `p + 3 + line->len <= buf + bufsize`.
 
-### D4 - Spanned-record heap overflow (`jesprint.c:150`) *[memory safety]*
+### D4 - Spanned-record heap overflow (`jesprint.c:150`) *[memory safety]* — #24
 
 `prbuf` is sized from the 2-byte total length in the `FLAG_FIRST` part only and
 is only ever grown (`:134`). `MIDDLE`/`LAST` parts are copied in unchecked and
@@ -216,20 +216,20 @@ the overflow test happens **after** the copy. A block whose first record is a
 `MIDDLE`/`LAST` part - e.g. the first block after a failed `spool_read` - writes
 past `prbuf`.
 
-### D5 - `FLAG_FIRST` length accounting (`jesprint.c:129-159`) *[unverified]*
+### D5 - `FLAG_FIRST` length accounting (`jesprint.c:129-159`) *[unverified]* — #29
 
 For the first part of a spanned record `p` is advanced past the 2-byte total
 length and the optional carriage control byte, but both the copy length and the
 final `p += sp->len2` use `sp->len2` unadjusted. Needs a real spanned record to
 settle - a host test case (§5.2).
 
-### D6 - Return value is the callback's (`jesprint.c:154,167,176`)
+### D6 - Return value is the callback's (`jesprint.c:154,167,176`) — #26
 
 `rc = esc_print(...)` inside the loop, and `rc` is what `jesprint()` returns; on
 success the caller gets whatever the last `prt()` returned, mixed into the same
 int as 503 / 404 / 0. There is no way to report "printed N lines".
 
-### D7 - One spool volume; the MTTR M byte is discarded (`jesopen.c:46`, `jesprint.c:75`, `@@jsrd4.c:34-45`)
+### D7 - One spool volume; the MTTR M byte is discarded (`jesopen.c:46`, `jesprint.c:75`, `@@jsrd4.c:34-45`) — #27
 
 `jesopen()` opens only `DD:HASPACE1`, everything uses `jes->js[0]`, and
 `__jsrd4()` builds MBBCCHHR from TT/R while **discarding the M byte** (the spool
@@ -237,7 +237,7 @@ volume index). Latent: this system has `&SPOOL=SPOOL1`, a single volume
 (`&NUMDA=2` is the configured *maximum*), and every MTTR observed has `M=00`.
 It would bite on a multi-volume spool - silently, by reading the wrong volume.
 
-### D8 - PDDB scan bound (`jesjob.c:81,178,198`) *[minor]*
+### D8 - PDDB scan bound (`jesjob.c:81,178,198`) *[minor]* — #28
 
 `pddbend` is the end of the *buffer*, not `iotbuf + iot->IOTPDDBP`; the scan
 relies on finding a `PDBDSKEY == 0` terminator.
@@ -276,7 +276,7 @@ on this system means the SYSLOG we cannot read.
 for the printer to purge it, then `PARM='SYSLOG'` - the checkpointed PDDB still
 advertises the data set and the walk stops on a foreign block.
 
-### 5.2 Host tests for the record parser - **requires a small refactor**
+### 5.2 Host tests for the record parser - **requires a small refactor** — #25
 
 Not needed for #4 (the parser is exonerated), but D3/D4 are real and untested.
 `jesprint.c` cannot be compiled on the host: file-scope `__asm__`
@@ -312,7 +312,75 @@ Cases, executing production code:
 
 ---
 
-## 6. Recommended order
+## 6. Runbook: the hardcopy switch used for the proof
+
+Recorded verbatim so the experiment can be repeated - and undone - exactly.
+
+### State found (and restored to)
+
+```
+D C,HC ->
+    IEE250I 16.39.31 CONSOLE DISPLAY 369
+    WTO BUFFERS:    CURR =     0      LIM =  500
+    CONSOLE/ALT     COND    AUTH   ID AREA  NBUF ROUTCD
+    015/009     H      CMDS    03            ALL      <- hardcopy: DEVICE 015
+    010/009     N       ALL    01 Z,A        ALL
+    009/010     M       ALL    02            ALL
+    015/009     A,T     NONE   03            ALL
+```
+
+Device **015**, alternate 009, `AUTH=CMDS`, `ROUTCD=ALL`. The device *type*
+behind 015 was not established: `D U,,,015,1` returns only the `IEE450I ... UNIT
+STATUS` header through the mvsMF console API - the continuation lines are not
+collected, and the `solmsgs` follow-up returns empty. Look it up in the
+Hercules device configuration.
+
+### Switch to the system log
+
+```
+VARY SYSLOG,HARDCPY          -> IEE349I HARDCOPY CONSOLE      (accepted)
+```
+
+Syntax matters on MVS 3.8j - these were **rejected**:
+
+```
+VARY (SYSLOG),HARDCPY,ALL    -> IEE309I VARY  UNIDENTIFIABLE KEYWORD
+V SYSLOG,HARDCPY,ALL         -> IEE309I V     UNIDENTIFIABLE KEYWORD
+V (SYSLOG),HARDCPY,ALL,CMDS  -> IEE309I V     UNIDENTIFIABLE KEYWORD
+```
+
+`IEE349I HARDCOPY CONSOLE` reads like a rejection but is informational -
+verify with `D C,HC`, which then shows:
+
+```
+    CONSOLE/ALT     COND    AUTH   ID AREA  NBUF ROUTCD
+    SYSLOG          H      CMDS                  ALL      <- hardcopy: SYSLOG
+```
+
+### Produce and spin a log data set
+
+```
+D T                          (a few times, to put messages in the log)
+WRITELOG Y                   -> IEE043I A SYSTEM LOG DATA SET HAS BEEN QUEUED
+                                TO SYSOUT CLASS Y
+```
+
+`WRITELOG` **without** an operand queues to class A - `NOHOLD` here, so a
+printer purges it before it can be read. That is the red case. The class
+operand (`Y`, or `H`) is what makes the data set survive.
+
+### Restore
+
+```
+VARY 015,HARDCPY             -> IEE349I HARDCOPY CONSOLE
+D C,HC                       -> back to "015/009  H  CMDS  03  ALL"
+```
+
+Verified: the display after restoring is byte-identical to the state found.
+
+---
+
+## 7. Recommended order
 
 1. **D1 (+D2)** - report *why* nothing was printed, and bound the walk. This is
    the actual libc370 fix for #4 and what mvsmf#145 needs to answer

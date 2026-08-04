@@ -21,12 +21,52 @@ $$Z  PRINT,DUMMY,NOHOLD             TRASH (DISCARDED)                   00001540
   -> TRKCEL is an attribute of output classes A,B,L,M - not of SYSLOG as such.
   -> class A/L are NOHOLD: a printer drains and PURGES them within seconds.
 
-==== B. hardcopy log, before ==================================================
-D C,HC ->
+==== B. hardcopy log: before, during, after ===================================
+BEFORE (state found):
+  D C,HC ->
+    IEE250I 16.39.31 CONSOLE DISPLAY 369
+    WTO BUFFERS:    CURR =     0      LIM =  500
     CONSOLE/ALT     COND    AUTH   ID AREA  NBUF ROUTCD
-    015/009     H      CMDS    03            ALL          <- hardcopy = device 015,
-                                                             NOT the system log
-  (restored to exactly this after the experiment)
+    015/009     H      CMDS    03            ALL     <- hardcopy = DEVICE 015,
+    010/009     N       ALL    01 Z,A        ALL        NOT the system log
+    009/010     M       ALL    02            ALL
+    015/009     A,T     NONE   03            ALL
+
+  (device TYPE behind 015 not established: D U,,,015,1 returns only the
+   IEE450I header through the mvsMF console API, the continuation lines are
+   not collected and solmsgs returns empty -> look it up in the Hercules
+   device configuration)
+
+SWITCH:
+  VARY SYSLOG,HARDCPY          -> IEE349I HARDCOPY CONSOLE   (accepted)
+  rejected variants on MVS 3.8j:
+  VARY (SYSLOG),HARDCPY,ALL    -> IEE309I VARY  UNIDENTIFIABLE KEYWORD
+  V SYSLOG,HARDCPY,ALL         -> IEE309I V     UNIDENTIFIABLE KEYWORD
+  V (SYSLOG),HARDCPY,ALL,CMDS  -> IEE309I V     UNIDENTIFIABLE KEYWORD
+
+DURING:
+  D C,HC ->
+    CONSOLE/ALT     COND    AUTH   ID AREA  NBUF ROUTCD
+    SYSLOG          H      CMDS                  ALL   <- hardcopy = SYSLOG
+    010/009     N       ALL    01 Z,A        ALL
+    009/010     M       ALL    02            ALL
+    015/009     A,T     NONE   03            ALL
+
+  D T  (x6)                    -> messages into the log
+  WRITELOG Y                   -> IEE043I A SYSTEM LOG DATA SET HAS BEEN
+                                  QUEUED TO SYSOUT CLASS Y
+  (WRITELOG without operand queues to class A = NOHOLD here -> purged)
+
+AFTER (restored):
+  VARY 015,HARDCPY             -> IEE349I HARDCOPY CONSOLE
+  D C,HC ->
+    IEE250I 16.48.21 CONSOLE DISPLAY 445
+    WTO BUFFERS:    CURR =     0      LIM =  500
+    CONSOLE/ALT     COND    AUTH   ID AREA  NBUF ROUTCD
+    015/009     H      CMDS    03            ALL     <- identical to BEFORE
+    010/009     N       ALL    01 Z,A        ALL
+    009/010     M       ALL    02            ALL
+    015/009     A,T     NONE   03            ALL
 
 ==== C. TRKCELL is NOT the cause - job TCELB, same data, two output classes ===
 (class A = NOHOLD+TRKCEL, held with HOLD=YES so it survives; class Y = HOLD)
