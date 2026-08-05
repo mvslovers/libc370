@@ -31,3 +31,4 @@ CLAUDE.md
 
 # host SDK build output (sdk/mklibc.py)
 /build/
+__pycache__/
