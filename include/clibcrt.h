@@ -67,5 +67,12 @@ extern CLIBCRT  *__crtget(void);
 extern int      __crtset(void);
 extern int      __crtres(void);
 
+/* runtime exit: run the atexit()/on_exit() functions, close open files and
+   release the runtime's storage, then terminate the task via @@EXITA.  This is
+   what exit() calls.  Deliberately not declared __attribute__((noreturn)) --
+   control does not come back, but the definition in @@exit.c ends in a plain
+   return, so the attribute would be a promise the code does not make. */
+extern void     __exit(int status);
+
 
 #endif

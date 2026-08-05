@@ -25,4 +25,10 @@ extern int      putenv(const char *str);
 
 extern int      unsetenv(const char *name);
 
+/* load "name=value" lines from a data set into the environment; fn is a
+   name fopen() understands, e.g. "dd:SYSENV".  MVS sequence numbers in the
+   last 8 columns and "*"/"#" comment lines are stripped.  0 = loaded,
+   non-zero = the data set could not be opened. */
+extern int      loadenv(const char *fn);
+
 #endif
