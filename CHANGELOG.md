@@ -55,6 +55,19 @@ breaking change (`jesprint()`).
   `__fpshr`/`__fpold`/`__fpnew`/`__fpstar`. The one-word parmlist is now built in
   the work area the routine already GETMAINs; the caller's storage is never
   written. Found via RAKF's ADDUSER.
+- **The build reused stale generated `.s` (#8).** `compile_c()` skipped `cc370
+  -S` whenever the `.s` was newer than its `.c`, which is not a staleness test:
+  a `.c` mtime says nothing about the headers it includes, the flags it was
+  compiled with, or the code generator that compiled it. A fixed cc370
+  (mvslovers/cc370#14) and an edited `include/*.h` both left the old `.s` in
+  place, so `libc.a` kept the old object code with nothing in the build output
+  to show a skip — the miscompile was only caught by reading the raw object
+  bytes. Every `.c` is now compiled on every build, which costs ~7s for all 712
+  and is the whole of what the skip saved; a full `make build` goes from 1.3s to
+  8.2s. `make clean` additionally removes the generated `.s` (only those with a
+  `.c` sibling), which `rm -rf build/sdk` never did. **If you have built
+  libc370 before, rebuild: the installed `libc.a` may contain object code from
+  an older compiler.**
 - **`__listpd()` leaked one allocation per directory entry (#34, PR #35).** Every
   PDSLIST entry was allocated twice and only the second pointer kept, so the
   first block could be freed neither by the caller nor by `__freepd()` — one

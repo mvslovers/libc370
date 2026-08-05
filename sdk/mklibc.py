@@ -16,6 +16,7 @@ The sysroot is derived from the driver itself (cc370 -dumpmachine /
 
 Usage:  python3 sdk/mklibc.py build      # compile/assemble/archive into build/sdk
         python3 sdk/mklibc.py install    # copy artifacts into the cc370 sysroot
+        python3 sdk/mklibc.py clean      # remove build/sdk + the generated .s
         python3 sdk/mklibc.py all
 """
 import os, sys, glob, subprocess, shutil, concurrent.futures as cf
@@ -60,19 +61,6 @@ def gitrev():
         return "unknown"
 
 
-def compile_ver(cfile, sfile):
-    """Compile the build-stamp TU (@@ver.c) fresh on EVERY build so its embedded
-    commit tracks HEAD.  Its -D inputs (the git rev) change without @@ver.c
-    itself changing, so the mtime cache in compile_c() would otherwise freeze
-    the stamp at whatever commit produced the first build."""
-    flags = CFLAGS + [f'-DLIBC370_REV="{gitrev()}"']
-    r = run([CC370] + flags + ["-S", cfile, "-o", sfile])
-    if not os.path.exists(sfile) or os.path.getsize(sfile) == 0:
-        return "cc370 FAIL %s: %s" % (os.path.basename(cfile),
-               "\n".join(l for l in r.stderr.splitlines() if "re-asserted" not in l)[:300])
-    return None
-
-
 def sysroot():
     triple = run([CC370, "-dumpmachine"]).stdout.strip()
     # Derive <prefix> from the driver's own location (<prefix>/bin/cc370) rather
@@ -84,12 +72,20 @@ def sysroot():
     return triple, os.path.join(base, "include"), os.path.join(base, "lib")
 
 
-def compile_c(cfile, sfile):
-    """cc370 -S a .c -> .s when the .s is missing or older (crent ships most .s;
-    71 .c -- @@renmem, @@stow, time64 -- have none and must be compiled)."""
-    if os.path.exists(sfile) and os.path.getmtime(cfile) <= os.path.getmtime(sfile):
-        return None
-    r = run([CC370] + CFLAGS + ["-S", cfile, "-o", sfile])
+def compile_c(cfile, sfile, extra=()):
+    """cc370 -S a .c -> .s, unconditionally.
+
+    The .s files are build output that happens to be written next to its source.
+    They used to be skipped when the .s was newer than the .c, which is not a
+    staleness test: a .c mtime says nothing about the headers it includes, the
+    flags it was compiled with, or the code generator that compiled it.  All
+    three went wrong silently -- a fixed cc370 (mvslovers/cc370#14) and an
+    edited include/*.h both left the old .s in place and put the old object code
+    into libc.a, with nothing in the build output to show a skip (#8).
+
+    Regenerating all 712 costs ~7s, which is the whole of what the skip saved.
+    """
+    r = run([CC370] + CFLAGS + list(extra) + ["-S", cfile, "-o", sfile])
     if not os.path.exists(sfile) or os.path.getsize(sfile) == 0:
         return "cc370 FAIL %s: %s" % (os.path.basename(cfile),
                "\n".join(l for l in r.stderr.splitlines() if "re-asserted" not in l)[:300])
@@ -129,19 +125,17 @@ def defines_main(ofile):
 def cmd_build():
     os.makedirs(BUILD, exist_ok=True)
     odir = f"{BUILD}/obj"; os.makedirs(odir, exist_ok=True)
-    # 1. gather sources: regenerate missing/stale .s, collect .s + .asm
+    # 1. compile every .c -> .s, collect them + the hand-written .asm
+    rev = gitrev()      # one git call per build; @@ver.c bakes it in as the stamp
     srcs = []
     for d in C_DIRS:
         for c in sorted(glob.glob(f"{d}/**/*.c", recursive=True)):
             s = c[:-2] + ".s"
-            if os.path.abspath(c) == os.path.abspath(VER_C):
-                err = compile_ver(c, s)     # always fresh: stamp must track HEAD
-            else:
-                err = compile_c(c, s)
+            extra = [f'-DLIBC370_REV="{rev}"'] if os.path.abspath(c) == os.path.abspath(VER_C) else ()
+            err = compile_c(c, s, extra)
             if err:
                 print("  " + err); return 1
-            if os.path.exists(s):
-                srcs.append(s)
+            srcs.append(s)
     asms = sorted(glob.glob(f"{ASM_DIR}/*.asm"))
     print(f"[libc] {len(srcs)} .s + {len(asms)} .asm")
 
@@ -222,9 +216,32 @@ def cmd_install():
     return 0
 
 
+def cmd_clean():
+    """Remove build/sdk AND the generated .s.
+
+    The .s sit next to their .c in src/ and are gitignored, so `rm -rf build`
+    used to leave 712 files behind that look like source and are not.  Only a .s
+    with a .c sibling is removed -- exactly the set cmd_build() writes, and
+    therefore the set that cannot be hand-maintained, since the build overwrites
+    it on every run.  A .s without a .c is left alone (there is none today, and
+    the build would ignore it anyway).
+    """
+    n = 0
+    for d in C_DIRS:
+        for c in glob.glob(f"{d}/**/*.c", recursive=True):
+            s = c[:-2] + ".s"
+            if os.path.exists(s):
+                os.remove(s); n += 1
+    shutil.rmtree(BUILD, ignore_errors=True)
+    print(f"[clean] {n} generated .s removed, {BUILD} gone")
+    return 0
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "all"
     rc = 0
+    if cmd == "clean":
+        sys.exit(cmd_clean())
     if cmd in ("build", "all"):
         rc = cmd_build()
     if rc == 0 and cmd in ("install", "all"):
