@@ -17,8 +17,26 @@
  * Returns the STOW return code in register 15 (0 on success, non-zero
  * otherwise - see the STOW documentation), or -1 for an unknown function.
  *
- * The assembler STOW macro encodes the function and SVC linkage, so the
- * register conventions are handled the same way __bldl() wraps BLDL.
+ * The SVC 21 linkage is built by hand because as370 has no STOW opcode and
+ * there is no stow macro in the macro library: the STOW mnemonic assembled
+ * to NOTHING, so every call was a silent no-op that returned the func letter
+ * left in R15 (#32).  BLDL, by contrast, as370 does know.
+ *
+ * The linkage below is transcribed from SYS1.MACLIB(STOW) and its inner
+ * macro IHBINNRA on MVS 3.8j, not from memory.  IHBINNRA loads
+ *
+ *      R1 = DCB address        (LR 1,&A - the first operand)
+ *      R0 = area address       (LR 0,&B - the second operand)
+ *
+ * and the function is encoded by NEGATING those registers - there is no
+ * function code byte:
+ *
+ *      A   R0 = +area   R1 = +dcb      (no negation)
+ *      R   R0 = +area   R1 = -dcb      LCR 1,1
+ *      D   R0 = -area   R1 = +dcb      LCR 0,0
+ *      C   R0 = -area   R1 = -dcb      LCR 1,1 + LCR 0,0
+ *
+ * followed by SVC 21, with the return code in R15.
  */
 int
 __stow(void *dcb, void *area, int func)
@@ -27,22 +45,34 @@ __stow(void *dcb, void *area, int func)
 
     switch (func) {
     case 'A': case 'a':
-        __asm__("STOW\t(%1),(%2),A\n\t"
+        __asm__("LR\tR1,%1\n\t"
+                "LR\tR0,%2\n\t"
+                "SVC\t21\n\t"
                 "LR\t%0,R15"
                 : "=r"(rc) : "r"(dcb), "r"(area) : "0", "1", "14", "15");
         break;
     case 'R': case 'r':
-        __asm__("STOW\t(%1),(%2),R\n\t"
+        __asm__("LR\tR1,%1\n\t"
+                "LR\tR0,%2\n\t"
+                "LCR\tR1,R1\n\t"
+                "SVC\t21\n\t"
                 "LR\t%0,R15"
                 : "=r"(rc) : "r"(dcb), "r"(area) : "0", "1", "14", "15");
         break;
     case 'D': case 'd':
-        __asm__("STOW\t(%1),(%2),D\n\t"
+        __asm__("LR\tR1,%1\n\t"
+                "LR\tR0,%2\n\t"
+                "LCR\tR0,R0\n\t"
+                "SVC\t21\n\t"
                 "LR\t%0,R15"
                 : "=r"(rc) : "r"(dcb), "r"(area) : "0", "1", "14", "15");
         break;
     case 'C': case 'c':
-        __asm__("STOW\t(%1),(%2),C\n\t"
+        __asm__("LR\tR1,%1\n\t"
+                "LR\tR0,%2\n\t"
+                "LCR\tR1,R1\n\t"
+                "LCR\tR0,R0\n\t"
+                "SVC\t21\n\t"
                 "LR\t%0,R15"
                 : "=r"(rc) : "r"(dcb), "r"(area) : "0", "1", "14", "15");
         break;

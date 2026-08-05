@@ -98,6 +98,15 @@ def compile_c(cfile, sfile):
 
 def assemble(src, ofile):
     r = run([AS370] + ASMINC + ["-o", ofile, src])
+    # as370 writes an object file even when it flagged statements (rc=8 for an
+    # undefined operation code), so "the .o exists" is NOT success: a missing
+    # macro silently drops the instruction and ships a wrong object.  That is
+    # how __stow() shipped as a no-op (#32).  Trust the return code.
+    if r.returncode != 0:
+        if os.path.exists(ofile):
+            os.remove(ofile)        # never leave a half-assembled object behind
+        return "as370 rc=%d %s: %s" % (r.returncode, os.path.basename(src),
+                                       (r.stderr or r.stdout).strip()[:300])
     if not os.path.exists(ofile) or os.path.getsize(ofile) == 0:
         return "as370 FAIL %s: %s" % (os.path.basename(src), (r.stderr or r.stdout)[:300])
     return None
