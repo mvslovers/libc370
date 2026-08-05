@@ -86,6 +86,7 @@ int jesprint(JES *jes, JESJOB *job, unsigned dsid,
     buf = calloc(1, bufsize);
     if (!buf) {
         wtof("Unable to allocate storage for %u byte buffer", bufsize);
+        st->reason = JESPR_NOMEM;
         goto quit;
     }
     eob = &buf[bufsize-sizeof(PRLINE)];
@@ -170,6 +171,8 @@ int jesprint(JES *jes, JESJOB *job, unsigned dsid,
                         prbuf = calloc(1, blksize + 4);
                         if (!prbuf) {
                             wtof("Unable to allocate storage for %u byte buffer", blksize + 4);
+                            st->reason = JESPR_NOMEM;
+                            st->mttr   = mttr;
                             goto quit;
                         }
                     }
@@ -178,7 +181,16 @@ int jesprint(JES *jes, JESJOB *job, unsigned dsid,
                     if (sp->flags & FLAG_HASCC) p++;
                 }
 
-                if (!prbuf) break;  /* we don't have a print buffer for the spanned record */
+                /* a MIDDLE/LAST part with no FIRST part before it: there is
+                   no buffer to reassemble into, so the rest of this block is
+                   skipped.  Report it - silently dropping records is what
+                   #21 is about.  The first block after a foreign read is
+                   exactly how this happens (see #24).                       */
+                if (!prbuf) {
+                    st->reason = JESPR_NOBUF;
+                    st->mttr   = mttr;
+                    break;
+                }
 
                 memcpy(&prbuf[linelen], p, sp->len2);
                 linelen += sp->len2;

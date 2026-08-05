@@ -263,8 +263,11 @@ int main(int argc, char **argv)
                        "   callback saw %u line(s) / %u char(s)\n",
                        st.blocks, st.lines, st.mttr, st.prtrc,
                        ctx.lines, ctx.chars);
+                /* the counters agree by construction - what they prove is
+                   that arg reached every call intact, not that the line
+                   count is independently correct */
                 if (st.lines != ctx.lines) {
-                    printf("       *** JESPRST.lines and the callback disagree\n");
+                    printf("       *** arg did not reach every callback\n");
                 }
             }
         }
@@ -585,6 +588,8 @@ static const char *prreason(int reason)
     case JESPR_LOOP:    return "LOOP     block chains to itself";
     case JESPR_CAP:     return "CAP      iteration cap hit, walk truncated";
     case JESPR_STOPPED: return "STOPPED  callback asked to stop";
+    case JESPR_NOBUF:   return "NOBUF    spanned part with no FIRST part";
+    case JESPR_NOMEM:   return "NOMEM    buffer allocation failed";
     }
     return "?        unknown reason";
 }

@@ -123,7 +123,8 @@ int jesjobf1(JESJOB **ppjesjob);
    tracks are then reallocated to other jobs.  Reading such a data set stops on
    a foreign block and yields no lines, which is NOT the same as an empty one.
    Callers that must tell those apart (410 vs 404 vs an empty body) read the
-   reason; callers that don't may pass st = NULL.                            */
+   reason; callers that don't may pass st = NULL.  When st is given it is
+   always filled, including on the 503 and 404 exits.                        */
 #define JESPR_END       0           /* chain end, data set read in full      */
 #define JESPR_EMPTY     1           /* PDDB carries no MTTR, nothing written */
 #define JESPR_IOERR     2           /* spool_read() failed                   */
@@ -133,6 +134,10 @@ int jesjobf1(JESJOB **ppjesjob);
 #define JESPR_LOOP      5           /* next block address is this block      */
 #define JESPR_CAP       6           /* iteration cap hit, walk truncated     */
 #define JESPR_STOPPED   7           /* the print callback asked to stop      */
+#define JESPR_NOBUF     8           /* spanned record part with no FIRST     */
+/*                                     part: it cannot be reassembled, the
+                                       rest of that block was skipped        */
+#define JESPR_NOMEM     9           /* a buffer could not be allocated       */
 
 /* Runaway guard for the block chain.  The next address is taken out of the
    block just read, so a corrupted or foreign chain could loop.  This is a
