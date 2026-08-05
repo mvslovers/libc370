@@ -45,7 +45,7 @@ breaking change (`jesprint()`).
   `test/mvs/tststow.c`, which forces three different STOW return codes (0/8/4)
   out of one data set — old libc returned 195/195/195 with the directory
   unchanged.
-- **SVC 99 parmlist built in the caller's storage (#19).** `@@SVC99` set the
+- **SVC 99 parmlist built in the caller's storage (PR #19).** `@@SVC99` set the
   high-order bit SVC 99 requires by modifying the caller's parameter list in
   place, relying on that storage being writable. It is not when a cc370 program
   is entered as a TSO command processor: the parameter list cc370 emits sits in
