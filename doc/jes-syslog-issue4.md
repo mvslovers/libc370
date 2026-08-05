@@ -1,6 +1,8 @@
 # Issue #4 - jesprint() cannot read the active SYSLOG from spool
 
-Analysis of `src/jes/jesprint.c` for mvslovers/libc370#4 (blocks mvslovers/mvsmf#145).
+Analysis of `src/jes/jesprint.c` for mvslovers/libc370#4 (feeds
+mvslovers/mvsmf#186, the deep-history follow-up to the delivered
+mvslovers/mvsmf#145).
 
 ## Result
 
@@ -158,7 +160,7 @@ The hardcopy setting was returned to device 015 and verified with `D C,HC`.
 
 ---
 
-## 3. What this means for #4 and mvsmf#145
+## 3. What this means for #4 and for mvsmf
 
 Reading the hardcopy log through this code path **works**, under two
 operational conditions on the target system:
@@ -168,6 +170,16 @@ operational conditions on the target system:
 2. the log data set must be queued to a **held** SYSOUT class - `WRITELOG H` /
    `WRITELOG Y`, or by giving class L the `HOLD` attribute in `JES2PM00`.
    In a `NOHOLD` class a printer purges it before anything can read it.
+
+`WRITELOG <class>` is an *operator command*, not a `JES2PM00` change - mvsmf can
+issue it through the console API it already has, so condition 2 need not become
+a deck change on the target system.
+
+**State of the mvsmf side.** mvslovers/mvsmf#145 is closed: it shipped
+`GET /zosmf/restconsoles/v1/log` from the Master Trace Table - the recent window,
+not a deep archive - and was closed with the note "the active SYSLOG on spool is
+not browsable", which this analysis disproves. The deep-history capability is
+therefore still unshipped and is tracked in mvslovers/mvsmf#186.
 
 What libc370 should change is not the parser but the reporting: a caller must
 be able to tell "this data set is gone / not ours" from "this data set is
@@ -262,6 +274,13 @@ PARM='SYSLOG,SCAN'   + brute-force scan of the spool volume for the job's blocks
 cc370 -Iinclude test/mvs/tstjeslg.c -flinker-output=iebcopy -o TSTJESLG
 ld370 --pack TSTJESLG.iebcopy -o probe -xmit --dsn <LOADLIB>   # then TSO RECEIVE
 ```
+
+**Built by hand, deliberately.** libc370 is the cc370 sysroot, not an mbt
+project - no `project.toml`, no `[[test]]` declarations, no CI - so nothing
+compiles this translation unit automatically, and neither `make` nor `make
+clean` touches it. It is a diagnostic instrument kept next to the analysis, not
+a regression test: after a change to `clibjes2.h` or the JES structures it must
+be rebuilt by hand to find out whether it still compiles.
 
 Needs `REGION=4M` (the checkpoint buffer alone is 140 KB; the 512 K default
 fails), `TIME=1440` for `,SCAN`, and the `HASPCKPT`/`HASPACE1` DDs. It
@@ -382,10 +401,24 @@ Verified: the display after restoring is byte-identical to the state found.
 
 ## 7. Recommended order
 
-1. **D1 (+D2)** - report *why* nothing was printed, and bound the walk. This is
-   the actual libc370 fix for #4 and what mvsmf#145 needs to answer
-   "gone"/"empty" correctly.
-2. **mvsmf#145** - document the operational requirement (hardcopy to SYSLOG,
-   log queued to a held class) and surface the distinction in the endpoint.
-3. **D3 + D4** memory-safety fixes with the §5.2 extraction and host tests.
-4. **D6, D7, D8** as separate, lower-priority items.
+1. **D1 (+D2)** - #21, #22: report *why* nothing was printed, and bound the
+   walk. This is the actual libc370 fix for #4, and what mvslovers/mvsmf#186
+   needs to answer "gone"/"empty" correctly. Its verification is the probe's red
+   and green case (§5.1), not a host test: the decisions live in the I/O loop,
+   which stays in `jesprint.c` even after the #25 extraction.
+2. **D3 + D4** - #23, #24, with the §5.2 extraction (#25) and host tests. Not
+   far behind step 1: D4's trigger *is* the #4 red case - "the first block after
+   a failed `spool_read`" carrying a `MIDDLE`/`LAST` part. Same walk, same
+   trigger.
+3. **mvslovers/mvsmf#186** - deep history over the spooled generations, with the
+   operational requirements from §3 documented in the endpoint.
+4. **D6, D7, D8** - #26, #27, #28 as separate, lower-priority items, and #29
+   once a real spanned record settles D5.
+
+Independent of all of the above: **#30**, reading spooled SYSOUT through PSO/SSI
+instead of the checkpointed IOT. It removes the stale-pointer failure mode
+entirely (JES2 hands over a data set that exists *now*, read by DSN through
+normal access methods) and makes held output selectable, but it needs APF
+authorization, does not see the still-open log data set - PSO selects from the
+output queue, where the open generation has no JOE - and so does not remove the
+`WRITELOG` step either.
