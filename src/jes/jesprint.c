@@ -39,11 +39,15 @@ typedef struct prblock {
     unsigned short  dsid;
 } PRBLOCK;
 
-static int esc_print(int(*prt)(const char *, unsigned), char *line, unsigned linelen);
+static int esc_print(int(*prt)(const char *, unsigned, void *), char *line,
+                     unsigned linelen, void *arg);
 
-int jesprint(JES *jes, JESJOB *job, unsigned dsid, int(*prt)(const char *line, unsigned linelen))
+int jesprint(JES *jes, JESJOB *job, unsigned dsid,
+             int(*prt)(const char *line, unsigned linelen, void *arg),
+             void *arg, JESPRST *st)
 {
     int         rc      = 503;      /* service unavailable */
+    JESPRST     stat;               /* used when the caller passes st = NULL */
     JESDD       *jesdd  = NULL;
     HASPCP      *cp     = NULL;
     HASPJS      *js     = NULL;
@@ -61,6 +65,10 @@ int jesprint(JES *jes, JESJOB *job, unsigned dsid, int(*prt)(const char *line, u
     unsigned    count;
     unsigned    n;
     int         i;
+
+    if (!st) st = &stat;            /* one code path, no NULL tests below    */
+    memset(st, 0, sizeof(JESPRST));
+    st->reason = JESPR_EMPTY;       /* nothing walked yet                    */
 
     if (!jes) goto quit;
     if (!job) goto quit;
@@ -102,13 +110,38 @@ int jesprint(JES *jes, JESJOB *job, unsigned dsid, int(*prt)(const char *line, u
     if (!jesdd->mttr) goto quit;    /* no sysout for this dsid, nothing to do */
 
     /* process the sysout dataset */
-    for(block = (PRBLOCK*)buf, mttr = jesdd->mttr; mttr; mttr = block->next) {
-        /* read block from spool dataset */
-        if (spool_read(js, mttr, buf, hct->_BUFSIZE)) break;
+    st->reason = JESPR_END;         /* until something stops the walk early  */
 
-        /* make sure this block is for our job */
-        if (job->jobkey != block->jobkey) break;
-        if (jesdd->dsid != block->dsid) break;
+    for(block = (PRBLOCK*)buf, mttr = jesdd->mttr; mttr; mttr = block->next) {
+        /* runaway guard: the next address comes out of the block we read */
+        if (st->blocks >= JESPR_MAXBLK) {
+            st->reason = JESPR_CAP;
+            st->mttr   = mttr;
+            break;
+        }
+
+        /* read block from spool dataset */
+        if (spool_read(js, mttr, buf, hct->_BUFSIZE)) {
+            st->reason = JESPR_IOERR;
+            st->mttr   = mttr;
+            break;
+        }
+
+        /* make sure this block is for our job.  A mismatch is how a purged
+           data set announces itself: the checkpointed PDDB still points at
+           tracks that now belong to somebody else.                         */
+        if (job->jobkey != block->jobkey) {
+            st->reason = JESPR_FOREIGN;
+            st->mttr   = mttr;
+            break;
+        }
+        if (jesdd->dsid != block->dsid) {
+            st->reason = JESPR_DSID;
+            st->mttr   = mttr;
+            break;
+        }
+
+        st->blocks++;
 #if 0
         wtodumpf(buf, sizeof(PRBLOCK), "PRBLOCK");
 #endif
@@ -151,8 +184,14 @@ int jesprint(JES *jes, JESJOB *job, unsigned dsid, int(*prt)(const char *line, u
                 linelen += sp->len2;
 
                 if (sp->flags & FLAG_LAST || linelen > blksize) {
-                    rc = esc_print(prt, prbuf, linelen);
-                    if (rc < 0) goto quit;
+                    if (linelen) st->lines++;
+                    rc = esc_print(prt, prbuf, linelen, arg);
+                    if (rc < 0) {
+                        st->reason = JESPR_STOPPED;
+                        st->prtrc  = rc;
+                        st->mttr   = mttr;
+                        goto quit;
+                    }
                     linelen = 0;
                 }
 
@@ -164,9 +203,22 @@ int jesprint(JES *jes, JESJOB *job, unsigned dsid, int(*prt)(const char *line, u
             if (line->flags & FLAG_HASCC) p++;  /* skip over carriage control character */
 
             /* print this line after HTML escaping it */
-            rc = esc_print(prt, p, line->len);
-            if (rc < 0) goto quit;
+            if (line->len) st->lines++;
+            rc = esc_print(prt, p, line->len, arg);
+            if (rc < 0) {
+                st->reason = JESPR_STOPPED;
+                st->prtrc  = rc;
+                st->mttr   = mttr;
+                goto quit;
+            }
             p+=line->len;
+        }
+
+        /* a block that chains to itself would spin forever */
+        if (block->next == mttr) {
+            st->reason = JESPR_LOOP;
+            st->mttr   = mttr;
+            break;
         }
     }
 
@@ -178,7 +230,8 @@ quit:
 
 __asm__("\n&FUNC    SETC 'esc_print'");
 static int
-esc_print(int(*prt)(const char *, unsigned), char *line, unsigned linelen)
+esc_print(int(*prt)(const char *, unsigned, void *), char *line,
+          unsigned linelen, void *arg)
 {
     int         rc = 0;
     char        *p;
@@ -235,10 +288,10 @@ esc_print(int(*prt)(const char *, unsigned), char *line, unsigned linelen)
     linelen = (unsigned) (p - buf);
 
     /* print the translated and escaped buffer */
-    rc = prt(buf, linelen);
+    rc = prt(buf, linelen, arg);
 #else
     /* print the translated buffer */
-    rc = prt(line, linelen);
+    rc = prt(line, linelen, arg);
 #endif
 quit:
     return rc;

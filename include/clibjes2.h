@@ -117,8 +117,46 @@ int jesjobfr(JESJOB ***pppjesjob);
 /* jesjobf1() - free 1 JESJOB */
 int jesjobf1(JESJOB **ppjesjob);
 
-/* jesprint() - print a job SYSOUT by DSID via callback function pointer */
-int jesprint(JES *jes, JESJOB *job, unsigned dsid, int(*prt)(const char *line, unsigned linelen));
+/* jesprint() walk outcome - why the block chain stopped being followed.
+   The spool data set the checkpointed PDDB advertises may be gone: JES2 can
+   have printed and purged it while the checkpoint still lists it, and its
+   tracks are then reallocated to other jobs.  Reading such a data set stops on
+   a foreign block and yields no lines, which is NOT the same as an empty one.
+   Callers that must tell those apart (410 vs 404 vs an empty body) read the
+   reason; callers that don't may pass st = NULL.                            */
+#define JESPR_END       0           /* chain end, data set read in full      */
+#define JESPR_EMPTY     1           /* PDDB carries no MTTR, nothing written */
+#define JESPR_IOERR     2           /* spool_read() failed                   */
+#define JESPR_FOREIGN   3           /* block belongs to another job -        */
+/*                                     data set purged, tracks reallocated   */
+#define JESPR_DSID      4           /* block belongs to another dsid         */
+#define JESPR_LOOP      5           /* next block address is this block      */
+#define JESPR_CAP       6           /* iteration cap hit, walk truncated     */
+#define JESPR_STOPPED   7           /* the print callback asked to stop      */
+
+/* Runaway guard for the block chain.  The next address is taken out of the
+   block just read, so a corrupted or foreign chain could loop.  This is a
+   backstop, not the detection: the jobkey/dsid checks reject foreign blocks
+   and JESPR_LOOP catches a self-reference.  It is deliberately well above the
+   number of blocks that fit on a spool volume (a 3350 at BUFSIZE 3664 holds
+   ~83k), so it can never truncate a legitimate data set.                    */
+#define JESPR_MAXBLK    65536
+
+typedef struct jesprst  JESPRST;    /* jesprint() walk statistics            */
+
+struct jesprst {
+    unsigned    blocks;             /* 00 blocks accepted and parsed         */
+    unsigned    lines;              /* 04 lines handed to the callback       */
+    unsigned    mttr;               /* 08 MTTR the walk stopped on (0 = end) */
+    int         reason;             /* 0C JESPR_*                            */
+    int         prtrc;              /* 10 callback rc when JESPR_STOPPED     */
+};
+
+/* jesprint() - print a job SYSOUT by DSID via callback function pointer.
+   arg is passed through to prt() untouched; st may be NULL.                 */
+int jesprint(JES *jes, JESJOB *job, unsigned dsid,
+             int(*prt)(const char *line, unsigned linelen, void *arg),
+             void *arg, JESPRST *st);
 
 /* jesdelj() - delete job output by job name and/or job id */
 int jesdelj(const char *jobname, const char *jobid);
