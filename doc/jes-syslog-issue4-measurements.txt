@@ -1,0 +1,218 @@
+TSTJESLG probe output - libc370 issue #4
+System: MVS 3.8j (MVS/CE, node MVSC) on Hercules, JES2, 2026-08-04
+Program: test/mvs/tstjeslg.c, run via jcl/tstjeslg.jcl
+Trimmed: only the sections cited by doc/jes-syslog-issue4.md are kept.
+
+==== A. JES2 init deck SYS1.PARMLIB(JES2PM00) - the relevant lines ============
+&BUFSIZE=3664                  BUFFER SIZE (5 PER TRACK ON 3350)        00000010
+&NUMDA=2                       MAX NUMBER OF SPOOL VOLUMES              00000340
+&NUMTGV=3330                   TRACK GROUPS PER SPOOL VOLUME (3350)     00000410
+&SPOOL=SPOOL1                  SPOOL VOLUME SERIAL                      00001200
+$$A  PRINT,SYSOUT,NOHOLD,TRKCEL     STANDARD OUTPUT CLASS               00001480
+$$B  PRINT,SYSOUT,NOHOLD,TRKCEL     STANDARD PUNCH OUTPUT CLASS         00001490
+$$L  PRINT,SYSOUT,NOHOLD,TRKCEL     SYSLOG                              00001500
+$$M  PRINT,SYSOUT,NOHOLD,TRKCEL     DOCUMENTATION                       00001510
+$$X  PRINT,SYSOUT,HOLD              HELD BATCH                          00001520
+$$Y  PRINT,SYSOUT,HOLD              HELD STC/TSU                        00001530
+$$Z  PRINT,DUMMY,NOHOLD             TRASH (DISCARDED)                   00001540
+
+  -> ONE spool volume (&SPOOL=SPOOL1); &NUMDA is the MAXIMUM, not the count.
+  -> 5 buffers per track on the 3350 (validates the R=1..5 scan).
+  -> TRKCEL is an attribute of output classes A,B,L,M - not of SYSLOG as such.
+  -> class A/L are NOHOLD: a printer drains and PURGES them within seconds.
+
+==== B. hardcopy log: before, during, after ===================================
+BEFORE (state found):
+  D C,HC ->
+    IEE250I 16.39.31 CONSOLE DISPLAY 369
+    WTO BUFFERS:    CURR =     0      LIM =  500
+    CONSOLE/ALT     COND    AUTH   ID AREA  NBUF ROUTCD
+    015/009     H      CMDS    03            ALL     <- hardcopy = DEVICE 015,
+    010/009     N       ALL    01 Z,A        ALL        NOT the system log
+    009/010     M       ALL    02            ALL
+    015/009     A,T     NONE   03            ALL
+
+  (device TYPE behind 015 not established: D U,,,015,1 returns only the
+   IEE450I header through the mvsMF console API, the continuation lines are
+   not collected and solmsgs returns empty -> look it up in the Hercules
+   device configuration)
+
+SWITCH:
+  VARY SYSLOG,HARDCPY          -> IEE349I HARDCOPY CONSOLE   (accepted)
+  rejected variants on MVS 3.8j:
+  VARY (SYSLOG),HARDCPY,ALL    -> IEE309I VARY  UNIDENTIFIABLE KEYWORD
+  V SYSLOG,HARDCPY,ALL         -> IEE309I V     UNIDENTIFIABLE KEYWORD
+  V (SYSLOG),HARDCPY,ALL,CMDS  -> IEE309I V     UNIDENTIFIABLE KEYWORD
+
+DURING:
+  D C,HC ->
+    CONSOLE/ALT     COND    AUTH   ID AREA  NBUF ROUTCD
+    SYSLOG          H      CMDS                  ALL   <- hardcopy = SYSLOG
+    010/009     N       ALL    01 Z,A        ALL
+    009/010     M       ALL    02            ALL
+    015/009     A,T     NONE   03            ALL
+
+  D T  (x6)                    -> messages into the log
+  WRITELOG Y                   -> IEE043I A SYSTEM LOG DATA SET HAS BEEN
+                                  QUEUED TO SYSOUT CLASS Y
+  (WRITELOG without operand queues to class A = NOHOLD here -> purged)
+
+AFTER (restored):
+  VARY 015,HARDCPY             -> IEE349I HARDCOPY CONSOLE
+  D C,HC ->
+    IEE250I 16.48.21 CONSOLE DISPLAY 445
+    WTO BUFFERS:    CURR =     0      LIM =  500
+    CONSOLE/ALT     COND    AUTH   ID AREA  NBUF ROUTCD
+    015/009     H      CMDS    03            ALL     <- identical to BEFORE
+    010/009     N       ALL    01 Z,A        ALL
+    009/010     M       ALL    02            ALL
+    015/009     A,T     NONE   03            ALL
+
+==== C. TRKCELL is NOT the cause - job TCELB, same data, two output classes ===
+(class A = NOHOLD+TRKCEL, held with HOLD=YES so it survives; class Y = HOLD)
+  DD SYSUT2   dsid=104   mttr=00041302 records=5      lrecl=80    recfm=90 class=A flag=40
+     dsname=JES2.JOB00312.SO0104
+     blk 0    mttr=00041302 M=00 TT=1043 R=2 spool_read rc=0
+       hdr next=00041304 jobkey=E314FBA6 (job E314FBA6 MATCH) dsid=104 (dd 104 MATCH)
+       records in block: 5 (0 spanned part(s))
+       +000 00041304E314FBA60068400050E3D9D2 |    T  w    &TRK|
+       +010 C3C5D3D340D7D9D6C2C540D3C9D5C540 |CELL PROBE LINE |
+       +020 F0F0F140C1C1C1C1C1C1C1C1C1C1C1C1 |001 AAAAAAAAAAAA|
+       +030 C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1 |AAAAAAAAAAAAAAAA|
+       +040 C1C1C1C1C1C1C1C1C1C1C1C140400050 |AAAAAAAAAAAA   &|
+       +050 E3D9D2C3C5D3D340D7D9D6C2C540D3C9 |TRKCELL PROBE LI|
+     blk 1    mttr=00041304 M=00 TT=1043 R=4 spool_read rc=0
+  -> PDBFLAG2=88 (PDB2TCEL) - the SAME flag SYSLOG's PDDB carries - and the
+     data set reads perfectly. TRKCELL is exonerated.
+
+==== D. SYSLOG after WRITELOG Y (held class) - IT READS =======================
+TSTJESLG - libc370 #4 probe, jobname filter 'SYSLOG' (+IOT dump)
+checkpoint_open('DD:HASPCKPT') -> 00094AC0
+  HCT bufsize=3664 maxjobs=1024 numjoes=3000 numtgv=3330 numda=2
+  pddb1=908 jqeblks=8 jotblks=27 buflen=143360 buf=00116FC8
+spool_open('DD:HASPACE1') -> 00094DF0
+  spool ddname=HASPACE1 trkcyl=30
+jesjob('SYSLOG', FILTER_JOBNAME, dd=1) -> 1 job(s)
+JOB SYSLOG   STC00254 owner=SYSTEM   type=50 f1=01 f2=81
+    jobkey=E2FC8F85 iotmttr=00002803 spinmttr=00002804 jtflg=00
+    3 DD(s)
+  DD JES00101 dsid=101   mttr=0001E001 records=32     lrecl=130   recfm=C0 class=A flag=00
+     dsname=JES2.STC00254.SO0101
+     blk 0    mttr=0001E001 M=00 TT=480 R=1 spool_read rc=0
+       hdr next=D1C3E340 jobkey=0EA80000 (job E2FC8F85 MISMATCH) dsid=58132 (dd 101 MISMATCH)
+       records in block: 3 (0 spanned part(s))
+       +000 D1C3E3400EA80000E314FD0C00000000 |JCT  y  T       |
+       +010 0001E003000000000000000000000F50 |  \            &|
+       +020 00640000000000240000000000000000 |                |
+       +030 000040400000000000009004D1D6C240 |            JOB |
+       +040 40F3F1F5E3E2E3D1C5E2D3C7E3D9D2C3 | 315TSTJESLGTRKC|
+       +050 C5D340D7D9D6C2C54040404040404040 |EL PROBE        |
+     WALK: 0 block(s) accepted, 0 record(s) (0 spanned part(s))
+     STOP: jobkey MISMATCH  [jesprint.c:110]
+     => jesprint() would print 0 line(s) for this DD
+  DD JES00102 dsid=102   mttr=00042901 records=32     lrecl=130   recfm=C0 class=Y flag=00
+     dsname=JES2.STC00254.SO0102
+     blk 0    mttr=00042901 M=00 TT=1065 R=1 spool_read rc=0
+       hdr next=00042903 jobkey=E2FC8F85 (job E2FC8F85 MATCH) dsid=102 (dd 102 MATCH)
+       records in block: 32 (0 spanned part(s))
+       +000 00042903E2FC8F850066570057F4F0F0 |    S  e     400|
+       +010 F040F1F64BF4F24BF1F8404040404040 |0 16.42.18      |
+       +020 4040404040C9C5C5F0F4F3C940C140E2 |     IEE043I A S|
+       +030 E8E2E3C5D440D3D6C740C4C1E3C140E2 |YSTEM LOG DATA S|
+       +040 C5E340C8C1E240C2C5C5D540D8E4C5E4 |ET HAS BEEN QUEU|
+       +050 C5C440E3D640E2E8E2D6E4E340C3D3C1 |ED TO SYSOUT CLA|
+     blk 1    mttr=00042903 M=00 TT=1065 R=3 spool_read rc=0
+       hdr next=00000000 jobkey=E2FC8F85 (job E2FC8F85 MATCH) dsid=102 (dd 102 MATCH)
+       records in block: 0 (0 spanned part(s))
+       +000 00000000E2FC8F850066FF0057F4F0F0 |    S  e     400|
+       +010 F040F1F64BF4F24BF1F8404040404040 |0 16.42.18      |
+       +020 4040404040C9C5C5F0F4F3C940C140E2 |     IEE043I A S|
+       +030 E8E2E3C5D440D3D6C740C4C1E3C140E2 |YSTEM LOG DATA S|
+       +040 C5E340C8C1E240C2C5C5D540D8E4C5E4 |ET HAS BEEN QUEU|
+       +050 C5C440E3D640E2E8E2D6E4E340C3D3C1 |ED TO SYSOUT CLA|
+     WALK: 2 block(s) accepted, 32 record(s) (0 spanned part(s))
+     STOP: chain end (next=0)
+     => jesprint() would print 32 line(s) for this DD
+  DD JES00103 dsid=103   mttr=00043301 records=0      lrecl=130   recfm=C0 class=A flag=00
+     dsname=JES2.STC00254.SO0103
+     blk 0    mttr=00043301 M=00 TT=1075 R=1 spool_read rc=0
+       hdr next=D1C3E340 jobkey=0EA80000 (job E2FC8F85 MISMATCH) dsid=58112 (dd 103 MISMATCH)
+       records in block: 2 (2 spanned part(s))
+  -> dsid 102, class Y (HELD): jobkey MATCH, dsid MATCH, 32 records, chain ends
+     cleanly, and the data is the real log text.
+  -> dsid 101 / 103, class A (NOHOLD): already printed and PURGED; the
+     checkpointed PDDB still lists them (recct=32!) and their MTTR now points
+     into a track that has been reallocated to another job's JCT.
+
+==== E. scan after WRITELOG (class A generation) - the data is really gone ====
+  SCAN of the spool for jobkey=E2FC8F85 ...
+  (the key is matched at every fullword offset in the first 64 bytes of a block:
+   data blocks carry it at +4, JCT/IOT control records at +8)
+    HIT mttr=00002801 TT=40 R=1 key@+8  +0=D1C3E340 +4=0EA80000 dsid=58108 records=5
+       +000 D1C3E3400EA80000E2FC8F8500002802 |JCT  y  S  e    |
+       +010 0000280300000000000000000000032C |                |
+    HIT mttr=00002802 TT=40 R=2 key@+8  +0=C9D6E340 +4=0EA81800 dsid=58108 records=2
+       +000 C9D6E3400EA81800E2FC8F8500002802 |IOT  y  S  e    |
+       +010 00002805009C915800BCD90800000000 |      j   R     |
+    HIT mttr=00002803 TT=40 R=3 key@+8  +0=C9D6E340 +4=0EA80800 dsid=58108 records=2
+       +000 C9D6E3400EA80800E2FC8F8500002803 |IOT  y  S  e    |
+       +010 00000000000000000000000000000000 |                |
+    HIT mttr=00002805 TT=40 R=5 key@+8  +0=C9D6E340 +4=0EA81400 dsid=58108 records=2
+  SCAN done: 83100 block(s) read up to TT=16649, 4 block(s) carry jobkey E2FC8F85
+TSTJESLG rc=0
+  -> only the JCT and the three IOTs carry the SYSLOG job key; not one data
+     block. Positive control for the same scan (job HTTPD) finds 61 blocks
+     including data blocks - see section F.
+
+==== F. scan positive control (HTTPD) =========================================
+  SCAN of the spool for jobkey=E3032DAD ...
+  (the key is matched at every fullword offset in the first 64 bytes of a block:
+   data blocks carry it at +4, JCT/IOT control records at +8)
+    HIT mttr=0001CC01 TT=460 R=1 key@+8  +0=D1C3E340 +4=0EA80000 dsid=58115 records=5
+       +000 D1C3E3400EA80000E3032DAD00000000 |JCT  y  T  �    |
+       +010 0001CC03000000000000000000000700 |                |
+    HIT mttr=0001CC02 TT=460 R=2 key@+8  +0=C9D6E340 +4=0EA80800 dsid=58115 records=4
+       +000 C9D6E3400EA80800E3032DAD0001CC02 |IOT  y  T  �    |
+       +010 00000000000000000000000000000000 |                |
+    HIT mttr=0001CC03 TT=460 R=3 key@+8  +0=C9D6E340 +4=0EA80800 dsid=58115 records=7
+       +000 C9D6E3400EA80800E3032DAD0001CC03 |IOT  y  T  �    |
+       +010 00000000000000000000000000000000 |                |
+    HIT mttr=0001CC04 TT=460 R=4 key@+4  +0=00000000 +4=E3032DAD dsid=3 records=32
+    HIT mttr=0001CC05 TT=460 R=5 key@+4  +0=00000000 +4=E3032DAD dsid=1 records=4
+    HIT mttr=0001CD01 TT=461 R=1 key@+4  +0=0001CD04 +4=E3032DAD dsid=4 records=3
+    HIT mttr=0001CD02 TT=461 R=2 key@+4  +0=0001D001 +4=E3032DAD dsid=2 records=49
+    HIT mttr=0001CD03 TT=461 R=3 key@+4  +0=0001CD02 +4=E3032DAD dsid=2 records=2
+    HIT mttr=0001CD04 TT=461 R=4 key@+4  +0=0001CF04 +4=E3032DAD dsid=4 records=74
+    HIT mttr=0001CD05 TT=461 R=5 key@+4  +0=00000000 +4=E3032DAD dsid=5 records=15
+    HIT mttr=0001CE01 TT=462 R=1 key@+8  +0=D1C3E340 +4=0EA80000 dsid=58115 records=5
+    HIT mttr=0001CE02 TT=462 R=2 key@+8  +0=C9D6E340 +4=0EA81000 dsid=58115 records=5
+    HIT mttr=0001CE03 TT=462 R=3 key@+8  +0=C9D6E340 +4=0EA81000 dsid=58115 records=6
+    HIT mttr=0001CE04 TT=462 R=4 key@+8  +0=C9D6E340 +4=0EA81000 dsid=58115 records=6
+    HIT mttr=0001CE05 TT=462 R=5 key@+8  +0=C9D6E340 +4=0EA81000 dsid=58115 records=5
+    HIT mttr=0001CF01 TT=463 R=1 key@+8  +0=C9D6E340 +4=0EA81000 dsid=58115 records=6
+    HIT mttr=0001CF02 TT=463 R=2 key@+4  +0=00000000 +4=E3032DAD dsid=102 records=0
+    HIT mttr=0001CF03 TT=463 R=3 key@+8  +0=C9D6E340 +4=0EA81000 dsid=58115 records=6
+    HIT mttr=0001CF04 TT=463 R=4 key@+4  +0=0001D003 +4=E3032DAD dsid=4 records=74
+    HIT mttr=0001CF05 TT=463 R=5 key@+4  +0=00000000 +4=E3032DAD dsid=103 records=0
+    HIT mttr=0001D001 TT=464 R=1 key@+4  +0=0001D004 +4=E3032DAD dsid=2 records=52
+    HIT mttr=0001D002 TT=464 R=2 key@+4  +0=0002E901 +4=E3032DAD dsid=4 records=74
+    HIT mttr=0001D003 TT=464 R=3 key@+4  +0=0001D005 +4=E3032DAD dsid=4 records=74
+    HIT mttr=0001D004 TT=464 R=4 key@+4  +0=0002E903 +4=E3032DAD dsid=2 records=46
+  SCAN done: 83100 block(s) read up to TT=16649, 61 block(s) carry jobkey E3032DAD
+TSTJESLG rc=0
+==== G. first SYSLOG chain walk (before any WRITELOG) =========================
+TSTJESLG - libc370 #4 probe, jobname filter 'SYSLOG' (+spool scan)
+  DD JES00101 dsid=101   mttr=0001E001 records=0      lrecl=130   recfm=C0 class=A flag=00
+     dsname=JES2.STC00254.SO0101
+     blk 0    mttr=0001E001 M=00 TT=480 R=1 spool_read rc=0
+       hdr next=D1C3E340 jobkey=0EA80000 (job E2FC8F85 MISMATCH) dsid=58102 (dd 101 MISMATCH)
+       records in block: 5 (2 spanned part(s))
+       +000 D1C3E3400EA80000E2F6F91500000000 |JCT  y  S69     |
+       +010 0001E00300000000000000000000086C |  \            %|
+       +020 00640000000000240000000000000000 |                |
+       +030 000040400000000000273004E2E3C340 |            STC |
+       +040 40F1F4F1E9E3C9D4C5D9404040404040 | 141ZTIMER      |
+       +050 40404040404040404040404040404040 |                |
+     WALK: 0 block(s) accepted, 0 record(s) (0 spanned part(s))
+     STOP: jobkey MISMATCH  [jesprint.c:110]
+     => jesprint() would print 0 line(s) for this DD
