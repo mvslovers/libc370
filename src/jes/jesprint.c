@@ -128,16 +128,26 @@ int jesprint(JES *jes, JESJOB *job, unsigned dsid,
             break;
         }
 
-        /* make sure this block is for our job.  A mismatch is how a purged
-           data set announces itself: the checkpointed PDDB still points at
-           tracks that now belong to somebody else.                         */
+        /* Make sure this block is for our job.  Where the mismatch happens
+           decides what it means, and the two must not be confused:
+
+           on the FIRST block  nothing of this data set was read.  The
+                               checkpointed PDDB points at tracks that now
+                               belong to somebody else - JES2 purged the data
+                               set and reallocated them.  The data is gone.
+
+           after N blocks      the data set is still open.  Its last written
+                               block chains to a track that is allocated but
+                               not yet written, so it carries a foreign key.
+                               Everything written so far WAS read; this is the
+                               normal end of an open data set, not a loss.  */
         if (job->jobkey != block->jobkey) {
-            st->reason = JESPR_FOREIGN;
+            st->reason = st->blocks ? JESPR_OPENEND : JESPR_FOREIGN;
             st->mttr   = mttr;
             break;
         }
         if (jesdd->dsid != block->dsid) {
-            st->reason = JESPR_DSID;
+            st->reason = st->blocks ? JESPR_OPENEND : JESPR_DSID;
             st->mttr   = mttr;
             break;
         }

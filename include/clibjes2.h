@@ -128,9 +128,13 @@ int jesjobf1(JESJOB **ppjesjob);
 #define JESPR_END       0           /* chain end, data set read in full      */
 #define JESPR_EMPTY     1           /* PDDB carries no MTTR, nothing written */
 #define JESPR_IOERR     2           /* spool_read() failed                   */
-#define JESPR_FOREIGN   3           /* block belongs to another job -        */
-/*                                     data set purged, tracks reallocated   */
-#define JESPR_DSID      4           /* block belongs to another dsid         */
+#define JESPR_FOREIGN   3           /* the FIRST block belongs to another
+                                       job: nothing of this data set was
+                                       read.  The checkpoint is stale - JES2
+                                       purged the data set and reallocated
+                                       its tracks                            */
+#define JESPR_DSID      4           /* the FIRST block belongs to another
+                                       dsid of this job                      */
 #define JESPR_LOOP      5           /* next block address is this block      */
 #define JESPR_CAP       6           /* iteration cap hit, walk truncated     */
 #define JESPR_STOPPED   7           /* the print callback asked to stop      */
@@ -138,6 +142,16 @@ int jesjobf1(JESJOB **ppjesjob);
 /*                                     part: it cannot be reassembled, the
                                        rest of that block was skipped        */
 #define JESPR_NOMEM     9           /* a buffer could not be allocated       */
+#define JESPR_OPENEND   10          /* a foreign block AFTER at least one
+                                       accepted block: this data set is still
+                                       open and everything written so far was
+                                       read.  The chain's last block points at
+                                       a track that is allocated but not yet
+                                       written, so it carries somebody else's
+                                       key.  This is a NORMAL end, not a loss
+                                       - measured on an active STC whose
+                                       message log read 350 lines and then
+                                       stopped exactly this way.             */
 
 /* Runaway guard for the block chain.  The next address is taken out of the
    block just read, so a corrupted or foreign chain could loop.  This is a

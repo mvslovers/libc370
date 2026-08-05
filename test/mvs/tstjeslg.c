@@ -590,6 +590,7 @@ static const char *prreason(int reason)
     case JESPR_STOPPED: return "STOPPED  callback asked to stop";
     case JESPR_NOBUF:   return "NOBUF    spanned part with no FIRST part";
     case JESPR_NOMEM:   return "NOMEM    buffer allocation failed";
+    case JESPR_OPENEND: return "OPENEND  end of an OPEN data set (normal)";
     }
     return "?        unknown reason";
 }
