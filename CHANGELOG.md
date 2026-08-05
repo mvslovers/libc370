@@ -6,9 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
-Three paths that reported success while doing nothing, losing data or losing
-storage, plus an S0C4 on every open-by-DSN from a TSO command processor. One
-breaking change (`jesprint()`).
+Mostly silent failures: paths that reported success while doing nothing, losing
+data, losing storage, or building against a stale compiler. Also an S0C4 on
+open-by-DSN from a TSO command processor, and public prototypes for four
+routines consumers had to declare by hand. One breaking change (`jesprint()`).
+
+### Added
+- **Prototypes for `loadenv()`, `tzset()`, `__exit()` and `__svc99()` (#5).**
+  All four link fine — only the declarations were missing, so consumers got
+  implicit-declaration warnings and carried local `extern`s (httplua's
+  `a804a8f`). `loadenv()` is now in `clibenv.h`, `tzset()` in `time.h`,
+  `__exit()` in `clibcrt.h`, and `__svc99()` moved out of the `#ifdef MUSIC`
+  guard in `mvssupa.h` that hid it on MVS — SVC 99 is an MVS service. No
+  `#pragma linkage` on `__svc99()`: `@@SVC99` takes the standard OS parameter
+  list cc370 builds for any call, which is what the implicit declarations were
+  already producing. `__exit()` is deliberately not `noreturn` — control does
+  not come back, but the definition ends in a plain `return`. Verified as a
+  declaration-only change: every one of the 712 generated `.s` is byte-identical
+  across the change except `@@ver.s`, which bakes in the git revision.
 
 ### Changed
 - **BREAKING — `jesprint()` reports why it stopped (#21, #22, PR #31).** `rc` was

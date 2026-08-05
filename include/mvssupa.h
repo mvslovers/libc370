@@ -31,7 +31,6 @@ int idcams(const char *fmt, ...);   /* reentrant C function, LINKs to IDCAMS ext
 #ifdef MUSIC
 int __system(int len, const char *command);
 int __textlc(void);
-int __svc99(void *rb);
 #else
 int __system(int req_type,
              size_t pgm_len,
@@ -39,3 +38,10 @@ int __system(int req_type,
              size_t parm_len,
              char *parm);
 #endif
+
+/* SVC 99 (dynamic allocation) is an MVS service, so it belongs outside the
+   MUSIC guard it used to sit in; the caller builds the request block.  No
+   linkage pragma: @@SVC99 takes the standard OS parameter list that cc370
+   already builds for any call, which is what the callers in this library have
+   been getting all along from the implicit declaration. */
+int __svc99(void *rb);

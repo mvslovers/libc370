@@ -56,5 +56,6 @@ struct tm *localtime(const time_t *timer);
 struct tm *localtime_r(const time_t *timer, struct tm *p)	asm("LOCALTMR");
 size_t strftime(char *s, size_t maxsize,
                 const char *format, const struct tm *timeptr);
+void tzset(void);
 
 #endif
