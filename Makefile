@@ -7,7 +7,7 @@
 #
 #   make            build libc.a + crt0/1/m.o + stage headers & macros
 #   make install    install all of it into the cc370 sysroot
-#   make clean
+#   make clean      remove build/sdk and the generated .s in src/
 PY := python3
 
 .PHONY: all build install clean
@@ -17,4 +17,4 @@ build:
 install:
 	$(PY) sdk/mklibc.py all
 clean:
-	rm -rf build/sdk
+	$(PY) sdk/mklibc.py clean
