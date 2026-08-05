@@ -4,14 +4,20 @@
  * ISSUE #4: jesprint() returns ZERO lines for the SYSLOG spool datasets, even
  * though jesjob() finds the SYSLOG STC and its DDs carry a non-zero PDBMTTR.
  *
- * jesprint() (src/jes/jesprint.c:105-111) has FOUR ways to produce no output
- * and ALL FOUR return rc=0 - "success, nothing printed".  From the outside
- * they are indistinguishable, which is why the issue is stuck:
+ * When this probe was written, jesprint()'s block loop had FOUR ways to produce
+ * no output and ALL FOUR returned rc=0 - "success, nothing printed".  From the
+ * outside they were indistinguishable, which is why the issue was stuck:
  *
- *   (1) spool_read() fails            jesprint.c:107   break, rc=0
- *   (2) block jobkey != job->jobkey   jesprint.c:110   break, rc=0
- *   (3) block dsid   != jesdd->dsid   jesprint.c:111   break, rc=0
- *   (4) all three OK, but the record loop (jesprint.c:116) emits nothing
+ *   (1) spool_read() fails                     break, rc=0
+ *   (2) block jobkey != job->jobkey            break, rc=0
+ *   (3) block dsid   != jesdd->dsid            break, rc=0
+ *   (4) all three OK, but the record loop emits nothing
+ *
+ * Issues #21/#22 fixed exactly that: jesprint() now reports the outcome of its
+ * walk through a JESPRST out-parameter (JESPR_END / _EMPTY / _IOERR / _FOREIGN
+ * / _DSID / _LOOP / _CAP / _STOPPED) and no longer follows the chain unbounded.
+ * PARM=',PRINT' drives the real jesprint() so its report can be compared with
+ * what this probe reconstructs independently.
  *
  * This probe does exactly what jesprint() does - jesjob() -> follow jesdd->mttr
  * through block->next with spool_read() - but REPORTS every step instead of
@@ -31,14 +37,18 @@
  * cannot read.  Opening HASPCKPT / HASPACE1 here puts every failure in
  * SYSPRINT instead.
  *
- * PARM='<jobname>[,IOT|,SCAN]' - jobname is a jesjob() FILTER_JOBNAME pattern
- * (default SYSLOG):
+ * PARM='<jobname>[,IOT|,SCAN|,PRINT]' - jobname is a jesjob() FILTER_JOBNAME
+ * pattern (default SYSLOG):
  *
  *   'SYSLOG'        walk every DD's block chain (above)
  *   'SYSLOG,IOT'    + the raw IOT chain: header, track group map, and every
  *                     PDDB at the offset jesjob.c uses (cp->pddb1)
  *   'SYSLOG,SCAN'   + brute-force scan of the whole spool volume for blocks
  *                     carrying this job's jobkey (~66k reads; needs TIME=1440)
+ *   'SYSLOG,PRINT'  + call the real jesprint() per DD and print its JESPRST:
+ *                     stop reason, blocks accepted, lines emitted, stop MTTR.
+ *                     Red  case: a purged data set -> reason=FOREIGN, lines=0
+ *                     Green case: a held generation -> reason=END, lines=n
  *
  * Always run a CONTROL alongside: 'HTTPD' (an active STC whose SYSOUT
  * jesprint() prints correctly) and a finished batch job.  The comparison is
@@ -71,13 +81,13 @@
 #define MAXR        8   /* scan: records per track to try (R=5 DOES occur -
                            0001CC05 / 00002805; reads past the end just fail) */
 
-/* the 10-byte spool block header jesprint.c:36-40 assumes */
+/* the 10-byte spool block header jesprint.c's PRBLOCK assumes */
 #define BLK_NEXT(b) (*(unsigned int   *)&(b)[0])
 #define BLK_KEY(b)  (*(unsigned int   *)&(b)[4])
 #define BLK_DSID(b) (*(unsigned short *)&(b)[8])
 #define BLK_DATA    10
 
-/* PRLINE flags, jesprint.c:16-23 */
+/* PRLINE flags, mirrored from jesprint.c */
 #define EOB         0xff
 #define FLAG_HASCC  0x80
 #define FLAG_SPAN   0x10
@@ -93,6 +103,20 @@ static void dumpiot(HASPCP *cp, HASPJS *js, unsigned char *buf, unsigned bufsize
 static void scanspool(HASPJS *js, unsigned char *buf, unsigned bufsize,
                       JESJOB *job);
 static char prt(unsigned char c);
+
+/* ,PRINT mode - context handed to the jesprint() callback through its void
+   *arg parameter.  Before that parameter existed every consumer had to route
+   this through the per-task GRT (grtapp1..3); see mvsmf and ftpd. */
+typedef struct prctx {
+    unsigned    lines;              /* lines the callback actually saw       */
+    unsigned    chars;              /* bytes the callback actually saw       */
+    unsigned    shown;              /* lines echoed so far                   */
+} PRCTX;
+
+#define PRSHOW      5               /* echo this many lines per DD, then count */
+
+static int prline(const char *line, unsigned linelen, void *arg);
+static const char *prreason(int reason);
 
 int main(int argc, char **argv)
 {
@@ -110,6 +134,7 @@ int main(int argc, char **argv)
     unsigned    d;
     int         iotdump = 0;
     int         scan    = 0;
+    int         useapi  = 0;
     int         rc      = 8;
     char        filt[12];
 
@@ -125,12 +150,14 @@ int main(int argc, char **argv)
         if (argv[1][i] == ',') {
             iotdump = 1;
             if (argv[1][i+1] == 'S') { iotdump = 0; scan = 1; }
+            if (argv[1][i+1] == 'P') { iotdump = 0; useapi = 1; }
         }
         filter = filt;
     }
 
-    printf("TSTJESLG - libc370 #4 probe, jobname filter '%s'%s%s\n",
-           filter, iotdump ? " (+IOT dump)" : "", scan ? " (+spool scan)" : "");
+    printf("TSTJESLG - libc370 #4 probe, jobname filter '%s'%s%s%s\n",
+           filter, iotdump ? " (+IOT dump)" : "", scan ? " (+spool scan)" : "",
+           useapi ? " (+jesprint API)" : "");
 
     /* jesopen() would do this, but it wraps everything in try()/ESTAE and
        reports failures with wtof() - i.e. to the console, which on this system
@@ -212,11 +239,37 @@ int main(int argc, char **argv)
             printf("     dsname=%-44.44s\n", dd->dsname);
 
             if (!dd->mttr) {
-                printf("     -> mttr=0, jesprint() returns 0 without reading\n");
+                printf("     -> mttr=0, jesprint() reports JESPR_EMPTY\n");
                 continue;
             }
 
             walk(js, buf, bufsize, job, dd);
+
+            /* ,PRINT - drive the real jesprint() and report what it now says
+               about its own walk.  This is the red/green case for #21:
+                 red   a purged data set  -> reason=FOREIGN, lines=0
+                 green a held generation  -> reason=END,     lines=n      */
+            if (useapi) {
+                PRCTX   ctx;
+                JESPRST st;
+                int     prc;
+
+                memset(&ctx, 0, sizeof(ctx));
+                prc = jesprint(jes, job, dd->dsid, prline, &ctx, &st);
+
+                printf("     jesprint() rc=%d  reason=%s\n",
+                       prc, prreason(st.reason));
+                printf("       blocks=%u lines=%u stopmttr=%08X prtrc=%d"
+                       "   callback saw %u line(s) / %u char(s)\n",
+                       st.blocks, st.lines, st.mttr, st.prtrc,
+                       ctx.lines, ctx.chars);
+                /* the counters agree by construction - what they prove is
+                   that arg reached every call intact, not that the line
+                   count is independently correct */
+                if (st.lines != ctx.lines) {
+                    printf("       *** arg did not reach every callback\n");
+                }
+            }
         }
 
         if (iotdump) {
@@ -241,7 +294,7 @@ quit:
     return rc;
 }
 
-/* follow the spool block chain exactly like jesprint.c:105-111, but report
+/* follow the spool block chain exactly like jesprint()'s block loop, but report
    every decision instead of breaking silently */
 static void walk(HASPJS *js, unsigned char *buf, unsigned bufsize,
                  JESJOB *job, JESDD *dd)
@@ -269,7 +322,7 @@ static void walk(HASPJS *js, unsigned char *buf, unsigned bufsize,
                    blocks, mttr, (mttr >> 24) & 0xFF, (mttr >> 8) & 0xFFFF,
                    mttr & 0xFF, rc);
         }
-        if (rc) { stop = "spool_read() FAILED  [jesprint.c:107]"; break; }
+        if (rc) { stop = "spool_read() FAILED  -> JESPR_IOERR"; break; }
 
         next = BLK_NEXT(buf);
         key  = BLK_KEY(buf);
@@ -287,8 +340,8 @@ static void walk(HASPJS *js, unsigned char *buf, unsigned bufsize,
             dump(buf, bufsize < DUMPLEN ? bufsize : DUMPLEN);
         }
 
-        if (key != job->jobkey) { stop = "jobkey MISMATCH  [jesprint.c:110]"; break; }
-        if (dsid != dd->dsid)   { stop = "dsid MISMATCH  [jesprint.c:111]"; break; }
+        if (key != job->jobkey) { stop = "jobkey MISMATCH  -> JESPR_FOREIGN"; break; }
+        if (dsid != dd->dsid)   { stop = "dsid MISMATCH  -> JESPR_DSID"; break; }
 
         blocks++;
         lines += n;
@@ -436,7 +489,7 @@ static void dumpiot(HASPCP *cp, HASPJS *js, unsigned char *buf, unsigned bufsize
     }
 }
 
-/* count the print records jesprint.c:116-170 would find in this block.
+/* count the print records jesprint()'s record loop would find in this block.
    Bounds are checked BEFORE every dereference (jesprint.c tests line->len
    first and p < eob second - see the analysis doc). */
 static unsigned scanblk(const unsigned char *buf, unsigned bufsize, unsigned *nspan)
@@ -499,4 +552,45 @@ static void dump(const unsigned char *p, unsigned len)
         chr[16] = 0;
         printf("       +%03X %-32.32s |%-16.16s|\n", i, hex, chr);
     }
+}
+
+/* ,PRINT - the jesprint() callback.  Everything it needs arrives through
+   arg; nothing is fished out of thread-global storage. */
+static int prline(const char *line, unsigned linelen, void *arg)
+{
+    PRCTX *ctx = (PRCTX *) arg;
+
+    if (!ctx) return 0;             /* would be a bug in the arg plumbing */
+
+    ctx->lines++;
+    ctx->chars += linelen;
+
+    if (ctx->shown < PRSHOW) {
+        ctx->shown++;
+        printf("       | %-*.*s\n", linelen, linelen, line);
+    }
+    else if (ctx->shown == PRSHOW) {
+        ctx->shown++;
+        printf("       | ... (further lines counted, not echoed)\n");
+    }
+
+    return 0;
+}
+
+static const char *prreason(int reason)
+{
+    switch (reason) {
+    case JESPR_END:     return "END      chain end, data set read in full";
+    case JESPR_EMPTY:   return "EMPTY    PDDB carries no MTTR";
+    case JESPR_IOERR:   return "IOERR    spool_read() failed";
+    case JESPR_FOREIGN: return "FOREIGN  foreign block - data set purged?";
+    case JESPR_DSID:    return "DSID     block belongs to another dsid";
+    case JESPR_LOOP:    return "LOOP     block chains to itself";
+    case JESPR_CAP:     return "CAP      iteration cap hit, walk truncated";
+    case JESPR_STOPPED: return "STOPPED  callback asked to stop";
+    case JESPR_NOBUF:   return "NOBUF    spanned part with no FIRST part";
+    case JESPR_NOMEM:   return "NOMEM    buffer allocation failed";
+    case JESPR_OPENEND: return "OPENEND  end of an OPEN data set (normal)";
+    }
+    return "?        unknown reason";
 }
