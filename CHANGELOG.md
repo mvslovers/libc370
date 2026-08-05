@@ -6,8 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
-Silent-failure fixes: three paths that reported success while doing nothing,
-losing data or losing storage. One breaking change (`jesprint()`).
+Three paths that reported success while doing nothing, losing data or losing
+storage, plus an S0C4 on every open-by-DSN from a TSO command processor. One
+breaking change (`jesprint()`).
 
 ### Changed
 - **BREAKING — `jesprint()` reports why it stopped (#21, #22, PR #31).** `rc` was
