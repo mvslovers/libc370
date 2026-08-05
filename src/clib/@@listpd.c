@@ -46,7 +46,6 @@ __listpd(const char *dataset, const char *filter)
             }
 
             pdslist = calloc(1, size);
-            pdslist = calloc(1, size);
             if (!pdslist) goto quit;
 
             memcpy(pdslist, &buf[pos], size);
