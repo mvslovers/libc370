@@ -135,6 +135,16 @@ whenever the queue above feels heavy.
 - **mvslovers/mvsmf#198** — `PUT` of a data set with LRECL > 1024 smashes the
   stack (S0C1). The record length is clamped against LRECL and then copied into
   a fixed 1024-byte buffer.
+- **mvslovers/cc370#37** — `cc370` silently drops `-Wl,--ac,1` and `ld370
+  --pack` loses the AC again, so an authorized program can look linked and end
+  S047 with an empty SYSPRINT. Two deploy cycles, found building the #58 probe.
+- **mvslovers/ftpd#81** — the ASXBSENV/ENQ change from #58 and #64: recovery
+  comments describing a mechanism `racf_auth()` no longer has. Only actionable
+  now that #64 has landed; before that, removing the DEQ would have reintroduced
+  a stall.
+- **mvslovers/ftpd#82** and **mvslovers/httpd#135** — the rc handling #63 needs.
+  Both must land *before* libc370 flips the flag bit, and both are safe against
+  the old and the new library, so they can go whenever.
 
 ## Where the crent370 issues went
 
