@@ -81,13 +81,13 @@
 #define MAXR        8   /* scan: records per track to try (R=5 DOES occur -
                            0001CC05 / 00002805; reads past the end just fail) */
 
-/* the 10-byte spool block header jesprint.c's PRBLOCK assumes */
+/* the 10-byte spool block header jesprb.h's PRBLOCK assumes */
 #define BLK_NEXT(b) (*(unsigned int   *)&(b)[0])
 #define BLK_KEY(b)  (*(unsigned int   *)&(b)[4])
 #define BLK_DSID(b) (*(unsigned short *)&(b)[8])
 #define BLK_DATA    10
 
-/* PRLINE flags, mirrored from jesprint.c */
+/* PRLINE flags, mirrored from jesprb.h */
 #define EOB         0xff
 #define FLAG_HASCC  0x80
 #define FLAG_SPAN   0x10
@@ -257,7 +257,10 @@ int main(int argc, char **argv)
                 memset(&ctx, 0, sizeof(ctx));
                 prc = jesprint(jes, job, dd->dsid, prline, &ctx, &st);
 
-                printf("     jesprint() rc=%d  reason=%s\n",
+                /* since #26 rc is a status and nothing else - 0 when the
+                   walk ran, 404 unknown dsid, 503 JES2 unusable.  The
+                   callback's own rc is st.prtrc, printed below.          */
+                printf("     jesprint() rc=%d (status)  reason=%s\n",
                        prc, prreason(st.reason));
                 printf("       blocks=%u lines=%u stopmttr=%08X prtrc=%d"
                        "   callback saw %u line(s) / %u char(s)\n",
@@ -490,8 +493,8 @@ static void dumpiot(HASPCP *cp, HASPJS *js, unsigned char *buf, unsigned bufsize
 }
 
 /* count the print records jesprint()'s record loop would find in this block.
-   Bounds are checked BEFORE every dereference (jesprint.c tests line->len
-   first and p < eob second - see the analysis doc). */
+   Bounds are checked BEFORE every dereference (the walk in jesprb.c
+   tests line->len first and p < eob second - see the analysis doc). */
 static unsigned scanblk(const unsigned char *buf, unsigned bufsize, unsigned *nspan)
 {
     const unsigned char *p   = &buf[BLK_DATA];

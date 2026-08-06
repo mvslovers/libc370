@@ -115,6 +115,15 @@ static int cap_emit(char *line, unsigned linelen, void *arg)
     return 0;
 }
 
+/* start a case from a clean walk state.  The reassembly buffer belongs to the
+ * caller (jesprint() frees it at the end of its walk), so a case that left one
+ * behind has to free it here - "no leaks, ever" holds for tests too.        */
+static void pb_reset(JESPRB *pb)
+{
+    if (pb->prbuf) free(pb->prbuf);
+    memset(pb, 0, sizeof(*pb));
+}
+
 static void cap_reset(void)
 {
     memset(cap, 0, sizeof(cap));
@@ -187,6 +196,8 @@ int main(void)
     int     rc;
     unsigned off;
 
+    memset(&pb, 0, sizeof pb);      /* pb_reset() frees, so start it clean */
+
     printf("TSTJESPRB - libc370 #25: __jesprb() record walk\n\n");
 
     /* ------------------------------------------------------------------
@@ -195,7 +206,7 @@ int main(void)
     printf("(1) plain records\n");
     {
         cap_reset();
-        memset(&pb, 0, sizeof pb);
+        pb_reset(&pb);
         blk_init(blk);
         off = put_line(blk, 10, "AAA", 0);
         off = put_line(blk, off, "BB",  0);
@@ -219,7 +230,7 @@ int main(void)
     printf("(2) carriage control\n");
     {
         cap_reset();
-        memset(&pb, 0, sizeof pb);
+        pb_reset(&pb);
         blk_init(blk);
         off = put_line(blk, 10, "HELLO", '1');   /* '1' = skip to channel 1 */
         off = put_line(blk, off, "WORLD", ' ');
@@ -239,7 +250,7 @@ int main(void)
     printf("(3) spanned line within one block\n");
     {
         cap_reset();
-        memset(&pb, 0, sizeof pb);
+        pb_reset(&pb);
         blk_init(blk);
         off = put_span(blk, 10,  "ABCD", FLAG_FIRST,  9, 0);
         off = put_span(blk, off, "EF",   FLAG_MIDDLE, 0, 0);
@@ -262,7 +273,7 @@ int main(void)
     printf("(4) spanned line across two blocks\n");
     {
         cap_reset();
-        memset(&pb, 0, sizeof pb);
+        pb_reset(&pb);
 
         blk_init(blk);
         off = put_span(blk, 10, "ABCD", FLAG_FIRST, 7, 0);
@@ -289,7 +300,7 @@ int main(void)
     printf("(5) immediate EOB\n");
     {
         cap_reset();
-        memset(&pb, 0, sizeof pb);
+        pb_reset(&pb);
         blk_init(blk);
         put_eob(blk, 10);
 
@@ -309,7 +320,7 @@ int main(void)
     printf("(6) zero-filled block\n");
     {
         cap_reset();
-        memset(&pb, 0, sizeof pb);
+        pb_reset(&pb);
         blk_init(blk);
 
         rc = __jesprb(blk, BLKSIZE, &pb, cap_emit, NULL);
@@ -328,7 +339,7 @@ int main(void)
     printf("(S) callback stops the walk\n");
     {
         cap_reset();
-        memset(&pb, 0, sizeof pb);
+        pb_reset(&pb);
         emit_stop_at = 1;               /* the second line says stop        */
         emit_rc      = -77;
         blk_init(blk);
