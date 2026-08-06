@@ -27,6 +27,41 @@ static time64_t make_time(unsigned int t_hundreths_seconds_since_midnight, unsig
 
 static int dsid_comp(const void *, const void *);
 
+/* End of the PDDBs in the IOT now in iotbuf.
+ *
+ * The IOT says where they stop: IOTPDDBP is the "OFFSET BEYOND LAST PDDB IN
+ * IOT" (haspiot.h).  The scan used to run to the end of the READ BUFFER
+ * instead and rely on hitting a zero PDBDSKEY, so a spin IOT with one PDDB
+ * and 2500 bytes of buffer behind it was walked on nothing but that
+ * terminator (#28).
+ *
+ * IOTPDDBP comes out of the same block as everything else, so it is not
+ * trusted either: a value that does not land between the first PDDB and the
+ * end of the buffer falls back to the buffer end, which is exactly what the
+ * scan did before.  The bound can therefore only ever get tighter.
+ *
+ * The test against the returned pointer is `pddb < end`, i.e. an entry has to
+ * START below IOTPDDBP - not fit entirely below it.  Measured on the target,
+ * IOTPDDBP is 1828 for an IOT whose PDDBs start at 908 and are 104 bytes
+ * apart, and 1828 - 908 is not a multiple of 104: the field is an upper bound
+ * on the area, not the address just past the last entry.  Demanding that an
+ * entry fit entirely below it could therefore drop a legitimate last PDDB.
+ *
+ * What must hold regardless is that the entry fits in the BUFFER, so the
+ * offset is clamped to the last start that leaves room for a whole __PDDB.
+ * The old scan did not do that either: bounded by &iotbuf[BUFSIZE], an entry
+ * starting in the last 103 bytes was read past the end of the buffer.     */
+static __PDDB *pddb_end(const char *iotbuf, unsigned bufsize,
+                        const __IOT *iot, unsigned pddb1)
+{
+    unsigned off  = iot->IOTPDDBP;
+    unsigned last = bufsize - sizeof(__PDDB);   /* last start that still fits */
+
+    if (off < pddb1 || off > last + 1) off = last + 1;
+
+    return (__PDDB *)&iotbuf[off];
+}
+
 JESJOB **jesjob(JES *jes, const char *filter, JESFILT type, int dd)
 {
     JESJOB      **array = NULL;
@@ -78,7 +113,6 @@ JESJOB **jesjob(JES *jes, const char *filter, JESFILT type, int dd)
     jct    = (__JCT*)jctbuf;
     iotbuf = jctbuf + hct->_BUFSIZE;
     iot    = (__IOT*)iotbuf;
-    pddbend= (__PDDB*)&iotbuf[hct->_BUFSIZE];
 
     for(jqe=cp->jqe; jqe < cp->jqeend; jqe++) {
         if (jqe->JQETYPE == _FREE) continue;    /* Skip this JQE    */
@@ -172,8 +206,12 @@ JESJOB **jesjob(JES *jes, const char *filter, JESFILT type, int dd)
             /* Process the IOT */
             // wtof("%s process the IOT %p", __func__, jct->JCTIOT);
             for(mttr = jct->JCTIOT; mttr; mttr=iot->IOTIOTTR) {
-                /* read this jobs IOT (and PDDBs) record */
-                spool_read(js, mttr, iotbuf, hct->_BUFSIZE);
+                /* read this jobs IOT (and PDDBs) record.  An unchecked read
+                   would leave the PREVIOUS IOT in the buffer and the scan
+                   below would bound itself by its IOTPDDBP (#28)          */
+                if (spool_read(js, mttr, iotbuf, hct->_BUFSIZE)) break;
+
+                pddbend = pddb_end(iotbuf, hct->_BUFSIZE, iot, cp->pddb1);
 
                 for(i=0, pddb = (__PDDB*)&iotbuf[cp->pddb1]; pddb < pddbend; i++, pddb++) {
                     // wtodumpf(pddb, sizeof(__PDDB), "PDDB#%d", i);
@@ -192,8 +230,10 @@ JESJOB **jesjob(JES *jes, const char *filter, JESFILT type, int dd)
             for(mttr = jct->JCTSPIOT; mttr; mttr=iot->IOTIOTTR) {
                 /* read this jobs IOT (and PDDBs) record */
                 // wtof("%s spool_read() MTTR=%08X", __func__, mttr);
-                spool_read(js, mttr, iotbuf, hct->_BUFSIZE);
+                if (spool_read(js, mttr, iotbuf, hct->_BUFSIZE)) break;
                 /* wtodumpf(iotbuf, sizeof(__IOT), "IOT %08X", mttr); */
+
+                pddbend = pddb_end(iotbuf, hct->_BUFSIZE, iot, cp->pddb1);
 
                 for(i=0, pddb = (__PDDB*)&iotbuf[cp->pddb1]; pddb < pddbend; i++, pddb++) {
                     // wtodumpf(pddb, sizeof(__PDDB), "PDDB#%d", i);
@@ -217,8 +257,10 @@ JESJOB **jesjob(JES *jes, const char *filter, JESFILT type, int dd)
             for(rc=0, mttr = jct->JCTIOT; mttr; mttr=iot->IOTIOTTR) {
                 /* read this jobs IOT (and PDDBs) record */
                 /* wtof("%s spool_read() MTTR=%08X", __func__, mttr); */
-                spool_read(js, mttr, iotbuf, hct->_BUFSIZE);
+                if (spool_read(js, mttr, iotbuf, hct->_BUFSIZE)) break;
                 /* wtodumpf(iotbuf, sizeof(__IOT), "IOT %08X", mttr); */
+
+                pddbend = pddb_end(iotbuf, hct->_BUFSIZE, iot, cp->pddb1);
 
                 for(mttr=0, i=0, pddb = (__PDDB*)&iotbuf[cp->pddb1]; pddb < pddbend; i++, pddb++) {
 #if 0
