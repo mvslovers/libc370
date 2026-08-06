@@ -30,7 +30,6 @@
 **                  the proper RELEASE parameter. Macro processing terminates.
 */
 #include "racf.h"
-#include "cliblock.h"
 
 __asm__("\n&FUNC    SETC 'racf_login'");
 ACEE *
@@ -39,17 +38,17 @@ racf_login(const char *user, const char *pass, const char *group, int *racf_rc)
     volatile int    rc          = 0;
     volatile ACEE   *acee       = 0;
     int             sup         = 0;
-    unsigned        *psa        = (unsigned *)0;
-    unsigned        *ascb       = (unsigned *)psa[0x224/4]; /* A(ASCB)      */
-    unsigned        *asxb       = (unsigned *)ascb[0x6C/4]; /* A(ASXB)      */
     int             len;
     char            userid[9];
     char            password[9];
     char            groupid[9];
     RACINIT         plist;
 
-    /* lock the ASXB (ENQ) address */
-    lock(asxb,0);
+    /* No ENQ: RACINIT ENVIR=CREATE returns the new ACEE through the ACEE=
+    ** pointer in the parameter list and this routine never reads or writes
+    ** ASXBSENV, so there is nothing address-space-wide to serialize.  The
+    ** lock that used to bracket the whole function only cost every login an
+    ** address-space-wide serialization point (#64). */
 
     __asm__("XC\t0(0,%0),0(%0)      clear plist *** executed ***\n\t"
             "EX\t%1,*-6" : : "r"(&plist), "r"(sizeof(plist)-1));
@@ -151,9 +150,6 @@ racf_login(const char *user, const char *pass, const char *group, int *racf_rc)
         : : : "1", "14", "15");
     }
 
-quit:
-    /* unlock the ASXB (ENQ) address */
-    unlock(asxb,0);
     if (racf_rc) *racf_rc = rc;
     return (ACEE*)acee;
 }

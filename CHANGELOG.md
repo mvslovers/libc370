@@ -194,6 +194,34 @@ first instalment of taking the console back from the library.
   `spool_read()` is a BDAM READ/CHECK and the TU carries file-scope assembler.
 
 ### Fixed
+- **`racf_login()` and `racf_logout()` stop taking the address-space-wide ASXB
+  ENQ, and `racf_logout()` stops re-pinning a foreign ACEE (#64).** #58 removed
+  the ENQ and the ASXBSENV poke from `racf_auth()`; it was never the only entry
+  point holding either. `racf_login()` bracketed itself in `lock(asxb)` without
+  ever touching ASXBSENV — RACINIT ENVIR=CREATE returns the new ACEE through the
+  `ACEE=` pointer — so the ENQ bought nothing and cost every login an
+  address-space-wide serialization point. `racf_logout()` did worse: it read
+  ASXBSENV on entry, parked the ACEE being deleted there, and wrote the *observed
+  value* back on exit. In a server with one TCB per user that observed value is
+  routinely another session's ACEE, so the restore re-pinned an identity whose
+  owner had already moved on — the chain in mvslovers/ftpd#64, which ftpd could
+  not close from its side. The delete needs no poke: the ACEE travels in the
+  parameter list at offset X'34', which is where RACINIT looks first.
+  One thing did **not** survive contact with the target. The issue expected
+  RACINIT to clear ASXBSENV itself when it holds the ACEE being deleted, and the
+  first cut of this fix dropped libc370's hand-coded clear on that assumption.
+  It does not: `test/mvs/tstracfl.c` case (4) caught the field still holding the
+  dead pointer, which is worse than holding none, because the next authorization
+  decision follows it. So the clear stays — as a `__cas()` against the dead
+  pointer, which cannot clobber a concurrent writer and therefore still needs no
+  ENQ. That is the first use in the library of the compare-and-swap added in #48.
+  Verified on MVS 3.8j against both libraries: pre-fix a caller holding the ASXB
+  lock loses it across `racf_login()` and `racf_logout()` (cases 2 and 3), and a
+  worker TCB parking NULL in ASXBSENV reads back a foreign ACEE 14 times in 1210
+  loops while the main task churns 200 login/logout pairs (case 6) — COND CODE
+  0008. With the fix all three are clean and the run is 0000. Consumers see no
+  API change; ftpd's ABEND-recovery DEQ and its `SITE ABEND=LOCK` hook lose their
+  subject once this ships (mvslovers/ftpd#81).
 - **`racf_auth()` passes the ACEE in the RACHECK plist instead of writing it
   into ASXBSENV (#58).** It used to authorize against a caller-supplied ACEE by
   parking it in ASXBSENV for the length of the RACHECK and restoring it after,
