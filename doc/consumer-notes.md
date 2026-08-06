@@ -107,6 +107,52 @@ int rc = try(func, arg);   /* include/clibtry.h; rc = 0x00sssuuu, sss/uuu = aben
 `try()` expands to `___try`; a near-duplicate `__try` also exists and is dead —
 see #17.
 
+## The console belongs to the program, not to the library
+
+A libc370 routine reports a failure **through its return value**. It does not
+WTO, and it does not dump a control block to the operator. Only the caller knows
+whether a failure was expected — `__dsalc()` cannot tell an attempt to create a
+data set that is meant to exist already from a real environmental error, so it
+reports neither and returns the rc either way.
+
+Two things make this stricter here than on a system with a log file:
+
+* On MVS 3.8j the console **is** the SYSLOG. A client retrying in a loop turns a
+  per-failure message into a per-attempt one, and #4 measures how little room
+  there is.
+* An unconditional `wtof()` puts `WTOF` → `VWTOF` → `WTODUMPF` → `WTODUMP` in the
+  autocall closure of every module that touches the routine — roughly 3.7 KB of a
+  24-bit private region for a message nobody asked for.
+
+Where a diagnostic is worth keeping for the next hunt, the convention is to park
+it rather than delete it:
+
+```c
+    err = __svc99(&rb99);
+#if 0 /* debugging */
+    if (err) {
+        wtof("%s: __svc99() err=%d", __func__, err);
+        wtodumpf(&rb99, sizeof(RB99), "%s RB99", __func__);
+    }
+#endif
+    if (err) goto quit;                         /* src/clib/@@dsalc.c */
+```
+
+A parked block is a note, not working code: it is never compiled, so its format
+strings drift out of step with the signatures around it. Expect to fix it up
+before it runs again.
+
+The rule is not yet true everywhere. As of #43 there are live `wtof()` /
+`wtodumpf()` calls left in the shipped library, and two of them decide the
+footprint question above for everyone: `malloc.c` and `@@crtget.c` are pulled by
+practically every program, so the WTO chain is linked into practically every
+module regardless of what the rest of the library does. The exception the sweep
+keeps is the path with no return value to carry the news — an out-of-storage
+message on a path that then abends is the only trace anyone gets.
+
+Your own code is the other side of this contract: if you want a failure on the
+console, write it there yourself, where you know what it means.
+
 ## Dataset I/O is BSAM (and EXCP); VSAM is a separate API
 
 `fopen()` and friends go through the assembler dataset layer (`asm/@@aopen.asm`

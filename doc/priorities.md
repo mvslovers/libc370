@@ -15,13 +15,20 @@ serialization primitive that is declared in a public header is the worst thing
 on this list per line of code needed to remove it.
 
 **#43 — library routines WTO diagnostics to the operator console.** `__dsalc()`
-writes a WTO *and* a hex dump of the SVC 99 request block on every failure,
-including the entirely ordinary "data set already exists". The caller already
-reports the failure properly. The first fix is two lines; the sweep behind it is
-96 live calls across 27 shipped translation units, each needing a decision —
-keep (genuinely unrecoverable, no other trace), park under `#if 0` the way most
-of the library already does, or delete. On this system the console *is* the
-SYSLOG, and #4 is the story of how scarce that is.
+is done (PR #57): its 16 calls are gone or parked, the rule is written down in
+[`consumer-notes.md`](consumer-notes.md), and `test/mvs/tstdsalc.c` guards it on
+target. What is left is the sweep — **80 live calls across 26 shipped
+translation units**, each needing a decision: keep (genuinely unrecoverable, no
+other trace), park under `#if 0` the way most of the library already does, or
+delete. Two of them decide the question for everyone and should lead the
+decision table rather than trail the easy deletes in `@@64mul.c`: `malloc.c` and
+`@@crtget.c` are pulled by practically every program, so the `WTOF` → `VWTOF` →
+`WTODUMPF` → `WTODUMP` chain is linked into practically every module no matter
+what the rest of the library does — measured while fixing `__dsalc()`, whose own
+module still carries the chain for exactly that reason. Both are also *keep*
+candidates on diagnostic grounds, which is the real content of the sweep.
+`@@dsfree.c` is the reference row: it parks the same SVC 99 dump already. On this
+system the console *is* the SYSLOG, and #4 is the story of how scarce that is.
 
 ## Next
 

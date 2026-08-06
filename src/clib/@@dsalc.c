@@ -44,10 +44,7 @@ __dsalc(char *ddname, const char *opts)
     if (opts) {
         templen = strlen(opts) + 8;
         temp    = calloc(1, templen);
-        if (!temp) {
-            wtof("%s: Out of memory (%d bytes)", __func__, templen);
-            goto quit;
-        }
+        if (!temp) goto quit;   /* malloc() reports the shortage itself */
         
         /* copy opts string to temp and upper case */
         for(p=temp, t=(char*)opts; *t; p++, t++) {
@@ -137,7 +134,7 @@ __dsalc(char *ddname, const char *opts)
         else if (strstr(p, "OLD")) err = __txold(&txt99, NULL);
         else if (strstr(p, "MOD")) err = __txmod(&txt99, NULL);
         else if (strstr(p, "SHR")) err = __txshr(&txt99, NULL);
-        else wtof("%s: Invalid DISP=%s", __func__, p);
+        else err = 1;           /* unknown token -- fail, do not allocate without it */
         if (err) goto quit;
         
         p = strtok(NULL, " ,");
@@ -150,7 +147,7 @@ __dsalc(char *ddname, const char *opts)
             else if (strstr(p, "KEEP")) err = __txkeep(&txt99, NULL);
             else if (strstr(p, "UNCAT")) err = __txucat(&txt99, NULL);
             else if (strstr(p, "UNCATLG")) err = __txucat(&txt99, NULL);
-            else wtof("%s: Invalid DISP=,%s", __func__, p);
+            else err = 1;
             if (err) goto quit;
         }
         
@@ -164,7 +161,7 @@ __dsalc(char *ddname, const char *opts)
             else if (strstr(p, "KEEP")) err = __txakee(&txt99, NULL);
             else if (strstr(p, "UNCAT")) err = __txauca(&txt99, NULL);
             else if (strstr(p, "UNCATLG")) err = __txauca(&txt99, NULL);
-            else wtof("%s: Invalid DISP=,,%s", __func__, p);
+            else err = 1;
             if (err) goto quit;
         }
     }
@@ -172,37 +169,25 @@ __dsalc(char *ddname, const char *opts)
     if (dsalc->dsorg) {
         /* DSORG=xx */
         err = __txorg(&txt99, dsalc->dsorg);
-        if (err) {
-            wtof("%s: Invalid DSORG=%s", __func__, dsalc->dsorg);
-            goto quit;
-        }
+        if (err) goto quit;
     }
 
     if (dsalc->recfm) {
         /* RECFM=xx */
         err = __txrecf(&txt99, dsalc->recfm);
-        if (err) {
-            wtof("%s: Invalid RECFM=%s", __func__, dsalc->recfm);
-            goto quit;
-        }
+        if (err) goto quit;
     }
     
     if (dsalc->lrecl) {
         /* LRECL=xx */
         err = __txlrec(&txt99, dsalc->lrecl);
-        if (err) {
-            wtof("%s: Invalid LRECL=%s", __func__, dsalc->lrecl);
-            goto quit;
-        }
+        if (err) goto quit;
     }
 
     if (dsalc->blksize) {
         /* BLKSIZE=xx */
         err = __txbksz(&txt99, dsalc->blksize);
-        if (err) {
-            wtof("%s: Invalid BLKSIZE=%s", __func__, dsalc->blksize);
-            goto quit;
-        }
+        if (err) goto quit;
     }
 
     /* get optional space "[CYL|TRK],pri[,sec]," or "blksize,pri[,sec]," */
@@ -210,19 +195,13 @@ __dsalc(char *ddname, const char *opts)
 		if (memcmp(dsalc->space, "CYL=", 4)==0) {
 			/* CYLINDERS */
 			err = __txcyl(&txt99, NULL);
-            if (err) {
-                wtof("%s: Invalid CYL value SPACE=%s", __func__, dsalc->space);
-                goto quit;
-            }
+            if (err) goto quit;
 			dsalc->space += 4;
 		}
 		else if (memcmp(dsalc->space, "TRK=", 4)==0) {
 			/* TRACKS */
 			err = __txtrk(&txt99, NULL);
-            if (err) {
-                wtof("%s: Invalid TRK value SPACE=%s", __func__, dsalc->space);
-                goto quit;
-            }
+            if (err) goto quit;
 			dsalc->space += 4;
 		}
 		else {
@@ -230,36 +209,23 @@ __dsalc(char *ddname, const char *opts)
 			char *x = strchr(dsalc->space, '=');
 			if (x) *x = 0;
 			err = __txblk(&txt99, dsalc->space);
-            if (err) {
-                wtof("%s: Invalid blocks value SPACE=%s", __func__, dsalc->space);
-                goto quit;
-            }
+            if (err) goto quit;
 			if (x) dsalc->space = x+1;
         }
 
         while(*dsalc->space && !isdigit(*dsalc->space)) dsalc->space++;
         err = __txspac(&txt99, dsalc->space);  /* "pri[,sec][,dir]" */
-        if (err) {
-            wtof("%s: Invalid SPACE=%s", __func__, dsalc->space);
-            goto quit;
-        }
         if (err) goto quit;
     }
 
     if (dsalc->unit) {
         err = __txunit(&txt99, dsalc->unit);
-        if (err) {
-            wtof("%s: Invalid UNIT=%s", __func__, dsalc->unit);
-            goto quit;
-        }
+        if (err) goto quit;
     }
 
     if (dsalc->volser) {
         err = __txvols(&txt99, dsalc->volser);
-        if (err) {
-            wtof("%s: Invalid VOLSER=%s", __func__, dsalc->volser);
-            goto quit;
-        }
+        if (err) goto quit;
     }
 
 
@@ -278,11 +244,13 @@ __dsalc(char *ddname, const char *opts)
 
     /* SVC 99 */
     err = __svc99(&rb99);
+#if 0 /* debugging */
     if (err) {
         wtof("%s: __svc99() err=%d", __func__, err);
         wtodumpf(&rb99, sizeof(RB99), "%s RB99", __func__);
-        goto quit;
     }
+#endif
+    if (err) goto quit;
 
     if (ddname) {
         /* return DDNAME */
