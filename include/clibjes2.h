@@ -172,7 +172,19 @@ struct jesprst {
 };
 
 /* jesprint() - print a job SYSOUT by DSID via callback function pointer.
-   arg is passed through to prt() untouched; st may be NULL.                 */
+   arg is passed through to prt() untouched; st may be NULL.
+
+   The return value is a status and nothing else (#26):
+
+       0     the request was valid and the block walk ran - st says how it
+             ended, including "the callback stopped it"
+       404   this job has no such dsid
+       503   JES2 is not usable: no jes, no job, no dsid, no checkpoint
+
+   It no longer carries the print callback's rc.  A callback that stops the
+   walk (by returning a negative value) is reported as st->reason ==
+   JESPR_STOPPED with its rc in st->prtrc, and the lines that did go out are
+   in st->lines - so a caller that has to react to either MUST pass st.     */
 int jesprint(JES *jes, JESJOB *job, unsigned dsid,
              int(*prt)(const char *line, unsigned linelen, void *arg),
              void *arg, JESPRST *st);
