@@ -4,7 +4,7 @@ A reading of the open issues as of **2026-08-06**, ordered. Not a plan anyone is
 committed to — the order encodes what is risky, what is cheap, and what is
 blocked on something other than effort. Re-read it when those change.
 
-Revised the same day, after #48 and #43 closed.
+Revised the same day, after #48, #43, #58 and #64 closed.
 
 ## Landed since this was written
 
@@ -39,6 +39,17 @@ and 0 times against the new one. A second defect went with the ENQ —
 `racf_auth()` ignored `lock()`'s "you already have it" rc and DEQd
 unconditionally, so a caller holding the ASXB lock across the call lost it; that
 is what `test/mvs/tstracau.c` guards. Follow-up in the consumer: ftpd#81.
+
+**#64 — the other two RACF entry points still had the ASXB ENQ** (PR #65).
+`racf_auth()` was never the only holder. `racf_login()` bracketed itself in
+`lock(asxb)` without ever touching ASXBSENV, and `racf_logout()` read the field
+on entry and wrote the *observed* value back on exit — which with one TCB per
+user is routinely another session's ACEE, re-pinned after its owner had moved
+on. Both gone. The issue's premise that RACINIT clears ASXBSENV itself turned
+out to be **false**, measured: the first cut left the field pointing at a freed
+ACEE. The clear stays as a `__cas()` against the dead pointer — the library's
+first use of the compare-and-swap from #48 — which is why no ENQ is needed to
+make it safe. `test/mvs/tstracfl.c`, pre-fix 0008 / fixed 0000.
 
 ## Now
 
