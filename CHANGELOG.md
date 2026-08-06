@@ -123,6 +123,26 @@ changes, both `jesprint()`.
   `spool_read()` is a BDAM READ/CHECK and the TU carries file-scope assembler.
 
 ### Fixed
+- **The PDDB scan was bounded by the read buffer, not by the IOT (#28).**
+  `jesjob()` scanned the PDDBs of an IOT from `cp->pddb1` to the end of the
+  3664-byte read buffer and relied on hitting a zero `PDBDSKEY` to stop — for a
+  spin IOT holding a single PDDB that meant walking 2500 bytes of whatever the
+  block happened to contain, on nothing but that terminator. The IOT carries the
+  real bound: `IOTPDDBP`, "OFFSET BEYOND LAST PDDB IN IOT" (`haspiot.h`). It is
+  used now, treated as an upper bound on the area rather than the address past
+  the last entry — measured on the target it is 1828 for an IOT whose PDDBs
+  start at 908 and are 104 bytes apart, and 920 is not a multiple of 104, so
+  requiring an entry to *fit* below it could drop a legitimate last PDDB.
+  Coming out of the same untrusted block, a value that does not land between the
+  first PDDB and the buffer is ignored in favour of the old bound, so the scan
+  can only ever get tighter. Two things came with it: the buffer clamp now
+  leaves room for a whole `__PDDB`, closing an over-read the old bound allowed
+  for an entry starting in the last 103 bytes; and the three `spool_read()`
+  calls that feed these scans have their return code checked, without which the
+  new bound would be read out of the *previous* IOT still sitting in the buffer.
+  Verified on MVS 3.8j by running `jesjob()` through `TSTJESLG` before and
+  after: 108 DD lines over five job filters, including STCs with spin IOTs,
+  byte-identical.
 - **Heap over-read walking the records of a block (#23).** The loop test was
   `line->len != EOB && p < eob` — C evaluates `&&` left to right, so the record
   header was dereferenced *before* the bounds test that was supposed to protect
