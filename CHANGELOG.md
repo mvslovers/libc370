@@ -7,11 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 Mostly silent failures: paths that reported success while doing nothing, losing
-data, losing storage, or building against a stale compiler. Also an S0C4 on
-open-by-DSN from a TSO command processor, and public prototypes for four
-routines consumers had to declare by hand, and two heap defects in the JES2
-spool record walk that any foreign or truncated block could reach. Two breaking
-changes, both `jesprint()`.
+data, losing storage, or building against a stale compiler. Two heap defects in
+the JES2 spool record walk that any foreign or truncated block could reach, a
+compare-and-swap that stored the wrong word entirely, an S0C4 on open-by-DSN
+from a TSO command processor, and public prototypes for four routines consumers
+had to declare by hand. Three breaking changes: `jesprint()` twice, and the
+atomics.
 
 ### Added
 - **`__cas()` — compare and swap the way the instruction does it (#48).** Stores
@@ -45,7 +46,7 @@ changes, both `jesprint()`.
 - **Host regression for the spool record walk, `test/host/tstjesprb.c` (#25).**
   It links and executes the *real* `__jesprb()` — unlike `test/host/tstcmtt.c`,
   which had to hand-mirror the code under test because its TU cannot be built on
-  the host. 35 checks over plain records, carriage control, a spanned line inside
+  the host. 87 checks over plain records, carriage control, a spanned line inside
   one block and across two blocks, an immediate EOB, a zero-filled block, and a
   callback that stops the walk. Two cases from #25's list are deliberately
   missing: a truncated block (#23) and a MIDDLE/LAST part with no FIRST (#24) are
@@ -58,7 +59,7 @@ changes, both `jesprint()`.
   the bounds arithmetic, and the record layouts (`sizeof(PRLINE)`,
   `sizeof(SPLINE)`, the block header offsets). It does not add the memory-safety
   verdict: there is no sanitizer on MVS 3.8j, so the host ASan run stays the gate.
-  77/77 on both, COND CODE 0000 on MVS 3.8j.
+  87/87 on both, COND CODE 0000 on MVS 3.8j.
 - **Prototypes for `loadenv()`, `tzset()`, `__exit()` and `__svc99()` (#5).**
   All four link fine — only the declarations were missing, so consumers got
   implicit-declaration warnings and carried local `extern`s (httplua's
@@ -88,15 +89,19 @@ changes, both `jesprint()`.
   counters also gained their first tests, `test/mvs/tstatom.c` (8)-(10),
   including the documented wrap at the limits — `__inc()` at `INT_MAX` goes to
   0, not to `INT_MIN`, which is what makes them counters and not fetch-and-add.
-- **BREAKING — `__cs()` is gone; use `__swap()` or `__cas()` (#48).** It never
-  was a compare and swap: the `CS` retry loop it used turns the instruction's
+- **BREAKING — `__cs()` is gone, and it was broken; use `__swap()` or `__cas()`
+  (#48).** Two things were wrong with it and only one of them was a typo. The
+  inline assembler did `L 1,0(,%2)` where `%2` holds the value, so it stored the
+  word *at* `new_value` rather than `new_value`: nothing useful when that looked
+  like low storage, an S0C4 when it looked like protected storage. And it never
+  was a compare and swap — the `CS` retry loop turns the instruction's
   comparison into an unconditional exchange, because the caller never gets to
-  say what it expected. Renamed to `__swap()`, which is what it does — with the
-  defect fixed that made it store the word *at* `new_value`. Nothing in the
+  say what it expected. So the exchange survives as `__swap()`, correct this
+  time, and `__cas()` is the operation the name always promised. Nothing in the
   library or in httpd, mvsmf, ftpd or ufsd called it, so the rename breaks
   nobody; the one project that tried, rexx370, had already backed out to a plain
   load/store. `test/mvs/tstcs.c` became `test/mvs/tstatom.c` and covers both
-  functions, 21 checks, including the slot-claim pattern that motivated
+  functions, including the slot-claim pattern that motivated
   `__cas()`.
 - **`TSTJESLG` drives the shipping walk instead of a copy of it (#45).** The
   probe reconstructed what `jesprint()` would do with its own `scanblk()`, a
@@ -108,7 +113,7 @@ changes, both `jesprint()`.
   in its own case. Since #25 there is no need for a mirror: the probe now calls
   `__jesprb()` and reports what it emitted, the longest line (over 255 bytes
   means the record was spanned) and `JESPRB.reason` per block.
-, not the callback's rc
+- **BREAKING — `jesprint()`'s return value is a status, not the callback's rc
   (#26).** `rc` started as 503, became 404 or 0 — and was then overwritten by
   every `prt()` call, so on a completed walk the caller received whatever the
   *last* callback returned. Three meanings in one `int`: a callback returning a
@@ -177,19 +182,6 @@ changes, both `jesprint()`.
   Verified on MVS 3.8j by running `jesjob()` through `TSTJESLG` before and
   after: 108 DD lines over five job filters, including STCs with spin IOTs,
   byte-identical.
-- **`__cs()` stored the word at `new_value`, not `new_value` (#48).** The inline
-  assembler did `L 1,0(,%2)` where `%2` holds the value, so the library's
-  compare-and-swap dereferenced its second argument: it wrote whatever lived at
-  that address — nothing useful when the value looked like low storage, an S0C4
-  when it looked like protected storage. `LR` instead of `L`. The asm also wrote
-  R0 and R1 without declaring them, and its retry label was a file-scope `AGAIN`
-  in the generated source; both fixed. Nothing in the library or in httpd, mvsmf,
-  ftpd or ufsd calls `__cs()` — the header invited a use that would not have
-  worked. Red→green on MVS 3.8j with `test/mvs/tstcs.c`, which passes a
-  `new_value` that is also a valid address so both outcomes are readable storage
-  and the defect reports instead of abending: before, `target` took the decoy's
-  contents `DEADBEEF`; after, the address `00095B60` that was actually passed.
-  Inherited from mvslovers/crent370#32.
 - **Heap over-read walking the records of a block (#23).** The loop test was
   `line->len != EOB && p < eob` — C evaluates `&&` left to right, so the record
   header was dereferenced *before* the bounds test that was supposed to protect
