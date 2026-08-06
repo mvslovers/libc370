@@ -13,17 +13,21 @@
  * WHAT THESE CASES PIN - AND WHAT THEY DO NOT
  * --------------------------------------------------------------------
  * They pin the walk's contract as the code defines it: block header of 10
- * bytes, PRLINE/SPLINE layouts from jesprb.h, and for a spanned line the
- * layout the parser implies - a FIRST part whose data is [2-byte total]
- * [optional carriage control][len2 payload bytes], with the next record
- * starting len2 bytes after the payload begins.
+ * bytes, PRLINE/SPLINE layouts from jesprb.h, and for a spanned line a FIRST
+ * part whose data is [2-byte total][optional carriage control][len2 payload
+ * bytes], with the next record starting len2 bytes after the payload begins.
  *
- * They do NOT prove that real JES2 blocks are laid out that way.  Whether
- * len2 on a FIRST part counts from sp->data (i.e. includes the 2-byte total
- * length) or from after it is exactly the open question in #29, and it can
- * only be settled by a real spanned record captured on the target - case 9
- * of the suite in #25, an MVS fixture, not a host test.  If #29 turns out to
- * be a real defect, the spanned fixtures below (3) and (4) move with the fix.
+ * Case (12) is the one that proves real JES2 blocks are laid out that way: it
+ * is a byte-for-byte reconstruction of a record captured on MVS 3.8j, and it
+ * is what settled #29 (len2 counts the payload AFTER the prefix).  Everything
+ * else here is synthetic, and cases (3) and (4) hold the shapes that capture
+ * confirmed exist - a record spanning two blocks really does arrive as a
+ * FIRST part in one and a LAST part in the next.
+ *
+ * Worth knowing when reading them: "spanned" does not mean "too big for a
+ * block".  PRLINE.len is a single byte, so ANY record over 255 bytes takes
+ * the spanned form; a 500-byte record that fits its block arrives as one part
+ * with FIRST, MIDDLE and LAST all set at once (flags 0x1E).
  *
  * Cases (7) to (11) are the red->green gates for #23 and #24.  Blocks are
  * allocated on the HEAP for that reason: they are memory-safety cases, and
@@ -126,6 +130,30 @@ static int cap_emit(char *line, unsigned linelen, void *arg)
         caplen[ncap] = linelen;
     }
     ncap++;
+    return 0;
+}
+
+/* Case (12) checks a 4000-byte line, which is too big to park in cap[] and
+ * whose point is the seam anyway: it verifies the pattern in place instead of
+ * copying it out.  A = the FIRST part's payload, a = the LAST part's.       */
+#define BIGBLK  3664                /* the JES2 BUFSIZE measured on the target */
+static unsigned seam_len;           /* length of the reassembled line        */
+static int      seam_ok = -1;       /* 1 = every byte where it belongs       */
+
+static int seam_emit(char *line, unsigned linelen, void *arg)
+{
+    unsigned i;
+
+    (void)arg;
+    if (!linelen) return 0;
+
+    seam_len = linelen;
+    seam_ok  = (linelen == 4000);
+    for (i = 0; i < 3647 && seam_ok; i++)
+        if (line[i] != (char)('A' + (i % 26))) seam_ok = 0;
+    for (i = 0; i < 353 && seam_ok; i++)
+        if (line[3647+i] != (char)('a' + (i % 26))) seam_ok = 0;
+
     return 0;
 }
 
@@ -583,6 +611,72 @@ int main(void)
                  "(11) 64 bytes into a line that announced 6 is refused");
         CHECK_EQ(ncap, 2, "(11) only the fragment followed the long line");
         CHECK_STR(cap[1], caplen[1], "ABCD", "(11) fragment is what had arrived");
+    }
+
+    /* ------------------------------------------------------------------
+     * (12) THE REAL THING - a record too long for one block, captured on
+     *      MVS 3.8j (2026-08-06, JES2 BUFSIZE 3664).  IEBDG wrote 4000-byte
+     *      records to SYSOUT; TSTJESLG dumped what JES2 put on the spool:
+     *
+     *        blk 0  +10  00 18 0E3F | 0FA0 C1C2C3C4…
+     *                    len=0  flags=SPAN|FIRST  len2=3647
+     *                    total=4000, then 3647 bytes of payload
+     *        blk 1  +10  00 12 0161 | C8C9D1D2…
+     *                    len=0  flags=SPAN|LAST   len2=353, no prefix
+     *
+     *      3647 + 353 = 4000, exactly the announced total - which is what
+     *      the clamp in the walk measures against, so this fixture is also
+     *      the proof that the clamp cannot fire on legitimate data.
+     *
+     *      Note what the FIRST part does to the block: 10 + 4 + 2 + 3647 =
+     *      3663 of 3664 bytes.  One byte is left, too little for another
+     *      record header - the "short tail is an ordinary end" rule, on real
+     *      data.
+     * ---------------------------------------------------------------- */
+    printf("(12) real capture: a 4000-byte record across two blocks\n");
+    {
+        char     *b1 = calloc(1, BIGBLK);
+        char     *b2 = calloc(1, BIGBLK);
+        SPLINE   *sp;
+        unsigned  i;
+
+        if (!b1 || !b2) { printf("out of memory\n"); exit(2); }
+        pb_reset(&pb);
+        seam_len = 0; seam_ok = -1;
+
+        sp = (SPLINE *)&b1[10];                 /* FIRST part */
+        sp->len   = 0;
+        sp->flags = FLAG_SPAN | FLAG_FIRST;
+        sp->len2  = 3647;
+        *(unsigned short *)&sp->data[0] = 4000;
+        for (i = 0; i < 3647; i++) sp->data[2+i] = (unsigned char)('A' + (i % 26));
+
+        rc = __jesprb(b1, BIGBLK, &pb, seam_emit, NULL);
+
+        CHECK_EQ(rc, 0, "(12) first block returns 0");
+        CHECK_EQ(pb.reason, JESPRB_OK,
+                 "(12) the 1-byte tail behind the part is an ordinary end");
+        CHECK_EQ(pb.total, 4000, "(12) the announced total was picked up");
+        CHECK_EQ(pb.linelen, 3647, "(12) 3647 bytes held over");
+        CHECK_EQ(seam_len, 0, "(12) nothing emitted yet");
+
+        sp = (SPLINE *)&b2[10];                 /* LAST part, no prefix */
+        sp->len   = 0;
+        sp->flags = FLAG_SPAN | FLAG_LAST;
+        sp->len2  = 353;
+        for (i = 0; i < 353; i++) sp->data[i] = (unsigned char)('a' + (i % 26));
+        ((PRLINE *)&b2[10 + 4 + 353])->len = EOB;
+
+        rc = __jesprb(b2, BIGBLK, &pb, seam_emit, NULL);
+
+        CHECK_EQ(rc, 0, "(12) second block returns 0");
+        CHECK_EQ(pb.reason, JESPRB_OK, "(12) reason OK");
+        CHECK_EQ(seam_len, 4000, "(12) 3647 + 353 = the announced 4000");
+        CHECK_EQ(seam_ok, 1, "(12) every byte in place across the seam");
+        CHECK_EQ(pb.linelen, 0, "(12) the line is closed");
+
+        free(b1);
+        free(b2);
     }
 
     if (pb.prbuf) free(pb.prbuf);
