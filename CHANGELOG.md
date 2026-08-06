@@ -21,6 +21,18 @@ changes, both `jesprint()`.
   reports nothing for it, exactly as it does today for a block it never noticed
   was bad. httpd and mvsmf should each gain one `case` in their
   `do_print_sysout_why()`.
+- **A spanned-record fixture from a real spool block (#44).** Case (12) of
+  `test/host/tstjesprb.c` is a byte-for-byte reconstruction of a 4000-byte
+  SYSOUT record captured on MVS 3.8j: a `FIRST` part carrying 3647 bytes and
+  announcing 4000, then a `LAST` part with the remaining 353 in the next block.
+  It pins three things at once — that `len2` counts the payload *after* the
+  2-byte prefix (which closed #29), that the parts sum to exactly the announced
+  total, so the clamp added for #24 cannot fire on legitimate data, and that a
+  `FIRST` part filling its block to within one byte ends that block normally
+  rather than as `JESPR_TRUNC`. Also worth knowing from the capture: "spanned"
+  does not mean "too big for a block" — `PRLINE.len` is one byte, so *any*
+  record over 255 bytes takes the spanned form, and one that fits arrives with
+  `FIRST|MIDDLE|LAST` all set at once.
 - **Host regression for the spool record walk, `test/host/tstjesprb.c` (#25).**
   It links and executes the *real* `__jesprb()` — unlike `test/host/tstcmtt.c`,
   which had to hand-mirror the code under test because its TU cannot be built on
@@ -52,7 +64,17 @@ changes, both `jesprint()`.
   across the change except `@@ver.s`, which bakes in the git revision.
 
 ### Changed
-- **BREAKING — `jesprint()`'s return value is a status, not the callback's rc
+- **`TSTJESLG` drives the shipping walk instead of a copy of it (#45).** The
+  probe reconstructed what `jesprint()` would do with its own `scanblk()`, a
+  hand-written mirror — and the mirror had drifted: it advanced a spanned part
+  by `4 + len2` where the walk advances `4 + 2 + len2` past a `FIRST` part's
+  length prefix. On a data set of 500-byte records it reported half the lines
+  `jesprint()` actually reads, while printing "jesprint() would print N lines"
+  about code it never ran. Exactly the failure `test/host/tstcmtt.c` warns about
+  in its own case. Since #25 there is no need for a mirror: the probe now calls
+  `__jesprb()` and reports what it emitted, the longest line (over 255 bytes
+  means the record was spanned) and `JESPRB.reason` per block.
+, not the callback's rc
   (#26).** `rc` started as 503, became 404 or 0 — and was then overwritten by
   every `prt()` call, so on a completed walk the caller received whatever the
   *last* callback returned. Three meanings in one `int`: a callback returning a

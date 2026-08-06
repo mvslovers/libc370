@@ -72,6 +72,7 @@
 #include "hasppddb.h"   /* JES PDDB                                         */
 #include "haspiot.h"    /* JES IOT (+ track group map)                      */
 #include "clibjes2.h"   /* jesopen/jesjob/jesprint                          */
+#include "jesprb.h"     /* __jesprb() - the REAL record walk (#45)          */
 #include "clibary.h"    /* arraycount                                       */
 
 #define MAXBLK      500 /* chain-follow cap: a stale block can chain wildly */
@@ -87,15 +88,17 @@
 #define BLK_DSID(b) (*(unsigned short *)&(b)[8])
 #define BLK_DATA    10
 
-/* PRLINE flags, mirrored from jesprb.h */
-#define EOB         0xff
-#define FLAG_HASCC  0x80
-#define FLAG_SPAN   0x10
-#define FLAG_FIRST  0x08
-#define FLAG_LAST   0x02
+/* record layouts and flags come from jesprb.h; this probe used to mirror
+   them, which is what #45 is about */
 
 static void dump(const unsigned char *p, unsigned len);
-static unsigned scanblk(const unsigned char *buf, unsigned bufsize, unsigned *nspan);
+typedef struct scanctx  SCANCTX;
+struct scanctx {
+    unsigned    lines;              /* non-empty lines the walk handed out    */
+    unsigned    longest;            /* longest one: > 255 means it was spanned */
+};
+static unsigned scanblk(unsigned char *buf, unsigned bufsize, JESPRB *pb, SCANCTX *ctx);
+static const char *prbreason(int reason);
 static void walk(HASPJS *js, unsigned char *buf, unsigned bufsize,
                  JESJOB *job, JESDD *dd);
 static void dumpiot(HASPCP *cp, HASPJS *js, unsigned char *buf, unsigned bufsize,
@@ -306,13 +309,16 @@ static void walk(HASPJS *js, unsigned char *buf, unsigned bufsize,
     unsigned    mttr    = dd->mttr;
     unsigned    blocks  = 0;
     unsigned    lines   = 0;
-    unsigned    spans   = 0;
+    JESPRB      pb;                 /* the walk's state, spans the blocks    */
+    SCANCTX     ctx;                /* what it emitted                       */
     unsigned    next;
     unsigned    key;
     unsigned    dsid;
     unsigned    n;
-    unsigned    ns;
     int         rc;
+
+    memset(&pb,  0, sizeof(pb));
+    memset(&ctx, 0, sizeof(ctx));
 
     while (mttr) {
         if (blocks >= MAXBLK) { stop = "block cap reached (chain too long/looping)"; break; }
@@ -330,7 +336,7 @@ static void walk(HASPJS *js, unsigned char *buf, unsigned bufsize,
         next = BLK_NEXT(buf);
         key  = BLK_KEY(buf);
         dsid = BLK_DSID(buf);
-        n    = scanblk(buf, bufsize, &ns);
+        n    = scanblk(buf, bufsize, &pb, &ctx);
 
         if (blocks < DUMPBLKS) {
             printf("       hdr next=%08X jobkey=%08X (job %08X %s)"
@@ -339,7 +345,8 @@ static void walk(HASPJS *js, unsigned char *buf, unsigned bufsize,
                    key == job->jobkey ? "MATCH" : "MISMATCH",
                    dsid, dd->dsid,
                    dsid == dd->dsid ? "MATCH" : "MISMATCH");
-            printf("       records in block: %u (%u spanned part(s))\n", n, ns);
+            printf("       records in block: %u line(s), walk ended: %s\n",
+                   n, prbreason(pb.reason));
             dump(buf, bufsize < DUMPLEN ? bufsize : DUMPLEN);
         }
 
@@ -348,16 +355,18 @@ static void walk(HASPJS *js, unsigned char *buf, unsigned bufsize,
 
         blocks++;
         lines += n;
-        spans += ns;
 
         if (next == mttr) { stop = "block chains to ITSELF"; break; }
         mttr = next;
     }
 
-    printf("     WALK: %u block(s) accepted, %u record(s) (%u spanned part(s))\n",
-           blocks, lines, spans);
+    printf("     WALK: %u block(s) accepted, %u line(s), longest %u byte(s)%s\n",
+           blocks, lines, ctx.longest,
+           ctx.longest > 255 ? "  <- SPANNED (over the 1-byte record length)" : "");
     printf("     STOP: %s\n", stop);
-    printf("     => jesprint() would print %u line(s) for this DD\n", lines);
+    printf("     => jesprint() prints %u line(s) for this DD\n", lines);
+
+    if (pb.prbuf) free(pb.prbuf);
 }
 
 /* Brute-force scan of the spool volume for blocks that carry this job's
@@ -401,11 +410,21 @@ static void scanspool(HASPJS *js, unsigned char *buf, unsigned bufsize,
 
             hits++;
             if (hits <= 24) {
-                unsigned ns;
+                JESPRB   pb;
+                SCANCTX  ctx;
+                unsigned n;
+
+                /* a block found by brute force belongs to no chain we are
+                   following, so it gets its own state */
+                memset(&pb,  0, sizeof(pb));
+                memset(&ctx, 0, sizeof(ctx));
+                n = scanblk(buf, bufsize, &pb, &ctx);
+                if (pb.prbuf) free(pb.prbuf);
+
                 printf("    HIT mttr=%08X TT=%u R=%u key@+%u  +0=%08X"
-                       " +4=%08X dsid=%u records=%u\n",
+                       " +4=%08X dsid=%u lines=%u\n",
                        mttr, tt, r, found, BLK_NEXT(buf), BLK_KEY(buf),
-                       BLK_DSID(buf), scanblk(buf, bufsize, &ns));
+                       BLK_DSID(buf), n);
                 if (hits <= 3) dump(buf, 32);
             }
         }
@@ -492,43 +511,50 @@ static void dumpiot(HASPCP *cp, HASPJS *js, unsigned char *buf, unsigned bufsize
     }
 }
 
-/* count the print records jesprint()'s record loop would find in this block.
-   Bounds are checked BEFORE every dereference (the walk in jesprb.c
-   tests line->len first and p < eob second - see the analysis doc). */
-static unsigned scanblk(const unsigned char *buf, unsigned bufsize, unsigned *nspan)
+/* Run the REAL record walk (src/jes/jesprb.c) over one block and report what
+   it emitted.  This probe used to carry a hand-written copy of that walk, and
+   the copy had drifted: it advanced a spanned part by 4 + len2, while the walk
+   advances 4 + 2 + len2 past a FIRST part's length prefix.  On a data set of
+   500-byte records it therefore reported half the lines jesprint() reads
+   (#45).  Nothing is mirrored here any more.
+
+   pb carries the spanned-line state across the blocks of one data set, exactly
+   as jesprint() does; pass a zeroed JESPRB for a standalone block.  The caller
+   frees pb->prbuf.  Returns the lines this block contributed. */
+static int scanemit(char *line, unsigned linelen, void *arg)
 {
-    const unsigned char *p   = &buf[BLK_DATA];
-    const unsigned char *end = &buf[bufsize];
-    unsigned            n    = 0;
+    SCANCTX *ctx = (SCANCTX *) arg;
 
-    *nspan = 0;
+    /* a zero-length record is fill: the walk hands it over, esc_print() drops
+       it, and a caller's callback never sees it - count it the same way */
+    if (!linelen) return 0;
 
-    while (p + 3 <= end) {
-        unsigned len   = p[0];
-        unsigned flags = p[1];
+    ctx->lines++;
+    if (linelen > ctx->longest) ctx->longest = linelen;
+    return 0;
+}
 
-        if (len == EOB) break;
+static unsigned scanblk(unsigned char *buf, unsigned bufsize, JESPRB *pb,
+                        SCANCTX *ctx)
+{
+    unsigned before = ctx->lines;
 
-        if (flags & FLAG_SPAN) {
-            unsigned len2;
+    __jesprb((char *) buf, bufsize, pb, scanemit, ctx);
 
-            if (p + 4 > end) break;
-            len2 = (unsigned) ((p[2] << 8) | p[3]);
-            (*nspan)++;
-            if (flags & FLAG_LAST) n++;
-            p += 4 + len2;
-            continue;
-        }
+    return ctx->lines - before;
+}
 
-        n++;
-        p += 3 + len;
-
-        /* a zero-length, zero-flag record is fill, not data: jesprint() walks
-           it 3 bytes at a time and prints nothing - report it as such */
-        if (len == 0 && flags == 0) { n--; }
+/* why the record walk of one block ended (JESPRB_*, jesprb.h) */
+static const char *prbreason(int reason)
+{
+    switch (reason) {
+    case JESPRB_OK:      return "end of block";
+    case JESPRB_STOPPED: return "callback stopped the walk";
+    case JESPRB_NOBUF:   return "spanned part with no line to join, block given up";
+    case JESPRB_NOMEM:   return "out of storage";
+    case JESPRB_TRUNC:   return "record runs past the end of the block";
     }
-
-    return n;
+    return "unknown";
 }
 
 static char prt(unsigned char c)
