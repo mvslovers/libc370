@@ -138,8 +138,12 @@ int jesjobf1(JESJOB **ppjesjob);
 #define JESPR_LOOP      5           /* next block address is this block      */
 #define JESPR_CAP       6           /* iteration cap hit, walk truncated     */
 #define JESPR_STOPPED   7           /* the print callback asked to stop      */
-#define JESPR_NOBUF     8           /* spanned record part with no FIRST     */
-/*                                     part: it cannot be reassembled, the
+#define JESPR_NOBUF     8           /* a spanned record part that cannot be
+                                       reassembled: no FIRST part opened the
+                                       line, or the parts add up to more than
+                                       the FIRST part announced.  What had
+                                       been assembled was handed to the
+                                       callback as a truncated line and the
                                        rest of that block was skipped        */
 #define JESPR_NOMEM     9           /* a buffer could not be allocated       */
 #define JESPR_OPENEND   10          /* a foreign block AFTER at least one
@@ -152,6 +156,11 @@ int jesjobf1(JESJOB **ppjesjob);
                                        - measured on an active STC whose
                                        message log read 350 lines and then
                                        stopped exactly this way.             */
+#define JESPR_TRUNC     11          /* a record ran past the end of a block:
+                                       the block is truncated or malformed,
+                                       so the rest of it was skipped.  The
+                                       chain is intact and the walk went on
+                                       with the next block (#23)             */
 
 /* Runaway guard for the block chain.  The next address is taken out of the
    block just read, so a corrupted or foreign chain could loop.  This is a

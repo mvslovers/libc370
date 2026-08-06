@@ -9,10 +9,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 Mostly silent failures: paths that reported success while doing nothing, losing
 data, losing storage, or building against a stale compiler. Also an S0C4 on
 open-by-DSN from a TSO command processor, and public prototypes for four
-routines consumers had to declare by hand. Two breaking changes, both
-`jesprint()`.
+routines consumers had to declare by hand, and two heap defects in the JES2
+spool record walk that any foreign or truncated block could reach. Two breaking
+changes, both `jesprint()`.
 
 ### Added
+- **`JESPR_TRUNC` (#23).** A new `jesprint()` stop reason: a record ran past the
+  end of a block, so the block is truncated or malformed and the rest of it was
+  skipped. The chain is intact and the walk continues with the next block, same
+  as `JESPR_NOBUF`. Purely additive — a consumer that does not know the constant
+  reports nothing for it, exactly as it does today for a block it never noticed
+  was bad. httpd and mvsmf should each gain one `case` in their
+  `do_print_sysout_why()`.
 - **Host regression for the spool record walk, `test/host/tstjesprb.c` (#25).**
   It links and executes the *real* `__jesprb()` — unlike `test/host/tstcmtt.c`,
   which had to hand-mirror the code under test because its TU cannot be built on
@@ -86,6 +94,38 @@ routines consumers had to declare by hand. Two breaking changes, both
   `spool_read()` is a BDAM READ/CHECK and the TU carries file-scope assembler.
 
 ### Fixed
+- **Heap over-read walking the records of a block (#23).** The loop test was
+  `line->len != EOB && p < eob` — C evaluates `&&` left to right, so the record
+  header was dereferenced *before* the bounds test that was supposed to protect
+  it. `p` advanced by up to 258 bytes per iteration from a position only
+  required to be `< eob`, so a malformed, truncated or foreign block read past
+  the end of the `calloc`'d buffer — and handed those bytes to the print
+  callback as a line. Every record is now measured against the end of the block
+  before anything in it is read. A header that *is* readable and then points
+  past the end means the block is malformed and ends that block's walk with the
+  new `JESPR_TRUNC`; a tail too short to hold another header is the ordinary end
+  of a block — a full block has no room for an EOB byte and a zero-padded one
+  walks 3 bytes at a time into exactly that, so reporting either as truncated
+  would have cried wolf on every padded block. Verified red→green under
+  `-fsanitize=address`: the old walk reports `heap-buffer-overflow, READ of size
+  200, 0 bytes after the 128-byte region`.
+- **Heap overflow reassembling a spanned line (#24).** Two ways past the end of
+  `prbuf`, both now closed. A `MIDDLE`/`LAST` part with no `FIRST` opening the
+  line copied into whatever buffer an *earlier, possibly much shorter* line had
+  left behind — the `!prbuf` guard only caught the case where no spanned line
+  had ever been seen; the walk now tracks whether a line is actually open. And
+  the parts were only checked against the announced total *after* the `memcpy`
+  had already run past the end. ASan on the old walk: `WRITE of size 60` into an
+  8-byte region. The check is against *this* line's announced total, which is
+  now tracked separately: `prbuf`'s size is the largest total seen so far
+  because the buffer only ever grows, so clamping against it would measure a
+  short line against a long predecessor's buffer and let it overrun its own
+  announcement by thousands of bytes unnoticed (case (11) pins it). When a block gives up, what was already assembled is handed to
+  the callback as a truncated line — a visible fragment beats a line that
+  silently disappears — and the reassembly state is then dropped, so the next
+  block cannot append across the gap and produce a line that never existed on
+  the spool. The four cases are in `test/host/tstjesprb.c` (7)-(10); run it
+  under ASan, without it three of them pass against the broken walk too.
 - **`__stow()` assembled to nothing (#32, PR #33).** as370 has no STOW operation
   code and there is no `stow` macro in the macro library, so the mnemonic
   produced no instruction at all: the func letter was left in R15 and returned as
