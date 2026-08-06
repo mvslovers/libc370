@@ -142,6 +142,53 @@ int main(int argc, char **argv)
     CHECK_HEX(slot, 0x0BADCAFE, "(7) the winner's value survives untouched");
     CHECK_HEX(want, 0x0BADCAFE, "(7) the loser is told who holds it");
 
+    /* ------------------------------------------------------------------
+     * (8) the counters.  They had no test at all before #55 - which is
+     *     how their two shared habits (undeclared R0/R1 clobbers, and
+     *     file-scope asm labels) survived unnoticed.
+     * ---------------------------------------------------------------- */
+    printf("(8) __inc / __dec / __uinc / __udec\n");
+    target = 41;
+    CHECK_HEX(__inc(&target), 41, "(8) __inc returns the PREVIOUS value");
+    CHECK_HEX(target, 42, "(8) __inc left 42 behind");
+    CHECK_HEX(__dec(&target), 42, "(8) __dec returns the previous value");
+    CHECK_HEX(target, 41, "(8) __dec left 41 behind");
+
+    target = 0;
+    CHECK_HEX(__uinc(&target), 0, "(8) __uinc returns the previous value");
+    CHECK_HEX(target, 1, "(8) __uinc left 1 behind");
+    CHECK_HEX(__udec(&target), 1, "(8) __udec returns the previous value");
+    CHECK_HEX(target, 0, "(8) __udec left 0 behind");
+
+    /* ------------------------------------------------------------------
+     * (9) they WRAP at their limits instead of overflowing.  That is
+     *     documented in clibos.h and deliberate, and it is the reason
+     *     none of them is a fetch-and-add: a caller counting past the
+     *     maximum silently starts over rather than going negative.
+     * ---------------------------------------------------------------- */
+    printf("(9) wrap at the limits\n");
+    target = 0x7FFFFFFF;                        /* INT_MAX */
+    CHECK_HEX(__inc(&target), 0x7FFFFFFF, "(9) __inc at INT_MAX returns it");
+    CHECK_HEX(target, 0, "(9) __inc wrapped to 0, not to INT_MIN");
+
+    target = 0x80000000;                        /* INT_MIN */
+    CHECK_HEX(__dec(&target), 0x80000000, "(9) __dec at INT_MIN returns it");
+    CHECK_HEX(target, 0x7FFFFFFF, "(9) __dec wrapped to INT_MAX");
+
+    target = 0xFFFFFFFF;
+    CHECK_HEX(__uinc(&target), 0xFFFFFFFF, "(9) __uinc at max returns it");
+    CHECK_HEX(target, 0, "(9) __uinc wrapped to 0");
+
+    target = 0;
+    CHECK_HEX(__udec(&target), 0, "(9) __udec at 0 returns it");
+    CHECK_HEX(target, 0xFFFFFFFF, "(9) __udec wrapped to max");
+
+    printf("(10) the counters with a NULL argument\n");
+    CHECK_HEX(__inc((void *)0),  0, "(10) __inc  returns 0 and does not abend");
+    CHECK_HEX(__dec((void *)0),  0, "(10) __dec  returns 0 and does not abend");
+    CHECK_HEX(__uinc((void *)0), 0, "(10) __uinc returns 0 and does not abend");
+    CHECK_HEX(__udec((void *)0), 0, "(10) __udec returns 0 and does not abend");
+
     printf("\n=== TSTATOM: %d/%d passed", mbt_passed, mbt_run);
     if (mbt_failed) printf(" (%d FAILED)", mbt_failed);
     printf(" ===\n");
