@@ -11,8 +11,9 @@ data, losing storage, or building against a stale compiler. Two heap defects in
 the JES2 spool record walk that any foreign or truncated block could reach, a
 compare-and-swap that stored the wrong word entirely, an S0C4 on open-by-DSN
 from a TSO command processor, and public prototypes for four routines consumers
-had to declare by hand. Three breaking changes: `jesprint()` twice, and the
-atomics.
+had to declare by hand. Four breaking changes: `jesprint()` twice, the atomics,
+and `__dsalc()` — which also stops narrating its failures to the operator, the
+first instalment of taking the console back from the library.
 
 ### Added
 - **`__cas()` — compare and swap the way the instruction does it (#48).** Stores
@@ -74,6 +75,37 @@ atomics.
   across the change except `@@ver.s`, which bakes in the git revision.
 
 ### Changed
+- **BREAKING — `__dsalc()` no longer writes to the operator console, and an
+  unknown `DISP=` token now fails instead of being ignored (#43).** Creating a
+  data set that already exists — an ordinary outcome — put three lines on the
+  console: a `wtof()`, a 20-byte hex dump of the SVC 99 request block, and this
+  once per attempt for a client that retries. The rc and `S99ERROR` reach the
+  caller unchanged; mvsMF already prints what a human needs (`MVSMF64E`), and it
+  is the caller, not the library, that knows whether the failure was expected.
+  The dump is parked under `#if 0`, the way `@@dsfree.c` already parks the same
+  one. Fourteen further calls in the routine went with it — thirteen
+  `Invalid …` reports and a duplicate of the out-of-storage message `malloc()`
+  writes itself. Eleven of the fourteen sat on a path that already returned an
+  rc, so nothing that reached the caller changed. Three did **not**: an
+  unrecognized token in any of the three
+  `DISP=` positions used to be reported to the console while `err` stayed 0, so
+  the allocation went ahead with no disposition text unit at all — a WTO in place
+  of a return code. `__dsalc()` now returns 1 there. A caller passing a
+  disposition libc370 does not parse (`DISP=(NEW,PASS)` — `PASS` is not in the
+  list) gets a failed allocation where it used to get a silently different one.
+  Consumers that build the option string from user input should check their rc
+  handling. `@@dsalc.o` no longer references `WTOF`/`WTODUMPF`, and a minimal
+  module that calls `__dsalc()` links 1,076 bytes smaller — though the WTO chain
+  itself stays, because `malloc.c` and `@@crtget.c` still pull it into everything.
+  `test/mvs/tstdsalc.c` is the guard, run on MVS 3.8j against both libraries:
+  the pre-fix module returns 0 from all three `DISP=` cases and reports the DD it
+  allocated anyway (COND CODE 0008), the fixed one returns 1 (0000). Case (6) is
+  the issue's own scenario, and since "no WTO" cannot be asserted from inside the
+  program it brackets the call with two WTOs of its own — in the pre-fix job log
+  four `__dsalc` lines sit between the markers, in the fixed one they are
+  adjacent. The rule behind this is written down in
+  [`doc/consumer-notes.md`](doc/consumer-notes.md); the remaining live calls
+  across the library are the rest of #43.
 - **The four counters and `cthread_wait()` declare what their assembler writes
   (#55).** `__inc()`, `__uinc()`, `__dec()`, `__udec()` and `cthread_wait()`'s CS
   block all load R0 and R1 and told the compiler nothing — safe today because
