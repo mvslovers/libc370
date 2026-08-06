@@ -4,6 +4,21 @@ Analysis of `src/jes/jesprint.c` for mvslovers/libc370#4 (feeds
 mvslovers/mvsmf#186, the deep-history follow-up to the delivered
 mvslovers/mvsmf#145).
 
+> **Line references below are the code as it stood on 2026-08-04.** PR #40
+> (#25) moved the block and record walk into `src/jes/jesprb.c`, so the defects
+> this document numbers D3, D4 and D5 now live there — unchanged, which is the
+> point of that PR. The findings stand; only the addresses moved:
+>
+> | here | today |
+> |------|-------|
+> | D3 over-read, `jesprint.c:116` | `jesprb.c:33` (the loop bounds test) |
+> | D4 spanned overflow, `jesprint.c:150` | `jesprb.c:66` (the `memcpy`) |
+> | D5 `FLAG_FIRST` accounting, `jesprint.c:129-159` | `jesprb.c:38-80` |
+> | buffer + `eob`, `jesprint.c:78,83` | `jesprint.c:64` (`calloc`), `jesprb.c:31` (`eob`) |
+> | D6 return value, `jesprint.c:154,167,176` | fixed in #26: `rc` is 0/404/503, the callback's rc is `st->prtrc` |
+>
+> D1, D2 and D7 refer to code still in `jesprint.c`, shifted by the extraction.
+
 ## Result
 
 **`jesprint()` reads the SYSLOG correctly. It was never broken.** Proven on the
