@@ -143,6 +143,19 @@ changes, both `jesprint()`.
   Verified on MVS 3.8j by running `jesjob()` through `TSTJESLG` before and
   after: 108 DD lines over five job filters, including STCs with spin IOTs,
   byte-identical.
+- **`__cs()` stored the word at `new_value`, not `new_value` (#48).** The inline
+  assembler did `L 1,0(,%2)` where `%2` holds the value, so the library's
+  compare-and-swap dereferenced its second argument: it wrote whatever lived at
+  that address — nothing useful when the value looked like low storage, an S0C4
+  when it looked like protected storage. `LR` instead of `L`. The asm also wrote
+  R0 and R1 without declaring them, and its retry label was a file-scope `AGAIN`
+  in the generated source; both fixed. Nothing in the library or in httpd, mvsmf,
+  ftpd or ufsd calls `__cs()` — the header invited a use that would not have
+  worked. Red→green on MVS 3.8j with `test/mvs/tstcs.c`, which passes a
+  `new_value` that is also a valid address so both outcomes are readable storage
+  and the defect reports instead of abending: before, `target` took the decoy's
+  contents `DEADBEEF`; after, the address `00095B60` that was actually passed.
+  Inherited from mvslovers/crent370#32.
 - **Heap over-read walking the records of a block (#23).** The loop test was
   `line->len != EOB && p < eob` — C evaluates `&&` left to right, so the record
   header was dereferenced *before* the bounds test that was supposed to protect
