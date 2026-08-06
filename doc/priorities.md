@@ -27,17 +27,20 @@ comment on #43, and it comes down to one measurement: `malloc.c` and
 The sweep would have removed console noise and no footprint, at the price of 26
 translation units of churn.
 
-Three things that survey found are worth doing on their own, and none of them
-needs the sweep. Unfiled as of today:
-
-* `@@listvl.c:263` — the format string takes two `%s` and one argument is
-  passed, so the diagnostic can S0C4 the program it was meant to explain.
-* `@@txdsn.c:30` — an unconditional `wtodumpf()` on the **success** path: every
-  allocation of a DSN with a member name dumps its text unit to the console.
-* `@@listvl.c:84` — `calloc` failure `break`s out of the volume loop and returns
-  a short list with no error indication.
+Three defects that survey turned up are filed as #59, #60 and #61 — none of them
+needs the sweep, and they are below.
 
 ## Now
+
+**#59 and #60 — two lines the #43 survey found by reading rather than counting.**
+Both are cheap and neither needs a judgement call. #59: `open_vatlst()`'s
+"unable to open" message has two `%s` and one argument, so `vsprintf` formats a
+garbage pointer — the diagnostic can S0C4 the program it was about to report a
+recoverable failure for, and it only ever runs when something is already wrong.
+#60: `__txdsn()` dumps the DALMEMBR text unit to the console **on the success
+path**, so every allocation of a DSN with a member name writes a hex dump to the
+SYSLOG; it also dumps the text unit before checking it for NULL. #60 is host
+testable, which makes it the better first issue of the two.
 
 **#49 — `clock64()` returns milliseconds, its type says seconds.** Small once
 decided, and the decision is not the maintainer's to skip: correcting the
@@ -45,6 +48,16 @@ function silently divides every existing caller's value by 1000 (rexx370 has
 adapted to the current behaviour), while correcting the documentation leaves the
 library with no function returning seconds at all. Whichever way, it belongs in
 a release note next to the `jesprint()` breaks, not in a quiet commit.
+
+**#61 — `__listvl()` truncates its volume list silently.** The same shape of
+decision as #49, and the third of the #43 findings. A `calloc` failure mid-scan
+`break`s out and returns the volumes found so far; the function returns
+`VOLLIST **` and has no way to say the list is short, so a caller cannot tell 12
+volumes from 40 with storage having run out at the 13th. Today the WTO is the
+only signal, which is the wrong audience. Failing the whole call is the cheapest
+honest answer and the one I would take, but the signature is public, so it is
+the maintainer's to pick — and it is the reason that one WTO could not simply be
+deleted with the rest.
 
 **#39 — 129 of 712 TUs compile with implicit declarations.** The biggest quiet
 risk here: an implicit declaration means the compiler invents a signature, and
