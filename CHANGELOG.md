@@ -9,9 +9,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 Mostly silent failures: paths that reported success while doing nothing, losing
 data, losing storage, or building against a stale compiler. Also an S0C4 on
 open-by-DSN from a TSO command processor, and public prototypes for four
-routines consumers had to declare by hand. One breaking change (`jesprint()`).
+routines consumers had to declare by hand. Two breaking changes, both
+`jesprint()`.
 
 ### Added
+- **Host regression for the spool record walk, `test/host/tstjesprb.c` (#25).**
+  It links and executes the *real* `__jesprb()` — unlike `test/host/tstcmtt.c`,
+  which had to hand-mirror the code under test because its TU cannot be built on
+  the host. 35 checks over plain records, carriage control, a spanned line inside
+  one block and across two blocks, an immediate EOB, a zero-filled block, and a
+  callback that stops the walk. Two cases from #25's list are deliberately
+  missing: a truncated block (#23) and a MIDDLE/LAST part with no FIRST (#24) are
+  red today and land with those fixes. What the spanned cases pin is the parser's
+  own contract, not JES2's format — whether `len2` on a FIRST part includes the
+  2-byte total-length prefix is #29 and needs a captured block from the target.
 - **Prototypes for `loadenv()`, `tzset()`, `__exit()` and `__svc99()` (#5).**
   All four link fine — only the declarations were missing, so consumers got
   implicit-declaration warnings and carried local `extern`s (httplua's
@@ -26,6 +37,35 @@ routines consumers had to declare by hand. One breaking change (`jesprint()`).
   across the change except `@@ver.s`, which bakes in the git revision.
 
 ### Changed
+- **BREAKING — `jesprint()`'s return value is a status, not the callback's rc
+  (#26).** `rc` started as 503, became 404 or 0 — and was then overwritten by
+  every `prt()` call, so on a completed walk the caller received whatever the
+  *last* callback returned. Three meanings in one `int`: a callback returning a
+  byte count leaked it into `rc`, a data set that printed 0 lines was
+  indistinguishable from one that printed 500, and a callback returning a
+  *positive* value was indistinguishable from "JES2 unusable". `jesprint()` now
+  returns 0, 404 or 503 and nothing else; a callback that stops the walk is
+  `st->reason == JESPR_STOPPED` with its rc in `st->prtrc`, and the lines that
+  went out are `st->lines`. **Consumers that read the negative rc must move to
+  `st` and relink** — mvsmf `jobsapi.c` (its `RC_SPOOL_CAP` sentinel travelled
+  back through `rc`) and httpd `httpjes2.c` (`if (rc < 0) goto quit`). ftpd
+  already reads `st->reason`/`st->prtrc` and needs no change. The break is
+  silent — the signature is unchanged, so an un-updated consumer compiles and
+  simply stops noticing.
+- **`jesprint()`'s record walk extracted to `__jesprb()` (#25).** The block and
+  record parser moved into `src/jes/jesprb.c`, an asm-free translation unit
+  (buffer in, lines out) with its own `src/jes/jesprb.h`; `jesprint()` keeps the
+  `spool_read()` chain, the jobkey/dsid checks and the `EX`/`TR` translate on its
+  side of the emit callback. The spanned-line state (`prbuf`/`blksize`/`linelen`)
+  and the line count moved into a `JESPRB` the caller carries across blocks,
+  because a spanned line legitimately continues into the next block. Behaviour is
+  otherwise unchanged: the two known memory-safety defects in the walk (#23, #24)
+  are still there, deliberately — they now have somewhere to be tested from.
+  One side effect worth the line: `esc_print()`'s stack frame drops from 1128 to
+  104 bytes. Its HTML-escaping branch has been `#if 0` since output went to
+  `text/plain`, but the `char buf[1024]` it used was declared unconditionally and
+  cc370 allocated it on every call. Peak stack on the print path goes from 1304
+  bytes (`jesprint` + `esc_print`) to 400 (`jesprint` + `__jesprb` + `esc_print`).
 - **BREAKING — `jesprint()` reports why it stopped (#21, #22, PR #31).** `rc` was
   set to 0 before the block loop and every early exit left it there: a failed
   `spool_read()`, a block belonging to another job and a block belonging to
