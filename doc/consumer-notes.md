@@ -113,7 +113,10 @@ A libc370 routine reports a failure **through its return value**. It does not
 WTO, and it does not dump a control block to the operator. Only the caller knows
 whether a failure was expected — `__dsalc()` cannot tell an attempt to create a
 data set that is meant to exist already from a real environmental error, so it
-reports neither and returns the rc either way.
+reports neither and returns the rc either way. On a path where nothing failed
+there is not even a judgement call to make: `__txdsn()` dumped the DALMEMBR text
+unit to the console on every successful allocation of a DSN with a member, until
+#60.
 
 Two things make this stricter here than on a system with a log file:
 
