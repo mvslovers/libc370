@@ -4,15 +4,18 @@ A reading of the open issues as of **2026-08-06**, ordered. Not a plan anyone is
 committed to — the order encodes what is risky, what is cheap, and what is
 blocked on something other than effort. Re-read it when those change.
 
-## Now
+Revised the same day, after #48 and the first half of #43 landed.
 
-**#48 — `__cs()` stores the word at `new_value`.** The inline assembler does
-`L 1,0(,%2)` where `%2` holds a value, so the library's compare-and-swap writes
-whatever lives at that address: silently nothing useful when the value looks
-like low storage, an S0C4 when it looks like protected storage. The fix is one
-instruction (`LR`) plus the clobbers the asm never declared. A broken
-serialization primitive that is declared in a public header is the worst thing
-on this list per line of code needed to remove it.
+## Landed since this was written
+
+**#48 — `__cs()` stored the word at `new_value`** (PR #53, #54, #56). It was
+also never a compare-and-swap: the `CS` retry loop turned the instruction's
+comparison into an unconditional exchange. So it is gone, replaced by `__swap()`
+and a real `__cas()`, with the clobbers the inline assembler never declared and
+per-function retry labels. `test/mvs/tstatom.c` covers both. Breaking — see the
+CHANGELOG.
+
+## Now
 
 **#43 — library routines WTO diagnostics to the operator console.** `__dsalc()`
 is done (PR #57): its 16 calls are gone or parked, the rule is written down in
