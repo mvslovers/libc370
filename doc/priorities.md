@@ -4,7 +4,7 @@ A reading of the open issues as of **2026-08-06**, ordered. Not a plan anyone is
 committed to — the order encodes what is risky, what is cheap, and what is
 blocked on something other than effort. Re-read it when those change.
 
-Revised the same day, after #48 and the first half of #43 landed.
+Revised the same day, after #48 and #43 closed.
 
 ## Landed since this was written
 
@@ -15,25 +15,29 @@ and a real `__cas()`, with the clobbers the inline assembler never declared and
 per-function retry labels. `test/mvs/tstatom.c` covers both. Breaking — see the
 CHANGELOG.
 
-## Now
-
-**#43 — library routines WTO diagnostics to the operator console.** `__dsalc()`
-is done (PR #57): its 16 calls are gone or parked, the rule is written down in
-[`consumer-notes.md`](consumer-notes.md), and `test/mvs/tstdsalc.c` guards it on
-target. What is left is the sweep — **80 live calls across 26 shipped
-translation units**, each needing a decision: keep (genuinely unrecoverable, no
-other trace), park under `#if 0` the way most of the library already does, or
-delete. Two of them decide the question for everyone and should lead the
-decision table rather than trail the easy deletes in `@@64mul.c`: `malloc.c` and
+**#43 — `__dsalc()` narrated its failures to the operator** (PR #57). Its 16
+calls are gone or parked, the rule is in [`consumer-notes.md`](consumer-notes.md)
+— a routine reports through its return value, the console belongs to the program
+— and `test/mvs/tstdsalc.c` guards it on target. The sweep over the other 80
+calls was surveyed and then **decided against**; the reasoning is in the closing
+comment on #43, and it comes down to one measurement: `malloc.c` and
 `@@crtget.c` are pulled by practically every program, so the `WTOF` → `VWTOF` →
-`WTODUMPF` → `WTODUMP` chain is linked into practically every module no matter
-what the rest of the library does — measured while fixing `__dsalc()`, whose own
-module still carries the chain for exactly that reason. Both are also *keep*
-candidates on diagnostic grounds, which is the real content of the sweep.
-`@@dsfree.c` is the reference row: it parks the same SVC 99 dump already. On this
-system the console *is* the SYSLOG, and #4 is the story of how scarce that is.
+`WTODUMPF` → `WTODUMP` chain (~3.7 KB) is in practically every module regardless
+— and both are the kind of message the issue itself carved out as worth keeping.
+The sweep would have removed console noise and no footprint, at the price of 26
+translation units of churn.
 
-## Next
+Three things that survey found are worth doing on their own, and none of them
+needs the sweep. Unfiled as of today:
+
+* `@@listvl.c:263` — the format string takes two `%s` and one argument is
+  passed, so the diagnostic can S0C4 the program it was meant to explain.
+* `@@txdsn.c:30` — an unconditional `wtodumpf()` on the **success** path: every
+  allocation of a DSN with a member name dumps its text unit to the console.
+* `@@listvl.c:84` — `calloc` failure `break`s out of the volume loop and returns
+  a short list with no error indication.
+
+## Now
 
 **#49 — `clock64()` returns milliseconds, its type says seconds.** Small once
 decided, and the decision is not the maintainer's to skip: correcting the
