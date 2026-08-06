@@ -153,6 +153,64 @@ message on a path that then abends is the only trace anyone gets.
 Your own code is the other side of this contract: if you want a failure on the
 console, write it there yourself, where you know what it means.
 
+## A module run from the LNKLST cannot write its own statics
+
+Deploy a load module into a system library on the LNKLST and it can **read** its
+writable statics but not **store** into them — the first store is an S0C4. The
+same module, byte for byte, writes them happily when it is fetched from a
+private library through a STEPLIB.
+
+Measured on MVS 3.8j (2026-08-06) with a probe that WTOs each step, from
+`SYS2.LINKLIB` (APF-authorized and on LNKLST) versus a private LINKLIB:
+
+| link | from LNKLST | via STEPLIB |
+|---|---|---|
+| `ld370 --ac 1` | reads ok, **S0C4** on store | — |
+| `ld370` (no AC) | reads ok, **S0C4** on store | — |
+| `ld370 --norent` | reads ok, **S0C4** on store | — |
+| `cc370` driver link | reads ok, **S0C4** on store | stores fine |
+
+So it is the library the module is fetched from that decides, not `AC(1)`, not
+the RENT attribute, and not who did the linking. That is the same constraint
+libc370 lives under, and why `signal()` keeps its handler table on the heap via
+`__wsaget()` instead of in the load module (see above): **keep mutable state in
+automatic storage or on the heap** if the module may ever be installed
+system-wide. One `static int` counter is enough to abend it on the first write.
+
+Consumers deploying into their own LINKLIB and naming it on a STEPLIB — which
+is what `mbt`'s `make deploy` produces — are not affected.
+
+Note that stdio buffers are lost on an abend even after `fflush()`: the DCB is
+never closed, so the trailing block never reaches the SYSOUT data set. A probe
+that may abend should say where it is with `wtof()`, which reaches the job log
+immediately; that is how the table above was measured after SYSPRINT came back
+empty three times.
+
+## Authorized programs: the AC has to be set by ld370, twice
+
+Anything calling a libc370 routine that issues `MODESET KEY=ZERO,MODE=SUP` —
+`racf_auth()`, `racf_login()`, `racf_set_acee()` — has to be linked **AC=1** and
+fetched from an APF-authorized library, or the step ends S047.
+
+`cc370` accepts `-Wl,--ac,1` and **silently drops it**: the output is
+byte-identical to a link without it. And `ld370 --pack` loses the flag again
+unless `--ac 1` is repeated on the pack step:
+
+```sh
+cc370 -O1 -Iinclude -c prog.c -o prog.o
+ld370 --entry @@CRT0 --ac 1 -o PROG crt0.o prog.o -L<lib> -lc
+ld370 --pack PROG=PROG --ac 1 -o out -xmit --dsn <LOADLIB>
+```
+
+A module that lost its AC looks exactly like a working one until it runs, and
+the S047 arrives with an empty SYSPRINT for the reason above. Filed against the
+toolchain as mvslovers/cc370#37.
+
+To check whether the AC took: an authorized program's `WTO` appears in the job
+log **without** the `+` prefix that marks a problem-program message.
+
+`test/mvs/tstracau.c` is a worked example of both sections.
+
 ## Dataset I/O is BSAM (and EXCP); VSAM is a separate API
 
 `fopen()` and friends go through the assembler dataset layer (`asm/@@aopen.asm`

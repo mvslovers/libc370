@@ -30,10 +30,10 @@
 **              whose authority was checked does not have the SPECIAL attribute.
 **      04      Indicates STATUS=ERASE was specified and the data set is to
 **              be erased when scratched.
-**      08      Indicates DSTYPE=T or CLASS=‘TAPEVOL’ was specified and the
+**      08      Indicates DSTYPE=T or CLASS=ï¿½TAPEVOLï¿½ was specified and the
 **              user is not authorized to use the specified volume.
 **      0C      Indicates the user is not authorized to use the data set.
-**      10      Indicates DSTYPE=T or CLASS=‘TAPEVOL’ was specified and the
+**      10      Indicates DSTYPE=T or CLASS=ï¿½TAPEVOLï¿½ was specified and the
 **              user is not authorized to specify LABEL=(,BLP).
 **      1C      User with EXECUTE authority to the data set profile specified
 **              ATTR=READ, and RACF failed the access attempt.
@@ -47,25 +47,16 @@
 **          list form of the macro does not have the proper RELEASE parameter.
 **          Macro processing terminates.
 */
-#include "cliblock.h"
 #include "racf.h"
 
 __asm__("\n&FUNC    SETC 'racf_auth'");
 int racf_auth(ACEE *acee, const char *classname, const char *resource,
               int attr) {
   int rc = 0;
-  unsigned *psa = (unsigned *)0;
-  unsigned *ascb = (unsigned *)psa[0x224 / 4]; /* A(ASCB)      */
-  unsigned *asxb = (unsigned *)ascb[0x6C / 4]; /* A(ASXB)      */
-  ACEE **asxbsenv = (ACEE **)&asxb[0xC8 / 4];  /* A(ASXBSENV)  */
-  ACEE *oldacee = *asxbsenv;                   /* prev ACEE    */
   int len;
   RACLASS cclass;
   char resname[80];
   RACHECK plist;
-
-  /* lock the ASXB (ENQ) address */
-  lock(asxb, 0);
 
   memset(cclass.name, ' ', sizeof(cclass.name));
   memset(resname, ' ', sizeof(resname));
@@ -106,6 +97,17 @@ int racf_auth(ACEE *acee, const char *classname, const char *resource,
 #endif
   plist.len = sizeof(plist);
 
+  /* Authorize against the caller's ACEE by passing it in the parameter list.
+  ** RACHECK resolves the ACEE from the plist first and only falls back to
+  ** ASXBSENV when the field is zero -- which is exactly what acee==NULL asks
+  ** for, so no test is needed here.  ASXBSENV is address-space-wide: writing
+  ** the ACEE there and back is visible to every other TCB in the address
+  ** space for the length of the call, and an ENQ around it only serializes
+  ** racf_auth() against itself, not against a caller switching identity for
+  ** any other reason.  Touching nothing shared is race-free by construction.
+  */
+  plist.acee = acee;
+
   __asm__("\n"
           "*\n"
           "* enter supervisor state\n"
@@ -114,11 +116,6 @@ int racf_auth(ACEE *acee, const char *classname, const char *resource,
           :
           :
           : "1", "14", "15");
-
-  if (acee) {
-    /* set ASXBSENV with the ACEE pointer */
-    *asxbsenv = acee;
-  }
 
   __asm__("\n"
           "*\n"
@@ -130,11 +127,6 @@ int racf_auth(ACEE *acee, const char *classname, const char *resource,
           : "r"(resname), "r"(&cclass), "r"(attr), "m"(plist)
           : "1", "14", "15");
 
-  if (acee) {
-    /* set ASXBSENV with the prev ACEE pointer */
-    *asxbsenv = oldacee;
-  }
-
   __asm__("\n"
           "*\n"
           "* return to problem state\n"
@@ -143,9 +135,6 @@ int racf_auth(ACEE *acee, const char *classname, const char *resource,
           :
           :
           : "1", "14", "15");
-
-  /* unlock the ASXB (ENQ) address */
-  unlock(asxb, 0);
 
   return rc;
 }
