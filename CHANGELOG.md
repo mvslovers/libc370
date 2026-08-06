@@ -194,6 +194,32 @@ first instalment of taking the console back from the library.
   `spool_read()` is a BDAM READ/CHECK and the TU carries file-scope assembler.
 
 ### Fixed
+- **`racf_auth()` passes the ACEE in the RACHECK plist instead of writing it
+  into ASXBSENV (#58).** It used to authorize against a caller-supplied ACEE by
+  parking it in ASXBSENV for the length of the RACHECK and restoring it after,
+  holding an address-space-wide ENQ on the ASXB to keep concurrent callers out.
+  The ENQ only serialized `racf_auth()` against other `racf_auth()` calls: any
+  caller switching identity for another reason — which every multi-TCB server
+  does, since data set OPEN authorizes against ASXBSENV — was not serialized
+  against it, and the save/restore could then leave a foreign ACEE parked there.
+  RAKF fails open when it finds zero. The RACHECK parameter list has had an ACEE
+  field at offset X'18' all along, which RAKF resolves before falling back to
+  ASXBSENV (`SRCLIB/ICHSFR00.hlasm:111-115`), and `racf_login()` already did the
+  equivalent for RACINIT. Setting it touches nothing shared, so the check is
+  race-free by construction rather than by locking; `acee == NULL` leaves the
+  field zero and the ASXBSENV fallback behaves exactly as before, so callers see
+  no API change. Consumers that DEQ the ASXB defensively after an ABEND inside
+  `racf_auth()` (ftpd, `src/ftpd#ses.c`) keep working — the DEQ becomes a no-op —
+  and can drop that cleanup once they require this version. See mvslovers/ftpd#64
+  for the full failure chain.
+  A second defect goes with the ENQ, and it is the one that could be proven on
+  target: `lock()` returns 8 when you already hold the lock, `racf_auth()`
+  ignored that and DEQd unconditionally, so a caller holding the ASXB lock
+  across the call **had it released out from under them** and its own `unlock()`
+  then failed. `test/mvs/tstracau.c` case (3), run on MVS 3.8j against both
+  libraries: pre-fix `testlock()` comes back 0 (gone) and `unlock()` 8 (not
+  ours), COND CODE 0008; fixed, 8 and 0, COND CODE 0000. `racauth.o` no longer
+  references `@@LK`/`@@LKUNLK` at all.
 - **The PDDB scan was bounded by the read buffer, not by the IOT (#28).**
   `jesjob()` scanned the PDDBs of an IOT from `cp->pddb1` to the end of the
   3664-byte read buffer and relied on hitting a zero `PDBDSKEY` to stop — for a
