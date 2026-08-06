@@ -25,11 +25,11 @@
  * of the suite in #25, an MVS fixture, not a host test.  If #29 turns out to
  * be a real defect, the spanned fixtures below (3) and (4) move with the fix.
  *
- * Cases (7) to (10) are the red->green gates for #23 and #24.  Blocks are
- * allocated on the HEAP for that reason: three of those cases are memory-safety
- * cases, and reading past a stack array quietly "works".  RUN THEM UNDER
- * ASAN or they prove much less than they look like they do - without it, (7),
- * (8b) and (10) pass against the shipping walk of PR #40 as well.
+ * Cases (7) to (11) are the red->green gates for #23 and #24.  Blocks are
+ * allocated on the HEAP for that reason: they are memory-safety cases, and
+ * reading past a stack array quietly "works".  RUN THEM UNDER ASAN or they
+ * prove much less than they look like they do - without it, (7), (8b) and (10)
+ * pass against the shipping walk of PR #40 as well.
  * ====================================================================
  *
  * Build / run (host; no libc370 headers needed, the parser has none):
@@ -40,11 +40,20 @@
  *     cc -std=gnu99 -Wall -Wextra -fsanitize=address -I ../../src/jes \
  *        -o t tstjesprb.c ../../src/jes/jesprb.c && ./t
  *
+ * THE SAME SOURCE RUNS ON THE TARGET.  Since #25 the walk needs no assembler
+ * and no I/O, so cc370 compiles this file as it stands and a batch job drives
+ * it against the same synthetic blocks - see jcl/tstjesprb.jcl.  What that run
+ * adds is what a host run cannot give: cc370's code generation, 24-bit
+ * pointers under the bounds arithmetic, and the record layouts of case (0).
+ * What it does NOT add is the memory-safety verdict - there is no sanitizer on
+ * MVS 3.8j, so the host ASan run stays the gate for #23 and #24.
+ *
  * RC: 0 = all checks passed, 1 = a check failed.  #25, #23, #24.
  */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stddef.h>
 
 #include "jesprb.h"
 
@@ -226,6 +235,25 @@ int main(void)
     memset(&pb, 0, sizeof pb);      /* pb_reset() frees, so start it clean */
 
     printf("TSTJESPRB - libc370 #25: __jesprb() record walk\n\n");
+
+    /* ------------------------------------------------------------------
+     * (0) the record layouts the walk measures against.  Every bounds
+     *     check below is `p + sizeof(PRLINE) > end` and friends, so a
+     *     compiler that pads these differently would move the boundary
+     *     the memory-safety cases are testing.  Cheap on the host, the
+     *     whole point on the target: only an MVS run says what cc370
+     *     makes of them (jcl/tstjesprb.jcl).
+     * ---------------------------------------------------------------- */
+    printf("(0) record layout\n");
+    CHECK_EQ(sizeof(PRLINE), 3, "(0) PRLINE header is 3 bytes");
+    CHECK_EQ(sizeof(SPLINE), 4, "(0) SPLINE header is 4 bytes");
+    /* NOT sizeof(PRBLOCK): that is 12, because the compiler pads behind the
+     * 2-byte dsid.  The block header on the spool is 10 bytes and the walk
+     * starts at the literal blk[10]; what has to hold is where the three
+     * fields sit, which is what jesprint() reads them at. */
+    CHECK_EQ(offsetof(PRBLOCK, next),   0, "(0) block header: next at +0");
+    CHECK_EQ(offsetof(PRBLOCK, jobkey), 4, "(0) block header: jobkey at +4");
+    CHECK_EQ(offsetof(PRBLOCK, dsid),   8, "(0) block header: dsid at +8");
 
     /* ------------------------------------------------------------------
      * (1) plain records, several per block

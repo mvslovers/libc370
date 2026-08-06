@@ -31,6 +31,13 @@ changes, both `jesprint()`.
   red today and land with those fixes. What the spanned cases pin is the parser's
   own contract, not JES2's format — whether `len2` on a FIRST part includes the
   2-byte total-length prefix is #29 and needs a captured block from the target.
+  **The same source also runs on MVS** (`jcl/tstjesprb.jcl`): cc370 compiles it
+  unchanged, because since #25 the walk needs neither assembler nor I/O. That run
+  adds what a host run cannot — cc370's code generation, 24-bit pointers under
+  the bounds arithmetic, and the record layouts (`sizeof(PRLINE)`,
+  `sizeof(SPLINE)`, the block header offsets). It does not add the memory-safety
+  verdict: there is no sanitizer on MVS 3.8j, so the host ASan run stays the gate.
+  77/77 on both, COND CODE 0000 on MVS 3.8j.
 - **Prototypes for `loadenv()`, `tzset()`, `__exit()` and `__svc99()` (#5).**
   All four link fine — only the declarations were missing, so consumers got
   implicit-declaration warnings and carried local `extern`s (httplua's
