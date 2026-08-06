@@ -30,6 +30,16 @@ translation units of churn.
 Three defects that survey turned up are filed as #59, #60 and #61 — none of them
 needs the sweep, and they are below.
 
+**#58 — `racf_auth()` wrote the caller's ACEE into ASXBSENV** (PR #62). It now
+passes it in the RACHECK parameter list, where RAKF looks first, and the
+address-space-wide ENQ that was there to make the poke survivable is gone with
+it. The race is measured, not argued: a worker TCB parking NULL in ASXBSENV read
+the main task's ACEE back 215 times in 6146 iterations against the old library,
+and 0 times against the new one. A second defect went with the ENQ —
+`racf_auth()` ignored `lock()`'s "you already have it" rc and DEQd
+unconditionally, so a caller holding the ASXB lock across the call lost it; that
+is what `test/mvs/tstracau.c` guards. Follow-up in the consumer: ftpd#81.
+
 ## Now
 
 **#59 and #60 — two lines the #43 survey found by reading rather than counting.**
