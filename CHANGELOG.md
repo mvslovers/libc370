@@ -14,6 +14,15 @@ spool record walk that any foreign or truncated block could reach. Two breaking
 changes, both `jesprint()`.
 
 ### Added
+- **`__cas()` — compare and swap the way the instruction does it (#48).** Stores
+  `new_value` only if `*mem` is still `*expect`; returns 0 when it swapped, 1
+  when it did not — and then `*expect` holds what is in memory instead, which is
+  what a retry loop needs and what a plain exchange cannot tell you. `-1` for
+  NULL arguments, so "did not swap" and "you passed nonsense" are
+  distinguishable. This is the operation rexx370 needed when it worked around
+  the broken `__cs()` by swapping a value in and back out again
+  (`irx#anch.c`): between those two swaps another thread sees a value that was
+  never meant to be published. One `CS` has no such window.
 - **`JESPR_TRUNC` (#23).** A new `jesprint()` stop reason: a record ran past the
   end of a block, so the block is truncated or malformed and the rest of it was
   skipped. The chain is intact and the walk continues with the next block, same
@@ -64,6 +73,16 @@ changes, both `jesprint()`.
   across the change except `@@ver.s`, which bakes in the git revision.
 
 ### Changed
+- **BREAKING — `__cs()` is gone; use `__swap()` or `__cas()` (#48).** It never
+  was a compare and swap: the `CS` retry loop it used turns the instruction's
+  comparison into an unconditional exchange, because the caller never gets to
+  say what it expected. Renamed to `__swap()`, which is what it does — with the
+  defect fixed that made it store the word *at* `new_value`. Nothing in the
+  library or in httpd, mvsmf, ftpd or ufsd called it, so the rename breaks
+  nobody; the one project that tried, rexx370, had already backed out to a plain
+  load/store. `test/mvs/tstcs.c` became `test/mvs/tstatom.c` and covers both
+  functions, 21 checks, including the slot-claim pattern that motivated
+  `__cas()`.
 - **`TSTJESLG` drives the shipping walk instead of a copy of it (#45).** The
   probe reconstructed what `jesprint()` would do with its own `scanblk()`, a
   hand-written mirror — and the mirror had drifted: it advanced a spanned part
