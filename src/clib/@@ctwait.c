@@ -23,14 +23,14 @@ cthread_wait(unsigned *ecb)
 
 #if 1
     __asm__("\n"
-"AGAIN    DS    0H\n"
+"@@CTWAGN DS    0H\n"
 "         L     0,0(,%1)    get ecb value\n"
 "         LA    1,0         new ecb value\n"
 "         CS    0,1,0(%1)   save new value in ecb\n"
-"         BNZ   AGAIN       ecb changed, try again\n"
+"         BNZ   @@CTWAGN       ecb changed, try again\n"
 "         N     0,=X'3FFFFFFF'\n"
 "         ST    0,%0        return ecb value"
-        : "=m"(rc) : "r"(ecb));
+        : "=m"(rc) : "r"(ecb) : "0", "1");
 #else
     rc = (int)(*ecb & 0x3FFFFFFF);
     *ecb = 0;

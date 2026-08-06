@@ -73,6 +73,21 @@ changes, both `jesprint()`.
   across the change except `@@ver.s`, which bakes in the git revision.
 
 ### Changed
+- **The four counters and `cthread_wait()` declare what their assembler writes
+  (#55).** `__inc()`, `__uinc()`, `__dec()`, `__udec()` and `cthread_wait()`'s CS
+  block all load R0 and R1 and told the compiler nothing — safe today because
+  cc370 happens not to want those registers across the asm, which is a register
+  allocator's mood rather than a guarantee. `cthread_wait()` is the telling one:
+  its *first* asm block declares `"1", "14", "15"`, the CS block below it
+  declared nothing. Their retry labels (`AGAIN`, and `INCIT`/`SWAPIT` in the
+  inc/dec pair) were file-scope in the generated assembler, so a second inline
+  loop in any of those files — or merging the near-identical TUs, which is
+  tempting — would have produced a duplicate symbol. Now named after their
+  function. Verified as a no-op: of the 12 changed lines in each generated `.s`
+  (4 in `@@ctwait.s`), **none** has a cause other than the label name. The four
+  counters also gained their first tests, `test/mvs/tstatom.c` (8)-(10),
+  including the documented wrap at the limits — `__inc()` at `INT_MAX` goes to
+  0, not to `INT_MIN`, which is what makes them counters and not fetch-and-add.
 - **BREAKING — `__cs()` is gone; use `__swap()` or `__cas()` (#48).** It never
   was a compare and swap: the `CS` retry loop it used turns the instruction's
   comparison into an unconditional exchange, because the caller never gets to

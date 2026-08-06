@@ -9,20 +9,20 @@ unsigned __uinc(void *mem)
     if (!mem) goto quit;
 
     __asm__("\n"
-"AGAIN    DS    0H\n"
+"@@UINAGN DS    0H\n"
 "         L     0,0(,%1)    get current value\n"
 "         LR    1,0         copy for new value\n"
 "         C     1,=F'-1'    max value?\n"
-"         BNE   INCIT       no, bump it up\n"
+"         BNE   @@UINIT       no, bump it up\n"
 "         SR    1,1         reset to zero\n"
-"         B     SWAPIT\n"
-"INCIT    DS    0H\n"
+"         B     @@UINSWP\n"
+"@@UINIT  DS    0H\n"
 "         AL    1,=F'1'     increment new value\n"
-"SWAPIT   DS    0H\n"
+"@@UINSWP DS    0H\n"
 "         CS    0,1,0(%1)   save new value in memory\n"
-"         BNZ   AGAIN       changed, try again\n"
+"         BNZ   @@UINAGN       changed, try again\n"
 "         ST    0,%0        return value"
-        : "=m"(old_value) : "r"(mem));
+        : "=m"(old_value) : "r"(mem) : "0", "1");
 
 quit:
     return old_value;
