@@ -52,11 +52,22 @@ typedef struct prblock {
  * block.  The caller also frees prbuf when the walk is over.                */
 typedef struct jesprb {
     char       *prbuf;          /* reassembly buffer for a spanned line      */
-    unsigned    blksize;        /* usable size of prbuf                      */
+    unsigned    blksize;        /* size of prbuf: the LARGEST total announced
+                                   so far, since the buffer only ever grows  */
+    unsigned    total;          /* what the FIRST part of the line now being
+                                   assembled announced.  Not the same as
+                                   blksize - a short line after a long one
+                                   would otherwise be measured against the
+                                   long one's buffer and could overrun its
+                                   own announcement unnoticed (#24)          */
     unsigned    linelen;        /* bytes of the spanned line assembled so far*/
     unsigned    lines;          /* lines handed to emit(), all blocks so far */
     int         reason;         /* JESPRB_* for the block just walked        */
     int         prtrc;          /* emit() rc when reason == JESPRB_STOPPED   */
+    int         assembling;     /* a FIRST part opened a line and no LAST has
+                                   closed it: only then may a MIDDLE/LAST be
+                                   appended, and only then is prbuf sized for
+                                   the line now arriving (#24)              */
 } JESPRB;
 
 /* Why the record walk of ONE block ended.  jesprint() maps these onto the
@@ -64,9 +75,13 @@ typedef struct jesprb {
  * this translation unit stays free of libc370 headers.                      */
 #define JESPRB_OK       0       /* end of block, keep following the chain    */
 #define JESPRB_STOPPED  1       /* emit() asked to stop (its rc is in prtrc) */
-#define JESPRB_NOBUF    2       /* MIDDLE/LAST part with no FIRST part: the
-                                   rest of THIS block cannot be reassembled  */
+#define JESPRB_NOBUF    2       /* a spanned part that cannot be reassembled:
+                                   a MIDDLE/LAST with no FIRST opening the
+                                   line, or parts adding up to more than the
+                                   FIRST part announced                      */
 #define JESPRB_NOMEM    3       /* reassembly buffer could not be allocated  */
+#define JESPRB_TRUNC    4       /* a record runs past the end of the block:
+                                   the block is truncated or malformed       */
 
 /* Walk the records of one spool block and hand each line to emit().
  *
@@ -77,8 +92,14 @@ typedef struct jesprb {
  * stops the walk.
  *
  * Returns 0 when the caller should follow the chain to the next block (that
- * includes JESPRB_NOBUF, which only ends the record walk of this block), and
- * a negative value when the whole walk must stop; pb->reason says why.      */
+ * includes JESPRB_NOBUF and JESPRB_TRUNC, which only end the record walk of
+ * this block), and a negative value when the whole walk must stop;
+ * pb->reason says why.
+ *
+ * Giving up on a block hands out whatever of a spanned line was already
+ * assembled - a visible fragment beats a line that silently disappears - and
+ * then drops the reassembly state, so the next block cannot append to a line
+ * whose middle this block could not read (#24).                            */
 int __jesprb(char *blk, unsigned blklen, JESPRB *pb,
              int (*emit)(char *line, unsigned linelen, void *arg), void *arg);
 

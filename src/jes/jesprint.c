@@ -147,10 +147,11 @@ int jesprint(JES *jes, JESJOB *job, unsigned dsid,
         }
 
         /* the record walk gave up on this block but the chain is intact, so
-           the remaining blocks are still read - same as before the walk was
-           extracted, and the reason survives to the end of the walk        */
-        if (pb.reason == JESPRB_NOBUF) {
-            st->reason = JESPR_NOBUF;
+           the remaining blocks are still read; the reason survives to the end
+           of the walk.  Whatever the walk had already assembled of a spanned
+           line went out as a truncated line before it gave up (#24).       */
+        if (pb.reason == JESPRB_NOBUF || pb.reason == JESPRB_TRUNC) {
+            st->reason = (pb.reason == JESPRB_TRUNC) ? JESPR_TRUNC : JESPR_NOBUF;
             st->mttr   = mttr;
         }
 
