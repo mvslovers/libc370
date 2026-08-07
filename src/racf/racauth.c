@@ -92,9 +92,22 @@ int racf_auth(ACEE *acee, const char *classname, const char *resource,
     /* invalid, set to highest access allowed */
     attr = RACHECK_ATTR_ALTER;
   }
-#if 1
+  /* LOG=NONE.  This used to be 0x10 under the same name, and 0x10 is
+  ** DSTYPE=V -- so the library asked for no audit and got one, while telling
+  ** RACF the entity was a VSAM data set (#63).
+  **
+  ** The one thing that had to be proven before this bit could move is that
+  ** suppressing the audit does not soften a decision.  test/mvs/tstracmx.c
+  ** measured the whole matrix on MVS 3.8j against RAKF: a user who is not
+  ** permitted answers 8 with every flag value, in FACILITY and in DATASET,
+  ** through the plist ACEE and through the ASXBSENV fallback, and ATTR still
+  ** decides (READ granted, UPDATE refused).  Only one answer moves: a
+  ** resource with NO profile answers 4 ("not protected") instead of 0.  That
+  ** is why ftpd#82 and httpd#135 had to land first -- both accept 0 and 4 as
+  ** "allowed" now.  Callers of racf_auth() must test rc <= 4, not rc == 0.
+  */
   plist.flag1 |= RACHECK_FLAG1_LOG_NONE;
-#endif
+
   plist.len = sizeof(plist);
 
   /* Authorize against the caller's ACEE by passing it in the parameter list.

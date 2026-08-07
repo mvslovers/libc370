@@ -11,7 +11,9 @@ data, losing storage, or building against a stale compiler. Two heap defects in
 the JES2 spool record walk that any foreign or truncated block could reach, a
 compare-and-swap that stored the wrong word entirely, an S0C4 on open-by-DSN
 from a TSO command processor, and public prototypes for four routines consumers
-had to declare by hand. Four breaking changes: `jesprint()` twice, the atomics,
+had to declare by hand. Five breaking changes: `jesprint()` twice, the atomics,
+`racf_auth()` — which stops asking for audit suppression with the bit that
+means "this is a VSAM data set", and in exchange answers 4 where it answered 0 —
 and `__dsalc()` — which also stops narrating its failures to the operator, the
 first instalment of taking the console back from the library. `__txdsn()` is
 the second, and the plainer case: it dumped a control block on the path where
@@ -77,6 +79,44 @@ everything had worked.
   across the change except `@@ver.s`, which bakes in the git revision.
 
 ### Changed
+- **BREAKING — `racf_auth()` asks for `LOG=NONE` with the bit that means it,
+  and an unprotected resource now answers 4 instead of 0 (#63).** The library
+  set `0x10` under the name `RACHECK_FLAG1_LOG_NONE`. `0x10` is **`DSTYPE=V`**
+  (`sysmac/racheck.macro:562`); `LOG=NONE` is `0x02`. So two things were true
+  at once: the audit suppression the library asked for never happened, and
+  every `CLASS=DATASET` check it issued told RACF the entity was a VSAM data
+  set. **What changes for callers:** a resource with no profile answered
+  `0` and now answers `4` — "not protected", which is SAF's other way of
+  saying allowed. **Test `rc <= 4`, not `rc == 0`.** ftpd (ftpd#82) and httpd
+  (httpd#135) already do; mvsmf calls only `racf_set_acee()` and is
+  unaffected. A denial is unchanged at 8.
+  The gate on this was never the rc — it was whether suppressing the audit
+  also softens a decision, and that is now measured rather than assumed.
+  `test/mvs/tstracmx.c` walks eight cells against RAKF on MVS 3.8j, each with
+  five `flag1` values (`00`, `10`, `02`, `04`, `12`), counting both the rc and
+  the RAKF messages the check produced:
+  a user who is genuinely not permitted answers **8 with every flag value** —
+  in FACILITY and in DATASET, with the ACEE in the parameter list and with it
+  reached through the ASXBSENV fallback — and `ATTR` still decides, `UPDATE`
+  refused against a profile granting only READ. Two answers move, and only
+  two: a FACILITY resource with no profile goes 0 → 4, and the audit goes
+  2 RAKF lines per check → 0. `0x04` (`LOG=NOFAIL`) behaves exactly like
+  `0x02` on both counts, so there is no flag that buys the silence without
+  the rc: on this RAKF they are the same trade.
+  `DSTYPE=V` turned out to change no outcome anywhere in the matrix — `0x00`
+  and `0x10` are identical in all forty cells, including the DATASET rows
+  where `DSTYPE` is consulted — so the lie in the parameter list was a lie and
+  not a defect. Worth knowing for anyone reading the old code.
+  One measurement is narrower than it looks: the reference system carries a
+  `DATASET *` READ profile, so no data set name on it is genuinely
+  unprotected, and the DATASET rows answer 0 throughout. A system without that
+  catch-all should expect 4 there too.
+  While in the header: every `flag1` bit is now defined and named after the
+  macro (`RACHECK_FLAG1_DSTYPE_V`, `..._LOG_NOFAIL`, `..._RACFIND`,
+  `..._31BIT`, `..._ENTITY_CSA`), the three `flag2` bits the macro can set are
+  defined for the first time, and the four `ATTR` values were re-checked
+  against `sysmac/racheck.macro:231` and are **correct** — cell (7) confirms
+  `UPDATE` on target. `racf.h` now documents the return codes it hands back.
 - **BREAKING — `__dsalc()` no longer writes to the operator console, and an
   unknown `DISP=` token now fails instead of being ignored (#43).** Creating a
   data set that already exists — an ordinary outcome — put three lines on the
