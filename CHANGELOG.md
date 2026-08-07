@@ -13,7 +13,9 @@ compare-and-swap that stored the wrong word entirely, an S0C4 on open-by-DSN
 from a TSO command processor, and public prototypes for four routines consumers
 had to declare by hand. Four breaking changes: `jesprint()` twice, the atomics,
 and `__dsalc()` — which also stops narrating its failures to the operator, the
-first instalment of taking the console back from the library.
+first instalment of taking the console back from the library. `__txdsn()` is
+the second, and the plainer case: it dumped a control block on the path where
+everything had worked.
 
 ### Added
 - **`__cas()` — compare and swap the way the instruction does it (#48).** Stores
@@ -194,6 +196,31 @@ first instalment of taking the console back from the library.
   `spool_read()` is a BDAM READ/CHECK and the TU carries file-scope assembler.
 
 ### Fixed
+- **`__txdsn()` stops dumping the DALMEMBR text unit to the operator console,
+  and checks the text units it builds before storing them (#60).** Every
+  allocation of a data set name carrying a member —
+  `__dsalc("dsn=SYS1.MACLIB(IEFZB4D0);disp=shr")`, and so every
+  `fopen("DD:x(member)")` that goes through dynamic allocation — wrote a hex
+  dump of the text unit to the console. Not on failure: on the success path,
+  with no `if` in front of it. On MVS 3.8j the console is the SYSLOG (#4), and
+  unlike #43 there is no judgement call attached — nothing had gone wrong. The
+  same line held a second defect: the text unit was dumped *before* it was
+  checked, so a failed `calloc` gave `wtodumpf(NULL, …)` — a plausible-looking
+  dump of low storage in place of an allocation failure — and then
+  `arrayadd(txt99, NULL)`. The DALDSNAM unit two lines below was passed to
+  `arrayadd()` unchecked in the same way. Both are checked now, and the
+  function reports through the return value every caller already reads
+  (`if (err) goto quit`); a unit that was built but could not be added is freed
+  rather than leaked, since `FreeTXT99Array()` only reaches what made it into
+  the array. The NULL matters more than a defensive check usually would:
+  `__dsalc()` ORs the high-order bit into the last array element and hands the
+  list to SVC 99, so a NULL element is a text unit at address 0.
+  `test/host/tsttxdsn.c` links and executes the real `@@txdsn.c` — 22/22 with
+  the fix, 14/22 and eight failures against the pre-fix source. The generated
+  `@@txdsn.s` no longer references `WTODUMPF`, and dropping the call also
+  retires the implicit declaration it needed (the file includes neither
+  `clib.h` nor `clibwto.h`), so it compiles clean under `cc370 -Wall -Werror`:
+  one of the 129 translation units in #39, off the list for free.
 - **`racf_login()` and `racf_logout()` stop taking the address-space-wide ASXB
   ENQ, and `racf_logout()` stops re-pinning a foreign ACEE (#64).** #58 removed
   the ENQ and the ASXBSENV poke from `racf_auth()`; it was never the only entry

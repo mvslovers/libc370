@@ -9,6 +9,7 @@ __txdsn(TXT99 ***txt99, const char *dataset)
     int     len;
     char    *p;
     char    *member;
+    TXT99   *tu;
     char    dsn[80];
 
     if (dataset) {
@@ -20,19 +21,27 @@ __txdsn(TXT99 ***txt99, const char *dataset)
 
         member = strchr(dsn, '(');
         if (member) {
-            TXT99 *txmem;
             *member = 0;
             member++;
             p = strchr(member,')');
             if (p) *p = 0;
             len = strlen(member);
-            txmem = NewTXT99(DALMEMBR,1,len,member);
-            wtodumpf(txmem, sizeof(TXT99)+len, "%s: DALMEMBR", __func__);
-            err = arrayadd(txt99, txmem);
-            if (err) goto quit;
+
+            tu = NewTXT99(DALMEMBR,1,len,member);
+            if (!tu) goto quit;
+
+            if (arrayadd(txt99, tu)) {
+                free(tu);
+                goto quit;
+            }
             len = strlen(dsn);
         }
-        err = arrayadd(txt99, NewTXT99(DALDSNAM,1,len,dsn));
+
+        tu = NewTXT99(DALDSNAM,1,len,dsn);
+        if (!tu) goto quit;
+
+        err = arrayadd(txt99, tu);
+        if (err) free(tu);
     }
 
 quit:
