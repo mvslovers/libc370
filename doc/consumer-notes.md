@@ -271,6 +271,48 @@ bit integers maximum"). libc370 ships a small bignum — `__64`, 16-bit limbs, i
 `include/clib64.h` and `src/clib/@@64*.c` — which is what `src/time64` is built
 on. Use it where you would otherwise reach for `long long`.
 
+Note that a plain `unsigned long long` divide does not link: cc370 compiles it
+into a call to `@@UDIVDI`, which `libc.a` does not define, and `ld370` reports
+it unresolved. Shifts, addition and subtraction on `long long` are generated
+inline and are fine — only divide and modulo need `__64_div*` / `__64_divmod*`.
+
+### `__64` is big-endian by design — it cannot be tested on a host
+
+`__64` is a union of three views over the same eight bytes, and different
+operations read different views:
+
+| operation | view | assumes |
+|---|---|---|
+| `__64_cmp`, `__64_or`, `__64_copy` | `.u64` | native order |
+| `__64_div`, `__64_sub` | `array[]` of `uint16_t` | `array[0]` = most significant halfword |
+| `__64_from_u32`, `__64_from_i32`, `__64_to_i32`, `__64_lshift_one_bit` | `u32[]` | `u32[0]` = high word |
+
+On S/370 all three coincide and the code is correct. On a little-endian host
+they do not — and the failure is the dangerous kind: the sources **compile,
+link and run**, and simply answer wrong. A host build of the `src/time64`
+scaling returns 0 for both `/1000` and `/1000000`. Nothing announces that the
+harness is measuring nothing, so the obvious next move is to "fix" the expected
+values until the test is green.
+
+Word size is not the problem, so `-m32` does not rescue it: an ILP32 x86 host is
+still little-endian. Nor is there an arrangement that works — feeding operands
+in big-endian `array[]` layout does not help, because `__64_div_u32()` builds
+its divisor with `__64_from_u32()` and `__64_div()` compares with `__64_cmp()`
+on the way round the loop. Separately, `include/time64.h` refuses to compile at
+all under `__LP64__`, and the `@@64*` entry points are S/370 assembler with no
+native equivalent.
+
+**The testing contract that follows:** `__64` behaviour — and anything built on
+it, which is all of `src/time64` — is verified on MVS (or a big-endian ILP32
+target) only. A host test may check expected-value *literals*, but must not
+exercise `__64` itself. `test/mvs/tsttm64.c` and `test/host/tsttm64vec.c` are
+the worked example: the arithmetic vectors run on the target, and the host
+companion includes no libc370 header and calls no libc370 function — it only
+re-derives the expected quotients with native 64-bit division, which catches a
+transposed digit in the table without pretending to have exercised the library.
+
+This is a property of the design, not a defect.
+
 ## Assembler macros are vendored — nothing comes from MVS
 
 `sysmac/` holds the SYS1.MACLIB members (including the JES2 ones: `$pso`,
