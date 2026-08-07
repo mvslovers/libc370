@@ -156,6 +156,41 @@ message on a path that then abends is the only trace anyone gets.
 Your own code is the other side of this contract: if you want a failure on the
 console, write it there yourself, where you know what it means.
 
+## `racf_auth()` has two "allowed" answers, not one
+
+SAF answers an authorization check with a return code, and **two of its values
+mean the access may proceed**:
+
+| rc | meaning |
+|----|---------|
+| 0  | permitted |
+| 4  | the resource is not protected — no profile covers it |
+| 8  | not authorized |
+
+So the test is `rc <= 4`, never `rc == 0`. A caller that tests for 0 reads "no
+profile exists" as a denial, and on a system where the profile was never
+defined that means refusing everything.
+
+Until #63 the distinction was invisible: `racf_auth()` set the wrong flag bit
+in the RACHECK parameter list and an unprotected resource always answered 0.
+It now asks for `LOG=NONE` with the bit that means it, and answers 4 there —
+measured on MVS 3.8j, along with the part that matters more: a user who is
+genuinely **not** permitted still answers 8, in every class, with the ACEE
+passed in the parameter list and with it reached through ASXBSENV
+(`test/mvs/tstracmx.c`).
+
+Whether "no profile exists" *should* mean allow is the caller's policy
+decision, not the library's — and it is a decision worth making deliberately
+rather than inheriting. A server gating logins on a FACILITY resource that
+nobody defined is letting everyone in, which may or may not be what its
+operator expects.
+
+One thing that comes with the fix: `LOG=NONE` suppresses RAKF's audit
+messages, and on MVS 3.8j the console is the SYSLOG (#4). A busy server no
+longer writes two lines per authorization decision. If you *want* the audit
+trail, the library can no longer give it to you — say so on the issue and it
+becomes a parameter.
+
 ## A module run from the LNKLST cannot write its own statics
 
 Deploy a load module into a system library on the LNKLST and it can **read** its

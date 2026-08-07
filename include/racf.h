@@ -38,6 +38,19 @@ extern int      racf_logout(ACEE **acee)                                asm("RAC
 ** where attr is one of RACF_ATTR_READ, RACF_ATTR_UPDATE, RACF_ATTR_CONTROL
 ** or RACF_ATTR_ALTER.  If attr is 0 the RACF_ATTR_READ is assumed.
 ** if attr is an invalid value the RACF_ATTR_ALTER is assumed.
+**
+** The return code is SAF's, unmodified:
+**    0  permitted
+**    4  the resource is not protected -- no profile covers it.  In SAF terms
+**       this is also an "allowed" answer, and a caller that tests rc == 0
+**       reads it as a denial.  Test rc <= 4 for "may proceed".
+**    8  not authorized
+**   12+ see the table at the top of src/racf/racauth.c
+**
+** Which of 0 and 4 an unprotected resource answers depends on a flag in the
+** RACHECK parameter list that libc370 currently sets wrongly, so today it is
+** always 0 -- see #63 and the comment at that assignment.  Consumers should
+** already accept both.
 */
 extern int      racauth(ACEE *acee, const char *classname,
                         const char *resource, int attr);
