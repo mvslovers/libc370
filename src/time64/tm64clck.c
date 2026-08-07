@@ -3,6 +3,12 @@
 #include <stdint.h>
 #include <time64.h>
 
+/* clock64() returns SECONDS since the unix epoch, matching clock64_t and the
+ * prototype in time64.h.  It divided by 1000 and returned milliseconds until
+ * #49 - which made it a duplicate of mclock64() and left the library with no
+ * function returning seconds at all.  The millisecond and microsecond tiers
+ * are mclock64() and uclock64(); nothing here scales for them.
+ */
 __asm__("\n&FUNC    SETC 'clock64'");
 clock64_t clock64(void)
 {
@@ -27,15 +33,15 @@ __asm__("LA\t2,%0\tget address of 8 byte work area\n\t"
     /* convert to microseconds (bits 0-51==number of microseconds) */
     clock.u64 >>= 12; /* convert to microseconds (1 us = .000001 sec) */
 
-#if 0
+#if 1
     /* calc seconds by discarding the microseconds (divide by 1000000) */
 	__64_div_u32(&clock, 1000000, &clock);
 #else
-    /* convert microseconds to miliseconds (divide by 1000) 
+    /* convert microseconds to miliseconds (divide by 1000)
      * Note: 1000000 microseconds == 1 second.
-     * 		    1000 miliseconds  == 1 second 
+     * 		    1000 miliseconds  == 1 second
      */
-	__64_div_u32(&clock, 1000, &clock);	/* CLOCKS_PER_SECOND is 1000 */
+	__64_div_u32(&clock, 1000, &clock);
 #endif
 
 #endif

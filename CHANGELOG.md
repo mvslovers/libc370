@@ -11,7 +11,9 @@ data, losing storage, or building against a stale compiler. Two heap defects in
 the JES2 spool record walk that any foreign or truncated block could reach, a
 compare-and-swap that stored the wrong word entirely, an S0C4 on open-by-DSN
 from a TSO command processor, and public prototypes for four routines consumers
-had to declare by hand. Five breaking changes: `jesprint()` twice, the atomics,
+had to declare by hand. Six breaking changes: `jesprint()` twice, the atomics,
+`clock64()` — which finally returns the seconds its type always claimed, in one
+coordinated move with `time64()` so that `time64()`'s own value does not budge —
 `racf_auth()` — which stops asking for audit suppression with the bit that
 means "this is a VSAM data set", and in exchange answers 4 where it answered 0 —
 and `__dsalc()` — which also stops narrating its failures to the operator, the
@@ -79,6 +81,51 @@ everything had worked.
   across the change except `@@ver.s`, which bakes in the git revision.
 
 ### Changed
+- **BREAKING — `clock64()` returns seconds, not milliseconds (#49).** It
+  divided the microseconds out by 1000, so it returned milliseconds while
+  `clock64_t` and its prototype both said seconds. `mclock64()` is the same
+  seven lines, which made `clock64()` a duplicate of it and left the library
+  with no function returning seconds at all — while `time64_t`, `gmtime64()`
+  and the whole `m*`/`u*` scaling family are built on seconds.
+  **What changes for callers:** anything reading `clock64()` as milliseconds
+  now gets 1/1000 of what it did. **Those callers move to `mclock64()`**,
+  which is unchanged and always was milliseconds. Anything feeding
+  `clock64()` to `gmtime64()` as seconds was ~56 000 years out and is now
+  right. `time64()`, `mclock64()` and `uclock64()` are **unchanged in value**;
+  so are `mtime64()`, `utime64()` and everything derived from them.
+  This could not be a one-line change. `time64()` was cancelling the bug with
+  a second wrong constant — `clock64()` then `/CLOCKS_PER_SEC` — so correcting
+  `clock64()` alone would have moved the ×1000 error into `time64()` and
+  broken every in-repo consumer instead of none. Both sites moved together:
+  `time64()` is now a straight `clock64()` pass-through, exactly as
+  `utime64()` is for `uclock64()` and `mtime64()` for `mclock64()`, and it no
+  longer reads `CLOCKS_PER_SEC` at all. That macro describes `clock()`, which
+  this library does not implement (`src/clib/clock.c` returns `-1`), and it is
+  no longer referenced anywhere in `src/`.
+  The quietest thing this could have broken is in the thread manager.
+  `dispatch_work()` (`src/thdmgr/@@cminit.c`) subtracts two `time64()` values
+  and tests the result for truth, so it is a raw second count — an assumption
+  nothing in that file named, and one that costs no abend and no message when
+  it is wrong: milliseconds would post every waiting worker on essentially
+  every manager pass, seconds/1000 would stop the timer posts for up to ~16
+  minutes. It is now written down at the site, and `test/mvs/tsttm64.c` case
+  (9) guards it by reading `time64()` twice across a real two-second `STIMER`
+  wait and requiring a difference of 1..3. It measured 2 before the change and
+  2 after.
+  The rest of that test landed one PR ahead of this one (#73) for exactly this
+  reason. Nineteen cases on MVS 3.8j, COND CODE 0000 on both sides of the fix;
+  the only two that moved are the two that record the unit contract —
+  `clock64() == mclock64()` became `clock64() == time64()`, and
+  `clock64()/1000 == time64()` became `clock64()*1000 == mclock64()`. Every
+  invariant — the `gmtime64()` era check, the seconds-since-1970 magnitude,
+  the µs/ms/s tier agreement, monotonicity, `difftime64()` and case (9) — is
+  untouched and green on both sides, which is the evidence that `time64()` did
+  not move.
+  Known consumer: lua370's `os.clock()` (`src/loslib.c`) reads `clock64()`
+  directly and reimplemented the same `/CLOCKS_PER_SEC` compensation; it moves
+  to `mclock64()`. rexx370 migrated to `uclock64()` ahead of this
+  (mvslovers/rexx370#103). No other repository in the ecosystem calls
+  `clock64()` at all.
 - **BREAKING — `racf_auth()` asks for `LOG=NONE` with the bit that means it,
   and an unprotected resource now answers 4 instead of 0 (#63).** The library
   set `0x10` under the name `RACHECK_FLAG1_LOG_NONE`. `0x10` is **`DSTYPE=V`**
