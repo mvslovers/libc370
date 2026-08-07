@@ -16,7 +16,22 @@
 #define __64_SSCANF_FORMAT_STR        "%4hx"
 #define __64_MAX_VAL                  ((__64_DTYPE_TMP)0xFFFF)
 
-/* Data-holding structure: array of __64_DTYPEs */
+/* Data-holding structure: array of __64_DTYPEs.
+ *
+ * BIG-ENDIAN BY DESIGN.  The three members below are three views of the same
+ * eight bytes and the routines mix them freely: __64_cmp/__64_or/__64_copy
+ * work on .u64, __64_div/__64_sub walk array[] with array[0] the MOST
+ * significant halfword, and __64_from_u32/__64_to_i32/__64_lshift_one_bit use
+ * u32[] with u32[0] the HIGH word.  On S/370 all three coincide.  On a
+ * little-endian host they do not, and nothing says so: the code compiles,
+ * links, runs, and answers wrong.  Word size is not the issue, so -m32 does
+ * not help either.
+ *
+ * Consequence for tests: __64, and everything built on it (all of
+ * src/time64), is verified on the target only.  A host test may check
+ * expected-value literals but must not exercise __64.  See #76 and the
+ * "64-bit arithmetic is software" section of doc/consumer-notes.md.
+ */
 typedef union {
 	uint64_t	u64;					/* used internally for bit operations and assigments */
 	uint32_t	u32[2];					/* used internally for initialization */

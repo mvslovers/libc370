@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <time64.h>
 
+__asm__("\n&FUNC    SETC 'mtime64'");
 mtime64_t mtime64(mtime64_t *mtimer)
 {
     mtime64_t tt;
