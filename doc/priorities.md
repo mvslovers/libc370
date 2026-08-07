@@ -4,8 +4,10 @@ A reading of the open issues as of **2026-08-07**, ordered. Not a plan anyone is
 committed to — the order encodes what is risky, what is cheap, and what is
 blocked on something other than effort. Re-read it when those change.
 
-Revised after #48, #43, #58, #64, #60 and #59 closed. The last two were what
-this list called "Now", and clearing them added one issue to it (#68).
+Revised after #48, #43, #58, #64, #60, #59 and #63 closed. Three of those were
+what this list called "Now" or "Deferred", and clearing them added two issues
+back to it (#68, and #70 from a consumer's own sweep) — both of the same
+family: the compiler was never in a position to catch any of it.
 
 ## Landed since this was written
 
@@ -74,6 +76,30 @@ The finding underneath it is the reason #68 now exists: `wtof()` was an implicit
 declaration in that file, and with no prototype in scope there is no format
 checking at all.
 
+**#63 — `RACHECK_FLAG1_LOG_NONE` was `0x10`, which is `DSTYPE=V`** (PR #69). So
+the audit suppression never happened and every `CLASS=DATASET` check told RACF
+the entity was a VSAM data set. The bit is `0x02` now, and the whole of the
+issue's acceptance matrix was measured before it moved: `test/mvs/tstracmx.c`,
+eight cells against RAKF on MVS 3.8j, five `flag1` values each, rc **and** RAKF
+message count per check. The gate holds — a user who is genuinely not permitted
+answers 8 with every flag value, in FACILITY and in DATASET, through the plist
+ACEE and through the ASXBSENV fallback, and `ATTR` still refuses UPDATE against
+a READ-only profile. Two things move and only two: an unprotected resource goes
+0 → 4, and the audit goes two RAKF lines per check to none. Breaking, so callers
+test `rc <= 4` — ftpd#82 and httpd#135 landed that first, which was the whole
+point of the ordering.
+
+Three things the measurement settled that the reading could not. **`DSTYPE=V`
+never changed an outcome**: `0x00` and `0x10` are identical in all forty cells,
+including the DATASET rows where it is consulted — a lie in the parameter list,
+not a defect. **`0x04` (`LOG=NOFAIL`) behaves exactly like `0x02`** on both rc
+and audit, so the silence cannot be bought without the rc change. And the
+DATASET rows are narrower than they look: the reference system has a
+`DATASET *` READ profile, so nothing on it is genuinely unprotected. A sweep for
+`racf_auth` callers — rather than for the constants, which a caller testing
+`rc == 0` never mentions — turned up a fourth consumer the issue never named,
+`picozip370-app`; it already tests `rc > 4` and is `#if 0`'d anyway.
+
 ## Now
 
 **#49 — `clock64()` returns milliseconds, its type says seconds.** Small once
@@ -114,6 +140,16 @@ that ends the class.
 
 ## Consumer-driven, in the order someone is waiting
 
+**#70 — `sleep()` and `__tzset()` are shipped but declared nowhere.** Two
+prototypes in `time.h` and the job is done, which makes this the cheapest thing
+on the list. httpd found them turning on `-Wall` (httpd#138) and has declared
+them locally to get moving (httpd#140), so it is waiting on this only to delete
+that workaround. Worth doing next to #39 rather than instead of it: same defect,
+and #5 was the same defect again. The note at the bottom of #70 is the one to
+read — httpd was calling `__arcou()`, which is not an API name at all and linked
+because the `__` → `@@` mapping happened to land on the right CSECT. Nothing
+disagreed with it because nothing had been declared.
+
 **#50 — catalog name in `DSLIST`.** mvsMF needs `catnm` for Zowe Explorer.
 Note that `DSLIST` is a public struct consumers allocate, so growing it is a
 coordinated rebuild, not a field append.
@@ -145,15 +181,6 @@ get replaced by different latent bugs.
 architecture change, not a fix. Worth doing when the JES area is otherwise
 settled, and after #27 is decided — the two overlap.
 
-**#63 — `RACHECK_FLAG1_LOG_NONE` is the wrong bit.** 0x10 is DSTYPE=V; LOG=NONE
-is 0x02. So every `racf_auth()` is audited *and* RAKF is told the entity is
-VSAM. This one is deferred on someone else's clock rather than on effort or
-risk: flipping the bit changes an rc consumers act on, so the consumers have to
-handle it first. Half of that is done — ftpd#82 closed on 2026-08-06 — and what
-is left is **httpd#135**. It is safe against the old library and the new one, so
-nothing stops it going today, and once it does, #63 is a one-constant change
-with nothing in front of it.
-
 ## Independent of all of the above
 
 **#37 — compile the `.c` in parallel.** Twenty minutes, touches nothing else,
@@ -162,12 +189,11 @@ whenever the queue above feels heavy.
 
 ## Filed elsewhere on 2026-08-06 — what is left of it
 
-Three of the six closed the same afternoon (`mvsmf#198`, `ftpd#81`, `ftpd#82`).
-These are the ones still open, and one of them holds up work in this repository:
+Four of the six are closed (`mvsmf#198`, `ftpd#81`, `ftpd#82`, and `httpd#135`,
+which was the last thing standing in front of #63). Nothing in that list blocks
+this repository any more. Both survivors are in the compiler, and neither can be
+answered from here:
 
-- **mvslovers/httpd#135** — the rc handling #63 needs, and now the only thing in
-  front of it since ftpd#82 landed. Safe against the old library and the new
-  one, so it can go whenever.
 - **mvslovers/cc370#36** — `'\n'` compiles to EBCDIC NEL (`X'15'`), not LF
   (`X'25'`). Moved out of libc370's predecessor because only the compiler can
   emit the other byte. Filed as an investigation: the first deliverable is a
