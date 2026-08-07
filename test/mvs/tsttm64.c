@@ -1,35 +1,37 @@
 /*
- * tsttm64.c - libc370 #49 step A: pin the present behaviour of the time64
- * clock family and the divisor layer under it, BEFORE anything is fixed
- * (MVS target, batch).
+ * tsttm64.c - libc370 #49: the unit contract of the time64 clock family and
+ * the divisor layer under it (MVS target, batch).
  *
- * ISSUE #49: clock64() (src/time64/tm64clck.c) divides the microseconds out
- * by 1000, so it returns MILLISECONDS while clock64_t and the header say
- * seconds.  mclock64() does the same seven lines, so the two are the same
- * function today.  time64() then divides by CLOCKS_PER_SEC (1000) and so
- * comes out in seconds after all - the bug is cancelled inside the library
- * by a second wrong constant.  The fix therefore has to move BOTH sites at
- * once, and this file is the net that proves it moved only what it meant to.
+ * ISSUE #49: clock64() (src/time64/tm64clck.c) divided the microseconds out
+ * by 1000, so it returned MILLISECONDS while clock64_t and the header said
+ * seconds.  mclock64() is the same seven lines, so the two were the same
+ * function.  time64() then divided by CLOCKS_PER_SEC (1000) and came out in
+ * seconds after all - the bug was cancelled inside the library by a second
+ * wrong constant.  The fix had to move BOTH sites at once, and this file is
+ * the net that proves it moved only what it meant to.
+ *
+ * The file landed one PR AHEAD of the fix (step A) with cases (1) and (2)
+ * written against the old behaviour.  The fix (step B) rewrote exactly those
+ * two and left everything else untouched, which is the evidence that
+ * time64() did not move.
  *
  * THIS FILE CHANGES NO BEHAVIOUR.  It calls the functions exactly as they
  * ship and only compares their values to each other.  There is deliberately
- * no STCK injection and no scaling kernel here - restructuring the clock
- * functions is step B, where they are rebuilt anyway.
+ * no STCK injection and no scaling kernel here.
  *
  * ====================================================================
  * THREE CLASSES, AND THEY ARE NOT THE SAME KIND OF TEST
  * --------------------------------------------------------------------
- * (A) CURRENT BEHAVIOUR - freezes what the library does today.  These
- *     cases are EXPECTED TO BE REWRITTEN in step B; that is the point of
- *     them.  They record that clock64() and mclock64() are interchangeable
- *     right now and that clock64() is ~1000x time64().  After the fix the
- *     first becomes clock64()*1000 == mclock64() and the second becomes
- *     clock64() == time64().  A step-B PR that does NOT touch these cases
- *     has not done what it claims.
+ * (A) UNIT CONTRACT - the two cases the fix deliberately moved.  They now
+ *     record that clock64() == time64() (both seconds) and that clock64()
+ *     is 1000x smaller than mclock64().  Before the fix they read
+ *     clock64() == mclock64() and clock64()/1000 == time64(); the old text
+ *     is quoted at each case so the change is legible from here.  Any
+ *     future change to the units belongs in these two and nowhere else.
  *
- * (B) INVARIANT - must stay green across step B, untouched.  This is the
- *     actual safety net.  If a case here goes red while someone is editing
- *     tm64clck.c or tm64time.c, the edit is wrong, not the test.
+ * (B) INVARIANT - untouched by the fix and green on both sides of it.  This
+ *     is the actual safety net.  If a case here goes red while someone is
+ *     editing tm64clck.c or tm64time.c, the edit is wrong, not the test.
  *
  * (C) ARITHMETIC - fixed vectors through __64_div_u32()/__64_divmod_u32().
  *     The whole fix is a change of divisor, so the divider itself gets
@@ -95,8 +97,8 @@
  * Install: RECEIVE the XMIT into the STEPLIB of jcl/tsttm64.jcl.
  *
  * RC: 0 = every check passed, 8 = at least one did not (it is the COND
- * CODE).  Class (A) failing means the library already moved - read the
- * SYSPRINT, do not "repair" the expectation.
+ * CODE).  A class (B) failure is a finding about the library or the system,
+ * not an expectation to adjust - read the SYSPRINT first.
  */
 #include <stdio.h>
 #include <time64.h>
@@ -214,32 +216,37 @@ int main(int argc, char **argv)
     (void)argc;
     (void)argv;
 
-    printf("TSTTM64 - libc370 #49 step A, no library behaviour changed\n\n");
+    printf("TSTTM64 - libc370 #49, clock64() returns seconds\n\n");
 
     /* ============================================================== */
-    printf("(A) CURRENT BEHAVIOUR - rewritten deliberately in step B\n");
+    printf("(A) UNIT CONTRACT - rewritten by the step B fix\n");
     /* ============================================================== */
 
-    /* (1) clock64() and mclock64() are the same function today: same STCK,
-           same epoch, same >>12, same /1000.  Two separate reads, so allow
-           the clock to have moved a little between them. */
-    c1 = clock64();
-    m1 = mclock64();
-    t0.u64 = (c1 > m1) ? (c1 - m1) : (m1 - c1);
-    sprintf(note, "|clock64-mclock64| = %llu ms", (unsigned long long)t0.u64);
-    check("(1) clock64() == mclock64() (both ms today)",
-          t0.u32[0] == 0 && t0.u32[1] <= 1000, note);
-
-    /* (2) ... and clock64() is therefore ~1000x time64().  After step B
-           this becomes clock64() == time64(). */
+    /* (1) clock64() and time64() are now the same value: clock64() counts
+           seconds and time64() passes it straight through, exactly as
+           utime64() does for uclock64() and mtime64() for mclock64().
+           Before the fix this case read clock64() == mclock64(). */
     c1 = clock64();
     t1 = time64(NULL);
     tmp.u64 = c1;
-    __64_div_u32(&tmp, 1000, &scaled);
-    delta = absdiff(&scaled, &t1);
-    sprintf(note, "|clock64()/1000 - time64()| = %d s", delta);
-    check("(2) clock64()/1000 == time64() (ms vs s)",
-          delta >= 0 && delta <= 2, note);
+    delta = absdiff(&tmp, &t1);
+    sprintf(note, "|clock64() - time64()| = %d s", delta);
+    check("(1) clock64() == time64() (both seconds)",
+          delta >= 0 && delta <= 1, note);
+
+    /* (2) ... and clock64() is now 1000x SMALLER than mclock64(), where it
+           used to be equal to it.  clock64() truncates the sub-second part,
+           so scaling it back up lands up to 999 ms short of the millisecond
+           tier.  Before the fix this case read clock64()/1000 == time64(). */
+    c1 = clock64();
+    m1 = mclock64();
+    tmp.u64 = c1;
+    __64_mul_u32(&tmp, 1000, &scaled);
+    t0.u64 = m1;
+    delta = absdiff(&scaled, &t0);
+    sprintf(note, "|clock64()*1000 - mclock64()| = %d ms", delta);
+    check("(2) clock64()*1000 == mclock64() (s vs ms)",
+          delta >= 0 && delta <= 1000, note);
 
     /* ============================================================== */
     printf("\n(B) INVARIANT - must stay green across step B\n");
@@ -361,10 +368,9 @@ int main(int argc, char **argv)
 
     printf("\nTSTTM64 %s\n", bad ? "FAILED" : "PASSED");
     if (bad) {
-        printf("  A class (A) failure means the library behaviour already\n");
-        printf("  moved - check tm64clck.c/tm64time.c before touching this\n");
-        printf("  file.  A class (B) failure during step B means the edit\n");
-        printf("  is wrong, not the expectation.\n");
+        printf("  A class (B) failure is a finding about the library or the\n");
+        printf("  system, not an expectation to adjust.  Check tm64clck.c\n");
+        printf("  and tm64time.c before touching this file.\n");
     }
 
     return bad ? 8 : 0;

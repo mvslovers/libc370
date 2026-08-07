@@ -341,7 +341,17 @@ dispatch_work(CTHDMGR *mgr, CTHDWORK *work)
 		}
 	}
 
-	/* get the current time and calculate if we need to post timer */
+	/* get the current time and calculate if we need to post timer.
+	 *
+	 * RELIES ON time64() RETURNING SECONDS: post_timer below is a raw
+	 * second count, tested for truth rather than against a threshold, so
+	 * "non-zero" means "at least one second has passed" and matches the
+	 * 1 sec cadence CTHDWORK_OPT_TIMER promises (clibthdi.h).  A time64()
+	 * in milliseconds would post every waiting worker on essentially every
+	 * manager pass; one in seconds/1000 would stop the timer posts for up
+	 * to ~16 minutes.  Neither abends and neither is logged.  #49, and
+	 * test/mvs/tsttm64.c case (9) is the guard.
+	 */
 	now = time64(NULL);	/* get the current time_t value */
 #if 0
 	post_timer = ((now - work->wait_time) > 1);
