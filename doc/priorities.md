@@ -1,10 +1,11 @@
 # What to work on next
 
-A reading of the open issues as of **2026-08-06**, ordered. Not a plan anyone is
+A reading of the open issues as of **2026-08-07**, ordered. Not a plan anyone is
 committed to — the order encodes what is risky, what is cheap, and what is
 blocked on something other than effort. Re-read it when those change.
 
-Revised the same day, after #48, #43, #58 and #64 closed.
+Revised after #48, #43, #58, #64, #60 and #59 closed. The last two were what
+this list called "Now", and clearing them added one issue to it (#68).
 
 ## Landed since this was written
 
@@ -27,8 +28,8 @@ comment on #43, and it comes down to one measurement: `malloc.c` and
 The sweep would have removed console noise and no footprint, at the price of 26
 translation units of churn.
 
-Three defects that survey turned up are filed as #59, #60 and #61 — none of them
-needs the sweep, and they are below.
+Three defects that survey turned up were filed as #59, #60 and #61 — none of
+them needed the sweep. Two are below in this section; #61 is the one still open.
 
 **#58 — `racf_auth()` wrote the caller's ACEE into ASXBSENV** (PR #62). It now
 passes it in the RACHECK parameter list, where RAKF looks first, and the
@@ -51,17 +52,29 @@ ACEE. The clear stays as a `__cas()` against the dead pointer — the library's
 first use of the compare-and-swap from #48 — which is why no ENQ is needed to
 make it safe. `test/mvs/tstracfl.c`, pre-fix 0008 / fixed 0000.
 
-## Now
+**#60 — `__txdsn()` dumped a text unit to the console on the success path**
+(PR #66). Deleted rather than parked, because parking preserves the second
+defect in dormant form: the dump ran *before* the NULL check, so a failed
+`calloc` gave `wtodumpf(NULL, …)` — a plausible-looking dump of low storage —
+and then stored a NULL text unit, which `__dsalc()` hands to SVC 99 as a text
+unit at address 0. Both text units the function builds are checked now.
+`test/host/tsttxdsn.c` links and executes the real TU: 22/22 fixed, 14/22 with
+eight failures pre-fix. The red run earned its keep — it caught the first cut of
+the fix returning 0 from the new failure path, because `err` had already been
+set by the successful `arrayadd` above it.
 
-**#59 and #60 — two lines the #43 survey found by reading rather than counting.**
-Both are cheap and neither needs a judgement call. #59: `open_vatlst()`'s
-"unable to open" message has two `%s` and one argument, so `vsprintf` formats a
-garbage pointer — the diagnostic can S0C4 the program it was about to report a
-recoverable failure for, and it only ever runs when something is already wrong.
-#60: `__txdsn()` dumps the DALMEMBR text unit to the console **on the success
-path**, so every allocation of a DSN with a member name writes a hex dump to the
-SYSLOG; it also dumps the text unit before checking it for NULL. #60 is host
-testable, which makes it the better first issue of the two.
+**#59 — the "unable to open" diagnostic named nothing** (PR #67). Two `%s`, one
+argument, and the target run says more than the reading did: pre-fix,
+`__listvl(NULL, 0, "NOSUCHM")` logged `unable to open "NOSUCHM"` — the caller's
+string, still in the varargs slot, not the `SYS1.PARMLIB(NOSUCHM)` that was
+actually attempted — and the full-DSN case logged three blanks. Two calls, two
+different wrong values. COND CODE 0000 both times, which is why the probe
+brackets each call with WTOs of its own and the verdict is read from JESMSGLG.
+The finding underneath it is the reason #68 now exists: `wtof()` was an implicit
+declaration in that file, and with no prototype in scope there is no format
+checking at all.
+
+## Now
 
 **#49 — `clock64()` returns milliseconds, its type says seconds.** Small once
 decided, and the decision is not the maintainer's to skip: correcting the
@@ -80,12 +93,24 @@ honest answer and the one I would take, but the signature is public, so it is
 the maintainer's to pick — and it is the reason that one WTO could not simply be
 deleted with the rest.
 
-**#39 — 129 of 712 TUs compile with implicit declarations.** The biggest quiet
-risk here: an implicit declaration means the compiler invents a signature, and
-on this target that decides linkage. #5 was one instance of it, found because a
-consumer tripped over it. Mechanical but broad — it touches hundreds of files,
-so it wants a window with no other branch open, and it splits cleanly by source
-directory.
+**#39 — 128 of 714 TUs compile with implicit declarations** (the issue says 129
+of 712; re-counted 2026-08-07, and the library has gained two files since). The
+biggest quiet risk here: an implicit declaration means the compiler invents a
+signature, and on this target that decides linkage. #5 was one instance of it,
+found because a consumer tripped over it — and #59 was another, since a call
+with no prototype is a call nothing checks. Both TUs touched this week are off
+the list. Mechanical but broad — it touches hundreds of files, so it wants a
+window with no other branch open, and it splits cleanly by source directory.
+
+**#68 — declare the WTO routines `format(printf)` so the compiler catches the
+next #59.** The same argument as #39, one step further: an implicit declaration
+means nothing is checked, and even with a prototype `wtof()` carries no format
+attribute, so nothing is checked either way. Attaching the attributes
+temporarily and compiling all of `src/` found exactly one *too few arguments* in
+the library — #59 — which is the good news; the work is not here but in the
+consumers, where `wtof("%08X", ptr)` is a common idiom and `-Werror` is on. That
+sweep needs no libc370 change to run, and it is what gates the three-line commit
+that ends the class.
 
 ## Consumer-driven, in the order someone is waiting
 
@@ -120,31 +145,36 @@ get replaced by different latent bugs.
 architecture change, not a fix. Worth doing when the JES area is otherwise
 settled, and after #27 is decided — the two overlap.
 
+**#63 — `RACHECK_FLAG1_LOG_NONE` is the wrong bit.** 0x10 is DSTYPE=V; LOG=NONE
+is 0x02. So every `racf_auth()` is audited *and* RAKF is told the entity is
+VSAM. This one is deferred on someone else's clock rather than on effort or
+risk: flipping the bit changes an rc consumers act on, so the consumers have to
+handle it first. Half of that is done — ftpd#82 closed on 2026-08-06 — and what
+is left is **httpd#135**. It is safe against the old library and the new one, so
+nothing stops it going today, and once it does, #63 is a one-constant change
+with nothing in front of it.
+
 ## Independent of all of the above
 
 **#37 — compile the `.c` in parallel.** Twenty minutes, touches nothing else,
 turns 6.7 seconds of serial `cc370` into roughly a quarter of that. Take it
 whenever the queue above feels heavy.
 
-## Filed elsewhere today, same afternoon's work
+## Filed elsewhere on 2026-08-06 — what is left of it
 
+Three of the six closed the same afternoon (`mvsmf#198`, `ftpd#81`, `ftpd#82`).
+These are the ones still open, and one of them holds up work in this repository:
+
+- **mvslovers/httpd#135** — the rc handling #63 needs, and now the only thing in
+  front of it since ftpd#82 landed. Safe against the old library and the new
+  one, so it can go whenever.
 - **mvslovers/cc370#36** — `'\n'` compiles to EBCDIC NEL (`X'15'`), not LF
   (`X'25'`). Moved out of libc370's predecessor because only the compiler can
   emit the other byte. Filed as an investigation: the first deliverable is a
   survey of who compares against `'\n'` across the projects.
-- **mvslovers/mvsmf#198** — `PUT` of a data set with LRECL > 1024 smashes the
-  stack (S0C1). The record length is clamped against LRECL and then copied into
-  a fixed 1024-byte buffer.
 - **mvslovers/cc370#37** — `cc370` silently drops `-Wl,--ac,1` and `ld370
   --pack` loses the AC again, so an authorized program can look linked and end
   S047 with an empty SYSPRINT. Two deploy cycles, found building the #58 probe.
-- **mvslovers/ftpd#81** — the ASXBSENV/ENQ change from #58 and #64: recovery
-  comments describing a mechanism `racf_auth()` no longer has. Only actionable
-  now that #64 has landed; before that, removing the DEQ would have reintroduced
-  a stall.
-- **mvslovers/ftpd#82** and **mvslovers/httpd#135** — the rc handling #63 needs.
-  Both must land *before* libc370 flips the flag bit, and both are safe against
-  the old and the new library, so they can go whenever.
 
 ## Where the crent370 issues went
 
