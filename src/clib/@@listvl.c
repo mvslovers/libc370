@@ -10,6 +10,7 @@
 #include "clibstr.h"        /* __patmat()                   */
 #include "iecvucb.h"		/* UCBDASD						*/
 #include "cvt.h"			/* CVT							*/
+#include "clibwto.h"       /* wtof()                       */
 
 static int in_vollist(VOLLIST **vollist, const char *vol);
 static FILE *open_vatlst(const char *vatlst);
@@ -197,7 +198,7 @@ static int get_lspace(VOLLIST *vol)
 		vol->maxfreetrks = atoi(parmarea.max_contig_trk);
 	}
 	else {
-		wtof("@@listvl:%s: LSPACE RC=%d", __func__, rc);
+		wtof("%s: LSPACE RC=%d", __func__, rc);
 	}
 	
 quit:
@@ -260,7 +261,7 @@ static FILE *open_vatlst(const char *vatlst)
 do_dataset:
 	fp = fopen(dsn, "r");
 
-	if (!fp) wtof("@@listvl:%s: unable to open \"%s\"", __func__);
+	if (!fp) wtof("%s: unable to open \"%s\"", __func__, dsn);
 
 quit:
 	return fp;
