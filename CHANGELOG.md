@@ -196,6 +196,39 @@ everything had worked.
   `spool_read()` is a BDAM READ/CHECK and the TU carries file-scope assembler.
 
 ### Fixed
+- **`open_vatlst()`'s "unable to open" diagnostic names the data set again
+  (#59).** The message had two `%s` conversions and one argument, so `vwtof()`
+  → `vsprintf()` formatted as a `char *` a word nothing had stored into: in the
+  generated code the parameter list was two words long and `vsprintf` read a
+  third. Garbage in the best case, an S0C4 in the worst — in the handler for a
+  failure that had just been detected and was about to be reported cleanly by
+  returning NULL. The line runs only once `fopen()` has already failed, i.e. on
+  a missing or misspelled VATLST member, so the code that could turn a
+  recoverable "no VATLST, carry on without comments" into an abend was the code
+  that only ever ran when something was already wrong. The data set name is
+  passed now — the built one, `SYS1.PARMLIB(member)`, not the string the caller
+  handed in — and the `@@listvl:` prefix is gone from both live messages in the
+  file, since `__func__` already names the routine. `@@listvl.c` also gains
+  `#include "clibwto.h"`, which is the part worth remembering: `wtof()` was an
+  implicit declaration there, and with no prototype in scope there is no format
+  checking at all, which is how a two-`%s`-one-argument call could sit in a
+  shipped library. Generated code is unchanged apart from internal function
+  indices. A sweep of the whole library with `format(printf)` attributes
+  temporarily attached to `wtof()`/`wtodumpf()`/`wtorf()` found this to be the
+  only *too few arguments* in `src/` (two *too many* remain, in
+  `@@abrpt.c:336` and `tm64ltmr.c:69`, where the surplus is ignored). The probe
+  is `test/mvs/tstlstvl.c` with `jcl/tstlstvl.jcl`; its COND CODE only proves
+  the call survived and kept the volume list, because a WTO cannot be read back
+  from inside the program — the message itself is checked in the job log,
+  between markers the probe writes itself. Run on MVS 3.8j against both
+  libraries, and the pre-fix log is the argument in one line: for
+  `__listvl(NULL, 0, "NOSUCHM")` it read
+  `unable to open "NOSUCHM"` — the caller's string, still lying in the varargs
+  slot, not the `SYS1.PARMLIB(NOSUCHM)` that was actually attempted — and for a
+  full DSN it read `unable to open "   "`. Two calls, two different wrong
+  values, which is what an unwritten word looks like. With the fix both name
+  their data set, and the control window with `vatlst=NULL` stays empty. COND
+  CODE 0000 either way: this one is not decided by the return code.
 - **`__txdsn()` stops dumping the DALMEMBR text unit to the operator console,
   and checks the text units it builds before storing them (#60).** Every
   allocation of a data set name carrying a member —
