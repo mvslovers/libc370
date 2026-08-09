@@ -49,7 +49,10 @@ extern void     __stymd(long scalar,
 struct tm *gmtime(const time_t *timer)
 {
     CLIBCRT     *crt    = __crtget();
-    struct tm   *tms    = (struct tm*)crt->crttms;
+    struct tm   *tms;
+
+    if (!crt) return (struct tm*)0; /* no CRT: no static tm buffer (#85) */
+    tms = (struct tm*)crt->crttms;
 
 	return gmtime_r(timer, tms);
 }

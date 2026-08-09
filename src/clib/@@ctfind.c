@@ -15,6 +15,8 @@ cthread_find(unsigned tcb)
     unsigned    count;
     unsigned    n;
 
+    if (!grt) goto quit;        /* no GRT: no thread table (#85) */
+
     locked  = lock(&grt->grtcthrd,0);
     array   = grt->grtcthrd;
     count   = arraycount(&array);

@@ -15,7 +15,7 @@ __findenv(const char *name, int *index, int nocase)
     __ENVVAR    *envvar;
     int         i;
 
-    if (name && grt->grtenv) {
+    if (name && grt && grt->grtenv) {
         unsigned count = arraycount(&grt->grtenv);
         for(i=0; i < count; i++) {
             envvar = grt->grtenv[i];

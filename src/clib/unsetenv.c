@@ -15,6 +15,8 @@ unsetenv(const char *name)
     __ENVVAR    *envvar;
     int         i;
 
+    if (!grt) return 0;         /* no GRT: nothing to unset (#85) */
+
     lock(&grt->grtenv,0);
     if (name && grt->grtenv) {
         unsigned count = arraycount(&grt->grtenv);

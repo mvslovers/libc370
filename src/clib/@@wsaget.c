@@ -13,6 +13,8 @@ __wsaget(void *key, unsigned len)
     unsigned    size    = sizeof(CLIBWSA) + len;
     unsigned    count;
 
+    if (!grt) return NULL;      /* no GRT: no writable statics (#85) */
+
     lock(&grt->grtwsa,0);
     count = arraycount(&grt->grtwsa);
     while(count > 0) {

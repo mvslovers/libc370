@@ -10,6 +10,8 @@ clib_apf_setup(const char *pgm)
     int         rc      = 0;
     CLIBCRT     *crt    = __crtget();   /* A(CLIBCRT)               */
 
+    if (!crt) return -1;        /* no CRT: no auth state (#85) */
+
     if (!(crt->crtopts & CRTOPTS_AUTH)) {
         /* this task has not been authorized yet */
         rc = unauth_setup(pgm);
@@ -23,6 +25,8 @@ static int unauth_setup(const char *name)
 {
     int         rc      = 0;
     CLIBCRT     *crt    = __crtget();   /* A(CLIBCRT)               */
+
+    if (!crt) return -1;        /* no CRT: no auth state (#85) */
 
     /* this task is not currently APF authorized */
     rc = __autask();    /* APF authorize this task via SVC 244  */

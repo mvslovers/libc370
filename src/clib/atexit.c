@@ -8,13 +8,18 @@
 __PDPCLIB_API__ int atexit(void (*func)(void))
 {
     CLIBGRT *grt        = __grtget();
+    int     rc          = -1;
 
-    if (func) {
+    if (func && grt) {
         lock(&grt->grtexit,0);
-        arrayadd(&grt->grtexit, func);
-        arrayadd(&grt->grtexita, 0);
+        rc = arrayadd(&grt->grtexit, func);
+        if (!rc) {
+            rc = arrayadd(&grt->grtexita, 0);
+            /* keep the func/arg arrays paired (#85) */
+            if (rc) arraydel(&grt->grtexit, arraycount(&grt->grtexit));
+        }
         unlock(&grt->grtexit,0);
     }
 
-    return 0;
+    return rc;
 }

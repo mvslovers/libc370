@@ -27,7 +27,7 @@ int
 __dsalc(char *ddname, const char *opts)
 {
     CLIBCRT     *crt        = __crtget();
-    char        *crtstrtk   = crt->crtstrtk;
+    char        *crtstrtk;
     int         err         = 1;
     char        *temp       = NULL;
     int         templen     = 0;
@@ -38,6 +38,9 @@ __dsalc(char *ddname, const char *opts)
     unsigned    count;
     char        *p;
     char 		*t;
+
+    if (!crt) return err;       /* no CRT: no strtok state (#85) */
+    crtstrtk = crt->crtstrtk;
 
 	// wtof("%s: enter", __func__);
 	

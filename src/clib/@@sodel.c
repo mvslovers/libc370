@@ -15,6 +15,8 @@ __sodel(int ss)
     unsigned    count;
     unsigned    n;
 
+    if (!grt) goto quit;        /* no GRT: no socket table (#85) */
+
     lock(&grt->grtsock,0);
     count = arraycount(&grt->grtsock);
     for(n=0; n < count; n++) {

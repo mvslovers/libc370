@@ -9,13 +9,18 @@ int
 on_exit(void (*func)(int,void*), void *arg)
 {
     CLIBGRT *grt        = __grtget();
+    int     rc          = -1;
 
-    if (func) {
+    if (func && grt) {
         lock(&grt->grtexit,0);
-        arrayadd(&grt->grtexit, func);
-        arrayadd(&grt->grtexita, arg);
+        rc = arrayadd(&grt->grtexit, func);
+        if (!rc) {
+            rc = arrayadd(&grt->grtexita, arg);
+            /* keep the func/arg arrays paired (#85) */
+            if (rc) arraydel(&grt->grtexit, arraycount(&grt->grtexit));
+        }
         unlock(&grt->grtexit,0);
     }
 
-    return 0;
+    return rc;
 }

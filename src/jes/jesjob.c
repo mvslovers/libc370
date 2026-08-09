@@ -182,7 +182,11 @@ JESJOB **jesjob(JES *jes, const char *filter, JESFILT type, int dd)
         }
 
         /* add this JESJOB to the array of JESJOBs */
-        arrayadd(&array, job); 
+        if (arrayadd(&array, job)) {
+            wtof("Unable to add %u byte JESJOB handle to array", sizeof(JESJOB));
+            free(job);
+            goto quit;
+        }
         strcpy(job->eye, JESJOB_EYE);
 
         /* Fill in the job info from the JQE and JCT records */
@@ -355,7 +359,12 @@ process_pddb(__PDDB *pddb, JESJOB *job)
     }
 
     /* add the jesdd to the array of jesdd in the job handle */
-    arrayadd(&job->jesdd, jesdd);
+    if (arrayadd(&job->jesdd, jesdd)) {
+        wtof("Unable to add %u byte JESDD handle to job", sizeof(JESDD));
+        free(jesdd);
+        jesdd = NULL;
+        goto quit;
+    }
 
     /* initialize the jesdd handle */
     strcpy(jesdd->eye, JESDD_EYE);

@@ -6,6 +6,8 @@ int tmr_init(void)
     TMR     *tmr = tmr_get();
     int     lockrc;
 
+    if (!tmr) return -1;        /* no TMR anchor: no timer services (#85) */
+
     lockrc = lock(tmr, 0);
     if (!(tmr->flags & TMR_FLAG_INIT)) {
         /* not initialized yet */

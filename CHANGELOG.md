@@ -352,6 +352,34 @@ everything had worked.
   `spool_read()` is a BDAM READ/CHECK and the TU carries file-scope assembler.
 
 ### Fixed
+- **The CRT/GRT anchor tier no longer dereferences NULL (#85).**
+  `__crtget()`/`__grtget()` can return NULL — "CRT for TCB not found", and
+  since #82 a failed constructor is a second route — but ~25 sites
+  dereferenced the anchor unchecked: the stdio anchors (`stdin`/`stdout`/
+  `stderr` themselves), the env family, `atexit()`/`on_exit()`, cthread
+  push/pop/find, the mutex family, the socket table, `gmtime()`,
+  `__dsalc()`, `clib_apf_setup()`, `__wsaget()` and the whole timer family.
+  Every listed site now fails through its function's own contract (NULL,
+  -1, a zero id, or a no-op — whatever its callers already handle). Riding
+  along, the ignored-rc class: `atexit()`/`on_exit()`/`cthread_push()` pair
+  their func/arg array adds with a rollback so the two arrays can never
+  desynchronize; `newthread()` fails the create instead of returning a
+  thread that `cthread_find()` and cleanup would never see; `@@listvl` and
+  the JES job/DD walks log, free and stop instead of silently dropping the
+  element; the six timer creators free the TQE and return id 0 when it
+  could not be queued, instead of leaking one that would never fire. And
+  the one route a *healthy* program could actually reach — `@@CRT0`/
+  `@@CRT1` ignored `@@GRTSET`'s rc, leaving a program running with no GRT
+  (no stdio anchors, no env) when the GRT calloc failed — is closed the
+  way #82 closed the CRT route: WTO + user abend U0801 at startup.
+  The NULL branches themselves require a TCB running C code without a
+  CRT — the unsupported situation itself — so they are guards, not
+  black-box-testable behavior (same standing as the `failed()` guard from
+  #9). What is testable is that no touched happy path moved:
+  `test/mvs/tstanchr.c` exercises the anchors, an env round trip, the exit
+  hooks (handler firing visible as a WTO in the job log), cthread
+  push/pop, the mutex family, `gmtime()` and a timer that really fires —
+  COND CODE 0000 on both sides of the change.
 - **`calloc()` no longer masks `nmemb * size` to 24 bits (#84).** The old
   `((nmemb * size) + 7) & 0x00FFFFF8` rounded up to 8 — fine — but also
   truncated the product to 24 bits, and there was no overflow check at all.

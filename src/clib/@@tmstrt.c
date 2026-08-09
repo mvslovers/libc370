@@ -10,6 +10,8 @@ int tmr_start(void)
     int         running;
     int         i;
 
+    if (!tmr) return ENOMEM;    /* no TMR anchor: no timer services (#85) */
+
     /* initialize the timer handle if needed */
     tmr_init();
 

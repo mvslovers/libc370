@@ -76,6 +76,13 @@ CRTSETUP DS    0H
          BALR  R14,R15           Create our CLIBCRT area
          L     R15,=V(@@GRTSET)
          BALR  R14,R15           Anchor a CLIBGRT area as CRTGRT
+* A missing CLIBGRT surfaces later as NULL stdio/env anchors on a
+* running program; fail loudly at startup instead (#85)
+         LTR   R15,R15           Did we get a CLIBGRT?
+         BZ    GRTOK             Yes, continue
+         WTO   '@@CRT1 - No storage for CLIBGRT'
+         ABEND 801,DUMP          Cannot run C code without a GRT
+GRTOK    DS    0H
 *
 * Save R13 in CRTSAVE
          L     R15,=V(@@CRTGET)
