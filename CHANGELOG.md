@@ -352,6 +352,20 @@ everything had worked.
   `spool_read()` is a BDAM READ/CHECK and the TU carries file-scope assembler.
 
 ### Fixed
+- **`calloc()` no longer masks `nmemb * size` to 24 bits (#84).** The old
+  `((nmemb * size) + 7) & 0x00FFFFF8` rounded up to 8 — fine — but also
+  truncated the product to 24 bits, and there was no overflow check at all.
+  Measured on MVS 3.8j before the fix: `calloc(1, 0x1000009)` returned a
+  valid **16-byte** block for a 16 MB request, and `calloc(0x8001, 0x20000)`
+  returned **128 KB** for a 4 GB one — no message, no NULL, the caller
+  overran the heap at first use. Now any product a 32-bit `size_t` cannot
+  hold (including the +7 rounding) is refused with NULL and
+  `errno = ENOMEM`; the untruncated total goes to `malloc()`, whose 6 MB
+  `MAX_CHUNK` cap rejects merely-huge requests, so nothing that used to
+  work stops working — `test/mvs/tstcaloc.c` pins that with a zero-checked
+  `calloc(1, 5M)` next to the two truncation cases (assertion-red: COND
+  CODE 0008 before, 0000 after) plus the exact-2^32 wrap and the prefix
+  word `realloc()` reads.
 - **`open_vatlst()`'s "unable to open" diagnostic names the data set again
   (#59).** The message had two `%s` conversions and one argument, so `vwtof()`
   → `vsprintf()` formatted as a `char *` a word nothing had stored into: in the
