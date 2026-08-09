@@ -44,7 +44,7 @@ __dsalc(char *ddname, const char *opts)
     if (opts) {
         templen = strlen(opts) + 8;
         temp    = calloc(1, templen);
-        if (!temp) goto quit;   /* malloc() reports the shortage itself */
+        if (!temp) goto quit;   /* shortage arrives as NULL; malloc() has already logged it */
         
         /* copy opts string to temp and upper case */
         for(p=temp, t=(char*)opts; *t; p++, t++) {

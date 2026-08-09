@@ -53,6 +53,13 @@ CRTSETUP DS    0H
 * Save R13 in CRTSAVE
          L     R15,=V(@@CRTGET)
          BALR  R14,R15           Get our CLIBCRT area
+* A NULL CLIBCRT would make the L/ST below touch low storage;
+* fail loudly instead (#81)
+         LTR   R15,R15           Did we get a CLIBCRT?
+         BNZ   CRTOK             Yes, continue
+         WTO   '@@CRTM - No CLIBCRT (C environment missing)'
+         ABEND 801,DUMP          Cannot run C code without a CRT
+CRTOK    DS    0H
          L     R0,CRTSAVE-CLIBCRT(,R15) Get previous save area
          ST    R0,OLDSAVE        Save for later
          ST    R13,CRTSAVE-CLIBCRT(,R15) Save our save area address

@@ -102,6 +102,14 @@ static int __vsam_open_intrdr(char *ddname, VSFILE **vsfile)
 
     /* allocate RPL work area */
     wa = calloc(1, 80);
+    if (!wa) {
+        /* free directly: __vsam_close_intrdr() is a stub and quit
+         * would leak the handle */
+        free(vs);
+        vs = 0;
+        rc = ENOMEM;
+        goto quit;
+    }
 
     /* initialize our VSAM file handle */
     strcpy(vs->eye, VSFILE_EYE);

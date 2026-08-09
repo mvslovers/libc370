@@ -11,13 +11,15 @@ data, losing storage, or building against a stale compiler. Two heap defects in
 the JES2 spool record walk that any foreign or truncated block could reach, a
 compare-and-swap that stored the wrong word entirely, an S0C4 on open-by-DSN
 from a TSO command processor, and public prototypes for four routines consumers
-had to declare by hand. Six breaking changes: `jesprint()` twice, the atomics,
+had to declare by hand. Seven breaking changes: `jesprint()` twice, the atomics,
 `clock64()` — which finally returns the seconds its type always claimed, in one
 coordinated move with `time64()` so that `time64()`'s own value does not budge —
 `racf_auth()` — which stops asking for audit suppression with the bit that
 means "this is a VSAM data set", and in exchange answers 4 where it answered 0 —
-and `__dsalc()` — which also stops narrating its failures to the operator, the
-first instalment of taking the console back from the library. `__txdsn()` is
+`__dsalc()` — which also stops narrating its failures to the operator, the
+first instalment of taking the console back from the library — and `malloc()`,
+which can finally fail: storage shortage returns NULL with `errno = ENOMEM`
+where it used to abend S878. `__txdsn()` is
 the second, and the plainer case: it dumped a control block on the path where
 everything had worked.
 
@@ -81,6 +83,45 @@ everything had worked.
   across the change except `@@ver.s`, which bakes in the git revision.
 
 ### Changed
+- **BREAKING — `malloc()` can fail: storage shortage returns NULL instead of
+  abending S878 (#81).** `@@GETM` issued `GETMAIN RU` — register form,
+  *unconditional* — which does not report a shortage, it abends. So every
+  `if (!p)` in this library and in every consumer was dead code for the exact
+  case it was written for, and a storage race in httpd/mvsmf surfaced as an
+  S878 somewhere down whatever call chain allocated next (the #217 death
+  spiral). `@@GETM` now issues `GETMAIN RC` and returns NULL on a nonzero
+  R15, and `malloc()` sets `errno = ENOMEM` on the way out. `calloc()`,
+  `realloc()` and `strdup()` already propagated NULL correctly, so the whole
+  family fails the way its callers always assumed. The fix sits in `@@GETM`
+  itself and not in a wrapper above it because httpd and mvsmf call
+  `__getm()` directly.
+  **What changes for callers:** nothing at compile time — the change is
+  source-compatible and arrives at each consumer's next relink. At run time,
+  allocation checks that never ran can now run; a site that does not check
+  gets a NULL dereference at the point of *use* instead of an S878 at the
+  point of *allocation*. The ecosystem sweep lives in #81: httpd, httplua,
+  lua370, ufsd and mvsmf each have named follow-up work, and
+  picozip370-app/mqtt370 build against crent370 and are not covered by this
+  change at all.
+  Two guards ride along because a failable allocator creates hazards ahead
+  of `main()`. The CRT startup code — `@@crt0`/`@@crt1`, mainline and
+  CTHREAD, plus `@@crtm` — used the `@@CRTGET` result as a base register
+  without testing it; with a failable calloc behind `@@CRTSET`, that `ST`
+  would land in low storage at the `CRTSAVE` offset. All five sites now test
+  R15 and fail loudly (WTO + user abend **U0801**) instead of corrupting the
+  PSA. And `jesiropn.c` passed an unchecked 80-byte RPL work area to
+  `MODCB` — under NULL the RPL would point its record area at address 0.
+  The `wtof("Out of memory, bytes needed=%u")` + save area traceback in
+  `malloc()`, previously unreachable for real shortage, now fires on every
+  failed allocation — it names the requester, which is exactly the
+  diagnostic #217 lacked. That path allocates nothing itself, so it cannot
+  recurse.
+  `test/mvs/tstgetm.c` (with `jcl/tstgetm.jcl`, REGION=2048K) is the
+  red→green probe: it drives its own region to exhaustion, which abends
+  S878 before this change and must arrive as NULL with `errno = ENOMEM`
+  after it, then frees everything and proves allocation works again. It
+  also pins `malloc(0)` → NULL, the 6 MB `MAX_CHUNK` cap, and the size
+  prefix at p-4 that `realloc()` reads.
 - **BREAKING — `clock64()` returns seconds, not milliseconds (#49).** It
   divided the microseconds out by 1000, so it returned milliseconds while
   `clock64_t` and its prototype both said seconds. `mclock64()` is the same

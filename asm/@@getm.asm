@@ -25,11 +25,19 @@ SUBPOOL  EQU   0                                                      *
          N     R3,=X'FFFFFFC0'    MULTIPLE OF 64
 *
          AIF   ('&SYS' NE 'S380').NOANY
-         GETMAIN RU,LV=(R3),SP=SUBPOOL,LOC=ANY
+         GETMAIN RC,LV=(R3),SP=SUBPOOL,LOC=ANY
          AGO   .FINANY
 .NOANY   ANOP  ,
-         GETMAIN RU,LV=(R3),SP=SUBPOOL
+         GETMAIN RC,LV=(R3),SP=SUBPOOL
 .FINANY  ANOP  ,
+*
+* CONDITIONAL GETMAIN: A STORAGE SHORTAGE MUST SURFACE AS A NULL
+* RETURN FROM MALLOC(), NOT AS AN S878 ABEND (#81)
+         LTR   R15,R15            STORAGE OBTAINED?
+         BZ    GETMOK             YES, SET UP THE PREFIX
+         SLR   R1,R1              NO, RETURN NULL
+         B     GETMEX
+GETMOK   DS    0H
 *
 * WE STORE THE AMOUNT WE REQUESTED FROM MVS INTO THIS ADDRESS
          ST    R3,0(,R1)
