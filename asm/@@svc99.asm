@@ -26,8 +26,14 @@ SUBPOOL  EQU   0                                                      *
          USING @@SVC99,R12
          LR    R11,R1
 *
-         GETMAIN RU,LV=WORKLEN,SP=SUBPOOL
-         ST    R13,4(,R1)
+         GETMAIN RC,LV=WORKLEN,SP=SUBPOOL
+         LTR   R15,R15            Work area storage obtained?
+         BZ    HAVEWORK           Yes, continue
+* No storage for the work area: fail the request with -1, the SVC
+* is never issued and the caller's request block is untouched (#83)
+         L     R15,=F'-1'         Indicate failure
+         RETURN (14,12),RC=(15)   Return to caller
+HAVEWORK ST    R13,4(,R1)
          ST    R1,8(,R13)
          LR    R13,R1
          LR    R1,R11

@@ -60,6 +60,8 @@ SUBPOOL  EQU   0                                                      *
 *                                                                     *
 *  OPEN input failed return code is: -37                              *
 *  OPEN output failed return code is: -39                             *
+*  OPEN out of storage return code is: -12 (ENOMEM); -1 when even    *
+*  the internal save area could not be obtained (#83)                 *
 *                                                                     *
 * FIND input member return codes are:                                 *
 * Original, before the return and reason codes had                    *
@@ -98,10 +100,15 @@ SUBPOOL  EQU   0                                                      *
          L     R4,0(,R4)          Load C/370 MODE.  0=input 1=output
          SPACE 1
          AIF   ('&SYS' NE 'S390').NOLOW
-         GETMAIN R,LV=ZDCBLEN,SP=SUBPOOL,LOC=BELOW
+         GETMAIN RC,LV=ZDCBLEN,SP=SUBPOOL,LOC=BELOW
          AGO   .FINLOW
-.NOLOW   GETMAIN R,LV=ZDCBLEN,SP=SUBPOOL
-.FINLOW  LR    R10,R1             Addr.of storage obtained to its base
+.NOLOW   GETMAIN RC,LV=ZDCBLEN,SP=SUBPOOL
+.FINLOW  LTR   R15,R15            DCB area storage obtained?
+         BZ    HAVEDCB            Yes, continue
+* No storage for the DCB area: fail with -ENOMEM, nothing to free (#83)
+         L     R7,=F'-12'         Set return code -ENOMEM
+         B     RETURNOP           Return to caller
+HAVEDCB  LR    R10,R1             Addr.of storage obtained to its base
          USING IHADCB,R10         Give assembler DCB area base register
          LR    R0,R10             Load output DCB area address
          LA    R1,ZDCBLEN         Load output length of DCB area
@@ -425,8 +432,17 @@ WNOMEM2  OPEN  MF=(E,OPENCLOS),TYPE=J
 *---------------------------------------------------------------------*
 GETBUFF  L     R5,BLKSIZE         Load the input blocksize
          LA    R6,4(,R5)          Add 4 in case RECFM=U buffer
-         GETMAIN R,LV=(R6),SP=SUBPOOL  Get input buffer storage
-         ST    R1,ZBUFF1          Save for cleanup
+         GETMAIN RC,LV=(R6),SP=SUBPOOL  Get input buffer storage
+         LTR   R15,R15            Buffer storage obtained?
+         BZ    HAVEBF1            Yes, continue
+* No storage for a buffer: undo whatever this open built so far,
+* then return -ENOMEM (#83).  Reached from three GETMAIN sites.
+NOBUFF   LA    R7,12              Preset ENOMEM, FREEDCB negates it
+         TM    IOMFLAGS,IOFTERM   Terminal I/O (nothing was opened)?
+         BNZ   FREEDCB            Yes, just free the DCB area
+         CLOSE MF=(E,OPENCLOS)    Close the data set
+         B     FREEDCB            Free DCB area and return -12
+HAVEBF1  ST    R1,ZBUFF1          Save for cleanup
          ST    R6,ZBUFF1+4           ditto
          ST    R1,BUFFADDR        Save the buffer address for READ
          XC    0(4,R1),0(R1)      Clear the RECFM=U Record Desc. Word
@@ -435,8 +451,15 @@ GETBUFF  L     R5,BLKSIZE         Load the input blocksize
          SPACE 1
          L     R6,LRECL           Get record length
          LA    R6,4(,R6)          Insurance
-         GETMAIN R,LV=(R6),SP=SUBPOOL  Get VBS build record area
-         ST    R1,ZBUFF2          Save for cleanup
+         GETMAIN RC,LV=(R6),SP=SUBPOOL  Get VBS build record area
+         LTR   R15,R15            VBS area storage obtained?
+         BZ    HAVEBF2            Yes, continue
+* No storage for the VBS area: free buffer 1, then the common path
+         L     R1,ZBUFF1          Buffer 1 address
+         L     R0,ZBUFF1+4        Buffer 1 length
+         FREEMAIN R,LV=(0),A=(1),SP=SUBPOOL  Free input buffer
+         B     NOBUFF             Close, free DCB area, return -12
+HAVEBF2  ST    R1,ZBUFF2          Save for cleanup
          ST    R6,ZBUFF2+4           ditto
          LA    R14,4(,R1)
          ST    R14,VBSADDR        Save the VBS read/user write
@@ -477,7 +500,9 @@ TERMOPEN MVC   IOMFLAGS,WWORK     Save for duration
          ST    R6,BLKSIZE         Return it
          ST    R6,LRECL           Return it
          LA    R6,4(,R6)          Add 4 in case RECFM=U buffer
-         GETMAIN R,LV=(R6),SP=SUBPOOL  Get input buffer storage
+         GETMAIN RC,LV=(R6),SP=SUBPOOL  Get input buffer storage
+         LTR   R15,R15            Buffer storage obtained?
+         BNZ   NOBUFF             No, fail with -12
          ST    R1,ZBUFF2          Save for cleanup
          ST    R6,ZBUFF2+4           ditto
          LA    R1,4(,R1)          Allow for RDW if not V
