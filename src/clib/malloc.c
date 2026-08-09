@@ -5,6 +5,7 @@
 #include "string.h"
 #include "ctype.h"
 #include "stddef.h"
+#include "errno.h"
 #include "mvssupa.h"
 
 #if USE_MEMMGR
@@ -84,6 +85,7 @@ __PDPCLIB_API__ void *malloc(size_t size)
 	}
 	
     if (!ptr) {
+        errno = ENOMEM;
         wtof("Out of memory, bytes needed=%u", size);
         __wtotb(0);
     }

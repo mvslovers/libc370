@@ -77,6 +77,13 @@ CRTSETUP DS    0H
 * Save R13 in CRTSAVE
          L     R15,=V(@@CRTGET)
          BALR  R14,R15           Get our CLIBCRT area
+* A NULL CLIBCRT would make the ST below a store into low storage;
+* fail loudly instead (#81)
+         LTR   R15,R15           Did we get a CLIBCRT?
+         BNZ   CRTOK             Yes, continue
+         WTO   '@@CRT0 - No storage for CLIBCRT'
+         ABEND 801,DUMP          Cannot run C code without a CRT
+CRTOK    DS    0H
          ST    R13,CRTSAVE-CLIBCRT(,R15) Save our save area address
 *
          L     R7,TCBRBP
@@ -166,6 +173,13 @@ CTHREAD  DS    0H
 * Save R13 in CRTSAVE
          L     R15,=V(@@CRTGET)
          BALR  R14,R15           Get our CLIBCRT area
+* A NULL CLIBCRT would make the ST below a store into low storage;
+* fail loudly instead (#81)
+         LTR   R15,R15           Did we get a CLIBCRT?
+         BNZ   TCRTOK            Yes, continue
+         WTO   'CTHREAD - No storage for CLIBCRT'
+         ABEND 801,DUMP          Cannot run C code without a CRT
+TCRTOK   DS    0H
          ST    R13,CRTSAVE-CLIBCRT(,R15) Save our save area address
 *
 * Call thread function
