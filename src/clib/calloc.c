@@ -5,12 +5,23 @@
 #include "string.h"
 #include "ctype.h"
 #include "stddef.h"
+#include "errno.h"
 #include "mvssupa.h"
 
 __PDPCLIB_API__ void *calloc(size_t nmemb, size_t size)
 {
-    size_t total    = ((nmemb * size) + 7) & 0x00FFFFF8;
+    size_t total;
     void *ptr;
+
+    /* refuse a product a 32-bit size_t cannot hold: the old 24-bit
+     * mask turned such requests into tiny valid allocations that the
+     * caller then overran (#84).  malloc() itself refuses anything
+     * over its 6 MB cap. */
+    if (size != 0 && nmemb > 0xFFFFFFF8u / size) {
+        errno = ENOMEM;
+        return NULL;
+    }
+    total = ((nmemb * size) + 7) & 0xFFFFFFF8;
 
     ptr = malloc(total);
     if (ptr) {
