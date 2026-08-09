@@ -11,15 +11,16 @@ data, losing storage, or building against a stale compiler. Two heap defects in
 the JES2 spool record walk that any foreign or truncated block could reach, a
 compare-and-swap that stored the wrong word entirely, an S0C4 on open-by-DSN
 from a TSO command processor, and public prototypes for four routines consumers
-had to declare by hand. Seven breaking changes: `jesprint()` twice, the atomics,
+had to declare by hand. Eight breaking changes: `jesprint()` twice, the atomics,
 `clock64()` — which finally returns the seconds its type always claimed, in one
 coordinated move with `time64()` so that `time64()`'s own value does not budge —
 `racf_auth()` — which stops asking for audit suppression with the bit that
 means "this is a VSAM data set", and in exchange answers 4 where it answered 0 —
 `__dsalc()` — which also stops narrating its failures to the operator, the
-first instalment of taking the console back from the library — and `malloc()`,
+first instalment of taking the console back from the library — `malloc()`,
 which can finally fail: storage shortage returns NULL with `errno = ENOMEM`
-where it used to abend S878. `__txdsn()` is
+where it used to abend S878 — and the `fopen()`/dynalloc path, which follows
+suit: shortage during an open fails the call instead of abending S80A. `__txdsn()` is
 the second, and the plainer case: it dumped a control block on the path where
 everything had worked.
 
@@ -83,6 +84,33 @@ everything had worked.
   across the change except `@@ver.s`, which bakes in the git revision.
 
 ### Changed
+- **BREAKING — `fopen()`, `__aopen()` and `__svc99()` fail on storage
+  shortage instead of abending (#83).** The #81 fix left three unconditional
+  GETMAINs on the open/dynalloc path: the FUNHEAD `SAVE=` dynamic save area
+  in `mvsmacs.macro` — used by `@@AOPEN`, `@@ACLOSE`, `@@ALINE` and
+  `@@SYSTEM`, so the S80A hit before the function's first real instruction —
+  `@@AOPEN`'s DCB area plus its three buffer sites, and `@@SVC99`'s work
+  area. All of them are `GETMAIN RC` now, and each failure surfaces through
+  the caller's existing error contract. `__aopen()` returns **-1** when even
+  the save area cannot be obtained and **-12 (-ENOMEM)** from the DCB and
+  buffer sites — with everything acquired up to that point released: the
+  data set is closed, an already-obtained buffer freed, the DCB area freed.
+  A failed open leaks nothing. `__svc99()` returns **-1**, the SVC never
+  issued, the caller's request block untouched. `ropen()` already translates
+  negative `__aopen()` codes into `errno`, so it reports ENOMEM without a
+  change; `fopen()` returns NULL exactly as its callers always assumed. The
+  `SAVE=` failure path is generic — restore the caller's registers, R15=-1 —
+  which is why the same shortage also fails `fclose()`, terminal line I/O
+  and `system()` cleanly instead of abending them.
+  Measured red→green on MVS 3.8j: `test/mvs/tstaopn.c` (REGION=1024K)
+  exhausts its region in three phases — the #81 diagnostics fire for each —
+  then calls `__aopen()` and `__svc99()` directly. Pre-fix: S80A in the
+  FUNHEAD GETMAIN. Post-fix: rc -1/-1, and after free-all the same
+  `__aopen()` against DD:SYSUT1 succeeds, COND CODE 0000. Deliberately
+  unchanged: `@@estae.c:147`'s `GETMAIN RU` (nothing sane to do when the
+  recovery environment itself cannot be built) and the CRT startup GETMAINs
+  (`@@crt0/1/m` stack allocation — at program start there is no caller to
+  fail back to).
 - **BREAKING — `malloc()` can fail: storage shortage returns NULL instead of
   abending S878 (#81).** `@@GETM` issued `GETMAIN RU` — register form,
   *unconditional* — which does not report a shortage, it abends. So every
