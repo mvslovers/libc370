@@ -15,6 +15,8 @@ __75init(void)
     CLIBGRT *grt    = __grtget();
     PL75    pl;
 
+    if (!grt) return -1;        /* no GRT: no socket table (#85) */
+
     lock(&grt->grtsock, 0);
     if (!grt->grtsock) {
         grt->grtsock = arraynew(FD_SETSIZE);

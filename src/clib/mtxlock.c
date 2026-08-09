@@ -20,6 +20,6 @@ mtxlock(CLIBMUTX *mutex)
     if (rc==0) {
         /* add mutex to array of mutex's for this thread */
         CLIBCRT *crt    = __crtget();
-        arrayadd(&crt->crtmutx, mutex);
+        if (crt) arrayadd(&crt->crtmutx, mutex);
     }
 }

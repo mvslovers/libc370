@@ -17,6 +17,8 @@ cthread_pop(CTHDPOP type)
     void        *arg            = 0;
     unsigned    count;
 
+    if (!crt) goto quit;        /* no CRT: nothing pushed (#85) */
+
     lock(&crt->crtpush,0);
     count = arraycount(&crt->crtpush);
     if (count) {

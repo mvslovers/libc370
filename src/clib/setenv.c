@@ -27,6 +27,8 @@ setenv(const char *name, const char *value, int rewrite)
 	char        *found;
 	__ENVVAR    *envvar;
 
+    if (!grt) return -1;        /* no GRT: no environment (#85) */
+
     lock(&grt->grtenv,0);
 
     while(*name==' ') name++;                   /* skip leading spaces */

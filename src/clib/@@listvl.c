@@ -87,7 +87,11 @@ VOLLIST **__listvl(	const char *filter, int dolspace, const char *vatlst)
 		}
 		
 		/* add vol to vollist array */
-		array_add(&vollist, vol);
+		if (array_add(&vollist, vol)) {
+			wtof("%s: out of memory", __func__);
+			free(vol);
+			break;
+		}
 		
 		/* populate UCB info for this volume */
 		memcpy(vol->volser, ucbdasd->ucbvol, 6);

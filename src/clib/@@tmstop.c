@@ -7,6 +7,8 @@ int tmr_stop(void)
     int         lockrc;
     int         i;
 
+    if (!tmr) return -1;        /* no TMR anchor: no timer services (#85) */
+
     /* initialize the timer handle if needed */
     tmr_init();
 

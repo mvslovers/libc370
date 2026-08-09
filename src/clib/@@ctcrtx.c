@@ -102,13 +102,26 @@ newthread(unsigned tcb, unsigned owntcb, unsigned stacksize)
                             ((stacksize+7) & 0x000FFFF8);
     CTHDTASK    *task   = calloc(1, sizeof(CTHDTASK) + newstack);
 
+    if (!grt) {
+        /* no GRT: an unregistered thread would be invisible to
+         * cthread_find() and cleanup (#85) */
+        free(task);
+        return NULL;
+    }
+
     if (task) {
         strcpy(task->eye, CTHDTASK_EYE);
         task->tcb       = tcb;
         task->owntcb    = owntcb;
         task->stacksize = newstack;
         lock(&grt->grtcthrd,0);
-        arrayadd(&grt->grtcthrd, task);
+        if (arrayadd(&grt->grtcthrd, task)) {
+            /* not registered: cthread_find()/cleanup would never
+             * see it, fail the create instead (#85) */
+            unlock(&grt->grtcthrd,0);
+            free(task);
+            return NULL;
+        }
         unlock(&grt->grtcthrd,0);
     }
 

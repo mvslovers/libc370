@@ -14,6 +14,8 @@ tmr_id(void)
     unsigned    id;
     int         lockrc;
 
+    if (!tmr) return 0;         /* no TMR anchor: no timer services (#85) */
+
     tmr_init();
 
     lockrc = lock(tmr, 0);

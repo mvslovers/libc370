@@ -5,8 +5,11 @@ COM *
 __gtcom(void)
 {
     CLIBGRT     *grt    = __grtget();
-    COM         *com    = grt->grtcom;
+    COM         *com;
     unsigned    work[3] = {0};
+
+    if (!grt) return (COM*)0;   /* no GRT: no COM anchor (#85) */
+    com = grt->grtcom;
 
     if (!com) {
         __asm__("EXTRACT (%0),FIELDS=COMM,MF=(E,(%1))" : :

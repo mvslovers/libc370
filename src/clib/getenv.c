@@ -13,6 +13,8 @@ getenv(const char *name)
     int     index;
 	char    *result;
 
+    if (!grt) return NULL;      /* no GRT: no environment (#85) */
+
     lock(&grt->grtenv,0);
 	result = __findenv(name, &index, 0);    /* same case */
 	unlock(&grt->grtenv,0);
