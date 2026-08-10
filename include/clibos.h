@@ -162,7 +162,11 @@ int freemain(void *addr);
    until every such site in the call graph is pinned (issue #89). */
 
 /* __setsp() set the ambient heap subpool, returns the previous value.
-   No-op returning 0 when the current TCB has no PPA. */
+   No-op returning 0 when the current TCB has no PPA.  Usable range in
+   problem state is 1-127 (0 is the shared default): subpools above 127
+   need supervisor state, so a problem-state caller that sets one gets
+   NULL from every allocation until the value is reset - the GETMAIN is
+   conditional and fails with a return code, not an abend. */
 unsigned char __setsp(unsigned char sp);
 
 /* __getsp() current ambient heap subpool, 0 when the TCB has no PPA */

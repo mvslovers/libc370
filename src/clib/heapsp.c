@@ -1,7 +1,6 @@
 #include <clib.h>
 #include <clibos.h>
 #include <clibppa.h>
-#include <clibstr.h>
 #include <string.h>
 
 /* Runtime heap subpool (#89).
