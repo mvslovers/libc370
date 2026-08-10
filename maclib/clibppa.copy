@@ -15,7 +15,8 @@ PPATIN   EQU    X'08'             ... STDIN is terminal
 PPATOUT  EQU    X'04'             ... STDOUT is terminal
 PPATERR  EQU    X'02'             ... STDERR is terminal
 PPASUBPL DS     X                 21 save area subpool number
-         DS     2X                22 unused / available
+PPAHEAPS DS     X                 22 heap (malloc) subpool number
+         DS     X                 23 unused / available
 PPASTKLN DS     F                 24 stack area length
 PPAEXITA DS     A(0)              28 EXITA entry point address
          DS     F                 2C unused / available

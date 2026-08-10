@@ -60,6 +60,18 @@ PLUSPPA  DS    0H
          ICM   R15,B'0111',TCBFSAB => TCB first save area
          L     R0,8(,15)         get "next" value from fsa
          ST    R0,PPASAVE        save old "next" value in PPA
+* Inherit the caller's heap subpool (#89).  For the first @@CRT0 on
+* this TCB the word from 8(fsa) is whatever MVS left there, NOT a
+* PPA, so validate it the way @@PPAGET does before reading from it.
+* Anything else leaves PPAHEAPS as the XC above set it: subpool 0.
+         LTR   R3,R0             candidate PPA to a real base reg
+         BZ    NOINHER           zero, no caller PPA
+         CL    R3,=F'16777215'   GT X'FFFFFF'?
+         BH    NOINHER           not a 24 bit address
+         CLC   PPAEYE-CLIBPPA(L'PPAEYE,R3),=A(PPAEYE$) eye catcher?
+         BNE   NOINHER           not a PPA, inherit nothing
+         MVC   PPAHEAPS,PPAHEAPS-CLIBPPA(R3) inherit heap subpool
+NOINHER  DS    0H
          ST    R6,8(,R15)        save PPA as fsa "next" value
 *
 CRTSETUP DS    0H

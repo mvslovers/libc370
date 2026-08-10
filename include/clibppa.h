@@ -23,7 +23,8 @@ struct clibppa {
 #define PPAFLAG_TOUT	0x04	/* ... STDOUT is terminal				*/
 #define PPAFLAG_TERR	0x02	/* ... STDERR is terminal				*/
     char    ppasubpl;			/* 21 save area subpool number          */
-	char 	unused[2];			/* 22 unused/available					*/
+	char 	ppaheaps;			/* 22 heap (malloc) subpool number		*/
+	char 	unused[1];			/* 23 unused/available					*/
 	unsigned ppastkln;			/* 24 stack area length 				*/
 	void	*ppaexita;			/* 28 EXITA entry point address			*/
 	void    *ppacppl;			/* 2C TSO CPPL							*/

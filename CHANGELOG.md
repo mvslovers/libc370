@@ -25,6 +25,29 @@ the second, and the plainer case: it dumped a control block on the path where
 everything had worked.
 
 ### Added
+- **The malloc subpool is a runtime value (#89).** `@@GETM` no longer assembles
+  subpool 0 in: it resolves the ambient heap subpool per call from `PPAHEAPS`
+  (+0x22) in the current TCB's own PPA — validated exactly like `@@PPAGET`
+  tier 1, no owner-TCB fallback — and records it in the high byte of the
+  rounded-size header word, which is precisely the `SP||LV` pair `@@FREEM` now
+  feeds the R-form FREEMAIN. A block therefore travels with its subpool and
+  `free()` needs no variant; a pre-#89 header decodes as subpool 0 unchanged.
+  `@@CRT0`/`@@CRT1` inherit `PPAHEAPS` from the caller's PPA when the old
+  `8(TCBFSAB)` word actually validates as one (on the first CRT of a TCB it is
+  unvalidated MVS residue), so a LINKed C module allocates from its caller's
+  ambient subpool and the caller's value is current again on return. New API in
+  `clibos.h`: `__setsp()` (set ambient, returns previous), `__getsp()`, and
+  `__getmsp(size, sp)` — the explicit-subpool `__getm()` used to pin storage
+  that must survive a `FREEMAIN SP=n` reclaim. **Nothing changes until someone
+  calls `__setsp(n)`**: the ambient value is 0 everywhere today, cthread TCBs
+  (no PPA) stay pinned to 0 by construction, and the T0 probe (`tstsubp`)
+  measured subpools 1-127 as strictly per-task on MVS 3.8, so one constant
+  subpool number is all httpd#154's stage 2 needs. Guard rails that came with
+  it: `__getm()` now refuses a rounded size past 24 bits (it is callable
+  directly and malloc's 6M cap does not protect it), and the danger inherent
+  in an ambient subpool — server-lifetime storage allocated from module
+  context landing in the module's subpool — is documented at the API with the
+  pinning rules (`__getmsp(size, 0)` / `__setsp(0)` brackets).
 - **`__cas()` — compare and swap the way the instruction does it (#48).** Stores
   `new_value` only if `*mem` is still `*expect`; returns 0 when it swapped, 1
   when it did not — and then `*expect` holds what is in memory instead, which is
@@ -352,6 +375,21 @@ everything had worked.
   `spool_read()` is a BDAM READ/CHECK and the TU carries file-scope assembler.
 
 ### Fixed
+- **`try()` no longer resumes with a dead LINKed program's runtime environment
+  (found by #89's T4 probe).** When a C program entered through LINK abends
+  under an ESTAE, its `@@EXITA` never runs, so the PPA its `@@CRT0` chained
+  at `8(TCBFSAB)` stayed there after the retry — and every CRT-anchored libc
+  call in the surviving caller (stdio, `__crtget()`, since #89 the ambient
+  heap subpool) resolved through the dead program's environment.  Under a
+  worker that keeps running, that is httpd's post-CGI-abend state today; in
+  the probe it was an immediate S0C4 (JOB00790).  `___try()`'s `call()` now
+  snapshots the word before dispatching the protected function and restores
+  it on the retry path, so a caught abend leaves the caller's own runtime
+  current.  The abandoned PPA and stack still leak (subpool 0 by #89's scope
+  decision), but they are no longer *live*.  The unreachable `__try()` twin
+  in `@@try.c` carries the same guard so the copies do not drift.  Verified
+  red→green with `test/mvs/tstsplnk.c` (JOB00790 S0C4 → JOB00802 COND 0000,
+  eight caught S0C1s, `8(TCBFSAB)` asserted after each).
 - **The CRT/GRT anchor tier no longer dereferences NULL (#85).**
   `__crtget()`/`__grtget()` can return NULL — "CRT for TCB not found", and
   since #82 a failed constructor is a second route — but ~25 sites
