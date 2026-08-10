@@ -70,7 +70,15 @@ In order:
    area; `R13` -> our save area.
 5. **Hang the PPA off the TCB**: save the old `8(TCBFSAB)` in `PPASAVE`, then
    store the PPA there. This is what makes the PPA findable by
-   `@@PPAGET`/`@@CRTGET`.
+   `@@PPAGET`/`@@CRTGET`. Since #89 this step also **inherits the heap
+   subpool**: if the old `8(TCBFSAB)` word validates as a PPA (nonzero, 24-bit,
+   `'@PPA'` eyecatcher — the word is *unvalidated* MVS residue on the first
+   `@@CRT0` of a TCB), `PPAHEAPS` (+0x22) is copied from it; otherwise it stays
+   0 from the `XC`. A LINKed C module therefore allocates from its caller's
+   ambient subpool, and the caller's own value is current again on return.
+   `@@GETM` resolves `PPAHEAPS` per call (same validated walk, current TCB
+   only) and records the subpool in the header's high byte, where `@@FREEM`
+   reads it back — see `__setsp()`/`__getsp()`/`__getmsp()` in `clibos.h`.
 6. Initialise the NAB (`THEIRSTK = MAINSTK`).
 7. `@@CRTSET` (create the CLIBCRT for this TCB in `ppacrt[]`), `@@GRTSET`
    (create the CLIBGRT process anchor).
@@ -97,10 +105,14 @@ Default stack: `MAINSTK DS 65536F` = **256 KB**.
 
 ## `@@crt1` — crt0 minus IDENTIFY (no threads)
 
-`@@crt1.asm` is a line-for-line copy of crt0 with exactly one functional change:
-the `IDENTIFY EPLOC=CTHREAD` is commented out. Everything else — PPA, TCBFSA
-anchoring, `@@CRTSET`/`@@GRTSET`, `EXTRACT`, the external `@@EXITA` — is
-identical.
+`@@crt1.asm` is a near copy of crt0 whose one *intended* functional change is
+that the `IDENTIFY EPLOC=CTHREAD` is commented out. Everything else — PPA,
+TCBFSA anchoring, the #89 `PPAHEAPS` inheritance, `@@CRTSET`/`@@GRTSET`,
+`EXTRACT`, the external `@@EXITA` — is identical. (Two incidental drifts exist
+on the dead CTHREAD path: the WTO texts say `@@CRT1`, and crt1's `@@CTEXIT`
+reads its return code from `0(R1)` only *after* the `@@CRTGET` call, which does
+not preserve `R1` — harmless while the path is unreachable, but not
+"line-for-line".)
 
 Consequence worth knowing: the `CTHREAD`/`@@CTEXIT` code is **still assembled
 into crt1 but is dead/unreachable**. With no CDE entry, `ATTACH EP=CTHREAD`

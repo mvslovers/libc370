@@ -25,6 +25,29 @@ the second, and the plainer case: it dumped a control block on the path where
 everything had worked.
 
 ### Added
+- **The malloc subpool is a runtime value (#89).** `@@GETM` no longer assembles
+  subpool 0 in: it resolves the ambient heap subpool per call from `PPAHEAPS`
+  (+0x22) in the current TCB's own PPA — validated exactly like `@@PPAGET`
+  tier 1, no owner-TCB fallback — and records it in the high byte of the
+  rounded-size header word, which is precisely the `SP||LV` pair `@@FREEM` now
+  feeds the R-form FREEMAIN. A block therefore travels with its subpool and
+  `free()` needs no variant; a pre-#89 header decodes as subpool 0 unchanged.
+  `@@CRT0`/`@@CRT1` inherit `PPAHEAPS` from the caller's PPA when the old
+  `8(TCBFSAB)` word actually validates as one (on the first CRT of a TCB it is
+  unvalidated MVS residue), so a LINKed C module allocates from its caller's
+  ambient subpool and the caller's value is current again on return. New API in
+  `clibos.h`: `__setsp()` (set ambient, returns previous), `__getsp()`, and
+  `__getmsp(size, sp)` — the explicit-subpool `__getm()` used to pin storage
+  that must survive a `FREEMAIN SP=n` reclaim. **Nothing changes until someone
+  calls `__setsp(n)`**: the ambient value is 0 everywhere today, cthread TCBs
+  (no PPA) stay pinned to 0 by construction, and the T0 probe (`tstsubp`)
+  measured subpools 1-127 as strictly per-task on MVS 3.8, so one constant
+  subpool number is all httpd#154's stage 2 needs. Guard rails that came with
+  it: `__getm()` now refuses a rounded size past 24 bits (it is callable
+  directly and malloc's 6M cap does not protect it), and the danger inherent
+  in an ambient subpool — server-lifetime storage allocated from module
+  context landing in the module's subpool — is documented at the API with the
+  pinning rules (`__getmsp(size, 0)` / `__setsp(0)` brackets).
 - **`__cas()` — compare and swap the way the instruction does it (#48).** Stores
   `new_value` only if `*mem` is still `*expect`; returns 0 when it swapped, 1
   when it did not — and then `*expect` holds what is in memory instead, which is
