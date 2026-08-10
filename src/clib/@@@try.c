@@ -66,6 +66,26 @@ call(void *func, void *plist)
 	CLIBCRT 	*crt = __crtget();
     int         rc;
     REGS        regs;
+    unsigned    *fsanext = 0;
+    unsigned    savenext = 0;
+
+    /* Snapshot the TCB first-save-area "next" word.  If func LINKs a C
+     * program that abends, that program's @@CRT0 pushed its PPA there
+     * and its @@EXITA never ran to pop it: after the retry every
+     * CRT-anchored libc call (stdio, __crtget, the ambient heap
+     * subpool) would resolve through the DEAD program's environment -
+     * measured as an S0C4 in the #89 T4 probe (tstsplnk).  Restore the
+     * word on the abend path; the abandoned PPA's owner is gone. */
+    {
+        unsigned    *psa = 0;                       /* low core == PSA */
+        unsigned    tcb  = psa[0x21C / 4];          /* PSATOLD         */
+        unsigned    fsa  = *(unsigned *)(tcb + 0x70) & 0x00FFFFFF;
+
+        if (fsa) {
+            fsanext  = (unsigned *)(fsa + 8);
+            savenext = *fsanext;
+        }
+    }
 
     /* populate the retry registers */
     __asm__("STM\t0,14,0(%0)" : : "r" (&regs));
@@ -96,6 +116,10 @@ call(void *func, void *plist)
 "RETRY    DS   0H");
 
     __asm__("LR\t%0,15" : "=r" (rc));
+
+    /* abend path: unhook whatever a dead LINKed program left chained
+       at 8(TCBFSAB) before any CRT-anchored libc runs (see above) */
+    if (fsanext) *fsanext = savenext;
 
 	/* isolate the system and user abend codes */
     rc &= 0xFFFFFF;

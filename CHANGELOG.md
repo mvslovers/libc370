@@ -375,6 +375,21 @@ everything had worked.
   `spool_read()` is a BDAM READ/CHECK and the TU carries file-scope assembler.
 
 ### Fixed
+- **`try()` no longer resumes with a dead LINKed program's runtime environment
+  (found by #89's T4 probe).** When a C program entered through LINK abends
+  under an ESTAE, its `@@EXITA` never runs, so the PPA its `@@CRT0` chained
+  at `8(TCBFSAB)` stayed there after the retry — and every CRT-anchored libc
+  call in the surviving caller (stdio, `__crtget()`, since #89 the ambient
+  heap subpool) resolved through the dead program's environment.  Under a
+  worker that keeps running, that is httpd's post-CGI-abend state today; in
+  the probe it was an immediate S0C4 (JOB00790).  `___try()`'s `call()` now
+  snapshots the word before dispatching the protected function and restores
+  it on the retry path, so a caught abend leaves the caller's own runtime
+  current.  The abandoned PPA and stack still leak (subpool 0 by #89's scope
+  decision), but they are no longer *live*.  The unreachable `__try()` twin
+  in `@@try.c` carries the same guard so the copies do not drift.  Verified
+  red→green with `test/mvs/tstsplnk.c` (JOB00790 S0C4 → JOB00802 COND 0000,
+  eight caught S0C1s, `8(TCBFSAB)` asserted after each).
 - **The CRT/GRT anchor tier no longer dereferences NULL (#85).**
   `__crtget()`/`__grtget()` can return NULL — "CRT for TCB not found", and
   since #82 a failed constructor is a second route — but ~25 sites

@@ -62,6 +62,22 @@ call(void *func, void *plist)
 {
     int         rc;
     REGS        regs;
+    unsigned    *fsanext = 0;
+    unsigned    savenext = 0;
+
+    /* Snapshot the TCB first-save-area "next" word - mirror of the
+     * guard in @@@try.c call(); see the comment there.  This copy
+     * (__try) has no callers, kept in sync so the twins do not drift. */
+    {
+        unsigned    *psa = 0;                       /* low core == PSA */
+        unsigned    tcb  = psa[0x21C / 4];          /* PSATOLD         */
+        unsigned    fsa  = *(unsigned *)(tcb + 0x70) & 0x00FFFFFF;
+
+        if (fsa) {
+            fsanext  = (unsigned *)(fsa + 8);
+            savenext = *fsanext;
+        }
+    }
 
     /* populate the retry registers */
     __asm__("STM\t0,14,0(%0)" : : "r" (&regs));
@@ -87,6 +103,10 @@ call(void *func, void *plist)
 "RETRY    DS   0H");
 
     __asm__("LR\t%0,15" : "=r" (rc));
+
+    /* abend path: unhook whatever a dead LINKed program left chained
+       at 8(TCBFSAB) - mirror of @@@try.c call() */
+    if (fsanext) *fsanext = savenext;
 
     /* remove the estae */
     estae(ESTAE_DELETE, 0, 0);
