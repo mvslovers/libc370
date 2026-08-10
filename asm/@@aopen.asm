@@ -454,10 +454,15 @@ HAVEBF1  ST    R1,ZBUFF1          Save for cleanup
          GETMAIN RC,LV=(R6),SP=SUBPOOL  Get VBS build record area
          LTR   R15,R15            VBS area storage obtained?
          BZ    HAVEBF2            Yes, continue
-* No storage for the VBS area: free buffer 1, then the common path
+* No storage for the VBS area: free buffer 1, then the common path.
+* The R form wants SP||LV packed into R0 by the caller - an SP=
+* operand together with LV=(0) trips IHB019 and the macro MEXITs
+* having generated NO code at all, which as370 does not fail on;
+* that silent nothing leaked buffer 1 on this path (#90)
          L     R1,ZBUFF1          Buffer 1 address
          L     R0,ZBUFF1+4        Buffer 1 length
-         FREEMAIN R,LV=(0),A=(1),SP=SUBPOOL  Free input buffer
+         ICM   R0,8,=AL1(SUBPOOL) Subpool in the high byte
+         FREEMAIN R,LV=(0),A=(1)  Free input buffer
          B     NOBUFF             Close, free DCB area, return -12
 HAVEBF2  ST    R1,ZBUFF2          Save for cleanup
          ST    R6,ZBUFF2+4           ditto

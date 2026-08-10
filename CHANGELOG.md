@@ -375,6 +375,21 @@ everything had worked.
   `spool_read()` is a BDAM READ/CHECK and the TU carries file-scope assembler.
 
 ### Fixed
+- **`@@AOPEN`'s buffer-1 cleanup exists again (#90).** The failure path
+  "buffer 1 obtained, VBS record area not" was written as
+  `FREEMAIN R,LV=(0),A=(1),SP=SUBPOOL`, which the FREEMAIN macro rejects
+  (IHB019: `SP=` is not allowed with `LV=(0)`) and then MEXITs having
+  generated **no code at all** — and as370 treats the severity-12 MNOTE as a
+  printing no-op, so the build stayed green and the #83 failure path silently
+  leaked the buffer precisely when storage was already short.  The statement
+  now packs the subpool into R0's high byte (`ICM R0,8,=AL1(SUBPOOL)`), the
+  idiom `@@EXITA` and `@@AREAD` already use.  Red→green on MVS 3.8j with
+  `test/mvs/tstabuf.c`: a carved 22K window (the only hole in an exhausted
+  region) feeds three failing opens of a RECFM=VS data set whose 28K record
+  area cannot fit — pre-fix each open leaks buffer 1 into the window and an
+  18K probe no longer fits (JOB00820, RC 8); post-fix the window survives
+  intact (JOB00822, COND 0000), and the #83 probe `tstaopn` stays green
+  (JOB00824).
 - **`try()` no longer resumes with a dead LINKed program's runtime environment
   (found by #89's T4 probe).** When a C program entered through LINK abends
   under an ESTAE, its `@@EXITA` never runs, so the PPA its `@@CRT0` chained
