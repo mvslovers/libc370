@@ -126,6 +126,10 @@ call(void *func, void *plist)
             sp = (unsigned char)ppa->ppasubpl; /* as @@EXITA frees it  */
             if (!lv || lv > 0x00FFFFFF) break;
 
+            /* #96: close the dead program's files and free its
+               runtime anchors while the PPA still holds them */
+            __ppahrv(ppa);
+
             dead = (unsigned)ppa->ppasave;     /* read before the free */
             __asm__("FREEMAIN RC,A=(%1),LV=(%2),SP=(%3)\n\t"
                     "LR\t%0,15"

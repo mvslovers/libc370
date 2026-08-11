@@ -33,4 +33,13 @@ struct clibppa {
 CLIBPPA * __PPAGET(void);
 CLIBPPA * __ppaget(void);
 
+/* __ppahrv() - free what a dead program's own exit path would have
+   freed: its open FILEs (fclose, DCBs are still open under this TCB),
+   its CLIBGRT with the registration arrays (atexit functions are NOT
+   run), and its CLIBCRTs.  Called by try()'s abend-path walk for each
+   validated abandoned PPA before the stack+PPA block is freed (#96).
+   Everything is validated before it is trusted; what does not
+   validate is left alone. */
+void __ppahrv(CLIBPPA *ppa);
+
 #endif
