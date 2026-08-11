@@ -3,7 +3,6 @@
 #include <ctype.h>
 #include <modmap.h>
 
-static int      super_loadhi(const char *module, void **anchor, void **epa);
 static int      relocate_load(FILE *fp, unsigned lowlp, unsigned highlp);
 static int      process_rldr(unsigned char *buf, unsigned lowlp, unsigned highlp);
 static unsigned fetch(unsigned address, unsigned size);
@@ -19,13 +18,12 @@ int __loadhi(const char *module, void **lpa, void **epa, unsigned *sz)
     void        *lowlp  = 0;    /* low load point address           */
     unsigned    size    = 0;    /* size of module                   */
     unsigned    offep   = 0;    /* offset of entry point            */
-    FILE        *fp;            /* file handle                      */
+    FILE        *fp     = 0;    /* file handle, tested at quit:     */
     CDE         *cde;
     void        *dcb;
     char        member[12]   = "        ";
     char        filename[56] = {0};
     int         i;
-    char        *p;
 
     for(i=0; i < 8 && module[i]; i++) {
         member[i] = toupper(module[i]);
