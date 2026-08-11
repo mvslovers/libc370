@@ -12,7 +12,9 @@ typedef unsigned int        ECB;
 /* ecb_wait() - wait for ECB to be posted */
 int ecb_wait(ECB *ecb)                                                                  asm("@@ECBWT");
 
-/* ecb_timed_wait() - wait for ecb to be posted, after bintvl expires ecb will be posted with postcode value */
+/* ecb_timed_wait() - wait for ecb to be posted, after bintvl expires ecb will be posted with postcode value.
+   returns 0 after the wait; negative (-STIMER rc) when the timer could not be
+   set - NO wait was done and the ecb is untouched, the caller owns the retry (#94) */
 int ecb_timed_wait(ECB *ecb, unsigned bintvl, unsigned postcode)                        asm("@@ECBTW");
 
 /* ecb_waitlist() - wait for any ecb in the ecb list to be posted, last ecb address must have high bit on */
@@ -22,7 +24,11 @@ int ecb_waitlist(ECB **ecblist)                                                 
 int ecb_waitarray(ECB **ecbarray)                                                       asm("@@ECBWA");
 
 /* ecb_timed_waitlist() wait for any ecb in the ecb list to be posted,
-   if timeecb is not null then after bintvl expires the timeecb will be posted with postcode value */
+   if timeecb is not null then after bintvl expires the timeecb will be posted with postcode value.
+   returns 0 after the wait; negative (-STIMER rc) when the timer could not be
+   set - NO wait was done and no ecb is touched, the caller owns the retry.
+   Waiting anyway would hang forever when the timer exit is the only poster
+   of a caller-local ecb (#94, the httpd#159 frozen worker) */
 int ecb_timed_waitlist(ECB **ecblist, ECB *timeecb, unsigned bintvl, unsigned postcode) asm("@@ECBTWL");
 
 /* ecb_timed_waitarray() wait for any ecb in the ecb array to be posted,

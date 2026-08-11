@@ -1,4 +1,6 @@
 #include <clibecb.h>
+#include <clibcrt.h>
+#include <clibwto.h>
 
 __asm__("\n&FUNC    SETC 'ecb_timed_waitlist'");
 int
@@ -44,14 +46,44 @@ ecb_timed_waitlist(ECB **waitlist, ECB *timeout_ecb, unsigned bintvl, unsigned p
 
     wtof("%s issuing STIMER REAL BINTVL(%u)", __func__, bintvl);
 #endif
-    __asm__("L\t0,=A(EXITDRVR)\n\tSTIMER REAL,(0),BINTVL=(%0),ERRET=SAVERC\n"
-            "SAVERC\tST\t15,0(,%1)"
-            : : "r"(&bintvl), "r"(&rc) : "1", "14", "15");
+    /* The macro's ERRET path reaches SAVERC via LTR 15,15/BNZ and the
+     * success path falls through to the same instruction, so rc is 0
+     * exactly when the timer exists.  rc is a real output operand and
+     * the asm a barrier: the fsa[0] store above must complete before
+     * the SVC (the exit reads it asynchronously). */
+    __asm__ __volatile__(
+            "L\t0,=A(EXITDRVR)\n\t"
+            "STIMER REAL,(0),BINTVL=(%1),ERRET=SAVERC\n"
+            "SAVERC\tLR\t%0,15"
+            : "=r"(rc)
+            : "r"(&bintvl)
+            : "0", "1", "14", "15", "memory");
 #if 0
     wtof("%s STIMER REAL RC=%d",__func__, rc);
     /* debugging */
     wtof("%s WAIT ECBLIST=(%08X) TCB(%06X)", __func__, waitlist, tcb);
 #endif
+
+    /* #94: a nonzero rc means there IS no timer.  For a caller-local
+     * ECB the timer exit is the only poster in the address space, so
+     * the WAIT below would never return - the frozen worker of
+     * httpd#159, reachable whenever storage is tight enough for
+     * STIMER REAL to fail (the httpd#154/#172 exhaustion curve).
+     * Unpark the plist slot and hand the failure back; callers own
+     * the retry policy and their own deadlines.  One WTO per task
+     * the first time: under the storage shortage that makes STIMER
+     * fail, a WTO per call would flood the console. */
+    if (rc) {
+        CLIBCRT     *crt = __crtget();
+
+        fsa[0] = save;
+        if (crt && !(crt->crtflag & CRTFLAG_TMRFAIL)) {
+            crt->crtflag |= CRTFLAG_TMRFAIL;
+            wtof("libc370 ecb_timed_waitlist(): STIMER REAL failed rc=%d,"
+                 " returning without waiting", rc);
+        }
+        return -rc;
+    }
 
     /* wait for ECB post */
     __asm__("WAIT ECBLIST=(%0)" : : "r"(waitlist));
@@ -69,7 +101,6 @@ ecb_timed_waitlist(ECB **waitlist, ECB *timeout_ecb, unsigned bintvl, unsigned p
     /* restore fsa value */
     fsa[0]   = save;
 
-quit:
     return 0;
 }
 
