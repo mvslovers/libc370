@@ -42,6 +42,7 @@ struct clibcrt {
 	char 		crtflag;			/* 10E processing flag(s)				*/
 #define CRTFLAG_TSO			0x80	/* ... TSO environment					*/
 #define CRTFLAG_TSOB		0x40	/* ... TSO background environment		*/
+#define CRTFLAG_TMRFAIL		0x20	/* ... STIMER failure reported (#94)	*/
 #define CRTFLAG_TIN			0x08	/* ... STDIN is terminal				*/
 #define CRTFLAG_TOUT		0x04	/* ... STDOUT is terminal				*/
 #define CRTFLAG_TERR		0x02	/* ... STDERR is terminal				*/

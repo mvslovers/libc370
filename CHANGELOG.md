@@ -375,6 +375,35 @@ everything had worked.
   `spool_read()` is a BDAM READ/CHECK and the TU carries file-scope assembler.
 
 ### Fixed
+- **`ecb_timed_waitlist()` no longer waits on an ECB nothing will post (#94).**
+  The STIMER REAL failure code stored by `ERRET=SAVERC` was never read: the
+  WAIT ran regardless, and for a caller-local ECB the timer exit is the only
+  poster in the address space — a failed STIMER meant a task frozen in that
+  WAIT forever, the shape of mvslovers/httpd#159's wedged worker, reachable
+  exactly when storage is tight enough for STIMER REAL to fail (the
+  httpd#154/#172 exhaustion curve).  The macro's ERRET path reaches the
+  fall-through only via `LTR 15,15`, so rc is 0 exactly when the timer
+  exists; on nonzero the call now unparks the plist slot from `fsa[0]`,
+  skips the WAIT and returns `-rc` — no ECB is touched, callers own the
+  retry policy — with one WTO per task the first time (`CRTFLAG_TMRFAIL`:
+  a per-call WTO would flood the console precisely when the system is
+  already starving).  `ecb_timed_wait()`/`ecb_timed_waitarray()` propagate
+  the new return; `cthread_timed_wait()` keeps its contract — its callers
+  loop on their own deadlines, which now bound the degradation to a tight
+  poll instead of a dead worker.  The STIMER asm also became a proper
+  output-operand asm: the old form used R0 without declaring it and stored
+  rc through a pointer the compiler knew nothing about — harmless only while
+  nobody read rc.  New probe `test/mvs/tstecbtw.c` + `jcl/tstecbtw.jcl`:
+  timer-post semantics, the parked `fsa[0]` word across every call, and a
+  drained-region leg (~5.7M malloc'd away, wtof-only while drained).  On a
+  healthy system LSQA is fenced from the region, so STIMER survives a full
+  problem-state drain — outcome B on both libcs (JOB00890 pre-fix,
+  JOB00893 post-fix, both COND CODE 0000): the freeze itself needs
+  httpd#159's degraded field state, and the probe documents which outcome
+  it saw (a pre-#94 libc hangs at the marked call on such a system; the
+  fixed one returns the error).  What the runs do prove: the guard never
+  false-triggers under storage pressure, and the timer path is unchanged
+  when the timer exists.
 - **A caught abend in a LINKed program no longer leaks its 256K stack (#93).**
   `try()`'s retry path unhooked the dead program's PPA from `8(TCBFSAB)` (#89)
   and then discarded the address — the stack+PPA block `@@CRT0` obtained as
