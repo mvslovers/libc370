@@ -375,6 +375,38 @@ everything had worked.
   `spool_read()` is a BDAM READ/CHECK and the TU carries file-scope assembler.
 
 ### Fixed
+- **A caught abend in a LINKed program no longer leaks its 256K stack (#93).**
+  `try()`'s retry path unhooked the dead program's PPA from `8(TCBFSAB)` (#89)
+  and then discarded the address — the stack+PPA block `@@CRT0` obtained as
+  one subpool-0 GETMAIN (~262K: `MAINSTK` alone is 65536 fullwords) stayed
+  allocated for the life of the address space, 61% of the fixed ~427K
+  per-caught-abend cost measured from the consumer side in httpd#172.
+  `call()` now walks `PPASAVE` from the abandoned head back to its snapshot —
+  so a dead program that itself LINKed a dead program releases the whole
+  chain — validating every hop the way `@@PPAGET` does (non-zero, 24-bit,
+  `PPAEYE`), and FREEMAINs each block conditionally (RC) with the
+  `PPASUBPL||PPASTKLN` pair `@@EXITA` frees: garbage at `8(TCBFSAB)` frees
+  nothing, and a bad request inside abend recovery is a return code, not a
+  second abend.  The unhook happens before the walk, so a second abend
+  re-enters the retry with the chain already popped and frees nothing twice.
+  Scope stays inside #89's decision: `@@AOPEN`'s DCBs, `@@SVC99` and
+  `@@ESTAE` remain untouched — the task does not terminate and MVS closes
+  nothing, so handing those back would convert a leak into corruption; only
+  the stack block provably has no outside pointers (its owner's RB was purged
+  by RTM before the retry point).  The `__try()` twin in `@@try.c` carries
+  the same walk so the copies do not drift.  New probe `test/mvs/tstppafr.c`
+  (+ `tstppamd.c`, `tstppain.c`, `jcl/tstppafr.jcl`): 6 single-level plus
+  3 nested caught S0C1s must cost nothing durable — the verdict counts how
+  many of four 1M mallocs fit in REGION=6M, sized against the ~434K measured
+  per-abend cost so neither IEFUSI generosity nor fragmentation can decide
+  it — while normal returns must not double-free and garbage at `8(TCBFSAB)`
+  must free nothing.  Verified red→green on MVS 3.8j: pre-fix JOB00880
+  (RC 8, 0 of 4 blocks fit), post-fix JOB00882 (COND CODE 0000, 3 of 4, and
+  successive inner stacks land at the SAME address — the block demonstrably
+  comes back).  The out-of-scope CLIBCRT/stdio remainder (~170K per caught
+  abend, the rest of httpd#172's ~427K) still leaks by design.  `tstsplnk`'s
+  red control leg leaned on the pre-#93 leak and moves from five to six
+  unreclaimed 1M abends — green again in JOB00883.
 - **`@@AOPEN`'s buffer-1 cleanup exists again (#90).** The failure path
   "buffer 1 obtained, VBS record area not" was written as
   `FREEMAIN R,LV=(0),A=(1),SP=SUBPOOL`, which the FREEMAIN macro rejects

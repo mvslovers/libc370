@@ -17,12 +17,14 @@
  *   T4  __setsp(6), __linkds(TSTSPINR) which abends S0C1 holding a
  *       1M block.  Green leg: release SP6 after each of 3 abends,
  *       then malloc(2M) must still work - the reclaim keeps the
- *       region whole.  Red control leg: 5 more abends with NO
+ *       region whole.  Red control leg: 6 more abends with NO
  *       release, malloc(2M) must FAIL - proving the probe can see
  *       the leak the reclaim prevents.  A final release recovers the
- *       storage and malloc(2M) works again.  (The inner module's own
- *       @@CRT0 stack+PPA stay subpool 0 by #89's scope decision and
- *       leak ~260K per abend on BOTH legs - REGION=8M absorbs it.)
+ *       storage and 1M refills work again.  (Since #93 the inner
+ *       module's @@CRT0 stack+PPA no longer leak - ___try frees the
+ *       abandoned chain on the abend path - so exhausting the region
+ *       takes SIX deliberate subpool-6 megabytes where five 1M+260K
+ *       leaks used to do it.  tstppafr is the dedicated #93 probe.)
  *
  * THE CHAIN ASSERTION.  After an abend the inner module's @@EXITA
  * never runs, so its PPA would stay chained at 8(TCBFSAB) and every
@@ -34,9 +36,10 @@
  * this probe ASSERTS after every caught abend that 8(TCBFSAB) is the
  * outer PPA again.  Pre-fix: S0C4.  Post-fix: COND CODE 0000.
  *
- * Console note: each TSTSPINR run WTOs one line; the red leg ends in
- * malloc's 'Out of memory' WTO + traceback by design.  All eight
- * S0C1s are caught by __linkds with dumps suppressed.
+ * Console note: each TSTSPINR run WTOs one line; if the region runs
+ * tighter than expected the red leg may end in malloc's 'Out of
+ * memory' WTO + traceback - harmless.  All nine S0C1s are caught by
+ * __linkds with dumps suppressed.
  *
  * BUILD (host):
  *     cc370 -Iinclude test/mvs/tstsplnk.c -flinker-output=iebcopy -o TSTSPLNK
@@ -57,7 +60,12 @@
 #include <clibwto.h>
 
 #define GREENN  3               /* abend+release iterations           */
-#define REDN    5               /* abend-without-release iterations   */
+#define REDN    6               /* abend-without-release iterations:
+                                   since #93 only the deliberate 1M
+                                   subpool-6 blocks leak (the @@CRT0
+                                   stacks are reclaimed by ___try), so
+                                   exhausting the region takes one
+                                   more round than pre-#93 */
 #define PROBE   (2 * 1024 * 1024)   /* region-whole probe size: must
                                        succeed when leaks are reclaimed,
                                        fail after the red leg's ~6M */
@@ -155,7 +163,7 @@ int main(void)
     }
     __setsp(0);
     p = malloc(PROBE);
-    bad += check("(4e) after 5 abends with NO release: malloc(2M) FAILS",
+    bad += check("(4e) after 6 abends with NO release: malloc(2M) FAILS",
                  p == NULL);
     if (p) free(p);
 

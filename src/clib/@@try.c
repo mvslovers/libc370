@@ -1,5 +1,6 @@
 #include <clibstae.h>
 #include <clibcrt.h>
+#include <clibppa.h>
 #include <clibwto.h>
 
 typedef struct {
@@ -105,8 +106,40 @@ call(void *func, void *plist)
     __asm__("LR\t%0,15" : "=r" (rc));
 
     /* abend path: unhook whatever a dead LINKed program left chained
-       at 8(TCBFSAB) - mirror of @@@try.c call() */
-    if (fsanext) *fsanext = savenext;
+       at 8(TCBFSAB), then free the abandoned @@CRT0 stack+PPA chain
+       (#93) - mirror of @@@try.c call(), see the comments there */
+    if (fsanext) {
+        unsigned    dead  = *fsanext;
+        unsigned    depth = 0;
+
+        *fsanext = savenext;
+
+        while (dead && dead != savenext && dead <= 0x00FFFFFF
+               && depth++ < 16) {              /* depth: cycle guard */
+            CLIBPPA     *ppa = (CLIBPPA *)dead;
+            unsigned    lv, sp, frc;
+
+            if (*(unsigned *)ppa->ppaeye !=
+                ((unsigned)'@' << 24 | (unsigned)'P' << 16 |
+                 (unsigned)'P' << 8  | (unsigned)'A')) break;
+            lv = ppa->ppastkln;                /* whole block SP||LV,  */
+            sp = (unsigned char)ppa->ppasubpl; /* as @@EXITA frees it  */
+            if (!lv || lv > 0x00FFFFFF) break;
+
+            dead = (unsigned)ppa->ppasave;     /* read before the free */
+            __asm__("FREEMAIN RC,A=(%1),LV=(%2),SP=(%3)\n\t"
+                    "LR\t%0,15"
+                    : "=r"(frc)
+                    : "r"(ppa), "r"(lv), "r"(sp)
+                    : "0", "1", "14", "15");
+            if (frc) {
+                char    msg[] = "libc370 @@try.c call(): FREEMAIN of an abandoned PPA failed, walk stopped";
+
+                wto(msg);
+                break;
+            }
+        }
+    }
 
     /* remove the estae */
     estae(ESTAE_DELETE, 0, 0);
