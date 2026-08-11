@@ -1,5 +1,6 @@
 #include <clibstae.h>
 #include <clibcrt.h>
+#include <clibppa.h>
 #include <clibwto.h>
 
 typedef struct {
@@ -118,8 +119,50 @@ call(void *func, void *plist)
     __asm__("LR\t%0,15" : "=r" (rc));
 
     /* abend path: unhook whatever a dead LINKed program left chained
-       at 8(TCBFSAB) before any CRT-anchored libc runs (see above) */
-    if (fsanext) *fsanext = savenext;
+       at 8(TCBFSAB) before any CRT-anchored libc runs (see above),
+       then free it (#93).  A dead program's @@EXITA never ran, so the
+       stack+PPA block its @@CRT0 GETMAINed (~262K) is orphaned: its
+       RB was purged by RTM before the retry and nothing else points
+       at the block.  Walk PPASAVE from the abandoned head back to the
+       snapshot so a dead program that itself LINKed a dead program
+       releases the whole chain, validating every hop the way @@PPAGET
+       does - a garbage value at 8(TCBFSAB) must free nothing.  Unhook
+       FIRST: a second abend re-enters RETRY with the chain already
+       popped and walks nothing.  FREEMAIN is conditional (RC): inside
+       abend recovery a bad request must be a return code, not another
+       abend.  No CRT-anchored calls here; wto() is SVC 35 only. */
+    if (fsanext) {
+        unsigned    dead  = *fsanext;
+        unsigned    depth = 0;
+
+        *fsanext = savenext;
+
+        while (dead && dead != savenext && dead <= 0x00FFFFFF
+               && depth++ < 16) {              /* depth: cycle guard */
+            CLIBPPA     *ppa = (CLIBPPA *)dead;
+            unsigned    lv, sp, frc;
+
+            if (*(unsigned *)ppa->ppaeye !=
+                ((unsigned)'@' << 24 | (unsigned)'P' << 16 |
+                 (unsigned)'P' << 8  | (unsigned)'A')) break;
+            lv = ppa->ppastkln;                /* whole block SP||LV,  */
+            sp = (unsigned char)ppa->ppasubpl; /* as @@EXITA frees it  */
+            if (!lv || lv > 0x00FFFFFF) break;
+
+            dead = (unsigned)ppa->ppasave;     /* read before the free */
+            __asm__("FREEMAIN RC,A=(%1),LV=(%2),SP=(%3)\n\t"
+                    "LR\t%0,15"
+                    : "=r"(frc)
+                    : "r"(ppa), "r"(lv), "r"(sp)
+                    : "0", "1", "14", "15");
+            if (frc) {
+                char    msg[] = "libc370 @@@try.c call(): FREEMAIN of an abandoned PPA failed, walk stopped";
+
+                wto(msg);
+                break;
+            }
+        }
+    }
 
 	/* isolate the system and user abend codes */
     rc &= 0xFFFFFF;
