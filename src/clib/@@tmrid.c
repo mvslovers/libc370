@@ -11,7 +11,7 @@ tmr_id(void)
     unsigned    *ascb   = (unsigned *)psa[0x224/4]; /* ascb     == PSAAOLD  */
     unsigned    asid    = ((ascb[0x24/4]) >> 16);
     TMR         *tmr    = tmr_get();
-    unsigned    id;
+    unsigned    id      = 0;    /* the switch below covers every id & 3 */
     int         lockrc;
 
     if (!tmr) return 0;         /* no TMR anchor: no timer services (#85) */

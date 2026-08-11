@@ -6,7 +6,7 @@
 
 __PDPCLIB_API__ int rand(void)
 {
-    int ret;
+    int ret = 0;    /* no CRT: no seed, and no residue to hand back */
     CLIBCRT *crt = __crtget();
 
     if (crt) {

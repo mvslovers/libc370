@@ -10,7 +10,7 @@ __asm__("\n&FUNC    SETC 'recv'");
 extern int
 recv(int ss, void *vbuf, int len, int flags)
 {
-    int     rc;
+    int     rc  = 0;    /* len <= 0 never enters the loop below */
     int     chunk;
     char    *buf;
     int     read;

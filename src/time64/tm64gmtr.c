@@ -77,9 +77,12 @@ static int check_tm(struct tm *tm)
 __asm__("\n&FUNC    SETC 'gmtime64_r'");
 struct tm *gmtime64_r (const time64_t *in_time, struct tm *p)
 {
-    int 		v_tm_sec, v_tm_min, v_tm_hour, v_tm_mon, v_tm_wday;
+    int 		v_tm_sec, v_tm_min, v_tm_hour, v_tm_wday;
+    /* set together in the m >= 0 branch, which an unsigned compare can never
+    ** skip -- initialized so -Wuninitialized stays quiet (#102) */
+    int 		v_tm_mon = 0;
     time64_t 	v_tm_tday;
-    int 		leap;
+    int 		leap = 0;
     time64_t 	m;
     time64_t 	time = *in_time;
     int 		year = 70;
