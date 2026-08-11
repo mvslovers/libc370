@@ -123,7 +123,7 @@ relocate_load(FILE *fp, unsigned lowlp, unsigned highlp, unsigned size)
     unsigned char   *dptr   = NULL;
     MMOD            *mmod   = NULL;
     int             loadtext= 0;
-    int             bad     = 0;
+    int             bad     = 0;    /* refused items, whole module */
 
     /* read each record from the load module */
     for(;;) {
@@ -149,13 +149,18 @@ relocate_load(FILE *fp, unsigned lowlp, unsigned highlp, unsigned size)
 
         /* process RLD records we've read */
         if ((mmod->id & MMOD_ID_RLD) == MMOD_ID_RLD) {
-            bad = process_rldr(dptr, read, lowlp, highlp, size);
-            if (bad) {
-                wtof("%s %d RLD item(s) address outside the %u byte module "
-                     "and were not relocated", __func__, bad, size);
-                rc = 4;
-            }
+            bad += process_rldr(dptr, read, lowlp, highlp, size);
         }
+    }
+
+    /* one message for the module, with the total -- a per-record WTO would
+    ** put the same line on the console once for every RLD record and bury
+    ** the count that actually tells you how wrong the module is.
+    */
+    if (bad) {
+        wtof("%s %d RLD item(s) address outside the %u byte module "
+             "and were not relocated", __func__, bad, size);
+        rc = 4;
     }
 
     return rc;
