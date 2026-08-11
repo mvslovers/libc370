@@ -395,12 +395,18 @@ everything had worked.
   the stack block provably has no outside pointers (its owner's RB was purged
   by RTM before the retry point).  The `__try()` twin in `@@try.c` carries
   the same walk so the copies do not drift.  New probe `test/mvs/tstppafr.c`
-  (+ `tstppamd.c`, `tstppain.c`, `jcl/tstppafr.jcl`): 12 single-level plus
-  6 nested caught S0C1s must cost nothing durable — a final `malloc(4M)` in
-  REGION=8M fails on the pre-fix ~6.2M of abandoned stacks and succeeds
-  post-fix — while normal returns must not double-free and garbage at
-  `8(TCBFSAB)` must free nothing.  `tstsplnk`'s red control leg leaned on the
-  pre-#93 leak and moves from five to six unreclaimed 1M abends.
+  (+ `tstppamd.c`, `tstppain.c`, `jcl/tstppafr.jcl`): 6 single-level plus
+  3 nested caught S0C1s must cost nothing durable — the verdict counts how
+  many of four 1M mallocs fit in REGION=6M, sized against the ~434K measured
+  per-abend cost so neither IEFUSI generosity nor fragmentation can decide
+  it — while normal returns must not double-free and garbage at `8(TCBFSAB)`
+  must free nothing.  Verified red→green on MVS 3.8j: pre-fix JOB00880
+  (RC 8, 0 of 4 blocks fit), post-fix JOB00882 (COND CODE 0000, 3 of 4, and
+  successive inner stacks land at the SAME address — the block demonstrably
+  comes back).  The out-of-scope CLIBCRT/stdio remainder (~170K per caught
+  abend, the rest of httpd#172's ~427K) still leaks by design.  `tstsplnk`'s
+  red control leg leaned on the pre-#93 leak and moves from five to six
+  unreclaimed 1M abends — green again in JOB00883.
 - **`@@AOPEN`'s buffer-1 cleanup exists again (#90).** The failure path
   "buffer 1 obtained, VBS record area not" was written as
   `FREEMAIN R,LV=(0),A=(1),SP=SUBPOOL`, which the FREEMAIN macro rejects

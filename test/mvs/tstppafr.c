@@ -18,12 +18,12 @@
  *       the blocks and pops the chain, and ___try must NOT free
  *       again (a double free would corrupt subpool 0 for the whole
  *       remaining run).
- *   T1  __setsp(7), then 12 x __linkds(TSTPPAIN): each S0C1 is
+ *   T1  __setsp(7), then 6 x __linkds(TSTPPAIN): each S0C1 is
  *       caught and the dead stack+PPA must come back to the region.
  *   T2  after the abend storm the outer module is intact: its own
  *       subpool-0 block, __crtget(), malloc and stdio all work -
  *       the guard against freeing one frame too many.
- *   T3  6 x __linkds(TSTPPAMD): B LINKs C, C abends - TWO blocks per
+ *   T3  3 x __linkds(TSTPPAMD): B LINKs C, C abends - TWO blocks per
  *       round are abandoned, chained through PPASAVE, and the whole
  *       chain back to the snapshot must be released.
  *   T4  a tried function clobbers 8(TCBFSAB) with garbage (a heap
@@ -31,12 +31,23 @@
  *       nothing may be freed, the snapshot must be restored.  This
  *       is the leg where the validation-free version is wrong.
  *
- * THE VERDICT is region arithmetic, tstsplnk-style: 12 + 2*6 = 24
- * abandoned blocks are ~6.2M pre-fix, so in REGION=8M the final
- * malloc(4M) FAILS pre-fix and succeeds post-fix, independent of
- * WTO-level noise.  Pre-fix: RC 8 (check (1c)).  Post-fix: RC 0.
+ * THE VERDICT is region arithmetic, tstsplnk-style, sized so it does
+ * not depend on what IEFUSI grants above the request and tolerates
+ * fragmentation: REGION=6M, and after all legs the probe counts how
+ * many of four 1M mallocs succeed (no contiguity requirement).
+ * Pre-fix each caught abend of a LINKed program costs ~434K durable
+ * (measured live: the 262K stack+PPA plus ~170K of CLIBCRT/stdio the
+ * #89 scope decision leaves alone), so the 6 + 2*3 = 12 abandoned
+ * blocks demand ~4.6M and exhaust the region: nothing fits, and once
+ * the region is gone the T3 LINKs may fail rc=12 instead of abending
+ * (more red).  Post-fix the stack+PPA blocks come back - successive
+ * inner stacks land at the SAME address - and only the out-of-scope
+ * ~170K/abend remains: ~3M stay free and the 1M blocks fit again.
+ * The threshold of 2 leaves >=1M of margin on either side.
+ * Verified red->green on MVS 3.8j: pre-fix JOB00880 (RC 8, 0 of 4
+ * blocks fit), post-fix JOB00882 (COND CODE 0000, 3 of 4).
  *
- * Console note: one WTO per TSTPPAIN/TSTPPAMD run; all 21 abends are
+ * Console note: one WTO per TSTPPAIN/TSTPPAMD run; all 12 abends are
  * caught with dumps suppressed by the ESTAE.
  *
  * BUILD (host):
@@ -60,11 +71,11 @@
 #include <clibcrt.h>
 #include <clibwto.h>
 
-#define N1      12              /* T1: single-level caught abends     */
-#define N3      6               /* T3: nested caught abends           */
-#define PROBE   (4 * 1024 * 1024)   /* region-whole probe: fails on
-                                       ~6.2M of leaked stacks, succeeds
-                                       when they are reclaimed */
+#define N1      6               /* T1: single-level caught abends     */
+#define N3      3               /* T3: nested caught abends           */
+#define DRAINN  4               /* verdict: 1M blocks attempted;
+                                   pre-fix none fit, post-fix >=2
+                                   must (see header arithmetic)      */
 
 static int check(const char *what, int ok);
 
@@ -175,11 +186,25 @@ int main(void)
     bad += check("(4h) chain restored over 31-bit garbage",
                  *fsanext() == myppa);
 
-    /* T1 verdict: 24 abandoned blocks must all have come back ---------- */
-    p = malloc(PROBE);
-    bad += check("(1c) after 24 abandoned blocks: malloc(4M) works",
-                 p != NULL);
-    if (p) free(p);
+    /* T1 verdict: the 12 abandoned blocks must all have come back.
+       Count 1M blocks instead of one big malloc so fragmentation
+       cannot decide the outcome (see the header arithmetic). */
+    {
+        void        *drain[DRAINN];
+        unsigned    got = 0;
+
+        for (i = 0; i < DRAINN; i++) {
+            drain[i] = malloc(1024 * 1024);
+            if (drain[i]) got++;
+        }
+        for (i = 0; i < DRAINN; i++) {
+            free(drain[i]);
+        }
+        wtof("TSTPPAFR: %u of %u 1M blocks fit after the abend storm",
+             got, (unsigned)DRAINN);
+        bad += check("(1c) after 12 abandoned blocks: 2+ 1M blocks fit",
+                     got >= 2);
+    }
 
     bad += check("(6) 8(TCBFSAB) is the outer PPA at the end",
                  *fsanext() == myppa);
