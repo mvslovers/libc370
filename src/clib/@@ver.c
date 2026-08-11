@@ -16,7 +16,7 @@
 #define LIBC370_REV "unknown"
 #endif
 
-static const char stamp[] = "libc370 v" VERSION " (" LIBC370_REV ")";
+static const char stamp[] = "LIBC370 " VERSION " (" LIBC370_REV ")";
 
 __asm__("\n&FUNC    SETC 'libc370_version'");
 const char *

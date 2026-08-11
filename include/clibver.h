@@ -4,7 +4,7 @@
 /* libc370_version() - the exact libc370 linked into this module.
 **
 ** Returns a stable, statically-allocated string of the form
-**     "libc370 v1.0.0 (6b676dc)"
+**     "LIBC370 1.0.0 (6b676dc)"
 ** (version from the VERSION file, commit from `git rev-parse --short HEAD`,
 ** with "-dirty" appended when built from a modified tree).  Consumers should
 ** log it once at startup so the runtime actually linked in is recorded on the
