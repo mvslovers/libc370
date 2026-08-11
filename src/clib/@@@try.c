@@ -130,7 +130,10 @@ call(void *func, void *plist)
        FIRST: a second abend re-enters RETRY with the chain already
        popped and walks nothing.  FREEMAIN is conditional (RC): inside
        abend recovery a bad request must be a return code, not another
-       abend.  No CRT-anchored calls here; wto() is SVC 35 only. */
+       abend.  The unhook also makes CRT-anchored libc safe again -
+       everything below resolves through the SURVIVOR's runtime, which
+       is what lets __ppahrv() (#96) run fclose()/free() for the dead
+       program's files and runtime anchors before its PPA is freed. */
     if (fsanext) {
         unsigned    dead  = *fsanext;
         unsigned    depth = 0;
@@ -148,6 +151,10 @@ call(void *func, void *plist)
             lv = ppa->ppastkln;                /* whole block SP||LV,  */
             sp = (unsigned char)ppa->ppasubpl; /* as @@EXITA frees it  */
             if (!lv || lv > 0x00FFFFFF) break;
+
+            /* #96: close the dead program's files and free its
+               runtime anchors while the PPA still holds them */
+            __ppahrv(ppa);
 
             dead = (unsigned)ppa->ppasave;     /* read before the free */
             __asm__("FREEMAIN RC,A=(%1),LV=(%2),SP=(%3)\n\t"

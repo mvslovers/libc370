@@ -375,6 +375,32 @@ everything had worked.
   `spool_read()` is a BDAM READ/CHECK and the TU carries file-scope assembler.
 
 ### Fixed
+- **A caught abend now costs ~nothing durable: the dead program's runtime is
+  torn down (#96).**  After #93 a caught abend of a LINKed program still cost
+  a fixed ~172K: 40K of ambient-subpool heap, and 132K that NO subpool
+  release could reach.  The composition probe (`test/mvs/tstcrtlk.c`) pinned
+  it by experiment: not abandoned module copies (a 128K-bigger inner module
+  leaks the same), not RTM recovery (a local caught abend costs 0K), but the
+  dead program's own runtime — above all the three stdio FILEs `@@start.c`
+  eagerly fopens for every C program (`*SYSPRINT`, `*SYSTERM`, SYSIN), still
+  OPEN after the abend with their DCBs and buffers deliberately pinned
+  outside the ambient heap subpool.  New `__ppahrv()` (`src/clib/@@ppahrv.c`),
+  called from the #93 walk for each validated abandoned PPA before its
+  stack+PPA block is FREEMAINed, mirrors `__exit()` on the dead CLIBGRT:
+  fclose() every FILE in the dead `grtfile` array (CLOSE is legal — same
+  TCB, the task is not terminating, and fclose validates each FILE's own
+  eyecatcher), free the env/wsa/devtb elements and arrays, free the
+  atexit/on_exit registration arrays WITHOUT running the dead functions,
+  then free the CLIBGRT and the CLIBCRTs as `@@GRTRES`/`@@CRTRES` would
+  have.  Everything is validated before it is trusted (24-bit pointers,
+  eyecatchers, never the survivor's GRT) — what does not validate is left
+  alone, a leak instead of a corruption.  Measured red→green on MVS 3.8j:
+  172K per abend steady state, 132K of it release-proof (JOB00903, RC 8 on
+  the probe's 16K thresholds) → ~0K per abend (JOB00906, COND CODE 0000);
+  the #93 probe's drain verdict improves from 3 to 4 of 4 1M blocks
+  (JOB00907), tstsplnk and tstecbtw stay green (JOB00908/909).  Together
+  with #93 the fixed per-caught-abend cost measured in mvslovers/httpd#172
+  goes from ~427K to ~0.
 - **`ecb_timed_waitlist()` no longer waits on an ECB nothing will post (#94).**
   The STIMER REAL failure code stored by `ERRET=SAVERC` was never read: the
   WAIT ran regardless, and for a caller-local ECB the timer exit is the only
