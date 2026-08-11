@@ -3,8 +3,9 @@
 #include <ctype.h>
 #include <modmap.h>
 
-static int      relocate_load(FILE *fp, unsigned lowlp, unsigned highlp);
-static int      process_rldr(unsigned char *buf, unsigned lowlp, unsigned highlp);
+static int      relocate_load(FILE *fp, unsigned lowlp, unsigned highlp, unsigned size);
+static int      process_rldr(unsigned char *buf, size_t reclen,
+                             unsigned lowlp, unsigned highlp, unsigned size);
 static unsigned fetch(unsigned address, unsigned size);
 static int      store(unsigned address, unsigned value, unsigned size);
 
@@ -82,8 +83,14 @@ int __loadhi(const char *module, void **lpa, void **epa, unsigned *sz)
 #if 0
     wtodumpf(lowlp, size, member);
 #endif
-    /* relocate the lowlp adcons to the highlp adcons */
-    relocate_load(fp, (unsigned)lowlp, (unsigned)highlp);
+    /* relocate the lowlp adcons to the highlp adcons.  A module we could not
+    ** relocate cleanly must not be published: half-relocated code in CSA is
+    ** worse than no module at all, so the caller gets the failure instead.
+    */
+    if (relocate_load(fp, (unsigned)lowlp, (unsigned)highlp, size) != 0) {
+        wtof("%s relocation of \"%s\" failed, module not loaded", __func__, member);
+        goto quit;
+    }
 
     /* calculate high entry point address */
     highep = (void*)((unsigned)highlp + offep);
@@ -109,13 +116,14 @@ quit:
 
 __asm__("\n&FUNC    SETC 'relocate_load'");
 static int
-relocate_load(FILE *fp, unsigned lowlp, unsigned highlp)
+relocate_load(FILE *fp, unsigned lowlp, unsigned highlp, unsigned size)
 {
     int             rc      = 0;
     size_t          read    = 0;
     unsigned char   *dptr   = NULL;
     MMOD            *mmod   = NULL;
     int             loadtext= 0;
+    int             bad     = 0;    /* refused items, whole module */
 
     /* read each record from the load module */
     for(;;) {
@@ -141,8 +149,18 @@ relocate_load(FILE *fp, unsigned lowlp, unsigned highlp)
 
         /* process RLD records we've read */
         if ((mmod->id & MMOD_ID_RLD) == MMOD_ID_RLD) {
-            process_rldr(dptr, lowlp, highlp);
+            bad += process_rldr(dptr, read, lowlp, highlp, size);
         }
+    }
+
+    /* one message for the module, with the total -- a per-record WTO would
+    ** put the same line on the console once for every RLD record and bury
+    ** the count that actually tells you how wrong the module is.
+    */
+    if (bad) {
+        wtof("%s %d RLD item(s) address outside the %u byte module "
+             "and were not relocated", __func__, bad, size);
+        rc = 4;
     }
 
     return rc;
@@ -174,90 +192,112 @@ static __inline int store(unsigned address, unsigned value, unsigned size)
     return 0;
 }
 
+/* Walk one RLD record and relocate the adcons it names.
+**
+** The RLD data is a stream of items.  A full item is 8 bytes -- the relocation
+** and position ESD ids, then a flag byte and a 3 byte offset.  When an item's
+** T bit (RLD_FLAG_SAME) is set the NEXT item shares those two ids and omits
+** them, so it is only 4 bytes.
+**
+** The walk is bounded by the record's own RLD byte count, never by the T bit.
+** That distinction is the whole of #100: an ld370 before mvslovers/cc370#42
+** left the inherited T bit set on the item that ended up last in a record,
+** claiming a continuation item the record does not contain.  Following it read
+** 4 bytes past the RLD data -- and for RECFM=U __aread() hands back a whole
+** BLKSIZE buffer, so what sits there is the tail of the previous, longer
+** record.  That residue reads as a perfectly plausible item whose 3 byte
+** offset then lands anywhere at all.  Program fetch bounds its own walk by the
+** byte count and is unaffected; we now do the same, which also keeps every
+** module an older ld370 already produced working.
+**
+** Returns the number of items refused because their offset is not inside the
+** module -- 0 when the record relocated cleanly.
+*/
 __asm__("\n&FUNC    SETC 'process_rldr'");
 static int
-process_rldr(unsigned char *buf, unsigned lowlp, unsigned highlp)
+process_rldr(unsigned char *buf, size_t reclen,
+             unsigned lowlp, unsigned highlp, unsigned size)
 {
-    int             rc      = 0;
-    unsigned        count   = 0;
-    MMRLDR          *rldr;
-    MMRLD           *rld;
-    MMRLDF          *rldf;
+    int             rejected = 0;
+    int             same    = 0;    /* previous item set T: this one is short */
+    MMRLDR          *rldr   = (MMRLDR*)buf;
+    unsigned char   *p;
+    unsigned char   *end;
+    unsigned char   flag;
     unsigned        address;
     unsigned        value;
-    unsigned        size;
+    unsigned        isize;
     unsigned        offset;
+    unsigned        count;
 
-    /* map the buffer contents */
-    rldr            = (MMRLDR*)buf;
-    rld             = (MMRLD*)rldr->data;
-    rldf            = rld->mmrldf;
+    /* How many bytes of RLD data this record claims -- capped at what __aread()
+    ** actually handed us before it ever becomes a pointer, so a garbage count
+    ** cannot produce an out of range address just by being added.
+    ** ld370 emits control records and RLD records separately, so ctlcnt is 0 on
+    ** every record that gets here; a combined control+RLD record would hold its
+    ** control data in this range and the items read out of it are caught by the
+    ** offset check below.
+    */
+    count = rldr->rldcnt;
+    if (reclen > sizeof(MMRLDR) && count > reclen - sizeof(MMRLDR)) {
+        count = (unsigned)(reclen - sizeof(MMRLDR));
+    }
 
-#if 0
-    wtof("%s lowlp=%08X, highlp=%08X", __func__, lowlp, highlp);
-    wtodumpf(rldr, 256, "RLDR");
-#endif
-    while(count < rldr->rldcnt) {
-#if 0
-        wtodumpf(rld, sizeof(MMRLD), "RLD");
-        wtodumpf(rldf, sizeof(MMRLDF), "RLDF");
-#endif
-        if (rldf->flag & RLD_FLAG_UNRES) {
-            /* don't process unresolved relocation entries */
-            goto next;
+    p   = (unsigned char*)rldr->data;
+    end = p + count;
+
+    while (p + 4 <= end) {
+        if (!same) {
+            /* this item carries its own relocation/position ids first */
+            if (p + 8 > end) break;     /* truncated -- stop, do not guess */
+            p += 4;
         }
+
+        flag    = p[0];
+        offset  = GET3(p + 1);
+        p      += 4;
+        same    = (flag & RLD_FLAG_SAME) != 0;   /* governs the NEXT item */
+
+        /* don't process unresolved relocation entries */
+        if (flag & RLD_FLAG_UNRES) continue;
 
         /* get the size of the target address */
-        offset = GET3(rldf->address);                   /* offset of adcon in storage */
-#if 0
-        wtof("%s offset=%08X", __func__, offset);
-#endif
-        size = rldf->flag & RLD_FLAG_LL;
-        if (size == RLD_FLAG_LL2) {
-            size = 2;
+        isize = flag & RLD_FLAG_LL;
+        if (isize == RLD_FLAG_LL2) {
+            isize = 2;
         }
-        else if (size == RLD_FLAG_LL3) {
-            size = 3;
+        else if (isize == RLD_FLAG_LL3) {
+            isize = 3;
         }
-        else if (size == RLD_FLAG_LL4) {
-            size = 4;
+        else if (isize == RLD_FLAG_LL4) {
+            isize = 4;
         }
         else {
             /* should never happen, but just in case */
-            goto next;
+            continue;
+        }
+
+        /* an adcon has to live inside the module we just copied.  Without this
+        ** a bad offset is a store into whatever the arithmetic produced -- a
+        ** silent S0C4 with nothing to point at its cause.
+        */
+        if (offset + isize > size) {
+            rejected++;
+            continue;
         }
 
         /* get current relocated value from module in memory (lowlp) */
         address = lowlp + offset;                       /* address of adcon in private area (lowlp) */
-        /* wtof("%s fetch(%08X,%u)", __func__, address, size); */
-        value = fetch(address, size);                   /* fetch the current adcon value */
-        /* wtof("%s fetch(%08X,%u) rc=%08X", __func__, address, size, value); */
+        value = fetch(address, isize);                  /* fetch the current adcon value */
 
         /* remove the relocation value from the adcon value (lowlp) */
         value -= lowlp;
-#if 0
-        wtof("%s RLD VALUE(%08X)", __func__, value);
-#endif
+
         /* adjust the adcon value in the CSA storage (highlp) */
         value += highlp;                                /* new adcon value */
         address = highlp + offset;                      /* address of adcon in CSA */
-        /* wtof("%s store(%08X,%08X,%u)", __func__, address, value, size); */
-        store(address, value, size);                    /* store adcon with relocated value */
-
-next:
-        /* get next RLD entry from record */
-        buf = (unsigned char*)rldf;
-        if (rldf->flag & RLD_FLAG_SAME) {
-            count += sizeof(MMRLDF);
-            rldf = (MMRLDF*)(buf + sizeof(MMRLDF));
-        }
-        else {
-            count += sizeof(MMRLD);
-            rld = (MMRLD*)(buf + sizeof(MMRLDF));
-            rldf = rld->mmrldf;
-        }
+        store(address, value, isize);                   /* store adcon with relocated value */
     }
 
-quit:
-    return rc;
+    return rejected;
 }
