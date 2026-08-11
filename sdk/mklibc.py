@@ -32,7 +32,10 @@ VERSION = open(f"{ROOT}/VERSION").read().strip() if os.path.exists(f"{ROOT}/VERS
 C_DIRS = [f"{ROOT}/src/{d}" for d in
           ("clib", "cmtt", "crypto", "dyn75", "jes", "os", "racf", "smf", "thdmgr", "time64")]
 ASM_DIR = f"{ROOT}/asm"
-CFLAGS = ["-O1", f'-DVERSION="{VERSION}"',
+# -Wuninitialized is not implied by -Wall in this gcc 3.4.6 and needs -O to run
+# at all, so it has to be named here (#102).  It finds #99 -- __loadhi() calling
+# fclose() on stack residue -- at the -O1 the build already uses.
+CFLAGS = ["-O1", "-Wuninitialized", f'-DVERSION="{VERSION}"',
           f"-I{ROOT}/include", f"-I{ROOT}/src/thdmgr", f"-I{ROOT}/src/time64"]
 ASMINC = ["-I", f"{ROOT}/maclib", "-I", f"{ROOT}/sysmac"]   # sysmac vendors SYS1.MACLIB
 STARTUPS = ("@@crt0", "@@crt1", "@@crtm")                      # -> separate startfiles
@@ -72,7 +75,7 @@ def sysroot():
     return triple, os.path.join(base, "include"), os.path.join(base, "lib")
 
 
-def compile_c(cfile, sfile, extra=()):
+def compile_c(cfile, sfile, extra=(), warnings=None):
     """cc370 -S a .c -> .s, unconditionally.
 
     The .s files are build output that happens to be written next to its source.
@@ -89,6 +92,12 @@ def compile_c(cfile, sfile, extra=()):
     if not os.path.exists(sfile) or os.path.getsize(sfile) == 0:
         return "cc370 FAIL %s: %s" % (os.path.basename(cfile),
                "\n".join(l for l in r.stderr.splitlines() if "re-asserted" not in l)[:300])
+    # A successful compile's stderr was discarded, so a warning cc370 did issue
+    # reached nobody -- which is the other half of why #99 sat unnoticed.  Hand
+    # them back so the build can report them (#102).
+    if warnings is not None:
+        warnings.extend(l.replace(ROOT + "/", "") for l in r.stderr.splitlines()
+                        if ": warning:" in l)
     return None
 
 
@@ -128,16 +137,21 @@ def cmd_build():
     # 1. compile every .c -> .s, collect them + the hand-written .asm
     rev = gitrev()      # one git call per build; @@ver.c bakes it in as the stamp
     srcs = []
+    warns = []
     for d in C_DIRS:
         for c in sorted(glob.glob(f"{d}/**/*.c", recursive=True)):
             s = c[:-2] + ".s"
             extra = [f'-DLIBC370_REV="{rev}"'] if os.path.abspath(c) == os.path.abspath(VER_C) else ()
-            err = compile_c(c, s, extra)
+            err = compile_c(c, s, extra, warns)
             if err:
                 print("  " + err); return 1
             srcs.append(s)
     asms = sorted(glob.glob(f"{ASM_DIR}/*.asm"))
     print(f"[libc] {len(srcs)} .s + {len(asms)} .asm")
+    if warns:
+        print(f"[libc] {len(warns)} compiler warning(s):")
+        for w in warns:
+            print("  " + w)
 
     # 2. assemble everything (parallel)
     def do(src):

@@ -15,20 +15,25 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
     int ch;
     int fin = 0;
     int cnt = 0;
-    char *cptr;
-    int *iptr;
-    unsigned int *uptr;
-    long *lptr;
-    unsigned long *luptr;
-    short *hptr;
-    unsigned short *huptr;
-    double *dptr;
-    float *fptr;
-    long startpos;
-    const char *startp;
-    int skipvar; /* nonzero if we are skipping this variable */
-    int modlong;   /* nonzero if "l" modifier found */
-    int modshort;   /* nonzero if "h" modifier found */
+    /* The va_arg targets below are set and used under the same !skipvar
+    ** test, startpos/startp under the same fp != NULL test, and the three
+    ** mod/skip flags at the '%' that opens each format item -- so none is
+    ** read unset. The compiler cannot follow any of those pairings, so
+    ** they are initialized here to keep -Wuninitialized quiet (#102). */
+    char *cptr = NULL;
+    int *iptr = NULL;
+    unsigned int *uptr = NULL;
+    long *lptr = NULL;
+    unsigned long *luptr = NULL;
+    short *hptr = NULL;
+    unsigned short *huptr = NULL;
+    double *dptr = NULL;
+    float *fptr = NULL;
+    long startpos = 0;
+    const char *startp = NULL;
+    int skipvar = 0; /* nonzero if we are skipping this variable */
+    int modlong = 0;   /* nonzero if "l" modifier found */
+    int modshort = 0;   /* nonzero if "h" modifier found */
     int informatitem;  /* nonzero if % format item started */
            /* informatitem is 1 if we have processed "%l" but not the
               type letter (s,d,e,f,g,...) yet. */

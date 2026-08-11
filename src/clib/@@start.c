@@ -52,7 +52,7 @@ __start(char *p, char *pgmname, int tsojbid, void **pgmr1)
     char        *argv[MAXPARMS + 1];
     int         rc;
     int         parmLen;
-    int         progLen;
+    int         progLen = 0;
     char        parmbuf[310];
 
     /* need to know if this is a TSO environment straight away

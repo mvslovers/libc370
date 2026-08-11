@@ -40,7 +40,7 @@ __estae(ESTAE_OP op, void *fp, void *udata)
     CLIBCRT         *crt    = __crtget();
     int             rc      = -1;
     unsigned        work[4];
-    unsigned        np;
+    unsigned        np      = 0;    /* set for the two ops that read it */
     volatile PARAM  *param;
     volatile PARAM  *p;
 

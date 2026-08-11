@@ -27,13 +27,17 @@ __fseek(FILE *fp, long int offset, int whence)
     else if (whence == SEEK_CUR) {
         newpos = oldpos + offset;
     }
-
-    if (whence == SEEK_END) {
+    else if (whence == SEEK_END) {
         /* read until end of file or error */
         while (__fread(buf, sizeof(buf), 1, fp) == 1) {
             /* do nothing */
         }
         goto quit;
+    }
+    else {
+        /* not a whence we know -- there is no position to seek to, and
+        ** every use of newpos below would be reading an unset local. */
+        return (-1);
     }
 
     /* if we're in read mode */
