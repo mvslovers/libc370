@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
-## [Unreleased]
+## [1.0.2] - 2026-08-12
 
 Mostly silent failures: paths that reported success while doing nothing, losing
 data, losing storage, or building against a stale compiler. Two heap defects in
@@ -22,7 +22,14 @@ which can finally fail: storage shortage returns NULL with `errno = ENOMEM`
 where it used to abend S878 — and the `fopen()`/dynalloc path, which follows
 suit: shortage during an open fails the call instead of abending S80A. `__txdsn()` is
 the second, and the plainer case: it dumped a control block on the path where
-everything had worked.
+everything had worked. `__loadhi()` — the load-into-CSA path ufsd and nsf370
+depend on — carries two more of the same kind: an `fclose()` on stack residue,
+in supervisor state under PSW key 0 where that is cross-key corruption rather
+than an abend, and an RLD walk bounded by a continuation bit instead of the
+record's byte count, which relocated past the end of the module and stored an
+adcon into unmapped storage. And the build stopped throwing warnings away:
+`-Wuninitialized` is on, its 23 hits are cleared — five of them real — and a
+warning on an otherwise successful compile now reaches the build output.
 
 ### Added
 - **The malloc subpool is a runtime value (#89).** `@@GETM` no longer assembles
@@ -107,6 +114,13 @@ everything had worked.
   across the change except `@@ver.s`, which bakes in the git revision.
 
 ### Changed
+- **The startup version stamp reads `LIBC370 1.0.2 (<commit>)`.** It was
+  `libc370 v1.0.0 (<commit>)`: the module name is uppercase like every other MVS
+  message on the console it is written to, and the `v` carried nothing the
+  surrounding format did not already give. `libc370_version()` is otherwise
+  unchanged and no consumer parses the string — it is only logged — but anything
+  grepping a job log for the old form needs the new one. The example in
+  `clibver.h` moved with it so the documented and the emitted form do not drift.
 - **BREAKING — `fopen()`, `__aopen()` and `__svc99()` fail on storage
   shortage instead of abending (#83).** The #81 fix left three unconditional
   GETMAINs on the open/dynalloc path: the FUNHEAD `SAVE=` dynamic save area
@@ -375,6 +389,102 @@ everything had worked.
   `spool_read()` is a BDAM READ/CHECK and the TU carries file-scope assembler.
 
 ### Fixed
+- **`__loadhi()` relocated past the end of the module (#100).** The RLD walk let
+  the T bit (`x'01'` — "the next item shares these two ESD ids and is 4 bytes
+  rather than 8") decide when to stop, adding the size of the *next* item rather
+  than the current one. That comes out exact only because the first item always
+  costs 8 and the last was assumed to have the bit clear; when the last item in a
+  record has it **set**, the sum lands 4 bytes short of `rldcnt`, the loop runs
+  once more, and the walk reads an item the record does not contain. What sits
+  there is the point: `__aread()` does no deblocking for `RECFM=U`
+  (`asm/@@aread.asm`) — it issues a READ for `BLKSIZE` and hands back the buffer,
+  so behind a short record lies the tail of the previous, longer one. That
+  residue reads as a perfectly plausible RLD item whose 3-byte offset can be
+  anything, and `store()` wrote the adcon into unmapped storage: **S0C4,
+  deterministic, no diagnostic**, and moving as soon as the module grows. An
+  ld370 before mvslovers/cc370#42 emits that stale bit routinely — UFSDSSIR has
+  two such records, IRXJCL 65. The walk now runs to `rldcnt`, capped at the
+  length `__aread()` actually returned, and the T bit only selects the next
+  item's size; a stale bit on the last item ends the loop instead of stepping
+  past it, so every module an older ld370 already produced — which is everything
+  now installed — relocates correctly. MVS program fetch bounds its own walk the
+  same way. Two more from the same report ride along: `process_rldr()` refuses an
+  offset that is not inside the module instead of storing through it and counts
+  the refusals (accumulated across the module and reported **once**, with the
+  total), and `__loadhi()` now **tests** `relocate_load()`'s return code, which it
+  previously discarded — a module that did not relocate cleanly is freed and the
+  load fails rather than being published to the caller, because half-relocated
+  code in CSA is worse than no module at all. The control/text interleaving the
+  report suspected is not what fails: ld370 emits control and RLD records
+  separately, established by walking a real UFSDSSIR's record stream before
+  touching any code. Red→green on the host over real module bytes —
+  `test/host/tstrldwk.c` links and executes the real `@@loadhi.c` against the 252
+  bytes at offset 27383 of an ld370-linked UFSDSSIR, one of the records whose
+  last item carries the stale bit. Pre-fix ASan reports `heap-buffer-overflow,
+  READ of size 1, 0 bytes after the 252-byte region` — the phantom item's flag
+  byte; post-fix 8/8, 41 items walked and not 42. `fetch()`/`store()` are out of
+  the test's reach (`@@loadhi.c` holds addresses in `unsigned`, correct on the
+  24-bit target and truncating on a 64-bit host), so every case passes `size = 0`;
+  that arithmetic is unchanged.
+- **The build compiles with `-Wuninitialized`, and a warning now reaches the
+  build output (#102).** #99 was not a toolchain blind spot — cc370 finds it and
+  always could. Two separate things kept it from ever being seen. The flag was
+  never set: `sdk/mklibc.py` compiled with `-O1` and no warning options at all,
+  and in this gcc 3.4.6 `-Wall` does **not** imply `-Wuninitialized`, it has to be
+  named. And the output was thrown away: `compile_c()` captured cc370's stderr
+  but only looked at it when the compile had *failed*, so a warning on an
+  otherwise successful compile reached nobody. Both change together — warnings
+  are collected and printed after the compile pass — since setting the flag alone
+  would have changed nothing observable. The 23 hits in the sources that go into
+  `libc.a` are cleared, and five were real: `rand()` returned stack residue as a
+  random number when `__crtget()` came back NULL (0 now); `recv()` with
+  `len <= 0` never entered the read loop and then tested and returned an unset
+  `rc` (0 now, which is also the right answer for a zero-length receive);
+  `__fseek()` left `newpos` unset for a `whence` that is none of `SEEK_SET`,
+  `SEEK_CUR` or `SEEK_END` and every use below read garbage — **an unknown
+  `whence` is rejected with -1** and `SEEK_END` folds into the same if/else chain,
+  so there is exactly one decision on `whence`; `fgets()` decided on residue for
+  `n <= 1` — `fgets(s, 1, fp)` now does what C99 7.21.7.2 asks (store the
+  terminator, return `s`) and **`n < 1` returns NULL without touching the
+  buffer**, since with no room even for the terminator there is nothing that may
+  be stored; and `__start()`'s `progLen` is assigned only inside the branch that
+  *sets* `GRTFLAG1_TSO` but read under a test of the flag itself, which lives in
+  the GRT, is address-space wide and is only ever OR'd in — a second `__start()`
+  with a non-TSO parm reached the read with `progLen` unset and used it as a loop
+  bound and a pointer increment. Initialized to 0 so the read is at least
+  defined; the design question behind it is #105. The rest the compiler cannot
+  prove (`@@estae.c`, `@@tmrid.c`, 14 in `vvscanf.c`, `tm64gmtr.c`) and are
+  initialized to say so. The reporting half earned its keep immediately by
+  surfacing a warning cc370 had been issuing by default all along —
+  `strcpyp()` discarding qualifiers from its source pointer — left alone here
+  because the fix widens a header that ships into every consumer's sysroot
+  (#104). Verified two ways: 23 cc370 warnings before and 0 after over the ten
+  directories that make up `libc.a`, and an independent clang pass over all 784
+  TUs in `src/` agrees, its only remaining hits being three in `src/wip`, which
+  is not built. `-Werror=uninitialized` is deliberately not proposed yet.
+- **`__loadhi()` called `fclose()` on stack residue (#99).** `FILE *fp` was
+  declared without an initializer but tested at the common exit, and it is
+  assigned only after the module has been LOADed, the CDE located and the CSA
+  storage obtained — so the three failure paths before that point (the LOAD
+  failing, `clib_find_cde()` returning NULL, the subpool 241 GETMAIN coming back
+  empty) all reached `quit:` with `fp` holding whatever the stack happened to
+  contain. Those three are exactly the failures a caller most needs to see: the
+  diagnostic WTO is issued, but the address space then dies of a second,
+  unrelated abend before the caller can act on the return code, so a legible
+  `cannot GETMAIN 25784 bytes from subpool 241` is followed by something that
+  looks like a storage overlay somewhere else entirely — and whether it abends at
+  all depends on stack residue, so the same error reproduces differently between
+  builds. Both callers, ufsd and nsf370, run `__loadhi()` in supervisor state
+  under PSW key 0, where a garbage `fp` that happens to point into mapped storage
+  raises no protection exception at all: `fclose()` writes, and the failure
+  degrades from an abend into silent cross-key corruption. Every other variable
+  tested at `quit:` was already initialized at its declaration, so this was an
+  oversight rather than intent. Verified statically, which is the right check for
+  this class — the symptom depends on stack contents, so no runtime test
+  reproduces it reliably, while the dataflow is decidable at compile time: three
+  clang *used uninitialized* diagnostics and cc370's own
+  `'fp' might be used uninitialized` before, silent after. Two dead declarations
+  turned up by the same pass went with it.
 - **A caught abend now costs ~nothing durable: the dead program's runtime is
   torn down (#96).**  After #93 a caught abend of a LINKed program still cost
   a fixed ~172K: 40K of ambient-subpool heap, and 132K that NO subpool
