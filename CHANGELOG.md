@@ -822,7 +822,9 @@ warning on an otherwise successful compile now reaches the build output.
   `test/mvs/tststow.c`, which forces three different STOW return codes (0/8/4)
   out of one data set — old libc returned 195/195/195 with the directory
   unchanged.
-- **SVC 99 parmlist built in the caller's storage (PR #19).** `@@SVC99` set the
+- **SVC 99 parmlist built in the caller's storage (PR #19, contributed by
+  [@mainframed](https://github.com/mainframed) of
+  [MVS-sysgen/RAKF](https://github.com/MVS-sysgen/RAKF)).** `@@SVC99` set the
   high-order bit SVC 99 requires by modifying the caller's parameter list in
   place, relying on that storage being writable. It is not when a cc370 program
   is entered as a TSO command processor: the parameter list cc370 emits sits in
@@ -831,7 +833,8 @@ warning on an otherwise successful compile now reaches the build output.
   batch, since `fopen()` reaches SVC 99 through
   `__fpshr`/`__fpold`/`__fpnew`/`__fpstar`. The one-word parmlist is now built in
   the work area the routine already GETMAINs; the caller's storage is never
-  written. Found via RAKF's ADDUSER.
+  written. Found through RAKF's `ADDUSER`, diagnosed and fixed in the same pull
+  request — the first outside contribution to this library.
 - **The build reused stale generated `.s` (#8).** `compile_c()` skipped `cc370
   -S` whenever the `.s` was newer than its `.c`, which is not a staleness test:
   a `.c` mtime says nothing about the headers it includes, the flags it was
