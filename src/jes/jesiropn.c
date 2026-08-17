@@ -10,24 +10,36 @@
 #include "txt99.h"
 #include "clibwto.h"
 #include "clibvsam.h"
+#include "clibio.h"
 
-static int __alloc_intrdr(char *ddname);
+static int __alloc_intrdr(char *ddname);    /* buffer of at least 9 bytes   */
 static int __vsam_open_intrdr(char *ddname, VSFILE **vsfile);
 static int __vsam_close_intrdr(VSFILE *vsfile);
 
 int jesiropn(VSFILE **vsfile)
 {
     int err = 1;
-    char ddname[8];
-    
+    char ddname[9] = {0};
+
     err = __alloc_intrdr(ddname);
     if (err) goto quit;
 
     err = __vsam_open_intrdr(ddname, vsfile);
-    if (err) goto quit;
+    if (err) {
+        /* The DD is unallocated by the "unallocate at close" text unit
+         * __alloc_intrdr() asked for, and no CLOSE will ever run for a
+         * cluster that did not open: release it here or the DD and its
+         * SWA residue stay for the life of the address space.
+         *
+         * The cleanup runs over the errno the open just set, so save it:
+         * that value is how the caller tells EVSOPEN from ENOMEM.      */
+        int saved_errno = errno;
+        __dsfree(ddname);
+        errno = saved_errno;
+        goto quit;
+    }
 
 quit:
-    /* TODO: free INTRDR allocation */
     return err;
 }
 
@@ -73,8 +85,13 @@ static int __alloc_intrdr(char *ddname)
     err = __svc99(&rb99);
     if (err) goto quit;
 
-    /* return DDNAME */
+    /* Return the DDNAME as a C string: SVC 99 gives back 8 characters
+     * padded with blanks, and both strcpyp() in __vsam_open_intrdr() and
+     * __txddn() under __dsfree() take the length with strlen().          */
     memcpy(ddname, txt99[0]->text, 8);
+    for (p = ddname + 8; p > ddname && p[-1] == ' '; p--)
+        ;
+    *p = 0;
 
 quit:
     if (txt99) FreeTXT99Array(&txt99);
@@ -103,10 +120,6 @@ static int __vsam_open_intrdr(char *ddname, VSFILE **vsfile)
     /* allocate RPL work area */
     wa = calloc(1, 80);
     if (!wa) {
-        /* free directly: __vsam_close_intrdr() is a stub and quit
-         * would leak the handle */
-        free(vs);
-        vs = 0;
         rc = ENOMEM;
         goto quit;
     }
@@ -152,8 +165,13 @@ static int __vsam_open_intrdr(char *ddname, VSFILE **vsfile)
             "ST    15,%2"
         : : "r"(&vs->acb), "r"(pl), "m"(rc) : "1", "14", "15");
 
+    /* The open flag decides, not R15: OPEN can come back with a warning
+     * (R15=4) over an ACB that is open and usable, and reporting that as
+     * a failure would hand the caller a NULL handle while leaving the
+     * cluster open and the DD allocated.                                 */
     if (acb->acboflgs & ACBOPEN) {
         vs->flags |= VSFILE_FLAG_OPEN;
+        rc = 0;
     }
     else {
         rc = EVSOPEN;
@@ -175,8 +193,22 @@ quit:
 }
 
 __asm__("\n&FUNC    SETC '__vsam_close_intrdr'");
-int __vsam_close_intrdr(VSFILE *vsfile)
+static int __vsam_close_intrdr(VSFILE *vsfile)
 {
+    void *wa = NULL;
+
+    if (!vsfile) goto quit;
+
+    /* the RPL work area allocated above; its only reference is rplarea,
+     * and __vsclos() frees the VSFILE alone (#115)                       */
+    wa = vsfile->rpl.rplarea;
+
+    /* CLOSEs only when the open flag is set, then frees the handle       */
+    __vsclos(vsfile);
+
+    if (wa) free(wa);
+
+quit:
     return 0;
 }
 
