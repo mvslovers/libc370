@@ -607,7 +607,13 @@ process_job(char *buf, char *jobname, char *userid)
     userid[0]   = 0;
 
     for(t = (TEXT*)buf; t->key != 0 && t->key != ENDK; t = (TEXT*)buf) {
-        len = t->len & 0x7F;
+        /* Bound by the destination, not by the text stream (#111).  t->len is
+           one byte, so the mask alone still admits 127 into the twelve-byte
+           buffers process_intxt() passes, and the values go on into nine-byte
+           JESJOB.owner / JESDD fields after that.  Eight is what an MVS name
+           is and what those fields hold - the same clamp process_dd() has
+           carried since #22 fixed this exact class in the sibling parser. */
+        len = MIN(t->len & 0x7F, 8);
 
         switch (t->key) {
         case USERK:     /* JOB     USER=                        */
@@ -645,7 +651,10 @@ process_exec(char *buf, char *stepname, char *procname, char *program)
     for(t = (TEXT*)buf; t->key != 0 && t->key != ENDK; t = (TEXT*)buf) {
         /* wtodumpf(t, sizeof(TEXT), "%s TEXT", __func__); */
 
-        len = t->len & 0x7F;
+        /* bound by the destination, not by the text stream (#111) - see the
+           note in process_job(); stepname, procname and program are the same
+           twelve-byte locals, feeding the same nine-byte JESDD fields */
+        len = MIN(t->len & 0x7F, 8);
 
         /* wtof("%s t->key=%u", __func__, t->key); */
         switch (t->key) {
