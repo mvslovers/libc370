@@ -8,6 +8,7 @@ C_FILES := jescanj.c \
 	jesiropn.c \
 	jesirput.c \
 	jesircls.c \
+	jesircl2.c \
 	jesjob.c \
 	jesjobf1.c \
 	jesjobfr.c \
