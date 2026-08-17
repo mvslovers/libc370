@@ -248,5 +248,6 @@ int jesxdone(SSSO *ssso);
 int jesiropn(VSFILE **vsfile);
 int jesirput(VSFILE  *vsfile, char card[80]);
 int jesircls(VSFILE  *vsfile);
+int jesircl2(VSFILE  *vsfile, unsigned char jobid[8]);
 #endif
 
