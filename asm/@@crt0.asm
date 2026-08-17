@@ -34,10 +34,28 @@ USEDFLT  DS    0H
 PLUSPPA  DS    0H
          AL    R8,=A(L'CLIBPPA+7)       Add in our CLIBPPA length
          N     R8,=X'00FFFFF8'          Round to nearest double word
-         LA    R0,SUBPOOL               Subpool number
-         SLL   R0,24                    Shift into high byte
-         ALR   R0,R8                    Plus size of storage we want
-         GETMAIN R,LV=(0)
+         LA    R2,SUBPOOL               Subpool number
+* CONDITIONAL GETMAIN (#108).  The R-form abended S80A from inside the
+* SVC when the private area could not spare the stack.  That named
+* neither the requester nor the size - httpd logged only "EXTERNAL
+* PROGRAM MVSMF failed with S80A ABEND", and the S80A could equally
+* have come from anywhere else in the address space.  RC lets us fail
+* by name, as U0801, the way the CLIBGRT and CLIBCRT guards below
+* already do (#81, #85).
+*
+* We do NOT carry on with a smaller stack: PDPPRLG has no bounds check
+* (it only bumps the NAB at 76(13)), so a short stack would run off the
+* end silently and corrupt whatever follows it.
+*
+* R8 still holds the length that was refused, so the dump carries the
+* size even though a WTO cannot: there is no writable storage to format
+* a number into here, and this CSECT is linked into RENT load modules.
+         GETMAIN RC,LV=(R8),SP=(R2)
+         LTR   R15,R15           Did we get the stack?
+         BZ    STKOK             Yes, continue
+         WTO   '@@CRT0 - No storage for C stack'
+         ABEND 801,DUMP          Cannot run C code without a stack
+STKOK    DS    0H
          XC    0(L'CLIBPPA,R1),0(R1)    Clear PPA
          ST    R13,4(,R1)
          ST    R1,8(,R13)
