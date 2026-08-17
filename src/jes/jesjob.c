@@ -88,6 +88,8 @@ JESJOB **jesjob(JES *jes, const char *filter, JESFILT type, int dd)
     char        owner[12];
 
     if (!jes) goto quit;
+    if (!jes->cp) goto quit;
+    if (!jes->js) goto quit;    /* an empty array is not indexable (#108)  */
 
     /* if the caller supplied a filter we want to make an UPPERCASE copy */
     if (type != FILTER_NONE && filter) {

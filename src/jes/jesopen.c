@@ -8,6 +8,7 @@
 #include "clibjes2.h"   /* JES prototypes */
 #include "clibstae.h"   /* ESTAE functions */
 #include "clibary.h"    /* dynamic array */
+#include "clibwto.h"    /* wtof                                             */
 
 static void try_jesopen(JES **jespp);
 
@@ -50,8 +51,27 @@ static void try_jesopen(JES **jespp)
         goto quit;
     }
 
-    /* Add spool handle to array of spool handle in our JES handle */
-    arrayadd(&jes->js, js);
+    /* Add spool handle to array of spool handle in our JES handle.
+     *
+     * Unchecked, this was the one allocation on the open path that could
+     * fail and still hand back a handle (#108): jes->js stays NULL while
+     * the eye catcher and jes->cp say the handle is good.  jesjob() and
+     * jesprint() then evaluate jes->js[0], and on MVS that load SUCCEEDS -
+     * low-address protection stops stores into page zero, not fetches - so
+     * they get a non-NULL value out of the PSA, walk past __jsrd4()'s own
+     * NULL test and store through it.  The S0C4 the caller sees is that
+     * store, not the shortage that caused it.
+     *
+     * jesclose() cannot release the spool handle here because it reaches it
+     * through the array that does not exist, so close it directly first.
+     * That is not a double close: if arrayadd() failed the array holds no
+     * elements, and jesclose() only walks the ones it counts.             */
+    if (arrayadd(&jes->js, js)) {
+        wtof("Unable to add spool handle to JES handle");
+        spool_close(js);
+        jesclose(&jes);
+        goto quit;
+    }
 
 quit:
     *jespp = jes;
