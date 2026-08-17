@@ -4,6 +4,72 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Changed
+- **BREAKING — the C startup stack GETMAIN is conditional, and a shortage
+  abends U0801 by name instead of S80A from inside the SVC (#108).**
+  `@@CRT0`/`@@CRT1`/`@@CRTM` obtained their stack with `GETMAIN R,LV=(0)` —
+  register form, *unconditional* — so an address space that could not spare
+  the ~262K abended inside SVC 10 with nothing to say. What reached the
+  operator was a bare `S80A`, which on a busy system is indistinguishable
+  from any other storage abend anywhere else in it: httpd logged only
+  `HTTPD908E EXTERNAL PROGRAM MVSMF failed with S80A ABEND`, and neither the
+  requester nor the size was recoverable from it. All three sites now issue
+  `GETMAIN RC,LV=(R8),SP=(R2)` and, on a nonzero R15, `WTO` the module name
+  and `ABEND 801,DUMP` — the same shape the CLIBGRT and CLIBCRT guards in
+  those very files have carried since #81/#85. httpd renders that as
+  `failed with U0801 ABEND`, and the console carries
+  `@@CRT0 - No storage for C stack`.
+  **This does not reverse #83's decision, it completes it.** #83 left these
+  three GETMAINs unconditional on the grounds that "at program start there is
+  no caller to fail back to", and that reasoning still holds — the program
+  still dies. What changes is only that it dies *by name*. In particular the
+  startup does **not** retry with a smaller stack: `PDPPRLG`
+  (`maclib/pdpprlg.macro`) has no bounds check at all — it loads the NAB from
+  `76(13)`, chains, and stores it back — so a short stack would run off its
+  end silently rather than fail, which is strictly worse than abending.
+  The refused length stays in **R8** for the dump. It is deliberately not in
+  the WTO text: formatting a number needs writable storage, and at that point
+  there is none — the GETMAIN just failed, and the CSECT itself is not
+  writable because consumer load modules link RENT by default (mbt passes
+  `--norent` only on request), which is the one place a static work area would
+  turn this diagnostic into the S0C4 it is meant to explain.
+  **What changes for callers:** nothing at compile time; the new abend code
+  arrives at each consumer's next relink. Monitoring keyed on `S80A` from a
+  libc370 program start should key on `U0801` instead.
+  Verification is by inspection of the assembled expansion, not by test: a
+  startup storage shortage is not reproducible from batch on MVS 3.8j. The
+  listing confirms `SVC 120` with a `B'00000000'` mode byte (conditional),
+  only `LR`/`SLL`/`ICM`/`SR` ahead of it (no store into the inline parameter
+  list, so the RENT attribute holds), `LR 0,R8` leaving R8 intact for the
+  `ST R8,PPASTKLN` that follows, and the `LTR`/`BZ`/`WTO`/`ABEND` path behind
+  it. `@@estae.c:147`'s `GETMAIN RU` stays unconditional as #83 left it.
+
+### Fixed
+- **`jesopen()` no longer returns a JES handle whose spool array was never
+  allocated (#108).** `try_jesopen()` checked every allocation but the
+  `arrayadd()` that stores the freshly opened spool handle into `jes->js`. On
+  a storage shortage that call returns -1, `jes->js` stays NULL, and the
+  handle was still returned looking complete — eye catcher set, `jes->cp`
+  populated. `jesjob()` and `jesprint()` then evaluated `jes->js[0]`, and on
+  MVS that load *succeeds*: low-address protection stops stores into page
+  zero, not fetches, so they took a non-NULL value out of the PSA, walked past
+  `__jsrd4()`'s own `if (!js)` test and stored through it — a store into
+  nucleus-derived storage from problem state, key 8, i.e. an S0C4 whose cause
+  was a GETMAIN that failed several frames earlier. Same shape as #61 and #80:
+  the allocation is not the problem, the unchecked result is. `jesopen()` now
+  reports the failure and returns NULL, closing the spool data set directly
+  before `jesclose()` (which reaches it only through the array that does not
+  exist); both indexing sites are guarded so a handle from any other source
+  cannot take the same route. `jesopen.c` also gains `clibwto.h` — it was
+  calling `wtof()` with no prototype in scope, which on this target decides
+  linkage (#39). Verified red→green on the host by
+  `test/host/tstjesop.c`, which links the real `jesopen.c`, `jesclose.c` and
+  array code and injects the failure at `calloc` so the real
+  `arrayadd()`/`arraynew()` pair runs and really fails: 13/18 pre-fix, 18/18
+  after.
+
 ## [1.0.2] - 2026-08-12
 
 Mostly silent failures: paths that reported success while doing nothing, losing
