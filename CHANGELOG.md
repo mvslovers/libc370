@@ -47,6 +47,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   it. `@@estae.c:147`'s `GETMAIN RU` stays unconditional as #83 left it.
 
 ### Fixed
+- **`process_exec()` and `process_job()` bound every copy by its destination
+  (#111).** Both took `len = t->len & 0x7F` — a one-byte field masked but not
+  bounded, so up to **127** — and `memcpy`'d that into `process_intxt()`'s
+  twelve-byte locals (`jobname`, `userid`, `stepname`, `procstep`, `program`).
+  Five keys reached them: `USERK` and `JOBK`, `PGMEK`, `PROCEK` and `EXECK`.
+  The values then left the frame: `process_sysout()`/`process_sysin()`
+  `strcpy()` `stepname`/`procstep` into **nine**-byte `JESDD` fields, and
+  `process_intxt()` `strcpy()`s `userid` into a nine-byte `JESJOB.owner` — so
+  one bad length byte overran a stack buffer and a heap one. Both are clamped
+  to 8 now, which is what an MVS name is and exactly what those nine-byte
+  fields hold. This is the clamp PR #22 (`58319b2`, "Fix S0C4 in process_dd
+  for multi-digit SPACE values") gave the sibling `process_dd()` and did not
+  give these two; that PR's trigger was an ordinary JCL detail and its symptom
+  was an S0C4. Red→green on the host under ASAN by `test/host/tstjestx.c`,
+  which `#include`s the real translation unit and hands each parser a
+  destination allocated at exactly twelve bytes: pre-fix ASAN reports
+  `WRITE of size 64 ... 0 bytes after 12-byte region` inside `process_job`,
+  post-fix 14/14. Case (7) is also PR #22's regression guard, which it never
+  had. Whether this is the mechanism behind #108 is **not** settled — it is
+  fixed on its own terms.
 - **`jesopen()` no longer returns a JES handle whose spool array was never
   allocated (#108).** `try_jesopen()` checked every allocation but the
   `arrayadd()` that stores the freshly opened spool handle into `jes->js`. On
