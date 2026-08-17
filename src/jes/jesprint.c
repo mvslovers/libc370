@@ -58,6 +58,8 @@ int jesprint(JES *jes, JESJOB *job, unsigned dsid,
     hct    = &cp->hct;
     bufsize = hct->_BUFSIZE;
 
+    if (!jes->js) goto quit;    /* an empty array is not indexable (#108)  */
+
     js     = jes->js[0];
     if (!js) goto quit;
 
