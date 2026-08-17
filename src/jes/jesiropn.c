@@ -29,8 +29,13 @@ int jesiropn(VSFILE **vsfile)
         /* The DD is unallocated by the "unallocate at close" text unit
          * __alloc_intrdr() asked for, and no CLOSE will ever run for a
          * cluster that did not open: release it here or the DD and its
-         * SWA residue stay for the life of the address space.           */
+         * SWA residue stay for the life of the address space.
+         *
+         * The cleanup runs over the errno the open just set, so save it:
+         * that value is how the caller tells EVSOPEN from ENOMEM.      */
+        int saved_errno = errno;
         __dsfree(ddname);
+        errno = saved_errno;
         goto quit;
     }
 
