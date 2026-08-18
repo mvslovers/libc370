@@ -47,6 +47,63 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   it. `@@estae.c:147`'s `GETMAIN RU` stays unconditional as #83 left it.
 
 ### Fixed
+- **`send()` honours the X'75' retry code `-2`, and loops over a short write
+  (#120).** `src/dyn75/@@75send.c` tested its reply for `-1` and handed
+  everything else back as a byte count — so the "would block, wait and
+  reissue" code `-2` reached the caller as if it were a length. `@@75recv.c`
+  has had the matching `STIMER WAIT` since forever; SEND simply never needed
+  it, because Hercules' X'75' emulation called a **blocking** host `send()`
+  straight on the emulated CPU thread. A client that stopped reading filled
+  the host send buffer, the guest `send()` blocked, the CPU stopped making
+  progress, and the Hercules watchdog killed the whole emulator by design
+  (`impl.c` `CRASH()`). `mvslovers/hyperion` `1a599b0d` made that send
+  non-blocking and gave it the contract RECV and ACCEPT have always had:
+  a non-blocking guest socket (`FIONBIO`) gets `-1` with `EWOULDBLOCK`, a
+  blocking one — the default, `Ccom_blk = 1` — gets `-2`. On a patched
+  emulator that gap turned a transiently full send buffer into a **failed
+  transfer**: `ftpd_data_send()` (`ftpd/src/ftpd#dat.c:314`) treats `rc <= 0`
+  as fatal, so any client slower than the server could abort a download, and
+  the control-socket sends (`ftpd#ses.c:115` and friends) discard the return
+  value entirely and would drop a response line silently. **httpd was never
+  affected** — it sets `FIONBIO` on every accepted socket and takes the
+  `-1`/`EWOULDBLOCK` path its own send layer already handles.
+  The same emulator change makes a **short write** reachable for the first
+  time (`MSG_DONTWAIT` sends what fits and reports it), which the single-shot
+  call passed straight up; `send()` now loops on the remainder the way
+  `recv()` loops on the bytes still wanted, and returns the accumulated count.
+  **The parameter list is rebuilt on every pass, and that is the load-bearing
+  part of the fix.** `@@75.s` ends with `STM 0,15,0(11)` — it stores all
+  sixteen registers back into the caller's `PL75` — and x75.c's guest-to-host
+  copy loop drains R1 to zero and advances R5 past the bytes it moved, after
+  which the second X'75' sets R1 = `len_out`, which is 0 for a SEND. A retry
+  that reused the list would ask the emulator to send **zero bytes from a
+  pointer already past the buffer**: a silent no-op, looping forever. That is
+  why `@@75recv.c` re-does its `XC` clear and re-sets R6-R9 inside its loop,
+  and this now does the same with R1/R5/R7/R8.
+  **The retry is unbounded, deliberately.** A budget that gave up with
+  `-1`/`EWOULDBLOCK` would re-create the reported bug rather than fix it —
+  `ftpd_data_send()` would still abort, only later — and a blocking socket
+  reporting `EWOULDBLOCK` is a contract no POSIX caller expects. The stall
+  budget belongs in the consumer, which knows about quiesce and shutdown;
+  httpd already has one (`SEND_STALL_MAX`). The cost is stated plainly: a peer
+  that never drains now hangs the guest task instead of failing it, which is
+  the blocking-socket semantic the pre-patch emulator had too — except that
+  one took the emulator down with it.
+  **The 4096-byte chunking `@@75recv.c` documents is *not* mirrored here.**
+  x75.c's copy loop is direction-symmetric (same 255-byte segmentation, same
+  `effective_addr2 += i`), `lar_tcpip()` sets `len_in` from R1 with no cap,
+  and neither x75.c nor tcpip.c contains a 4096 anywhere — whatever that
+  comment observed, its cause is not in the guest/host copy, and chunking the
+  send path would cost an emulator-side `malloc`/`free` per chunk for a hazard
+  nobody has measured on it.
+  `test/host/tst75snd.c` links and executes the real `@@75send.c` against a
+  fake `__75()` that reproduces the register write-back, so a fix that hoisted
+  the assignments out of the loop fails it: 47/47 green, 25/47 against the
+  pre-fix file. Not covered there: the `STIMER` itself (the host recipe
+  removes it with the `XC`; it is by inspection of `@@75send.s`, the same one
+  line `@@75recv.c` has shipped for years) and that `-2` actually arrives —
+  the end-to-end gate is `mvslovers/httpd` →
+  `docs/hercules-x75-send-stall-repro.md`, driven against ftpd.
 - **`process_exec()` and `process_job()` bound every copy by its destination
   (#111).** Both took `len = t->len & 0x7F` — a one-byte field masked but not
   bounded, so up to **127** — and `memcpy`'d that into `process_intxt()`'s
