@@ -47,6 +47,75 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   it. `@@estae.c:147`'s `GETMAIN RU` stays unconditional as #83 left it.
 
 ### Fixed
+- **`send()` honours the X'75' retry code `-2`, on a bounded budget (#120).**
+  `src/dyn75/@@75send.c` tested its reply for `-1` and handed everything else
+  back as a byte count — so the "would block, wait and reissue" code `-2`
+  reached the caller as if it were a length. `@@75recv.c` has had the matching
+  `STIMER WAIT` since forever; SEND simply never needed it, because Hercules'
+  X'75' emulation called a **blocking** host `send()` straight on the emulated
+  CPU thread. A client that stopped reading filled the host send buffer, the
+  guest `send()` blocked, the CPU stopped making progress, and the Hercules
+  watchdog killed the whole emulator by design (`impl.c` `CRASH()`).
+  `mvslovers/hyperion` `1a599b0d` made that send non-blocking and gave it the
+  contract RECV and ACCEPT have always had: a non-blocking guest socket
+  (`FIONBIO`) gets `-1` with `EWOULDBLOCK`, a blocking one — the default,
+  `Ccom_blk = 1` — gets `-2`. On a patched emulator that gap turned a
+  transiently full send buffer into a **failed transfer**:
+  `ftpd_data_send()` (`ftpd/src/ftpd#dat.c:314`) treats `rc <= 0` as fatal, so
+  any client slower than the server could abort a download, and the
+  control-socket sends (`ftpd#ses.c:115` and friends) discard the return value
+  entirely and would drop a response line silently. **httpd was never
+  affected** — it sets `FIONBIO` on every accepted socket and takes the
+  `-1`/`EWOULDBLOCK` path its own send layer already handles.
+  **The change is purely additive.** An unpatched Hercules cannot return `-2`
+  from SEND at all — its `case 10` yields only `-1` or a count — so on such a
+  system the new branch is dead code and behaviour is bit-identical to before.
+  That is what makes libc370 the *first* thing to roll out rather than the
+  last: it costs nothing on an unmodified emulator and makes every system
+  ready for a patched one, whenever that arrives.
+  **Only `-2` retries.** `-2` always means zero bytes went out, so the
+  identical buffer is reissued unchanged and no accumulation is needed. A
+  short write stays a byte count and is returned as one after a single X'75':
+  a general partial-send loop would change `send()`'s semantics for every
+  caller, and httpd builds its state machine on exactly that partial return
+  (`httpd/src/httpfile.c`).
+  **The parameter list is rebuilt for every attempt, and that is the
+  load-bearing part.** `@@75.s` ends with `STM 0,15,0(11)` — it stores all
+  sixteen registers back into the caller's `PL75` — and x75.c's guest-to-host
+  copy loop drains R1 to zero and advances R5 past the bytes it moved, after
+  which the second X'75' sets R1 = `len_out`, which is 0 for a SEND. A retry
+  that reused the list would ask the emulator to send **zero bytes from a
+  pointer already past the buffer**: a silent no-op that would burn the whole
+  budget against a peer that had in fact drained. That is why `@@75recv.c`
+  re-does its `XC` clear and re-sets R6-R9 inside its loop; R1/R5/R7/R8 are
+  now re-set the same way.
+  **The wait is bounded on httpd's policy:** `SEND_STALL_MAX` 100 attempts ×
+  `STIMER WAIT,BINTVL==F'10'` (0.10 s) = ten seconds without progress, then
+  `-1` with `EWOULDBLOCK` so the caller can tear the session down. The numbers
+  are httpd's `SEND_STALL_MAX`/`SEND_STALL_PAUSE` deliberately, so a stalled
+  peer is dropped on one number across the ecosystem instead of three. That
+  errno is set in C, not fetched: `Cerr[]` was never assigned for a `-2`, so
+  there is no emulator errno to ask for.
+  **The 4096-byte chunking `@@75recv.c` documents is *not* mirrored here.**
+  x75.c's copy loop is direction-symmetric (same 255-byte segmentation, same
+  `effective_addr2 += i`), `lar_tcpip()` sets `len_in` from R1 with no cap, and
+  `grep` finds no `4096`, `4095` or `0x1000` in x75.c, tcpip.c or their headers
+  — whatever that comment observed, its cause is not in the guest/host copy.
+  `test/host/tst75snd.c` links and executes the real `@@75send.c` against a
+  fake `__75()` that reproduces the register write-back, so a fix that hoisted
+  the assignments out of the loop fails it. Seven cases, both sides of the
+  budget included: 39/39 green, 25/39 against the pre-fix file — and every
+  check in the four "must not change" cases passes on both, which is the
+  additivity claim above, stated as a number. Not covered there: the `STIMER`
+  itself (the host recipe removes it with the `XC`; it is by inspection of
+  `@@75send.s`, the same line `@@75recv.c` has shipped for years, and nothing
+  live crosses it — SVC 47 preserves R2-R13 and R12 is reloaded behind it) and
+  that `-2` actually arrives — the end-to-end gate is `mvslovers/httpd` →
+  `docs/hercules-x75-send-stall-repro.md`, driven against ftpd.
+  **This reaches a running system only after a relink:** libc370 is the cc370
+  sysroot and is statically linked, so ftpd needs `sdk/mklibc.py all` on its
+  build host, a rebuild, and a deploy before the fix is anywhere.
+
 - **`process_exec()` and `process_job()` bound every copy by its destination
   (#111).** Both took `len = t->len & 0x7F` — a one-byte field masked but not
   bounded, so up to **127** — and `memcpy`'d that into `process_intxt()`'s
