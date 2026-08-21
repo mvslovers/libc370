@@ -14,6 +14,7 @@ struct __dsalc {
     char		*blksize;   // blksize=...
     char        *ddn;       // ddname=...
     char        *disp;      // disp=(new,catlg,delete)
+    char        *dcbdsn;    // dcbdsn=... (DCB model reference)
     char        *dsn;       // dsname=...
     char        *dsorg;     // dsorg=PS or PO or ...
     char        *lrecl;     // lrecl=...
@@ -90,6 +91,11 @@ __dsalc(char *ddname, const char *opts)
         else if (strstr(p, "DD=")) dsalc->ddn = p+3;
         else if (strstr(p, "DDNAME=")) dsalc->ddn = p+7;
         else if (strstr(p, "DISP=")) dsalc->disp = p+5;
+        /* DCBDSN= must be tested before DSN=: this dispatch uses strstr(),
+        * not a prefix compare, and "DCBDSN=" contains "DSN=" at offset 3 --
+        * so the DSN= branch would match a model reference and take the data
+        * set name from four bytes into the middle of the keyword. */
+        else if (strstr(p, "DCBDSN=")) dsalc->dcbdsn = p+7;
         else if (strstr(p, "DSN=")) dsalc->dsn = p+4;
         else if (strstr(p, "DSNAME=")) dsalc->dsn = p+7;
         else if (strstr(p, "DSORG=")) dsalc->dsorg = p+6;
@@ -104,6 +110,7 @@ __dsalc(char *ddname, const char *opts)
 	wtof("%s: blksize   =\"%s\"", __func__, dsalc->blksize);
     wtof("%s: ddn       =\"%s\"", __func__, dsalc->ddn);
     wtof("%s: disp      =\"%s\"", __func__, dsalc->disp);
+    wtof("%s: dcbdsn    =\"%s\"", __func__, dsalc->dcbdsn);
     wtof("%s: dsn       =\"%s\"", __func__, dsalc->dsn);
     wtof("%s: dsorg     =\"%s\"", __func__, dsalc->dsorg);
 	wtof("%s: lrecl     =\"%s\"", __func__, dsalc->lrecl);
@@ -167,6 +174,14 @@ __dsalc(char *ddname, const char *opts)
             else err = 1;
             if (err) goto quit;
         }
+    }
+
+    if (dsalc->dcbdsn) {
+        /* DCBDSN=dsname -- JCL DCB=(dsname).  Emitted ahead of the explicit
+        * DCB attributes below so those override the model, the way
+        * DCB=(model,RECFM=FB) reads in JCL. */
+        err = __txdcbd(&txt99, dsalc->dcbdsn);
+        if (err) goto quit;
     }
 
     if (dsalc->dsorg) {
