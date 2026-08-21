@@ -3,16 +3,16 @@
 Stand: 2026-08-20, 23 offene Issues. Reihenfolge nach *tatsächlicher* Auswirkung
 auf laufende Systeme, nicht nach Alter oder Aufwand.
 
-Zwei Befunde, die die Reihenfolge gegenüber dem Issue-Text verschieben:
+Zwei Befunde, die die Reihenfolge gegenüber dem ursprünglichen Issue-Text
+verschieben. **Beide sind am 2026-08-21 in die Issues nachgezogen worden:**
 
 - **#108 ist nicht mehr „mechanism unlocated".** #109 und #110 sind gemerged,
   der im Abschlusskommentar benannte Hauptverdächtige #111 liegt als `cd66e86`
-  in `main`. Alle im Call-Tree genannten Kandidaten sind eliminiert.
-- **Die Caller-Tabelle in #80 ist veraltet.** httpds `httpdslp.c` liegt heute
-  unter `httpd/tbd/src/` und wird nicht gebaut. Exponiert ist noch ftpd
-  (`ftpd#mvs.c:941`, LIST/NLST mit breitem Filter).
-
-Beide Issues sollten entsprechend nachgezogen werden.
+  in `main`. Alle im Call-Tree genannten Kandidaten sind eliminiert. Issue
+  umbenannt auf „every named suspect fixed, needs re-verification".
+- **Die Caller-Tabelle in #80 war veraltet.** httpds `httpdslp.c` liegt unter
+  `httpd/tbd/` und wird nicht gebaut (`httpd/project.toml:108-113`); mvsMF ist
+  von `dsapi.c:369` auf `:540` gewandert. Tabelle im Issue korrigiert.
 
 ---
 
@@ -26,10 +26,17 @@ Drei Defekte in einer Datei. Der zweite ist der schlimmste und steht in keiner
 (`@@listpd.c:32-33`). Das trifft **auch die gebundenen Caller** — mvsmf
 `dsapi.c:540`, ftpd `:1191` — der Filter schützt davor nicht.
 
-- Clamping auf das `fread()`-Ergebnis: eine Zeile, sofort machbar.
-- `max`-Parameter bzw. Iterator-Form: Signaturänderung → gehört in die
-  Relink-Runde (Tier 5). Löst zugleich Defekt 1 für ftpd und lässt mvsMF
-  seinen duplizierten Directory-Parser fallen.
+Nach Reichweite sortiert kehrt sich die Reihenfolge der drei Defekte um:
+
+- **Defekt 2 zuerst — er ist der breite und hat keine Ausnahme.** Der Filter
+  wird *innerhalb* der Schleife angewendet, also laufen auch `ftpd:1191` und
+  `mvsmf:540` über denselben Overrun. Clamping auf das `fread()`-Ergebnis ist
+  eine Zeile, braucht keine Signaturänderung und keinen Relink: sofort machbar.
+- **Defekt 1 ist inzwischen schmal** — ein Caller, ftpds `LIST`/`NLST`.
+  `max`-Parameter bzw. Iterator-Form bleibt richtig, ist aber eine
+  Signaturänderung → Relink-Runde (Tier 5). Lässt mvsMF zugleich seinen
+  duplizierten Directory-Parser fallen.
+- **Defekt 3 zusammen mit #61 entscheiden**, nicht getrennt (siehe Tier 2).
 
 ### 2. #11 — cthread teardown force-DETACHed einen lebenden Worker (S33E)
 
@@ -53,9 +60,9 @@ Verhältnis der gesamten Liste.
 ### 4. #108 — umklassifizieren, nicht jagen
 
 Kein offener Crash-Hunt mehr, sondern eine **Verifikation**: `dd=1`-Probe gegen
-einen degradierten Adressraum wiederholen, dann entweder schließen oder mit
-neuen Belegen neu aufmachen. Billig — und solange es unverändert dasteht,
-überzeichnet es die Lage.
+einen degradierten Adressraum auf einem aktuellen Build wiederholen — kein
+Abend heißt schließen, ein Abend heißt neu aufmachen, dann aber mit Belegen,
+die mehr wert sind, weil vier Hypothesen vom Tisch sind. Billig.
 
 ---
 
