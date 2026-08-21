@@ -23,6 +23,12 @@ extern void __frtx9a(TXT99 ***txt99array);
 /* __txdsn() - add text unit for DATASET name to array of text units */
 extern int  __txdsn(TXT99 ***txt99, const char *dataset);
 
+/* __txdcbd() - add text unit for a DCB model reference (JCL DCB=(dsname)) to
+**              array of text units.  MVS copies the model's DCB attributes;
+**              it does NOT copy SPACE -- that is DFSMS LIKE=, which 3.8j has
+**              no equivalent for.  Explicit DCB text units still override. */
+extern int  __txdcbd(TXT99 ***txt99, const char *dataset);
+
 /* __txdmy() - add text unit for DUMMY to array of text units */
 extern int  __txdmy(TXT99 ***txt99, const char *unused);
 
