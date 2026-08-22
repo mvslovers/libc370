@@ -18,6 +18,14 @@ int jesclose(JES **ppjes)
 
     jes = *ppjes;
     if (jes) {
+        /* free whatever a jesjob() walk left anchored: after a handler
+           abend, recovery has nothing but this handle, and these were the
+           ~26K leaking per abend (#126) */
+        if (jes->injobs) jesjobfr(&jes->injobs);
+        if (jes->inbuf)  { free(jes->inbuf);  jes->inbuf  = NULL; }
+        if (jes->inbuf2) { free(jes->inbuf2); jes->inbuf2 = NULL; }
+        if (jes->inbuf3) { free(jes->inbuf3); jes->inbuf3 = NULL; }
+
         if (jes->js) {
             count = arraycount(&jes->js);
             for (n=0; n < count; n++) {
