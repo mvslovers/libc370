@@ -21,12 +21,19 @@ examine(char *s, int n, const char **formt, va_list *arg);
 extern void
 __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision, char *result);
 
+/* smax = space left in s (fq == NULL); the budget is honoured since #128 */
+extern int
+__examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax);
+
 int
 vsnprintf(char *s, int n, const char *format, va_list arg)
 {
     char        *sin        = s;
     int         fin         = 0;
     int         chcount     = 0;
+    int         lim         = (n > 0) ? n - 1 : 0;   /* content budget: one
+                                                        byte stays reserved
+                                                        for the NUL (#128) */
     int         vint;
     double      vdbl;
     unsigned int uvint;
@@ -69,7 +76,7 @@ vsnprintf(char *s, int n, const char *format, va_list arg)
 
                 do {
                     nptr--;
-                    if (chcount < n) outch(*nptr);
+                    if (chcount < lim) outch(*nptr);
                     chcount++;
                 } while (nptr != numbuf);
             }
@@ -80,7 +87,7 @@ vsnprintf(char *s, int n, const char *format, va_list arg)
                 len = strlen(numbuf);
 
                 for(i=0; i < len; i++) {
-                    if (chcount < n) outch(numbuf[i]);
+                    if (chcount < lim) outch(numbuf[i]);
                     chcount++;
                 }
             }
@@ -94,14 +101,14 @@ vsnprintf(char *s, int n, const char *format, va_list arg)
 
                 len = strlen(vcptr);
                 for(i=0; i < len; i++) {
-                    if (chcount < n) outch(vcptr[i]);
+                    if (chcount < lim) outch(vcptr[i]);
                     chcount++;
                 }
             }
             else if (*format == 'c') {
                 /* format character */
                 vint = va_arg(arg, int);
-                if (chcount < n) outch(vint);
+                if (chcount < lim) outch(vint);
                 chcount++;
             }
             else if (*format == 'n') {
@@ -111,14 +118,14 @@ vsnprintf(char *s, int n, const char *format, va_list arg)
             }
             else if (*format == '%') {
                 /* format escape character % */
-                if (chcount < n) outch('%');
+                if (chcount < lim) outch('%');
                 chcount++;
             }
             else  {
                 /* any other format sequence */
                 int extraCh;
 
-                extraCh = n-chcount;
+                extraCh = lim-chcount;
                 if (extraCh < 0) extraCh = 0;
 #if 0
                 extraCh = examine(s, extraCh, &format, &arg);
@@ -127,7 +134,7 @@ vsnprintf(char *s, int n, const char *format, va_list arg)
 #endif
                 if (s!=NULL) {
                     for(i=0; i < extraCh; i++) {
-                        if (chcount < n) s++;
+                        if (chcount < lim) s++;
                         chcount++;
                     }
                 }
@@ -139,14 +146,18 @@ vsnprintf(char *s, int n, const char *format, va_list arg)
         }
 
         /* default, output next character */
-        if (chcount < n) outch(*format);
+        if (chcount < lim) outch(*format);
         chcount++;
 
 next:
         format++;
     }
 
-    if (chcount < n) outch(0);
+    /* C semantics: at most n-1 content bytes, and ALWAYS a terminator when
+       n > 0.  The old code wrote up to n content bytes and skipped the NUL
+       whenever the text filled the buffer, so a deliberately small buffer
+       came back unterminated and strlen() ran off it (#128). */
+    if (n > 0) outch(0);
 
     return (chcount);
 }
