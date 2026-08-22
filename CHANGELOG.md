@@ -47,6 +47,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   it. `@@estae.c:147`'s `GETMAIN RU` stays unconditional as #83 left it.
 
 ### Fixed
+- **`remove()` deletes PDS members via STOW under `DISP=SHR`, not IDCAMS
+  (#127).** IDCAMS DELETE allocates its target exclusively, and MVS keeps
+  one SYSDSN ENQ per DSN per address space at the highest level any
+  allocation needs: with a standing allocation of the same DSN in the
+  address space (a STEPLIB, an httpd SYSENV DD), the shared ENQ was
+  escalated to exclusive - and MVS ENQ has no way back down, so the data
+  set stayed blocked for every other address space until the step ended
+  (mvslovers/mvsmf#342: SYS2.PARMLIB locked until the HTTPD restart).
+  Names of exactly the form `dsn(member)` now go to the new `__delmem()` -
+  allocate `DISP=SHR`, open the BPAM DCB for OUTPUT, STOW delete, close,
+  free, the pattern `__renmem()` has always used - which also routes the
+  delete through OPEN's RACF gate.  Whole data sets keep the IDCAMS path.
 - **`send()` honours the X'75' retry code `-2`, on a bounded budget (#120).**
   `src/dyn75/@@75send.c` tested its reply for `-1` and handed everything else
   back as a byte count — so the "would block, wait and reissue" code `-2`
