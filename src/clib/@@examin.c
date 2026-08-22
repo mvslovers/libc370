@@ -11,7 +11,14 @@
 #include <clib64.h>
 
 #define unused(x) ((void)(x))
-#define outch(ch) ((fq == NULL) ? *s++ = (char)ch : putc(ch, fq))
+/* Emit one character.  For the string sink (fq == NULL) the write is
+   bounded by smax, the space the caller says is left in s; extraCh keeps
+   counting the LOGICAL length regardless, so the caller still learns what
+   the full conversion would have needed (#128). */
+#define outch(ch) do { \
+        if (fq != NULL) putc(ch, fq); \
+        else if (sput < smax) { *s++ = (char)ch; sput++; } \
+    } while (0)
 #define inch() ((fp == NULL) ? \
     (ch = (unsigned char)*s++) : (ch = getc(fp)))
 
@@ -22,9 +29,10 @@ extern void
 __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision, char *result);
 
 int
-__examin(const char **formt, FILE *fq, char *s, va_list *arg, int chcount)
+__examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax)
 {
     int         extraCh     = 0;
+    int         sput        = 0;    /* bytes actually written to s (#128)  */
     int         flagMinus   = 0;
     int         flagPlus    = 0;
     int         flagSpace   = 0;
@@ -58,7 +66,6 @@ __examin(const char **formt, FILE *fq, char *s, va_list *arg, int chcount)
 	__64		div64;
 	__64		base64;
 
-    unused(chcount);
     format = *formt;
 
     /* processing flags */
@@ -307,8 +314,16 @@ __examin(const char **formt, FILE *fq, char *s, va_list *arg, int chcount)
         }
 
         if (fq == NULL) {
-            memcpy(s, work, slen);
-            s += slen;
+            /* bounded like outch(): copy what fits, count what the whole
+               conversion needed (#128) */
+            size_t w = slen;
+
+            if (w > (size_t)(smax - sput)) {
+                w = (smax > sput) ? (size_t)(smax - sput) : 0;
+            }
+            memcpy(s, work, w);
+            s += w;
+            sput += (int)w;
         }
         else {
             fputs(work, fq);
