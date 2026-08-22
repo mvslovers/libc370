@@ -54,8 +54,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   shows: the `0xFF` end-of-block marker, read as the high byte of a
   text-string length, sent `process_dd()` up to 64K past the buffer (the
   layout-dependent S0C4 storms behind mvslovers/mvsmf#282), and a spanned
-  record desynchronised the walk into stale buffer tails (the `UNKnnnn`
-  ddnames).  The blocks now go through `__jesprb()`, the hardened record
+  record - any statement over 255 bytes arrives as SPLINE parts - could
+  desynchronise the walk into stale buffer tails.  The blocks now go
+  through `__jesprb()`, the hardened record
   walk `jesprint()` already uses; the key walks in
   `process_job()`/`process_exec()`/`process_dd()` are bounded by the record
   end; the chain's `spool_read()` is checked like the IOT loops have been

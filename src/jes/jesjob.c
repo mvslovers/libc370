@@ -512,8 +512,9 @@ quit:
  * end-of-block marker, read as the high byte of a text-string length, sent
  * process_dd() up to 64K past the buffer whenever the byte after it decoded
  * as a DD statement (the layout-dependent S0C4 behind mvsmf#282), and a
- * spanned record desynchronised the walk into stale buffer tails (the
- * UNKnnnn ddnames).  The records therefore go through __jesprb() now - the
+ * spanned record - any statement over 255 bytes arrives as SPLINE parts -
+ * could desynchronise it into stale buffer tails.  The records therefore
+ * go through __jesprb() now - the
  * same hardened walk jesprint() reads every other spool data set with - and
  * the callback below gets ONE complete, reassembled text string with its
  * real length (#126). */
