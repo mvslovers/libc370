@@ -171,4 +171,11 @@ extern int __dsfree(const char *ddname);   /* input dd name                    *
  * set, this renames a member of a partitioned data set. */
 extern int __renmem(const char *dsn, const char *oldmem, const char *newmem);
 
+/* __delmem() delete PDS member mem from dsn via STOW delete, under a
+ * DISP=SHR allocation - never exclusive, see #127 / mvslovers/mvsmf#342.
+ * Returns 0 on success, a positive STOW return code (8=member not found,
+ * ...), or a negative value for allocation/open failures.  remove() routes
+ * dsn(member) names here; IDCAMS DELETE stays for whole data sets. */
+extern int __delmem(const char *dsn, const char *mem);
+
 #endif
