@@ -19,12 +19,13 @@ INTXT-Walk in `jesjob(dd=1)` läuft über `__jesprb()` und leakt bei einem Abend
 nichts mehr (das war die Fragmentierung hinter mvsmf#282/#287, gemessen ~26K
 pro Abend), und `remove()` löscht Member per STOW unter SHR statt IDCAMS (die
 ENQ-Eskalation aus mvsmf#342, per Rezept geschlossen gemessen). Damit ist auch
-die offene dd=0/dd=1-Asymmetrie aus #282 erklärt. Neu offen und noch nicht
-einsortiert: **#128** (vsnprintf ignoriert die Puffergrenze bei
-Breiten-Formaten — stiller Overrun auf dem Target bei grünem Host, von
-mvsMF-TSTABND aufgedeckt), **#131** (rename()-Member über IDCAMS ALTER,
-mutmaßlich dieselbe Eskalation, Messrezept im Issue; `__renmem()` liegt
-bereit). Härtung httpd-seitig: mvslovers/httpd#238 (SYSENV FREE=CLOSE).
+die offene dd=0/dd=1-Asymmetrie aus #282 erklärt. **#128** und **#131** sind
+am selben Tag nachgezogen (PR #132/#133): vsnprintf hält jetzt auf jedem
+Konversionspfad die Puffergrenze und terminiert immer (mvsMF-`make test-mvs`
+damit erstmals komplett grün, 508/0), und rename() macht Member-Renames per
+STOW unter SHR — inklusive GDG-Guard in beiden Member-Branches, damit
+`dsn(0)`/`dsn(+1)` weiter als Ganzes-Dataset-Operation zu IDCAMS gehen.
+Härtung httpd-seitig weiter offen: mvslovers/httpd#238 (SYSENV FREE=CLOSE).
 
 ---
 
