@@ -19,7 +19,7 @@
 extern void
 __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision, char *result);
 extern int
-__examin(const char **formt, FILE *fq, char *s, va_list *arg, int chcount);
+__examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax);
 
 int
 vvprintf(const char *format, va_list arg, FILE *fq, char *s)
@@ -114,7 +114,10 @@ vvprintf(const char *format, va_list arg, FILE *fq, char *s)
             else {
                 int extraCh;
 
-                extraCh = __examin(&format, fq, s, &arg, chcount);
+                /* the string sink here is vsprintf()'s, which is unbounded
+                   by definition - INT_MAX says so explicitly now that
+                   __examin honours its budget (#128) */
+                extraCh = __examin(&format, fq, s, &arg, INT_MAX);
                 chcount += extraCh;
                 if (s != NULL) {
                     s += extraCh;
