@@ -18,6 +18,21 @@ struct jes {
 #define JES_EYE     "**JES**"       /* ... eye catcher                      */
     HASPCP          *cp;            /* 08 JES Checkpoint handle             */
     HASPJS          **js;           /* 0C array of JES Spool handles        */
+
+    /* What jesjob() is building lives here while it is being built.  A
+       handler that abends mid-walk unwinds into recovery code that has
+       nothing but this handle - the half-built result and the work buffers
+       were locals of the abended frame, ~26K leaked per abend, which is
+       what degraded the address space in mvslovers/mvsmf#282 (#126).
+       jesclose() frees whatever is still anchored; jesjob() clears the
+       anchors when ownership passes to its caller.  The result spine can
+       MOVE while an arrayadd() grows it, so the walk drops that anchor
+       around the call rather than risk jesclose() freeing a spine a
+       realloc just replaced. */
+    JESJOB          **injobs;       /* 10 jesjob() result being built       */
+    char            *inbuf;         /* 14 jesjob() JCT/IOT work buffer      */
+    char            *inbuf2;        /* 18 process_intxt() block buffer      */
+    char            *inbuf3;        /* 1C process_intxt() spanned-line buf  */
 };
 
 struct jesjob {

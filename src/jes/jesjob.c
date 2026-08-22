@@ -10,15 +10,16 @@
 #include "iefvkeys.h"   /* text key values                                  */
 #include "clibjes2.h"   /* JES prototypes */
 #include "clibary.h"    /* dynamic array                                    */
+#include "jesprb.h"     /* hardened spool record walk (#25)                 */
 
 #ifndef MIN
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #endif
 
 static int process_intxt(JES *jes, __JQE *jqe, __JCT *jct, unsigned pddb_mttr, JESJOB *job);
-static int process_job(char *buf, char *jobname, char *userid);
+static int process_job(char *buf, const char *eob, char *jobname, char *userid);
 static JESDD *process_pddb(__PDDB *pddb, JESJOB *job);
-static int process_exec(char *buf, char *stepname, char *procname, char *program);
+static int process_exec(char *buf, const char *eob, char *stepname, char *procname, char *program);
 static int process_dd(char *buf, char *eob, char *ddname, char *dsname, char *sysout, unsigned *sysin);
 static int process_sysout(JESDD **jesdd, const char *ddname, const char *dsname, const char *sysout, const char *stepname, const char *procstep);
 static int process_sysin(JESDD **jesdd, const char *ddname, const char *dsname, const char *stepname, const char *procstep);
@@ -111,6 +112,7 @@ JESJOB **jesjob(JES *jes, const char *filter, JESFILT type, int dd)
         wtof("Unable to allocate storage for %u byte buffer", hct->_BUFSIZE * 2);
         goto quit;
     }
+    jes->inbuf = buf;               /* recovery anchor (#126)               */
     jctbuf = buf;
     jct    = (__JCT*)jctbuf;
     iotbuf = jctbuf + hct->_BUFSIZE;
@@ -183,12 +185,15 @@ JESJOB **jesjob(JES *jes, const char *filter, JESFILT type, int dd)
             goto quit;
         }
 
-        /* add this JESJOB to the array of JESJOBs */
+        /* add this JESJOB to the array of JESJOBs.  The anchor is dropped
+           while the spine may move and re-set right after (#126) */
+        jes->injobs = NULL;
         if (arrayadd(&array, job)) {
             wtof("Unable to add %u byte JESJOB handle to array", sizeof(JESJOB));
             free(job);
             goto quit;
         }
+        jes->injobs = array;
         strcpy(job->eye, JESJOB_EYE);
 
         /* Fill in the job info from the JQE and JCT records */
@@ -333,6 +338,10 @@ JESJOB **jesjob(JES *jes, const char *filter, JESFILT type, int dd)
     }
 
 quit:
+    if (jes) {
+        jes->injobs = NULL;         /* ownership passes to the caller       */
+        jes->inbuf  = NULL;
+    }
     if (buf) free(buf);
     return array;
 }
@@ -490,7 +499,85 @@ quit:
     return result;
 }
 
-/* process_intxt() read internal text for job and merge with job->jesdd array */
+/* process_intxt() read internal text for job and merge with job->jesdd array
+ *
+ * The internal text (DSID 5) is an ordinary spool data set: a 10-byte block
+ * header, then PRLINE/SPLINE records - one converter text string per record,
+ * in the spanned form once a statement exceeds 255 bytes (jesprb.h; the
+ * layout was settled byte-for-byte by the capture in tstjesprb.c case 12).
+ *
+ * This walk used to step over the raw block by STRLTH alone.  That stride
+ * happens to equal the record stride for simple records, so it mostly
+ * worked - and derailed exactly where the record structure shows: the 0xFF
+ * end-of-block marker, read as the high byte of a text-string length, sent
+ * process_dd() up to 64K past the buffer whenever the byte after it decoded
+ * as a DD statement (the layout-dependent S0C4 behind mvsmf#282), and a
+ * spanned record - any statement over 255 bytes arrives as SPLINE parts -
+ * could desynchronise it into stale buffer tails.  The records therefore
+ * go through __jesprb() now - the
+ * same hardened walk jesprint() reads every other spool data set with - and
+ * the callback below gets ONE complete, reassembled text string with its
+ * real length (#126). */
+
+/* what intxt_emit() carries across the records of one job's internal text */
+typedef struct intxtctx {
+    JESJOB          *job;
+    unsigned        count;      /* jesdd entries when the walk started      */
+    unsigned char   jobname[12];
+    unsigned char   userid[12];
+    unsigned char   stepname[12];
+    unsigned char   procstep[12];
+    unsigned char   program[12];
+    unsigned char   ddname[12];
+    unsigned char   dsname[56];
+    unsigned char   sysout[8];
+    unsigned        sysin;
+} INTXTCTX;
+
+__asm__("\n&FUNC    SETC 'intxt_emit'");
+static int
+intxt_emit(char *line, unsigned linelen, void *arg)
+{
+    INTXTCTX    *ctx = (INTXTCTX*)arg;
+    __TXTPRE    *pre = (__TXTPRE*)line;
+    char        *eob = line + linelen;  /* the record holds one text string:
+                                           its real end bounds every parser
+                                           below.  STRLTH is data from the
+                                           spool and bounds nothing (#126) */
+
+    if (linelen < sizeof(__TXTPRE)) return 0;   /* not a text string */
+
+    switch(pre->STRINDCS & 0x0F) {
+    case JOBSTR:        /* ... JOB STATEMENT TEXT STRING            */
+        process_job(line, eob, ctx->jobname, ctx->userid);
+        if (ctx->userid[0]) strcpy(ctx->job->owner, ctx->userid);
+        if (!ctx->count) return -1;     /* no JESDD so we're done: negative
+                                           rc stops the whole record walk  */
+        break;
+    case EXECSTR:       /* ... EXEC STATEMENT TEXT STRING           */
+        process_exec(line, eob, ctx->stepname, ctx->procstep, ctx->program);
+        break;
+    case DDSTR:         /* ... DD STATEMENT TEXT STRING             */
+        process_dd(line, eob, ctx->ddname, ctx->dsname, ctx->sysout, &ctx->sysin);
+        if (ctx->sysout[0]) {
+            /* DD is for SYSOUT */
+            process_sysout(ctx->job->jesdd, ctx->ddname, ctx->dsname,
+                           ctx->sysout, ctx->stepname, ctx->procstep);
+        }
+        if (ctx->sysin) {
+            /* DD is for SYSIN */
+            process_sysin(ctx->job->jesdd, ctx->ddname, ctx->dsname,
+                          ctx->stepname, ctx->procstep);
+        }
+        break;
+    case PROCSTR:       /* ... PROC STATEMENT TEXT STRING           */
+        process_exec(line, eob, ctx->procstep, ctx->program, ctx->program);
+        break;
+    }
+
+    return 0;
+}
+
 __asm__("\n&FUNC    SETC 'process_intxt'");
 static int
 process_intxt(JES *jes, __JQE *jqe, __JCT *jct, unsigned pddb_mttr, JESJOB *job)
@@ -499,91 +586,49 @@ process_intxt(JES *jes, __JQE *jqe, __JCT *jct, unsigned pddb_mttr, JESJOB *job)
     HASPJS          *js     = jes->js[0];
     __HCT           *hct    = &cp->hct;
     char            *buf    = NULL;
-    __TXTPRE        *pre    = NULL;
-    JESDD           **jesdd = job->jesdd;
-    unsigned        count   = arraycount(&jesdd);
-    unsigned        n;
+    PRBLOCK         *block  = NULL;
+    JESPRB          pb      = {0};  /* not memset(): the host test builds
+                                       this TU with libc370's inline S/370
+                                       memset, which must not be emitted  */
+    INTXTCTX        ctx     = {0};
     unsigned        mttr;
-    unsigned char   *p;
-    unsigned char   *eob;   /* end of block */
-    struct hdr {
-        unsigned int    next;
-        unsigned int    jobid;
-        unsigned short  dsid;
-        unsigned char   len1;       /* 1 byte length */
-        unsigned char   len2[2];    /* 2 byte length */
-        unsigned char   record[0];  /* start of text string records */
-    }           *hdr;
-    unsigned char   jobname[12] = "";
-    unsigned char   userid[12] = "";
-    unsigned char   stepname[12] = "";
-    unsigned char   procstep[12] = "";
-    unsigned char   program[12] = "";
-    unsigned char   ddname[12] = "";
-    unsigned char   dsname[56] = "";
-    unsigned char   sysout[8] = "";
-    unsigned        sysin;
+    unsigned        blocks  = 0;
 
-    /* wtof("%s enter", __func__); */
+    ctx.job   = job;
+    ctx.count = arraycount(&job->jesdd);
 
     buf = calloc(1, hct->_BUFSIZE);
     if (!buf) goto quit;
+    jes->inbuf2 = buf;              /* recovery anchor (#126)               */
 
-    for(mttr=pddb_mttr; mttr; mttr=hdr->next) {
-        /* read the internal text record */
-        /* wtof("%s spool_read() MTTR=%08X", __func__, mttr); */
-        spool_read(js, mttr, buf, hct->_BUFSIZE);
-        /* wtodumpf(buf, hct->_BUFSIZE, "text record for mttr=%08X", mttr); */
+    for(mttr=pddb_mttr; mttr; mttr=block->next) {
+        /* runaway guard: the next address comes out of the block we read */
+        if (blocks++ >= JESPR_MAXBLK) break;
 
-        hdr = (struct hdr*)buf;
-        if (hdr->jobid != jct->JCTJBKEY) break;
-        if (hdr->dsid != PDBINTXT) break;
+        /* read the internal text block.  Unchecked, a failed read left the
+           PREVIOUS block in the buffer: its jobkey and dsid still match and
+           its chain word still points at the block that would not read, so
+           the loop spun re-parsing stale data (#126; the IOT loops have had
+           this check since #28) */
+        if (spool_read(js, mttr, buf, hct->_BUFSIZE)) break;
 
-        p = hdr->record;
-        eob = buf + hct->_BUFSIZE - 1;
+        block = (PRBLOCK*)buf;
+        if (block->jobkey != jct->JCTJBKEY) break;
+        if (block->dsid != PDBINTXT) break;
 
-        while( p < eob ) {
-            pre = (__TXTPRE*)p;
-            if (pre->STRLTH==0) break;
-
-            switch(pre->STRINDCS & 0x0F) {
-            case JOBSTR:        /* ... JOB STATEMENT TEXT STRING            */
-                /* wtodumpf(pre, pre->STRLTH, "JOB Text String"); */
-                process_job(p, jobname, userid);
-                if (userid[0]) strcpy(job->owner, userid);
-                if (!count) goto quit;  /* no JESDD so we're done */
-                break;
-            case EXECSTR:       /* ... EXEC STATEMENT TEXT STRING           */
-                /* wtodumpf(pre, pre->STRLTH, "EXEC Text String"); */
-                process_exec(p, stepname, procstep, program);
-                break;
-            case DDSTR:         /* ... DD STATEMENT TEXT STRING             */
-                /* wtodumpf(pre, pre->STRLTH, "%s: DD Text String", __func__); */
-                process_dd(p, p+pre->STRLTH, ddname, dsname, sysout, &sysin);
-                /* wtof("ddname=%s, dsname=%s, sysout=%s, sysin=%u", ddname, dsname, sysout, sysin); */
-                if (sysout[0]) {
-                    /* DD is for SYSOUT */
-                    process_sysout(job->jesdd, ddname, dsname, sysout, stepname, procstep);
-                }
-                if (sysin) {
-                    /* DD is for SYSOUT */
-                    process_sysin(job->jesdd, ddname, dsname, stepname, procstep);
-                }
-                break;
-            case PROCSTR:       /* ... PROC STATEMENT TEXT STRING           */
-                /* wtodumpf(pre, pre->STRLTH, "PROC Text String"); */
-                process_exec(p, procstep, program, program);
-                break;
-            }
-
-            p += pre->STRLTH + 3;
+        if (__jesprb(buf, hct->_BUFSIZE, &pb, intxt_emit, &ctx) < 0) {
+            jes->inbuf3 = pb.prbuf; /* the walk may have grown it           */
+            break;
         }
+        jes->inbuf3 = pb.prbuf;     /* recovery anchor (#126)               */
     }
 
 quit:
+    jes->inbuf2 = NULL;
+    jes->inbuf3 = NULL;
+    if (pb.prbuf) free(pb.prbuf);
     if (buf) free(buf);
-    /* wtof("%s exit count=%u", __func__, count); */
-    return (int)count;
+    return (int)ctx.count;
 }
 
 typedef struct {
@@ -595,7 +640,7 @@ typedef struct {
 
 __asm__("\n&FUNC    SETC 'process_job'");
 static int
-process_job(char *buf, char *jobname, char *userid)
+process_job(char *buf, const char *eob, char *jobname, char *userid)
 {
     __JOBSTR    *job    = (__JOBSTR*)buf;
     TEXT        *t;
@@ -606,7 +651,14 @@ process_job(char *buf, char *jobname, char *userid)
     jobname[0]  = 0;
     userid[0]   = 0;
 
-    for(t = (TEXT*)buf; t->key != 0 && t->key != ENDK; t = (TEXT*)buf) {
+    /* Every step is bounded by eob, the end of this statement's record: the
+       walk used to stop only on a 0/ENDK key byte, so a truncated or
+       desynchronised stream sent it through whatever follows the buffer
+       (#126). */
+    while (buf + sizeof(TEXT) <= eob) {
+        t = (TEXT*)buf;
+        if (t->key == 0 || t->key == ENDK) break;
+
         /* Bound by the destination, not by the text stream (#111).  t->len is
            one byte, so the mask alone still admits 127 into the twelve-byte
            buffers process_intxt() passes, and the values go on into nine-byte
@@ -614,6 +666,7 @@ process_job(char *buf, char *jobname, char *userid)
            is and what those fields hold - the same clamp process_dd() has
            carried since #22 fixed this exact class in the sibling parser. */
         len = MIN(t->len & 0x7F, 8);
+        if ((char*)t->data + len > eob) break;      /* truncated value */
 
         switch (t->key) {
         case USERK:     /* JOB     USER=                        */
@@ -629,7 +682,7 @@ process_job(char *buf, char *jobname, char *userid)
         }
 
         /* move buf pointer to next key */
-        for(buf+=2, n=0; n < t->count; n++) buf += (1 + (buf[0] & 0x7F));
+        for(buf+=2, n=0; n < t->count && buf < eob; n++) buf += (1 + (buf[0] & 0x7F));
     }
 
     /* wtof("process_job(%s,%s)", jobname, userid); */
@@ -638,7 +691,7 @@ process_job(char *buf, char *jobname, char *userid)
 
 __asm__("\n&FUNC    SETC 'process_exec'");
 static int
-process_exec(char *buf, char *stepname, char *procname, char *program)
+process_exec(char *buf, const char *eob, char *stepname, char *procname, char *program)
 {
     __EXECSTR   *exec   = (__EXECSTR*)buf;
     TEXT        *t;
@@ -648,13 +701,17 @@ process_exec(char *buf, char *stepname, char *procname, char *program)
     buf         = exec->STREKEY;
     stepname[0]  = 0;
 
-    for(t = (TEXT*)buf; t->key != 0 && t->key != ENDK; t = (TEXT*)buf) {
+    /* bounded by eob like process_job() - see the note there (#126) */
+    while (buf + sizeof(TEXT) <= eob) {
+        t = (TEXT*)buf;
+        if (t->key == 0 || t->key == ENDK) break;
         /* wtodumpf(t, sizeof(TEXT), "%s TEXT", __func__); */
 
         /* bound by the destination, not by the text stream (#111) - see the
            note in process_job(); stepname, procname and program are the same
            twelve-byte locals, feeding the same nine-byte JESDD fields */
         len = MIN(t->len & 0x7F, 8);
+        if ((char*)t->data + len > eob) break;      /* truncated value */
 
         /* wtof("%s t->key=%u", __func__, t->key); */
         switch (t->key) {
@@ -680,7 +737,7 @@ process_exec(char *buf, char *stepname, char *procname, char *program)
         }
 
         /* move buf pointer to next key */
-        for(buf+=2, n=0; n < t->count; n++) buf += (1 + (buf[0] & 0x7F));
+        for(buf+=2, n=0; n < t->count && buf < eob; n++) buf += (1 + (buf[0] & 0x7F));
     }
 
     /* wtof("process_exec(%s,%s,%s)", stepname, procname, program); */
@@ -702,15 +759,17 @@ process_dd(char *buf, char *eob, char *ddname, char *dsname, char *sysout, unsig
     sysout[0]   = 0;
     *sysin      = 0;
 
-    for(t = (TEXT*)buf; t->key != 0 && t->key != ENDK && buf < eob; t = (TEXT*)buf) {
-#if 0
-        char *p = buf;
-        for(p+=2, n=0; n < t->count; n++) p += (1 + p[0]);
-        wtodumpf(buf, n, "%s: t->key=%d", __func__, t->key);
-#endif
+    /* eob is the end of this statement's record (it used to be computed
+       from the STRLTH the spool itself supplied, so it bounded nothing);
+       every read and every advance below stays inside it (#126) */
+    while (buf + sizeof(TEXT) <= eob) {
+        t = (TEXT*)buf;
+        if (t->key == 0 || t->key == ENDK) break;
+
         switch (t->key) {
         case DDK: {     /* DD      DD                           */
             unsigned len = MIN(t->len, 8);
+            if ((char*)t->data + len > eob) break;
             memcpy(ddname, t->data, len);
             ddname[len] = 0;
             strtok(ddname, " ");
@@ -720,9 +779,11 @@ process_dd(char *buf, char *eob, char *ddname, char *dsname, char *sysout, unsig
             unsigned len;
             if (t->len & 0x80) {
                 buf++;
+                if (buf + sizeof(TEXT) > eob) goto quit;
                 t = (TEXT*)buf;
             }
             len = MIN(t->len, 44);
+            if ((char*)t->data + len > eob) break;
             memcpy(dsname, t->data, len);
             dsname[len] = 0;
             strtok(dsname, " ");
@@ -730,6 +791,7 @@ process_dd(char *buf, char *eob, char *ddname, char *dsname, char *sysout, unsig
         }
         case SYSOUTK: { /* DD      SYSOUT=                      */
             unsigned len = MIN(t->len, 4);
+            if ((char*)t->data + len > eob) break;
             memcpy(sysout, t->data, len);
             sysout[len] = 0;
             strtok(sysout, " ");
@@ -758,9 +820,14 @@ process_dd(char *buf, char *eob, char *ddname, char *dsname, char *sysout, unsig
 		}
         }
 
-        /* move buf pointer to next key */
-        for(buf+=2, n=0; n < t->count; n++) buf += (1 + buf[0]);
+        /* move buf pointer to next key.  The step byte is a length and must
+           be read unsigned: as a (signed) char a value with the high bit set
+           walks BACKWARD, and with garbage in the stream that is an endless
+           loop inside the bound (#126) */
+        for(buf+=2, n=0; n < t->count && buf < eob; n++) buf += (1 + (unsigned char)buf[0]);
     }
+
+quit:
 
     // wtof("process_dd(%s,%s,%s)", ddname, dsname, sysout);
 	// wtof("%s: exit", __func__);

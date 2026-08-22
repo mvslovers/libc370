@@ -59,6 +59,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   allocate `DISP=SHR`, open the BPAM DCB for OUTPUT, STOW delete, close,
   free, the pattern `__renmem()` has always used - which also routes the
   delete through OPEN's RACF gate.  Whole data sets keep the IDCAMS path.
+- **`jesjob(dd=1)` walks the internal text by its records, and an abend
+  mid-walk no longer leaks what it built (#126).** The parser stepped over
+  raw INTXT blocks by `STRLTH` alone - a stride that matches the record
+  stride for simple records and derails exactly where the record structure
+  shows: the `0xFF` end-of-block marker, read as the high byte of a
+  text-string length, sent `process_dd()` up to 64K past the buffer (the
+  layout-dependent S0C4 storms behind mvslovers/mvsmf#282), and a spanned
+  record - any statement over 255 bytes arrives as SPLINE parts - could
+  desynchronise the walk into stale buffer tails.  The blocks now go
+  through `__jesprb()`, the hardened record
+  walk `jesprint()` already uses; the key walks in
+  `process_job()`/`process_exec()`/`process_dd()` are bounded by the record
+  end; the chain's `spool_read()` is checked like the IOT loops have been
+  since #28.  Separately, everything the walk builds is anchored in the JES
+  handle while it is being built - measured before the fix, each S0C4
+  leaked ~26K of half-built job arrays and buffers, which is what degraded
+  the httpd address space - so recovery that only holds the handle frees it
+  via `jesclose()`.  `test/host/tstjestx.c` grows four walk-bounding cases,
+  including a storm-shaped block driven through the real `__jesprb()`.
+- **`send()` honours the X'75' retry code `-2`, on a bounded budget (#120).**
 - **`send()` honours the X'75' retry code `-2`, on a bounded budget (#120).**
   `src/dyn75/@@75send.c` tested its reply for `-1` and handed everything else
   back as a byte count — so the "would block, wait and reissue" code `-2`

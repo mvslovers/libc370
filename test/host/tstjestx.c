@@ -41,10 +41,14 @@
  *   into the next local.  ASAN is load-bearing here, not decoration (same
  *   reasoning as test/host/tstrldwk.c).
  *
- * - It pins the COPY, not the walk.  A desynchronised text stream can still
- *   step process_intxt()'s outer loop onto nonsense; what this guarantees is
- *   that nonsense truncates instead of overflowing.  Bounding the walk itself
- *   is a separate question and is NOT addressed here.
+ * - Since #126 it pins the WALK as well as the copy: cases (9)-(12) hold
+ *   the record bound.  The parsers used to stop only on a 0/ENDK key byte
+ *   (and process_dd() on an eob computed from the STRLTH the spool itself
+ *   supplied), so a record that ended without a terminator - or lied about
+ *   its length, the way a stray 0xFF end-of-block marker reads as STRLTH
+ *   0xFFnn - walked whatever follows the buffer.  Case (12) drives the real
+ *   __jesprb() record walk over a block shaped like the mvsmf#282 storm
+ *   blocks: record, EOB marker, stale DD byte behind it.
  *
  * - It does not prove #108.  Whether this overflow is the S0C4 in
  *   mvslovers/mvsmf#282 is unsettled - see #108.  This is a defect on its own
@@ -77,11 +81,12 @@
  *     R=../..
  *     cc -std=gnu99 -Wall -Wextra -fsanitize=address \
  *        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
- *        -I $R/include -o t tstjestx.c \
+ *        -I $R/include -I $R/src/jes -o t tstjestx.c \
+ *        "$R/src/jes/jesprb.c" \
  *        "$R/src/clib/@@aradd.c" "$R/src/clib/@@arnew.c" \
  *        "$R/src/clib/@@arcou.c" "$R/src/clib/@@arget.c" \
  *        "$R/src/clib/@@arfre.c"
- *     ./t                                             # 14/14, rc 0
+ *     ./t                                             # 20/20, rc 0
  *
  * RED, against the pre-fix source.  Cases (1)-(4) execute and pass, then case
  * (5) aborts.  The ASAN report is the ONLY output: the abort does not flush
@@ -220,6 +225,12 @@ static unsigned char *make_execstr(unsigned char key, unsigned char lenbyte,
  * ASAN bounds it.  Twelve bytes: one past it is a diagnosable overflow. */
 static char *dest12(void) { return calloc(1, 12); }
 
+/* End of the record a make_*() fixture built: the walks are bounded by the
+ * record that holds the text string since #126, so every call below says
+ * where its record ends. */
+static char *txt_eob(unsigned char *txt, unsigned prefix_len, unsigned datalen)
+{ return (char *)txt + prefix_len + 3 + datalen + 1; }
+
 /* 64 printable bytes - longer than the buffer, shorter than the 127 the
  * length field can express, so the copy is unambiguous in the ASAN report. */
 static const char LONG64[] =
@@ -242,28 +253,28 @@ int main(void)
     printf("(1) process_job, USER=IBMUSER:\n");
     a = dest12(); b = dest12();
     txt = make_jobstr(USERK, 7, "IBMUSER", 7);
-    process_job((char *)txt, a, b);
+    process_job((char *)txt, txt_eob(txt, 6, 7), a, b);
     CHECK_STR(b, "IBMUSER", "(1) userid parsed");
     free(txt); free(a); free(b);
 
     printf("\n(2) process_job, JOB=MBTTEST1 (a full eight):\n");
     a = dest12(); b = dest12();
     txt = make_jobstr(JOBK, 8, "MBTTEST1", 8);
-    process_job((char *)txt, a, b);
+    process_job((char *)txt, txt_eob(txt, 6, 8), a, b);
     CHECK_STR(a, "MBTTEST1", "(2) jobname parsed, all eight kept");
     free(txt); free(a); free(b);
 
     printf("\n(3) process_exec, PGM=IEBGENER:\n");
     a = dest12(); b = dest12(); c = dest12();
     txt = make_execstr(PGMEK, 8, "IEBGENER", 8);
-    process_exec((char *)txt, a, b, c);
+    process_exec((char *)txt, txt_eob(txt, 4, 8), a, b, c);
     CHECK_STR(c, "IEBGENER", "(3) program parsed");
     free(txt); free(a); free(b); free(c);
 
     printf("\n(4) process_exec, EXEC=STEP1:\n");
     a = dest12(); b = dest12(); c = dest12();
     txt = make_execstr(EXECK, 5, "STEP1", 5);
-    process_exec((char *)txt, a, b, c);
+    process_exec((char *)txt, txt_eob(txt, 4, 5), a, b, c);
     CHECK_STR(a, "STEP1", "(4) stepname parsed");
     free(txt); free(a); free(b); free(c);
 
@@ -275,7 +286,7 @@ int main(void)
     printf("\n(5) process_job, USER= with a 64-byte length (#111):\n");
     a = dest12(); b = dest12();
     txt = make_jobstr(USERK, 64, LONG64, 64);
-    process_job((char *)txt, a, b);
+    process_job((char *)txt, txt_eob(txt, 6, 64), a, b);
     CHECK(strlen(b) <= 8,       "(5) userid bounded by its destination");
     CHECK_STR(b, "ABCDEFGH",    "(5) and truncated, not mangled");
     free(txt); free(a); free(b);
@@ -283,7 +294,7 @@ int main(void)
     printf("\n(6) process_exec, PGM= with a 64-byte length (#111):\n");
     a = dest12(); b = dest12(); c = dest12();
     txt = make_execstr(PGMEK, 64, LONG64, 64);
-    process_exec((char *)txt, a, b, c);
+    process_exec((char *)txt, txt_eob(txt, 4, 64), a, b, c);
     CHECK(strlen(c) <= 8,       "(6) program bounded by its destination");
     CHECK_STR(c, "ABCDEFGH",    "(6) and truncated, not mangled");
     free(txt); free(a); free(b); free(c);
@@ -291,21 +302,21 @@ int main(void)
     printf("\n(6b) process_exec, EXEC= with a 64-byte length (#111):\n");
     a = dest12(); b = dest12(); c = dest12();
     txt = make_execstr(EXECK, 64, LONG64, 64);
-    process_exec((char *)txt, a, b, c);
+    process_exec((char *)txt, txt_eob(txt, 4, 64), a, b, c);
     CHECK(strlen(a) <= 8,       "(6b) stepname bounded by its destination");
     free(txt); free(a); free(b); free(c);
 
     printf("\n(6c) process_exec, PROC= with a 64-byte length (#111):\n");
     a = dest12(); b = dest12(); c = dest12();
     txt = make_execstr(PROCEK, 64, LONG64, 64);
-    process_exec((char *)txt, a, b, c);
+    process_exec((char *)txt, txt_eob(txt, 4, 64), a, b, c);
     CHECK(strlen(b) <= 8,       "(6c) procname bounded by its destination");
     free(txt); free(a); free(b); free(c);
 
     printf("\n(6d) process_job, JOB= with a 64-byte length (#111):\n");
     a = dest12(); b = dest12();
     txt = make_jobstr(JOBK, 64, LONG64, 64);
-    process_job((char *)txt, a, b);
+    process_job((char *)txt, txt_eob(txt, 6, 64), a, b);
     CHECK(strlen(a) <= 8,       "(6d) jobname bounded by its destination");
     free(txt); free(a); free(b);
 
@@ -317,7 +328,7 @@ int main(void)
     printf("\n(7) process_dd, DD= with a 64-byte length (PR #22 guard):\n");
     ddname = dest12(); dsname = calloc(1, 56); sysout = calloc(1, 12);
     txt = make_txt(4, DDSTR, DDK, 64, LONG64, 64);
-    process_dd((char *)txt, (char *)txt + 4 + 3 + 64, ddname, dsname, sysout,
+    process_dd((char *)txt, txt_eob(txt, 4, 64), ddname, dsname, sysout,
                &sysin);
     CHECK(strlen(ddname) <= 8,  "(7) ddname still bounded (#22 holds)");
     CHECK_STR(ddname, "ABCDEFGH", "(7) and truncated at eight");
@@ -330,9 +341,107 @@ int main(void)
     printf("\n(8) high bit set on the length byte:\n");
     a = dest12(); b = dest12();
     txt = make_jobstr(USERK, 0x80 | 7, "IBMUSER", 7);
-    process_job((char *)txt, a, b);
+    process_job((char *)txt, txt_eob(txt, 6, 7), a, b);
     CHECK_STR(b, "IBMUSER", "(8) 0x87 still means seven");
     free(txt); free(a); free(b);
+
+    /* ------------------------------------------------------------------
+     * (9)-(12) #126.  The walks themselves must be bounded by the record.
+     * Before the fix they stopped only on a 0/ENDK key byte and, for
+     * process_dd(), on an eob computed from the STRLTH the spool itself
+     * supplied - so a record that simply ENDS (or lies about its length)
+     * sent them through whatever follows the buffer.  Heap-exact
+     * allocations + ASAN make one byte past the record a diagnosable
+     * failure, same as (5)-(7).
+     * ---------------------------------------------------------------- */
+    printf("\n(9) process_job, record ends with no terminator (#126):\n");
+    a = dest12(); b = dest12();
+    {
+        unsigned       total = 6 + 3 + 7;      /* no ENDK byte at the end  */
+        unsigned char *p     = calloc(1, total);
+        p[0] = (unsigned char)(total >> 8);
+        p[1] = (unsigned char)(total & 0xFF);
+        p[2] = JOBSTR;
+        p[6] = USERK; p[7] = 1; p[8] = 7;
+        memcpy(p + 9, "IBMUSER", 7);
+        process_job((char *)p, (char *)p + total, a, b);
+        CHECK_STR(b, "IBMUSER", "(9) value parsed, walk stopped at eob");
+        free(p);
+    }
+    free(a); free(b);
+
+    printf("\n(10) process_job, value claims more than the record holds (#126):\n");
+    a = dest12(); b = dest12();
+    {
+        unsigned       total = 6 + 3 + 7;      /* seven data bytes ...     */
+        unsigned char *p     = calloc(1, total);
+        p[0] = (unsigned char)(total >> 8);
+        p[1] = (unsigned char)(total & 0xFF);
+        p[2] = JOBSTR;
+        p[6] = USERK; p[7] = 1; p[8] = 64;     /* ... claiming sixty-four  */
+        memcpy(p + 9, "IBMUSER", 7);
+        process_job((char *)p, (char *)p + total, a, b);
+        CHECK(b[0] == 0, "(10) truncated value dropped, not read past eob");
+        free(p);
+    }
+    free(a); free(b);
+
+    printf("\n(11) intxt_emit, STRLTH lies, linelen is the bound (#126):\n");
+    {
+        /* The exact storm shape from mvsmf#282: a stray 0xFF (the JES2
+         * end-of-block marker) read as the high byte of STRLTH promised a
+         * ~64K string.  Since #126 the record's real length is the bound
+         * and STRLTH is not trusted for anything. */
+        unsigned       linelen = 4 + 3 + 8;    /* a complete DD record     */
+        unsigned char *line    = calloc(1, linelen);
+        INTXTCTX      *ctx     = calloc(1, sizeof(INTXTCTX));
+        JESJOB        *jj      = calloc(1, sizeof(JESJOB));
+        line[0] = 0xFF; line[1] = 0x37;        /* STRLTH 0xFF37: a lie     */
+        line[2] = DDSTR;
+        line[4] = DDK; line[5] = 1; line[6] = 8;
+        memcpy(line + 7, "SYSPRINT", 8);       /* no terminator either     */
+        ctx->job   = jj;
+        ctx->count = 1;
+        intxt_emit((char *)line, linelen, ctx);
+        CHECK_STR(ctx->ddname, "SYSPRINT",
+                  "(11) DD parsed inside the record, huge STRLTH ignored");
+        free(line); free(jj); free(ctx);
+    }
+
+    printf("\n(12) __jesprb + intxt_emit, EOB marker stops the walk (#126):\n");
+    {
+        /* A whole internal-text block the way the storm delivered it: the
+         * 10-byte header, one record, then the 0xFF end-of-block marker
+         * followed by stale bytes whose first happens to decode as a DD
+         * statement.  The old raw walk stepped onto that marker, read
+         * STRLTH >= 0xFF00 and took the stale byte at face value; the
+         * record walk stops at the marker and the garbage never reaches a
+         * parser. */
+        unsigned       blklen = 64;
+        char          *blk    = calloc(1, blklen);
+        INTXTCTX      *ctx    = calloc(1, sizeof(INTXTCTX));
+        JESJOB        *jj     = calloc(1, sizeof(JESJOB));
+        JESPRB        *pb     = calloc(1, sizeof(JESPRB));
+        unsigned char *r      = (unsigned char *)blk + 10;
+        int            rc;
+        /* record: len | flags | len2 | data (a 15-byte JOB text string)   */
+        r[0] = 15; r[1] = 0; r[2] = 15;
+        r[3] = 0; r[4] = 15;                   /* STRLTH 15                */
+        r[5] = JOBSTR;
+        r[9] = USERK; r[10] = 1; r[11] = 5;
+        memcpy(r + 12, "MIKEG", 5);
+        r[17] = ENDK;
+        /* end-of-block marker, then the poison byte                       */
+        r[18] = 0xFF;
+        r[19] = DDSTR;                         /* stale: would parse as DD */
+        ctx->job   = jj;
+        ctx->count = 1;
+        rc = __jesprb(blk, blklen, pb, intxt_emit, ctx);
+        CHECK(rc == 0, "(12) record walk ended at the EOB marker");
+        CHECK_STR(ctx->userid, "MIKEG", "(12) the real record was parsed");
+        CHECK(ctx->ddname[0] == 0, "(12) the stale DD byte never reached a parser");
+        free(blk); free(jj); free(ctx); free(pb);
+    }
 
     return mbt_test_summary("tstjestx");
 }
