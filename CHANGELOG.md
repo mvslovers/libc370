@@ -47,6 +47,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   it. `@@estae.c:147`'s `GETMAIN RU` stays unconditional as #83 left it.
 
 ### Fixed
+- **`rename()` renames PDS members via STOW change under `DISP=SHR`, not
+  IDCAMS ALTER (#131).** The ALTER sibling of #127: IDCAMS allocates the
+  ALTER target exclusively, and with a standing allocation of the same DSN
+  in the address space the shared SYSDSN ENQ is escalated to exclusive
+  with no way back down - measured with the same KEEP-DD A/B that settled
+  the delete (the probe sat in `IEF099I WAITING FOR DATA SETS` for the
+  life of the renaming step).  Names of the form `dsn(member)` on BOTH
+  sides with the same dsn now go to `__renmem()` (STOW change, TTR and
+  ISPF statistics preserved); whole data sets and cross-data-set forms
+  keep IDCAMS ALTER.  No shipped caller was exposed - mvsMF and ftpd
+  already call `__renmem()` directly - so this closes the API-level trap.
 - **`remove()` deletes PDS members via STOW under `DISP=SHR`, not IDCAMS
   (#127).** IDCAMS DELETE allocates its target exclusively, and MVS keeps
   one SYSDSN ENQ per DSN per address space at the highest level any
