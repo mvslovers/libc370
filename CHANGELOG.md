@@ -47,6 +47,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   it. `@@estae.c:147`'s `GETMAIN RU` stays unconditional as #83 left it.
 
 ### Fixed
+- **`vsnprintf()` honours its bound on every conversion and always
+  terminates (#128).** The simple conversions were bounded, but every
+  width/precision conversion went to `__examin()`, whose first act was
+  `unused(chcount)` - the remaining-space budget was discarded and the
+  conversion written unbounded through `*s++`; `snprintf(buf, 10, "S%03X
+  U%04d", ...)` overran its buffer (caught by mvsMF's TSTABND canary the
+  first time a `make test-mvs` had readable output again).  vsnprintf also
+  wrote up to n content bytes with no NUL on truncation.  `__examin()`'s
+  fifth parameter now is the space left in s and the string sink stops
+  there (including the %f memcpy) while still returning the logical
+  length; `vvprintf()` passes INT_MAX for vsprintf's deliberately
+  unbounded sink; vsnprintf reserves the final byte for the terminator (C
+  semantics: at most n-1 content bytes, always a NUL when n > 0).  New
+  host test `test/host/tstvsnp.c`, 16/16 under ASan, heap-buffer-overflow
+  against the pre-fix source.
 - **`remove()` deletes PDS members via STOW under `DISP=SHR`, not IDCAMS
   (#127).** IDCAMS DELETE allocates its target exclusively, and MVS keeps
   one SYSDSN ENQ per DSN per address space at the highest level any
