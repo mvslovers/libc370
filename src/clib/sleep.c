@@ -1,3 +1,4 @@
+#include <time.h>	/* our own prototype, so the definition is checked */
 #include <clibecb.h>
 
 int

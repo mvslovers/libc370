@@ -58,4 +58,13 @@ size_t strftime(char *s, size_t maxsize,
                 const char *format, const struct tm *timeptr);
 void tzset(void);
 
+/* __tzset() - set the CRT timezone offset directly, in seconds from UTC
+**            (negative west of it).  tzset() parses TZ, or falls back to
+**            CVTTZ, and calls this.  Returns 0, or 1 when there is no CRT. */
+int __tzset(int tzoffset);
+
+/* sleep() - wait the given number of seconds on a timed ECB.
+**           Always returns 0: nothing on this target cuts the wait short. */
+int sleep(unsigned seconds);
+
 #endif
