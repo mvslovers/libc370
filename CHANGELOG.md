@@ -7,6 +7,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Added
+- **Prototypes for `sleep()` and `__tzset()`, in `time.h` (#70).** Both are
+  built into the library and were declared in no header at all, so every caller
+  compiled them as an implicit declaration — a warning under `-Wall`, an error
+  under `-Werror` or a strict C99 front end, and in every case a call site whose
+  arguments the compiler could not check. `tzset()` was already declared
+  (`time.h:59`); `__tzset()`, the internal half it calls, was not. Both now sit
+  next to it, and `src/clib/sleep.c` and `src/clib/@@tzset.c` include `<time.h>`
+  themselves so the definitions are checked against the prototypes — the pattern
+  `tzset.c` has carried since #5.
+  **Nothing in the ecosystem conflicts:** httpd declared both locally while
+  waiting for this (`httpprm.c:24`, `mvslovers/httpd#140`) with the signatures
+  taken from the definitions, so the header agrees rather than collides, and its
+  local declarations can now go. No other consumer declares either.
+  This is a step of #39 — the goal there is `-Wall` in `sdk/mklibc.py`, which is
+  the only thing that stops the class from coming back.
 - **`DCBDSN=` allocates a data set modelled on an existing one (#123, PR
   #124).** SVC 99's `DALDCBDS` text unit — the JCL `DCB=(dsname)` model
   reference. MVS reads the model's DSCB and copies its DCB attributes into
