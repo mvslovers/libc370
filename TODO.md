@@ -78,8 +78,12 @@ needs re-verification"*.
 caveat, because it is not quite the test this item asked for.
 
 The build was confirmed from the console rather than assumed
-(`HTTPD005I LIBC370 1.0.3-DEV (3E9C15B)` = `main`). 2172 requests went through
-the `dd=1` path: `/files` over every one of the 131 jobs on the system, then
+(`HTTPD005I LIBC370 1.0.3-DEV (3E9C15B)` = `main`), and the path was confirmed
+in mvsMF rather than taken from the issue text: `jobFilesHandler` **and**
+`jobRecordsHandler` both reach `jesjob(…, 1)` through
+`find_job_by_name_and_id()` (`jobsapi.c:209/273 → :1238`), so a record read
+rebuilds the inventory too — close to **2100 `dd=1` walks**, not the ~340 the
+endpoint count suggests. 2172 requests went through the `dd=1` path: `/files` over every one of the 131 jobs on the system, then
 1200 and 856 requests in 8 concurrent streams over the largest job available
 (106 spool files), including a full record sweep. Zero 5xx, and the Master
 Trace Table over the whole window holds no `S80A`, `S0C4`, `IEA703I`,
