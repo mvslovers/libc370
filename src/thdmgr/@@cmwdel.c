@@ -1,6 +1,7 @@
 /* @@CMWDEL.C - cthread_worker_del()
 */
 #include "clibthdi.h"
+#include "clibwto.h"     /* wtof(): a prototype decides linkage here (#39) */
 
 #if 0
 static void
@@ -30,6 +31,23 @@ cthread_worker_del(CTHDWORK **work)
 
     if (!work) goto quit;
     if (!*work) goto quit;
+
+    /* A worker whose subtask is still running must not be dismantled at all,
+    ** and the check has to come BEFORE the array removal below: a retained
+    ** worker has to stay in mgr->worker so cthread_manager_term() can see it
+    ** and keep mgr alive.  The worker reaches the manager through work->mgr
+    ** and its own ecb through work->wait, and cthread_worker_add() passed
+    ** this very pointer to cthread_create_ex() as arg2 -- so free(*work)
+    ** below would pull all three out from under a live TCB (#11).
+    */
+    task = (*work)->task;
+    if (task && task->tcb && !(task->termecb & 0x40000000)) {
+        (*work)->state = CTHDWORK_STATE_STUCK;
+        wtof("cthread_worker_del(%08X): TCB(%06X) has not ended, worker "
+            "and task storage retained", *work, task->tcb);
+        rc = -1;
+        goto quit;
+    }
 
     mgr = (*work)->mgr;
     if (mgr) {

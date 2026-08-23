@@ -39,12 +39,26 @@ int tmr_stop(void)
     }
     if (lockrc==0) unlock(tmr, 0);
 
-    /* if we have a timer thread that has not shut down, detach it */
+    /* If the timer thread never acknowledged the shutdown it is still
+    ** running, and this used to DETACH it anyway -- the same ungated force
+    ** detach as the worker teardown in #11, with the same consequence: the
+    ** thread's stack lives inside its CTHDTASK (@@ctcrtx.c newthread), so
+    ** terminating it here and then dropping the only pointer to it leaves a
+    ** live TCB standing on storage nobody owns any more.
+    ** cthread_detach() now refuses a subtask that has not posted termecb, so
+    ** keep the handle instead of losing the reference we would need to clean
+    ** it up later.
+    */
     lockrc = lock(tmr, 0);
     if (tmr->task && !(tmr->flags & TMR_FLAG_SHUTDOWN)) {
         wtof("%s thread DETACH", __func__);
-        cthread_detach(tmr->task);
-        tmr->task = NULL;
+        if (cthread_detach(tmr->task)==CTHREAD_DETACH_LIVE) {
+            wtof("%s timer thread did not stop, TCB(%06X) retained",
+                __func__, tmr->task->tcb);
+        }
+        else {
+            tmr->task = NULL;
+        }
     }
     if (lockrc==0) unlock(tmr, 0);
 

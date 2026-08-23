@@ -149,6 +149,64 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   it. `@@estae.c:147`'s `GETMAIN RU` stays unconditional as #83 left it.
 
 ### Fixed
+- **Worker teardown no longer deadlocks on the manager lock, and never
+  force-DETACHes or frees a live task (#11).** The S33E on STC shutdown had two
+  causes stacked on each other, and the issue named neither — it recorded the
+  drain failure as unexplained and treated the S33E and the nested ESTAE fault
+  as separate problems.
+  **The deadlock.** `dispatch_thread_term()` held `lock(mgr,0)` across its whole
+  teardown loop, wait included. But `cthread_worker_wait()` — the only place a
+  worker observes `CTHDWORK_POST_SHUTDOWN` — *opens* with
+  `cthread_queue_del(&work->queue)`, which takes that same lock whenever the
+  worker still holds a dispatched item. `lock()` is an exclusive ENQ with
+  `RET=HAVE` (`@@lk.c`; `ENQ_HAVE`, `ENQ_EXC` and `ENQ_STEP` are all `0` in
+  `clibenq.h`), so rc 8 goes only to the task that already owns it and any other
+  TCB waits. Every worker that was executing a request when shutdown began
+  therefore blocked at the top of `cthread_worker_wait()`, never reached the
+  wait, and missed the window — **waiting on the very thread that was waiting
+  for it.** `work->queue` is set in exactly one place, `dispatch_work()`'s
+  `post_request` branch, which is why it hit busy workers and left idle ones
+  draining normally. No wedged handler was ever required.
+  **The free.** After the window expired the code force-DETACHed with
+  `STAE=YES` — abnormally terminating a live subtask, the S33E — and went
+  straight on to `cthread_worker_del()` → `cthread_delete()` → `free(*task)`.
+  `newthread()` allocates the stack **inside** that handle
+  (`calloc(1, sizeof(CTHDTASK) + newstack)`, `@@ctcrtx.c`), so the free released
+  the 64K the dying subtask's recovery exit was standing on, and `free(*work)`
+  released the `CTHDWORK` it still reached through `work->mgr` and `work->wait`.
+  That is what #9/#10 hardened against: the hardening was right, but the thing
+  it was recovering from is a use-after-free.
+  `dispatch_thread_term()` and `dispatch_thread_quiesce()` now take the lock per
+  array access and release it across the wait, and both adopt the
+  `locked = lock(...)` / `if (locked==0) unlock(...)` convention every sibling
+  already used. The DETACH is gated on `termecb` inside `cthread_detach()` and
+  at the call sites, because `cthread_worker_del()` → `cthread_delete()` is a
+  second unguarded route to it; `cthread_delete()` refuses the whole delete
+  rather than only the detach, since gating the detach alone leaves the `free()`
+  reachable and the free is the half that corrupts. `@@tmstop.c:46` was a third
+  instance of the same ungated force detach and is fixed with it. A worker that
+  will not stop is left in `mgr->worker` as the new `CTHDWORK_STATE_STUCK`, and
+  `cthread_manager_term()` counts those and takes the retain-and-log exit PR #7
+  built for the unjoined case — otherwise the dispatch thread ending normally
+  would license `free(mgr)` under a live TCB, turning an S33E in a dying address
+  space into a use-after-free on a running task.
+  **Contract change worth reading, though nothing in the ecosystem moves with
+  it:** `cthread_detach()` now returns `CTHREAD_DETACH_LIVE` and does nothing
+  when the subtask has not posted `termecb`, where it used to terminate it.
+  nsf370 is the only consumer that calls it directly and already waits for
+  `termecb` first (`nsfthr.c`, its ADR-0025), so the gate is a no-op there;
+  httpd and ftpd reach it only through `cthread_delete()` on their socket task,
+  and both ignore `cthread_manager_term()`'s rc. No owner check was added on
+  top: MVS already refuses a DETACH from anything but the attaching task, and
+  turning that loud failure into a silent skip would hide a defect rather than
+  prevent one.
+  The wait stays a `STIMER` poll deliberately —
+  `ecb_timed_wait(&task->termecb, …)` would pass the **same** ECB as both the
+  waitlist entry and the timeout ECB (`@@ecbtw.c`), posting on timeout the very
+  flag the loop tests, so the next pass would read "terminated" and detach a
+  live subtask. New probe `test/mvs/tstwterm.c` + `jcl/tstwterm.jcl`: one
+  worker, one queued request, teardown while it runs, with a handler that is
+  healthy and merely slow.
 - **`__listpd()` bounds its directory walk by the bytes `fread()` delivered
   (#80, defect 2).** The halfword taken out of the block became the loop bound
   with no relation to how much was actually read, and three reads in the body

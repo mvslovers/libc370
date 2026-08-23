@@ -57,6 +57,7 @@ struct cthdwork {
 #define CTHDWORK_STATE_DISPATCH 3       /* ... worker thread is dispatched  */
 #define CTHDWORK_STATE_SHUTDOWN 4       /* ... worker thread is stopping    */
 #define CTHDWORK_STATE_STOPPED  5       /* ... worker thread is stopped     */
+#define CTHDWORK_STATE_STUCK    6       /* ... did not stop, retained (#11) */
     unsigned    opt;                    /* 1C worker optionsnt              */
 #define CTHDWORK_OPT_TIMER	0x00000001	/* on=post timer desired (1 sec)	*/
 #define CTHDWORK_OPT_NOWORK	0x00000002  /* on=don't give queued work		*/
@@ -80,6 +81,12 @@ int cthread_manager_term(CTHDMGR **cthdmgr)                                     
 int cthread_worker_add(CTHDMGR *mgr)                                                        asm("@@CMWADD");
 int cthread_worker_del(CTHDWORK **work)                                                     asm("@@CMWDEL");
 int cthread_queue_del(CTHDQUE **queue)                                                      asm("@@CMQDEL");
+/* cthread_worker_shutdown() - stop a worker and report whether it really stopped.
+** Returns 0 when the worker's subtask has ended (or it never had one), so the
+** caller may delete it.  Returns -1 when the subtask is STILL RUNNING: the
+** worker is left in CTHDWORK_STATE_STUCK, and neither it, its task nor its
+** stack may be freed -- the stack lives inside the CTHDTASK allocation, so
+** freeing it pulls the ground out from under a live TCB (#11). */
 int cthread_worker_shutdown(CTHDWORK *work)                                                 asm("@@CMWSHU");
 int cthread_queue_add(CTHDMGR *mgr, void *data)                                             asm("@@CMQADD");
 int cthread_worker_wait(CTHDWORK *work, char **data)                                        asm("@@CMWWAT");
