@@ -55,7 +55,7 @@ char *strerror(int errnum);
 size_t strlen(const char *s);
 
 /* copy source string to target string with pad character fill */
-char *strcpyp(char *target, int tlen, void *source, int pad );
+char *strcpyp(char *target, int tlen, const void *source, int pad );
 
 /* copy source to target with pad character fill */
 void *memcpyp(void *target, int tlen, void *source, int slen, int pad);

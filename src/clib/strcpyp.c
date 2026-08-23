@@ -2,7 +2,7 @@
 #include "clibstr.h"
 
 char *
-strcpyp(char *target, int tlen, void *source, int pad )
+strcpyp(char *target, int tlen, const void *source, int pad )
 {
     char    *t      = target;
     int     slen    = source ? strlen(source) : 0;
