@@ -134,6 +134,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   it. `@@estae.c:147`'s `GETMAIN RU` stays unconditional as #83 left it.
 
 ### Fixed
+- **`cthread_worker_add()` releases the manager lock when the create fails
+  (#107).** The function takes the manager lock and drops it under its `unlock:`
+  label, but the `cthread_create_ex()` failure path left through `goto quit` —
+  *below* that label — so a lock this call acquired was never released. `lock()`
+  is an exclusive ENQ (`CLIBLOCK`/`LOCK.%08X`) held by the issuing TCB, so once
+  it is left held every later `lock(mgr,0)` from any other task in the address
+  space waits forever: `dispatch_thread_check()`/`dispatch_thread_work()` wedge,
+  `cthread_queue_add()` blocks with them, and the whole worker pool stops **with
+  no abend, no message, and nothing in a dump pointing here**. The trigger is
+  the realistic one — `cthread_create_ex()` returns NULL when the
+  `CTHDTASK + stack` `calloc()` fails — so the hang arrives exactly under the
+  storage pressure that leaves the caller least able to absorb it.
+  **Latent in-tree, live for consumers.** All three in-tree callers
+  (`dispatch_thread_init()`, `dispatch_thread_work()`, `dispatch_thread_create()`
+  in `@@cminit.c`) already hold the lock when they call in, so `lock()` returns 8
+  (ENQ `RET=HAVE`), `locked != 0`, and skipping the unlock happens to be correct.
+  But `cthread_worker_add()` is exported in `include/clibthdi.h`, and an unlocked
+  caller owns an ENQ it never releases. One line: `goto unlock` instead of
+  `goto quit`. `rc` is already -1 at that point, and the `cthread_worker_del()`
+  above re-enters `lock()`/`unlock()` correctly through the same `locked`
+  convention. The sibling functions (`@@cmqadd.c`, `@@cmqdel.c`, `@@cmwdel.c`,
+  `@@cmterm.c`) already route every exit through their unlock; this was the only
+  one with an exit that bypassed it.
 - **`rename()` renames PDS members via STOW change under `DISP=SHR`, not
   IDCAMS ALTER (#131).** The ALTER sibling of #127: IDCAMS allocates the
   ALTER target exclusively, and with a standing allocation of the same DSN
