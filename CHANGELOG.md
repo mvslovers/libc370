@@ -6,7 +6,94 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- **`DCBDSN=` allocates a data set modelled on an existing one (#123, PR
+  #124).** SVC 99's `DALDCBDS` text unit — the JCL `DCB=(dsname)` model
+  reference. MVS reads the model's DSCB and copies its DCB attributes into
+  the new allocation; measured on 3.8j, `DSORG`, `RECFM`, `LRECL` and
+  `BLKSIZE` all copied, CC 0000. The new `__txdcbd()` (declared in
+  `include/svc99.h`) emits the text unit, and `__dsalc()` gains a `DCBDSN=`
+  keyword — tested **before** the `DSN=` branch, because that dispatch runs
+  on `strstr()` and `"DCBDSN="` contains `"DSN="`. Explicit DCB text units
+  still override what the model supplies. Deliberately **not** `LIKE=`:
+  `DCB=` does not copy SPACE, and key X'004B' is `DALRSRVS` in this era's
+  table rather than `DALLIKE`, so callers keep supplying their own SPACE.
+- **`jesircl2()` hands out the jobid before the close frees it (#118, PR
+  #119).** The jobid arrives in `rpl.rplrbar` — an inline field of the RPL
+  embedded in the `VSFILE` — as the answer to the `ENDREQ` inside the close,
+  and the close frees that `VSFILE`. Every consumer that wanted the jobid was
+  therefore reading freed storage (mvsMF `jobsapi.c`, ftpd's `jes.c`).
+  `jesircl2(vsfile, jobid)` copies the eight bytes out between the `ENDREQ`
+  and the close — the only moment they can legally be read — and zeroes the
+  buffer on every early exit, so an ignored return code cannot pass stack
+  garbage off as a jobid. `jesircls()` becomes the NULL delegate, which keeps
+  the `ENDREQ`, the #115 work-area release and the close in one place; it
+  closes exactly as it always did, so nothing has to migrate to keep working.
+  Consumer migrations are tracked separately (`mvslovers/mvsmf#296` and the
+  ftpd counterpart) and **need this in the sysroot first**.
+
 ### Changed
+- **`strcpyp()` takes a `const void *source` (#104, PR #136).** It never writes
+  through `source` — it uses it for `strlen()` and `memcpy()` and nothing else
+  — so the parameter was simply under-qualified, and every caller holding a
+  `const char *` had to cast the qualifier away. The one that did not,
+  `__vsshwc()`, drew `src/clib/@@vsshwc.c:19: warning: passing arg 3 of
+  'strcpyp' discards qualifiers from pointer target type`. cc370 issues that by
+  default, with no `-W` flag, so it had been printed and discarded for as long
+  as it existed until #103 made the build show it — and it was the **last**
+  warning over the ten directories that make up `libc.a`, which made it the
+  noise floor the next real warning would have had to be spotted against, the
+  same dynamic that hid #99.
+  **Source-compatible in the direction that matters:** a caller passing a
+  non-const pointer still compiles unchanged, and a sweep of httpd, mvsMF,
+  ftpd, ufsd, httplua, httprexx, lua370 and rexx370 finds call sites only and
+  no local redeclaration — so nothing in the ecosystem has to move with this.
+  `test/host/tstjestx.c` did have to move in the same commit: it defines a
+  `strcpyp()` shim to satisfy the linker and reaches the real prototype through
+  `jesjob.c` → `clibary.h` → `string.h` → `clibstr.h`, so leaving the shim
+  behind is not a warning but `error: conflicting types for 'strcpyp'`, and
+  there is no `make test` that would have caught it.
+  `clibspl.h`'s `spl_strcpyp()` stays as it is — no callers anywhere in the
+  tree, so no warning to clear and no reason to touch a second published
+  header. `memcpyp()` is under-qualified the same way but draws no warning
+  today, as no caller passes it a const pointer; it is left for its own change,
+  together with the now-redundant `(void*)` casts at the ~20 `strcpyp()` call
+  sites. Verified: cc370 warnings over the ten `libc.a` directories, 1 before
+  and 0 after; `test/host/tstjestx.c` builds clean under ASan, 20/20.
+- **The bare inline-asm SVC macros carry a clobber list (#125, PR #134).** Ten
+  inline `__asm__` statements expanded to an SVC while declaring **no** clobbers
+  at all, leaving cc370 free to keep a live value in a register the SVC
+  destroys. All ten now declare `"0","1","14","15"`: `@@cminit.c` (STIMER),
+  `@@cmterm.c` (STIMER ×2), `@@cmwshu.c` (STIMER), `@@ecbtwl.c` (WAIT ECBLIST,
+  TTIMER CANCEL), `@@tmthrd.c` (WAIT ECBLIST), `@@abrpt.c` (OPEN, CLOSE) and
+  `@@ctcrtx.c` (ATTACH) — the last worth a second look, because it loads R1 and
+  reads R15 back into memory operands, so it already knew those registers were
+  in play and just never said so to the compiler.
+  **The failure mode is not theoretical.** In ftpd the identical bare form put
+  a struct pointer in R15 and kept it there across a `STIMER`; the next
+  iteration of the loop tested whatever the SVC had left, read a field from
+  that address and exited — on MVS a wait loop returning after one pass with
+  none of its exit conditions true (`mvslovers/ftpd#113`).
+  Nothing here is miscompiled today, and the reason **does not generalise**:
+  every one of these loop bodies happens to contain a function call, and the
+  call already forces R0/R1/R14/R15 to be treated as dead across that region.
+  ftpd's loop had none. `@@cminit.c` is the one waiting to bite — it sits
+  inside `#if 0`, so whoever re-enables it gets no call before the `STIMER`.
+  Generated code compared before and after with `cc370 -O1 -S` for all seven
+  files: six are byte-identical and `@@cmterm.c` gets *better* — with the
+  clobbers declared the compiler hoists `&mgr->wait` out of the retry loop into
+  R5 instead of recomputing it each pass — so this buys a guarantee at no cost.
+  File-scope `__asm__` blocks that define standalone assembler routines
+  (`EXITDRVR` in `@@ecbtwl.c`/`@@tmthrd.c`, `RETRY`/`RECOVERY` in `@@estae.c`)
+  are deliberately untouched: they do their own `SAVE (14,12)` and do not share
+  the compiler's register allocation.
+  **#125 stays open** for the statements carrying a *partial* list — `"0","1"`
+  in the four `@@75*.c` socket files, `"0","1","15"` in `@@75conn.c` and
+  `@@enqdeq.c`, `"1","14","15"` in `@@ctwait.c`, `@@ecbwt.c`, `@@ecbpst.c`,
+  `@@vsclos.c`, `@@vsopen.c`, `jesiropn.c` and the six `os/os*` files. Each is
+  missing a register the SVC can destroy, so each is the same latent defect,
+  but they are a much wider change across the base library of the whole
+  ecosystem and deserve their own pass with its own before/after comparison.
 - **BREAKING — the C startup stack GETMAIN is conditional, and a shortage
   abends U0801 by name instead of S80A from inside the SVC (#108).**
   `@@CRT0`/`@@CRT1`/`@@CRTM` obtained their stack with `GETMAIN R,LV=(0)` —
@@ -74,7 +161,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   host test `test/host/tstvsnp.c`, 16/16 under ASan, heap-buffer-overflow
   against the pre-fix source.
 - **`remove()` deletes PDS members via STOW under `DISP=SHR`, not IDCAMS
-- **`remove()` deletes PDS members via STOW under `DISP=SHR`, not IDCAMS
   (#127).** IDCAMS DELETE allocates its target exclusively, and MVS keeps
   one SYSDSN ENQ per DSN per address space at the highest level any
   allocation needs: with a standing allocation of the same DSN in the
@@ -105,7 +191,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   the httpd address space - so recovery that only holds the handle frees it
   via `jesclose()`.  `test/host/tstjestx.c` grows four walk-bounding cases,
   including a storm-shaped block driven through the real `__jesprb()`.
-- **`send()` honours the X'75' retry code `-2`, on a bounded budget (#120).**
 - **`send()` honours the X'75' retry code `-2`, on a bounded budget (#120).**
   `src/dyn75/@@75send.c` tested its reply for `-1` and handed everything else
   back as a byte count — so the "would block, wait and reissue" code `-2`
@@ -175,6 +260,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   sysroot and is statically linked, so ftpd needs `sdk/mklibc.py all` on its
   build host, a rebuild, and a deploy before the fix is anywhere.
 
+- **A failed internal reader open no longer leaks the handle, the RPL work area
+  and the DD (#115, PR #117).** `__vsam_close_intrdr()` was a stub that returned
+  0, so the failure path of `__vsam_open_intrdr()` released nothing: a failed
+  OPEN left the 192-byte `VSFILE`, the 80-byte RPL work area and the
+  dynallocated DD behind — and the DD stayed for the life of the address space,
+  because the "unallocate at close" text unit only fires on a CLOSE that never
+  happens. `__vsam_close_intrdr()` now closes through `__vsclos()`, which CLOSEs
+  only when the open flag is set and then frees the handle, and it releases the
+  work area whose only reference is `rpl.rplarea`; `jesiropn()` unallocates the
+  DD with `__dsfree()` — the TODO that stood at its `quit` label — with `errno`
+  saved across the cleanup so the caller still sees why the open failed.
+  **The open flag decides success, not R15:** OPEN can return a warning (4) over
+  an ACB that is open and usable, and R15 was stored into `rc` and never
+  cleared, so that came back as a failure, handing the caller a NULL handle
+  while the cluster stayed open and the DD allocated. The DDNAME buffer also
+  grows to 9 bytes and the SVC 99 blank padding is trimmed, because the name is
+  used as a C string: `__txddn()` under `__dsfree()` takes its length with
+  `strlen()`, and so does the `strcpyp()` into the handle, which read past the
+  8-byte array as it stood. Error paths only, reviewed as read code: they need a
+  forced OPEN failure to exercise and there is no host test for VSAM.
+- **The internal reader's 80-byte RPL work area is freed on close (#115, PR
+  #116).** `jesiropn()` `calloc`s it and hands it to VSAM through `MODCB AREA=`;
+  its only reference is `rpl.rplarea`. `jesircls()` closes through `vsclose()`,
+  which frees the `VSFILE` and nothing else, so every internal reader open
+  leaked that block — and **one live 80-byte block pins its whole 4K heap page**
+  for the life of the address space. Measured as one planted page per internal
+  reader open on a server that submits jobs all day. The area is remembered
+  before `vsclose()` frees the handle that holds the only pointer to it, and
+  released once the CLOSE is through; `vsfile` is tested for NULL first, because
+  the reads would otherwise fetch from the PSA — low-address protection stops
+  stores into page zero, not fetches — and `free()` would be handed whatever
+  word lives there. Verified on MVS: on a cold address space the intrdr
+  open/close cycle now costs 0 bytes where it cost 4096.
 - **`process_exec()` and `process_job()` bound every copy by its destination
   (#111).** Both took `len = t->len & 0x7F` — a one-byte field masked but not
   bounded, so up to **127** — and `memcpy`'d that into `process_intxt()`'s
