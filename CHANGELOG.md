@@ -149,6 +149,40 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   it. `@@estae.c:147`'s `GETMAIN RU` stays unconditional as #83 left it.
 
 ### Fixed
+- **`__listpd()` bounds its directory walk by the bytes `fread()` delivered
+  (#80, defect 2).** The halfword taken out of the block became the loop bound
+  with no relation to how much was actually read, and three reads in the body
+  were unbounded by it: the 8-byte end-of-directory `memcmp`, `buf[pos+11]`
+  (the user data length), and a `memcpy` of up to `12 + 2*31 = 74` bytes.
+  **A full 256-byte block is the ordinary case that trips it** — entries are at
+  least 12 bytes, so 21 of them fill bytes 2..253 and leave two over, `pos = 254`
+  still satisfies `pos < 256`, and the first thing the body does is read
+  `buf[254..261]`: six bytes past the end of a 256-byte **stack** array, after
+  which a member record is built out of whatever was there, `calloc`ed, and
+  added to the array the caller believes. Measured under ASan against the
+  pre-fix source: `stack-buffer-overflow, READ of size 8 ... at offset 320`,
+  where the frame reports `'buf'` as `[64, 320)` — the read starts exactly at
+  the end of the array.
+  **This reaches the bounded callers too**, which is why it is worth landing
+  ahead of the rest of #80: the filter is applied *inside* the loop, after the
+  entry has been read, so mvsMF `dsapi.c:540` and ftpd's member-name lookup run
+  through the same overrun as the unbounded ones.
+  The fixed-part bound now lives in the loop condition, where `pos + 12 <= len`
+  covers the sentinel and the length byte together, and the variable part is
+  tested once the entry size is known (`if (pos + size > len) break`). `len` is
+  clamped to the read (`if (len > nread) len = nread`) and a read too short to
+  hold a block length at all (`nread < 2`) stops before the halfword is
+  dereferenced, where the old `len <= 0` did not. Nothing is lost on a
+  well-formed block: its last entry ends exactly at `len`, so the loop leaves at
+  `pos == len` either way — what the new condition drops is the 1-11 bytes of
+  padding the old one walked into.
+  New host test `test/host/tstlspd.c`, 15/15 under ASan, red against the pre-fix
+  source. **#80 stays open** for defect 1 (unbounded allocation, which needs a
+  `max` parameter and therefore the relink round) and defect 3 (a `calloc()`
+  failure returns a silently truncated list, whose convention is settled
+  together with #61). `break` keeps a malformed entry distinct from the `x'FF'`
+  logical end of directory and preserves what the block already yielded;
+  *signalling* that shortfall to the caller is defect 3's job, not this change's.
 - **`cthread_worker_add()` releases the manager lock when the create fails
   (#107).** The function takes the manager lock and drops it under its `unlock:`
   label, but the `cthread_create_ex()` failure path left through `goto quit` —
