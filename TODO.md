@@ -12,29 +12,36 @@ some cheap items high and some expensive ones low.
 
 *Last reconciled against the tracker: 2026-08-23, 24 issues open.*
 
+**Three PRs are open against this list right now** — #137 (#107), #138 (#70) and
+#139 (#80 defect 2). They are ranked below as *in review*, not as open work; the
+CHANGELOG backfill they sit on is already on `main` (`3e9c15b`).
+
 ---
 
 ## Tier 1 — now
 
 ### 1 · #80 — `__listpd()`: unbounded allocation, unchecked block length, silent truncation
 
-Three defects in one file. **The second is the worst and appears in no heading:**
-`len` comes out of the block content and becomes a loop bound over a 256-byte
-stack buffer without ever being reconciled against the `fread()` result
-(`@@listpd.c:32-33`). That reaches the **bounded callers too** — mvsMF
-`dsapi.c:540`, ftpd `:1191` — because the filter does not protect against it.
+**Defect 2 is in review as PR #139.** What is left here is defects 1 and 3.
 
-Sorted by reach, the three defects come out in the opposite order to the issue text:
+Two corrections this file carried and the PR settled:
 
-- **Defect 2 first — it is the broad one and it has no exception.** The filter is
-  applied *inside* the loop, so `ftpd:1191` and `mvsmf:540` run through the same
-  overrun. Clamping to the `fread()` result is one line, needs no signature change
-  and no relink: doable immediately.
+- The bounded mvsMF caller is `dsapi.c:713`, not `:540` — which was itself a
+  correction of an earlier `:369`. ftpd's is unchanged at `ftpd#mvs.c:1191`.
+- **"Clamping to the `fread()` result is one line" was wrong**, and it was this
+  file's own claim as much as the issue's. `pos` still runs to `len-1` and the
+  body still reads twelve bytes from there, so the overrun survives the clamp.
+  The bound has to go into the loop condition (`pos + 12 <= len`, covering the
+  sentinel and the length byte together) with a second test once the entry size
+  is known. Still no signature change and no relink.
+
 - **Defect 1 is narrow now** — one caller, ftpd's `LIST`/`NLST`. A `max` parameter
   or an iterator form is still the right answer, but it is a signature change, so
-  it belongs to the relink round (Tier 5). It would also let mvsMF drop its
-  duplicated directory parser.
-- **Defect 3 is decided together with #61**, not separately (see Tier 2).
+  it belongs to the relink round (Tier 5). It would also let mvsMF drop the
+  duplicated directory parser it carries at `dsapi.c:2076`.
+- **Defect 3 is decided together with #61**, not separately (see Tier 2). PR #139
+  deliberately stops the walk without signalling the shortfall, which is exactly
+  the gap defect 3 has to close.
 
 ### 2 · #11 — cthread teardown force-DETACHes a live worker (S33E)
 
@@ -47,13 +54,18 @@ the fix direction in the issue is settled (`termecb` as the single source of
 truth, mark STUCK instead of DETACH, leave the storage to address-space
 termination). Expensive, but it is the one thing here that actually burns.
 
-### 3 · #107 — `cthread_worker_add()` leaves the manager lock held
+### 3 · #107 — `cthread_worker_add()` leaves the manager lock held — **PR #137, in review**
 
 One line: `goto quit` → `goto unlock`. Latent in-tree (all three callers already
 hold the lock), but the function is exported in `clibthdi.h`. The failure is a
 silent ENQ deadlock of the entire worker pool in the address space — no abend, no
 message, nothing in a dump pointing here. **Best effort-to-payoff ratio on the
 whole list.**
+
+Verified in the generated assembly rather than by test, because there is no host
+harness for the thread manager: `cc370 -O1 -S` before and after differ in exactly
+one instruction, `B @@L3` (quit) becoming `B @@L5`, the label the two existing
+`goto unlock` statements already branch to.
 
 ### 4 · #108 — reclassify, do not hunt
 
@@ -116,15 +128,26 @@ File-scope `__asm__` blocks that define standalone routines (`EXITDRVR`,
 `RETRY`/`RECOVERY`) are deliberately out of scope: they do their own
 `SAVE (14,12)` and do not share the compiler's register allocation.
 
-### 7 · #70 — `sleep()` and `__tzset()` have no prototype
+### 7 · #70 — `sleep()` and `__tzset()` have no prototype — **PR #138, in review**
 
-Trivial. Afterwards httpd can delete its local declarations (httpd#140).
+Trivial, and the consumer risk that sinks #68 does not apply: httpd's local
+declarations (`httpprm.c:24`, httpd#140) were taken from the same definitions, so
+the header agrees rather than collides, and no other consumer declares either.
+Afterwards httpd can delete them. Generated code is byte-identical to `main` for
+both touched files — a prototype changes what the compiler checks, not what it
+emits.
 
 ### 8 · #39 — 129 of 712 TUs with implicit declarations
 
 The parent case. Steps 1 (declare the 14 routines with no prototype) and 2 (the
 missing `#include`s) are mechanical and independent of each other. **The payoff is
 step 3**: `-Wall` in `sdk/mklibc.py` — only that stops this class from coming back.
+
+Two more found while building the #80 host test, not in the issue's list:
+`@@freepd.c` calls `__arcou()` and `__arfre()` with no prototype in scope. They
+link on the target only because the `__` → `@@` symbol mapping happens to produce
+the right CSECT — the same invisible-call shape the issue records for httpd's
+`__arcou()`. Worth folding into step 1 when it runs.
 
 ### 9 · #68 — `format(printf)` for `wtof()`/`wtodumpf()`/`wtorf()`
 
@@ -279,6 +302,15 @@ more than an honestly broken one.
 ## Recently landed
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
+
+- **CHANGELOG backfill** (`3e9c15b`, 2026-08-23, direct to `main`) — six landed
+  changes had no entry at all: #104, #125 (bare half), #123/#124, #118/#119,
+  #115/#116 and #115/#117. `Recently landed` here recorded them; the CHANGELOG is
+  what ships, and #104 is a public header signature change consumers meet on their
+  next unpinned clone. The `Unreleased` section also gained the `### Added`
+  heading it was missing, and two duplicated bullet headlines (the `remove()` and
+  `send()` entries) left by the changelog-keeping merges `82b32a1`/`ed578f7` are
+  gone.
 
 - **#104** (PR #136, 2026-08-23) — `strcpyp()` takes a `const void *source`. It
   was the last warning `make build` printed, so the noise floor over the ten
