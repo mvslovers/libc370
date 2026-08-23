@@ -33,7 +33,7 @@ cthread_worker_add(CTHDMGR *mgr)
     work->task = cthread_create_ex(mgr->func, mgr->udata, work, mgr->stacksize);
     if (!work->task) {
         cthread_worker_del(&work);
-        goto quit;
+        goto unlock;
     }
 
     rc = 0;
