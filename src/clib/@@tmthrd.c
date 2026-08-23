@@ -212,7 +212,7 @@ timed_waitlist(ECB **waitlist, ECB *timeout_ecb, unsigned bintvl, unsigned postc
 #endif
 
     /* wait for ECB post */
-    __asm__("WAIT ECBLIST=(%0)" : : "r"(waitlist));
+    __asm__("WAIT ECBLIST=(%0)" : : "r"(waitlist) : "0", "1", "14", "15");
 
 #if 0
     wtof("%s RUNNING TCB(%06X)", __func__, tcb);

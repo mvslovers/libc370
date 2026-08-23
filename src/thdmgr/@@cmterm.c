@@ -75,7 +75,7 @@ cthread_manager_term(CTHDMGR **cthdmgr)
             joined = 1;
             goto cleanup;
         }
-        __asm__("STIMER WAIT,BINTVL==F'10'   0.10 seconds");
+        __asm__("STIMER WAIT,BINTVL==F'10'   0.10 seconds" : : : "0", "1", "14", "15");
         if (mgr->state < CTHDMGR_STATE_QUIESCE) {
             mgr->state = CTHDMGR_STATE_QUIESCE;
         }
@@ -95,7 +95,7 @@ cthread_manager_term(CTHDMGR **cthdmgr)
             joined = 1;
             goto cleanup;
         }
-        __asm__("STIMER WAIT,BINTVL==F'10'   0.10 seconds");
+        __asm__("STIMER WAIT,BINTVL==F'10'   0.10 seconds" : : : "0", "1", "14", "15");
         cthread_post(&mgr->wait, CTHDMGR_POST_SHUTDOWN);
     }
 

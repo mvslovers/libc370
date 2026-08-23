@@ -103,7 +103,7 @@ dispatch_thread(CTHDMGR *mgr)
 			lock(mgr,0);
 			mgr->state = CTHDMGR_STATE_WAITING;
 			unlock(mgr,0);
-            __asm__("STIMER WAIT,BINTVL==F'10'   0.10 seconds");
+            __asm__("STIMER WAIT,BINTVL==F'10'   0.10 seconds" : : : "0", "1", "14", "15");
 
             /* Post our thread manager (mgr->wait) ECB. */
             cthread_post(&mgr->wait, CTHDMGR_POST_DATA);
