@@ -16,7 +16,8 @@ __listpd(const char *dataset, const char *filter)
     FILE        *fp     = 0;
     PDSLIST     **array = 0;
     PDSLIST     *pdslist;
-    int         len;
+    unsigned    nread;
+    unsigned    len;
     unsigned    pos;
     unsigned    size;
     char        buf[256];
@@ -26,17 +27,29 @@ __listpd(const char *dataset, const char *filter)
     if (!fp) goto quit;
 
     do {
-        len = fread(buf, 1, sizeof(buf), fp);
-        if (len <= 0) goto quit;
+        nread = fread(buf, 1, sizeof(buf), fp);
+        if (nread < 2) goto quit;   /* no block length to be read     */
 
         len = *(unsigned short *)buf;
-        for(pos = 2; pos < len; pos += size) {
+        if (len > nread) len = nread;   /* believe the read, not the block */
+
+        /* pos + 12 covers the 8 byte end-of-directory sentinel and the
+        ** user data length in buf[pos+11]; the size test below covers the
+        ** copy.  A block padded out behind its last entry stops here.
+        */
+        for(pos = 2; pos + 12 <= len; pos += size) {
             if (memcmp(&buf[pos], "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF", 8)==0) {
                 /* logical end of directory */
                 goto quit;
             }
             size = 12;  /* member,ttr,c = 8+3+1 */
             size += ((buf[pos+11] & 0x1F) * 2); /* + size of user data */
+
+            /* an entry whose user data runs past the block: stop trusting
+            ** this block, keep what it already yielded, read the next one.
+            ** Signalling the shortfall to the caller is defect 3 of #80.
+            */
+            if (pos + size > len) break;
 
             if (filter) {
                 memcpy(member, &buf[pos], 8);
