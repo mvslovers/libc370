@@ -74,10 +74,31 @@ in the closing comment, #111, is in `main` as `cd66e86`; every candidate in the
 call tree is eliminated. The issue was renamed to *"every named suspect fixed,
 needs re-verification"*.
 
-What is left is a **verification**: re-run the `dd=1` probe against a degraded
-address space on a current build. No abend means close it; an abend means reopen —
-but then with evidence worth more, because four hypotheses are off the table.
-Cheap.
+**Run on 2026-08-23 against `mvsdev`, and it came back clean** — but read the
+caveat, because it is not quite the test this item asked for.
+
+The build was confirmed from the console rather than assumed
+(`HTTPD005I LIBC370 1.0.3-DEV (3E9C15B)` = `main`). 2172 requests went through
+the `dd=1` path: `/files` over every one of the 131 jobs on the system, then
+1200 and 856 requests in 8 concurrent streams over the largest job available
+(106 spool files), including a full record sweep. Zero 5xx, and the Master
+Trace Table over the whole window holds no `S80A`, `S0C4`, `IEA703I`,
+`MVSMF901E` or `HTTPD908E`. The server never restarted.
+
+**What is missing is the degraded address space.** Storage stayed healthy
+throughout — the worker pool grew from 3 to 8 of 9 and the last 65536-byte
+stack GETMAIN succeeded at peak load. So this is *no regression under sustained
+load*, not proof against the original failure.
+
+The argument for closing anyway is that the degradation had a known engine and
+it is fixed: #126 measured ~26 KB leaked **per abend** in the INTXT walk, which
+is what walked the address space down until the next allocation failed. Route
+closed, suspects all fixed, 2172 requests produce nothing.
+
+Getting the real thing needs one deliberate step — bring HTTPD up under a
+`REGION` too small for 8 worker stacks plus a 106-file walk, then repeat. That
+breaks the stand for the duration, so it is a decision rather than a task.
+Full evidence in the issue comment.
 
 ---
 
