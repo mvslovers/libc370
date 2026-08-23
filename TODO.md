@@ -10,7 +10,7 @@ libc370 is the base library of the whole ecosystem, so a defect here is a defect
 in httpd, mvsMF, ftpd, ufsd and every other consumer at once; that is what puts
 some cheap items high and some expensive ones low.
 
-*Last reconciled against the tracker: 2026-08-23, 25 issues open.*
+*Last reconciled against the tracker: 2026-08-23, 24 issues open.*
 
 ---
 
@@ -116,23 +116,17 @@ File-scope `__asm__` blocks that define standalone routines (`EXITDRVR`,
 `RETRY`/`RECOVERY`) are deliberately out of scope: they do their own
 `SAVE (14,12)` and do not share the compiler's register allocation.
 
-### 7 · #104 — `strcpyp()` takes a non-`const` `void *source`
-
-Two lines, but a public header (`clibstr.h` goes into the cc370 sysroot). It also
-clears the one warning that currently forms the noise floor — the same dynamic
-that hid #99.
-
-### 8 · #70 — `sleep()` and `__tzset()` have no prototype
+### 7 · #70 — `sleep()` and `__tzset()` have no prototype
 
 Trivial. Afterwards httpd can delete its local declarations (httpd#140).
 
-### 9 · #39 — 129 of 712 TUs with implicit declarations
+### 8 · #39 — 129 of 712 TUs with implicit declarations
 
 The parent case. Steps 1 (declare the 14 routines with no prototype) and 2 (the
 missing `#include`s) are mechanical and independent of each other. **The payoff is
 step 3**: `-Wall` in `sdk/mklibc.py` — only that stops this class from coming back.
 
-### 10 · #68 — `format(printf)` for `wtof()`/`wtodumpf()`/`wtorf()`
+### 9 · #68 — `format(printf)` for `wtof()`/`wtodumpf()`/`wtorf()`
 
 Cheap here, **expensive across the ecosystem**: consumers clone libc370 `main`
 unpinned, so the attribute turns httpd, mvsMF and ftpd CI red — with the breakage
@@ -146,14 +140,14 @@ in *their* code. Keep the order the issue prescribes:
 
 ## Tier 4 — structural traps
 
-### 11 · #17 — consolidate the two `try()` wrappers
+### 10 · #17 — consolidate the two `try()` wrappers
 
 The trap is **active, not dormant**: since it first bit (#9 hardened the
 unreachable copy), #89, #93 and #96 have each been applied *twice*. Every fix to
 the central recovery path costs two edits and one chance to hit the wrong file.
 Needs its own review and a validation plan — not a passenger in a relink round.
 
-### 12 · #72 — the PPA environment flags do not say what they claim
+### 11 · #72 — the PPA environment flags do not say what they claim
 
 No crash, but a documented API that answers wrongly: `TSOBG` is set in the TSO
 foreground, and `TIN`/`TOUT`/`TERR` are set nowhere. Cheapest honest fix: correct
@@ -161,7 +155,7 @@ the semantics of `TSOFG`/`TSOBG` and either set the three dead defines (in
 `@@fpstar.c`, which knows) or delete them. Declared-and-dead is the worst of the
 three options.
 
-### 13 · #105 — `GRTFLAG1_TSO` sticks beyond `__start()`
+### 12 · #105 — `GRTFLAG1_TSO` sticks beyond `__start()`
 
 A design decision, not a patch: recompute per `__start()` (set *and* clear), or
 move the TSO property into the CRT. The two readings differ for `fopen.c`,
@@ -172,24 +166,24 @@ move the TSO property into the CRT. The two readings differ for `fopen.c`,
 
 ## Tier 5 — consumers waiting (one coordinated relink, best done in a single round)
 
-### 14 · #79 — JESJOB carries no submit time
+### 13 · #79 — JESJOB carries no submit time
 
 Two lines plus a struct field. Zowe shows `exec-submitted` empty today, and
 `mvslovers/mvsmf#209` is waiting on the same gap for `exec-system`. Append at
 offset 0x50 as the issue describes, so 0x00-0x4F stays stable.
 
-### 15 · #50 — catalog name in DSLIST
+### 14 · #50 — catalog name in DSLIST
 
 Same class, more work. Decide before implementing: scrape `LISTCAT` output, walk
 the CVTCATP chain, or use the `LOCATE` return area.
 
-### 16 · #51 — `inet_addr()` / `inet_ntoa()`
+### 15 · #51 — `inet_addr()` / `inet_ntoa()`
 
 A good entry-level issue and a real memory win: it saves ftpd the entire `sscanf`
 in its load module — on a 24-bit target exactly the kind of saving that counts.
 Host test is trivial, because neither function touches MVS.
 
-### 17 · #71 — `idcams()` discards SYSPRINT and the IDCnnnn number
+### 16 · #71 — `idcams()` discards SYSPRINT and the IDCnnnn number
 
 One store in a `switch` branch that does nothing today, plus a companion accessor.
 Afterwards ftpd says "IDC3203I" instead of "failed". `idcams()` keeps its
@@ -199,7 +193,7 @@ signature.
 
 ## Tier 6 — latent, research, comfort
 
-### 18 · #114 — `osbclose()` does not free a buffer pool built by OPEN
+### 17 · #114 — `osbclose()` does not free a buffer pool built by OPEN
 
 Latent by our own analysis: `MACRF=R` and no BUFNO in the prototype DCB, so OPEN
 does not normally build a pool. The in-tree callers are one member rename and an
@@ -207,9 +201,9 @@ unbuilt wip tree. httpd#195 — the hunt that flushed this out — is closed; th
 by-catch, not the planter. Take it along whenever the `osb*` path is being worked
 on anyway.
 
-### 19 · #113 — `CRTOPTS_AUTH` is dead, an authorized task skips `__austep()`
+### 18 · #113 — `CRTOPTS_AUTH` is dead, an authorized task skips `__austep()`
 
-### 20 · #122 — `clib_apf_setup()`: the already-authorized path is dead code
+### 19 · #122 — `clib_apf_setup()`: the already-authorized path is dead code
 
 **These two are one root cause and must be decided together.** `crt->crtopts` is
 declared in `clibcrt.h:37` and tested in `@@apfset.c:15` — and **assigned
@@ -235,19 +229,19 @@ the missing IDENTIFY cannot reach it; its APF troubles (ufsd#64) were the
 module-storage ones. That leaves ftpd and httpd as the only consumers that both
 link `crt1` and create threads.
 
-### 21 · #27 — JES spool support is single-volume
+### 20 · #27 — JES spool support is single-volume
 
 Latent: the reference system has one spool volume and all 264 observed MTTRs carry
 `M=00`. It goes live the day a second volume appears — and then presents as
 "empty data set", not as an error.
 
-### 22 · #52 — a z/OS-compatible `dynit.h`
+### 21 · #52 — a z/OS-compatible `dynit.h`
 
 Decide *whether* before building: two APIs for one service (`__dsalc()` with a
 string, `dynalloc()` with a struct, both ending in `__svc99()`). Only worth it if
 z/OS code is actually being ported in.
 
-### 23 · #30 — SYSOUT through PSO/SSI instead of the checkpointed IOT
+### 22 · #30 — SYSOUT through PSO/SSI instead of the checkpointed IOT
 
 A research project with a cheap first step: add held-class selection in
 `jesxwrtr()` and measure once what comes back in `SSSODSN`. One job decides whether
@@ -255,12 +249,12 @@ the rest runs straight. Note it is **no longer a gate on `mvslovers/mvsmf#186`**
 #21 closing gave that endpoint what it needed — so start this only when someone
 needs it.
 
-### 24 · #37 — SDK: compile the `.c` files in parallel
+### 23 · #37 — SDK: compile the `.c` files in parallel
 
 6.7 s → ~1 s across 712 TUs. Developer comfort. Check first whether parallel
 `cc370` invocations are safe (cc1 temp files), and do not lose an error message.
 
-### 25 · #75 — `clock()` as real task CPU time
+### 24 · #75 — `clock()` as real task CPU time
 
 The issue says it itself: dormant, nobody is waiting, lua370 is not a blocker.
 Route (a) via TCT/`TCBTCT` would be the way, but it makes `clock()` SMF-dependent
@@ -269,13 +263,13 @@ more than an honestly broken one.
 
 ---
 
-## Three campaigns instead of twenty-five tickets
+## Three campaigns instead of twenty-four tickets
 
 - **Unchecked allocation** — #80 defect 3 and #61. Settle one convention for the
   whole library rather than deciding twice, separately.
-- **Compiler visibility** — #125, #104, #70, #39, #68. The goal is `-Wall` in the
-  SDK build. #125 is the one with a measured failure and is independent of the
-  rest; #68 goes last and in its own three-step order, or it reddens consumer CI.
+- **Compiler visibility** — #125, #70, #39, #68 (#104 landed). The goal is `-Wall`
+  in the SDK build. #125 is the one with a measured failure and is independent of
+  the rest; #68 goes last and in its own three-step order, or it reddens consumer CI.
 - **Relink round** — #79, #50, and optionally #80 with a `max` parameter. Land
   struct and signature growth in one batch, with a CHANGELOG entry and a
   coordinated rebuild of httpd, mvsMF and ftpd.
@@ -286,6 +280,13 @@ more than an honestly broken one.
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
 
+- **#104** (PR #136, 2026-08-23) — `strcpyp()` takes a `const void *source`. It
+  was the last warning `make build` printed, so the noise floor over the ten
+  `libc.a` directories is now 0 rather than 1. `test/host/tstjestx.c`'s shim had
+  to move in the same commit or the header change is a hard `conflicting types`
+  error, which no test target would have caught. `spl_strcpyp()` deliberately
+  untouched (no callers); `memcpyp()` and the now-redundant `(void*)` casts at
+  the call sites are still open, unfiled.
 - **#125, the bare half** (PR #134) — ten inline SVC statements with no clobber
   list at all. The partial-list half is ranked at 6 above.
 - **#126 / #127** (PR #129 / #130, 2026-08-22) — the INTXT walk in `jesjob(dd=1)`
