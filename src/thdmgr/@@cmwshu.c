@@ -55,7 +55,7 @@ cthread_worker_shutdown(CTHDWORK *work)
 #if 0
             wtof("__cmwshu() posted work wait ecb %08X", work->wait);
 #endif
-            __asm__("STIMER WAIT,BINTVL==F'10'   0.10 seconds");
+            __asm__("STIMER WAIT,BINTVL==F'10'   0.10 seconds" : : : "0", "1", "14", "15");
         }
         /* unable to shutdown subtask, abend the subtask */
 #if 0

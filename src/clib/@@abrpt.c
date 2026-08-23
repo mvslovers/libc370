@@ -244,7 +244,7 @@ snap_dump(SDWA *sdwa)
 
     /* open SNAP DCB for output */
     __asm__( "OPEN  (SNAPDCB,(OUTPUT))         Open SNAP DCB\n\t"
-"         LR\t%0,15" : "=r" (rc));
+"         LR\t%0,15" : "=r" (rc) : : "0", "1", "14", "15");
     if (rc) {
         wtof("OPEN for SNAP DD failed, rc=%d", rc);
         goto quit;
@@ -253,7 +253,7 @@ snap_dump(SDWA *sdwa)
     __asm__( "LA\t2,SNAPDCB\n\tSNAP DCB=(2),SDATA=ALL,PDATA=ALL"
     : : : "0", "1", "2", "14", "15");
 
-    __asm__( "CLOSE SNAPDCB                    Close the SNAP DCB");
+    __asm__( "CLOSE SNAPDCB                    Close the SNAP DCB" : : : "0", "1", "14", "15");
 
     sdwa->SDWACMPF &= (0XFF - SDWAREQ); /* turn off dump flag */
 
