@@ -96,6 +96,11 @@ CTHDTASK *cthread_create_ex(void *func, void *arg1, void *arg2, unsigned stacksi
 
 void cthread_delete(CTHDTASK **task)                                                asm("@@CTDEL");
 
+/* cthread_detach() refuses a subtask that has not ended and returns this.
+** The DETACH SVC answers 0/4/8 in task->rc and try() answers an abend code,
+** so a negative value cannot be confused with either. */
+#define CTHREAD_DETACH_LIVE (-1)        /* subtask still running, not detached */
+
 int cthread_detach(CTHDTASK *task)                                                  asm("@@CTDET");
 
 CTHDTASK *cthread_find(unsigned tcb)                                                asm("@@CTFIND");

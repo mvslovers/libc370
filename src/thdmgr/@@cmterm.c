@@ -1,6 +1,7 @@
 /* @@CMTERM.C - cthread_manager_term()
 */
 #include "clibthdi.h"
+#include "clibwto.h"     /* wtof(): a prototype decides linkage here (#39) */
 
 #if 0
 #define WTODEBUG    /* define for wtof() debug messages */
@@ -20,6 +21,9 @@ cthread_manager_term(CTHDMGR **cthdmgr)
     unsigned    shutdown_tries;
     unsigned    count;
     unsigned    n;
+    unsigned    stuck   = 0;
+    CTHDWORK    *work;
+    CTHDTASK    *wtask;
 
     if (!cthdmgr) goto quit;
     mgr = *cthdmgr;
@@ -109,6 +113,43 @@ cleanup:
          */
         wtof("cthread_manager_term(%08X): dispatch thread did not stop, "
             "storage retained to avoid use-after-free", mgr);
+        rc = -1;
+        goto quit;
+    }
+
+    /* The dispatch thread ending is no longer sufficient licence to free
+     * mgr.  Since #11 it does not force-DETACH a worker that will not
+     * stop: it leaves that worker in mgr->worker as CTHDWORK_STATE_STUCK
+     * and returns normally.  Such a worker is a LIVE TCB that still
+     * reaches this manager through work->mgr and its own ecb through
+     * work->wait, so freeing mgr here would convert an S33E in a dying
+     * address space into a use-after-free on a running task - strictly
+     * worse than what #11 set out to fix.
+     *
+     * The count is derived from the array rather than kept in a counter,
+     * which costs nothing here and keeps CTHDMGR's layout unchanged -
+     * httpd decodes this control block field by field (httpcons.c).
+     */
+    if (mgr->worker) {
+        locked = lock(mgr,0);
+        count = arraycount(&mgr->worker);
+        for(n=1; n <= count; n++) {
+            work = arrayget(&mgr->worker, n);
+            if (!work) continue;
+            wtask = work->task;
+            if (!wtask) continue;
+            if (!wtask->tcb) continue;
+            if (wtask->termecb & 0x40000000) continue;
+            stuck++;
+        }
+        if (locked==0) {
+            unlock(mgr,0);
+        }
+    }
+
+    if (stuck) {
+        wtof("cthread_manager_term(%08X): %u worker(s) still running, "
+            "manager storage retained to avoid use-after-free", mgr, stuck);
         rc = -1;
         goto quit;
     }

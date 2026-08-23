@@ -268,17 +268,34 @@ static int
 dispatch_thread_quiesce(CTHDMGR *mgr)
 {
     int                 running     = 1;
+    int                 locked;
     unsigned   			count       = 0;
     unsigned            n;
     CTHDWORK            *work;
     CTHDTASK            *task;
 
-    lock(mgr,0);
-
-	/* we shut down workers in reverse order we created them */
+	/* we shut down workers in reverse order we created them.
+	**
+	** The lock is taken per array access and RELEASED across
+	** cthread_worker_shutdown(), which waits up to 5s.  These are WAITING
+	** workers, so they have already released their queue item and cannot
+	** deadlock on it the way dispatch_thread_term()'s can -- but holding the
+	** manager ENQ across the wait still stalls every OTHER worker that
+	** finishes a request meanwhile, for up to 5s per waiting worker, because
+	** cthread_worker_wait() opens by taking it (#11).
+	*/
+    locked = lock(mgr,0);
     count = arraycount(&mgr->worker);
+    if (locked==0) {
+        unlock(mgr,0);
+    }
+
     for(n=count; n > 0; n--) {
+        locked = lock(mgr,0);
         work = arrayget(&mgr->worker, n);
+        if (locked==0) {
+            unlock(mgr,0);
+        }
         if (!work) continue;
 
         task = work->task;
@@ -287,10 +304,9 @@ dispatch_thread_quiesce(CTHDMGR *mgr)
         if (task->termecb & 0x40000000) continue;
         if (work->state != CTHDWORK_STATE_WAITING) continue;
 
+        /* lock deliberately NOT held here: this is the wait */
         cthread_worker_shutdown(work);
     }
-
-    unlock(mgr,0);
 
     if (!count) running = 0; /* no worker threads */
 
@@ -408,8 +424,11 @@ dispatch_thread_work(CTHDMGR *mgr, int timer)
 			CTHDWORK *work = arrayget(&mgr->worker, n);
 			if (!work) continue;
 			if (work->state == CTHDWORK_STATE_WAITING) {
-				/* worker is waiting so it's safe to delete */
-				cthread_worker_shutdown(work);
+				/* worker is waiting so it's safe to delete -- but only once it
+				** really ended.  A worker that does not stop is retained rather
+				** than force-DETACHed and freed under a live TCB (#11); trimming
+				** the pool is not worth that, so leave it and try the next one. */
+				if (cthread_worker_shutdown(work)!=0) continue;
 				cthread_worker_del(&work);
 				count--;
 				if (count > mgr->maxtask) continue;
@@ -480,25 +499,69 @@ static int
 dispatch_thread_term(CTHDMGR *mgr)
 {
     int         rc          = 0;
+    int         locked;
     unsigned   	count       = 0;
     unsigned    n;
     CTHDWORK    *work;
 
-    /* terminate worker threads (reverse walk) */
-    lock(mgr,0);
+    /* Announce the quiesce under the lock, then RELEASE it.
+    **
+    ** The manager lock MUST NOT be held while waiting for a worker to end.
+    ** cthread_worker_wait() is the only place a worker observes
+    ** CTHDWORK_POST_SHUTDOWN, and it OPENS with cthread_queue_del(&work->queue),
+    ** which takes this very lock whenever the worker still holds a dispatched
+    ** item -- i.e. whenever it was executing a request when shutdown began.
+    ** lock() is an exclusive ENQ with RET=HAVE (@@lk.c, clibenq.h: ENQ_HAVE,
+    ** ENQ_EXC and ENQ_STEP are all 0), so rc 8 is returned only to the task
+    ** that already owns it; any other TCB waits.
+    **
+    ** Holding it across the wait therefore deadlocks exactly the busy workers:
+    ** each blocks at the top of cthread_worker_wait(), never reaches the wait
+    ** where the shutdown post is seen, misses the window, and used to be
+    ** force-DETACHed in turn (S33E).  That -- not a wedged handler -- is why
+    ** workers missed the window (#11).
+    */
+    locked = lock(mgr,0);
     mgr->state = CTHDMGR_STATE_QUIESCE;
-
-	/* if we have any workers still running we have to kill them */
-    count = arraycount(&mgr->worker);
-    for(n=count; n > 0; n--) {
-        work = arrayget(&mgr->worker, n);
-        if (!work) continue;
-        cthread_worker_shutdown(work);
-        cthread_worker_del(&work);
+    if (locked==0) {
+        unlock(mgr,0);
     }
 
+	/* if we have any workers still running we have to stop them */
+    locked = lock(mgr,0);
+    count = arraycount(&mgr->worker);
+    if (locked==0) {
+        unlock(mgr,0);
+    }
+
+    /* Reverse walk: cthread_worker_del() removes its worker from the array,
+    ** which shifts only the entries ABOVE it -- already visited going down.
+    ** A retained (STUCK) worker stays in the array and is simply stepped over.
+    */
+    for(n=count; n > 0; n--) {
+        locked = lock(mgr,0);
+        work = arrayget(&mgr->worker, n);
+        if (locked==0) {
+            unlock(mgr,0);
+        }
+
+        if (!work) continue;
+
+        /* lock deliberately NOT held here: this is the wait */
+        if (cthread_worker_shutdown(work)==0) {
+            cthread_worker_del(&work);
+        }
+        /* else: the worker is still running.  It stays in mgr->worker with
+        ** CTHDWORK_STATE_STUCK so cthread_manager_term() can see it and keep
+        ** mgr alive; nothing it owns is freed.
+        */
+    }
+
+    locked = lock(mgr,0);
     mgr->state = CTHDMGR_STATE_STOPPED;
-    unlock(mgr,0);
+    if (locked==0) {
+        unlock(mgr,0);
+    }
 
 	return rc;
 }
