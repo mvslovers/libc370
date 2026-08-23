@@ -40,8 +40,10 @@
  *   did the worker terminate OF ITS OWN ACCORD, or was it killed?  A
  *   force-DETACHed worker never reaches that line.  Return codes alone
  *   cannot tell the two apart - the S33E lands on the WORKER's TCB, not on
- *   the main task, so pre-fix this program still runs to completion and
- *   still gets its manager torn down.  It just leaves a corpse and a dump.
+ *   the main task, so pre-fix this program still runs to completion, still
+ *   gets its manager torn down, and cthread_manager_term() still answers 0.
+ *   Measured: six of the seven checks pass pre-fix, including that one.
+ *   Only worker_exited separates a drained worker from a killed one.
  *
  * - Sizing is deliberate and tied to the library's own constants.  count=4
  *   gives mintask=1 (cthread_manager_init: count > 3 ? 1) so exactly one
