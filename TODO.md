@@ -12,26 +12,18 @@ some cheap items high and some expensive ones low.
 
 *Last reconciled against the tracker: 2026-08-23, 22 issues open.*
 
-**#107 and #70 are closed and #80 defect 2 has landed** (PRs #137, #138, #139,
-merged 2026-08-23 on top of the CHANGELOG backfill `3e9c15b`). What that took
-out of Tier 1 is most of Tier 1: see *Recently landed*.
+**Tier 1 is nearly empty, and that is the news.** #107, #70, #80 defect 2 and
+now **#11** are all closed (PRs #137, #138, #139, #141, merged 2026-08-23 on top
+of the CHANGELOG backfill `3e9c15b`). #11 was the only *observed and recurring*
+production failure on this list since July; with it gone, what remains at the
+top is one **decision** (#108) and two **campaigns**, not a burning defect. Rank
+accordingly — the next thing to do is a judgement call, not an emergency.
 
 ---
 
 ## Tier 1 — now
 
-### 1 · #11 — cthread teardown force-DETACHes a live worker (S33E)
-
-The only *observed and recurring* production failure on this list. Confirmed
-2026-07-22 on a libc **after** PR #7; a relink does not help, because the
-unguarded `DETACH ...,STAE=YES` is in every version.
-
-The open question — why a worker misses the five-second window — is still open;
-the fix direction in the issue is settled (`termecb` as the single source of
-truth, mark STUCK instead of DETACH, leave the storage to address-space
-termination). Expensive, but it is the one thing here that actually burns.
-
-### 2 · #108 — reclassify, do not hunt
+### 1 · #108 — reclassify, do not hunt
 
 No longer an open crash hunt. #109 and #110 are merged and the prime suspect named
 in the closing comment, #111, is in `main` as `cd66e86`; every candidate in the
@@ -72,7 +64,7 @@ Full evidence in the issue comment.
 
 ## Tier 2 — campaign: unchecked allocation
 
-### 3 · #61 — `__listvl()` silently returns a truncated volume list, and #80 defect 3
+### 2 · #61 — `__listvl()` silently returns a truncated volume list, and #80 defect 3
 
 Now the whole of this campaign, and #80's remaining weight sits here: defect 2
 landed in PR #139, which deliberately stops the walk and keeps what the block
@@ -88,7 +80,7 @@ short list that looks complete is worse than no list at all.
 
 ## Tier 3 — campaign: make the compiler see it (order matters)
 
-### 4 · #125 — inline-asm SVC macros with partial clobber lists
+### 3 · #125 — inline-asm SVC macros with partial clobber lists
 
 The one item in this campaign with a **measured miscompile in the wild**. In ftpd
 the same form put a struct pointer in R15 and kept it there across a `STIMER`; the
@@ -122,7 +114,7 @@ File-scope `__asm__` blocks that define standalone routines (`EXITDRVR`,
 `RETRY`/`RECOVERY`) are deliberately out of scope: they do their own
 `SAVE (14,12)` and do not share the compiler's register allocation.
 
-### 5 · #39 — 129 of 712 TUs with implicit declarations
+### 4 · #39 — 129 of 712 TUs with implicit declarations
 
 The parent case. Steps 1 (declare the 14 routines with no prototype) and 2 (the
 missing `#include`s) are mechanical and independent of each other. **The payoff is
@@ -134,7 +126,7 @@ link on the target only because the `__` → `@@` symbol mapping happens to prod
 the right CSECT — the same invisible-call shape the issue records for httpd's
 `__arcou()`. Worth folding into step 1 when it runs.
 
-### 6 · #68 — `format(printf)` for `wtof()`/`wtodumpf()`/`wtorf()`
+### 5 · #68 — `format(printf)` for `wtof()`/`wtodumpf()`/`wtorf()`
 
 Cheap here, **expensive across the ecosystem**: consumers clone libc370 `main`
 unpinned, so the attribute turns httpd, mvsMF and ftpd CI red — with the breakage
@@ -147,6 +139,19 @@ in *their* code. Keep the order the issue prescribes:
 ---
 
 ## Tier 4 — structural traps
+
+### 6 · #140 — `src/thdmgr/clibthdi.h` duplicates `include/clibthdi.h`
+
+Filed while fixing #11, and it bit during that work. The quoted include in
+`src/thdmgr/*.c` finds the local copy, so **the library compiles against a
+different file from the one consumers get** — for a header that declares
+`CTHDMGR`/`CTHDWORK`/`CTHDQUE`, control blocks httpd decodes by offset
+(`httpcons.c`). The two agree only by nobody having edited one of them.
+
+It surfaced as a hard build error only because the edit was a `#define`; a
+struct field would have linked and run, with the library and every consumer
+disagreeing about a layout. Exactly #17's shape, one tier's worth cheaper to
+fix: delete the copy and let `-I include` resolve it.
 
 ### 7 · #17 — consolidate the two `try()` wrappers
 
@@ -299,6 +304,28 @@ more than an honestly broken one.
 ## Recently landed
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
+
+- **#11** (PR #141, 2026-08-23) — the S33E on shutdown, and neither half was what
+  this file or the issue said. **The drain failure was a deadlock on the manager's
+  own ENQ**, not a wedged handler: `dispatch_thread_term()` held `lock(mgr,0)`
+  across its wait, while `cthread_worker_wait()` — the only place a worker sees
+  the shutdown post — *opens* with `cthread_queue_del()`, which needs that same
+  lock whenever the worker still holds a dispatched item. Every busy worker
+  blocked waiting on the thread that was waiting for it. **And the S33E and the
+  nested ESTAE fault were one bug**: the stack lives inside the CTHDTASK
+  (`calloc(1, sizeof(CTHDTASK) + newstack)`), so the force-DETACH was followed by
+  `free()` of the storage the dying subtask's recovery exit stood on.
+  Fixed by releasing the lock around the wait, gating every DETACH on `termecb`
+  (including a third instance at `@@tmstop.c:46`), and propagating retention up
+  to `cthread_manager_term()` so a retained worker keeps `mgr` alive.
+  Measured red/green on mvsdev: pre-fix COND CODE 0008 at 13.31 s with the worker
+  never returning, post-fix 0000 at 10.21 s — the 3.1 s difference *is* the
+  deadlock. Probe: `test/mvs/tstwterm.c` + `jcl/tstwterm.jcl`.
+  Two things the run corrected: no `S33E` message and no dump appear in a bare
+  worker (the recovery exit is installed only via `try()`/`estae()`, which is why
+  httpd#122 was loud), and pre-fix passes **six of seven checks** including
+  `cthread_manager_term reports success` — which is why the probe cannot rely on
+  return codes.
 
 - **#80 defect 2** (PR #139, 2026-08-23) — `__listpd()` bounds its directory walk
   by the bytes `fread()` delivered. The fixed-part bound went into the loop
