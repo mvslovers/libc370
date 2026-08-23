@@ -130,7 +130,7 @@ void wtof(const char *text, ...) { (void)text; }
 int __jsrd4(HASPJS *js, unsigned mttr, void *buf4k, unsigned buflen)
 { (void)js; (void)mttr; (void)buf4k; (void)buflen; return -1; }
 
-char *strcpyp(char *target, int tlen, void *source, int pad)
+char *strcpyp(char *target, int tlen, const void *source, int pad)
 { (void)tlen; (void)source; (void)pad; return target; }
 
 void *memcpyp(void *target, int tlen, void *source, int slen, int pad)
