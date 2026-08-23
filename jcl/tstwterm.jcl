@@ -13,14 +13,21 @@
 //* The handler here is healthy and merely slow (8s), which is the
 //* whole point: nothing is wedged, and it still failed.
 //*
-//* PRE-FIX : ABEND S33E in this log, an SVC dump, and
-//*           "the worker returned of its own accord  *** FAIL",
-//*           COND CODE 0008.
-//* POST-FIX: no S33E, no dump, COND CODE 0000.
+//* MEASURED on mvsdev 2026-08-23, same source both sides:
+//*   PRE-FIX  "the worker returned of its own accord *** FAIL",
+//*            COND CODE 0008, elapsed 13.31s.  The job log shows
+//*            the handler finishing 3s before the job ends with
+//*            nothing in between - the worker on the ENQ.
+//*   POST-FIX 7/7 ok, COND CODE 0000, elapsed 10.21s, with
+//*            "finished the request" and "returning normally"
+//*            in the same second.
 //*
-//* TIME=1 is the watchdog - the run is ~8s clean, ~11s to the
-//* pre-fix force-DETACH, and a regression would hang instead.
-//* See test/mvs/tstwterm.c.
+//* No S33E message appears either way: it is real pre-fix, but
+//* libc370's recovery exit is installed only via try()/estae()
+//* and this worker is a bare loop.  httpd#122 was loud because
+//* httpd runs handlers under try().  See test/mvs/tstwterm.c.
+//*
+//* TIME=1 is the watchdog - a regression would hang.
 //*
 //S1       EXEC PGM=TSTWTERM,REGION=4M,TIME=1
 //STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.PROBE.LINKLIB

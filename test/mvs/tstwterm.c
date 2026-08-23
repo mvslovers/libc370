@@ -68,19 +68,36 @@
  *     cc370 -Iinclude test/mvs/tstwterm.c -flinker-output=iebcopy -o TSTWTERM
  *     ld370 --pack TSTWTERM.iebcopy -o probe -xmit --dsn <LOADLIB>
  *
- * RUN: see jcl/tstwterm.jcl.  TIME=1 is the watchdog: pre-fix the run takes
- * about 11 s to reach the force-DETACH, post-fix about 8 s to a clean end,
- * and a hang would otherwise sit there.
+ * RUN: see jcl/tstwterm.jcl.  TIME=1 is the watchdog: a regression would hang
+ * rather than fail.
  *
- * RED, against the pre-fix library: the job log carries
+ * MEASURED on mvsdev 2026-08-23, both sides from this one source - only the
+ * libc370 it is linked against differs (TSTWRED = main, TSTWTERM = fixed):
  *
- *     ABEND S33E detected for module ... TCB=...
+ *   RED   6 of 7 checks ok, "the worker returned of its own accord *** FAIL",
+ *         COND CODE 0008, step elapsed 13.31 s
+ *   GREEN 7 of 7 ok, COND CODE 0000, step elapsed 10.21 s
  *
- * and this probe reports
+ * The job log times the deadlock directly.  RED:
  *
- *     the worker returned of its own accord            *** FAIL
+ *     8.56.10  +TSTWTERM worker handling request, 8 seconds
+ *     8.56.10  +TSTWTERM terminating the manager while the worker is busy
+ *     8.56.18  +TSTWTERM worker finished the request
+ *     8.56.21  COND CODE 0008
  *
- * with COND CODE 0008.  Post-fix: no S33E, no dump, COND CODE 0000.
+ * Three seconds between the handler finishing and the job ending, with the
+ * worker producing nothing in between: that is the worker sitting on the
+ * manager ENQ until dispatch_thread_term() gave up and detached it.  GREEN
+ * puts "worker finished the request" and "worker returning normally" in the
+ * SAME second, and the 3.1 s difference in elapsed time is the whole defect.
+ *
+ * NOTE what RED does NOT show: there is no S33E message in the job log.  The
+ * S33E is real - DETACH STAE=YES abnormally terminates an incomplete subtask -
+ * but nothing REPORTS it here, because libc370's recovery exit (@@abrpt.c
+ * recovery()) is installed only through try()/estae(), and this worker is a
+ * bare loop.  httpd#122 was loud precisely because httpd runs its handlers
+ * under try().  So the probe proves the worker was KILLED rather than allowed
+ * to return, which is the defect; it does not reproduce the console message.
  *
  * RC: 0 = all expectations met, 8 = at least one did not.
  */
