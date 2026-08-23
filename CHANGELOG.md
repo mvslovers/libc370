@@ -165,7 +165,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   the end of the array.
   **This reaches the bounded callers too**, which is why it is worth landing
   ahead of the rest of #80: the filter is applied *inside* the loop, after the
-  entry has been read, so mvsMF `dsapi.c:540` and ftpd's member-name lookup run
+  entry has been read, so mvsMF `dsapi.c:713` and ftpd `ftpd#mvs.c:1191` run
   through the same overrun as the unbounded ones.
   The fixed-part bound now lives in the loop condition, where `pos + 12 <= len`
   covers the sentinel and the length byte together, and the variable part is

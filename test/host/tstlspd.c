@@ -5,7 +5,7 @@
  *
  * ISSUE #80 lists three defects in one file.  This test covers the SECOND, the
  * one that appears in no heading and is the only one of the three that reaches
- * the BOUNDED callers too - mvsMF dsapi.c:540 and ftpd's member-name lookup -
+ * the BOUNDED callers too - mvsMF dsapi.c:713 and ftpd ftpd#mvs.c:1191 -
  * because the filter is applied inside the loop, after the damage is done:
  *
  *     len = fread(buf, 1, sizeof(buf), fp);   // buf is 256 bytes
@@ -94,7 +94,10 @@
  *   @@aradd.c under-provides its slots by 4 bytes per generation and corrupts
  *   itself the moment an array grows past ARRAY_DEFAULT (20).  Case (2) needs
  *   21 entries.  That is a host artefact and NOT a target defect: on MVS
- *   3 * 4 == sizeof(ARRAY) exactly.  It is also why tstjestx.c can link the
+ *   3 * 4 == sizeof(ARRAY) exactly - measured, not assumed: cc370 -S over a
+ *   file holding sizeof(ARRAY), ARRAY_SIZE and sizeof(void *) emits
+ *   DC F'12', DC F'3' and DC F'4', so the struct carries no padding and the
+ *   division is exact on the target.  It is also why tstjestx.c can link the
  *   real array code and this cannot - its arrays never reach 20 elements.
  *   The array layer is not what is under test here; the walk is.
  *
