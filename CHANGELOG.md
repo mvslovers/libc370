@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Fixed
+- **Concurrent `printf()` no longer corrupts the stream: `vvprintf()` holds the
+  FILE lock across the whole line, and the public stdio wrappers never release
+  a hold they did not take (#145, PR #146).** The `%s` and `%eEgGfF` branches of
+  `vvprintf()` called the public `fputs()`, and every `__examin()` conversion
+  emitted through `putc()` — the public `fputc()`; those wrappers lock and
+  unconditionally unlock the same FILE, and with ENQ/DEQ RET=HAVE carrying no
+  nesting count the inner unlock released the outer hold at the first
+  conversion. Everything after it — including the `\n`-triggered
+  `__fflush()`/QSAM PUT — ran unserialized, and two tasks printf'ing the same
+  FILE merged and truncated records until the broken PUT surfaced as ABEND
+  S001-1 with no SYNAD (mvslovers/ftpd#117), or as a task silently wedged in
+  the corrupted QSAM state. Both faces were reproduced on demand by
+  `test/mvs/tstiolk.c` against the unfixed library (JOB02235: the literal
+  `IEC020I 001-1` seconds after start; JOB02237: a writer wedged after 8 of
+  400 lines, no abend at all), and the fix measured green (JOB02239, CC 0000:
+  800 of 800 records intact, zero corrupt). Two layers: `vvprintf()` /
+  `__examin()` write through `__fputs()`/`__fputc()` — which also removes an
+  ENQ/DEQ SVC pair *per byte* on width/precision conversions — and `fputs` /
+  `fputc` / `fwrite` / `fflush` / `fgets` / `fgetc` / `fread` / `fseek` /
+  `ungetc` / `freopen` / `vvprintf` itself release only a hold they acquired
+  (`owned = (lock(fp,0) == 0)`); the nested-acquire rc=8 contract that rests
+  on was measured on 3.8j (TSTIOLK round 1) before being relied on.
+  `fprintf()` was never affected — it formats into a private buffer and issues
+  one `fwrite()`. Consumers that printf from more than one task (ftpd, httpd,
+  ufsd) pick this up on their next relink against a released libc370.
+  `test/host/tstiolk.c` pins the lock ledger per conversion path on the host
+  (one acquire per line, every byte under the hold) as the fast regression
+  guard.
+
 ## [1.0.3] - 2026-08-23
 
 ### Added
