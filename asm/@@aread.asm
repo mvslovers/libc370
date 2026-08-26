@@ -103,6 +103,8 @@ READBSAM SR    R6,R6              Reset EOF flag
                MF=E               Execute a MF=L MACRO
 *                                 If EOF, R6 will be set to F'-1'
          CHECK DECB               Wait for READ to complete
+         TM    IOSFLAGS,IOFSYNAD  @@ASYNAD noted an I/O error?
+         BNZ   READIOER           Yes; hand it to the caller (#147)
          TM    IOPFLAGS,IOFCONCT  Did we hit concatenation?
          BZ    READUSAM           No; restore user's AM
          NI    IOPFLAGS,255-IOFCONCT   Reset for next time
@@ -289,6 +291,12 @@ TGETFREE LH    R0,0(,R1)          GET LENGTH
          ICM   R0,8,=AL1(1)       SUBPOOL 1
          FREEMAIN R,LV=(0),A=(1)  FREE SYSTEM BUFFER
          B     READEXIT           TAKE NORMAL EXIT
+         SPACE 1
+READIOER NI    IOSFLAGS,255-IOFSYNAD  Reset; error goes to the caller
+         AMUSE ,                  Restore caller's mode
+         XC    KEPTREC(8),KEPTREC Clear saved record info
+         LA    R6,1               RC=1: I/O error (EOF stays -1)
+         B     READEXIT           (#147 item 3)
          SPACE 1
 READEOD  OI    IOPFLAGS,IOFLEOF   Remember that we hit EOF
 READEOD2 XC    KEPTREC(8),KEPTREC Clear saved record info

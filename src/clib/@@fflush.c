@@ -1,6 +1,7 @@
 /* @@FFLUSH.C - caller should already hold lock on file handle */
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 #include <mvssupa.h>
 #include <osdcb.h>
 #include <osdecb.h>
@@ -53,6 +54,14 @@ __fflush(FILE *fp)
     case _FILE_RECFM_V: /* RECFM=V..    */
         err = varflush(fp);
         break;
+    }
+
+    if (err) {
+        /* uncorrectable I/O error on the physical write, recorded by
+           the SYNAD exit instead of ABEND S001 (#147); the buffer is
+           still reset below - the block is undeliverable */
+        fp->flags |= _FILE_FLAG_ERROR;
+        errno = EIO;
     }
 
 reset:

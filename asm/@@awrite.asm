@@ -157,7 +157,12 @@ TPUTWRIV STH   R5,0(,R4)          FILL RDW
          SPACE 1
 WRITEEX  TM    IOPFLAGS,IOFCURSE  RECURSION REQUESTED?
          BNZ   WRITMORE
+         TM    IOSFLAGS,IOFSYNAD  I/O error during physical write?
+         BNZ   WRITEIOE           Yes; hand it to the caller (#147)
          FUNEXIT RC=0
+         SPACE 1
+WRITEIOE NI    IOSFLAGS,255-IOFSYNAD  Reset; error goes to the caller
+         FUNEXIT RC=8
 *
          LTORG ,
          SPACE 2

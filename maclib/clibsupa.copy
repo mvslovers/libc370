@@ -132,4 +132,10 @@ FMUND    EQU   2               Undefined
 ZRECFM   DS    X             Equivalent RECFM bits
 ZIOSAVE2 DS    18F           Save area for physical write
 SAVEADCB DS    18F                Register save area for PUT
+* Per-FILE SYNAD stub, copied here by @@AOPEN (#147 item 3).  Entered
+* with R15 = its own address, so it reaches IOSFLAGS relative to
+* itself - no assumption about what R0/R1 carry on SYNAD entry.
+SYNAD24  DS    CL8           SYNAD stub code (SYNADCD in @@AOPEN)
+IOSFLAGS DS    X             I/O error status (#147 item 3)
+IOFSYNAD EQU   X'80'           the stub recorded an uncorrectable error
 ZDCBLEN  EQU   *-ZDCBAREA
