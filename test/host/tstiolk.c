@@ -31,12 +31,16 @@
  *      the caller still owning the lock, and the caller's unlock()
  *      succeeds;
  *   4. a public fputs() WITHOUT an outer hold still locks and releases
- *      like before (the ownership test must not leak holds).
+ *      like before (the ownership test must not leak holds);
+ *   5. (#147 item 2) puts() is ONE critical section: the string and its
+ *      newline go out under a single hold, so a concurrent printf can
+ *      no longer split the line at the '\n'.
  *
  * RED against the pre-fix source: the "[%s] %s" shape acquires twice
  * and writes half its bytes with no lock held, "%-8s" acquires eight
  * times (one ENQ/DEQ pair per byte through putc), and after a nested
- * fputs() the caller's hold is gone.
+ * fputs() the caller's hold is gone.  RED for (5) against the pre-#147
+ * puts.c: two acquires, the '\n' in an epoch of its own.
  *
  * BUILD / RUN (host, from test/host; same flag recipe as tstvsnp.c):
  *
@@ -119,6 +123,18 @@ int __fputc(int c, FILE *fp)
 #include "../../src/clib/@@fputs.c"
 #include "../../src/clib/fputs.c"
 #include "../../src/clib/fputc.c"
+
+/* puts() is a public libc symbol on the host too, and the compiler
+   likes to rewrite printf("...\n") into puts() calls - which would
+   land the harness's own output in the probe sink.  Compile the
+   library's puts under a test name and call it explicitly. */
+#define puts tst_puts
+#include "../../src/clib/puts.c"
+#undef puts
+
+/* puts() writes to stdout, which clibio.h resolves via __gtout() */
+static FILE *tst_stdout;
+FILE **__gtout(void) { return &tst_stdout; }
 
 /* ---- shims (same set as tstvsnp.c) ----------------------------------- */
 
@@ -288,6 +304,17 @@ int main(void)
     CHECK_EQ(lk_acq, 1, "(8) fputs acquired the lock");
     CHECK_EQ(lk_rel, 1, "(8) fputs released the lock");
     CHECK_EQ(lk_held, 0, "(8) lock free afterwards");
+
+    printf("\n(9) puts() is one critical section (#147 item 2):\n");
+    tst_stdout = fp;
+    reset();
+    rc = tst_puts("hi");
+    out[outn < OUTMAX ? outn : OUTMAX - 1] = 0;
+    CHECK(strcmp(out, "hi\n") == 0, "(9) text incl. newline rendered");
+    CHECK(rc != EOF, "(9) return is not EOF");
+    CHECK_EQ(lk_acq, 1, "(9) exactly one acquire (was 2: fputs + putc)");
+    CHECK(all_in_epoch_1(), "(9) string AND newline under the one hold");
+    CHECK_EQ(lk_held, 0, "(9) lock free afterwards");
 
     return mbt_test_summary("tstiolk");
 }
