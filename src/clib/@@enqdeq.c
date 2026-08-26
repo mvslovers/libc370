@@ -32,7 +32,12 @@ __enqdeq(const char *qn, const char *rn, unsigned options, int deq)
     }
 
     if (deq) {
-        pl.opt = ENQ_OPT_HAVE;
+        /* |=, not =: scope is part of the resource identity, and the
+           scope bits were resolved into pl.opt above.  A DEQ issued
+           SCOPE=STEP against an ENQ held SCOPE=SYSTEM addresses a
+           different resource and answers rc=8 - sysunlock() could
+           never release what syslock() took (#147 item 4) */
+        pl.opt |= ENQ_OPT_HAVE;
         __asm__( "DS    0H       Request DEQ\n"
         "         LA    1,%0\n"
         "         SVC   48       DEQ" : : "m"(pl) : "0", "1", "15");

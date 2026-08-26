@@ -1,15 +1,25 @@
 /* PUTS.C */
 #include <stdio.h>
+#include "cliblock.h"
 
 int
 puts(const char *s)
 {
-    int ret;
+    FILE    *fp = stdout;
+    int     ret;
+    int     owned;
 
-    ret = fputs(s, stdout);
-    if (ret == EOF) {
-        return (ret);
+    /* one critical section for the string AND its newline, so a
+       concurrent printf cannot split the line at the '\n' (#147);
+       rc=8 = caller already holds it (#145) */
+    owned = (lock(fp,0) == 0);
+
+    ret = __fputs(s, fp);
+    if (ret != EOF) {
+        ret = __fputc('\n', fp);
     }
 
-    return (putc('\n', stdout));
+    if (owned) unlock(fp,0);
+
+    return ret;
 }
