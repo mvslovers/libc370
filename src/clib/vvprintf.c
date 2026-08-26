@@ -34,8 +34,11 @@ vvprintf(const char *format, va_list arg, FILE *fq, char *s)
     char        numbuf[50];
     char        *nptr;
     int         *viptr;
+    int         owned   = 0;
 
-    if (fq) lock(fq,0); /* lock file handle (required for __fputc() call) */
+    /* lock file handle (required for __fputc() call); rc=8 means the
+       caller already holds it, and then it is not ours to release (#145) */
+    if (fq) owned = (lock(fq,0) == 0);
 
     while (!fin) {
         if (*format == '\0') {
@@ -78,7 +81,8 @@ vvprintf(const char *format, va_list arg, FILE *fq, char *s)
                     s += len;
                 }
                 else {
-                    fputs(numbuf, fq);
+                    /* __fputs, not fputs: we hold the FILE lock (#145) */
+                    __fputs(numbuf, fq);
                 }
                 chcount += len;
             }
@@ -94,7 +98,8 @@ vvprintf(const char *format, va_list arg, FILE *fq, char *s)
                     chcount += len;
                 }
                 else {
-                    fputs(vcptr, fq);
+                    /* __fputs, not fputs: we hold the FILE lock (#145) */
+                    __fputs(vcptr, fq);
                     chcount += strlen(vcptr);
                 }
             }
@@ -131,7 +136,7 @@ vvprintf(const char *format, va_list arg, FILE *fq, char *s)
         format++;
     }
 
-    if (fq) unlock(fq,0);
+    if (owned) unlock(fq,0);
 
     return (chcount);
 }

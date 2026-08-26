@@ -19,6 +19,15 @@ production failure on this list since July; with it gone, what remains at the
 top is one **decision** (#108) and two **campaigns**, not a burning defect. Rank
 accordingly — the next thing to do is a judgement call, not an emergency.
 
+**Update 2026-08-26: #145 briefly refilled Tier 1.** `vvprintf()`'s nested
+public `fputs()`/`putc()` released the FILE lock at the first conversion, so
+practically the whole printf line ran unserialized — the measured faces being
+ftpd#117's S001-1 (reproduced in seconds, JOB02235) and a writer silently
+wedged in the corrupted QSAM state (JOB02237, 8 of 400 lines). **PR #146**
+(fix: internal writers + ownership-aware wrappers; red/green tests host and
+MVS, green run JOB02239 CC 0000) is open; when it merges this drops back out
+of Tier 1 and every multitasking consumer wants a relink on the next release.
+
 ---
 
 ## Tier 1 — now

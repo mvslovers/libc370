@@ -6,12 +6,13 @@ int
 fseek(FILE *fp, long int offset, int whence)
 {
     int     rc;
+    int     owned;
 
-    lock(fp,0);
+    owned = (lock(fp,0) == 0);  /* rc=8 = caller already holds it (#145) */
 
     rc = __fseek(fp,offset,whence);
 
-    unlock(fp,0);
+    if (owned) unlock(fp,0);
 
     return rc;
 }

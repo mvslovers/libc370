@@ -14,9 +14,11 @@
 /* Emit one character.  For the string sink (fq == NULL) the write is
    bounded by smax, the space the caller says is left in s; extraCh keeps
    counting the LOGICAL length regardless, so the caller still learns what
-   the full conversion would have needed (#128). */
+   the full conversion would have needed (#128).  The FILE sink writes
+   through __fputc, not putc: vvprintf already holds the FILE lock, and
+   the public wrapper's unlock would give that hold away (#145). */
 #define outch(ch) do { \
-        if (fq != NULL) putc(ch, fq); \
+        if (fq != NULL) __fputc(ch, fq); \
         else if (sput < smax) { *s++ = (char)ch; sput++; } \
     } while (0)
 #define inch() ((fp == NULL) ? \
@@ -326,7 +328,8 @@ __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax)
             sput += (int)w;
         }
         else {
-            fputs(work, fq);
+            /* __fputs, not fputs: the caller holds the FILE lock (#145) */
+            __fputs(work, fq);
         }
         extraCh += slen;
     }
