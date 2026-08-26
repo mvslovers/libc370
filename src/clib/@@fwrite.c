@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <mvssupa.h>
 
 #define begwrite(fp, len)   (lenwrite = (len), dptr = (fp)->asmbuf)
@@ -21,7 +22,13 @@ __fwrite(const void *vptr, size_t size, size_t nmemb, FILE *fp)
         size *= nmemb;
         begwrite(fp, size);
         memcpy(dptr, ptr, size);
-        if (finwrite(fp)) goto quit;
+        if (finwrite(fp)) {
+            /* uncorrectable I/O error, recorded by the SYNAD exit
+               instead of ABEND S001 (#147) */
+            fp->flags |= _FILE_FLAG_ERROR;
+            errno = EIO;
+            goto quit;
+        }
         fp->filepos += 1;       /* count record written */
         i = 1;
         goto quit;

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <mvssupa.h>
 #include <osdcb.h>
 #include <osdecb.h>
@@ -46,9 +47,18 @@ __fgetc(FILE *fp)
 
 	do {
 		/* read one record from dataset */
-		if (__aread(fp->dcb, &dptr, &lenread) != 0) {
-			/* end of file */
-			fp->flags |= _FILE_FLAG_EOF;
+		int rc = __aread(fp->dcb, &dptr, &lenread);
+		if (rc != 0) {
+			if (rc > 0) {
+				/* uncorrectable I/O error, recorded by the
+				   SYNAD exit instead of ABEND S001 (#147) */
+				fp->flags |= _FILE_FLAG_ERROR;
+				errno = EIO;
+			}
+			else {
+				/* end of file */
+				fp->flags |= _FILE_FLAG_EOF;
+			}
 			goto quit;
 		}
 

@@ -252,7 +252,18 @@ OPREPJFC LA    R14,JFCB
          MVC   EOFR24(EOFRLEN),ENDFILE   Put EOF code below the line
          LA    R1,EOFR24
          STCM  R1,B'0111',DCBEODA
-         RDJFCB ((R10)),MF=(E,OPENCLOS)  Read JOB File Control Blk
+*   Plant the SYNAD exit: an uncorrectable I/O error is recorded in
+*   IOSFLAGS and returned to the caller instead of ABEND S001 (#147
+*   item 3).  The stub is copied into the work area, like the EOF
+*   code above, and finds IOSFLAGS relative to its own entry address
+*   (R15) - no assumption about the other SYNAD entry registers.
+*   Not for EXCP tape - that DCB keeps its own error handling.
+         TM    WWORK,IOFEXCP      EXCP mode ?
+         BNZ   OPNOSYN            Yes; no SYNAD there
+         MVC   SYNAD24(SYNADLEN),SYNADCD  Put SYNAD stub in work area
+         LA    R14,SYNAD24
+         STCM  R14,B'0111',DCBSYNA
+OPNOSYN  RDJFCB ((R10)),MF=(E,OPENCLOS)  Read JOB File Control Blk
 *---------------------------------------------------------------------*
 *   If the caller did not request EXCP mode, but the user has BLKSIZE
 *   greater than 32760 on TAPE, then we set the EXCP bit in R4 and
@@ -560,6 +571,16 @@ ENDFILE  LA    R6,1               Indicate @@AREAD reached end-of-file
          LNR   R6,R6              Make negative
          BR    R14                Return to instruction after the GET
 EOFRLEN  EQU   *-ENDFILE
+*
+* SYNAD stub, not executed here but copied to SYNAD24 in the work
+* area (#147 item 3).  On SYNAD entry R15 holds the stub's own
+* address, so IOSFLAGS is reachable relative to R15 with no other
+* register assumption.  Returning tells CHECK the error is handled:
+* no ABEND S001; @@AREAD/@@AWRITE test IOSFLAGS and turn the event
+* into an error return, which the C layer maps to ferror() + EIO.
+SYNADCD  OI    IOSFLAGS-SYNAD24(R15),IOFSYNAD  Note the I/O error
+         BR    R14                Handled; no abend
+SYNADLEN EQU   *-SYNADCD
 *
          LTORG ,
          SPACE 1

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <mvssupa.h>
 
 size_t
@@ -20,11 +21,20 @@ __fread(void *ptr, size_t size, size_t nmemb, FILE *fp)
     }
 
     if (fp->flags & _FILE_FLAG_RECORD) {
+        int rc;
         size *= nmemb;
-        i = __aread(fp->dcb, &dptr, &lenread);
-        if (i != 0) {
-            /* read error or eof */
-            fp->flags |= _FILE_FLAG_EOF;
+        rc = __aread(fp->dcb, &dptr, &lenread);
+        if (rc != 0) {
+            if (rc > 0) {
+                /* uncorrectable I/O error, recorded by the SYNAD
+                   exit instead of ABEND S001 (#147) */
+                fp->flags |= _FILE_FLAG_ERROR;
+                errno = EIO;
+            }
+            else {
+                /* end of file */
+                fp->flags |= _FILE_FLAG_EOF;
+            }
             i = 0;
             goto quit;
         }
