@@ -10,14 +10,23 @@ libc370 is the base library of the whole ecosystem, so a defect here is a defect
 in httpd, mvsMF, ftpd, ufsd and every other consumer at once; that is what puts
 some cheap items high and some expensive ones low.
 
-*Last reconciled against the tracker: 2026-08-23, 22 issues open.*
+*Last reconciled against the tracker: 2026-08-26, 27 issues open — of which the
+ranked list below covers 23.* **Four are filed but not yet ranked**, all newer
+than the last full reconciliation: #142 (`jesopen()` should dynalloc the
+checkpoint and spool, as `jesiropn()` already does), #143 (no volume-addressed
+SCRATCH/RENAME), #144 (an MVS test for `select()` silently dropping sockets) and
+#149 (stdio fail-fast after `_FILE_FLAG_ERROR`, plus `clearerr()`). Place them
+on the next pass rather than guessing a tier for them here.
 
-**Tier 1 is nearly empty, and that is the news.** #107, #70, #80 defect 2 and
-now **#11** are all closed (PRs #137, #138, #139, #141, merged 2026-08-23 on top
-of the CHANGELOG backfill `3e9c15b`). #11 was the only *observed and recurring*
-production failure on this list since July; with it gone, what remains at the
-top is one **decision** (#108) and two **campaigns**, not a burning defect. Rank
-accordingly — the next thing to do is a judgement call, not an emergency.
+**Tier 1 no longer holds a live defect, and that is the news.** #107, #70,
+#80 defect 2, **#11** (PRs #137, #138, #139, #141, merged 2026-08-23 on top of
+the CHANGELOG backfill `3e9c15b`), then #145, #147 and now **#108** are all
+closed. #11 was the only *observed and recurring* production failure on this
+list since July, and #108 was the last open crash hunt. Nothing below is a
+failure anyone is currently seeing on a running system: what remains is two
+**campaigns**, a **relink round**, and a set of traps that have not bitten yet.
+Rank accordingly — every choice here is a judgement about order, not an
+emergency.
 
 **Update 2026-08-26: #145 briefly refilled Tier 1 — and is closed again.**
 `vvprintf()`'s nested public `fputs()`/`putc()` released the FILE lock at the
@@ -40,46 +49,48 @@ ideas (fail-fast after `ferror()`, `clearerr()`) live in **#149**, which is a
 deliberate API decision, not a defect. With #145/#147 done, every multitasking
 consumer wants a relink on the next release — now for four reasons, not one.
 
+**And #108 is closed the same day**, on the 2026-08-23 re-verification run with
+its caveat intact: the address space was never degraded, so that run is *no
+regression under sustained load*, not proof against the original failure. It is
+enough because #111 — 127 bytes into a 12-byte buffer — has exactly the
+signature the evidence demanded (constant trigger, layout-dependent blast
+radius), and because #126 closed the ~26 KB-per-abend leak that produced the
+degraded state in the first place. The deliberate `REGION`-starved re-run stays
+undone on purpose; it threads a narrow window, breaks the stand while it runs,
+and would at best buy a negative on a spent hypothesis. **Closing it emptied
+Tier 1 of live defects** — and its unfiled review footnotes were harvested first,
+as **#151** and **#152**.
+
 ---
 
 ## Tier 1 — now
 
-### 1 · #108 — reclassify, do not hunt
+### 1 · #151 — four externals defined twice in `libc.a`, and one of them is a data word
 
-No longer an open crash hunt. #109 and #110 are merged and the prime suspect named
-in the closing comment, #111, is in `main` as `cd66e86`; every candidate in the
-call tree is eliminated. The issue was renamed to *"every named suspect fixed,
-needs re-verification"*.
+High here for cost, not for measured impact: nothing has failed yet, and the fix
+is deleting four dead files from three `makefile`s.
 
-**Run on 2026-08-23 against `mvsdev`, and it came back clean** — but read the
-caveat, because it is not quite the test this item asked for.
+`@@ERRNO`, `@@LKUNTF`, `@@LKUNTR` and `JESJOBFR` are each exported by two objects
+in the shipped archive. Three are harmless twins — a wrong letter in the filename
+while the function inside kept its name (`@@lkrntf`/`@@lkuntf`,
+`@@lkrntr`/`@@lkuntr`, `josjobfr`/`jesjobfr`), identical after preprocessing.
 
-The build was confirmed from the console rather than assumed
-(`HTTPD005I LIBC370 1.0.3-DEV (3E9C15B)` = `main`), and the path was confirmed
-in mvsMF rather than taken from the issue text: `jobFilesHandler` **and**
-`jobRecordsHandler` both reach `jesjob(…, 1)` through
-`find_job_by_name_and_id()` (`jobsapi.c:209/273 → :1238`), so a record read
-rebuilds the inventory too — close to **2100 `dd=1` walks**, not the ~340 the
-endpoint count suggests. 2172 requests went through the `dd=1` path: `/files` over every one of the 131 jobs on the system, then
-1200 and 856 requests in 8 concurrent streams over the largest job available
-(106 spool files), including a full record sweep. Zero 5xx, and the Master
-Trace Table over the whole window holds no `S80A`, `S0C4`, `IEA703I`,
-`MVSMF901E` or `HTTPD908E`. The server never restarted.
+`@@ERRNO` is not. `@@errno.s` puts the entry on a function prologue, the
+per-task accessor `errno.h` reaches through `#define errno *(__errno())` — so
+every `errno` in the ecosystem is a **call** to that name. `@@get@er.s`, a
+PDPCLIB leftover whose `__get_errno()` has **no callers anywhere**, puts the
+same `ENTRY` on a `DC F'0'`. Which one satisfies the reference is ld370 autocall
+order over the archive, and nothing pins it. If `@@get@er.o` ever wins, every
+`errno` touch branches onto four zero bytes — **S0C1, in every consumer at
+once**, with a symptom that looks nothing like its cause.
 
-**What is missing is the degraded address space.** Storage stayed healthy
-throughout — the worker pool grew from 3 to 8 of 9 and the last 65536-byte
-stack GETMAIN succeeded at peak load. So this is *no regression under sustained
-load*, not proof against the original failure.
+Latent, so not an emergency; but it is one archive-order change away, it costs
+almost nothing to remove, and `smptest/doc/SMP-INSTALLATION.md` §C.4 reaches the
+same four from the other side — the flat 8-character CDS MOD namespace cannot
+take two objects exporting one name, so this also gates object-deck delivery.
 
-The argument for closing anyway is that the degradation had a known engine and
-it is fixed: #126 measured ~26 KB leaked **per abend** in the INTXT walk, which
-is what walked the address space down until the next allocation failed. Route
-closed, suspects all fixed, 2172 requests produce nothing.
-
-Getting the real thing needs one deliberate step — bring HTTPD up under a
-`REGION` too small for 8 worker stacks plus a 106-file walk, then repeat. That
-breaks the stand for the duration, so it is a decision rather than a task.
-Full evidence in the issue comment.
+The archive-level twin of #140 in Tier 4, with a sharper edge: there the two
+copies agree by nobody having edited one, here they already disagree.
 
 ---
 
@@ -304,9 +315,23 @@ Route (a) via TCT/`TCBTCT` would be the way, but it makes `clock()` SMF-dependen
 — decide before writing a line whether a conditionally working `clock()` is worth
 more than an honestly broken one.
 
+### 23 · #152 — `arraydel()` reads one slot past the allocation
+
+Bottom of the list on purpose: it is real, and it is currently harmless. The
+shift loop runs to `count` instead of `count - 1`, so on a full array it reads
+`(*carray)[size]` — but the value is written into the slot that the next two
+statements overwrite with NULL, so nothing observes it. ASAN-class, not a
+measured fault.
+
+Filed anyway because the #108 review recorded it as sitting behind `#if 0`, and
+that holds for the jesjob path only: `arraydel()` has ~18 live callers — worker
+table, work queue, socket table, FILE table, mutex table, `atexit`/`on_exit`,
+CRT push/pop. One-line fix, and worth a host test at full occupancy, of which
+there is none today.
+
 ---
 
-## Three campaigns instead of twenty-two tickets
+## Three campaigns instead of twenty-three tickets
 
 - **Unchecked allocation** — #61 and #80 defect 3. Settle one convention for the
   whole library rather than deciding twice, separately. PR #139 made this the
@@ -325,6 +350,17 @@ more than an honestly broken one.
 ## Recently landed
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
+
+- **#108 closed** (2026-08-26) — the `jesjob(dd=1)` S0C4 hunt, closed on the
+  2026-08-23 re-verification run (~2100 `dd=1` walks on a build confirmed to be
+  `main`, zero 5xx, a clean MTT) with its caveat intact: the address space was
+  never degraded. Enough because every named suspect is fixed (#109, #110, #111)
+  and #126 removed the ~26 KB-per-abend leak that produced the degraded state;
+  the symptom, mvsmf#282, closed `COMPLETED` 2026-08-17. Its three unfiled
+  review footnotes were re-measured against `main` before closing:
+  `spool_read()` in `process_intxt()` is now checked (`jesjob.c:613`), the
+  duplicate externals became **#151**, the `@@ardel.c` one-past read became
+  **#152**.
 
 - **#147 item 3** (PR #150, 2026-08-26) — SYNAD on the BSAM DCBs: an
   uncorrectable I/O error is `ferror()`+`errno EIO` instead of ABEND S001. The
