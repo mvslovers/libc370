@@ -19,14 +19,16 @@ production failure on this list since July; with it gone, what remains at the
 top is one **decision** (#108) and two **campaigns**, not a burning defect. Rank
 accordingly — the next thing to do is a judgement call, not an emergency.
 
-**Update 2026-08-26: #145 briefly refilled Tier 1.** `vvprintf()`'s nested
-public `fputs()`/`putc()` released the FILE lock at the first conversion, so
-practically the whole printf line ran unserialized — the measured faces being
-ftpd#117's S001-1 (reproduced in seconds, JOB02235) and a writer silently
-wedged in the corrupted QSAM state (JOB02237, 8 of 400 lines). **PR #146**
-(fix: internal writers + ownership-aware wrappers; red/green tests host and
-MVS, green run JOB02239 CC 0000) is open; when it merges this drops back out
-of Tier 1 and every multitasking consumer wants a relink on the next release.
+**Update 2026-08-26: #145 briefly refilled Tier 1 — and is closed again.**
+`vvprintf()`'s nested public `fputs()`/`putc()` released the FILE lock at the
+first conversion, so practically the whole printf line ran unserialized — the
+measured faces being ftpd#117's S001-1 (reproduced in seconds, JOB02235) and a
+writer silently wedged in the corrupted QSAM state (JOB02237, 8 of 400 lines).
+**PR #146 merged same day** (fix: internal writers + ownership-aware wrappers;
+red/green tests host and MVS, green run JOB02239 CC 0000). Every multitasking
+consumer wants a relink on the next release. Its known neighbours (`fclose()`'s
+flush outside the lock, `puts()` as two critical sections, no SYNAD on the
+QSAM DCBs) are filed as follow-up — see the tracker.
 
 ---
 
@@ -314,6 +316,13 @@ more than an honestly broken one.
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
 
+- **#145** (PR #146, 2026-08-26) — `vvprintf()`'s nested public `fputs()`/`putc()`
+  released the FILE lock at the first conversion; concurrent printf corrupted
+  the stream (ftpd#117's S001-1, plus a silent writer wedge, both measured).
+  Internal writers go through `__fputs()`/`__fputc()`, the public one-FILE
+  wrappers release only a hold they acquired. `test/host/tstiolk.c` +
+  `test/mvs/tstiolk.c` are the regression guards; the ENQ rc=8 nesting
+  contract is measured on the target (TSTIOLK round 1).
 - **#11** (PR #141, 2026-08-23) — the S33E on shutdown, and neither half was what
   this file or the issue said. **The drain failure was a deadlock on the manager's
   own ENQ**, not a wedged handler: `dispatch_thread_term()` held `lock(mgr,0)`
