@@ -29,10 +29,12 @@ red/green tests host and MVS, green run JOB02239 CC 0000). Every multitasking
 consumer wants a relink on the next release. Its known neighbours are **#147**:
 items 2 (`puts()` split), 1 (`fclose()` teardown outside the lock) and 4 (DEQ
 drops the scope bits — `sysunlock()` could never release, measured JOB02241/43)
-are fixed with red/green guards host and MVS; item 3 — **a SYNAD on the QSAM
-DCBs**, so a genuine I/O error stops being an address-space-killing S001 —
-is the remaining piece and needs its own design (assembler, `__aopen`/
-`__aread`/`__awrite` layer) and PR.
+landed via **PR #148** (merged 2026-08-26) with red/green guards host and MVS.
+Item 3 — **a SYNAD on the QSAM DCBs**, so a genuine I/O error stops being an
+address-space-killing S001 — is the remaining piece, in design (assembler,
+`__aopen`/`__aread`/`__awrite` layer); #147 stays open for it. Also parked
+there: the ecosystem sweep for `syslock()` consumers that have been silently
+leaking system-scope ENQs.
 
 ---
 
@@ -320,6 +322,11 @@ more than an honestly broken one.
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
 
+- **#147 items 2/1/4** (PR #148, 2026-08-26) — `puts()` is one critical section,
+  `fclose()` tears down under the FILE lock, and `__enqdeq()`'s DEQ keeps its
+  scope bits (`sysunlock()` could never release what `syslock()` took — measured
+  JOB02241 red / JOB02243 green). Guards: tstiolk case 9, tstenqdq (SVC
+  parameter-list capture), tstfcls, tstslk. Item 3 (SYNAD) still open there.
 - **#145** (PR #146, 2026-08-26) — `vvprintf()`'s nested public `fputs()`/`putc()`
   released the FILE lock at the first conversion; concurrent printf corrupted
   the stream (ftpd#117's S001-1, plus a silent writer wedge, both measured).
