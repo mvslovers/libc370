@@ -7,6 +7,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Fixed
+- **`puts()` is one critical section, `fclose()` tears down under the FILE
+  lock, and DEQ keeps its scope bits — `sysunlock()` can actually release
+  (#147 items 2, 1, 4; follow-up to #145).** `puts()` locked twice (public
+  `fputs()` then `putc()`), so a concurrent printf could split the line at its
+  newline; now the string and the `'\n'` go out under one hold. `fclose()`
+  flushed, `__aclose()`'d the DCB and freed the buffer and the FILE with no
+  hold on the FILE lock — a concurrent `vfprintf()` could slip in after the
+  flush and PUT on a closed DCB or write through a freed buffer; the whole
+  teardown now runs under the lock (released after `free(fp)`, safe because
+  the lock rname is built from the pointer value). And `__enqdeq()`'s DEQ
+  branch overwrote `pl.opt` with `ENQ_OPT_HAVE`, throwing the scope bits away:
+  every DEQ went out SCOPE=STEP, so `sysunlock()`'s DEQ addressed a different
+  resource than `syslock()`'s SCOPE=SYSTEM ENQ, answered rc=8, and the
+  system-scope lock stayed held until task end — measured red on 3.8j
+  (JOB02241: re-`syslock()` after `sysunlock()` still answered 8) and green
+  after the one-character fix (`|=`, JOB02243: release and fresh re-acquire
+  both rc=0). Guards: `test/host/tstiolk.c` case 9, `test/host/tstenqdq.c`
+  (SVC parameter-list capture), `test/host/tstfcls.c` (teardown-under-hold
+  ledger), `test/mvs/tstslk.c`. The fourth #147 neighbour — a SYNAD on the
+  QSAM DCBs so a genuine I/O error stops killing the address space — remains
+  open there and gets its own design and PR.
 - **Concurrent `printf()` no longer corrupts the stream: `vvprintf()` holds the
   FILE lock across the whole line, and the public stdio wrappers never release
   a hold they did not take (#145, PR #146).** The `%s` and `%eEgGfF` branches of

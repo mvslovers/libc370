@@ -26,9 +26,13 @@ measured faces being ftpd#117's S001-1 (reproduced in seconds, JOB02235) and a
 writer silently wedged in the corrupted QSAM state (JOB02237, 8 of 400 lines).
 **PR #146 merged same day** (fix: internal writers + ownership-aware wrappers;
 red/green tests host and MVS, green run JOB02239 CC 0000). Every multitasking
-consumer wants a relink on the next release. Its known neighbours (`fclose()`'s
-flush outside the lock, `puts()` as two critical sections, no SYNAD on the
-QSAM DCBs) are filed as follow-up — see the tracker.
+consumer wants a relink on the next release. Its known neighbours are **#147**:
+items 2 (`puts()` split), 1 (`fclose()` teardown outside the lock) and 4 (DEQ
+drops the scope bits — `sysunlock()` could never release, measured JOB02241/43)
+are fixed with red/green guards host and MVS; item 3 — **a SYNAD on the QSAM
+DCBs**, so a genuine I/O error stops being an address-space-killing S001 —
+is the remaining piece and needs its own design (assembler, `__aopen`/
+`__aread`/`__awrite` layer) and PR.
 
 ---
 
