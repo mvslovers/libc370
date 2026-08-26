@@ -32,12 +32,13 @@ drops the scope bits — `sysunlock()` could never release, measured JOB02241/43
 landed via **PR #148**, and item 3 — **the SYNAD on the DCBs**, so a genuine
 I/O error is `ferror()`+`EIO` instead of an address-space-killing S001 — via
 **PR #150** (red JOB02246 / green JOB02250, plus the JOB02248 lesson that "no
-abend" alone is not the contract), both merged 2026-08-26. What remains on
-#147 is only its parked note: the ecosystem sweep for `syslock()` consumers
-that have been silently leaking system-scope ENQs. Follow-up ideas (fail-fast
-after `ferror()`, `clearerr()`) live in **#149**. With #145/#147 done, every
-multitasking consumer wants a relink on the next release — now for four
-reasons, not one.
+abend" alone is not the contract), both merged 2026-08-26. **#147 is closed:**
+its parked sweep came back empty — nothing in the 34 ecosystem repos calls
+`syslock()`/`sysunlock()` at all, every other lock family is SCOPE=STEP and so
+was unreachable by that bug, and no consumer owes a change for it. Follow-up
+ideas (fail-fast after `ferror()`, `clearerr()`) live in **#149**, which is a
+deliberate API decision, not a defect. With #145/#147 done, every multitasking
+consumer wants a relink on the next release — now for four reasons, not one.
 
 ---
 
@@ -330,6 +331,10 @@ Pointers only. The reasoning lives in the closing comments and the PRs.
   stub is per-FILE and R15-relative (the R1-based first cut measurably
   delivered a truncated block as data — JOB02248); red JOB02246, green
   JOB02250, guards `test/mvs/tstsynad.c`. Fail-fast/`clearerr()` ideas → #149.
+  The `syslock()` sweep that item 4 parked ran on close: **zero callers across
+  all 34 ecosystem repos**, and every other lock family is SCOPE=STEP, so the
+  DEQ bug was unreachable for them by construction. A real defect that never
+  bit anyone; no consumer owes a port.
 - **#147 items 2/1/4** (PR #148, 2026-08-26) — `puts()` is one critical section,
   `fclose()` tears down under the FILE lock, and `__enqdeq()`'s DEQ keeps its
   scope bits (`sysunlock()` could never release what `syslock()` took — measured
