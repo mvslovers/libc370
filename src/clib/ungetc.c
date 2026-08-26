@@ -5,7 +5,9 @@
 int
 ungetc(int c, FILE *fp)
 {
-    lock(fp,0);
+    int owned;
+
+    owned = (lock(fp,0) == 0);  /* rc=8 = caller already holds it (#145) */
 
     if ((fp->ungetch != -1) || (c == EOF)) {
         c = EOF;
@@ -14,7 +16,7 @@ ungetc(int c, FILE *fp)
         fp->ungetch = (unsigned char)c;
     }
 
-    unlock(fp,0);
+    if (owned) unlock(fp,0);
 
     return c;
 }

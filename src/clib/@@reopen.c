@@ -19,8 +19,9 @@ __reopen(const char *fn, const char *mode, FILE *fp)
     if (!(fp->flags & _FILE_FLAG_OPEN)) goto quit;
 
     if (fp->flags & _FILE_FLAG_OPEN) {
-        /* flush any pending data to disk */
-        fflush(fp);
+        /* flush any pending data to disk; __fflush, not fflush - our
+           caller freopen() already holds the FILE lock (#145) */
+        __fflush(fp);
     }
 
     /* open "new" file handle */

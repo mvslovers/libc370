@@ -6,12 +6,13 @@ int
 fputs(const char *s, FILE *fp)
 {
     int rc;
+    int owned;
 
-    lock(fp,0);
+    owned = (lock(fp,0) == 0);  /* rc=8 = caller already holds it (#145) */
 
     rc = __fputs(s,fp);
 
-    unlock(fp,0);
+    if (owned) unlock(fp,0);
 
     return rc;
 }

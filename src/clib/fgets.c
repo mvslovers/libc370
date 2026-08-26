@@ -5,11 +5,13 @@
 char *
 fgets(char *s, int n, FILE *fp)
 {
-    lock(fp, 0);
+    int owned;
+
+    owned = (lock(fp, 0) == 0); /* rc=8 = caller already holds it (#145) */
 
     s = __fgets(s,n,fp);
 
-    unlock(fp, 0);
+    if (owned) unlock(fp, 0);
 
     return s;
 }
