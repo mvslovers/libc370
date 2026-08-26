@@ -29,13 +29,15 @@ red/green tests host and MVS, green run JOB02239 CC 0000). Every multitasking
 consumer wants a relink on the next release. Its known neighbours are **#147**:
 items 2 (`puts()` split), 1 (`fclose()` teardown outside the lock) and 4 (DEQ
 drops the scope bits — `sysunlock()` could never release, measured JOB02241/43)
-landed via **PR #148** (merged 2026-08-26) with red/green guards host and MVS.
-Item 3 — **a SYNAD on the DCBs**, so a genuine I/O error stops being an
-address-space-killing S001 — is on **PR #150** (red JOB02246 / green JOB02250,
-plus the JOB02248 lesson that "no abend" alone is not the contract). Once that
-merges, #147 closes down to its parked note: the ecosystem sweep for
-`syslock()` consumers that have been silently leaking system-scope ENQs.
-Follow-up ideas (fail-fast after `ferror()`, `clearerr()`) live in **#149**.
+landed via **PR #148**, and item 3 — **the SYNAD on the DCBs**, so a genuine
+I/O error is `ferror()`+`EIO` instead of an address-space-killing S001 — via
+**PR #150** (red JOB02246 / green JOB02250, plus the JOB02248 lesson that "no
+abend" alone is not the contract), both merged 2026-08-26. What remains on
+#147 is only its parked note: the ecosystem sweep for `syslock()` consumers
+that have been silently leaking system-scope ENQs. Follow-up ideas (fail-fast
+after `ferror()`, `clearerr()`) live in **#149**. With #145/#147 done, every
+multitasking consumer wants a relink on the next release — now for four
+reasons, not one.
 
 ---
 
@@ -323,6 +325,11 @@ more than an honestly broken one.
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
 
+- **#147 item 3** (PR #150, 2026-08-26) — SYNAD on the BSAM DCBs: an
+  uncorrectable I/O error is `ferror()`+`errno EIO` instead of ABEND S001. The
+  stub is per-FILE and R15-relative (the R1-based first cut measurably
+  delivered a truncated block as data — JOB02248); red JOB02246, green
+  JOB02250, guards `test/mvs/tstsynad.c`. Fail-fast/`clearerr()` ideas → #149.
 - **#147 items 2/1/4** (PR #148, 2026-08-26) — `puts()` is one critical section,
   `fclose()` tears down under the FILE lock, and `__enqdeq()`'s DEQ keeps its
   scope bits (`sysunlock()` could never release what `syslock()` took — measured
