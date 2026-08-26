@@ -7,6 +7,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Fixed
+- **An uncorrectable I/O error is `ferror()` + `errno EIO`, not ABEND S001:
+  the DCBs `__aopen()` builds now carry a SYNAD exit (#147 item 3, PR #150).**
+  Without one, the first genuine I/O error on any libc370 FILE — bad track,
+  wrong-length record, device error — reached CHECK error processing as
+  `NO ERROR HANDLING, (SYNAD), EXIT SPECIFIED` and killed the whole address
+  space; that is what turned ftpd#117's corrupted PUT into a dead STC, and
+  what #145 could narrow but not remove. The exit follows the `EOFR24`
+  pattern: a six-byte stub copied into the per-FILE work area, planted in
+  `DCBSYNA`, finding the new `IOSFLAGS` byte relative to its own entry
+  address (R15) — no assumption about the other SYNAD entry registers, which
+  is not a theoretical nicety: the first cut derived the work area from R1
+  as the DECB address and, measured on 3.8j (JOB02248), the flag landed
+  nowhere while the truncated block was delivered as *data*. `@@AREAD`
+  answers RC=1 (EOF stays −1), `@@AWRITE` RC=8, and `__fgetc`/`__fread`/
+  `__fflush`/`__fwrite` map both to `_FILE_FLAG_ERROR` + `errno EIO`.
+  Measured red (JOB02246: S001-1 on a wrong-length READ, `try()`-caught) and
+  green (JOB02250, CC 0000: zero garbage lines, `ferror()` set, `feof()`
+  clear, `errno` EIO, `fclose()` survives, the program runs on) by
+  `test/mvs/tstsynad.c`. The EXCP tape path keeps its own error handling; a
+  write-side error is not forceable from an unprivileged batch probe and is
+  covered by the shared mechanism plus regression (TSTIOLK/TSTSLK green on
+  this libc). Fail-fast after `ferror()` and `clearerr()` are #149.
 - **`puts()` is one critical section, `fclose()` tears down under the FILE
   lock, and DEQ keeps its scope bits — `sysunlock()` can actually release
   (#147 items 2, 1, 4; follow-up to #145).** `puts()` locked twice (public

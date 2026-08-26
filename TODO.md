@@ -30,11 +30,12 @@ consumer wants a relink on the next release. Its known neighbours are **#147**:
 items 2 (`puts()` split), 1 (`fclose()` teardown outside the lock) and 4 (DEQ
 drops the scope bits — `sysunlock()` could never release, measured JOB02241/43)
 landed via **PR #148** (merged 2026-08-26) with red/green guards host and MVS.
-Item 3 — **a SYNAD on the QSAM DCBs**, so a genuine I/O error stops being an
-address-space-killing S001 — is the remaining piece, in design (assembler,
-`__aopen`/`__aread`/`__awrite` layer); #147 stays open for it. Also parked
-there: the ecosystem sweep for `syslock()` consumers that have been silently
-leaking system-scope ENQs.
+Item 3 — **a SYNAD on the DCBs**, so a genuine I/O error stops being an
+address-space-killing S001 — is on **PR #150** (red JOB02246 / green JOB02250,
+plus the JOB02248 lesson that "no abend" alone is not the contract). Once that
+merges, #147 closes down to its parked note: the ecosystem sweep for
+`syslock()` consumers that have been silently leaking system-scope ENQs.
+Follow-up ideas (fail-fast after `ferror()`, `clearerr()`) live in **#149**.
 
 ---
 
