@@ -158,7 +158,6 @@ C_FILES := abort.c \
 	getchar.c \
 	getenv.c \
 	getenvi.c \
-	@@get@er.c \
 	getmain.c \
 	@@getpso.c \
 	gets.c \
@@ -215,8 +214,6 @@ C_FILES := abort.c \
 	@@lkrn.c \
 	@@lkrnf.c \
 	@@lkrnte.c \
-	@@lkrntf.c \
-	@@lkrntr.c \
 	@@lkrnuf.c \
 	@@lkrnun.c \
 	@@lkrtef.c \

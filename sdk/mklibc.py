@@ -21,6 +21,9 @@ Usage:  python3 sdk/mklibc.py build      # compile/assemble/archive into build/s
 """
 import os, sys, glob, subprocess, shutil, concurrent.futures as cf
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import dupscan                    # duplicate-external gate, see #151
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # libc370 repo root
 CC370 = "cc370"                    # the toolchain driver, on PATH
 AS370 = "as370"                    # the installed tools, by name -- no repo path baked in
@@ -179,6 +182,19 @@ def cmd_build():
         print("[libc] WARNING excluding @@MAIN-definers from libc.a:",
               [os.path.basename(m) for m in mains])
         objs = [o for o in objs if o not in mains]
+
+    # 3b. safety: no external name may be exported by two archived modules.
+    # The archive namespace is flat and 8 characters wide, and ld370 resolves an
+    # autocall against the first object offering the name -- so a duplicate lets
+    # link order decide which code runs. #151: @@ERRNO was a function in one
+    # object and a DC F'0' in another, with errno.h making every errno a call to
+    # that name. Fail closed; there is no safe automatic pick.
+    dups, nscan, nskip = dupscan.scan(srcs + asms, startups=STARTUPS)
+    if dups:
+        dupscan.report(dups, nscan, nskip, tag="libc")
+        return 1
+    # say so on success too -- a silent gate reads the same as an absent one
+    print(f"[libc] no duplicate externals ({nscan} archived, {nskip} skipped)")
 
     # 4. archive the runtime -> libc.a ; copy crt startfiles
     libc = f"{BUILD}/libc.a"

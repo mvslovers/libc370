@@ -10,9 +10,9 @@ libc370 is the base library of the whole ecosystem, so a defect here is a defect
 in httpd, mvsMF, ftpd, ufsd and every other consumer at once; that is what puts
 some cheap items high and some expensive ones low.
 
-*Last reconciled against the tracker: 2026-08-26, 27 issues open — of which the
-ranked list below covers 23.* **Four are filed but not yet ranked**, all newer
-than the last full reconciliation: #142 (`jesopen()` should dynalloc the
+*Last reconciled against the tracker: 2026-08-27, 27 issues open — of which the
+ranked list below covers 22, with #151 fixed and its PR pending.* **Four are
+filed but not yet ranked**, all newer than the last full reconciliation: #142 (`jesopen()` should dynalloc the
 checkpoint and spool, as `jesiropn()` already does), #143 (no volume-addressed
 SCRATCH/RENAME), #144 (an MVS test for `select()` silently dropping sockets) and
 #149 (stdio fail-fast after `_FILE_FLAG_ERROR`, plus `clearerr()`). Place them
@@ -61,42 +61,28 @@ and would at best buy a negative on a spent hypothesis. **Closing it emptied
 Tier 1 of live defects** — and its unfiled review footnotes were harvested first,
 as **#151** and **#152**.
 
+**Update 2026-08-27: #151 is fixed.** Four external names were each exported by
+two archived objects; three were byte-identical twins from a mistyped filename,
+but `@@ERRNO` was a function prologue in one object and a `DC F'0'` in the other,
+with every `errno` in the ecosystem compiling to a call to that name. Latent —
+link order happened to pick the right one — and now pinned by deletion rather
+than by luck. The guard is `sdk/dupscan.py`, a build step scoped to exactly the
+set being archived (733 modules, matching the archive exactly), fail-closed before it
+is written. That empties Tier 1 again.
+
 ---
 
-## Tier 1 — now
+## Tier 1 — empty
 
-### 1 · #151 — four externals defined twice in `libc.a`, and one of them is a data word
-
-High here for cost, not for measured impact: nothing has failed yet, and the fix
-is deleting four dead files from three `makefile`s.
-
-`@@ERRNO`, `@@LKUNTF`, `@@LKUNTR` and `JESJOBFR` are each exported by two objects
-in the shipped archive. Three are harmless twins — a wrong letter in the filename
-while the function inside kept its name (`@@lkrntf`/`@@lkuntf`,
-`@@lkrntr`/`@@lkuntr`, `josjobfr`/`jesjobfr`), identical after preprocessing.
-
-`@@ERRNO` is not. `@@errno.s` puts the entry on a function prologue, the
-per-task accessor `errno.h` reaches through `#define errno *(__errno())` — so
-every `errno` in the ecosystem is a **call** to that name. `@@get@er.s`, a
-PDPCLIB leftover whose `__get_errno()` has **no callers anywhere**, puts the
-same `ENTRY` on a `DC F'0'`. Which one satisfies the reference is ld370 autocall
-order over the archive, and nothing pins it. If `@@get@er.o` ever wins, every
-`errno` touch branches onto four zero bytes — **S0C1, in every consumer at
-once**, with a symptom that looks nothing like its cause.
-
-Latent, so not an emergency; but it is one archive-order change away, it costs
-almost nothing to remove, and `smptest/doc/SMP-INSTALLATION.md` §C.4 reaches the
-same four from the other side — the flat 8-character CDS MOD namespace cannot
-take two objects exporting one name, so this also gates object-deck delivery.
-
-The archive-level twin of #140 in Tier 4, with a sharper edge: there the two
-copies agree by nobody having edited one, here they already disagree.
+Nothing here. #151 was the last entry and is fixed (PR pending); the ranked work
+starts at Tier 2. Keep this section — the next measured defect belongs in it, not
+appended to a campaign.
 
 ---
 
 ## Tier 2 — campaign: unchecked allocation
 
-### 2 · #61 — `__listvl()` silently returns a truncated volume list, and #80 defect 3
+### 1 · #61 — `__listvl()` silently returns a truncated volume list, and #80 defect 3
 
 Now the whole of this campaign, and #80's remaining weight sits here: defect 2
 landed in PR #139, which deliberately stops the walk and keeps what the block
@@ -112,7 +98,7 @@ short list that looks complete is worse than no list at all.
 
 ## Tier 3 — campaign: make the compiler see it (order matters)
 
-### 3 · #125 — inline-asm SVC macros with partial clobber lists
+### 2 · #125 — inline-asm SVC macros with partial clobber lists
 
 The one item in this campaign with a **measured miscompile in the wild**. In ftpd
 the same form put a struct pointer in R15 and kept it there across a `STIMER`; the
@@ -146,7 +132,7 @@ File-scope `__asm__` blocks that define standalone routines (`EXITDRVR`,
 `RETRY`/`RECOVERY`) are deliberately out of scope: they do their own
 `SAVE (14,12)` and do not share the compiler's register allocation.
 
-### 4 · #39 — 129 of 712 TUs with implicit declarations
+### 3 · #39 — 129 of 712 TUs with implicit declarations
 
 The parent case. Steps 1 (declare the 14 routines with no prototype) and 2 (the
 missing `#include`s) are mechanical and independent of each other. **The payoff is
@@ -158,7 +144,7 @@ link on the target only because the `__` → `@@` symbol mapping happens to prod
 the right CSECT — the same invisible-call shape the issue records for httpd's
 `__arcou()`. Worth folding into step 1 when it runs.
 
-### 5 · #68 — `format(printf)` for `wtof()`/`wtodumpf()`/`wtorf()`
+### 4 · #68 — `format(printf)` for `wtof()`/`wtodumpf()`/`wtorf()`
 
 Cheap here, **expensive across the ecosystem**: consumers clone libc370 `main`
 unpinned, so the attribute turns httpd, mvsMF and ftpd CI red — with the breakage
@@ -172,7 +158,7 @@ in *their* code. Keep the order the issue prescribes:
 
 ## Tier 4 — structural traps
 
-### 6 · #140 — `src/thdmgr/clibthdi.h` duplicates `include/clibthdi.h`
+### 5 · #140 — `src/thdmgr/clibthdi.h` duplicates `include/clibthdi.h`
 
 Filed while fixing #11, and it bit during that work. The quoted include in
 `src/thdmgr/*.c` finds the local copy, so **the library compiles against a
@@ -185,14 +171,14 @@ struct field would have linked and run, with the library and every consumer
 disagreeing about a layout. Exactly #17's shape, one tier's worth cheaper to
 fix: delete the copy and let `-I include` resolve it.
 
-### 7 · #17 — consolidate the two `try()` wrappers
+### 6 · #17 — consolidate the two `try()` wrappers
 
 The trap is **active, not dormant**: since it first bit (#9 hardened the
 unreachable copy), #89, #93 and #96 have each been applied *twice*. Every fix to
 the central recovery path costs two edits and one chance to hit the wrong file.
 Needs its own review and a validation plan — not a passenger in a relink round.
 
-### 8 · #72 — the PPA environment flags do not say what they claim
+### 7 · #72 — the PPA environment flags do not say what they claim
 
 No crash, but a documented API that answers wrongly: `TSOBG` is set in the TSO
 foreground, and `TIN`/`TOUT`/`TERR` are set nowhere. Cheapest honest fix: correct
@@ -200,7 +186,7 @@ the semantics of `TSOFG`/`TSOBG` and either set the three dead defines (in
 `@@fpstar.c`, which knows) or delete them. Declared-and-dead is the worst of the
 three options.
 
-### 9 · #105 — `GRTFLAG1_TSO` sticks beyond `__start()`
+### 8 · #105 — `GRTFLAG1_TSO` sticks beyond `__start()`
 
 A design decision, not a patch: recompute per `__start()` (set *and* clear), or
 move the TSO property into the CRT. The two readings differ for `fopen.c`,
@@ -211,7 +197,7 @@ move the TSO property into the CRT. The two readings differ for `fopen.c`,
 
 ## Tier 5 — consumers waiting (one coordinated relink, best done in a single round)
 
-### 10 · #80 defect 1 — `__listpd()` has no way to ask for less
+### 9 · #80 defect 1 — `__listpd()` has no way to ask for less
 
 What is left of #80 after PR #139, and it is narrow: one exposed caller, ftpd's
 `LIST`/`NLST` (`ftpd#mvs.c:941`) with a user-supplied filter. On `SYS1.SMPCDS`
@@ -220,24 +206,24 @@ member before returning anything. A `max` parameter or an iterator form fixes it
 but either is a signature change — hence this tier. It would also let mvsMF drop
 the duplicated directory parser it carries at `dsapi.c:2076`.
 
-### 11 · #79 — JESJOB carries no submit time
+### 10 · #79 — JESJOB carries no submit time
 
 Two lines plus a struct field. Zowe shows `exec-submitted` empty today, and
 `mvslovers/mvsmf#209` is waiting on the same gap for `exec-system`. Append at
 offset 0x50 as the issue describes, so 0x00-0x4F stays stable.
 
-### 12 · #50 — catalog name in DSLIST
+### 11 · #50 — catalog name in DSLIST
 
 Same class, more work. Decide before implementing: scrape `LISTCAT` output, walk
 the CVTCATP chain, or use the `LOCATE` return area.
 
-### 13 · #51 — `inet_addr()` / `inet_ntoa()`
+### 12 · #51 — `inet_addr()` / `inet_ntoa()`
 
 A good entry-level issue and a real memory win: it saves ftpd the entire `sscanf`
 in its load module — on a 24-bit target exactly the kind of saving that counts.
 Host test is trivial, because neither function touches MVS.
 
-### 14 · #71 — `idcams()` discards SYSPRINT and the IDCnnnn number
+### 13 · #71 — `idcams()` discards SYSPRINT and the IDCnnnn number
 
 One store in a `switch` branch that does nothing today, plus a companion accessor.
 Afterwards ftpd says "IDC3203I" instead of "failed". `idcams()` keeps its
@@ -247,7 +233,7 @@ signature.
 
 ## Tier 6 — latent, research, comfort
 
-### 15 · #114 — `osbclose()` does not free a buffer pool built by OPEN
+### 14 · #114 — `osbclose()` does not free a buffer pool built by OPEN
 
 Latent by our own analysis: `MACRF=R` and no BUFNO in the prototype DCB, so OPEN
 does not normally build a pool. The in-tree callers are one member rename and an
@@ -255,9 +241,9 @@ unbuilt wip tree. httpd#195 — the hunt that flushed this out — is closed; th
 by-catch, not the planter. Take it along whenever the `osb*` path is being worked
 on anyway.
 
-### 16 · #113 — `CRTOPTS_AUTH` is dead, an authorized task skips `__austep()`
+### 15 · #113 — `CRTOPTS_AUTH` is dead, an authorized task skips `__austep()`
 
-### 17 · #122 — `clib_apf_setup()`: the already-authorized path is dead code
+### 16 · #122 — `clib_apf_setup()`: the already-authorized path is dead code
 
 **These two are one root cause and must be decided together.** `crt->crtopts` is
 declared in `clibcrt.h:37` and tested in `@@apfset.c:15` — and **assigned
@@ -283,19 +269,19 @@ the missing IDENTIFY cannot reach it; its APF troubles (ufsd#64) were the
 module-storage ones. That leaves ftpd and httpd as the only consumers that both
 link `crt1` and create threads.
 
-### 18 · #27 — JES spool support is single-volume
+### 17 · #27 — JES spool support is single-volume
 
 Latent: the reference system has one spool volume and all 264 observed MTTRs carry
 `M=00`. It goes live the day a second volume appears — and then presents as
 "empty data set", not as an error.
 
-### 19 · #52 — a z/OS-compatible `dynit.h`
+### 18 · #52 — a z/OS-compatible `dynit.h`
 
 Decide *whether* before building: two APIs for one service (`__dsalc()` with a
 string, `dynalloc()` with a struct, both ending in `__svc99()`). Only worth it if
 z/OS code is actually being ported in.
 
-### 20 · #30 — SYSOUT through PSO/SSI instead of the checkpointed IOT
+### 19 · #30 — SYSOUT through PSO/SSI instead of the checkpointed IOT
 
 A research project with a cheap first step: add held-class selection in
 `jesxwrtr()` and measure once what comes back in `SSSODSN`. One job decides whether
@@ -303,19 +289,19 @@ the rest runs straight. Note it is **no longer a gate on `mvslovers/mvsmf#186`**
 #21 closing gave that endpoint what it needed — so start this only when someone
 needs it.
 
-### 21 · #37 — SDK: compile the `.c` files in parallel
+### 20 · #37 — SDK: compile the `.c` files in parallel
 
 6.7 s → ~1 s across 712 TUs. Developer comfort. Check first whether parallel
 `cc370` invocations are safe (cc1 temp files), and do not lose an error message.
 
-### 22 · #75 — `clock()` as real task CPU time
+### 21 · #75 — `clock()` as real task CPU time
 
 The issue says it itself: dormant, nobody is waiting, lua370 is not a blocker.
 Route (a) via TCT/`TCBTCT` would be the way, but it makes `clock()` SMF-dependent
 — decide before writing a line whether a conditionally working `clock()` is worth
 more than an honestly broken one.
 
-### 23 · #152 — `arraydel()` reads one slot past the allocation
+### 22 · #152 — `arraydel()` reads one slot past the allocation
 
 Bottom of the list on purpose: it is real, and it is currently harmless. The
 shift loop runs to `count` instead of `count - 1`, so on a full array it reads
@@ -331,7 +317,7 @@ there is none today.
 
 ---
 
-## Three campaigns instead of twenty-three tickets
+## Three campaigns instead of twenty-two tickets
 
 - **Unchecked allocation** — #61 and #80 defect 3. Settle one convention for the
   whole library rather than deciding twice, separately. PR #139 made this the
