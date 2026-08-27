@@ -13,7 +13,13 @@ some cheap items high and some expensive ones low.
 *Last reconciled against the tracker: 2026-08-27, 27 issues open — of which the
 ranked list below covers 22; #151 is fixed and merged.* **Four are
 filed but not yet ranked**, all newer than the last full reconciliation: #142 (`jesopen()` should dynalloc the
-checkpoint and spool, as `jesiropn()` already does), #143 (no volume-addressed
+checkpoint and spool — measured 2026-08-27, and the issue text understates it
+both ways: `__cpopen()`/`__jsopen()` **already** dynalloc when the argument is
+not `DD:`, so the minimum is two literals in `jesopen.c:37,47`; but the data set
+name is not a constant — JES2 builds it from `$DSNPRFX` (init parameter,
+default `SYS1`) plus the assembled literal `.HASPACE`/`.HASPCKPT`, and that
+prefix lives in the HCT, which is unreachable from another address space. See
+the measurements in the issue), #143 (no volume-addressed
 SCRATCH/RENAME), #144 (an MVS test for `select()` silently dropping sockets) and
 #149 (stdio fail-fast after `_FILE_FLAG_ERROR`, plus `clearerr()`). Place them
 on the next pass rather than guessing a tier for them here.
