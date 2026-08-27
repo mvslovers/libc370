@@ -7,6 +7,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Fixed
+- **Four external names were each exported by two archived objects, and
+  `@@ERRNO` was a data word in one of them (#151).** The archive namespace is
+  flat and eight characters wide, and ld370 satisfies an autocall from the first
+  object offering the name — so a duplicate lets link order decide which code
+  runs, with nothing pinning it. Three were byte-identical twins from a mistyped
+  filename (`@@lkrntf.c`/`@@lkuntf.c` and `@@lkrntr.c`/`@@lkuntr.c` both defined
+  `__lkuntf`/`__lkuntr`; `josjobfr.c`/`jesjobfr.c` both defined `jesjobfr`) —
+  harmless, since `diff` on the generated assembler shows no difference at all,
+  but equally unpinned. `@@ERRNO` was not: `@@errno.s` puts the entry on a
+  function prologue — the per-task accessor that `errno.h` reaches through
+  `#define errno *(__errno())` — while `@@get@er.s`, a PDPCLIB leftover, puts
+  the same `ENTRY` on a `DC F'0'`. Every `errno` in the ecosystem compiles to
+  `L 15,=V(@@ERRNO)` + `BALR 14,15` (measured in `src/dyn75/@@75sock.s:66`), so
+  resolving that reference to `@@get@er.o` would branch onto four zero bytes —
+  `X'00'`, an invalid opcode — on the first `errno` touch, in every consumer at
+  once. Latent, never observed: current link order picks `@@errno.o`, and
+  nothing enforced that. `__get_errno()`, the only reason `@@get@er.c` existed,
+  had no callers anywhere in the ecosystem. All four redundant modules are
+  deleted and dropped from their `makefile`s; the surviving object of each pair
+  is the one already being linked, so no consumer behaviour changes and the
+  archive goes from 737 to 733 members with nothing else added or removed.
+  Guarded by `sdk/dupscan.py`, now a build step: it reads the external names out
+  of the generated `.s`/`.asm` for exactly the set being archived — skipping the
+  `@@MAIN`-definers and crt startfiles that never become members, so it cannot
+  cry wolf — and fails the build before the archive is written. Measured red
+  (four duplicates before, one when `@@get@er.c` is restored) and green (733
+  archived modules, matching the archive exactly), with a link probe pulling all four
+  names into one load module: RC 0, and a negative control confirms ld370 does
+  report an unresolved external when there is one.
 - **An uncorrectable I/O error is `ferror()` + `errno EIO`, not ABEND S001:
   the DCBs `__aopen()` builds now carry a SYNAD exit (#147 item 3, PR #150).**
   Without one, the first genuine I/O error on any libc370 FILE — bad track,

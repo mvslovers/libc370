@@ -16,8 +16,7 @@ C_FILES := jescanj.c \
 	jesprint.c \
 	jesreque.c \
 	jesxdone.c \
-	jesxwrtr.c \
-	josjobfr.c
+	jesxwrtr.c
 
 A_FILES :=
 
