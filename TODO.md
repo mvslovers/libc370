@@ -11,7 +11,7 @@ in httpd, mvsMF, ftpd, ufsd and every other consumer at once; that is what puts
 some cheap items high and some expensive ones low.
 
 *Last reconciled against the tracker: 2026-08-27, 27 issues open — of which the
-ranked list below covers 22, with #151 fixed and its PR pending.* **Four are
+ranked list below covers 22; #151 is fixed and merged.* **Four are
 filed but not yet ranked**, all newer than the last full reconciliation: #142 (`jesopen()` should dynalloc the
 checkpoint and spool, as `jesiropn()` already does), #143 (no volume-addressed
 SCRATCH/RENAME), #144 (an MVS test for `select()` silently dropping sockets) and
@@ -61,7 +61,7 @@ and would at best buy a negative on a spent hypothesis. **Closing it emptied
 Tier 1 of live defects** — and its unfiled review footnotes were harvested first,
 as **#151** and **#152**.
 
-**Update 2026-08-27: #151 is fixed.** Four external names were each exported by
+**Update 2026-08-27: #151 is fixed and merged (PR #153).** Four external names were each exported by
 two archived objects; three were byte-identical twins from a mistyped filename,
 but `@@ERRNO` was a function prologue in one object and a `DC F'0'` in the other,
 with every `errno` in the ecosystem compiling to a call to that name. Latent —
@@ -74,7 +74,7 @@ is written. That empties Tier 1 again.
 
 ## Tier 1 — empty
 
-Nothing here. #151 was the last entry and is fixed (PR pending); the ranked work
+Nothing here. #151 was the last entry and landed via PR #153; the ranked work
 starts at Tier 2. Keep this section — the next measured defect belongs in it, not
 appended to a campaign.
 
@@ -336,6 +336,20 @@ there is none today.
 ## Recently landed
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
+
+- **#151** (PR #153, 2026-08-27) — four external names were each exported by two
+  archived objects. Three were byte-identical twins from a mistyped filename
+  (`diff` on the generated assembler is empty for all three pairs); `@@ERRNO`
+  was a function prologue in one object and a `DC F'0'` in the other, while
+  every `errno` in the ecosystem compiles to `L 15,=V(@@ERRNO)` + `BALR`
+  (measured, `src/dyn75/@@75sock.s:66`) — so link order decided whether `errno`
+  reached the per-task accessor or branched onto four zero bytes. Latent, never
+  observed. Archive 737 → 733 members, nothing else changed; the surviving
+  object of each pair is the one that was already being linked. Guarded by
+  `sdk/dupscan.py`, a fail-closed build step scoped to exactly the archived set,
+  proven red when the offender is restored. Note for cc370: the as370 corpus
+  manifest lists these four, and that gate was already red — 110 `CHANGED` and
+  10 coverage drifts from a manifest generated 2026-07-18, 58 `src/` commits ago.
 
 - **#108 closed** (2026-08-26) — the `jesjob(dd=1)` S0C4 hunt, closed on the
   2026-08-23 re-verification run (~2100 `dd=1` walks on a build confirmed to be
