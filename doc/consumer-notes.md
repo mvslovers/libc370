@@ -323,6 +323,28 @@ copies them to `<sysroot>/macros`, which an installed as370 finds by default
 
 So JES2 code assembles on the host with no `SYS1.HASPSRC` and no `MAC2=` anywhere.
 
+**What gets into `sysmac/` — and what does not.** The criterion is *libc370
+assembles it itself*: a member belongs here when one of the 27 hand-written
+`asm/*.asm`, one of the `.s` generated from `src/`, or one of the `maclib/`
+macros reaches it, directly or as an inner macro. Measured 2026-08-30, that is
+**120 of the 123** members. `sysmac/` is not a general SYS1.MACLIB mirror and
+must not grow into one — a project that needs a macro libc370 does not use
+brings its own and points `as370` at it with `-I`, which is searched **before**
+the sysroot, so it still gets the other 120 for free. The alternative — adding
+on request — quietly makes libc370 the ecosystem's system macro library and
+leaves it maintaining members it never assembles. That was decided on #155,
+where a COBOL-74 code generator's output wanted `SPIE`, `TIME`, `WTOR` and
+`PUTX`: real needs, all four declined here, because the generator decides its
+own macro set and nothing in this repo can anticipate it.
+
+Three members predate the rule and fail it. `GENCB` and `TESTCB` have no user
+anywhere in the ecosystem — dead weight, harmless, left alone. `XCTL` does:
+rexx370's `asm/irxtmpw.asm:110` (`XCTL EP=IKJEFT01`, a declared build source),
+and rexx370 carries no macro directory of its own, so it takes it from
+`<sysroot>/macros`. **Removing `xctl.macro` would break that build.** It is the
+standing reminder that `<sysroot>/macros` is a published surface: what goes in
+is a decision, and what comes back out is a breaking change.
+
 ## Crypto
 
 Blowfish (`bfishkey`, `bfishenc`, `bfishdec`) and SHA-256 (`sha256i`, `sha256u`,
