@@ -102,7 +102,9 @@ functions rather than two.** The sweep that settled it found the same shape in
 The convention lives in #61, retitled to hold it. Details in Tier 2 below; the
 short form is that it needs no signature change and no relink, and that it moves
 the wrong answer rather than removing it, so three consumer follow-ups are part
-of the campaign and none of them is filed yet.
+of the campaign — filed 2026-08-30 as `mvslovers/ftpd#118`,
+`mvslovers/mvsmf#360` and `mvslovers/lua370#15`, each marked blocked by the
+libc370 issue it waits on.
 
 ---
 
@@ -219,8 +221,14 @@ overloaded as "empty / not found" by every consumer: mvsMF answers 404
 (`dsapi.c:713-716`), ftpd answers 550 (`ftpd#mvs.c:943`), lua370 does not check
 at all (`loslib.c:1111`). So a storage shortage will be reported as an empty
 result instead of a short one until those three read `errno` — **three
-consumer-side follow-ups, none of them filed**. Without them, "fixed in libc370"
-reads as fixed when it is not.
+consumer-side follow-ups**, filed 2026-08-30 and each blocked by the libc370
+issue it waits on: `mvslovers/ftpd#118` and `mvslovers/mvsmf#360` (both on #80
+defect 3 and #157), `mvslovers/lua370#15` (on #61). Without them, "fixed in
+libc370" reads as fixed when it is not.
+
+lua370 is worth noting separately: it is the **only** live consumer of
+`__listvl()` anywhere, so #61's consumer side is that one ticket and nothing
+else.
 
 **Ordering against #80 defect 1** (Tier 5 item 10): if the shortfall is ever to
 be signalled explicitly rather than through `errno`, it belongs *in* that
@@ -461,7 +469,8 @@ there is none today.
 - **Unchecked allocation** — #61, #80 defect 3, #157 and #158. The convention is
   settled (NULL + guaranteed `errno`, 2026-08-30, recorded in #61) and covers all
   four list builders; what is open is one implementation pass over them, plus
-  three consumer follow-ups that are not filed yet. PR #139 made this the
+  three consumer follow-ups (`ftpd#118`, `mvsmf#360`, `lua370#15`) that are filed
+  and blocked on it. PR #139 made this the
   campaign's remaining libc370-side content: it bounded the walk but deliberately
   did not signal the shortfall.
 - **Compiler visibility** — #125, #39, #68 (#104 and #70 landed). The goal is
