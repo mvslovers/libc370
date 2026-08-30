@@ -6,6 +6,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- **`SPIE`, `TIME` and `WTOR` in the `sysmac/` mirror (#155).** The mirror is
+  the host-only copy of the SYS1.MACLIB members `as370` needs, and it grew from
+  what libc370's own hand-written assembler happened to reference — 123 members
+  (the issue says 124; `ls | wc -l` counted a header line).
+  A *generator* is a newer consumer, and its macro set is decided by the code it
+  emits: a COBOL-74 compiler's output expands `SPIE` (program-interruption exit,
+  SVC 14), `TIME` (SVC 11) and, for `ACCEPT FROM CONSOLE`, `WTOR` (SVC 35).
+  Against the mirror as it stood, `as370` gave RC=8 with `Undefined operation
+  code`, plus a knock-on `Undefined symbol` where a `TIME` card carried a label.
+  The three files are copied verbatim from the same SYS1.MACLIB extract the rest
+  came from — 102 of the 123 already there are byte-identical to it, the other
+  21 being SYS1.AMODGEN mappers (`CVT`, `IHAPSA`, `IKJTCB`, …) and three local
+  divergences (`getmain`, `idavscb3`, `idavsopt`). Nothing else was needed:
+  whatever `WTOR` reaches for is already covered by the `IHB01`/`IHBERMAC`/
+  `IHBINNRA`/`IHBINNRB` set that `WTO` brought in.
+  **Measured, not assumed** — RC=0 alone would not prove a macro expanded rather
+  than expanded to nothing, which is the exact failure `sdk/mklibc.py:111` warns
+  about. cc370's `as370` suite (mvslovers/cc370#52) carries two byte-identity
+  fixtures gated on `spie.macro`/`time.macro` being present; both went from
+  SKIPPED to OK, and the suite is 53/53 with `ALL SAMPLES BYTE-IDENTICAL TO
+  IFOX00`. For `WTOR`, which has no reference deck, `cobc370/src/hw.s`
+  assembles RC=0 with the SVCs in the listing (`0A0E` once, `0A0B` three times,
+  `0A23` at the `WTOR` card) and a deck of 104 cards — 3 sections, 15 `LD`, 2
+  `ER`, 4806 bytes of text, 2 RLD — which `ld370` links RC=0 to a 6224-byte
+  module. Nothing in libc370 uses any of the three, so `make build` is
+  unchanged (733 archived, no duplicate externals).
+
 ### Fixed
 - **Four external names were each exported by two archived objects, and
   `@@ERRNO` was a data word in one of them (#151).** The archive namespace is
