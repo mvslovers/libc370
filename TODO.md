@@ -10,8 +10,8 @@ libc370 is the base library of the whole ecosystem, so a defect here is a defect
 in httpd, mvsMF, ftpd, ufsd and every other consumer at once; that is what puts
 some cheap items high and some expensive ones low.
 
-*Last reconciled against the tracker: 2026-08-27, 27 issues open — of which the
-ranked list below covers 22; #151 is fixed and merged.* **Four are
+*Last reconciled against the tracker: 2026-08-30, 29 issues open — of which the
+ranked list below covers 25; #151 is fixed and merged.* **Four are
 filed but not yet ranked**, all newer than the last full reconciliation: #142 (`jesopen()` should dynalloc the
 checkpoint and spool — measured 2026-08-27, and the issue text understates it
 both ways: `__cpopen()`/`__jsopen()` **already** dynalloc when the argument is
@@ -22,19 +22,22 @@ prefix lives in the HCT, which is unreachable from another address space. See
 the measurements in the issue), #143 (no volume-addressed
 SCRATCH/RENAME), #144 (an MVS test for `select()` silently dropping sockets)
 and #149 (stdio fail-fast after `_FILE_FLAG_ERROR`, plus `clearerr()`). Place them
-on the next pass rather than guessing a tier for them here. (#155 was the
-fifth and is closed — see the update below; it asked for macros libc370 does
+on the next pass rather than guessing a tier for them here. (#155 was a fifth
+and is closed — see the update below; it asked for macros libc370 does
 not assemble.)
 
-**Tier 1 no longer holds a live defect, and that is the news.** #107, #70,
+**Tier 1 was emptied by seven closures and then refilled by an issue that had
+been sitting in the tracker the whole time.** #107, #70,
 #80 defect 2, **#11** (PRs #137, #138, #139, #141, merged 2026-08-23 on top of
 the CHANGELOG backfill `3e9c15b`), then #145, #147 and now **#108** are all
 closed. #11 was the only *observed and recurring* production failure on this
-list since July, and #108 was the last open crash hunt. Nothing below is a
-failure anyone is currently seeing on a running system: what remains is two
-**campaigns**, a **relink round**, and a set of traps that have not bitten yet.
-Rank accordingly — every choice here is a judgement about order, not an
-emergency.
+list since July, and #108 was the last open crash hunt — after which, for three
+days, nothing ranked here was a failure anyone was seeing on a running system.
+**#154 ends that**, and it was not new: filed 2026-08-27, missed by that day's
+reconciliation, ranked 2026-08-30 as item 1. Below it the picture is unchanged —
+two **campaigns**, a **relink round**, and a set of traps that have not bitten
+yet. Rank accordingly: past item 1, every choice here is a judgement about
+order, not an emergency.
 
 **Update 2026-08-26: #145 briefly refilled Tier 1 — and is closed again.**
 `vvprintf()`'s nested public `fputs()`/`putc()` released the FILE lock at the
@@ -93,35 +96,148 @@ with no macro directory of its own. All three stay: `<sysroot>/macros` is a
 published surface, so removing a member is a breaking change and needs its own
 decision, not a tidy-up.
 
+**Update 2026-08-30: the Tier 2 convention is decided, and the campaign is four
+functions rather than two.** The sweep that settled it found the same shape in
+`__listds()` and `__listal()`, both unfiled until now — **#157** and **#158**.
+The convention lives in #61, retitled to hold it. Details in Tier 2 below; the
+short form is that it needs no signature change and no relink, and that it moves
+the wrong answer rather than removing it, so three consumer follow-ups are part
+of the campaign and none of them is filed yet.
+
 ---
 
-## Tier 1 — empty
+## Tier 1 — one live defect
 
-Nothing here. #151 was the last entry and landed via PR #153; the ranked work
-starts at Tier 2. Keep this section — the next measured defect belongs in it, not
-appended to a campaign.
+### 1 · #154 — `recv()` caps its X'75' chunk at 4096, and only 256 or less is safe
+
+Filed 2026-08-27, missed by that day's reconciliation and by every list in this
+file until 2026-08-30. It is ranked here rather than parked with the unranked
+items because the argument is read off the emulator source rather than inferred,
+and because what it describes is silent data corruption in every X'75' consumer.
+
+`@@75recv.c:29-36` caps each RECV at 4096 and explains it with a dyn75/Hercules
+buffer-size limit. **The observation is right and the explanation is wrong**, so
+the cap does not prevent the thing it was written for.
+
+X'75' copies in **256-byte segments** and the instruction is restartable.
+Upstream `x75.c` recomputes the host-side pointer on every entry:
+
+```c
+if (regs->GR_L(1) != 0) s = (unsigned char *)(map32[regs->GR_L(2)]);
+```
+
+The guest side has architected state to resume from — the base register
+`GR_L(b2)` and the remaining count `GR_L(1)` both survive a nullifying
+exception. The host side has none: R2 is a slot index that never advances. So
+after a page fault on the guest buffer the copy resumes from the **start** of
+the host buffer and writes it to the already-advanced guest address. That is
+exactly the symptom the comment records.
+
+`vstorec()` resolves both page addresses through `MADDRL` before either
+`memcpy`, so one segment is atomic against a translation exception. **256 or
+less is immune by construction**: a single segment either faults having copied
+nothing — where resuming from the start is correct — or completes. Above 256 a
+segment can complete before a later one faults, and the likelihood scales with
+how many guest pages the copy touches. That is the whole of the observed size
+correlation.
+
+Which is why every cap so far worked and then failed. 4096 here since `cd43a70`
+(December 2024) is still 16 segments; mvsMF then met the same corruption at
+>2048 **with that cap in place**, capped at 2048 (`d2783f5`), and that failed
+five days later (`4bc1014`). `receive_raw_data()` has read **one byte per
+`recv()`** ever since — immune for the same reason 256 is. Sighted independently
+outside the ecosystem too: `twinslow/mvs_nfsd`, `socktest/`, same X'75' layer.
+
+**The change is one line and a truthful comment**, and it does not wait on the
+emulator. The host-side fix exists as uncommitted work in the local hyperion
+checkout (`x75.c`, `x75.h`, `tcpip.c` on `develop`, adding
+`+ lar_offset(&regs->gr[0])` so the host pointer resumes where the guest one
+did); neither change requires the other. The cap is also **permanent**: a guest
+cannot detect a patched emulator — no return value, status bit or function code
+distinguishes one, and adding such a thing would change the interface for every
+existing guest — so this can never be raised again on the strength of a fixed
+host.
+
+Cost is 16x more X'75' pairs than at 4096, and still a large net win against
+what consumers actually do: roughly 5700 pairs for a 1.4 MB body, against
+roughly 1.47 million single-byte `recv()` calls in mvsMF's present workaround.
+Once it lands, mvsMF can return `receive_raw_data()` to bulk reads.
+
+**`@@75send.c` is deliberately out of scope** — same exposure and no cap at all
+(`:46` passes `len` straight through), the mirror image with the host buffer
+losing its leading segments. Capping it changes what every caller sees per call,
+because `send()` returns a byte count and callers loop on partial writes. Its
+own decision and its own issue, not filed yet.
+
+The asymmetry in what has been observed fits the mechanism: a send buffer was
+just written by the application and is hot, while a receive buffer can have lain
+idle across an I/O wait — exactly when its pages get stolen.
 
 ---
 
 ## Tier 2 — campaign: unchecked allocation
 
-### 1 · #61 — `__listvl()` silently returns a truncated volume list, and #80 defect 3
+### 2 · #61, #80 defect 3, #157, #158 — four list builders hand back a silently short list
 
-Now the whole of this campaign, and #80's remaining weight sits here: defect 2
-landed in PR #139, which deliberately stops the walk and keeps what the block
-already yielded **without signalling the shortfall** — precisely the gap defect 3
-has to close, in `__listpd()` and `__listvl()` alike.
+**The convention is decided (2026-08-30) and recorded in #61**, which was
+retitled to hold it: on any allocation failure a list builder frees the partial
+list and everything in it, returns `NULL`, guarantees `errno == ENOMEM` at the
+return, and sets `errno = 0` on entry so a legitimately empty `NULL` is not read
+as a failure. No signature change, no relink. What is left is the
+implementation — four functions, one pass, one convention.
 
-Same shape as #80 defect 3. The two need **one** convention rather than two
-separate decisions — apply the recommendation from #61 (variant 2: fail
-completely, return NULL) to both. The caller has to check for NULL anyway, and a
-short list that looks complete is worse than no list at all.
+The sweep that settled it found the family is four, not two:
+
+| Function | On allocation failure | Issue |
+|---|---|---|
+| `__listpd()` | `goto quit` → partial list | #80 defect 3 |
+| `__listvl()` | `break` → partial list | #61 |
+| `__listds()` | callback returns 0, **the scan continues** → holes in the middle | #157 |
+| `__listal()` | `goto quit` → partial list, **and the record leaks** | #158 |
+
+**`__listds()` fails worst and has the most live callers** (ftpd ×2, mvsMF ×2).
+It does not truncate: `parse()` returns 0 after the failure and `__listc()` keeps
+feeding lines, so entries go missing out of the *middle* and the list ends
+exactly where a good run would end. mvsMF's data set list endpoint
+(`dsapi.c:1313`) renders that as a complete listing with a data set absent from
+it — a false negative with no short tail to notice. Its own complication is that
+the callback cannot stop the scan at all: `__listc()` discards the `prt()`
+return (`@@listc.c:67,93`).
+
+**The cost is not uniform.** For `__listpd()` the `errno` half is nearly free,
+and measured rather than assumed: `fclose()` never assigns `errno` itself, and
+the one write in its chain (`@@fflush.c:64`, `EIO`) is unreachable for a
+`"r,record"` FILE. For `__listvl()` there is a prerequisite — the `break` falls
+straight into the VATLST block, whose `fopen`/`fgets`/`fclose` can overwrite
+`errno`, and the `quit:` label at `@@listvl.c:136` has **no `goto` pointing at
+it**: that exit was written and never wired. `__listds()` has to carry its
+`errno` in `UDATA` across the rest of the scan. #158 also owes two plain
+`free()`s on its `array_add` paths, independent of the convention.
+
+**The fix moves the wrong answer, it does not remove it.** `NULL` is already
+overloaded as "empty / not found" by every consumer: mvsMF answers 404
+(`dsapi.c:713-716`), ftpd answers 550 (`ftpd#mvs.c:943`), lua370 does not check
+at all (`loslib.c:1111`). So a storage shortage will be reported as an empty
+result instead of a short one until those three read `errno` — **three
+consumer-side follow-ups, none of them filed**. Without them, "fixed in libc370"
+reads as fixed when it is not.
+
+**Ordering against #80 defect 1** (Tier 5 item 10): if the shortfall is ever to
+be signalled explicitly rather than through `errno`, it belongs *in* that
+signature change, not in a round of its own — otherwise `__listpd()` takes two
+API breaks in two releases. `errno` costs nothing and lands now; an explicit
+out-parameter can ride the relink round later, with `errno` as the fallback for
+callers that never adopt it.
+
+PR #139 is what made this the campaign's remaining content: it bounded
+`__listpd()`'s walk and deliberately kept what the block had already yielded
+**without signalling the shortfall**.
 
 ---
 
 ## Tier 3 — campaign: make the compiler see it (order matters)
 
-### 2 · #125 — inline-asm SVC macros with partial clobber lists
+### 3 · #125 — inline-asm SVC macros with partial clobber lists
 
 The one item in this campaign with a **measured miscompile in the wild**. In ftpd
 the same form put a struct pointer in R15 and kept it there across a `STIMER`; the
@@ -155,7 +271,7 @@ File-scope `__asm__` blocks that define standalone routines (`EXITDRVR`,
 `RETRY`/`RECOVERY`) are deliberately out of scope: they do their own
 `SAVE (14,12)` and do not share the compiler's register allocation.
 
-### 3 · #39 — 129 of 712 TUs with implicit declarations
+### 4 · #39 — 129 of 712 TUs with implicit declarations
 
 The parent case. Steps 1 (declare the 14 routines with no prototype) and 2 (the
 missing `#include`s) are mechanical and independent of each other. **The payoff is
@@ -167,7 +283,7 @@ link on the target only because the `__` → `@@` symbol mapping happens to prod
 the right CSECT — the same invisible-call shape the issue records for httpd's
 `__arcou()`. Worth folding into step 1 when it runs.
 
-### 4 · #68 — `format(printf)` for `wtof()`/`wtodumpf()`/`wtorf()`
+### 5 · #68 — `format(printf)` for `wtof()`/`wtodumpf()`/`wtorf()`
 
 Cheap here, **expensive across the ecosystem**: consumers clone libc370 `main`
 unpinned, so the attribute turns httpd, mvsMF and ftpd CI red — with the breakage
@@ -181,7 +297,7 @@ in *their* code. Keep the order the issue prescribes:
 
 ## Tier 4 — structural traps
 
-### 5 · #140 — `src/thdmgr/clibthdi.h` duplicates `include/clibthdi.h`
+### 6 · #140 — `src/thdmgr/clibthdi.h` duplicates `include/clibthdi.h`
 
 Filed while fixing #11, and it bit during that work. The quoted include in
 `src/thdmgr/*.c` finds the local copy, so **the library compiles against a
@@ -194,14 +310,14 @@ struct field would have linked and run, with the library and every consumer
 disagreeing about a layout. Exactly #17's shape, one tier's worth cheaper to
 fix: delete the copy and let `-I include` resolve it.
 
-### 6 · #17 — consolidate the two `try()` wrappers
+### 7 · #17 — consolidate the two `try()` wrappers
 
 The trap is **active, not dormant**: since it first bit (#9 hardened the
 unreachable copy), #89, #93 and #96 have each been applied *twice*. Every fix to
 the central recovery path costs two edits and one chance to hit the wrong file.
 Needs its own review and a validation plan — not a passenger in a relink round.
 
-### 7 · #72 — the PPA environment flags do not say what they claim
+### 8 · #72 — the PPA environment flags do not say what they claim
 
 No crash, but a documented API that answers wrongly: `TSOBG` is set in the TSO
 foreground, and `TIN`/`TOUT`/`TERR` are set nowhere. Cheapest honest fix: correct
@@ -209,7 +325,7 @@ the semantics of `TSOFG`/`TSOBG` and either set the three dead defines (in
 `@@fpstar.c`, which knows) or delete them. Declared-and-dead is the worst of the
 three options.
 
-### 8 · #105 — `GRTFLAG1_TSO` sticks beyond `__start()`
+### 9 · #105 — `GRTFLAG1_TSO` sticks beyond `__start()`
 
 A design decision, not a patch: recompute per `__start()` (set *and* clear), or
 move the TSO property into the CRT. The two readings differ for `fopen.c`,
@@ -220,7 +336,7 @@ move the TSO property into the CRT. The two readings differ for `fopen.c`,
 
 ## Tier 5 — consumers waiting (one coordinated relink, best done in a single round)
 
-### 9 · #80 defect 1 — `__listpd()` has no way to ask for less
+### 10 · #80 defect 1 — `__listpd()` has no way to ask for less
 
 What is left of #80 after PR #139, and it is narrow: one exposed caller, ftpd's
 `LIST`/`NLST` (`ftpd#mvs.c:941`) with a user-supplied filter. On `SYS1.SMPCDS`
@@ -229,24 +345,24 @@ member before returning anything. A `max` parameter or an iterator form fixes it
 but either is a signature change — hence this tier. It would also let mvsMF drop
 the duplicated directory parser it carries at `dsapi.c:2076`.
 
-### 10 · #79 — JESJOB carries no submit time
+### 11 · #79 — JESJOB carries no submit time
 
 Two lines plus a struct field. Zowe shows `exec-submitted` empty today, and
 `mvslovers/mvsmf#209` is waiting on the same gap for `exec-system`. Append at
 offset 0x50 as the issue describes, so 0x00-0x4F stays stable.
 
-### 11 · #50 — catalog name in DSLIST
+### 12 · #50 — catalog name in DSLIST
 
 Same class, more work. Decide before implementing: scrape `LISTCAT` output, walk
 the CVTCATP chain, or use the `LOCATE` return area.
 
-### 12 · #51 — `inet_addr()` / `inet_ntoa()`
+### 13 · #51 — `inet_addr()` / `inet_ntoa()`
 
 A good entry-level issue and a real memory win: it saves ftpd the entire `sscanf`
 in its load module — on a 24-bit target exactly the kind of saving that counts.
 Host test is trivial, because neither function touches MVS.
 
-### 13 · #71 — `idcams()` discards SYSPRINT and the IDCnnnn number
+### 14 · #71 — `idcams()` discards SYSPRINT and the IDCnnnn number
 
 One store in a `switch` branch that does nothing today, plus a companion accessor.
 Afterwards ftpd says "IDC3203I" instead of "failed". `idcams()` keeps its
@@ -256,7 +372,7 @@ signature.
 
 ## Tier 6 — latent, research, comfort
 
-### 14 · #114 — `osbclose()` does not free a buffer pool built by OPEN
+### 15 · #114 — `osbclose()` does not free a buffer pool built by OPEN
 
 Latent by our own analysis: `MACRF=R` and no BUFNO in the prototype DCB, so OPEN
 does not normally build a pool. The in-tree callers are one member rename and an
@@ -264,9 +380,9 @@ unbuilt wip tree. httpd#195 — the hunt that flushed this out — is closed; th
 by-catch, not the planter. Take it along whenever the `osb*` path is being worked
 on anyway.
 
-### 15 · #113 — `CRTOPTS_AUTH` is dead, an authorized task skips `__austep()`
+### 16 · #113 — `CRTOPTS_AUTH` is dead, an authorized task skips `__austep()`
 
-### 16 · #122 — `clib_apf_setup()`: the already-authorized path is dead code
+### 17 · #122 — `clib_apf_setup()`: the already-authorized path is dead code
 
 **These two are one root cause and must be decided together.** `crt->crtopts` is
 declared in `clibcrt.h:37` and tested in `@@apfset.c:15` — and **assigned
@@ -292,19 +408,19 @@ the missing IDENTIFY cannot reach it; its APF troubles (ufsd#64) were the
 module-storage ones. That leaves ftpd and httpd as the only consumers that both
 link `crt1` and create threads.
 
-### 17 · #27 — JES spool support is single-volume
+### 18 · #27 — JES spool support is single-volume
 
 Latent: the reference system has one spool volume and all 264 observed MTTRs carry
 `M=00`. It goes live the day a second volume appears — and then presents as
 "empty data set", not as an error.
 
-### 18 · #52 — a z/OS-compatible `dynit.h`
+### 19 · #52 — a z/OS-compatible `dynit.h`
 
 Decide *whether* before building: two APIs for one service (`__dsalc()` with a
 string, `dynalloc()` with a struct, both ending in `__svc99()`). Only worth it if
 z/OS code is actually being ported in.
 
-### 19 · #30 — SYSOUT through PSO/SSI instead of the checkpointed IOT
+### 20 · #30 — SYSOUT through PSO/SSI instead of the checkpointed IOT
 
 A research project with a cheap first step: add held-class selection in
 `jesxwrtr()` and measure once what comes back in `SSSODSN`. One job decides whether
@@ -312,19 +428,19 @@ the rest runs straight. Note it is **no longer a gate on `mvslovers/mvsmf#186`**
 #21 closing gave that endpoint what it needed — so start this only when someone
 needs it.
 
-### 20 · #37 — SDK: compile the `.c` files in parallel
+### 21 · #37 — SDK: compile the `.c` files in parallel
 
 6.7 s → ~1 s across 712 TUs. Developer comfort. Check first whether parallel
 `cc370` invocations are safe (cc1 temp files), and do not lose an error message.
 
-### 21 · #75 — `clock()` as real task CPU time
+### 22 · #75 — `clock()` as real task CPU time
 
 The issue says it itself: dormant, nobody is waiting, lua370 is not a blocker.
 Route (a) via TCT/`TCBTCT` would be the way, but it makes `clock()` SMF-dependent
 — decide before writing a line whether a conditionally working `clock()` is worth
 more than an honestly broken one.
 
-### 22 · #152 — `arraydel()` reads one slot past the allocation
+### 23 · #152 — `arraydel()` reads one slot past the allocation
 
 Bottom of the list on purpose: it is real, and it is currently harmless. The
 shift loop runs to `count` instead of `count - 1`, so on a full array it reads
@@ -340,12 +456,14 @@ there is none today.
 
 ---
 
-## Three campaigns instead of twenty-two tickets
+## Three campaigns instead of twenty-five tickets
 
-- **Unchecked allocation** — #61 and #80 defect 3. Settle one convention for the
-  whole library rather than deciding twice, separately. PR #139 made this the
-  campaign's whole remaining content: it bounded the walk but deliberately did
-  not signal the shortfall.
+- **Unchecked allocation** — #61, #80 defect 3, #157 and #158. The convention is
+  settled (NULL + guaranteed `errno`, 2026-08-30, recorded in #61) and covers all
+  four list builders; what is open is one implementation pass over them, plus
+  three consumer follow-ups that are not filed yet. PR #139 made this the
+  campaign's remaining libc370-side content: it bounded the walk but deliberately
+  did not signal the shortfall.
 - **Compiler visibility** — #125, #39, #68 (#104 and #70 landed). The goal is
   `-Wall` in the SDK build. #125 is the one with a measured failure and is
   independent of the rest; #68 goes last and in its own three-step order, or it
@@ -436,7 +554,7 @@ Pointers only. The reasoning lives in the closing comments and the PRs.
   at 254, `pos < 256` still held, and the sentinel `memcmp` read six bytes past a
   256-byte stack array. New host test `test/host/tstlspd.c`, 15/15 under ASan, red
   against the pre-fix source at `offset 320` of a `[64, 320)` frame array.
-  #80 stays open for defects 1 and 3, now ranked at items 10 and 3.
+  #80 stays open for defects 1 and 3, now ranked at items 10 and 2.
 - **#107** (PR #137, 2026-08-23) — `cthread_worker_add()` releases the manager
   lock when `cthread_create_ex()` fails. Verified in the generated assembly, there
   being no host harness for the thread manager: `cc370 -O1 -S` before and after
@@ -445,7 +563,8 @@ Pointers only. The reasoning lives in the closing comments and the PRs.
   and both `.c` files include it so the definitions are checked. No consumer
   conflicted: httpd's local declarations took their signatures from the same
   definitions. Generated code byte-identical, as a prototype should be.
-- **#108 re-verified, not closed** (2026-08-23) — see item 2. Clean run, but the
+- **#108 re-verified, not closed** (2026-08-23) — superseded by the closure
+  above. Clean run, but the
   address space never became degraded, so it is not yet the test the issue asks
   for. The decision to close is recorded there as open.
 
@@ -466,7 +585,7 @@ Pointers only. The reasoning lives in the closing comments and the PRs.
   untouched (no callers); `memcpyp()` and the now-redundant `(void*)` casts at
   the call sites are still open, unfiled.
 - **#125, the bare half** (PR #134) — ten inline SVC statements with no clobber
-  list at all. The partial-list half is ranked at 6 above.
+  list at all. The partial-list half is ranked at 3 above.
 - **#126 / #127** (PR #129 / #130, 2026-08-22) — the INTXT walk in `jesjob(dd=1)`
   now goes through `__jesprb()` and no longer leaks on an abend (that was the
   fragmentation behind `mvslovers/mvsmf#282` and `#287`, measured at ~26 KB per
@@ -481,12 +600,12 @@ Pointers only. The reasoning lives in the closing comments and the PRs.
 - **#21** (PR #31) — `jesprint()` reports *why* it stopped instead of returning
   `rc=0` with no lines, verified on the target. This unblocked
   `mvslovers/mvsmf#186`.
-- **#109 / #110 / #111** — every named suspect behind #108; see Tier 1 item 4.
+- **#109 / #110 / #111** — every named suspect behind #108; see its entry above.
 
 Two corrections that shifted this ranking against the original issue text, both
 pulled back into the issues on 2026-08-21:
 
-- **#108 is no longer "mechanism unlocated"** — see Tier 1 item 4.
+- **#108 is no longer "mechanism unlocated"** — see its entry above.
 - **The caller table in #80 was out of date.** httpd's `httpdslp.c` lives under
   `httpd/tbd/` and is not built (`httpd/project.toml:108-113`), and mvsMF moved
   from `dsapi.c:369` to `:540`. Corrected in the issue.
