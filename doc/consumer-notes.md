@@ -315,8 +315,11 @@ This is a property of the design, not a defect.
 
 ## Assembler macros are vendored — nothing comes from MVS
 
-`sysmac/` holds the SYS1.MACLIB members (including the JES2 ones: `$pso`,
-`$pddb`, `$sjb`, `$cmb`, `$tqe`), `maclib/` the crent/PDP macros; the crent
+`sysmac/` holds the system macros **libc370 itself assembles** — 120 of its 123
+members, drawn from SYS1.MACLIB, SYS1.AMODGEN and (for `$pso`, `$pddb`, `$sjb`,
+`$cmb`, `$tqe`) HASPSRC. It is deliberately **not** a general SYS1.MACLIB
+mirror; the criterion, the three exceptions and what a project does when it
+needs something else are below. `maclib/` holds the crent/PDP macros; the crent
 macros win on a name collision. `as370` gets both via `-I`, and `make install`
 copies them to `<sysroot>/macros`, which an installed as370 finds by default
 (otherwise `AS370_MACLIB=`).
