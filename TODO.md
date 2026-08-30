@@ -85,10 +85,13 @@ is unchanged, and the consumer is *outside* this repo — cc370's `as370` suite
 skips two byte-identity fixtures without `spie.macro`/`time.macro`, and both go
 green with them. What the issue asks and the PR does not decide is whether the
 mirror stays demand-driven or aims at a defined subset; the measurement that
-question needs is in the PR: of the 123 members, 102 are byte-identical to the
-local SYS1.MACLIB extract, 18 have no source there (the SYS1.AMODGEN mappers and
-the JES2 `$`-macros) and 3 diverge locally. The mirror is two archives plus
-divergence, so "a defined subset" would have to name both. **Mike's call.**
+question needs is in the PR: of the 123 members, 105 come from the local
+SYS1.MACLIB extract (102 byte-identical, three — `getmain`, `idavscb3`,
+`idavsopt` — identical once trailing blanks and CRLF are normalised, so no
+content diverges anywhere) and 18 do not exist in it at all: 13 SYS1.AMODGEN
+mappers and the five JES2 `$`-macros from HASPSRC. The mirror is faithful, but
+it is drawn from **three** libraries — so "a defined subset" would have to name
+all three, which is the part that makes it a decision. **Mike's call.**
 
 ---
 

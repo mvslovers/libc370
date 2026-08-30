@@ -16,11 +16,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   Against the mirror as it stood, `as370` gave RC=8 with `Undefined operation
   code`, plus a knock-on `Undefined symbol` where a `TIME` card carried a label.
   The files are copied verbatim from the same SYS1.MACLIB extract the rest
-  came from — 102 of the 123 already there are byte-identical to it, the other
-  21 being SYS1.AMODGEN mappers (`CVT`, `IHAPSA`, `IKJTCB`, …) and three local
-  divergences (`getmain`, `idavscb3`, `idavsopt`). Nothing else was needed:
-  whatever `WTOR` reaches for is already covered by the `IHB01`/`IHBERMAC`/
-  `IHBINNRA`/`IHBINNRB` set that `WTO` brought in.
+  came from, and that extract accounts for 105 of the 123 members already
+  present: 102 byte-identical, and `getmain`, `idavscb3`, `idavsopt` identical
+  once line endings and trailing blanks are normalised — `getmain` keeps the
+  80-column card padding the extract's copy has trimmed, the two VSAM inner
+  macros carry CRLF from the path they arrived by (`5d3d321`). Not one byte of
+  *content* diverges anywhere in the mirror. The remaining 18 are the ones this
+  extract does not hold at all: 13 SYS1.AMODGEN mappers (`CVT`, `IHAPSA`,
+  `IKJTCB`, `IEZDEB`, …) and the five JES2 `$`-macros from HASPSRC, per
+  `b8359d8` and `ade833a`. Nothing else was needed: whatever `WTOR` reaches for
+  is already covered by the `IHB01`/`IHBERMAC`/`IHBINNRA`/`IHBINNRB` set that
+  `WTO` brought in.
   **Measured, not assumed** — RC=0 alone would not prove a macro expanded rather
   than expanded to nothing, which is the exact failure `sdk/mklibc.py:111` warns
   about. cc370's `as370` suite (mvslovers/cc370#52) carries two byte-identity
