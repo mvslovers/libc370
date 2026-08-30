@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+- **`sysmac/` has a written scope rule, and #155 is declined against it.** The
+  criterion is *libc370 assembles it itself* — a member belongs in the mirror
+  when one of the 27 hand-written `asm/*.asm`, one of the `.s` generated from
+  `src/`, or one of the `maclib/` macros reaches it, directly or as an inner
+  macro. Measured, that is **120 of the 123** members. #155 asked for four more
+  (`SPIE`, `TIME`, `WTOR`, `PUTX`) because a COBOL-74 code generator's output
+  expands them; all four declined. The need is real, but the consumer is a
+  *generator* — it decides its own macro set from the code it is given, so
+  nothing here can anticipate it, and adding on request turns libc370 into the
+  ecosystem's system macro library by accident. A project that needs a macro
+  libc370 does not use brings it along and points `as370` at it with `-I`,
+  which is searched before the sysroot, so it keeps the other 120 for free.
+  The rule and the three pre-existing exceptions are in
+  `doc/consumer-notes.md`; one of them, `xctl.macro`, has a live consumer in
+  rexx370, which is why `<sysroot>/macros` is treated as a published surface.
+
 ### Fixed
 - **Four external names were each exported by two archived objects, and
   `@@ERRNO` was a data word in one of them (#151).** The archive namespace is

@@ -20,9 +20,11 @@ name is not a constant — JES2 builds it from `$DSNPRFX` (init parameter,
 default `SYS1`) plus the assembled literal `.HASPACE`/`.HASPCKPT`, and that
 prefix lives in the HCT, which is unreachable from another address space. See
 the measurements in the issue), #143 (no volume-addressed
-SCRATCH/RENAME), #144 (an MVS test for `select()` silently dropping sockets) and
-#149 (stdio fail-fast after `_FILE_FLAG_ERROR`, plus `clearerr()`). Place them
-on the next pass rather than guessing a tier for them here.
+SCRATCH/RENAME), #144 (an MVS test for `select()` silently dropping sockets)
+and #149 (stdio fail-fast after `_FILE_FLAG_ERROR`, plus `clearerr()`). Place them
+on the next pass rather than guessing a tier for them here. (#155 was the
+fifth and is closed — see the update below; it asked for macros libc370 does
+not assemble.)
 
 **Tier 1 no longer holds a live defect, and that is the news.** #107, #70,
 #80 defect 2, **#11** (PRs #137, #138, #139, #141, merged 2026-08-23 on top of
@@ -75,6 +77,21 @@ link order happened to pick the right one — and now pinned by deletion rather
 than by luck. The guard is `sdk/dupscan.py`, a build step scoped to exactly the
 set being archived (733 modules, matching the archive exactly), fail-closed before it
 is written. That empties Tier 1 again.
+
+**Update 2026-08-30: #155 is decided and closed — the mirror's scope is now a
+written rule.** The ask was four SYS1.MACLIB members a COBOL-74 code generator's
+output expands (`SPIE`, `TIME`, `WTOR`, `PUTX`). All four declined, and the
+reason generalises: `sysmac/` exists to carry what **libc370 itself assembles**,
+and a generator decides its own macro set, so adding on request quietly turns
+this repo into the ecosystem's system macro library. The rule is in
+`doc/consumer-notes.md`, with the measurement behind it — 120 of the 123 members
+are reachable from libc370's own build (27 `asm/*.asm` + 716 generated `.s` +
+`maclib/`, inner macros closed transitively). The three that are not: `GENCB`
+and `TESTCB` have no user anywhere in the ecosystem, and `XCTL` has one that
+matters — rexx370's `asm/irxtmpw.asm:110`, a declared build source in a project
+with no macro directory of its own. All three stay: `<sysroot>/macros` is a
+published surface, so removing a member is a breaking change and needs its own
+decision, not a tidy-up.
 
 ---
 
