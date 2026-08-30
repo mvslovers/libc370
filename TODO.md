@@ -11,7 +11,7 @@ in httpd, mvsMF, ftpd, ufsd and every other consumer at once; that is what puts
 some cheap items high and some expensive ones low.
 
 *Last reconciled against the tracker: 2026-08-27, 27 issues open — of which the
-ranked list below covers 22; #151 is fixed and merged.* **Four are
+ranked list below covers 22; #151 is fixed and merged.* **Five are
 filed but not yet ranked**, all newer than the last full reconciliation: #142 (`jesopen()` should dynalloc the
 checkpoint and spool — measured 2026-08-27, and the issue text understates it
 both ways: `__cpopen()`/`__jsopen()` **already** dynalloc when the argument is
@@ -20,9 +20,11 @@ name is not a constant — JES2 builds it from `$DSNPRFX` (init parameter,
 default `SYS1`) plus the assembled literal `.HASPACE`/`.HASPCKPT`, and that
 prefix lives in the HCT, which is unreachable from another address space. See
 the measurements in the issue), #143 (no volume-addressed
-SCRATCH/RENAME), #144 (an MVS test for `select()` silently dropping sockets) and
-#149 (stdio fail-fast after `_FILE_FLAG_ERROR`, plus `clearerr()`). Place them
-on the next pass rather than guessing a tier for them here.
+SCRATCH/RENAME), #144 (an MVS test for `select()` silently dropping sockets),
+#149 (stdio fail-fast after `_FILE_FLAG_ERROR`, plus `clearerr()`) and #155
+(three SYS1.MACLIB members missing from the `sysmac/` mirror — PR #156 open,
+and see the update below: it is not a defect, so it may never take a tier).
+Place them on the next pass rather than guessing a tier for them here.
 
 **Tier 1 no longer holds a live defect, and that is the news.** #107, #70,
 #80 defect 2, **#11** (PRs #137, #138, #139, #141, merged 2026-08-23 on top of
@@ -75,6 +77,18 @@ link order happened to pick the right one — and now pinned by deletion rather
 than by luck. The guard is `sdk/dupscan.py`, a build step scoped to exactly the
 set being archived (733 modules, matching the archive exactly), fail-closed before it
 is written. That empties Tier 1 again.
+
+**Update 2026-08-30: #155 has a PR open (#156) and is not ranked.** Three
+SYS1.MACLIB members the `sysmac/` mirror never carried — `SPIE`, `TIME`, `WTOR`.
+Not a defect and not a tier: nothing in libc370 uses any of them, `make build`
+is unchanged, and the consumer is *outside* this repo — cc370's `as370` suite
+skips two byte-identity fixtures without `spie.macro`/`time.macro`, and both go
+green with them. What the issue asks and the PR does not decide is whether the
+mirror stays demand-driven or aims at a defined subset; the measurement that
+question needs is in the PR: of the 123 members, 102 are byte-identical to the
+local SYS1.MACLIB extract, 18 have no source there (the SYS1.AMODGEN mappers and
+the JES2 `$`-macros) and 3 diverge locally. The mirror is two archives plus
+divergence, so "a defined subset" would have to name both. **Mike's call.**
 
 ---
 

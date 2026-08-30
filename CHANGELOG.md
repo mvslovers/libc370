@@ -9,8 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ### Added
 - **`SPIE`, `TIME` and `WTOR` in the `sysmac/` mirror (#155).** The mirror is
   the host-only copy of the SYS1.MACLIB members `as370` needs, and it grew from
-  what libc370's own hand-written assembler happened to reference — 123 members
-  (the issue says 124; `ls | wc -l` counted a header line).
+  what libc370's own hand-written assembler happened to reference — 123 members.
   A *generator* is a newer consumer, and its macro set is decided by the code it
   emits: a COBOL-74 compiler's output expands `SPIE` (program-interruption exit,
   SVC 14), `TIME` (SVC 11) and, for `ACCEPT FROM CONSOLE`, `WTOR` (SVC 35).
