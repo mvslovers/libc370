@@ -155,8 +155,30 @@ emulator. The host-side fix is committed on the fork as
 `mvslovers/hyperion` `fix/x75-restart-resume` (`fcf7d15d`, adding
 `+ lar_offset(&regs->gr[0])` so the host pointer resumes where the guest one
 did), with a red/green pair on `diag/x75-restart-trace` that instruments every
-restart; it builds clean but has not been measured yet. Neither change requires
-the other. The cap is also **permanent**: a guest
+restart. Neither change requires the other.
+
+**The mechanism is now measured, not read off source.** `test/mvs/tst75rst.c`
+forces the fault (page boundary at a chosen multiple of 256, `PGRLSE` on the
+page beyond it) and was run on MVSCE on 3 Sep 2026 against both halves of the
+red/green pair:
+
+| Case | red `first_bad` | green `first_bad` |
+|---|---|---|
+| boundary 0 (control) | none | none |
+| boundary 256 | **256** | none |
+| boundary 512 | **512** | none |
+| boundary 768 | **768** | none |
+
+Red `JOB03045` RC=8 under `gf1f1f9d1`, green `JOB03046` RC=0 under
+`g392c22c6`. In every red case the tail is a clean replay of the host buffer
+from its start, and the emulator's own trace reports `done` equal to the
+guest's `first_bad`. The control faults having copied nothing and is clean on
+both — which is exactly why **256 or less is immune**, and that is no longer an
+argument but an observation. The three restarts after a completed segment still
+occur under green with the same `done` values, so the fix changed the resume
+path and not the fault rate.
+
+The cap is also **permanent**: a guest
 cannot detect a patched emulator — no return value, status bit or function code
 distinguishes one, and adding such a thing would change the interface for every
 existing guest — so this can never be raised again on the strength of a fixed
