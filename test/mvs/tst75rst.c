@@ -87,7 +87,9 @@
  * RC: 0 = all expectations met, 8 = at least one did not.
  */
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <clibwto.h>
 #include <socket.h>
 #include <__75.h>
 
@@ -104,10 +106,20 @@
 /* boundary offset inside the receive buffer; 0 is the control case */
 static const unsigned boundary[NCASE] = { 0, 256, 512, 768 };
 
-static unsigned char arena[4 * PAGE];
+/* The arena is malloc'ed rather than static: program statics live in the load
+   module's own storage, which PGRLSE need not accept, while heap storage is
+   ordinary user subpool storage.  Over-allocated by a page so a page boundary
+   can be found inside it. */
+static unsigned char *arena;
+
+/* How PGRLSE wants its high address, decided by probing at run time rather
+   than assumed: PAGE-1 if the last byte of the page works, PAGE if it wants
+   the first byte of the next one.  0 means neither did. */
+static unsigned hi_bias;
 
 static int  check(const char *what, int ok);
-static void pgrlse(void *lo, void *hi);
+static int  pgrlse(void *lo, void *hi);
+static int  release_page(unsigned char *page);
 static void snooze(void);
 static int  recv75(int s, void *buf, unsigned len);
 static int  send_all(int s, const unsigned char *buf, unsigned len);
@@ -124,21 +136,60 @@ int main(void)
     unsigned        i;
     int             bad   = 0;
     int             rc;
+    int             rc_in, rc_ex;
+    int             ok_in, ok_ex;
 
     /* primes the stdio buffers before anything is measured */
     printf("TST75RST - libc370 #154 probe\n\n");
+
+    arena = (unsigned char *)malloc(5 * PAGE);
+    if (!arena) {
+        printf("*** FAIL  no storage for the arena\n");
+        wtof("TST75RST FAILED - no arena");
+        return 8;
+    }
 
     base  = (unsigned char *)(((unsigned)arena + PAGE - 1)
                               & ~(unsigned)(PAGE - 1));
     page1 = base + PAGE;
 
-    /* Does PGRLSE release on this system?  Fill, release, read back.  A
-       released page reads as zeros; if it still reads 0xFF nothing was
-       released and every case below would pass for the wrong reason. */
+    /* Does PGRLSE release on this system, and which high address does it
+       want?  Fill, release, read back: a released page reads as zeros, so if
+       it still reads 0xFF nothing was released and every case below would
+       pass for the wrong reason.  Both conventions for the high address are
+       tried rather than assumed - PGRLSE rounds inward, so an off-by-one
+       there makes the range empty and the call a silent no-op. */
     memset(page1, 0xFF, PAGE);
-    pgrlse(page1, page1 + PAGE - 1);
-    bad += check("PGRLSE releases the page (reads back zero)",
-                 page1[0] == 0x00 && page1[SEG] == 0x00);
+    rc_in = pgrlse(page1, page1 + PAGE - 1);       /* last byte of the page  */
+    ok_in = (page1[0] == 0x00 && page1[SEG] == 0x00);
+
+    rc_ex = -1;
+    ok_ex = 0;
+    if (!ok_in) {
+        memset(page1, 0xFF, PAGE);
+        rc_ex = pgrlse(page1, page1 + PAGE);       /* first byte beyond it   */
+        ok_ex = (page1[0] == 0x00 && page1[SEG] == 0x00);
+    }
+
+    hi_bias = ok_in ? (PAGE - 1) : (ok_ex ? PAGE : 0);
+
+    printf("  PGRLSE  hi=page+%u: rc=%d %s / hi=page+%u: rc=%d %s\n",
+           PAGE - 1, rc_in, ok_in ? "released" : "no-op",
+           PAGE, rc_ex, ok_ex ? "released" : "no-op");
+    wtof("TST75RST pgrlse incl rc=%d ok=%c excl rc=%d ok=%c bias=%u",
+         rc_in, ok_in ? 'Y' : 'N', rc_ex, ok_ex ? 'Y' : 'N', hi_bias);
+
+    bad += check("PGRLSE releases a page (reads back zero)", hi_bias != 0);
+
+    if (hi_bias == 0) {
+        /* Without a forced fault every case below would pass on a broken
+           emulator too, so do not run them and do not imply a verdict. */
+        printf("\n  PGRLSE released nothing - the probe cannot force a fault,\n");
+        printf("  so the receive cases are NOT run.  No verdict either way.\n");
+        printf("\nTST75RST FAILED\n");
+        wtof("TST75RST FAILED - pgrlse no-op, cases not run");
+        return 8;
+    }
 
     /* one listener for the whole run; a fresh connected pair per case */
     lsock = socket(AF_INET, SOCK_STREAM, 0);
@@ -188,6 +239,9 @@ int main(void)
     printf("  restarts 'after a completed segment' alongside this RC.\n");
 
     printf("\nTST75RST %s\n", bad ? "FAILED" : "PASSED");
+
+    if (bad) wtof("TST75RST FAILED (%d checks)", bad);
+    else     wtof("TST75RST PASSED");
 
     return bad ? 8 : 0;
 }
@@ -271,7 +325,7 @@ static int run_case(int lsock, unsigned port, unsigned bound)
 
     /* release the page the buffer runs into, then receive at once - nothing
        may touch that page in between or it becomes resident again */
-    pgrlse(page1, page1 + PAGE - 1);
+    release_page(page1);
 
     got = recv75(ssock, buf, BUFLEN);
 
@@ -294,6 +348,7 @@ static int run_case(int lsock, unsigned port, unsigned bound)
 
     if (clean) {
         printf("    ok    %u bytes, pattern intact\n", (unsigned)got);
+        wtof("TST75RST b=%u got=%u first_bad=none", bound, (unsigned)got);
         return 0;
     }
 
@@ -324,6 +379,12 @@ static int run_case(int lsock, unsigned port, unsigned bound)
         printf("              the tail is not a clean replay - some other"
                " corruption\n");
     }
+
+    /* SYSOUT sits in the QSAM buffer until fclose and an abend discards it;
+       the WTO is in the job log the moment it is issued */
+    wtof("TST75RST b=%u got=%u first_bad=%u mult256=%c replay=%c",
+         bound, (unsigned)got, first_bad,
+         (first_bad % SEG == 0) ? 'Y' : 'N', clean ? 'Y' : 'N');
 
     return bad;
 }
@@ -396,20 +457,35 @@ static int wait_for(int s, unsigned want)
 }
 
 /*
- * PGRLSE (SVC 112) releases whole pages: R0 = low address, R1 = high address.
- * It rounds INWARD, so a partial page at either end is left alone - both
- * addresses here are inside one page by construction.
+ * PGRLSE (SVC 112) releases whole pages: R0 = low address, R1 = high address,
+ * return code in R15.  It rounds INWARD, so whether the high address is the
+ * last byte of the page or the first byte beyond it decides between releasing
+ * one page and releasing nothing at all.  main() probes which, rather than
+ * assuming; a silent no-op here would make every case pass for the wrong
+ * reason.
  */
-static void pgrlse(void *lo, void *hi)
+static int pgrlse(void *lo, void *hi)
 {
+    int rc = -1;
+
     __asm__("\n"
 "*\n"
-"* release pages via SVC 112 (PGRLSE): R0 = low, R1 = high\n"
+"* release pages via SVC 112 (PGRLSE): R0 = low, R1 = high, R15 = rc\n"
 "*\n"
-"         LR\t0,%0\n\t"
-"         LR\t1,%1\n\t"
-"         SVC\t112\n"
-        : : "r" (lo), "r" (hi) : "0", "1", "14", "15", "memory");
+"         LR\t0,%1\n\t"
+"         LR\t1,%2\n\t"
+"         SVC\t112\n\t"
+"         ST\t15,%0"
+        : "=m" (rc) : "r" (lo), "r" (hi) : "0", "1", "14", "15", "memory");
+
+    return rc;
+}
+
+/* Release exactly the one page starting at 'page', using whichever high
+   address main() found this system to want. */
+static int release_page(unsigned char *page)
+{
+    return pgrlse(page, page + hi_bias);
 }
 
 static void snooze(void)
