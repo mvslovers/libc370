@@ -151,10 +151,12 @@ five days later (`4bc1014`). `receive_raw_data()` has read **one byte per
 outside the ecosystem too: `twinslow/mvs_nfsd`, `socktest/`, same X'75' layer.
 
 **The change is one line and a truthful comment**, and it does not wait on the
-emulator. The host-side fix exists as uncommitted work in the local hyperion
-checkout (`x75.c`, `x75.h`, `tcpip.c` on `develop`, adding
+emulator. The host-side fix is committed on the fork as
+`mvslovers/hyperion` `fix/x75-restart-resume` (`fcf7d15d`, adding
 `+ lar_offset(&regs->gr[0])` so the host pointer resumes where the guest one
-did); neither change requires the other. The cap is also **permanent**: a guest
+did), with a red/green pair on `diag/x75-restart-trace` that instruments every
+restart; it builds clean but has not been measured yet. Neither change requires
+the other. The cap is also **permanent**: a guest
 cannot detect a patched emulator — no return value, status bit or function code
 distinguishes one, and adding such a thing would change the interface for every
 existing guest — so this can never be raised again on the strength of a fixed
@@ -164,6 +166,15 @@ Cost is 16x more X'75' pairs than at 4096, and still a large net win against
 what consumers actually do: roughly 5700 pairs for a 1.4 MB body, against
 roughly 1.47 million single-byte `recv()` calls in mvsMF's present workaround.
 Once it lands, mvsMF can return `receive_raw_data()` to bulk reads.
+
+`test/mvs/tst75rst.c` (`jcl/tst75rst.jcl`) is the probe. It does not wait for a
+page fault, it causes one: a page boundary is placed at a chosen multiple of 256
+inside a 1024-byte receive buffer and the page beyond it is released with PGRLSE
+immediately before the receive, over a loopback pair the program owns both ends
+of. The receive goes through `__75()` rather than `recv()` so that one
+measurement is one pair of instructions. Read its RC together with the emulator
+trace and never alone — a clean run has two causes, resumed correctly and never
+faulted, and the guest cannot tell them apart.
 
 **`@@75send.c` is deliberately out of scope** — same exposure and no cap at all
 (`:46` passes `len` straight through), the mirror image with the host buffer
