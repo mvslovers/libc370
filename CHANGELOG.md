@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [1.0.4] - 2026-09-04
 
+### Added
+- **A probe for finding the JES2 checkpoint and spool without a DD
+  (`test/mvs/tstjesda.c` + `jcl/tstjesda.jcl`, research for #142).** No library
+  change: it exists to settle whether `jesopen()` can drop its two `DD:`
+  literals (`jesopen.c:37,47`), and the answer it measured is *not from a
+  constant*. `__cpopen()`/`__jsopen()` already dynalloc when the argument is not
+  `DD:`, so the plumbing is there — but JES2 builds the data set names from
+  `$DSNPRFX` (an init parameter, default `SYS1`) plus the assembled literal
+  `.HASPACE`/`.HASPCKPT`, and that prefix lives in the HCT, which is unreachable
+  from another address space. Recorded here so the next attempt starts from the
+  measurement rather than from the issue text, which understates it both ways.
+
 ### Changed
 - **`sysmac/` has a written scope rule, and #155 is declined against it.** The
   criterion is *libc370 assembles it itself* — a member belongs in the mirror

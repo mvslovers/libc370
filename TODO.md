@@ -10,7 +10,8 @@ libc370 is the base library of the whole ecosystem, so a defect here is a defect
 in httpd, mvsMF, ftpd, ufsd and every other consumer at once; that is what puts
 some cheap items high and some expensive ones low.
 
-*Last reconciled against the tracker: 2026-08-30, 29 issues open — of which the
+*Last reconciled against the tracker: 2026-08-30, 29 issues open; the tracker
+answers 30 on 2026-09-04, so a pass is due — of which the
 ranked list below covers 25; #151 is fixed and merged.* **Four are
 filed but not yet ranked**, all newer than the last full reconciliation: #142 (`jesopen()` should dynalloc the
 checkpoint and spool — measured 2026-08-27, and the issue text understates it
