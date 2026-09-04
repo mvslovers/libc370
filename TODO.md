@@ -45,8 +45,9 @@ first conversion, so practically the whole printf line ran unserialized — the
 measured faces being ftpd#117's S001-1 (reproduced in seconds, JOB02235) and a
 writer silently wedged in the corrupted QSAM state (JOB02237, 8 of 400 lines).
 **PR #146 merged same day** (fix: internal writers + ownership-aware wrappers;
-red/green tests host and MVS, green run JOB02239 CC 0000). Every multitasking
-consumer wants a relink on the next release. Its known neighbours are **#147**:
+red/green tests host and MVS, green run JOB02239 CC 0000). Shipped in
+**1.0.4**; every multitasking consumer wants that relink. Its known
+neighbours are **#147**:
 items 2 (`puts()` split), 1 (`fclose()` teardown outside the lock) and 4 (DEQ
 drops the scope bits — `sysunlock()` could never release, measured JOB02241/43)
 landed via **PR #148**, and item 3 — **the SYNAD on the DCBs**, so a genuine
@@ -57,8 +58,9 @@ its parked sweep came back empty — nothing in the 34 ecosystem repos calls
 `syslock()`/`sysunlock()` at all, every other lock family is SCOPE=STEP and so
 was unreachable by that bug, and no consumer owes a change for it. Follow-up
 ideas (fail-fast after `ferror()`, `clearerr()`) live in **#149**, which is a
-deliberate API decision, not a defect. With #145/#147 done, every multitasking
-consumer wants a relink on the next release — now for four reasons, not one.
+deliberate API decision, not a defect. With #145/#147 done and **shipped in
+1.0.4**, every multitasking consumer owes a relink — now for four reasons, not
+one.
 
 **And #108 is closed the same day**, on the 2026-08-23 re-verification run with
 its caveat intact: the address space was never degraded, so that run is *no
@@ -105,6 +107,18 @@ the wrong answer rather than removing it, so three consumer follow-ups are part
 of the campaign — filed 2026-08-30 as `mvslovers/ftpd#118`,
 `mvslovers/mvsmf#360` and `mvslovers/lua370#15`, each marked blocked by the
 libc370 issue it waits on.
+
+**Update 2026-09-04: v1.0.4 is tagged and released** — 31 commits, 5 PRs and 5
+issues since 1.0.3, no breaking change. It carries the whole stdio locking chain
+(#145 plus #147's four items) and the duplicate-external fix (#151), so the
+relink this file has been calling for twice is now available rather than
+pending. The one contract change consumers must read is #147 item 3: an
+uncorrectable I/O error is `ferror()` + `errno EIO` instead of an
+address-space-killing S001, and `feof()` is deliberately *not* set — so a reader
+that never checks `ferror()` now gets a short file quietly where it used to die
+loudly. That asymmetry is the whole of **#149**, which stays open as a
+deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
+1**, and its probe branch is unmerged.
 
 ---
 
