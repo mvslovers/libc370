@@ -151,11 +151,15 @@ five days later (`4bc1014`). `receive_raw_data()` has read **one byte per
 outside the ecosystem too: `twinslow/mvs_nfsd`, `socktest/`, same X'75' layer.
 
 **The change is one line and a truthful comment**, and it does not wait on the
-emulator. The host-side fix is committed on the fork as
-`mvslovers/hyperion` `fix/x75-restart-resume` (`fcf7d15d`, adding
-`+ lar_offset(&regs->gr[0])` so the host pointer resumes where the guest one
-did), with a red/green pair on `diag/x75-restart-trace` that instruments every
-restart. Neither change requires the other.
+emulator. **The host-side fix is upstream**: SDL-Hercules-390/hyperion #884 /
+PR #885, merged 6 Sep 2026 as `4675e7e1`, adding `+ lar_offset(&regs->gr[0])`
+so the host pointer resumes where the guest one did. The red/green pair that
+instruments every restart stays available as `mvslovers/hyperion`
+`diag/x75-restart-trace` — unfixed half at `HEAD~1`, fixed at `HEAD`.
+
+Neither change requires the other, and **the cap is still owed regardless of
+the fix**, for the permanence reason below: a guest cannot tell a patched
+emulator from an unpatched one.
 
 **The mechanism is now measured, not read off source.** `test/mvs/tst75rst.c`
 forces the fault (page boundary at a chosen multiple of 256, `PGRLSE` on the
