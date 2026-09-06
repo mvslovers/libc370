@@ -147,8 +147,16 @@ Which is why every cap so far worked and then failed. 4096 here since `cd43a70`
 (December 2024) is still 16 segments; mvsMF then met the same corruption at
 >2048 **with that cap in place**, capped at 2048 (`d2783f5`), and that failed
 five days later (`4bc1014`). `receive_raw_data()` has read **one byte per
-`recv()`** ever since — immune for the same reason 256 is. Sighted independently
-outside the ecosystem too: `twinslow/mvs_nfsd`, `socktest/`, same X'75' layer.
+`recv()`** ever since — immune for the same reason 256 is.
+
+*(This paragraph previously added `twinslow/mvs_nfsd`, `socktest/` as a sighting
+outside the ecosystem. **Retracted 6 Sep 2026:** their `rxtest.c` trace shows two
+`recv()` calls, the first partial at 256, and this mechanism would put the first
+bad byte of the second call at 512 rather than the 256 they report. Same number,
+different mechanism — it was never checked at the source before being cited, and
+it also reached upstream issue #884, where it has been publicly retracted. The
+evidence for #154 is the cap history above and the forced reproduction below,
+both unaffected.)*
 
 **The change is one line and a truthful comment**, and it does not wait on the
 emulator. **The host-side fix is upstream**: SDL-Hercules-390/hyperion #884 /
