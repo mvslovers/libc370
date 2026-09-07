@@ -24,6 +24,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   rexx370, which is why `<sysroot>/macros` is treated as a published surface.
 
 ### Fixed
+- **`recv()` capped its X'75' chunk at 4096, and only 256 or less is safe
+  against a restarted copy (#154).** X'75' moves data in 256-byte segments and
+  the instruction is restartable: a page translation exception on the guest
+  buffer is nullifying, so MVS resolves the page and the instruction runs again
+  from the top. The guest side resumes correctly — R1 holds the bytes remaining
+  and the base register was advanced before the exception — but the host side
+  has nothing to resume from. Upstream `x75.c` recomputes its pointer from
+  `map32[R2]` on every entry and R2 is a slot index that never advances, so the
+  remaining bytes are copied from the **start** of the host buffer to the
+  already advanced guest address. A single segment is atomic against that
+  exception (`vstorec()` resolves both page addresses through `MADDRL` before
+  either `memcpy`), which makes 256 or less immune by construction: it either
+  faults having moved nothing, where resuming from the start is correct, or it
+  completes. The defect needs one **completed** segment before the fault, which
+  is why every larger cap looked like a fix and then failed — 4096 here since
+  `cd43a70`, then 2048 in mvsMF, which failed five days later, after which
+  `receive_raw_data()` went to one byte per `recv()` and has stayed there.
+  The comment being replaced blamed a dyn75/Hercules buffer-size limit that
+  does not exist; the symptom it recorded was real and is that replay.
+  Measured red/green under a forced fault by `test/mvs/tst75rst.c`
+  (`jcl/tst75rst.jcl`), and independently sighted in production as
+  `mvslovers/ftpd#122`: a 4577-byte ASCII upload came out as stream bytes
+  `[0:2560] + [0:1536] + [4096:4577]` — first bad byte a multiple of 256, tail
+  a clean replay of the buffer head, total length exactly right.
+  Cost is 16x more X'75' pairs than at 4096 and still a large net win against
+  the single-byte reads consumers use today; mvsMF can now go back to bulk
+  reads. The cap is **permanent**: no return value, status bit or function code
+  lets a guest tell a patched emulator from an unpatched one, so it can never
+  be raised again on the strength of the host-side fix
+  (SDL-Hercules-390/hyperion `4675e7e1`, merged 2026-09-06), which is
+  independent of this change in both directions. `@@75send.c` has the same
+  exposure and no cap at all; it is deliberately left alone, because capping it
+  changes what every caller sees per call.
 - **Four external names were each exported by two archived objects, and
   `@@ERRNO` was a data word in one of them (#151).** The archive namespace is
   flat and eight characters wide, and ld370 satisfies an autocall from the first
