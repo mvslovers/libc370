@@ -245,6 +245,15 @@ int main(void)
         printf("    the control case did not pass.  Something other than\n");
         printf("    this defect is wrong; the other cases mean nothing.\n");
         bad++;
+    } else if (r_pre < 0) {
+        /* run_case() could not take the measurement at all - a failed
+           connect, a short send, a receive that did not return BUFLEN.  That
+           is not a red case, and reporting it as one would put a first bad
+           byte of 0 in front of a reader as if it were the defect. */
+        printf("    the pre-fix case could not be MEASURED (connect, send or\n");
+        printf("    receive failed).  No verdict either way - fix the probe's\n");
+        printf("    own plumbing and re-run.\n");
+        bad++;
     } else if (r_pre == 0) {
         printf("    cap 4096 is CLEAN on this stand, so the emulator carries\n");
         printf("    the host-side fix (hyperion 4675e7e1) or the receive never\n");
@@ -257,7 +266,10 @@ int main(void)
         printf("    %s).  The fault is live on this stand.\n",
                rp_pre ? "matches ftpd#122" : "corrupt but not a clean replay");
 
-        if (r_post == 0) {
+        if (r_post < 0) {
+            printf("    cap 256 could not be MEASURED - no verdict on the fix.\n");
+            bad++;
+        } else if (r_post == 0) {
             printf("    cap 256 is CLEAN against the same fault: the fix holds.\n");
         } else {
             printf("    cap 256 is ALSO corrupt (first bad byte %u) - the fix\n",
@@ -266,11 +278,17 @@ int main(void)
             bad++;
         }
 
-        printf("    linked recv() is %s",
-               r_libc == 0 ? "CLEAN" : "corrupt");
-        if (r_libc != 0) printf(" (first bad byte %u)", fb_libc);
-        printf(" - this build links the %s libc.\n",
-               r_libc == 0 ? "FIXED" : "pre-fix");
+        if (r_libc < 0) {
+            printf("    linked recv() could not be MEASURED - this run does not\n");
+            printf("    say which libc the module was built against.\n");
+            bad++;
+        } else {
+            printf("    linked recv() is %s",
+                   r_libc == 0 ? "CLEAN" : "corrupt");
+            if (r_libc != 0) printf(" (first bad byte %u)", fb_libc);
+            printf(" - this build links the %s libc.\n",
+                   r_libc == 0 ? "FIXED" : "pre-fix");
+        }
     }
 
     printf("\nTST75CAP %s\n", bad ? "FAILED" : "PASSED");
