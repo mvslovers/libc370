@@ -33,11 +33,15 @@ the CHANGELOG backfill `3e9c15b`), then #145, #147 and now **#108** are all
 closed. #11 was the only *observed and recurring* production failure on this
 list since July, and #108 was the last open crash hunt — after which, for three
 days, nothing ranked here was a failure anyone was seeing on a running system.
-**#154 ends that**, and it was not new: filed 2026-08-27, missed by that day's
-reconciliation, ranked 2026-08-30 as item 1. Below it the picture is unchanged —
+**#154 ended that**, and it was not new: filed 2026-08-27, missed by that day's
+reconciliation, ranked 2026-08-30 as item 1 — **and fixed 2026-09-07 by PR #166**,
+after `mvslovers/ftpd#122` arrived as an outside sighting of it. Tier 1 is empty
+again. Below it the picture is unchanged —
 two **campaigns**, a **relink round**, and a set of traps that have not bitten
-yet. Rank accordingly: past item 1, every choice here is a judgement about
-order, not an emergency.
+yet. Rank accordingly: with rank 1 retired, every choice here is a judgement
+about order, not an emergency. **The numbering is left as it stands** — ranks 2
+to 23 are referenced from prose in this file, so the retired rank 1 is a gap
+rather than a renumbering.
 
 **Update 2026-08-26: #145 briefly refilled Tier 1 — and is closed again.**
 `vvprintf()`'s nested public `fputs()`/`putc()` released the FILE lock at the
@@ -108,117 +112,55 @@ libc370 issue it waits on.
 
 ---
 
-## Tier 1 — one live defect
+## Tier 1 — empty
 
-### 1 · #154 — `recv()` caps its X'75' chunk at 4096, and only 256 or less is safe
+### #154 is fixed — `recv()` now caps its X'75' chunk at 256 (PR #166, 2026-09-07)
 
-Filed 2026-08-27, missed by that day's reconciliation and by every list in this
-file until 2026-08-30. It is ranked here rather than parked with the unranked
-items because the argument is read off the emulator source rather than inferred,
-and because what it describes is silent data corruption in every X'75' consumer.
+Kept here in short form because the *reason for the number* has to outlive the
+diff: 256 is not a tuning choice and cannot be raised again.
 
-`@@75recv.c:29-36` caps each RECV at 4096 and explains it with a dyn75/Hercules
-buffer-size limit. **The observation is right and the explanation is wrong**, so
-the cap does not prevent the thing it was written for.
+X'75' copies in 256-byte segments and the instruction is restartable. The guest
+side has architected state to resume from after a nullifying exception — the base
+register and R1 — and the host side has none: upstream `x75.c` recomputes its
+pointer from `map32[R2]` on every entry, and R2 is a slot index that never
+advances. So a copy that faults after a completed segment finishes from the
+**start** of the host buffer, and the tail of the read is a replay of its head.
+`vstorec()` resolves both page addresses through `MADDRL` before either `memcpy`,
+which makes one segment atomic against the exception — that is why 256 or less is
+immune by construction rather than merely less likely, and why every larger cap
+looked like a fix and then failed: 4096 here since `cd43a70`, then 2048 in mvsMF,
+which failed five days later.
 
-X'75' copies in **256-byte segments** and the instruction is restartable.
-Upstream `x75.c` recomputes the host-side pointer on every entry:
+**The cap is permanent.** A guest cannot detect a patched emulator — no return
+value, status bit or function code distinguishes one — so the host-side fix
+(SDL-Hercules-390/hyperion #884 / PR #885, merged 2026-09-06 as `4675e7e1`) never
+makes this removable: the same build has to keep working on an unpatched host.
 
-```c
-if (regs->GR_L(1) != 0) s = (unsigned char *)(map32[regs->GR_L(2)]);
-```
+Evidence, for anyone who has to re-open this: the forced-fault probe
+`test/mvs/tst75rst.c` (`jcl/tst75rst.jcl`, red `JOB03045` RC=8 under
+`gf1f1f9d1`, green `JOB03046` RC=0 under `g392c22c6`, `first_bad` = 256/512/768
+at those boundaries and clean at the boundary-0 control), and the production
+sighting `mvslovers/ftpd#122` — a 4577-byte ASCII upload received as
+`orig[0:2560] + orig[0:1536] + orig[4096:4577]`, first bad byte a multiple of 256,
+tail a clean replay of the head, total length exactly right. Read the probe's RC
+together with the emulator trace and never alone: a clean run has two causes,
+resumed correctly and never faulted, and the guest cannot tell them apart.
 
-The guest side has architected state to resume from — the base register
-`GR_L(b2)` and the remaining count `GR_L(1)` both survive a nullifying
-exception. The host side has none: R2 is a slot index that never advances. So
-after a page fault on the guest buffer the copy resumes from the **start** of
-the host buffer and writes it to the already-advanced guest address. That is
-exactly the symptom the comment records.
+**Follow-ups this opens.**
 
-`vstorec()` resolves both page addresses through `MADDRL` before either
-`memcpy`, so one segment is atomic against a translation exception. **256 or
-less is immune by construction**: a single segment either faults having copied
-nothing — where resuming from the start is correct — or completes. Above 256 a
-segment can complete before a later one faults, and the likelihood scales with
-how many guest pages the copy touches. That is the whole of the observed size
-correlation.
-
-Which is why every cap so far worked and then failed. 4096 here since `cd43a70`
-(December 2024) is still 16 segments; mvsMF then met the same corruption at
->2048 **with that cap in place**, capped at 2048 (`d2783f5`), and that failed
-five days later (`4bc1014`). `receive_raw_data()` has read **one byte per
-`recv()`** ever since — immune for the same reason 256 is.
-
-*(This paragraph previously added `twinslow/mvs_nfsd`, `socktest/` as a sighting
-outside the ecosystem. **Retracted 6 Sep 2026:** their `rxtest.c` trace shows two
-`recv()` calls, the first partial at 256, and this mechanism would put the first
-bad byte of the second call at 512 rather than the 256 they report. Same number,
-different mechanism — it was never checked at the source before being cited, and
-it also reached upstream issue #884, where it has been publicly retracted. The
-evidence for #154 is the cap history above and the forced reproduction below,
-both unaffected.)*
-
-**The change is one line and a truthful comment**, and it does not wait on the
-emulator. **The host-side fix is upstream**: SDL-Hercules-390/hyperion #884 /
-PR #885, merged 6 Sep 2026 as `4675e7e1`, adding `+ lar_offset(&regs->gr[0])`
-so the host pointer resumes where the guest one did. The red/green pair that
-instruments every restart stays available as `mvslovers/hyperion`
-`diag/x75-restart-trace` — unfixed half at `HEAD~1`, fixed at `HEAD`.
-
-Neither change requires the other, and **the cap is still owed regardless of
-the fix**, for the permanence reason below: a guest cannot tell a patched
-emulator from an unpatched one.
-
-**The mechanism is now measured, not read off source.** `test/mvs/tst75rst.c`
-forces the fault (page boundary at a chosen multiple of 256, `PGRLSE` on the
-page beyond it) and was run on MVSCE on 3 Sep 2026 against both halves of the
-red/green pair:
-
-| Case | red `first_bad` | green `first_bad` |
-|---|---|---|
-| boundary 0 (control) | none | none |
-| boundary 256 | **256** | none |
-| boundary 512 | **512** | none |
-| boundary 768 | **768** | none |
-
-Red `JOB03045` RC=8 under `gf1f1f9d1`, green `JOB03046` RC=0 under
-`g392c22c6`. In every red case the tail is a clean replay of the host buffer
-from its start, and the emulator's own trace reports `done` equal to the
-guest's `first_bad`. The control faults having copied nothing and is clean on
-both — which is exactly why **256 or less is immune**, and that is no longer an
-argument but an observation. The three restarts after a completed segment still
-occur under green with the same `done` values, so the fix changed the resume
-path and not the fault rate.
-
-The cap is also **permanent**: a guest
-cannot detect a patched emulator — no return value, status bit or function code
-distinguishes one, and adding such a thing would change the interface for every
-existing guest — so this can never be raised again on the strength of a fixed
-host.
-
-Cost is 16x more X'75' pairs than at 4096, and still a large net win against
-what consumers actually do: roughly 5700 pairs for a 1.4 MB body, against
-roughly 1.47 million single-byte `recv()` calls in mvsMF's present workaround.
-Once it lands, mvsMF can return `receive_raw_data()` to bulk reads.
-
-`test/mvs/tst75rst.c` (`jcl/tst75rst.jcl`) is the probe. It does not wait for a
-page fault, it causes one: a page boundary is placed at a chosen multiple of 256
-inside a 1024-byte receive buffer and the page beyond it is released with PGRLSE
-immediately before the receive, over a loopback pair the program owns both ends
-of. The receive goes through `__75()` rather than `recv()` so that one
-measurement is one pair of instructions. Read its RC together with the emulator
-trace and never alone — a clean run has two causes, resumed correctly and never
-faulted, and the guest cannot tell them apart.
-
-**`@@75send.c` is deliberately out of scope** — same exposure and no cap at all
-(`:46` passes `len` straight through), the mirror image with the host buffer
-losing its leading segments. Capping it changes what every caller sees per call,
-because `send()` returns a byte count and callers loop on partial writes. Its
-own decision and its own issue, not filed yet.
-
-The asymmetry in what has been observed fits the mechanism: a send buffer was
-just written by the application and is hot, while a receive buffer can have lain
-idle across an I/O wait — exactly when its pages get stolen.
+- Every X'75' consumer wants a relink on the next release — now for five reasons,
+  not four. ftpd is the one with a filed sighting (#122), and its ASCII dataset
+  upload path is the reproducer.
+- mvsMF can return `receive_raw_data()` to bulk reads: it has read one byte per
+  `recv()` since `4bc1014` purely to stay inside one segment. Not filed yet.
+- **`@@75send.c` is still uncapped** (`:46` passes `len` straight through), the
+  mirror image with the host buffer losing its leading segments. Left out of #166
+  on purpose — `send()` returns a byte count and callers loop on partial writes,
+  so capping it changes what every caller sees per call, not just the instruction
+  count. Its own decision and its own issue, **still not filed**. The asymmetry in
+  what has been observed fits the mechanism: a send buffer was just written by the
+  application and is hot, while a receive buffer can have lain idle across an I/O
+  wait — exactly when its pages get stolen.
 
 ---
 
