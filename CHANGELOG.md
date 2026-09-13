@@ -4,6 +4,60 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Fixed
+- **An out-of-space write is a return code now, not an ABEND (#176).**
+  `@@AOPEN` plants an `EXLST` type **X'08'** exit. `IFG0554T` — the module
+  named in the `IEC031I D37-04` line — scans the DCB exit list for it *before*
+  it abends, and takes `R15=1` as "rewrite the format-1 DSCB from
+  `DCBFDAD`/`DCBTRBAL`, clear the unit-exception bits in every IOB, drop FEOV,
+  and return to the access method to drive the caller's SYNAD with **output
+  error, no space available**". libc370 has had that SYNAD stub since #147, so
+  the condition now arrives the same way an uncorrectable I/O error already
+  did: `@@AWRITE` answers a nonzero rc, `__fflush()` sets `_FILE_FLAG_ERROR`
+  — **and reaches its `reset:` label**, so `fp->upto` is cleared and there is
+  nothing left for `fclose()` to re-drive.
+
+  **What it fixes is worse than the abend it removes.** Re-driving a WRITE
+  against a DCB that had taken an x37 did not fail cleanly: `0x0C4` on one run
+  and `0x0C6` on another for identical code, i.e. a wild store. `__fabandon()`
+  (#168) gave a caller a way out, but nothing stopped the re-drive itself and
+  one path reached it with no API call at all — `@@exit.c` walks
+  `grt->grtfile` at program termination and `fclose()`s every survivor **with
+  no ESTAE around it**, so a consumer that recovered an x37 and simply
+  returned from `main()` took the program check in teardown.
+
+  `errno` is **`ENOSPC`, not `EIO`**: `@@AWRITE` answers **12** for the x37
+  case and 8 for a SYNAD error, because out of space is the caller's problem
+  to solve and a bad track is not — a distinction #149 needs.
+
+  **Planted only where #147 plants SYNAD.** `IFG0554T`'s own header: *"if a
+  SYNAD address is not present or if CLOSE called EOV, an 001 abend is
+  issued"*. EXCP tape has no SYNAD and gets an inactive last entry instead,
+  keeping today's behaviour. Two consequences worth knowing: at **16 extents
+  or on a VIO unit MVS skips the exit and assumes `RC=1` anyway**, so libc370
+  already behaved this way for a 16-extent x37 — the exit makes the
+  one-extent case behave like the sixteen-extent case. And an x37 raised *by
+  CLOSE* becomes S001 rather than D37, which is strictly less legible; the
+  exit cannot tell from the DCB that it was entered from CLOSE. JOB00245
+  measured that CLOSE with nothing pending completes on `TRK(1,0)`, so that
+  path is not observed.
+
+  Not the X'11' ABEND exit, which is what #176 said first. `EXLDCBAB EQU
+  X'11'` appears exactly once in the whole MVS 3.8j source tree — its own
+  definition in `IHAEXLST` — and no module consults it.
+
+  **Measured** by `test/mvs/tstx37.c` + `jcl/tstx37.jcl` on mvsdev,
+  **JOB00247: CC 0000, 5/5 PASS, and no `IEC031I` line in the job log at
+  all.** The probe uses no `try()` on purpose — if the exit is not taken the
+  step abends and the log says so louder than any return code. The same
+  `TRK(1,0)` that produced a D37 at 200 records now stops at 200 with
+  `ferror()` set, `errno` 28, `fclose()` returning and `remove()` answering 0.
+  Cross-checked by JOB00249: `test/mvs/tstfabnd.c`, whose three steps each
+  produced a D37 in JOB00245, now report `try()` = 0 and "nothing to measure"
+  in all three.
+
 ## [1.0.5] - 2026-09-13
 
 ### Added

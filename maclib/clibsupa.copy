@@ -87,7 +87,7 @@ ZIODDNM  DS    CL8      DD NAME AT OFFSET X'28' FOR DCB COMPAT.
 ZGETLINE GETLINE MF=L             TWO WORD GTPB
          ORG   ,
 OPENCLOS DS    A                  OPEN/CLOSE parameter list
-DCBXLST  DS    2A                 07 JFCB / 85 DCB EXIT
+DCBXLST  DS    3A                 05 DCB EXIT / 07 JFCB / 88 x37
 EOFR24   DS    CL(ZEOFRLEN)
          AIF   ('&SYS' EQ 'S370').NOD24  If S/370, no 24-bit OPEN exit
          DS    0H
@@ -138,4 +138,5 @@ SAVEADCB DS    18F                Register save area for PUT
 SYNAD24  DS    CL8           SYNAD stub code (SYNADCD in @@AOPEN)
 IOSFLAGS DS    X             I/O error status (#147 item 3)
 IOFSYNAD EQU   X'80'           the stub recorded an uncorrectable error
+IOFX37   EQU   X'40'           the x37 exit took a no-space condition
 ZDCBLEN  EQU   *-ZDCBAREA

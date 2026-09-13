@@ -234,8 +234,8 @@ OPREPCOM MVC   DCBDDNAM,0(R3)
          BE    OPFIXMOD           Yes, may not block
          SPACE 1
 OPREPJFC LA    R14,JFCB
-* EXIT TYPE 07 + 80 (END OF LIST INDICATOR)
-         ICM   R14,B'1000',=X'87'
+* EXIT TYPE 07 - no longer the last entry since the x37 exit (#176)
+         ICM   R14,B'1000',=X'07'
          ST    R14,DCBXLST+4
          LA    R14,OCDCBEX        POINT TO DCB EXIT
 * Both S380 and S390 operate in 31-bit mode so need a stub
@@ -259,10 +259,25 @@ OPREPJFC LA    R14,JFCB
 *   (R15) - no assumption about the other SYNAD entry registers.
 *   Not for EXCP tape - that DCB keeps its own error handling.
          TM    WWORK,IOFEXCP      EXCP mode ?
-         BNZ   OPNOSYN            Yes; no SYNAD there
+         BNZ   OPNOX37            Yes; no SYNAD, so no x37 exit either
          MVC   SYNAD24(SYNADLEN),SYNADCD  Put SYNAD stub in work area
          LA    R14,SYNAD24
          STCM  R14,B'0111',DCBSYNA
+*   Plant the x37 exit: EXLST type 08, and the last entry in the list
+*   (#176).  IFG0554T scans the exit list for it before it abends, and
+*   takes R15=1 as "rewrite the format-1 DSCB and drive the caller's
+*   SYNAD with output error, no space" - so an out-of-space condition
+*   arrives as ferror()+ENOSPC instead of ABEND SD37, the same shape
+*   #147 gave an uncorrectable I/O error.
+*   ONLY where SYNAD was planted: IFG0554T's own header says RC=1 with
+*   no SYNAD address issues ABEND S001, the address-space killer #147
+*   exists to prevent.  EXCP tape has no SYNAD, so it gets an inactive
+*   last entry instead and keeps today's behaviour.
+         LA    R14,X37EXIT        Our x37 exit
+         ICM   R14,8,=X'88'       Type 08, last entry in the list
+         ST    R14,DCBXLST+8
+         B     OPNOSYN
+OPNOX37  MVI   DCBXLST+8,X'80'    Inactive, but still ends the list
 OPNOSYN  RDJFCB ((R10)),MF=(E,OPENCLOS)  Read JOB File Control Blk
 *---------------------------------------------------------------------*
 *   If the caller did not request EXCP mode, but the user has BLKSIZE
@@ -581,6 +596,34 @@ EOFRLEN  EQU   *-ENDFILE
 SYNADCD  OI    IOSFLAGS-SYNAD24(R15),IOFSYNAD  Note the I/O error
          BR    R14                Handled; no abend
 SYNADLEN EQU   *-SYNADCD
+*
+* x37 exit (#176), EXLST type 08.  Entered by IFG019RA's UEXIT routine
+* on behalf of IFG0554T with R1 -> the caller's DCB, which for us IS
+* ZDCBAREA base - so IOSFLAGS is one USING away and this needs no
+* per-DCB copy the way the SYNAD stub does.  It runs in the user's key
+* (MODESET KEYADDR=DXUKEY before the BALR), so the store is legal.
+*
+* R15 on return is the whole contract, from IFG0554T's own header:
+*   0  extend on this volume and retry - useless here, SPACE has no
+*      secondary in the case that reaches us, and for D37 a second 0 is
+*      ignored and treated as 2 anyway
+*   1  rewrite the format-1 DSCB from DCBFDAD/DCBTRBAL, clear unit
+*      exception bits in every IOB, drop FEOV, and return to the access
+*      method to drive the caller's SYNAD - what we want
+*   2  the B37-4/D37-4/E37-4 abend - what happened before this exit
+*
+* Addressed explicitly off R1, the way the SYNAD stub above addresses
+* itself off R15.  A USING IHADCB,R1 here does NOT do what it reads
+* like: FUNHEAD's USING IHADCB,R10 is still active, both give the same
+* displacement, and the assembler resolves the tie to the higher
+* register - so the store went through R10.  It would have worked by
+* accident (R10 holds the DCB in @@AWRITE, whose registers are the ones
+* restored before this exit is entered) and that is not a contract.
+*
+X37EXIT  LA    R1,0(,R1)          Clear the high byte before we store
+         OI    IOSFLAGS-IHADCB(R1),IOFX37   Out of space, not an error
+         LA    R15,1              Drive SYNAD; do not abend
+         BR    R14
 *
          LTORG ,
          SPACE 1

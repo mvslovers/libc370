@@ -157,12 +157,22 @@ TPUTWRIV STH   R5,0(,R4)          FILL RDW
          SPACE 1
 WRITEEX  TM    IOPFLAGS,IOFCURSE  RECURSION REQUESTED?
          BNZ   WRITMORE
+         TM    IOSFLAGS,IOFX37    Out of space on this data set?
+         BNZ   WRITENOS           Yes; its own rc, see below (#176)
          TM    IOSFLAGS,IOFSYNAD  I/O error during physical write?
          BNZ   WRITEIOE           Yes; hand it to the caller (#147)
          FUNEXIT RC=0
          SPACE 1
 WRITEIOE NI    IOSFLAGS,255-IOFSYNAD  Reset; error goes to the caller
          FUNEXIT RC=8
+         SPACE 1
+*  The x37 exit ran and asked IFG0554T for RC=1, so SYNAD was driven
+*  and IOFSYNAD is set too - test IOFX37 FIRST and clear both.  A
+*  separate return code because the C layer has to tell ENOSPC from
+*  EIO: out of space is the caller's problem to solve, a bad track is
+*  not, and #149 needs the difference (#176).
+WRITENOS NI    IOSFLAGS,255-IOFSYNAD-IOFX37  Reset both
+         FUNEXIT RC=12
 *
          LTORG ,
          SPACE 2

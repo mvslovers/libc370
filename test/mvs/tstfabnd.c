@@ -73,7 +73,18 @@
  * Then upload probe.xmit to IBMUSER.MBT.XMIT.IN, run jcl/recvfabn.jcl, run
  * jcl/tstfabnd.jcl.
  *
- * MEASURED 2026-09-13 on mvsdev, JOB00245.  Job CC 0000: all three steps
+ * SUPERSEDED BY #176 ON THE SAME DAY, and left in place on purpose.  The
+ * x37 exit added for #176 turns an out-of-space write into ferror()+ENOSPC,
+ * so none of the cases below can be set up any more: each needs a recovered
+ * ABEND and there no longer is one.  Run against a current library every
+ * step prints "nothing to measure" and ends CC 0000 - that outcome is itself
+ * a confirmation that the exit is in the library under test.  The probe for
+ * the new behaviour is test/mvs/tstx37.c.  __fabandon() itself is unchanged
+ * and still covered in full by test/host/tstfabnd.c; it remains the way out
+ * for any OTHER abend a caller's ESTAE recovers mid-write.
+ *
+ * MEASURED 2026-09-13 on mvsdev, JOB00245, against a library WITHOUT the
+ * #176 exit.  Job CC 0000: all three steps
  * green, 7/7 checks PASS, no teardown abend.  TRK(1,0) on WORK00 takes 200
  * records of 80 before the D37.
  *
@@ -122,6 +133,7 @@
 
 static int  bad = 0;
 static int  unmeasured = 0;     /* a case that HAD to measure and did not   */
+static int  retired = 0;        /* the defect is gone - see setup()         */
 static char dd[9];
 
 static FILE *thefp;             /* the FILE the try()'d helpers work on     */
@@ -218,9 +230,19 @@ static int setup(const char *dsn, int *abend)
     }
     *abend = fill(dsn);
     if (*abend == 0) {
-        printf("      no abend: TRK(1,0) took %ld records."
-               "  CANNOT MEASURE\n", written);
-        unmeasured++;
+        /* Not a failure, and not "cannot measure" either.  Since #176 the
+           x37 exit turns an out-of-space write into ferror()+ENOSPC, so
+           there is no recovered-abend state left for this probe to work
+           on: every case below needs one.  Say so and let the step end
+           clean - a probe whose defect has been fixed must not read red.
+           test/mvs/tstx37.c is the probe for the new behaviour; what this
+           one measured is on record in mvsdev JOB00245. */
+        printf("      no abend after %ld records - the library carries the"
+               " #176 x37 exit,\n"
+               "      so this probe has nothing to measure.  That is"
+               " correct, not a failure.\n", written);
+        wtof("TSTFABND RETIRED no abend - #176 exit is in this library");
+        retired++;
         fclose(thefp);
         return 1;
     }
@@ -378,7 +400,8 @@ int main(int argc, char **argv)
 
     printf("\n=== tstfabnd: %d check(s) failed, %d case(s) could not"
            " measure ===\n", bad, unmeasured);
-    wtof("TSTFABND VERDICT %c failed=%d unmeasured=%d", mode, bad, unmeasured);
+    wtof("TSTFABND VERDICT %c failed=%d unmeasured=%d retired=%d",
+         mode, bad, unmeasured, retired);
 
     return (bad || unmeasured) ? 8 : 0;
 }

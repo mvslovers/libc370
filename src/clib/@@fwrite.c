@@ -13,6 +13,7 @@ __fwrite(const void *vptr, size_t size, size_t nmemb, FILE *fp)
 {
     unsigned char   *ptr    = (unsigned char *)vptr;
     size_t          i       = 0;
+    int             err;
     size_t          j;
     unsigned char   *dptr;
     size_t          lenwrite;
@@ -22,11 +23,12 @@ __fwrite(const void *vptr, size_t size, size_t nmemb, FILE *fp)
         size *= nmemb;
         begwrite(fp, size);
         memcpy(dptr, ptr, size);
-        if (finwrite(fp)) {
+        if ((err = finwrite(fp)) != 0) {
             /* uncorrectable I/O error, recorded by the SYNAD exit
-               instead of ABEND S001 (#147) */
+               instead of ABEND S001 (#147); 12 is the x37 exit and
+               means out of space, not a device error (#176) */
             fp->flags |= _FILE_FLAG_ERROR;
-            errno = EIO;
+            errno = (err == 12) ? ENOSPC : EIO;
             goto quit;
         }
         fp->filepos += 1;       /* count record written */
