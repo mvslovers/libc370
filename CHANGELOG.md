@@ -70,35 +70,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `__aclose()` precedes `__fpfree()` (#167's ordering).
 
   **Measured on the target**, `test/mvs/tstfabnd.c` + `jcl/tstfabnd.jcl`, run
-  on mvsdev 2026-09-13 (JOB00241): GREEN step **CC 0000**, RED step 7/7 checks
-  PASS. `TRK(1,0)` on WORK00 takes 200 records of 80 before the D37; then
+  on mvsdev 2026-09-13 (JOB00245): **job CC 0000**, all three steps green, 7/7
+  checks pass, no teardown abend. `TRK(1,0)` on WORK00 takes 200 records of 80
+  before the D37; then
 
-  | case | | |
+  | step | | |
   |---|---|---|
-  | (1) `__fabandon()` | rc **0** | `remove()` rc **0** |
-  | (3) `fflush()` alone | rc `0x000C4000` | `__aclose()` alone rc **0**, `remove()` rc **0** |
-  | (2) `fclose()` alone | rc `0x000C6000` | `__dsfree()` rc **4** |
+  | GREEN — `__fabandon()` | rc **0** | `remove()` rc **0** |
+  | SPLIT — `fflush()` alone | rc `0x000C4000` | `__aclose()` alone rc **0**, `remove()` rc **0** |
+  | FCLOSE — `fclose()` alone | rc `0x000C4000` | `__dsfree()` rc **4** |
 
   Three things the run settled rather than assumed. **CLOSE with nothing
   pending completes** on a data set that is out of space — the open question
-  in #168, since BSAM CLOSE writes the EOF mark and can reach EOV. **Point 1
-  is the crux on the target too**: case (3) drives the two halves of
-  `fclose()` under separate `try()`s and it is the *flush* that abends, with
-  CLOSE straight afterwards clean. And **the second abend is a program check,
-  not a second D37** — `0x0C4` and `0x0C6` both appeared across runs for the
-  same code, so re-driving a WRITE against a DCB that has taken an x37 walks
-  into wild storage rather than failing cleanly. That is worse than #168
-  assumed and one more reason not to re-drive the flush.
+  in #168, since BSAM CLOSE writes the EOF mark and can reach EOV; `try()`
+  stays, but point 3 did not fire on this system. **Point 1 is the crux on the
+  target too**: the SPLIT step drives the two halves of `fclose()` under
+  separate `try()`s and it is the *flush* that abends, with CLOSE straight
+  afterwards clean and the DD gone. And **the second abend is a program check,
+  not a second D37** — `0x0C4` and `0x0C6` both appeared across runs for
+  identical code, so re-driving a WRITE against a DCB that has taken an x37
+  walks into wild storage rather than failing cleanly. That is worse than #168
+  assumed, is not fixed here, and is filed as **#176**: nothing stops the
+  re-drive itself, and `@@exit.c` reaches it with no ESTAE for a caller that
+  recovers an x37 and simply returns from `main()`.
 
-  The RED step ends `ABEND SC03` by construction — it deliberately leaves a
-  DCB that MVS CLOSE could not finish, and task termination closes it again
-  — so every verdict is written to the console as well as to SYSPRINT. Also
-  measured, and reported rather than asserted: rescuing a FILE *after* its
-  `fclose()` has already abended works in a fresh address space and fails
-  with `-2` in one where `remove()` (IDCAMS DELETE) has run, because that
-  escalates the SYSDSN ENQ for the rest of the step (#127). Both outcomes
-  appeared in JOB00241 alone, from nothing but the order of the cases. The
-  supported use is `__fabandon()` **instead of** `fclose()`.
+  One case per step, and not for cosmetics: run together, the FCLOSE step's
+  after-the-fact rescue answered `-2` and left the DD; run in its own address
+  space it answers `0`. Every `-2` had both an earlier IDCAMS DELETE and an
+  earlier D37 in the same step and nothing measured separates the two, so the
+  probe reports that path and never asserts it. The supported use is
+  `__fabandon()` **instead of** `fclose()`.
 
 - **`fopen()` can ask for RLSE (#167).** `__txrlse()` built a `DALRLSE`
   (`0x000D`) text unit and had a prototype in `svc99.h`, and nothing in the

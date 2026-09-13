@@ -81,33 +81,38 @@ unconditionally; **`fclose()` still does not** — a smaller version of the same
 leak, now **#174**, deliberately left out of the #168 PR because `fclose()` is
 on every consumer's path and #145 is what put the conditional there.
 
-**The gate is paid: mvsdev JOB00241, 2026-09-13.** GREEN step CC 0000, RED
-step 7/7 PASS. The unmeasured question is answered — **BSAM CLOSE with nothing
-pending completes** on a data set that is out of space, `__fabandon()` answers
-0 and `remove()` answers 0 from the same address space that just took the D37.
-**ftpd#129 can proceed** once the consumer is relinked against a sysroot
-carrying this libc (it is unversioned — check the installed `libc.a` date).
+**The gate is paid: mvsdev JOB00245, 2026-09-13, job CC 0000.** All three
+steps green, 7/7 checks. The unmeasured question is answered — **BSAM CLOSE
+with nothing pending completes** on a data set that is out of space,
+`__fabandon()` answers 0 and `remove()` answers 0 from the same address space
+that just took the D37. **ftpd#129 can proceed** once the consumer is relinked
+against a sysroot carrying this libc (it is unversioned — check the installed
+`libc.a` date).
 
 The run also settled two things the issue had guessed at. **Point 1 is the
-crux on the target**, not just by reading the source: case (3) drives
+crux on the target**, not just by reading the source: the SPLIT step drives
 `fflush()` and `__aclose()` under separate `try()`s and it is the flush that
 abends, with CLOSE straight afterwards clean. And **the second abend is a
 program check, not a second D37** — `0x0C4` and `0x0C6` both appeared across
-runs for the same code. Re-driving a WRITE against a DCB that has taken an x37
-walks into wild storage rather than failing cleanly. **Not filed**, and worth
-filing: libc370 has no guard that stops `@@fflush.c`/`@@AWRITE` from re-driving
-I/O on a DCB whose last write abended, and `__fabandon()` only helps the caller
-who knows to call it.
+runs for identical code, so re-driving a WRITE against a DCB that has taken an
+x37 walks into wild storage. That is now **#176**, and it is the one item here
+that is worse than it looks: `__fabandon()` only helps a caller who knows to
+call it, while `@@exit.c` walks `grt->grtfile` at termination and `fclose()`s
+every survivor **with no ESTAE**, so a consumer that recovers an x37 and simply
+returns from `main()` takes the program check in teardown. #176 also carries
+the concrete motivation for the phase-2 DCB ABEND exit (`EXLST` X'11') idea —
+it would turn the x37 into a return code before any re-drive can happen, the
+way #147 did with SYNAD, and would make the abandon dance unnecessary for the
+common case. Rank #176 on the next pass; it is a latent crash in every
+consumer, not a missing feature.
 
-One measured trap, kept because it cost two runs: rescuing a FILE *after* its
-`fclose()` abended answers 0 in a fresh address space and -2 in one where
-`remove()` (IDCAMS DELETE) has already run — the escalated SYSDSN ENQ does not
-come back down for the rest of the step (#127). Both outcomes appeared in
-JOB00241 alone, from nothing but the order of the cases. The probe reports it
-and never asserts it; the supported use is `__fabandon()` INSTEAD of
-`fclose()`. Phase-2 thought, not filed: a DCB ABEND exit (`EXLST` X'11') could
-turn an x37 into a return code the way #147 did with SYNAD, which would make
-the whole abandon dance unnecessary for the common case.
+One measurement kept because it cost four runs, and kept as a correlation
+rather than a cause: rescuing a FILE *after* its `fclose()` abended answers 0
+in a fresh address space and -2 in one where other cases have already run.
+Every -2 had both an earlier IDCAMS DELETE (#127's ENQ escalation) and an
+earlier D37 in the same step, and nothing measured separates them — so the
+probe runs one case per step and reports that path without asserting it. The
+supported use is `__fabandon()` INSTEAD of `fclose()`.
 
 **Deferred, deliberately: `test/mvs/tstfprls.c` does not echo S99ERROR/S99INFO.**
 `fopen()` only ever hands back NULL, so a rejected `DALRLSE` would arrive without
