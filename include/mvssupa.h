@@ -9,6 +9,11 @@ int __aread(void *handle, void *buf, size_t *len);
 int __awrite(void *handle, unsigned char **buf, size_t *sz);
 #pragma linkage(__aclose, OS)
 void __aclose(void *handle);
+/* __adisc() - discard whatever output is pending in the DCB work area, so
+   that the next __aclose() writes nothing (#168).  Clears IOFLDATA, IOFLSDW,
+   BUFFCURR and KEPTREC; issues no MVS service. */
+#pragma linkage(__adisc, OS)
+void __adisc(void *handle);
 #pragma linkage(__getclk, OS)
 unsigned int __getclk(void *buf);
 #pragma linkage(__gettz, OS)

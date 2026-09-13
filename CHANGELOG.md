@@ -7,6 +7,71 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Added
+- **`__fabandon()` — close a `FILE` whose last write failed (#168).** There was
+  no way to do it. `fclose()` flushes before it closes, so when the pending
+  block is exactly what could not be written, the close re-drives the failing
+  WRITE, abends in turn, and never reaches `__fpfree()` — the DD stays
+  allocated for the life of the job. Measured on mvsdev 2026-09-09, an FTP
+  upload into `SPACE=TRK(1,0)` (mvslovers/ftpd#129):
+
+  ```
+  IEC031I D37-04,IFG0554T,FTPDT,FTPDT,SYS00006,251,WORK00,IBMUSER.TEST.X40
+  FTPD070E ABEND SD37 RECOVERED CMD=STOR SOCKET=3 TOTAL=1
+  FTPD076W CLOSE ABENDED AFTER STOR, DD=SYS00006 FREE RC=4
+  FTPD073W COULD NOT SCRATCH IBMUSER.TEST.X40 AFTER ABEND, IDCAMS RC=8
+  ```
+
+  `__dsfree()` on that DD by name answers 4 — the DCB the failed CLOSE left
+  open still holds the allocation — and IDCAMS `DELETE` answers 8 from inside
+  the address space. So a server that runs out of space on a data set it
+  created can neither clean it up nor let its user clean it up; only a restart
+  releases it. ftpd's `DISP=(NEW,CATLG,DELETE)` says the partial should be
+  scratched, and it could not be.
+
+  `__fabandon(FILE *)` discards the buffer instead of flushing, tells the DCB
+  there is nothing pending (`__adisc()`, new `asm/@@adisc.asm`, clearing
+  `IOFLDATA`, `IOFLSDW`, `BUFFCURR` and `KEPTREC`), and issues CLOSE under an
+  ESTAE so a close that fails anyway is *reported* rather than propagated:
+  `0` clean, `>0` the `0x00sssuuu` abend code, `-1` not a FILE, `-2` the DD
+  would not unallocate, `-3` ESTAE CREATE failed and nothing was torn down.
+
+  **It is the C buffer, not the DCB buffer.** The issue put the crux on the
+  DCB's own state, and for ftpd's shape — `fopen(dsn,"wb")`, the buffered
+  `__fputc` path — it is not: the D37 fires inside `__awrite()`, the caller's
+  ESTAE unwinds *through* libc370, `@@fflush.c`'s `reset:` label never runs,
+  and `fp->upto` still points past the block that failed. `@@ATROUT` clears
+  `IOFLDATA` *before* the WRITE, so the DCB side is already quiet and
+  `@@ACLOSE`'s opening `FIXWRITE` is a no-op. `__adisc()` is there for the
+  general case — a caller that abandons while a *good* partial block is
+  pending means "write nothing more" — and `try()` for the one `@@ATROUT`
+  cannot help with: BSAM CLOSE writes the EOF mark and can reach EOV, and a
+  `_FILE_FLAG_RECORD` caller has no C buffer at all.
+
+  **It cannot be a smarter `fclose()`.** An x37 is an ABEND, not a SYNAD
+  condition, so `@@fflush.c` never sets `_FILE_FLAG_ERROR` (#147) and after the
+  caller's ESTAE recovers the FILE looks healthy to the library. Only the
+  caller knows — see #149, which this does not resolve.
+
+  **The stale ENQ goes too.** `lock()` is ENQ `RET=HAVE` keyed on the pointer
+  value. The abended `fwrite()` held the FILE lock and the ESTAE retry never
+  DEQ'd it, so `lock(fp,0)` answers 8 and `fclose()` — reading that as "an
+  outer caller owns it" (#145) — leaves a CLIBLOCK ENQ standing on storage it
+  then `free()`s. `__fabandon()` DEQs unconditionally: there is no legitimate
+  outer holder of a FILE being destroyed.
+
+  `fclose()`'s teardown tail moved to `__fpterm()` so the #145/#147 lock
+  sequence exists once. `fclose()` is otherwise unchanged, and pulls neither
+  `___try` nor `@@ADISC` — those come only with `@@FABAND`.
+
+  **Verification:** `test/host/tstfabnd.c`, 32 checks, 4 of them red without
+  the fix, compiling the real `fclose.c`/`@@faband.c`/`@@fpterm.c`; it also
+  asserts the old `fclose()` behaviour as a control so the rest cannot go
+  vacuous. `test/host/tstfcls.c` (#147) still passes and gained a check that
+  `__aclose()` precedes `__fpfree()` (#167's ordering). `test/mvs/tstfabnd.c` +
+  `jcl/tstfabnd.jcl` measure the two things the host cannot — whether CLOSE
+  with nothing pending completes at all on a data set that is out of space,
+  and whether the DD then really goes — and are **NOT YET RUN on a target**.
+
 - **`fopen()` can ask for RLSE (#167).** `__txrlse()` built a `DALRLSE`
   (`0x000D`) text unit and had a prototype in `svc99.h`, and nothing in the
   library ever called it — so there was no way to get unused space released for

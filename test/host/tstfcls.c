@@ -16,10 +16,10 @@
  * FILE remains a caller error; no lock can fix that.
  *
  * This test compiles the REAL fclose.c (and fflush.c, which the
- * pre-fix path calls) with the real array TUs, a two-resource lock
- * model (the FILE and &grt->grtfile), and shims for the MVS services
- * that record whether the FILE lock was held at the moment each
- * teardown step ran:
+ * pre-fix path calls, and @@fpterm.c, which #168 moved the teardown
+ * tail into) with the real array TUs, a two-resource lock model (the
+ * FILE and &grt->grtfile), and shims for the MVS services that record
+ * whether the FILE lock was held at the moment each teardown step ran:
  *
  *   1. the flush runs under the FILE hold (invariant: red gets it
  *      from public fflush(), green from fclose's own hold);
@@ -124,15 +124,20 @@ int __fflush(FILE *fp)
     return 0;
 }
 
+static int      aclose_done = 0;
+static int      aclose_before_fpfree = -1;
+
 void __aclose(void *handle)
 {
     (void)handle;
     held_at_aclose = lk_held(watchfp);
+    aclose_done = 1;
 }
 
 int __fpfree(FILE *fp)
 {
     held_at_fpfree = lk_held(fp);
+    aclose_before_fpfree = aclose_done;
     return 0;
 }
 
@@ -155,6 +160,7 @@ static void tst_free(void *p)
 
 #define free tst_free
 #include "../../src/clib/fclose.c"
+#include "../../src/clib/@@fpterm.c"
 #undef free
 
 #include "../../src/clib/fflush.c"
@@ -211,6 +217,8 @@ int main(void)
     CHECK_EQ(held_at_freebuf, 1, "(3) buffer free under the FILE hold");
     CHECK_EQ(held_at_fpfree, 1,  "(4) __fpfree under the FILE hold");
     CHECK_EQ(held_at_freefp, 1,  "(5) FILE free under the FILE hold");
+    CHECK_EQ(aclose_before_fpfree, 1,
+             "(5) __aclose before __fpfree (RLSE, #167)");
 
     CHECK_EQ((int)arraycount(&fakegrt.grtfile), 0, "(6) FILE left grtfile");
     CHECK_EQ(lk_acquires(&fakegrt.grtfile), 1, "(6) grtfile lock taken once");
