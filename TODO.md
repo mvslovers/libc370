@@ -27,8 +27,8 @@ on the next pass rather than guessing a tier for them here. (#155 was a fifth
 and is closed — see the update below; it asked for macros libc370 does
 not assemble.)
 
-**#167 was filed and fixed on the same pass (2026-09-13) and never needed a
-rank.** `__txrlse()` had been dead code since it was written: a `DALRLSE` text
+**#167 was filed, fixed and merged on the same pass (PR #170, 2026-09-13) and
+never needed a rank.** `__txrlse()` had been dead code since it was written: a `DALRLSE` text
 unit builder with a prototype and no caller, so no consumer could get unused
 space released for anything written through `fopen()`. The fix is a mode-string
 keyword — `fopen(dsn, "wb,rlse")` — wired into `__fpold()` and `__fpnew()`, opt
@@ -37,7 +37,8 @@ ftpd#127 are waiting on it**: an FTP STOR has no size at allocation time, so
 allocating large enough for a big upload strands that space on every small one.
 The scope call that made it not-a-one-liner was deliberate — unconditional RLSE
 would change `fclose()` for httpd, mvsMF, ufsd and ftpd at once. **The MVS half
-is measured**, which was the whole gate: mvsdev JOB00229, CC 0000, 2026-09-13.
+is measured**, which was the whole gate and the reason PR #170 carried two
+commits: mvsdev JOB00229, CC 0000, 2026-09-13.
 `TRK(30,5)` + one record + `fclose()` retains **30 tracks without the keyword and
 1 with it**, on both the DISP=OLD and the DISP=NEW path — so SVC 99 does accept
 `DALRLSE` with DISP=OLD and no space keys, ftpd's exact shape, and CLOSE really
