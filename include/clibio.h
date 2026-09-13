@@ -31,6 +31,7 @@ struct _file {
 #define _FILE_FLAG_RECORD   0x0200  /* ... fread/fwrite uses record i/o     */
 #define _FILE_FLAG_BSAM     0x0100  /* ... BSAM instead of QSAM access      */
 #define _FILE_FLAG_TERM		0x0080	/* ... TERM opened in __fpstar()		*/
+#define _FILE_FLAG_RLSE     0x0040  /* ... release unused space at CLOSE    */
 
 #define _FILE_FLAG_ERROR    0x0002  /* ... i/o error                        */
 #define _FILE_FLAG_EOF      0x0001  /* ... EOF has occured                  */

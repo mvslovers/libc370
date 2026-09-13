@@ -4,6 +4,75 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Added
+- **`fopen()` can ask for RLSE (#167).** `__txrlse()` built a `DALRLSE`
+  (`0x000D`) text unit and had a prototype in `svc99.h`, and nothing in the
+  library ever called it — so there was no way to get unused space released for
+  a data set written through `fopen()`. A new mode-string keyword now does:
+  `fopen(dsn, "wb,rlse")`, in the same comma-separated family as `record` and
+  `bsam`. `__fpmode()` turns it into `_FILE_FLAG_RLSE` (`0x0040`) and both
+  `__fpold()` (DISP=OLD) and `__fpnew()` (DISP=NEW) add the text unit.
+
+  **Opt-in, not a default.** Setting `DALRLSE` unconditionally would change
+  what `fclose()` does for every consumer's output `fopen()` — httpd, mvsMF,
+  ufsd, ftpd — and would take an append-mode writer's primary extent at every
+  close. Nothing changes for a caller that does not spell the keyword.
+
+  **It has to be here and not in `__dsalc()`'s opts parser.** RLSE is honoured
+  at CLOSE of the DCB opened against the DD that carried it, and `fclose()`
+  runs `__aclose(fp->dcb)` *before* `__fpfree()` drops the DD — so the DD
+  `fopen()` allocated is still there when CLOSE looks. mvslovers/ftpd allocates
+  with `__dsalcf()`, `__dsfree()`s that DD and *then* `fopen()`s the data set by
+  name (ftpd#100, ftpd#127): an `RLSE` keyword in the opts parser would be a
+  no-op for exactly the caller that asked for this.
+
+  **Skipped for a PDS member.** `fopen()` tries `__fpshr()` for a member and
+  falls through to `__fpold()` when that fails, so the flag alone would put
+  partial release on a PO data set and take the space the next member needs.
+  A caller may pass `"wb,rlse"` unconditionally; the library decides.
+
+  **Two sharp edges, neither a defect.** `"ab,rlse"` is accepted, and accepting
+  it is right — but RLSE is what makes append expensive: every `fclose()` gives
+  the unused primary back, so every following append takes a *secondary* extent,
+  and a data set gets 16 of those on one volume. Repeated append-with-RLSE walks
+  it into an x37 at a rate the caller chose. And the keyword only reaches the two
+  functions that allocate: `__fpmode()` sets the flag for any mode string
+  containing `rlse`, but it is silently ignored for read opens (`__fpshr`),
+  `&TEMP` data sets (`__fptmp`), `DD:ddname` (nothing is allocated), `*` SYSOUT
+  (`__fpstar`), and — deliberately — PDS members.
+
+  **Measured, not just built.** Host red/green: `test/host/tstfprls.c`, 51
+  checks, 8 red before the fix, links the real `@@fpmode.c`/`@@fpold.c`/
+  `@@fpnew.c` and captures the text unit array at the SVC 99 call. Target:
+  `test/mvs/tstfprls.c` + `jcl/tstfprls.jcl`, run on mvsdev 2026-09-13
+  (JOB00229, CC 0000, volume WORK00, 30 tracks/cylinder). Each case allocates
+  `TRK(30,5)`, writes one record, closes, and adds up the extents from the
+  format-1 DSCB:
+
+  | case | mode | tracks |
+  |---|---|---|
+  | `__dsalcf()` TRK(30,5) | — | 30 |
+  | DISP=OLD | `"wb"` | 30 |
+  | DISP=OLD | `"wb,rlse"` | **1** |
+  | DISP=NEW | no `rlse` | 30 |
+  | DISP=NEW | `",rlse"` | **1** |
+
+  **SVC 99 accepts `DALRLSE` with DISP=OLD and no space keys** — ftpd's exact
+  shape — and CLOSE released 29 of the 30 tracks. No SVC 99 returned nonzero.
+  That matters beyond the feature: had SVC 99 rejected it, `__fpold()` would
+  fail, `fopen()` would fall through to `__fpnew()`, DISP=NEW on an existing
+  cataloged data set would fail too, and the caller would lose the open
+  entirely. There is no graceful degradation in this design, and it does not
+  need one.
+
+  Filed off the back of this work, none of it fixed here: #171 (overlapping
+  `strcpy(p, p+1)` in `@@fpnew.c`/`@@dsalc.c`), #172 (`__fpnew()` sends no UNIT
+  text unit) and #173 (`clibdscb.h` models DSCB key presence inconsistently —
+  `struct dscb4` is unusable with `__dscbv()`, which the probe and
+  `@@listds.c:192` work around identically and independently).
+
 ## [1.0.4] - 2026-09-04
 
 ### Added

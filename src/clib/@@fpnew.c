@@ -138,6 +138,15 @@ __fpnew(FILE *fp)
         if (err) goto quit;
     }
 
+    /* SPACE=(,,RLSE), on request (#167) - see the note in @@fpold.c for why
+       this has to sit on the DD that fopen() allocates.  Skipped for a PDS
+       member: partial release on a PO data set takes the space the next
+       member needs. */
+    if ((fp->flags & _FILE_FLAG_RLSE) && !fp->member[0]) {
+        err = __txrlse(&txt99, NULL);
+        if (err) goto quit;
+    }
+
     count = arraycount(&txt99);
     if (!count) goto quit;
 

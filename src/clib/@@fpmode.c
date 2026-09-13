@@ -49,6 +49,10 @@ __fpmode(FILE *fp, const char *mode)
                 /* wtof("__fpmode found bsam"); */
                 fp->flags |= _FILE_FLAG_BSAM;
             }
+            if (strstr(&fp->mode[i],"rlse")) {
+                /* SPACE=(,,RLSE) on the dynamic allocation (#167) */
+                fp->flags |= _FILE_FLAG_RLSE;
+            }
             goto check;
         }
     }

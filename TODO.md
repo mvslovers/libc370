@@ -27,6 +27,43 @@ on the next pass rather than guessing a tier for them here. (#155 was a fifth
 and is closed — see the update below; it asked for macros libc370 does
 not assemble.)
 
+**#167 was filed and fixed on the same pass (2026-09-13) and never needed a
+rank.** `__txrlse()` had been dead code since it was written: a `DALRLSE` text
+unit builder with a prototype and no caller, so no consumer could get unused
+space released for anything written through `fopen()`. The fix is a mode-string
+keyword — `fopen(dsn, "wb,rlse")` — wired into `__fpold()` and `__fpnew()`, opt
+in, skipped for a PDS member. It matters because **mvslovers/ftpd#100 /
+ftpd#127 are waiting on it**: an FTP STOR has no size at allocation time, so
+allocating large enough for a big upload strands that space on every small one.
+The scope call that made it not-a-one-liner was deliberate — unconditional RLSE
+would change `fclose()` for httpd, mvsMF, ufsd and ftpd at once. **The MVS half
+is measured**, which was the whole gate: mvsdev JOB00229, CC 0000, 2026-09-13.
+`TRK(30,5)` + one record + `fclose()` retains **30 tracks without the keyword and
+1 with it**, on both the DISP=OLD and the DISP=NEW path — so SVC 99 does accept
+`DALRLSE` with DISP=OLD and no space keys, ftpd's exact shape, and CLOSE really
+releases. **ftpd#100 / ftpd#127 can proceed** once the consumer is relinked
+against a sysroot carrying this libc (it is unversioned — see the installed
+`libc.a` date). What the run also surfaced, and is NOT part of #167: **#173**,
+`clibdscb.h` models DSCB key presence three different ways behind one accessor.
+`struct dscb4` carries a leading `key[44]` that OBTAIN SEARCH does not return,
+so `d4.dscb4.dstrk` reads 44 bytes past the field and comes back 0 (JOB00223).
+The probe works around it — and so, independently, does `@@listds.c:192`, which
+is the point: two consumers, one header defect, the same hand-rolled offset
+twice. `dscb4` is a one-line fix, the `@@listds.c` cleanup follows it, and
+format-3 extent access is an open design question recorded there, not answered.
+Also filed off the back of this work: **#171** (overlapping `strcpy(p, p+1)` in
+`@@fpnew.c`/`@@dsalc.c` — benign on target, aborts every ASAN host run) and
+**#172** (`__fpnew()` sends no UNIT text unit).
+
+**Deferred, deliberately: `test/mvs/tstfprls.c` does not echo S99ERROR/S99INFO.**
+`fopen()` only ever hands back NULL, so a rejected `DALRLSE` would arrive without
+reason codes. Getting them means the probe issuing its own SVC 99 with a
+hand-rebuilt copy of `__fpold()`'s text units — forty lines that never fire on a
+green run, drift silently from what `__fpold()` actually builds, and become the
+first suspect the day something really breaks. **Write it against a real failure,
+when there is one.** Until then the probe says which of the three things happened
+(OPEN FAILED / NO MEASURE / MEASURED), which is what a red run needs first.
+
 **Tier 1 was emptied by seven closures and then refilled by an issue that had
 been sitting in the tracker the whole time.** #107, #70,
 #80 defect 2, **#11** (PRs #137, #138, #139, #141, merged 2026-08-23 on top of
