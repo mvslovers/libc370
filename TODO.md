@@ -10,9 +10,9 @@ libc370 is the base library of the whole ecosystem, so a defect here is a defect
 in httpd, mvsMF, ftpd, ufsd and every other consumer at once; that is what puts
 some cheap items high and some expensive ones low.
 
-*Last reconciled against the tracker: **2026-09-13**, 42 issues open, all 42
-ranked below.* #149 was fixed on the same day (PR #180) and #178/#179 were
-filed out of that work; both are ranked at the end. The previous pass was 2026-08-30 at 29 open, and the gap it left
+*Last reconciled against the tracker: **2026-09-13**, 41 issues open, all 41
+ranked below.* #149 was fixed and released the same day (PR #180, **v1.0.6**)
+and #178/#179 were filed out of that work; both are ranked at the end. The previous pass was 2026-08-30 at 29 open, and the gap it left
 is the reason this note now says "all": six issues filed on 2026-09-06
 (#160–#165) never reached this file at all, and the four it had parked as *not
 yet ranked* — #142, #143, #144, #149 — were still parked thirteen days later,
@@ -941,6 +941,24 @@ survive at all: C99 7.19.5.4 closes it either way, and libc370 does not.
 ## Recently landed
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
+
+- **v1.0.6** (2026-09-13) — #176 and #149, both on what a `FILE` does when a
+  write cannot be written, released together so consumers relink once.
+  **It is a behaviour change, not only a fix:** a consumer that writes in a
+  loop and checks `ferror()` once at the end now gets short returns mid-loop
+  instead of on every tenth call, and the `ferror()`/`feof()` macro correction
+  is a header change. Relink tickets filed and open in every consumer that
+  reads `ferror()` or writes through stdio — ftpd#135, mvsmf#366, ufsd#72,
+  httpd#265, lua370#16, httplua#8, rexx370#220. httprexx, ufsd-utils and
+  lstring370 need nothing beyond a routine rebuild.
+
+  `rexx370#220` is the one worth reading: `irxinout()` writes SAY output to a
+  `stdout` redirected to `DD:SYSTSPRT` for the life of an exec and checks
+  neither return value nor `ferror()`. That is the long-lived output stream
+  #149's argument against fail-fast assumed existed, and the sweep that decided
+  the issue covered ftpd/httpd/ufsd/mvsmf only — all four of which log through
+  WTO. It does not change the decision (SYSTSPRT is spool, and the stream dies
+  with the job step) but it is where the argument stops reaching.
 
 - **#151** (PR #153, 2026-08-27) — four external names were each exported by two
   archived objects. Three were byte-identical twins from a mistyped filename
