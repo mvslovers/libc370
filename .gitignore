@@ -34,3 +34,7 @@ CLAUDE.md
 __pycache__/
 
 /*.c
+
+# MVS deploy artifacts (ld370 --pack / -xmit output; probes and test packs)
+*.xmit
+*.iebcopy
