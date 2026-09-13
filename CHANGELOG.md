@@ -4,6 +4,42 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Added
+- **`fopen()` can ask for RLSE (#167).** `__txrlse()` built a `DALRLSE`
+  (`0x000D`) text unit and had a prototype in `svc99.h`, and nothing in the
+  library ever called it — so there was no way to get unused space released for
+  a data set written through `fopen()`. A new mode-string keyword now does:
+  `fopen(dsn, "wb,rlse")`, in the same comma-separated family as `record` and
+  `bsam`. `__fpmode()` turns it into `_FILE_FLAG_RLSE` (`0x0040`) and both
+  `__fpold()` (DISP=OLD) and `__fpnew()` (DISP=NEW) add the text unit.
+
+  **Opt-in, not a default.** Setting `DALRLSE` unconditionally would change
+  what `fclose()` does for every consumer's output `fopen()` — httpd, mvsMF,
+  ufsd, ftpd — and would take an append-mode writer's primary extent at every
+  close. Nothing changes for a caller that does not spell the keyword.
+
+  **It has to be here and not in `__dsalc()`'s opts parser.** RLSE is honoured
+  at CLOSE of the DCB opened against the DD that carried it, and `fclose()`
+  runs `__aclose(fp->dcb)` *before* `__fpfree()` drops the DD — so the DD
+  `fopen()` allocated is still there when CLOSE looks. mvslovers/ftpd allocates
+  with `__dsalcf()`, `__dsfree()`s that DD and *then* `fopen()`s the data set by
+  name (ftpd#100, ftpd#127): an `RLSE` keyword in the opts parser would be a
+  no-op for exactly the caller that asked for this.
+
+  **Skipped for a PDS member.** `fopen()` tries `__fpshr()` for a member and
+  falls through to `__fpold()` when that fails, so the flag alone would put
+  partial release on a PO data set and take the space the next member needs.
+  A caller may pass `"wb,rlse"` unconditionally; the library decides.
+
+  Red/green host test `test/host/tstfprls.c` (51 checks, 8 red before the fix)
+  links the real `@@fpmode.c`/`@@fpold.c`/`@@fpnew.c` and captures the text unit
+  array at the SVC 99 call. `test/mvs/tstfprls.c` + `jcl/tstfprls.jcl` is the
+  measurement the host cannot make: whether SVC 99 accepts `DALRLSE` with
+  DISP=OLD and no space keys, and whether MVS then releases the space — read
+  back from the format-1 DSCB with OBTAIN. **Not yet run on a target.**
+
 ## [1.0.4] - 2026-09-04
 
 ### Added

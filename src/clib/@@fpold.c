@@ -27,6 +27,20 @@ __fpold(FILE *fp)
     err = __txold(&txt99, NULL);
     if (err) goto quit;
 
+    /* SPACE=(,,RLSE), on request (#167).  It belongs on THIS DD and nowhere
+       else: RLSE is honoured at CLOSE of the DCB opened against the DD that
+       carried it, and fclose() runs __aclose() before __fpfree() drops the
+       DD.  A caller that allocates its own DD, frees it and then fopen()s the
+       data set by name - which is what mvslovers/ftpd does - can only get
+       partial release from here.
+       Not for a PDS member: fopen() falls through to __fpold() when __fpshr()
+       fails, and partial release on a PO data set takes the space the next
+       member needs. */
+    if ((fp->flags & _FILE_FLAG_RLSE) && !fp->member[0]) {
+        err = __txrlse(&txt99, NULL);
+        if (err) goto quit;
+    }
+
     count = arraycount(&txt99);
     if (!count) goto quit;
 

@@ -27,6 +27,21 @@ on the next pass rather than guessing a tier for them here. (#155 was a fifth
 and is closed — see the update below; it asked for macros libc370 does
 not assemble.)
 
+**#167 was filed and fixed on the same pass (2026-09-13) and never needed a
+rank.** `__txrlse()` had been dead code since it was written: a `DALRLSE` text
+unit builder with a prototype and no caller, so no consumer could get unused
+space released for anything written through `fopen()`. The fix is a mode-string
+keyword — `fopen(dsn, "wb,rlse")` — wired into `__fpold()` and `__fpnew()`, opt
+in, skipped for a PDS member. It matters because **mvslovers/ftpd#100 /
+ftpd#127 are waiting on it**: an FTP STOR has no size at allocation time, so
+allocating large enough for a big upload strands that space on every small one.
+The scope call that made it not-a-one-liner was deliberate — unconditional RLSE
+would change `fclose()` for httpd, mvsMF, ufsd and ftpd at once. **What is still
+owed is the MVS half**: `test/mvs/tstfprls.c` + `jcl/tstfprls.jcl` exist and have
+never been run, and they are the only thing that can answer whether SVC 99 takes
+`DALRLSE` with DISP=OLD and no space keys — ftpd's exact shape. Until that run,
+ftpd should not be told the feature is there.
+
 **Tier 1 was emptied by seven closures and then refilled by an issue that had
 been sitting in the tracker the whole time.** #107, #70,
 #80 defect 2, **#11** (PRs #137, #138, #139, #141, merged 2026-08-23 on top of
