@@ -12,13 +12,9 @@
 #include "cliblock.h"
 #include "clibary.h"
 
-extern int  __fpfree(FILE *fp);
-
 int
 fclose(FILE *fp)
 {
-    CLIBGRT *grt    = __grtget();
-    unsigned count;
     int     owned;
     if (!fp) goto quit;
     if (strcmp(fp->eye, _FILE_EYE)!=0) goto quit;
@@ -39,36 +35,8 @@ fclose(FILE *fp)
         fp->asmbuf  = 0;
     }
 
-    if (fp->buf) {
-        free(fp->buf);
-        fp->buf     = 0;
-        fp->upto    = 0;
-        fp->endbuf  = 0;
-    }
-
-    if (fp->flags & _FILE_FLAG_DYNAMIC) {
-        /* deallocate the dataset */
-        __fpfree(fp);
-    }
-
-    /* remove file handle from array of open file handles */
-    lock(&grt->grtfile,0);
-    count = arraycount(&grt->grtfile);
-    while(count > 0) {
-        count--;
-        if (grt->grtfile[count]==fp) {
-            arraydel(&grt->grtfile, count+1);
-            break;
-        }
-    }
-    unlock(&grt->grtfile,0);
-
-    free(fp);
-
-    /* after free(fp) on purpose: the lock rname is built from the
-       pointer VALUE, unlock() never dereferences it.  A waiter that
-       acquires now and uses the freed FILE was always a caller error */
-    if (owned) unlock(fp,0);
+    /* buffer, DD, grtfile, FILE, lock - shared with __fabandon() (#168) */
+    __fpterm(fp, owned);
 
 quit:
     return 0;
