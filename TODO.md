@@ -94,10 +94,10 @@ that is worse than it looks: `__fabandon()` only helps a caller who knows to
 call it, while `@@exit.c` walks `grt->grtfile` at termination and `fclose()`s
 every survivor **with no ESTAE**, so a consumer that recovers an x37 and simply
 returns from `main()` takes the program check in teardown. #176 also carries
-the concrete motivation for the phase-2 DCB ABEND exit (`EXLST` X'11') idea —
-it would turn the x37 into a return code before any re-drive can happen, the
-way #147 did with SYNAD, and would make the abandon dance unnecessary for the
-common case. **#176 is rank 1** as of the 2026-09-13 pass — a latent crash in
+the concrete motivation for the x37 exit — it turns the abend into a return
+code before any re-drive can happen, the way #147 did with SYNAD, and would
+make the abandon dance unnecessary for the common case. **It is `EXLST` type
+X'08', not the X'11' ABEND exit this file said at first** — see rank 1. **#176 is rank 1** as of the 2026-09-13 pass — a latent crash in
 every consumer, not a missing feature — and #149 sits next to it at rank 24,
 because the two are one design question and not two patches.
 
@@ -255,10 +255,38 @@ The reproducer exists and is green today because it *asserts* the abend:
 `test/mvs/tstfabnd.c` `PARM='SPLIT'` (`jcl/tstfabnd.jcl`). A fix flips that
 check, which is the right place to start.
 
-Phase 2, unmeasured: a DCB ABEND exit (`EXLST` X'11') could turn the x37 into a
-return code at the point it happens, the way #147 did with SYNAD — which would
-make the whole abandon dance unnecessary for the common case. Which x37 options
-MVS 3.8j honours is not verified.
+**The fix is an `EXLST` exit, and the contract is in the source, not in a
+guess.** `IFG0554T` — the module named in our own `IEC031I D37-04` — scans the
+DCB exit list for entry type **X'08'** and branches on the exit's R15:
+
+| R15 | what IFG0554T does |
+|---|---|
+| 0 | DADSM extend on the current volume and retry; for D37 a second 0 is treated as 2 |
+| **1** | rewrite the format-1 DSCB from `DCBFDAD`/`DCBTRBAL`, clear the unit-exception bits in every BSAM/QSAM IOB, drop the FEOV bit, and **return to the access method to drive the user's SYNAD** with "output error, no space available" |
+| 2 | as 1, then the `B37-4`/`D37-4`/`E37-4` abend — today's behaviour |
+
+**RC 1 lands on machinery libc370 already has.** #147 plants a SYNAD stub that
+records into `IOSFLAGS`, so `__awrite()` answers 8 and `__fflush()` sets
+`_FILE_FLAG_ERROR` — and this time reaches its `reset:` label, so `fp->upto` is
+cleared and there is nothing left for `fclose()` to re-drive. The whole
+mechanism of rank 1 disappears.
+
+Two conditions the module states and one trap. The exit is not taken at all
+when `DSORG` is not PS, when `DCBMACRF` has no PUT/WRITE, or when there is no
+X'08' entry — the last of those is today's immediate abend. At **16 extents or
+on a VIO unit the exit is skipped and RC 1 is assumed anyway**, so libc370
+already behaves this way for a 16-extent x37; the exit only makes the
+one-extent case behave like it. The trap: *"if a SYNAD address is not present
+or if CLOSE called EOV, an 001 abend is issued"* — so the exit must be planted
+only where #147 plants SYNAD, and an x37 raised by CLOSE becomes S001 rather
+than D37. JOB00245 measured that CLOSE with nothing pending completes on
+`TRK(1,0)`, so that path is not observed, but it is the one place the exit
+makes a failure *less* legible.
+
+**Not** the X'11' ABEND exit, which is what this file and #176 said first.
+`EXLDCBAB EQU X'11'` appears exactly once in the whole MVS 3.8j source tree —
+its own definition in `IHAEXLST` — and no module consults it. It is defined and
+never taken.
 
 ---
 
