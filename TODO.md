@@ -10,22 +10,16 @@ libc370 is the base library of the whole ecosystem, so a defect here is a defect
 in httpd, mvsMF, ftpd, ufsd and every other consumer at once; that is what puts
 some cheap items high and some expensive ones low.
 
-*Last reconciled against the tracker: 2026-08-30, 29 issues open; the tracker
-answers 30 on 2026-09-04, so a pass is due — of which the
-ranked list below covers 25; #151 is fixed and merged.* **Four are
-filed but not yet ranked**, all newer than the last full reconciliation: #142 (`jesopen()` should dynalloc the
-checkpoint and spool — measured 2026-08-27, and the issue text understates it
-both ways: `__cpopen()`/`__jsopen()` **already** dynalloc when the argument is
-not `DD:`, so the minimum is two literals in `jesopen.c:37,47`; but the data set
-name is not a constant — JES2 builds it from `$DSNPRFX` (init parameter,
-default `SYS1`) plus the assembled literal `.HASPACE`/`.HASPCKPT`, and that
-prefix lives in the HCT, which is unreachable from another address space. See
-the measurements in the issue), #143 (no volume-addressed
-SCRATCH/RENAME), #144 (an MVS test for `select()` silently dropping sockets)
-and #149 (stdio fail-fast after `_FILE_FLAG_ERROR`, plus `clearerr()`). Place them
-on the next pass rather than guessing a tier for them here. (#155 was a fifth
-and is closed — see the update below; it asked for macros libc370 does
-not assemble.)
+*Last reconciled against the tracker: **2026-09-13**, 41 issues open, all 41
+ranked below.* The previous pass was 2026-08-30 at 29 open, and the gap it left
+is the reason this note now says "all": six issues filed on 2026-09-06
+(#160–#165) never reached this file at all, and the four it had parked as *not
+yet ranked* — #142, #143, #144, #149 — were still parked thirteen days later,
+alongside #159 (filed on the day of that pass and missed by it), #169, #171,
+#172, #173, #174 and #176. A parked item is invisible, and that has a cost:
+**#160 is the send-side mirror of #154**, which was rank 1 until it was fixed,
+and nothing in this file said so for a week. This pass places every one of them.
+(#151 and #155 are closed — see the updates below.)
 
 **#167 was filed, fixed and merged on the same pass (PR #170, 2026-09-13) and
 never needed a rank.** `__txrlse()` had been dead code since it was written: a `DALRLSE` text
@@ -103,8 +97,9 @@ returns from `main()` takes the program check in teardown. #176 also carries
 the concrete motivation for the phase-2 DCB ABEND exit (`EXLST` X'11') idea —
 it would turn the x37 into a return code before any re-drive can happen, the
 way #147 did with SYNAD, and would make the abandon dance unnecessary for the
-common case. Rank #176 on the next pass; it is a latent crash in every
-consumer, not a missing feature.
+common case. **#176 is rank 1** as of the 2026-09-13 pass — a latent crash in
+every consumer, not a missing feature — and #149 sits next to it at rank 24,
+because the two are one design question and not two patches.
 
 One measurement kept because it cost four runs, and kept as a correlation
 rather than a cause: rescuing a FILE *after* its `fclose()` abended answers 0
@@ -132,13 +127,17 @@ list since July, and #108 was the last open crash hunt — after which, for thre
 days, nothing ranked here was a failure anyone was seeing on a running system.
 **#154 ended that**, and it was not new: filed 2026-08-27, missed by that day's
 reconciliation, ranked 2026-08-30 as item 1 — **and fixed 2026-09-07 by PR #166**,
-after `mvslovers/ftpd#122` arrived as an outside sighting of it. Tier 1 is empty
-again. Below it the picture is unchanged —
-two **campaigns**, a **relink round**, and a set of traps that have not bitten
-yet. Rank accordingly: with rank 1 retired, every choice here is a judgement
-about order, not an emergency. **The numbering is left as it stands** — ranks 2
-to 23 are referenced from prose in this file, so the retired rank 1 is a gap
-rather than a renumbering.
+after `mvslovers/ftpd#122` arrived as an outside sighting of it. Tier 1 was empty
+for six days, and **#176 refilled it on 2026-09-13** — stdio re-driving a WRITE
+on a DCB whose last write abended, measured as a program check and reachable
+through `@@exit.c` with no ESTAE and no API call. Below it the picture is
+unchanged — two **campaigns**, a **relink round**, and a set of traps that have
+not bitten yet, now joined by a **socket measurement set** that is not libc370
+defects at all. **The numbering is still left as it stands** — ranks 2 to 23 are
+referenced from prose in this file, so nothing is renumbered. Rank 1 was a gap
+and is now #176; everything the 2026-09-13 pass added takes **24 and upward** in
+tier order, so the number says when an item arrived and the tier says how much
+it matters.
 
 **Update 2026-08-26: #145 briefly refilled Tier 1 — and is closed again.**
 `vvprintf()`'s nested public `fputs()`/`putc()` released the FILE lock at the
@@ -223,7 +222,45 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 
 ---
 
-## Tier 1 — empty
+## Tier 1 — one
+
+### 1 · #176 — stdio re-drives a WRITE on a DCB whose last write abended, and program-checks
+
+Measured 2026-09-13 on mvsdev (JOB00235 / JOB00241 / JOB00245) while building
+the #168 probe. An `fwrite()` into a full `TRK(1,0)` data set takes D37-04 in
+`@@ATROUT`'s `CHECK`. The caller's ESTAE recovers — that part works, it is what
+mvslovers/ftpd does for a STOR — but the abend unwound *through* `@@fflush.c`
+before its `reset:` label, so `fp->upto` still points past the block that
+failed. Driving `fflush()` alone under a second `try()` then gives **`0x0C4` on
+one run and `0x0C6` on another, for identical code**: a wild store, not an
+orderly "the data set is full". `__aclose()` straight afterwards answers 0 and
+the DD goes, so the DCB is recoverable — it is the *write path* that is not safe
+to re-enter.
+
+**Why this is rank 1 and not a footnote under #168.** `__fabandon()` (#168, PR
+#175) gives a caller a way out, but nothing stops the re-drive itself, and one
+path reaches it with no API call at all: `@@exit.c` walks `grt->grtfile` at
+program termination and `fclose()`s every survivor **with no ESTAE around it**.
+A consumer that recovers an x37 and simply returns from `main()` takes the
+program check in teardown. `freopen()`/`__reopen()` and any direct `fflush()`
+are the same door.
+
+It cannot be driven off `_FILE_FLAG_ERROR`: an x37 is an ABEND, not a SYNAD
+condition, so #147's flag is never set and the FILE looks healthy to the
+library. That is the join with **rank 24 (#149)** — the two want one design, not
+two patches. Something has to mark the write path dead first; `_FILE_FLAG_ERROR`
+and `clearerr()` are then what express it.
+
+The reproducer exists and is green today because it *asserts* the abend:
+`test/mvs/tstfabnd.c` `PARM='SPLIT'` (`jcl/tstfabnd.jcl`). A fix flips that
+check, which is the right place to start.
+
+Phase 2, unmeasured: a DCB ABEND exit (`EXLST` X'11') could turn the x37 into a
+return code at the point it happens, the way #147 did with SYNAD — which would
+make the whole abandon dance unnecessary for the common case. Which x37 options
+MVS 3.8j honours is not verified.
+
+---
 
 ### #154 is fixed — `recv()` now caps its X'75' chunk at 256 (PR #166, 2026-09-07)
 
@@ -268,7 +305,7 @@ resumed correctly and never faulted, and the guest cannot tell them apart.
   mirror image with the host buffer losing its leading segments. Left out of #166
   on purpose — `send()` returns a byte count and callers loop on partial writes,
   so capping it changes what every caller sees per call, not just the instruction
-  count. Its own decision and its own issue, **still not filed**. The asymmetry in
+  count. Its own decision and its own issue: **#160, now rank 27**. The asymmetry in
   what has been observed fits the mechanism: a send buffer was just written by the
   application and is hot, while a receive buffer can have lain idle across an I/O
   wait — exactly when its pages get stolen.
@@ -440,6 +477,104 @@ move the TSO property into the CRT. The two readings differ for `fopen.c`,
 
 ---
 
+### 24 · #149 — stdio does not fail fast after `_FILE_FLAG_ERROR`, and there is no `clearerr()`
+
+Read with rank 1. The flag exists and `ferror()` reads it, but nothing in stdio
+refuses to keep going once it is set, and there is no way to reset it. Since
+#147 the flag has a real, narrow meaning: *the SYNAD stub recorded an
+uncorrectable I/O error*. What rank 1 adds is the case the flag cannot express —
+an ABEND is not a SYNAD condition, so the most dangerous state a FILE can be in
+is precisely the one that leaves the flag clear.
+
+So these are one design question and not two patches: what marks a FILE whose
+write path is dead, who sets it, and what refuses to run afterwards. Landing
+#149 alone gives a fail-fast for the errors that already announce themselves and
+leaves the x37 case exactly where it is.
+
+`clearerr()` is the small half and is C89-mandated; it should not land before
+the answer to "clear *what*, exactly".
+
+---
+
+### 25 · #174 — `fclose()` leaves a stale `CLIBLOCK` ENQ on freed storage
+
+Split out of #168 and deliberately left out of PR #175. `lock()` is ENQ
+`RET=HAVE` keyed on the pointer value, and rc=8 means **this task** already
+holds the resource. `fclose()` reads that as "an outer caller owns it and I must
+not DEQ" — right for #145, and wrong for the case rank 1 describes: an
+`fwrite()` that abended took the FILE lock and the ESTAE retry never released
+it. `fclose()` then skips the `unlock()` and `free()`s the FILE anyway, leaving
+an ENQ standing on storage that is back on the free chain. The next FILE
+`malloc()`ed at that address gets rc=8 from its own `lock()`, believes an outer
+caller owns it, and runs unserialized; a subtask that locks it waits on an ENQ
+nobody will release.
+
+`__fabandon()` already DEQs unconditionally — there is no legitimate outer
+holder of a FILE that is being destroyed — so the argument is settled. What is
+not settled is applying it to `fclose()`, which is on every consumer's path and
+where #145 is the reason the conditional is there in the first place.
+
+Cheap to make red: `test/host/tstfcls.c` already models `RET=HAVE` and asserts
+`hold_n == 0` at the end, and `test/host/tstfabnd.c` case (F) already pre-locks
+the FILE to cover exactly this for `__fabandon()`. One line.
+
+---
+
+### 26 · #165 — does a partial X'75' RECV consume what it returned?
+
+A measurement, and the only one in the socket set whose answer could be a live
+corruption in every consumer rather than a property of an unexercised path.
+`@@75recv.c` loops on partial reads, as every guest must; if a partial RECV does
+*not* consume what it returned, that loop replays bytes.
+
+It comes from a corruption report in `twinslow/mvs_nfsd`, `socktest/`: first bad
+byte at offset **256**, tail carrying the message from byte 0. The #154 restart
+mechanism cannot produce that — under restart the first call moves a single
+segment, which is immune, and the second moves two segments to `buf+256`, so a
+fault puts the first bad byte at **512**. The report was cited in
+SDL-Hercules-390/hyperion#884 and has since been retracted *there*, which is
+what makes it an independent suspect rather than a duplicate.
+
+Above the rest of the set because it is cheap and load-bearing:
+`test/mvs/tst75rst.c` already carries the loopback pair the program owns both
+ends of, a byte pattern that makes a replay unmistakable, and the low-level
+`__75()` path — so one measurement is one pair of X'75' instructions rather than
+a retry loop. Their own harness is not the route: it wants `<sys/socket.h>` and
+five other headers libc370 does not have, and porting 461 lines plus a Python
+driver is more work than a yes/no question warrants.
+
+---
+
+### 27 · #160 — `@@75send.c` caps nothing: the mirror of #154 on the send side
+
+The line Tier 1's #154 entry called "still not filed". `@@75send.c:46` passes
+`len` straight through. Same restart mechanism, opposite direction: on SEND the
+guest buffer is the *source*, so a fault mid-copy leaves the **host** buffer
+missing its leading segments, with the tail shifted down over them. 256 bytes or
+less is immune by construction, and a guest cannot detect a patched emulator —
+no return value, status bit or function code distinguishes one — so the
+host-side fix (hyperion #884 / PR #885) never makes the cap removable.
+
+Not a mirror of #154's *effort*, which is why it is here and not beside it.
+`recv()` loops internally, so #154 was one line; `send()` returns a byte count
+and callers loop on partial writes, so a cap turns one call into several and
+changes what every caller sees. Three options, none chosen: cap and loop inside
+`send()` (matches `recv()`, changes the meaning of a short return in a way
+callers may already depend on); cap and return the short count (honest, audits
+every consumer's send loop); document it and do nothing (rejected for `recv()`,
+and the same argument applies).
+
+**What it needs first is a measurement, not a patch.** `test/mvs/tst75rst.c`
+inverts: put a page boundary at a chosen multiple of 256 inside the *send*
+buffer, release the page beyond it immediately before the send, have the peer
+verify what arrived. Every sighting in the ecosystem so far has been on the
+receive side, which fits the mechanism — a send buffer was just written by the
+application and is hot, a receive buffer can have lain idle across an I/O wait,
+exactly when its pages get stolen — but that is an argument about likelihood,
+not about correctness.
+
+---
+
 ## Tier 5 — consumers waiting (one coordinated relink, best done in a single round)
 
 ### 10 · #80 defect 1 — `__listpd()` has no way to ask for less
@@ -473,6 +608,22 @@ Host test is trivial, because neither function touches MVS.
 One store in a `switch` branch that does nothing today, plus a companion accessor.
 Afterwards ftpd says "IDC3203I" instead of "failed". `idcams()` keeps its
 signature.
+
+---
+
+### 28 · #172 — `__fpnew()` sends no UNIT text unit
+
+Every `fopen()` that takes the DISP=NEW path allocates on whatever the system
+default hands it. Filed off #167's target run, where it is why cases (4) and (5)
+of `test/mvs/tstfprls.c` have to report "could not measure" instead of failing:
+if the default is not what the probe expected, the `fopen()` simply does not
+happen.
+
+In this tier rather than lower because it changes allocation behaviour for every
+consumer that creates a data set through `fopen()` — the kind of change that
+wants the coordinated rebuild this tier exists for. A mode-string keyword in the
+same comma-separated family as #167's `rlse` is the obvious shape, and #167
+already settled the argument about where such a keyword has to live.
 
 ---
 
@@ -562,7 +713,154 @@ there is none today.
 
 ---
 
-## Three campaigns instead of twenty-five tickets
+### 29 · #173 — `clibdscb.h` models DSCB key presence three different ways
+
+OBTAIN SEARCH returns the 96-byte DATA portion of a DSCB; the 44-byte key is the
+search *argument*, not part of the answer. `struct dscb1` models that and starts
+at `fmtid`. `struct dscb4` carries a leading `key[44]` and does not — so
+`d4.dscb4.dstrk` reads 44 bytes past the field and comes back 0. Measured
+2026-09-13, JOB00223.
+
+Two consumers already hand-roll around it independently: `test/mvs/tstfprls.c`
+finds the format id byte and reads relative to it, and `@@listds.c:192` does the
+same thing. That is the whole argument — one header defect, the same workaround
+written twice. `dscb4` is a one-line fix and the `@@listds.c` cleanup follows
+it. Format-3 extent access is an open design question recorded in the issue, not
+answered there.
+
+---
+
+### 30 · #171 — overlapping `strcpy(p, p+1)` in `@@fpnew.c` and `@@dsalc.c`
+
+Benign on the target — the generated MVC walks left to right — and it aborts
+every ASAN host run, which is how it was found. Two sites, `memmove()` each.
+Cheap enough that it belongs in whatever PR next touches those files rather than
+in one of its own.
+
+---
+
+### 31 · #159 — `@@crt0` and `@@crt1` are 319 lines that differ in three
+
+The ecosystem has already settled the question the variants exist to ask: 132
+modules link `crt1`, one links `crt0`, **none links `crtm`**. The functional
+delta is a single `IDENTIFY EPLOC` for `CTHREAD`, and the two copies have
+already drifted once in `@@CTEXIT` — harmless, because `@@CRTGET`'s `PDPEPIL`
+restores R1, but it is an edit that landed in one copy and not the other, which
+is the argument for merging in one line of diff. The mechanism sits three lines
+above it in the same file: `WXTRN` + `ICM` + skip, exactly what `@@STKLEN`
+already does. A weak external drives no autocall, so a program without threads
+never pulls the thread driver in and one that uses the thread API has the
+address anyway.
+
+**Two questions to settle before merging, not after**, and the second has teeth.
+`crt0`/`crt1` *create* a C environment for the task; `crtm` *joins* one — it
+GETMAINs a stack and calls `@@CRTGET`, which only looks the `CLIBCRT` up for the
+current TCB and abends `U0801` if there is none. That is the shape of a program
+LINKed into a task whose runtime is already up: an httpd CGI or display module.
+Those are linked with **`crt1`**. So either `crtm` is obsolete, or **the CGI
+path builds a second environment on a TCB that already has one** — and on a
+system where memory is priority #1 that is worth answering before the cleanup,
+not as part of it. (The first question is smaller: several `project.toml` files
+call `crt1` "the threading runtime" while `@@crt1.asm`'s own header says it is
+the copy *without* the CTHREAD IDENTIFY. The comments and the code disagree
+about which variant is which.)
+
+Read with `mvslovers/cc370#10` (startup customization via a weak `__premain()`
+hook — same mechanism, same file) and `cc370#99` (ld370 and a weak external when
+a hard ER for the same name exists; not a blocker, since nothing declares a hard
+`EXTRN CTHREAD`, but it is the same mechanism and worth having correct first).
+
+---
+
+### 32 · #169 — the authorized probe recipes pack a bare `.lm`
+
+Five places — `jcl/tstracau.jcl`, `jcl/tstracmx.jcl`, `test/mvs/tstracmx.c`,
+`test/mvs/tstracfl.c`, `doc/consumer-notes.md` — pack `NAME=NAME` instead of
+`NAME=NAME.iebcopy`. A bare `.lm` carries no PDS directory, so `--pack` has to
+default what only the directory holds. `--ac` given again on the pack command
+does reach it, which is why those probes really are authorized; the **entry
+point is packed as 0** and cannot be supplied at all. They work because `crt0.o`
+links first and `@@CRT0` lands at offset 0. A probe whose entry is not `@@CRT0`
+would pack at 0 and abend on whatever sits at the start of the module — the same
+"no output, just an abend" signature the AC half already cost two deploy cycles
+for.
+
+Since `cc370#37` the bare form warns on every run, and a warning that is always
+noise here teaches the reader to ignore one that will not be. One line each, and
+libc370 already does it correctly in 19 other `test/mvs` files.
+
+---
+
+### 33 · #142 — `jesopen()` should dynalloc the checkpoint and spool
+
+Measured 2026-08-27, and **the issue text understates it both ways.**
+`__cpopen()`/`__jsopen()` *already* dynalloc when the argument is not `DD:`, so
+the minimum is two literals in `jesopen.c:37,47`. But the data set name is not a
+constant: JES2 builds it from `$DSNPRFX` (init parameter, default `SYS1`) plus
+the assembled literal `.HASPACE` / `.HASPCKPT`, and that prefix lives in the
+HCT, which is unreachable from another address space. So the cheap version works
+on a default system and silently opens the wrong thing on a customised one —
+which is worse than not doing it. See the measurements in the issue.
+
+Same family as rank 34 below: both are "resolve it without the catalog", and the
+OBTAIN-by-volume scan recorded in the issue is the shared route.
+
+---
+
+### 34 · #143 — no volume-addressed SCRATCH/RENAME
+
+`remove()` and `rename()` resolve only through the catalog, so an uncataloged
+data set can be neither deleted nor renamed. The OBTAIN-by-volume scan that
+#142's discovery work established is the mechanism; this is the API end of it.
+
+---
+
+### 35 · #144, #161, #162, #163, #164 — the socket measurement set
+
+Five probes, one family, and **none of them a libc370 defect**: each asks what
+the *emulator* does when a guest pushes on a path nothing has pushed on, and
+each is written to need no Hercules change, no diagnostic build and no IPL — so
+it runs against any deployed version and survives as a regression test if the
+defect is ever fixed.
+
+- **#161 — can GETERROR return another address space's error?** `CerrGen` in
+  Hercules' `tcpip.c` is a single global, not per conversation and not per
+  address space, so the error a guest reads back need not be its own. Cheapest
+  of the five, and the single-address-space variant is simpler still: two
+  sockets, two errors that cannot be confused, read back for the first.
+- **#144 — does `select()` silently drop sockets from its set?** Same shape,
+  filed earlier, and it belongs here rather than alone in a "not yet ranked"
+  note, which is where it sat for a fortnight.
+- **#162 — slot exhaustion and `talk` aliasing.** `find_slot()` stops at
+  `Ccom-1` and assigns anyway, so two `talk` structures alias one slot — the
+  structure that carries the buffer pointers and lengths for a transfer in
+  flight. The question is not *can it alias* (it plainly can, by inspection) but
+  *can a guest get there*. A 26.7-hour soak moved the emulator's descriptor
+  count exactly once, and never from the probe: **normal open/close does not
+  leak**, so the test has to force the abnormal path — a task that dies between
+  the two X'75' instructions of one call.
+- **#163 — does `gethostbyname()` block the emulated CPU?** Same class as the
+  SEND defect fixed upstream as #863 / PR #864, where a blocking host call froze
+  the CPU until the Hercules watchdog killed the emulator by design. Measure it
+  from a *different* task: subtask A loops on a fine clock recording its largest
+  gap, subtask B looks up a name whose resolver has to time out. The gap is the
+  measurement; a fast lookup is the noise floor to compare it against.
+- **#164 — the unchecked `aux2` bound in the SELECT path. Read the caution in
+  the issue before writing or running this one** — it is the only one here
+  expected to be able to *damage* the emulator rather than observe it. `aux2`
+  comes from a guest register and indexes `Ccom_han[]` with no check against
+  `Ccom`; the result subcodes additionally write the guest's bitmap without
+  validating the length. A guest-controlled out-of-bounds read, and on the
+  result path an out-of-bounds write, in the emulator's address space. Escalate
+  in small documented steps and record where it stops working — the job is to
+  say which value does what, not to push until something breaks.
+
+#165 is at rank 26 and not here, because its answer could be a live corruption
+in every consumer rather than a property of a path no guest reaches.
+
+---
+
+## Five campaigns instead of forty-one tickets
 
 - **Unchecked allocation** — #61, #80 defect 3, #157 and #158. The convention is
   settled (NULL + guaranteed `errno`, 2026-08-30, recorded in #61) and covers all
@@ -575,9 +873,20 @@ there is none today.
   `-Wall` in the SDK build. #125 is the one with a measured failure and is
   independent of the rest; #68 goes last and in its own three-step order, or it
   reddens consumer CI.
-- **Relink round** — #79, #50, #51, #71 and #80 defect 1's `max` parameter. Land
-  struct and signature growth in one batch, with a CHANGELOG entry and a
+- **Relink round** — #79, #50, #51, #71, #172 and #80 defect 1's `max` parameter.
+  Land struct and signature growth in one batch, with a CHANGELOG entry and a
   coordinated rebuild of httpd, mvsMF and ftpd.
+- **stdio after an abend** — rank 1 (#176) and rank 24 (#149) are one design, not
+  two patches: what marks a FILE whose write path is dead, who sets it, and what
+  refuses to run afterwards. #168 shipped the caller's escape hatch
+  (`__fabandon()`, PR #175); neither of these is that, and #174 is the lock half
+  of the same failure.
+- **Socket measurements** — #144 and #161–#164 at rank 35, #165 at 26, #160 at 27.
+  None is a libc370 defect; each asks what the emulator does on a path no guest
+  has pushed on, and none needs a Hercules change to run. Order: #165 first,
+  because its answer could be a live corruption in every consumer, then #160's
+  send-side arm, which decides whether an API change every consumer uses is
+  worth making.
 
 ---
 
