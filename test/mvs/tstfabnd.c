@@ -32,12 +32,20 @@
  *       remove() then answers nonzero and __dsfree(ddname) answers 4.  If
  *       this case ever goes quiet the premise of #168 has changed and the
  *       green case above stops proving anything - so it is checked, not just
- *       printed.  It then RESCUES the FILE with __fabandon() - partly so the
- *       step does not end S0D37 (@@exit.c fcloses every survivor in
- *       grt->grtfile with no ESTAE around it), partly because @@ACLOSE was
- *       already ENTERED there, so the rescue measures abandon on a
- *       HALF-closed DCB: the state a consumer whose own fclose() abended is
- *       actually in.
+ *       printed.  The defect is measured with __dsfree() - ftpd's "FREE
+ *       RC=4" - and NOT with remove(): IDCAMS DELETE escalates the SYSDSN
+ *       ENQ to exclusive for the rest of the step (#127), which breaks the
+ *       rescue below for a reason that has nothing to do with #168.
+ *       It then RESCUES the FILE with __fabandon() - partly so the step does
+ *       not end in a teardown abend (@@exit.c fcloses every survivor in
+ *       grt->grtfile with no ESTAE around it, and MVS closes any DCB the
+ *       task left open at termination), partly because @@ACLOSE was already
+ *       ENTERED there, so the rescue measures abandon on a HALF-closed DCB:
+ *       the state a consumer whose own fclose() abended is actually in.
+ *   (3) WHICH HALF of fclose() takes the second abend.  #168 assumed a second
+ *       D37 from the re-driven write; the target says otherwise.  fflush()
+ *       and __aclose() are driven under separate try()s on a fresh data set,
+ *       so the run says it rather than the issue assuming it.
  *
  * That the data set can be deleted from ANOTHER address space was already
  * measured in the issue on 2026-09-09; this probe does not re-measure it.
@@ -65,13 +73,52 @@
  * Then upload probe.xmit to IBMUSER.MBT.XMIT.IN, run jcl/recvfabn.jcl, run
  * jcl/tstfabnd.jcl.
  *
- * NOT YET RUN ON A TARGET.
+ * MEASURED 2026-09-13 on mvsdev, JOB00241.  GREEN step CC 0000, RED step
+ * 7/7 checks PASS (and ABEND SC03, see below).  TRK(1,0) on WORK00 took 200
+ * records of 80 before the D37.
+ *
+ *   (1) __fabandon() rc=0, remove() rc=0
+ *   (3) fflush() alone  rc=0x000C4000   __aclose() alone rc=0, remove() rc=0
+ *   (2) fclose() alone  rc=0x000C6000   __dsfree() rc=4
+ *
+ * Three things the run settled, none of them assumed:
+ *
+ *  - CLOSE WITH NOTHING PENDING COMPLETES on a data set that is out of space.
+ *    That was the open question in #168 - BSAM CLOSE writes the EOF mark and
+ *    can reach EOV - and the answer is that it does not.  try() around it
+ *    stays, but point 3 did not fire.
+ *  - POINT 1 IS THE CRUX, on the target and not just by reading the source:
+ *    (3) drives the two halves of fclose() separately and it is the FLUSH
+ *    that abends, while CLOSE straight afterwards is clean.
+ *  - THE SECOND ABEND IS A PROGRAM CHECK, NOT A SECOND D37.  0x0C4 and 0x0C6
+ *    both appeared across runs for the same code - so libc370 re-driving a
+ *    WRITE against a DCB that has taken an x37 does not fail cleanly, it
+ *    walks into wild storage.  #168 assumed a second D37; it is worse than
+ *    that, and it is another reason the flush must not be re-driven.
+ *
+ * The RED step ENDS ABEND SC03 and that is by construction: case (2) leaves
+ * a DCB that MVS CLOSE could not finish and task termination closes it again
+ * (IEC999I IFG0TC0A).  Its record is the TSTFABND WTOs, which is why every
+ * verdict is written to the console as well.  The GREEN step's CC 0000 is a
+ * verdict.
+ *
+ * One measured trap, and the reason (3) runs before (2): the rescue in (2)
+ * answers 0 in a fresh address space and -2 in one where remove() - IDCAMS
+ * DELETE - has already run, because that escalates the SYSDSN ENQ for the
+ * rest of the step (#127).  BOTH outcomes were seen in JOB00241 alone, from
+ * nothing but the order of the cases.  It is reported, never asserted.
+ *
+ * Every verdict is ALSO written to the console, so the JES2 job log carries
+ * the record even if a teardown abend discards the SYSOUT buffer - this probe
+ * takes three D37s on purpose.  Grep the job log for TSTFABND.
  *
  * RC: 0 = every check passed, 8 = at least one did not (it is the COND CODE).
  */
 #include <stdio.h>
 #include <string.h>
 #include <clibtry.h>
+#include <clibwto.h>
+#include <mvssupa.h>   /* __aclose() - (3) drives it without fclose() */
 #include "clibio.h"     /* __dsalcf(), __dsfree(), __fabandon() */
 
 #define CREATE  "DSN=%s;DISP=(NEW,CATLG,DELETE);DSORG=PS;RECFM=FB;"          \
@@ -105,6 +152,19 @@ static void closer(FILE *fp)
     fclose(fp);
 }
 
+/* fclose()'s two halves, so the RED step can say which one takes the second
+ * abend: the flush re-driving the block that already failed (point 1 of
+ * #168), or CLOSE itself (point 3). */
+static void flusher(FILE *fp)
+{
+    fflush(fp);
+}
+
+static void acloser(FILE *fp)
+{
+    __aclose(fp->dcb);
+}
+
 /* ------------------------------------------------------------------------ */
 static int create(const char *dsn)
 {
@@ -132,6 +192,8 @@ static int fill(const char *dsn)
 
     abend = try(writer, thefp);
     printf("      %ld record(s) written, try() rc=0x%08X\n", written, abend);
+    wtof("TSTFABND write dd=%.8s recs=%ld try=%08X",
+         thefp->ddname, written, abend);
     return abend;
 }
 
@@ -143,117 +205,188 @@ static int scratch(const char *dsn)
     int rc = remove(dsn);
 
     printf("      remove(\"%s\") rc=%d\n", dsn, rc);
+    wtof("TSTFABND remove %s rc=%d", dsn, rc);
     return rc;
 }
 
 /* ------------------------------------------------------------------------ */
+/* Every verdict goes to the console as well as to SYSPRINT.  This probe
+ * takes three D37s on purpose, and SYSOUT records sit in the QSAM block
+ * buffer until fclose: an abend anywhere - including in the step's own
+ * teardown - discards every line printed so far.  WTOs land in the JES2 job
+ * log immediately and survive it.  printf is the human transcript; the WTOs
+ * are the record. */
 static void check(int cond, const char *what)
 {
     printf("  %s: %s\n", cond ? "PASS" : "FAIL", what);
+    wtof("TSTFABND %s %s", cond ? "PASS" : "FAIL", what);
     if (!cond) bad++;
 }
 
 int main(int argc, char **argv)
 {
     char    base[40];
-    char    dsng[48];
-    char    dsnr[48];
+    char    dsn[48];
+    char    ddsave[9];
+    int     red;
     int     abend;
     int     rc;
 
-    strcpy(base, (argc > 1 && argv[1][0]) ? argv[1] : "IBMUSER.TSTFABND");
-    sprintf(dsng, "%s.G", base);
-    sprintf(dsnr, "%s.R", base);
+    red = (argc > 1 && (argv[1][0] == 'R' || argv[1][0] == 'r'));
+    strcpy(base, (argc > 2 && argv[2][0]) ? argv[2] : "IBMUSER.TSTFABND");
 
     printf("=== tstfabnd: #168 - close a FILE whose last write failed ===\n");
-    printf("    green control %s\n", dsng);
-    printf("    red   control %s\n\n", dsnr);
+    printf("    step: %s\n\n", red ? "RED (the defect)" : "GREEN (the fix)");
 
-    /* ---- (1) GREEN: __fabandon() ------------------------------------- */
-    printf("(1) __fabandon() after a D37\n");
-    rc = create(dsng);
-    if (rc) {
-        printf("      __dsalcf rc=%d - CANNOT MEASURE\n", rc);
-        unmeasured++;
-    }
-    else {
-        abend = fill(dsng);
+    if (!red) {
+        /* ---- GREEN: __fabandon() instead of fclose() ------------------ */
+        sprintf(dsn, "%s.G", base);
+        printf("(1) __fabandon() after a D37 on %s\n", dsn);
+
+        rc = create(dsn);
+        if (rc) {
+            printf("      __dsalcf rc=%d - CANNOT MEASURE\n", rc);
+            unmeasured++;
+            goto done;
+        }
+        abend = fill(dsn);
         if (abend == 0) {
             printf("      no abend: TRK(1,0) took %ld records."
                    "  CANNOT MEASURE\n", written);
             unmeasured++;
             fclose(thefp);
+            goto done;
         }
-        else if (abend < 0) {
-            unmeasured++;
+        if (abend < 0) { unmeasured++; goto done; }
+
+        rc = __fabandon(thefp);
+        printf("      __fabandon rc=%d (0x%08X)\n", rc, rc);
+        wtof("TSTFABND (1) __fabandon rc=%d (%08X)", rc, rc);
+        check(rc == 0, "(1) __fabandon: CLOSE completed and the DD went");
+        if (rc > 0) {
+            printf("      CLOSE ABENDED WITH NOTHING PENDING - point 3 of"
+                   " #168 needs more than try().\n");
         }
-        else {
-            rc = __fabandon(thefp);
-            printf("      __fabandon rc=%d (0x%08X)\n", rc, rc);
-            check(rc == 0,
-                  "(1) __fabandon: CLOSE completed and the DD went");
-            if (rc > 0) {
-                printf("      CLOSE ABENDED WITH NOTHING PENDING - this is"
-                       " the measurement #168 was missing:\n"
-                       "      point 3 needs more than try(), the DD cannot"
-                       " go while CLOSE fails.\n");
-            }
-            check(scratch(dsng) == 0,
-                  "(1) the data set can be scratched from this address space");
-        }
+        check(scratch(dsn) == 0,
+              "(1) the data set can be scratched from this address space");
+        goto done;
     }
 
-    /* ---- (2) RED CONTROL: fclose() ----------------------------------- */
-    printf("\n(2) fclose() after a D37 - the defect, as a control\n");
-    rc = create(dsnr);
+    /* ---- RED: the defect, as a control ------------------------------- */
+    /* Everything below deliberately leaves a DCB that MVS CLOSE could not
+       finish, so the STEP is expected to end ABEND SC03: task termination
+       closes it again and IFG0TC0A takes the same failure.  That is why
+       this is its own step - the GREEN step's COND CODE stays a verdict.
+       The WTOs in the job log are this step's record. */
+    /* (3) runs BEFORE (2) on purpose: its cleanup has to unallocate a DD,
+       and (2) ends with remove() - IDCAMS DELETE - which demands its target
+       exclusively and leaves the escalated SYSDSN ENQ up for the rest of the
+       step (#127).  Run the other way round, (3)'s cleanup could not get rid
+       of its DD and the step reported a failure that said nothing about the
+       thing under test (mvsdev JOB00239).
+
+       Which half of fclose() takes the second abend?  #168 assumed a second
+       D37 from the re-driven write; the run says 0x000C6000.  Split the two
+       halves on a fresh data set and let the target say which one it is. */
+    sprintf(dsn, "%s.S", base);
+    printf("(3) which half of fclose() abends, on %s\n", dsn);
+
+    rc = create(dsn);
     if (rc) {
         printf("      __dsalcf rc=%d - CANNOT MEASURE\n", rc);
         unmeasured++;
+        goto done;
     }
-    else {
-        abend = fill(dsnr);
-        if (abend <= 0) {
-            printf("      no D37 - CANNOT MEASURE\n");
-            unmeasured++;
-            if (abend == 0) fclose(thefp);
-        }
-        else {
-            char    ddsave[9];
-
-            strcpy(ddsave, thefp->ddname);
-            rc = try(closer, thefp);
-            printf("      fclose() under try() rc=0x%08X\n", rc);
-            check(rc != 0, "(2) fclose() abends - the defect reproduces");
-
-            rc = scratch(dsnr);
-            check(rc != 0, "(2) ... and the data set cannot be scratched");
-
-            rc = __dsfree(ddsave);
-            printf("      __dsfree(\"%s\") rc=%d\n", ddsave, rc);
-            check(rc != 0, "(2) ... and the leftover DD will not unallocate");
-
-            /* The FILE the abended fclose() left standing MUST be taken off
-               grt->grtfile before main() returns: @@exit.c walks that array
-               and fclose()s every survivor, with no ESTAE around it, so the
-               step would end S0D37 at termination and the COND CODE would
-               stop being the verdict.
-               It also measures something the green case cannot.  @@ACLOSE
-               was ENTERED in (2) - FIXWRITE abended before its FREEMAINs and
-               before the CLOSE - so this is abandon applied to a HALF-closed
-               DCB, not a fresh one, which is the state a consumer whose own
-               fclose() abended is actually in. */
-            rc = __fabandon(thefp);
-            printf("      rescue: __fabandon after the failed fclose"
-                   " rc=%d (0x%08X)\n", rc, rc);
-            check(rc == 0,
-                  "(2) __fabandon rescues a FILE whose fclose() abended");
-            printf("      remove(\"%s\") after the rescue rc=%d\n",
-                   dsnr, remove(dsnr));
-        }
+    abend = fill(dsn);
+    if (abend <= 0) {
+        printf("      no D37 - CANNOT MEASURE\n");
+        unmeasured++;
+        if (abend == 0) fclose(thefp);
+        goto done;
     }
 
+    rc = try(flusher, thefp);
+    printf("      fflush() alone   rc=0x%08X\n", rc);
+    wtof("TSTFABND (3) fflush alone rc=%08X", rc);
+    check(rc != 0, "(3) the FLUSH is what abends - point 1 is the crux");
+
+    abend = try(acloser, thefp);
+    printf("      __aclose() alone rc=0x%08X\n", abend);
+    wtof("TSTFABND (3) aclose alone rc=%08X", abend);
+    check(abend == 0,
+          "(3) CLOSE alone completes - even after the flush program-checked");
+
+    /* Clean up, or @@exit.c fcloses this FILE at termination: fp->upto still
+       points past the block the flush could not write, so it would re-drive
+       the same program check with no ESTAE and the step would end on it.
+       NOT __fabandon() here - acloser() above already CLOSEd this DCB, and
+       @@ACLOSE frees the buffers and the work area, so a second one FREEMAINs
+       storage that is gone: measured as S0A0A on mvsdev JOB00237, a defect in
+       this probe and not in the library.  Dropping _FILE_FLAG_OPEN makes
+       fclose() skip both the flush and the close and run the teardown only,
+       which is all that is left to do. */
+    thefp->flags &= ~_FILE_FLAG_OPEN;
+    fclose(thefp);
+    printf("      cleanup: teardown only (the DCB is already closed)\n");
+    check(scratch(dsn) == 0,
+          "(3) ... and the DD went, so the data set can be scratched");
+
+    sprintf(dsn, "%s.R", base);
+    printf("\n(2) fclose() after a D37 on %s\n", dsn);
+
+    rc = create(dsn);
+    if (rc) {
+        printf("      __dsalcf rc=%d - CANNOT MEASURE\n", rc);
+        unmeasured++;
+        goto done;
+    }
+    abend = fill(dsn);
+    if (abend <= 0) {
+        printf("      no D37 - CANNOT MEASURE\n");
+        unmeasured++;
+        if (abend == 0) fclose(thefp);
+        goto done;
+    }
+
+    strcpy(ddsave, thefp->ddname);
+    rc = try(closer, thefp);
+    printf("      fclose() under try() rc=0x%08X\n", rc);
+    wtof("TSTFABND (2) fclose under try rc=%08X", rc);
+    check(rc != 0, "(2) fclose() abends - the defect reproduces");
+
+    /* __dsfree(), NOT remove().  IDCAMS DELETE's dynamic allocation demands
+       the data set exclusively, which escalates the shared SYSDSN ENQ with
+       no way back down for the rest of the step (#127) - so it must not run
+       before anything that still wants to unallocate.  __dsfree() is a plain
+       SVC 99 unallocate and is the exact probe ftpd logs as "FREE RC=4". */
+    rc = __dsfree(ddsave);
+    printf("      __dsfree(\"%s\") rc=%d\n", ddsave, rc);
+    wtof("TSTFABND (2) __dsfree %.8s rc=%d", ddsave, rc);
+    check(rc != 0, "(2) ... and the leftover DD will not unallocate");
+
+    /* Can abandon rescue it AFTER the fact?  REPORTED, NOT ASSERTED, because
+       it is not reliable and the run that showed it says why.  In a fresh
+       address space it answers 0 and the data set can then be scratched
+       (mvsdev JOB00235).  In an address space where remove() - IDCAMS
+       DELETE - has already run once, it answers -2 and the DD stays
+       (JOB00231, JOB00233): IDCAMS demands its target exclusively and the
+       escalated SYSDSN ENQ does not come back down for the rest of the step
+       (#127).  That is also why GREEN and RED are separate JOB STEPS.
+       The supported use is __fabandon() INSTEAD of fclose(), which is what
+       the GREEN step measures; this is a bonus, and it doubles as the
+       cleanup that lets the step end. */
+    rc = __fabandon(thefp);
+    printf("      rescue: __fabandon after the failed fclose rc=%d"
+           " (0x%08X)\n", rc, rc);
+    wtof("TSTFABND (2) rescue __fabandon rc=%d (%08X)", rc, rc);
+    rc = scratch(dsn);
+    printf("      (not a verdict - see the comment in the source)\n");
+
+done:
     printf("\n=== tstfabnd: %d check(s) failed, %d case(s) could not"
            " measure ===\n", bad, unmeasured);
+    wtof("TSTFABND VERDICT %s failed=%d unmeasured=%d",
+         red ? "RED" : "GREEN", bad, unmeasured);
 
     return (bad || unmeasured) ? 8 : 0;
 }
