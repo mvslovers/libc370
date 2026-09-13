@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
-## [Unreleased]
+## [1.0.5] - 2026-09-13
 
 ### Added
 - **`__fabandon()` — close a `FILE` whose last write failed (#168).** There was
