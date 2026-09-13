@@ -924,11 +924,13 @@ survive at all: C99 7.19.5.4 closes it either way, and libc370 does not.
 - **Relink round** — #79, #50, #51, #71, #172 and #80 defect 1's `max` parameter.
   Land struct and signature growth in one batch, with a CHANGELOG entry and a
   coordinated rebuild of httpd, mvsMF and ftpd.
-- **stdio after an abend** — rank 1 (#176) and rank 24 (#149) are one design, not
-  two patches: what marks a FILE whose write path is dead, who sets it, and what
-  refuses to run afterwards. #168 shipped the caller's escape hatch
-  (`__fabandon()`, PR #175); neither of these is that, and #174 is the lock half
-  of the same failure.
+- **stdio after an abend** — ~~#176 and #149~~ landed together in **v1.0.6**,
+  which was always the point: they were one design, not two patches. #168 had
+  shipped the caller's escape hatch first (`__fabandon()`, PR #175). What is
+  left of the campaign is **#174**, the lock half of the same failure, plus the
+  two deviations the work exposed and left standing, **#178** and **#179** —
+  both harmless while nothing consulted the error flag, both traps now that it
+  is a refusal.
 - **Socket measurements** — #144 and #161–#164 at rank 35, #165 at 26, #160 at 27.
   None is a libc370 defect; each asks what the emulator does on a path no guest
   has pushed on, and none needs a Hercules change to run. Order: #165 first,
@@ -959,6 +961,16 @@ Pointers only. The reasoning lives in the closing comments and the PRs.
   the issue covered ftpd/httpd/ufsd/mvsmf only — all four of which log through
   WTO. It does not change the decision (SYSTSPRT is spool, and the stream dies
   with the job step) but it is where the argument stops reaching.
+
+  `ftpd#135` is the other one that is not routine, and it is a **regression
+  v1.0.6 introduces**: ftpd#129 moved an out-of-space STOR from 451 to 552
+  because 4xx tells a conforming client to retry into a data set that is still
+  too small and already catalogued. That branch keys on the *abend code*
+  (`space_abend()`), and #176 removes the abend — so the ESTAE never runs and
+  the transfer falls through to the generic 451. One-line split on
+  `errno == ENOSPC` at ftpd's end; the lesson for this file is that removing an
+  abend can silently retire a consumer's recovery path, and that is worth
+  checking for before the next one.
 
 - **#151** (PR #153, 2026-08-27) — four external names were each exported by two
   archived objects. Three were byte-identical twins from a mistyped filename
