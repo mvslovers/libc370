@@ -33,12 +33,45 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   partial release on a PO data set and take the space the next member needs.
   A caller may pass `"wb,rlse"` unconditionally; the library decides.
 
-  Red/green host test `test/host/tstfprls.c` (51 checks, 8 red before the fix)
-  links the real `@@fpmode.c`/`@@fpold.c`/`@@fpnew.c` and captures the text unit
-  array at the SVC 99 call. `test/mvs/tstfprls.c` + `jcl/tstfprls.jcl` is the
-  measurement the host cannot make: whether SVC 99 accepts `DALRLSE` with
-  DISP=OLD and no space keys, and whether MVS then releases the space — read
-  back from the format-1 DSCB with OBTAIN. **Not yet run on a target.**
+  **Two sharp edges, neither a defect.** `"ab,rlse"` is accepted, and accepting
+  it is right — but RLSE is what makes append expensive: every `fclose()` gives
+  the unused primary back, so every following append takes a *secondary* extent,
+  and a data set gets 16 of those on one volume. Repeated append-with-RLSE walks
+  it into an x37 at a rate the caller chose. And the keyword only reaches the two
+  functions that allocate: `__fpmode()` sets the flag for any mode string
+  containing `rlse`, but it is silently ignored for read opens (`__fpshr`),
+  `&TEMP` data sets (`__fptmp`), `DD:ddname` (nothing is allocated), `*` SYSOUT
+  (`__fpstar`), and — deliberately — PDS members.
+
+  **Measured, not just built.** Host red/green: `test/host/tstfprls.c`, 51
+  checks, 8 red before the fix, links the real `@@fpmode.c`/`@@fpold.c`/
+  `@@fpnew.c` and captures the text unit array at the SVC 99 call. Target:
+  `test/mvs/tstfprls.c` + `jcl/tstfprls.jcl`, run on mvsdev 2026-09-13
+  (JOB00229, CC 0000, volume WORK00, 30 tracks/cylinder). Each case allocates
+  `TRK(30,5)`, writes one record, closes, and adds up the extents from the
+  format-1 DSCB:
+
+  | case | mode | tracks |
+  |---|---|---|
+  | `__dsalcf()` TRK(30,5) | — | 30 |
+  | DISP=OLD | `"wb"` | 30 |
+  | DISP=OLD | `"wb,rlse"` | **1** |
+  | DISP=NEW | no `rlse` | 30 |
+  | DISP=NEW | `",rlse"` | **1** |
+
+  **SVC 99 accepts `DALRLSE` with DISP=OLD and no space keys** — ftpd's exact
+  shape — and CLOSE released 29 of the 30 tracks. No SVC 99 returned nonzero.
+  That matters beyond the feature: had SVC 99 rejected it, `__fpold()` would
+  fail, `fopen()` would fall through to `__fpnew()`, DISP=NEW on an existing
+  cataloged data set would fail too, and the caller would lose the open
+  entirely. There is no graceful degradation in this design, and it does not
+  need one.
+
+  Filed off the back of this work, none of it fixed here: #171 (overlapping
+  `strcpy(p, p+1)` in `@@fpnew.c`/`@@dsalc.c`), #172 (`__fpnew()` sends no UNIT
+  text unit) and #173 (`clibdscb.h` models DSCB key presence inconsistently —
+  `struct dscb4` is unusable with `__dscbv()`, which the probe and
+  `@@listds.c:192` work around identically and independently).
 
 ## [1.0.4] - 2026-09-04
 

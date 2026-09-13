@@ -57,6 +57,32 @@
  *     one record, fclose(), and compare the retained tracks against a control
  *     run without "rlse".
  *
+ * TWO SHARP EDGES OF THE KEYWORD, neither of them a defect
+ * --------------------------------------------------------------------
+ * APPEND.  Case (6) pins that "ab,rlse" is accepted, and accepting it is
+ * right - a caller may well want the last append trimmed.  But RLSE is what
+ * makes append expensive: every fclose() gives the unused primary back, so
+ * every following append has to take a SECONDARY extent, and a data set gets
+ * 16 of those on one volume.  Repeated append-with-RLSE walks it into
+ * DS1NOEPV exhaustion (x37) at a rate the caller chose.  Say it out loud
+ * rather than leave it to be discovered; it is also precisely why RLSE is not
+ * the default.
+ *
+ * WHERE THE KEYWORD APPLIES.  __fpmode() sets _FILE_FLAG_RLSE for ANY mode
+ * string containing "rlse", but only __fpold() and __fpnew() act on it.  It
+ * is silently ignored for:
+ *
+ *   - read opens                     (__fpshr, DISP=SHR)
+ *   - "&TEMP" data sets              (__fptmp, VIO)
+ *   - "DD:ddname"                    (no allocation - the DD already exists)
+ *   - "*" / "*ddname" SYSOUT         (__fpstar)
+ *   - PDS members                    (__fpshr; and deliberately skipped in
+ *                                     __fpold/__fpnew - see case (3))
+ *
+ * Only the first of those is even arguable: RLSE on a DISP=SHR input open
+ * would be honoured by CLOSE for a data set nobody is writing, which is not
+ * something a C runtime should do behind an "r" mode.
+ *
  * ====================================================================
  * BUILD AND RUN (host, from test/host)
  *
@@ -66,13 +92,22 @@
  *                     them are extended asm with operand lists.  It does NOT
  *                     touch the asm("@@ARADD") labels in clibary.h - different
  *                     spelling - so host symbols keep the library's names.
+ *   -D'asm(x)='       erases the asm("@@ARADD") symbol labels in clibary.h.
+ *                     Not needed on macOS/clang, REQUIRED on Linux with GNU
+ *                     as: '@' is not valid in a symbol name in a .size/.type
+ *                     directive.  Erasing them costs nothing here - the host
+ *                     symbols then carry their C names, declaration and
+ *                     definition lose the label together.
  *   -D__32BIT__       is what libc370's own stddef.h/stdlib.h key size_t off.
  *                     Without it size_t is an unknown type and every compile
  *                     against -I include fails.
  *
  *     cc -std=gnu99 -Wall -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast \
- *        -D'__asm__(...)=' -D__32BIT__ -I ../../include -o tstfprls tstfprls.c
+ *        -D'__asm__(...)=' -D'asm(x)=' -D__32BIT__ \
+ *        -I ../../include -o tstfprls tstfprls.c
  *     ./tstfprls                                      # rc 0 when green
+ *
+ * Verified green both ways on macOS/clang (51/51, rc 0).
  *
  * NO -fsanitize=address, and not by preference: @@fpnew.c rewrites its mode
  * string in place with strcpy(p, p+1) (lines 43 and 47), which is an
