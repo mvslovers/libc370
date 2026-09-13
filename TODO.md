@@ -128,7 +128,8 @@ days, nothing ranked here was a failure anyone was seeing on a running system.
 **#154 ended that**, and it was not new: filed 2026-08-27, missed by that day's
 reconciliation, ranked 2026-08-30 as item 1 — **and fixed 2026-09-07 by PR #166**,
 after `mvslovers/ftpd#122` arrived as an outside sighting of it. Tier 1 was empty
-for six days, and **#176 refilled it on 2026-09-13** — stdio re-driving a WRITE
+for six days, **#176 refilled it on 2026-09-13 and PR #177 emptied it again
+the same day** — stdio re-driving a WRITE
 on a DCB whose last write abended, measured as a program check and reachable
 through `@@exit.c` with no ESTAE and no API call. Below it the picture is
 unchanged — two **campaigns**, a **relink round**, and a set of traps that have
@@ -222,71 +223,44 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 
 ---
 
-## Tier 1 — one
+## Tier 1 — empty again
 
-### 1 · #176 — stdio re-drives a WRITE on a DCB whose last write abended, and program-checks
+### ~~1 · #176~~ — fixed, PR #177, 2026-09-13
 
-Measured 2026-09-13 on mvsdev (JOB00235 / JOB00241 / JOB00245) while building
-the #168 probe. An `fwrite()` into a full `TRK(1,0)` data set takes D37-04 in
-`@@ATROUT`'s `CHECK`. The caller's ESTAE recovers — that part works, it is what
-mvslovers/ftpd does for a STOR — but the abend unwound *through* `@@fflush.c`
-before its `reset:` label, so `fp->upto` still points past the block that
-failed. Driving `fflush()` alone under a second `try()` then gives **`0x0C4` on
-one run and `0x0C6` on another, for identical code**: a wild store, not an
-orderly "the data set is full". `__aclose()` straight afterwards answers 0 and
-the DD goes, so the DCB is recoverable — it is the *write path* that is not safe
-to re-enter.
+Kept in short form because the *mechanism* has to outlive the diff.
 
-**Why this is rank 1 and not a footnote under #168.** `__fabandon()` (#168, PR
-#175) gives a caller a way out, but nothing stops the re-drive itself, and one
-path reaches it with no API call at all: `@@exit.c` walks `grt->grtfile` at
-program termination and `fclose()`s every survivor **with no ESTAE around it**.
-A consumer that recovers an x37 and simply returns from `main()` takes the
-program check in teardown. `freopen()`/`__reopen()` and any direct `fflush()`
-are the same door.
+`IFG0554T` — the module named in the `IEC031I D37-04` line — scans the DCB
+exit list for an **`EXLST` type X'08'** entry before it abends, and takes
+`R15=1` as "rewrite the format-1 DSCB, clear the unit-exception bits, drop
+FEOV, and return to the access method to drive the caller's SYNAD with output
+error, no space available". `@@AOPEN` now plants that exit, so an
+out-of-space write arrives as `ferror()` + `ENOSPC` on machinery #147 already
+built, and `__fflush()` reaches its `reset:` label — leaving nothing for
+`fclose()` to re-drive.
 
-It cannot be driven off `_FILE_FLAG_ERROR`: an x37 is an ABEND, not a SYNAD
-condition, so #147's flag is never set and the FILE looks healthy to the
-library. That is the join with **rank 24 (#149)** — the two want one design, not
-two patches. Something has to mark the write path dead first; `_FILE_FLAG_ERROR`
-and `clearerr()` are then what express it.
-
-The reproducer exists and is green today because it *asserts* the abend:
-`test/mvs/tstfabnd.c` `PARM='SPLIT'` (`jcl/tstfabnd.jcl`). A fix flips that
-check, which is the right place to start.
-
-**The fix is an `EXLST` exit, and the contract is in the source, not in a
-guess.** `IFG0554T` — the module named in our own `IEC031I D37-04` — scans the
-DCB exit list for entry type **X'08'** and branches on the exit's R15:
-
-| R15 | what IFG0554T does |
-|---|---|
-| 0 | DADSM extend on the current volume and retry; for D37 a second 0 is treated as 2 |
-| **1** | rewrite the format-1 DSCB from `DCBFDAD`/`DCBTRBAL`, clear the unit-exception bits in every BSAM/QSAM IOB, drop the FEOV bit, and **return to the access method to drive the user's SYNAD** with "output error, no space available" |
-| 2 | as 1, then the `B37-4`/`D37-4`/`E37-4` abend — today's behaviour |
-
-**RC 1 lands on machinery libc370 already has.** #147 plants a SYNAD stub that
-records into `IOSFLAGS`, so `__awrite()` answers 8 and `__fflush()` sets
-`_FILE_FLAG_ERROR` — and this time reaches its `reset:` label, so `fp->upto` is
-cleared and there is nothing left for `fclose()` to re-drive. The whole
-mechanism of rank 1 disappears.
-
-Two conditions the module states and one trap. The exit is not taken at all
-when `DSORG` is not PS, when `DCBMACRF` has no PUT/WRITE, or when there is no
-X'08' entry — the last of those is today's immediate abend. At **16 extents or
-on a VIO unit the exit is skipped and RC 1 is assumed anyway**, so libc370
-already behaves this way for a 16-extent x37; the exit only makes the
-one-extent case behave like it. The trap: *"if a SYNAD address is not present
-or if CLOSE called EOV, an 001 abend is issued"* — so the exit must be planted
-only where #147 plants SYNAD, and an x37 raised by CLOSE becomes S001 rather
-than D37. JOB00245 measured that CLOSE with nothing pending completes on
-`TRK(1,0)`, so that path is not observed, but it is the one place the exit
-makes a failure *less* legible.
-
-**Not** the X'11' ABEND exit, which is what this file and #176 said first.
-`EXLDCBAB EQU X'11'` appears exactly once in the whole MVS 3.8j source tree —
-its own definition in `IHAEXLST` — and no module consults it. It is defined and
+**Not the X'11' ABEND exit**, which this file and the issue said first.
+`EXLDCBAB EQU X'11'` appears exactly once in the whole MVS 3.8j source tree,
+in its own definition in `IHAEXLST`, and no module consults it. Defined and
 never taken.
+
+Measured mvsdev **JOB00247: CC 0000, 5/5 PASS, and no `IEC031I` line in the
+job log at all** (`test/mvs/tstx37.c`, deliberately without `try()`). Cross-
+checked by JOB00249: `test/mvs/tstfabnd.c`, whose three steps each produced a
+D37 in JOB00245, now report `try()` = 0 in all three.
+
+**Three things this leaves behind.** `errno` is `ENOSPC` and not `EIO` —
+`@@AWRITE` answers 12 for the x37 case and 8 for a SYNAD error — which is the
+distinction **rank 24 (#149)** needs and the reason to do it next. An x37
+raised *by CLOSE* now becomes S001 rather than D37: strictly less legible,
+unobserved (JOB00245 measured that CLOSE with nothing pending completes on
+`TRK(1,0)`), and the one place this change makes a failure harder to read.
+And **rank 25 (#174)** is untouched: `fclose()` still leaves a stale
+`CLIBLOCK` ENQ when a caller's `fwrite()` abended for some *other* reason.
+
+The MVS half of #168's probe is superseded and reports retirement instead of
+failure — a probe whose defect has been fixed must not read red.
+`__fabandon()` itself is unchanged and still the way out for any other abend
+a caller's ESTAE recovers mid-write.
 
 ---
 

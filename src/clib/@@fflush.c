@@ -59,9 +59,12 @@ __fflush(FILE *fp)
     if (err) {
         /* uncorrectable I/O error on the physical write, recorded by
            the SYNAD exit instead of ABEND S001 (#147); the buffer is
-           still reset below - the block is undeliverable */
+           still reset below - the block is undeliverable.
+           err==12 is the x37 exit (#176): the data set is out of
+           space, which is the caller's problem to solve and not a
+           device error, so it gets its own errno */
         fp->flags |= _FILE_FLAG_ERROR;
-        errno = EIO;
+        errno = (err == 12) ? ENOSPC : EIO;
     }
 
 reset:
