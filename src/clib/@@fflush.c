@@ -26,6 +26,17 @@ __fflush(FILE *fp)
     if (!(fp->flags & _FILE_FLAG_WRITE)) goto quit; /* not in WRITE mode */
     if (fp->upto == fp->buf) goto quit;             /* empty buffer      */
 
+    /* Fail fast (#149).  Re-driving a stream that has already failed
+       cannot succeed, and what is in the buffer is undeliverable either
+       way - discard it here rather than carry it into the next flush.
+       With the guards in @@fwrite.c and @@fputc.c nothing should reach
+       this with a non-empty buffer; it is here so that no path can. */
+    if (fp->flags & _FILE_FLAG_ERROR) {
+        if (fp->flags & _FILE_FLAG_ENOSPC) { err = 12; errno = ENOSPC; }
+        else                               { err =  8; errno = EIO;    }
+        goto reset;
+    }
+
 	/* This is new code to support TSO terminals */
 	if (dcb->dcbdevt == DCBDVTRM) {
 		/* DCB refers to terminal */
@@ -64,6 +75,7 @@ __fflush(FILE *fp)
            space, which is the caller's problem to solve and not a
            device error, so it gets its own errno */
         fp->flags |= _FILE_FLAG_ERROR;
+        if (err == 12) fp->flags |= _FILE_FLAG_ENOSPC;
         errno = (err == 12) ? ENOSPC : EIO;
     }
 

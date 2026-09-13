@@ -33,6 +33,13 @@ struct _file {
 #define _FILE_FLAG_TERM		0x0080	/* ... TERM opened in __fpstar()		*/
 #define _FILE_FLAG_RLSE     0x0040  /* ... release unused space at CLOSE    */
 
+/* _FILE_FLAG_ENOSPC rides along with _FILE_FLAG_ERROR and records WHICH
+   error set it, because the FILE itself keeps no errno and @@AWRITE clears
+   IOSFLAGS before it returns.  A fail-fast return (#149) needs it to say
+   ENOSPC rather than leave a stale value standing.  There is no x37 on
+   input, so it is only ever set on the write side.  Cleared wherever
+   _FILE_FLAG_ERROR is cleared. */
+#define _FILE_FLAG_ENOSPC   0x0004  /* ... the error was out of space       */
 #define _FILE_FLAG_ERROR    0x0002  /* ... i/o error                        */
 #define _FILE_FLAG_EOF      0x0001  /* ... EOF has occured                  */
 
@@ -136,8 +143,11 @@ extern int      vsnprintf(char *s, int n, const char *format, va_list arg);
 #define putchar(c)      (putc((c), stdout))
 #define getc(stream)    (fgetc((stream)))
 #define putc(c, stream) (fputc((c), (stream)))
-#define feof(stream)    ((stream)->flags & _FILE_FLAG_EOF)
-#define ferror(stream)  ((stream)->flags & _FILE_FLAG_ERROR)
+/* != 0, not the raw flag: the function forms return 1/0 and a caller who
+   writes ferror(f) == 1 must not get a different answer for including
+   <stdio.h> than for not including it (#149). */
+#define feof(stream)    (((stream)->flags & _FILE_FLAG_EOF)   != 0)
+#define ferror(stream)  (((stream)->flags & _FILE_FLAG_ERROR) != 0)
 
 /* return name of function that called the caller of __caller() */
 extern char *   __caller(char   *caller);

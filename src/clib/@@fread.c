@@ -15,6 +15,14 @@ __fread(void *ptr, size_t size, size_t nmemb, FILE *fp)
     int             c;
     unsigned char   *dptr;
 
+    /* Fail fast (#149).  An input error is always a real device error -
+       there is no x37 on a read - so re-driving it cannot succeed. */
+    if (fp->flags & _FILE_FLAG_ERROR) {
+        errno = EIO;
+        i = 0;
+        goto quit;
+    }
+
     if (fp->flags & _FILE_FLAG_EOF) {
         i = 0;
         goto quit;

@@ -1,5 +1,6 @@
 /* @@FPUTC.C - caller should hold lock on file handle */
 #include <stdio.h>
+#include <errno.h>
 
 int
 __fputc(int c, FILE *fp)
@@ -8,6 +9,15 @@ __fputc(int c, FILE *fp)
 
     if (!(fp->flags & _FILE_FLAG_WRITE)) goto quit; /* not in WRITE mode */
     if (fp->flags & _FILE_FLAG_RECORD) goto quit;   /* in record mode    */
+
+    /* Fail fast (#149).  fprintf(), fputs() and puts() all reach the
+       access method through here and not through __fwrite(), so the
+       guard has to be on both. */
+    if (fp->flags & _FILE_FLAG_ERROR) {
+        errno = (fp->flags & _FILE_FLAG_ENOSPC) ? ENOSPC : EIO;
+        rc = EOF;
+        goto quit;
+    }
 
     /* is this a text file? */
     if (!(fp->flags & _FILE_FLAG_BINARY)) {

@@ -74,7 +74,25 @@
  * upload probe.xmit to IBMUSER.MBT.XMIT.IN, run jcl/recvnosp.jcl, then
  * jcl/tstnospc.jcl.
  *
- * MEASURED 2026-09-13 on mvsdev, JOB00252: CC 0000, 9/9 PASS, and no
+ * MEASURED TWICE on mvsdev 2026-09-13, before and after the #149 fix.  The
+ * checks below are written so that BOTH runs are green - they pin the shape
+ * (no abend, no drift to EIO, clearerr() works), not the policy.  What the
+ * fix changed is the map, and the map is the evidence.
+ *
+ * AFTER the fix, JOB00254: CC 0000, 9/9, no IEC031I.
+ *
+ *   map   XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+ *         0 full, 50 short.  Every write after the error is refused at
+ *         the call.  253 us for a refused one against a 254 us floor for
+ *         an ordinary write during the fill - the floor IS the two
+ *         __getclk() calls around the measurement, so a refusal costs
+ *         nothing measurable.  Against 2355 us for a write that actually
+ *         reached the access method and failed, fail-fast is also the
+ *         cheaper path.  After clearerr(), 2 of 12 short instead of 1:
+ *         the buffer refills, the eleventh flush fails, and the twelfth
+ *         is refused.
+ *
+ * BEFORE the fix, JOB00252: CC 0000, 9/9 PASS, and no
  * IEC031I line in the job log.  TRK(1,0) on WORK00 took the same 200 records
  * of 80 that tstx37 fills it with.  The three answers:
  *
