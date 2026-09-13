@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
-## [Unreleased]
+## [1.0.6] - 2026-09-13
 
 ### Fixed
 - **A stream that has failed now fails fast, and `ferror()` answers 1 (#149).**
