@@ -11,8 +11,11 @@ __fseek(FILE *fp, long int offset, int whence)
     size_t y;
     char buf[1000];
 
-    /* *any* seek will clear the error and eof indicators */
-    fp->flags   &= 0xFFFF - _FILE_FLAG_ERROR;
+    /* *any* seek will clear the error and eof indicators.  C says fseek
+       clears eof only and rewind clears both; that deviation is its own
+       issue and is not touched here.  _FILE_FLAG_ENOSPC must follow
+       _FILE_FLAG_ERROR wherever it is cleared, or it dangles (#149). */
+    fp->flags   &= 0xFFFF - _FILE_FLAG_ERROR - _FILE_FLAG_ENOSPC;
     fp->flags   &= 0xFFFF - _FILE_FLAG_EOF;
 
     /* get current offset in this stream */

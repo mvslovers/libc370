@@ -18,6 +18,13 @@ __fgetc(FILE *fp)
     size_t          read;
     unsigned char   *dptr;
 
+    /* Fail fast (#149).  An input error is always a real device error -
+       there is no x37 on a read - so re-driving it cannot succeed. */
+    if (fp->flags & _FILE_FLAG_ERROR) {
+        errno = EIO;
+        goto quit;
+    }
+
     if (fp->flags & (_FILE_FLAG_EOF |_FILE_FLAG_RECORD)) goto quit;
 
     if (fp->ungetch != -1) {

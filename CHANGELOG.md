@@ -7,6 +7,40 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Fixed
+- **A stream that has failed now fails fast, and `ferror()` answers 1 (#149).**
+  Nothing in stdio ever looked at `_FILE_FLAG_ERROR`. `__fgetc()` and
+  `__fread()` tested only `_FILE_FLAG_EOF`; `__fwrite()` and `__fputc()`
+  tested neither. So after a failed write the bytes were still accepted into
+  the FILE buffer, flushed into a WRITE that failed again, and dropped at
+  `@@fflush.c`'s `reset:` label — **accepted and then silently discarded.**
+
+  Measured on mvsdev (`test/mvs/tstnospc.c`, JOB00252): after one `ENOSPC`,
+  **46 of the next 50 `fwrite()` calls returned the full 80 bytes and not one
+  of those records reached the disk.** The caller heard about 4 of 50. With
+  the guards in place (JOB00254) all 50 are refused at the call, and a refusal
+  costs nothing measurable — 253 µs against a 254 µs measurement floor, where
+  a write that actually reached the access method and failed cost 2355 µs.
+
+  The guard is on every entry that can reach the access method, `__fputc()`
+  included: `fprintf()`, `fputs()` and `puts()` go through it and not through
+  `__fwrite()`. `clearerr()` lifts it — which is what a caller who has freed
+  space must now do.
+
+  A refused call reports the **right** `errno`, not a stale one. The FILE
+  keeps no errno of its own and `@@AWRITE` clears `IOSFLAGS` before it
+  returns, so a new flag bit **`_FILE_FLAG_ENOSPC` (0x0004)** records which
+  error set `_FILE_FLAG_ERROR`. It rides along with it and is cleared
+  wherever it is cleared. No change to the 192-byte FILE.
+
+- **`ferror()` and `feof()` as macros returned the raw flag value (#149).**
+  The function forms return 1/0; the macros in `<stdio.h>` returned
+  `flags & _FILE_FLAG_ERROR` — **2** — and `flags & _FILE_FLAG_EOF` — 1. So
+  `if (ferror(f) == 1)` was **always false** for anyone who included
+  `<stdio.h>`, and true for anyone who did not. Both macros now yield 1/0.
+
+  `clearerr()` itself needed nothing: it has been in the tree since the
+  initial commit (`48111ed`, 2024-09-12), contrary to what #149 states.
+
 - **An out-of-space write is a return code now, not an ABEND (#176).**
   `@@AOPEN` plants an `EXLST` type **X'08'** exit. `IFG0554T` — the module
   named in the `IEC031I D37-04` line — scans the DCB exit list for it *before*

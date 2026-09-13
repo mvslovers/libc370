@@ -10,8 +10,9 @@ libc370 is the base library of the whole ecosystem, so a defect here is a defect
 in httpd, mvsMF, ftpd, ufsd and every other consumer at once; that is what puts
 some cheap items high and some expensive ones low.
 
-*Last reconciled against the tracker: **2026-09-13**, 41 issues open, all 41
-ranked below.* The previous pass was 2026-08-30 at 29 open, and the gap it left
+*Last reconciled against the tracker: **2026-09-13**, 42 issues open, all 42
+ranked below.* #149 was fixed on the same day (PR #180) and #178/#179 were
+filed out of that work; both are ranked at the end. The previous pass was 2026-08-30 at 29 open, and the gap it left
 is the reason this note now says "all": six issues filed on 2026-09-06
 (#160–#165) never reached this file at all, and the four it had parked as *not
 yet ranked* — #142, #143, #144, #149 — were still parked thirteen days later,
@@ -479,22 +480,35 @@ move the TSO property into the CRT. The two readings differ for `fopen.c`,
 
 ---
 
-### 24 · #149 — stdio does not fail fast after `_FILE_FLAG_ERROR`, and there is no `clearerr()`
+### ~~24 · #149~~ — fixed, PR #180, 2026-09-13
 
-Read with rank 1. The flag exists and `ferror()` reads it, but nothing in stdio
-refuses to keep going once it is set, and there is no way to reset it. Since
-#147 the flag has a real, narrow meaning: *the SYNAD stub recorded an
-uncorrectable I/O error*. What rank 1 adds is the case the flag cannot express —
-an ABEND is not a SYNAD condition, so the most dangerous state a FILE can be in
-is precisely the one that leaves the flag clear.
+Fail-fast landed on every stdio entry that can reach the access method, and
+`ferror()`/`feof()` as macros now answer 1/0 instead of the raw flag value.
 
-So these are one design question and not two patches: what marks a FILE whose
-write path is dead, who sets it, and what refuses to run afterwards. Landing
-#149 alone gives a fail-fast for the errors that already announce themselves and
-leaves the x37 case exactly where it is.
+The issue's premise was wrong twice. `clearerr()` has been in the tree since
+the initial commit (`48111ed`, 2024-09-12) — nothing to write. And the case
+against fail-fast that #149 itself raises, *"ftpd/httpd/ufsd log through these
+streams"*, does not hold for this ecosystem: all four log through **WTO**
+(`wtof()`, 394 call sites), hold no long-lived `FILE*` for a log, and not one
+of them calls `clearerr()`. Every stdio stream in them is per-request — open,
+transfer, check `ferror()` once, `fclose()`.
 
-`clearerr()` is the small half and is C89-mandated; it should not land before
-the answer to "clear *what*, exactly".
+What decided it was `test/mvs/tstnospc.c` on mvsdev. Before (JOB00252): after
+one `ENOSPC`, **46 of the next 50 `fwrite()` calls returned the full 80 bytes
+and not one of those records reached the disk**. After (JOB00254): all 50
+refused at the call, at no measurable cost — 253 µs against a 254 µs
+measurement floor, where a write that actually reached the access method and
+failed cost 2355 µs.
+
+`_FILE_FLAG_ENOSPC` (0x0004) is the new bit that lets a refused call report
+`ENOSPC` rather than a stale `errno`; the FILE keeps no errno and `@@AWRITE`
+clears `IOSFLAGS` before returning. It rides with `_FILE_FLAG_ERROR` and is
+cleared wherever that is cleared.
+
+Two things the work turned up and deliberately did **not** touch — see #178
+and #179: `@@fseek.c` clears `_FILE_FLAG_ERROR` on *any* seek (C says `fseek`
+clears EOF only, `rewind` clears both), and `@@reopen.c` sets the error flag on
+a **healthy, still-open** stream when `freopen()` fails to open the new one.
 
 ---
 
@@ -859,6 +873,38 @@ defect is ever fixed.
 
 #165 is at rank 26 and not here, because its answer could be a live corruption
 in every consumer rather than a property of a path no guest reaches.
+
+---
+
+### 36 · #178 — `fseek()` clears the error indicator, and `rewind()` is only `fseek()`
+
+C splits these and libc370 does not: `fseek` clears the **eof** indicator and
+leaves the error indicator standing (C99 7.19.9.2); `rewind` clears **both**
+(7.19.9.5), which is the only thing that distinguishes it from
+`fseek(f, 0L, SEEK_SET)`. `@@fseek.c` clears both on any seek, and `rewind.c`
+is literally that one `fseek()` call, so the two are indistinguishable.
+
+Harmless while nothing consulted the flag. Since #149 it is a trap: a seek is
+now a second, undocumented `clearerr()`, and a program that seeks after a
+failed write resumes writing into a data set that is still full.
+
+The edit is two lines. The risk is the sweep that has to come first — anything
+relying on a seek to clear an error changes behaviour, and no consumer calls
+`clearerr()` at all, so nobody would notice the stream had gone quiet.
+
+---
+
+### 37 · #179 — a failed `freopen()` marks the surviving stream as errored
+
+`@@reopen.c` sets `_FILE_FLAG_ERROR` on the **old** stream when `fopen()` of
+the new data set fails. Nothing failed on the old one — it was flushed a few
+lines earlier and its DCB is fine — and `freopen()` returning `NULL` is already
+the report.
+
+Since #149 that flag is a refusal rather than a note, so a failed `freopen()`
+now silently kills a healthy stream. Smallest fix is to drop the line. Worth
+deciding at the same time whether keeping the old stream open on failure should
+survive at all: C99 7.19.5.4 closes it either way, and libc370 does not.
 
 ---
 
