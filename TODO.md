@@ -56,6 +56,44 @@ Also filed off the back of this work: **#171** (overlapping `strcpy(p, p+1)` in
 `@@fpnew.c`/`@@dsalc.c` — benign on target, aborts every ASAN host run) and
 **#172** (`__fpnew()` sends no UNIT text unit).
 
+**#168 was filed, fixed and merged on the same pass and never needed a rank
+either — but it carries an unpaid gate.** There was no way to close a `FILE`
+whose last write failed: `fclose()` flushes first, so when the pending block is
+what could not be written it re-drives the failing WRITE, abends inside the
+close, and never reaches `__fpfree()` — the DD then stays allocated for the
+life of the job and the partial data set can be scratched neither by the
+program that created it nor by its user. Measured on mvsdev 2026-09-09
+(mvslovers/ftpd#129), an FTP STOR into `SPACE=TRK(1,0)`. The fix is
+`__fabandon(FILE *)`: discard instead of flush, `__adisc()` so the DCB agrees
+there is nothing pending, CLOSE under `try()` so a close that fails anyway is
+reported rather than propagated. **ftpd#129 is waiting on it** — everything
+else in that issue is already fixed.
+
+Two things worth keeping from the work. The issue's own account of the
+mechanism was wrong in a way that changed the fix: it put the crux on the DCB's
+buffer state, and for ftpd's `fopen(dsn,"wb")` shape the culprit is the **C**
+buffer — `@@ATROUT` clears `IOFLDATA` *before* the WRITE, so the DCB side is
+already quiet when the abend lands. And `lock()` is ENQ `RET=HAVE` keyed on the
+pointer value, so the abended `fwrite()`'s hold survives the ESTAE retry;
+`fclose()` reads the resulting rc=8 as "an outer caller owns it" (#145) and
+leaves a CLIBLOCK ENQ standing on storage it then frees. `__fabandon()` DEQs
+unconditionally; **`fclose()` still does not** — a smaller version of the same
+leak, now **#174**, deliberately left out of the #168 PR because `fclose()` is
+on every consumer's path and #145 is what put the conditional there.
+
+**The gate: `test/mvs/tstfabnd.c` + `jcl/tstfabnd.jcl` have NOT been run.**
+The host test (32 checks, 4 red before the fix) pins the shape of the call and
+nothing else. Unmeasured, and the reason the probe exists: whether BSAM CLOSE
+with nothing pending *completes* on a data set that is out of space — it still
+writes the EOF mark and can reach EOV, and "a zero-length record after a full
+track probably fits" is a guess, which is what the probe is for — and whether
+the DD then really goes.
+If it does not, point 3 of #168 needs more than `try()` and ftpd#129 is not
+finished. Rank this above any consumer relink that assumes `__fabandon()`
+works. Phase-2 thought, not filed: a DCB ABEND exit (`EXLST` X'11') could turn
+an x37 into a return code the way #147 did with SYNAD, which would make the
+whole abandon dance unnecessary for the common case.
+
 **Deferred, deliberately: `test/mvs/tstfprls.c` does not echo S99ERROR/S99INFO.**
 `fopen()` only ever hands back NULL, so a rejected `DALRLSE` would arrive without
 reason codes. Getting them means the probe issuing its own SVC 99 with a
