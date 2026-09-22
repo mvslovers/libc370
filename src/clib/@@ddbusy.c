@@ -1,7 +1,6 @@
 /* @@DDBUSY.C */
 #include <stdio.h>
 #include <string.h>
-#include <errno.h>
 #include <clib.h>
 #include <clibary.h>
 #include "cliblock.h"
@@ -88,11 +87,14 @@ int __ddbusy(FILE *fp)
     unsigned count;
     unsigned i;
     int      busy = 0;
+    int      owned;
 
     if (!fp) return 0;
     if (!fp->ddname[0]) return 0;
 
-    /* an input open of an input DD.  Both halves are needed: see above */
+    /* an input open.  __fpmode() makes READ and WRITE mutually exclusive
+       and rejects '+', so the second test cannot fire once the first has
+       passed; it is belt and braces against that changing. */
     if (!(fp->flags & _FILE_FLAG_READ)) return 0;
     if (fp->flags & _FILE_FLAG_WRITE) return 0;
 
@@ -116,12 +118,20 @@ int __ddbusy(FILE *fp)
     /* fopen() adds under this lock and __fpterm() removes under it, so
        reading the array without it can see a FILE mid-removal.  No
        nesting risk: fopen() takes it only after __fpopen() has returned. */
-    lock(&grt->grtfile, 0);
+    /* lock() answers 8 when this task already holds it, and unlocking
+       then would release someone else's claim.  No caller reaching here
+       holds it today -- fopen() takes it only after __fpopen() returns --
+       but this is the one site that would break silently if that changed,
+       so it uses the house idiom (fclose.c:26, @@fpterm.c). */
+    owned = (lock(&grt->grtfile, 0) == 0);
     count = arraycount(&grt->grtfile);
     for (i = 0; i < count; i++) {
         FILE *other = grt->grtfile[i];
 
         if (!other) continue;
+        /* unreachable today: fopen() registers fp only after __fpopen()
+           returns, and __reopen() passes a freshly created FILE.  Kept as
+           defence, not as a live case. */
         if (other == fp) continue;
         /* a FILE with no DCB is registered but not open, so it holds no
            DEB and cannot be what JES2 is objecting to */
@@ -136,7 +146,7 @@ int __ddbusy(FILE *fp)
             break;
         }
     }
-    unlock(&grt->grtfile, 0);
+    if (owned) unlock(&grt->grtfile, 0);
 
     return busy;
 }

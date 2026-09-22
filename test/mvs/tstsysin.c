@@ -40,7 +40,7 @@
  *          the probe for a reason that has nothing to do with the test.
  * RC: 0 = every check passed, 1 = a check failed (it is the COND CODE).
  *
- * Run:     mvsdev JOB00432, CC 0000, 2026-09-22 -- 10/10 in the SPOOL
+ * Run:     mvsdev JOB00435, CC 0000, 2026-09-22 -- 13/13 in the SPOOL
  *          step and 8/8 in REALDS (different steps run different cases).
  *
  * Proven red by the cleanest control there is: THE SAME SOURCE linked
@@ -50,7 +50,7 @@
  *     IEC141I 013-C0,IGG0199G,TSTSYSOL,SPOOL,SYSIN
  *     IEF450I TSTSYSOL SPOOL - ABEND S013 U0000
  *
- * -- which is issue #184 verbatim (JOB00433).  So the green run is not a
+ * -- which is issue #184 verbatim (JOB00436).  So the green run is not a
  * test that happens to pass; it is the same program surviving what used
  * to kill it.
  */
@@ -97,6 +97,7 @@ int main(void)
     int   sysprt = ddflags("SYSPRINT");
     int   spool;
     FILE *f;
+    char  line[133];
 
     printf("=== TSTSYSIN: libc370 #184 spool SYSIN reopen ===\n\n");
     printf("SYSIN TIOELINK=%02X  SYSPRINT TIOELINK=%02X\n", sysin, sysprt);
@@ -112,6 +113,11 @@ int main(void)
        fix assumes, here, where it fails loudly instead. */
     CHECK(sysprt >= 0 && (sysprt & TIOESSDS),
           "(1) SYSOUT=* carries TIOESSDS (X'02')");
+    /* Informational, not a guard: since the check masks TIOESYIN|TIOESSDS
+       it cannot silently never fire even if X'04' turns up.  This arm
+       records what the system actually does, and it carries weight only
+       in the SPOOL step -- in REALDS, SYSIN is X'00' and it asserts
+       nothing. */
     CHECK(sysin < 0 || !(sysin & TIOESYIN),
           "(1) TIOESYIN (X'04') is NOT the spool marker on this system");
 
@@ -129,8 +135,28 @@ int main(void)
         CHECK(errno == EBUSY, "(2) errno is EBUSY");
         if (f) fclose(f);
 
+        /* A backward fseek CAN route through __reopen(), which calls
+           fopen() while the old FILE is still open and registered -- so
+           the refusal would surface there too.  It does not happen for a
+           small instream SYSIN, and this is the check that says so:
+           @@fseek.c satisfies a seek whose target is still inside the
+           current buffer without reopening anything, and one block of
+           instream data is entirely inside it.  Measured, after this
+           check went red asserting the opposite.
+           What a seek PAST the buffer does on a spool SYSIN is not
+           measured; it needs more than one block of instream data. */
+        printf("(2) a backward seek inside the buffer does not reopen\n");
+        CHECK(fgets(line, sizeof line, stdin) != NULL,
+              "(2) stdin still reads normally after the refusal");
+        CHECK(fseek(stdin, 0L, SEEK_SET) == 0,
+              "(2) a backward fseek inside the buffer still succeeds");
+        CHECK(ferror(stdin) == 0, "(2) and leaves the stream unerrored");
+
         printf("(3) and it is only CONCURRENCY - close first and it opens\n");
         fclose(stdin);
+        /* the GRT slot is not cleared by fclose() and @@exit.c compares
+           against it, so model the workaround the way a porter should */
+        stdin = NULL;
         f = fopen("dd:SYSIN", "r");
         CHECK(f != NULL, "(3) fopen() succeeds once no DCB is held");
         if (f) {
