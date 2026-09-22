@@ -51,7 +51,7 @@ Also filed off the back of this work: **#171** (overlapping `strcpy(p, p+1)` in
 `@@fpnew.c`/`@@dsalc.c` — benign on target, aborts every ASAN host run) and
 **#172** (`__fpnew()` sends no UNIT text unit).
 
-**#183 is in flight on PR #185 and never needed a rank either — it turned out
+**#183 was merged on PR #185 and never needed a rank either — it turned out
 not to be the issue it was filed as.** It reads "No strncasecmp", and the POSIX
 names were indeed missing; what it did not know is that the capability has been
 in the archive all along under the MS-style names `stricmp`/`strncmpi`, and that
@@ -68,10 +68,22 @@ it is a gap everybody routed around.** The sweep that found them costs one grep
 across the ecosystem checkouts and is worth running before deciding a libc
 addition is speculative.
 
-The MVS gate is met: `test/mvs/tststrci.c` is 37/37 on mvsdev, JOB00409,
-CC 0000, and **proven red** at 12 of the 37 against a deliberately broken build
-(JOB00421). A host run would have folded through the host's ASCII table and
+The MVS gate is met: `test/mvs/tststrci.c` is 37/37 on mvsdev, JOB00422,
+CC 0000, and **proven red** at 11 of the 37 against a deliberately broken build
+(JOB00423). A host run would have folded through the host's ASCII table and
 observed none of it.
+
+**And the sweep above has a date, which is the part worth carrying.** It read
+`*/src` and `*/include` across the local checkouts and concluded no consumer
+carries a private copy of any of the four names — reported as a property of the
+ecosystem when it was a property of *what each checkout happened to be pinned
+at*. cobc370 was a month stale locally; its `main` does carry
+`#define strncasecmp cobc_strncasecmp`. Harmless here only because the `#define`
+sits after `#include <string.h>`, so the new declaration is seen first and every
+use is renamed past the archive member — collision-safe **by ordering, not by
+the absence that was measured**. A `#define` before the include, or a plain
+`static int strncasecmp(...)`, would have collided and the sweep would have
+missed it either way. Fetch before sweeping, and date the result.
 
 **#168 was filed, fixed and merged on the same pass and never needed a rank
 either — but it carries an unpaid gate.** There was no way to close a `FILE`
