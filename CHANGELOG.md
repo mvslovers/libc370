@@ -41,7 +41,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   | spool only | a real data set tolerates two concurrent DCBs | `JOB00424` step SI3 |
   | already open here | the refusal is about a live DEB | `fclose(stdin)` then `fopen` succeeds **and re-reads from the top**, `JOB00424` step SI2 |
 
-  That last one is worth keeping: instream SYSIN is **not** one-shot, only
+  **The direction test is a proxy, not JES2's discriminator**, and the
+  entry should say so: the exact one is the JFCB's SYSOUT class, which is
+  out of reach before the OPEN. The residual cell is an `'SO'` data set
+  opened for read while another *read* stream already holds it — rarer
+  than the one measured, unmeasured, and the same class. The check also
+  only sees DCBs `fopen()` registered, so a DD opened by `ropen()` (which
+  calls `__aopen()` directly), by assembler, or by a subtask with another
+  GRT still abends exactly as before.
+
+  That third bound is worth keeping: instream SYSIN is **not** one-shot, only
   non-concurrent — so `fclose(stdin)` is a one-line workaround that needs
   no staging data set.
 
@@ -56,10 +65,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   quit path calls `fclose()`, which runs a teardown of its own, and there
   was no reason its last step should be what the caller reads.
 
-  Gate: `JOB00430`, CC 0000, 10/10 in the spool step and 8/8 against a
+  Gate: `JOB00432`, CC 0000, 10/10 in the spool step and 8/8 against a
   real data set. **Proven red by the same source linked against the
   pre-fix libc**, which abends `IEC141I 013-C0,IGG0199G,TSTSYSOL,SPOOL,SYSIN`
-  (`JOB00431`) — the issue verbatim.
+  (`JOB00433`) — the issue verbatim.
 
 ### Added
 - **`strcasecmp()` and `strncasecmp()` (#183).** The POSIX names were missing

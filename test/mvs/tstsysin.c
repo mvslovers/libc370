@@ -40,7 +40,7 @@
  *          the probe for a reason that has nothing to do with the test.
  * RC: 0 = every check passed, 1 = a check failed (it is the COND CODE).
  *
- * Run:     mvsdev JOB00430, CC 0000, 2026-09-22 -- 10/10 in the SPOOL
+ * Run:     mvsdev JOB00432, CC 0000, 2026-09-22 -- 10/10 in the SPOOL
  *          step and 8/8 in REALDS (different steps run different cases).
  *
  * Proven red by the cleanest control there is: THE SAME SOURCE linked
@@ -50,7 +50,7 @@
  *     IEC141I 013-C0,IGG0199G,TSTSYSOL,SPOOL,SYSIN
  *     IEF450I TSTSYSOL SPOOL - ABEND S013 U0000
  *
- * -- which is issue #184 verbatim (JOB00431).  So the green run is not a
+ * -- which is issue #184 verbatim (JOB00433).  So the green run is not a
  * test that happens to pass; it is the same program surviving what used
  * to kill it.
  */
@@ -175,8 +175,18 @@ int main(void)
        library: this very call SUCCEEDS (JOB00429).  A check keyed on the
        incoming mode alone refuses it and breaks working code. */
     printf("(6) a SYSOUT DD opened for READ is not refused either\n");
+    /* SYSTERM, deliberately, NOT SYSPRINT.  HO200/HODEBACB points the
+       second DEB and ACB at the same SDB the holder is writing, so a read
+       stream on SYSPRINT can move the position under this test's own
+       output and corrupt the evidence for every other case.  SYSTERM is
+       the same 'SO' type, is held for write by stderr, and carries
+       nothing the test needs -- wtof() is WTO, not stderr.
+       Open and close only: the OPEN succeeding is what was measured
+       (JOB00429); what a READ of a spool SYSOUT returns is not, so
+       nothing here asserts it.  The gate on the close is the step's own
+       condition code. */
     errno = 0;
-    f = fopen("dd:SYSPRINT", "r");
+    f = fopen("dd:SYSTERM", "r");
     CHECK(f != NULL, "(6) read open of a held SYSOUT DD still succeeds");
     if (f) fclose(f);
 

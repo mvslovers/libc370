@@ -46,8 +46,16 @@
  *    re-entrant.  Refusing on the incoming mode alone would have broken
  *    that.  So the test is on the direction of the stream ALREADY
  *    holding the DD: an output DD is held for write, an input DD for
- *    read.  That reads JES2's own discriminator off the state libc370
- *    already has, instead of guessing it from the caller's mode.
+ *    read.  That is a PROXY for DSNDSTYP, not JES2's discriminator: it
+ *    coincides with it for every DD shape measured, and the residual
+ *    cell is an 'SO' data set opened for read while ANOTHER READ stream
+ *    already holds it, which HO200's open count would allow and this
+ *    still refuses.  That needs a first read open of a SYSOUT DD to have
+ *    happened, so it is rarer than the cell above, but it is the same
+ *    class and it is not measured.  The exact discriminator is the
+ *    JFCB's SYSOUT class, and it is out of reach here -- __rdjfcb() runs
+ *    at @@fpopen.c AFTER __aopen(), so reading it first would mean an
+ *    RDJFCB with its own DCB and exit list.  Not worth it for #184.
  *
  *  - SPOOL ONLY.  A real data set tolerates two concurrent DCBs
  *    (JOB00424 step SI3).  The discriminator is the TIOT entry's flag
@@ -60,9 +68,17 @@
  *    that nothing holds open is fine: fclose(stdin) then fopen("dd:SYSIN")
  *    succeeds and re-reads from the top (JOB00424 step SI2).
  *
- * Returns 1 when the OPEN must be refused, 0 otherwise.  Conservative in
- * both directions: anything it cannot establish returns 0, so an OPEN
- * that would have worked is never refused on a guess.
+ * Returns 1 when the OPEN must be refused, 0 otherwise.
+ *
+ * KNOWN BLIND SPOT.  It can only see DCBs that fopen() registered in
+ * grt->grtfile.  A DD opened by ropen() (src/clib/ropen.c calls __aopen()
+ * directly), by hand-written assembler, by another library, or by a
+ * subtask with a different GRT is invisible here, and such a case still
+ * abends exactly as before.  The DSAB carries dsabopct, an open-DCB count
+ * that would see all of them -- but it counts without regard to
+ * direction, so on its own it would refuse the very cell JOB00429 shows
+ * working.  Closing the blind spot means combining the two, which is
+ * more machinery than #184 needs.
  */
 int __ddbusy(FILE *fp)
 {
@@ -86,8 +102,12 @@ int __ddbusy(FILE *fp)
     tiotdd = dsab->dsabtiot;
     if (!tiotdd) return 0;
 
-    /* TIOESSDS, not TIOESYIN - see above */
-    if (!(tiotdd->TIOELINK & TIOESSDS)) return 0;
+    /* The pair, as IBM's own OPEN tests it: IFG0RR0B.asm:500 is
+       TM TIOESYIN-24(TIOTPTR),B'00000110' -- X'04' | X'02'.  On 3.8j
+       only X'02' is ever set (measured across 9 DDs), so this is
+       behaviour-identical today; testing the pair stops the check
+       resting on that observation. */
+    if (!(tiotdd->TIOELINK & (TIOESYIN | TIOESSDS))) return 0;
 
     grt = __grtget();
     if (!grt) return 0;
