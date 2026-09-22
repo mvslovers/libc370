@@ -6,6 +6,57 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- **A second concurrent open of a spool SYSIN is refused, not fatal (#184).**
+  `@@start` opens `dd:SYSIN` as stdin, so every user
+  `fopen("dd:SYSIN", "r")` is inherently a *second* open of that DD — and on
+  an instream `DD *` that is the one thing JES2 will not do. From
+  `HASPSSSM`, the SSI open path SYSIN and SYSOUT both reach:
+
+  ```
+  HO300    L     R0,SDBDEB        GET SDB'S DEB POINTER.
+           LTR   R0,R0            IF NO DEB, DATA SET IS
+           BZ    HO110            CLOSED.  GO OPEN IT.
+           TM    SJBFLG1,SJB1XBM  IF OPEN ALREADY AND XBM,
+           BO    HORET            IGNORE OPEN.
+           B     HOERR            NOT XBM BUT OPEN - ERROR.
+  ```
+
+  Already open and not an execution batch monitor is `HOERR`,
+  unconditionally, and `IEC141I 013-C0` follows. It cannot be negotiated,
+  so `fopen()` now answers **`NULL` with `errno == EBUSY`** instead of
+  letting the address space die in OPEN — the shape #147 and #176 already
+  established here.
+
+  Three bounds on the new check, each measured rather than reasoned about,
+  because getting any of them wrong breaks code that works today:
+
+  | bound | why | measured |
+  |---|---|---|
+  | input only | SYSOUT reaches `HO200`, which keeps an **open count** and returns happily on the second open | a doubled `SYSPRINT` open works, `JOB00425` |
+  | spool only | a real data set tolerates two concurrent DCBs | `JOB00424` step SI3 |
+  | already open here | the refusal is about a live DEB | `fclose(stdin)` then `fopen` succeeds **and re-reads from the top**, `JOB00424` step SI2 |
+
+  That last one is worth keeping: instream SYSIN is **not** one-shot, only
+  non-concurrent — so `fclose(stdin)` is a one-line workaround that needs
+  no staging data set.
+
+  **The discriminator is not the one the header points at.** `ieftiot.h`
+  documents `TIOESYIN` (X'04') as "ENTRY FOR SPOOLED SYSIN DATA SET", and
+  that bit is **never set** on MVS 3.8j (`JOB00426`). A spool DD is marked
+  by `TIOESSDS` (X'02'), the VS2 meaning of the same byte. A check written
+  from the comment would compile, run and never fire; `test/mvs/tstsysin.c`
+  asserts the right bit so it cannot rot silently.
+
+  `fopen()` also preserves `errno` across its failure cleanup now. The
+  quit path calls `fclose()`, which runs a teardown of its own, and there
+  was no reason its last step should be what the caller reads.
+
+  Gate: `JOB00427`, CC 0000, 9/9 in the spool step and 7/7 against a real
+  data set. **Proven red by the same source linked against the pre-fix
+  libc**, which abends `IEC141I 013-C0,IGG0199G,TSTSYSOL,SPOOL,SYSIN`
+  (`JOB00428`) — the issue verbatim.
+
 ### Added
 - **`strcasecmp()` and `strncasecmp()` (#183).** The POSIX names were missing
   entirely, and three projects had independently worked around that: rexx370

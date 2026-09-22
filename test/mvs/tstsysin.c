@@ -34,6 +34,20 @@
  *          installed sysroot libc, which has no @@DDBUSY and would abend
  *          the probe for a reason that has nothing to do with the test.
  * RC: 0 = every check passed, 1 = a check failed (it is the COND CODE).
+ *
+ * Run:     mvsdev JOB00427, CC 0000, 2026-09-22 -- 9/9 in the SPOOL step
+ *          and 7/7 in REALDS (different steps run different cases).
+ *
+ * Proven red by the cleanest control there is: THE SAME SOURCE linked
+ * against the installed pre-fix libc, which has no @@DDBUSY.  The SPOOL
+ * step abends before its first check --
+ *
+ *     IEC141I 013-C0,IGG0199G,TSTSYSOL,SPOOL,SYSIN
+ *     IEF450I TSTSYSOL SPOOL - ABEND S013 U0000
+ *
+ * -- which is issue #184 verbatim (JOB00428).  So the green run is not a
+ * test that happens to pass; it is the same program surviving what used
+ * to kill it.
  */
 #include <stdio.h>
 #include <string.h>

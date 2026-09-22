@@ -26,6 +26,10 @@
 //* REALDS needs an FB80 data set with at least one record:
 //*   IBMUSER.LIBC370.SIDATA
 //*
+//* Run:     mvsdev JOB00427, CC 0000 - 9/9 SPOOL, 7/7 REALDS.  Proven
+//*          red by linking the same source against the pre-fix libc:
+//*          IEC141I 013-C0 in the SPOOL step (JOB00428).
+//*
 //* RC 0 = every check passed, 1 = a check failed (it is the COND CODE).
 //*
 //SPOOL    EXEC PGM=TSTSYSIN,REGION=4M
