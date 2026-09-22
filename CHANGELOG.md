@@ -4,6 +4,59 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Added
+- **`strcasecmp()` and `strncasecmp()` (#183).** The POSIX names were missing
+  entirely, and three projects had independently worked around that: rexx370
+  (`src/irx#init.c:210`, *"without strcasecmp (not in crent370)"*), ftpd
+  (`src/ftpd#adr.c:18`, *"Spelled out instead of `strcasecmp()`"*) and the
+  cobc370 port that filed the issue.
+
+  The capability was already in the archive under the MS-style names
+  `stricmp`/`strncmpi` — but **nothing declared them**, in any header, so even
+  those were unreachable without writing the prototype by hand. All four are
+  now declared in `clibstr.h`, and that also closes `stricmp` as one of #39's
+  14 routines with no declaration anywhere: `@@finden.c` and `@@listds.c`
+  call it six times between them with no prototype in scope, which is #39's
+  count of **2** for `stricmp` — it counts warnings, one per TU. Measured
+  against the pre-change header, `-Wall` gives 1 + 1 before and 0 + 0 after.
+
+  The two new functions are **standalone** translation units rather than
+  wrappers around `stricmp`/`strncmpi`: under ld370 autocall a wrapper drags
+  two archive members into every link that uses one name, and ~40 bytes of
+  duplicated loop is the cheaper side of that trade. They fold through
+  `tolower()`, i.e. the `__tolow` table, which is what makes them
+  EBCDIC-correct — an ASCII-style fold (`c | 0x20`) would not be, since the
+  letters sit in three runs with gaps: a-i X'81'-X'89', j-r X'91'-X'99', s-z
+  X'A2'-X'A9'.
+
+  Like the aliases they join, they return `-1`/`0`/`1` where glibc returns the
+  difference. Only the sign is specified, so both conform; this keeps them
+  consistent with what was already in the archive. External names are
+  truncated to eight characters as always — `STRCASEC` and `STRNCASE`.
+
+  `test/mvs/tststrci.c` covers all four, spans all three EBCDIC letter runs,
+  and opens with a control that asserts the run is EBCDIC at all — on a host
+  the fold goes through the host's ASCII table and cannot observe the property
+  under test.
+
+### Fixed
+- **`strncmpi()` called `tolower()` out of line, twice per character (#183).**
+  The TU was missing `#include <ctype.h>` (`stdio.h` → `clibio.h` does not
+  pull ctype in), so `tolower` was an implicit declaration resolving to the
+  real function in `src/clib/tolower.c` instead of the `__tolow[c]` macro.
+  Measured on the generated assembler: two `L 15,=V(TOLOWER)` call sequences
+  per loop iteration before, one `L 2,=V(@@TOLOW)` table load after. It
+  computed the right answer throughout — and it had no in-tree caller and no
+  test, so nothing had ever run it.
+
+  This one is **not in #39's list**, which records `stricmp` but neither
+  `strncmpi` nor its `tolower`: the same shape as the `@@freepd.c` pair
+  `TODO.md` already notes as found outside the issue. The three TUs touched
+  here now compile clean under `-Wall -Werror` (the pre-change `strncmpi.c`
+  does not — RC 1 on the implicit `tolower`), which is #39's step 3.
+
 ## [1.0.6] - 2026-09-13
 
 ### Fixed

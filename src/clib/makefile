@@ -327,6 +327,7 @@ C_FILES := abort.c \
 	@@stdin.c \
 	@@stdout.c \
 	@@steplb.c \
+	strcasecmp.c \
 	strcat.c \
 	strchr.c \
 	strcmp.c \
@@ -339,6 +340,7 @@ C_FILES := abort.c \
 	strftime.c \
 	stricmp.c \
 	strlen.c \
+	strncasecmp.c \
 	strncat.c \
 	strncmp.c \
 	strncmpi.c \

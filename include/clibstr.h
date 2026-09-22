@@ -26,6 +26,14 @@ int memcmp(const void *s1, const void *s2, size_t n);
 int strcmp(const char *s1, const char *s2);
 int strcoll(const char *s1, const char *s2);
 int strncmp(const char *s1, const char *s2, size_t n);
+
+/* case-insensitive comparison; the POSIX names and the MS-style
+   aliases that predate them here.  All four fold through tolower(),
+   so they are EBCDIC-correct. */
+int strcasecmp(const char *s1, const char *s2);
+int strncasecmp(const char *s1, const char *s2, size_t n);
+int stricmp(const char *s1, const char *s2);
+int strncmpi(const char *s1, const char *s2, size_t n);
 size_t strxfrm(char *s1, const char *s2, size_t n);
 void *memchr(const void *s, int c, size_t n);
 char *strchr(const char *s, int c);
