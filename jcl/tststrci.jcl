@@ -24,7 +24,8 @@
 //* STRCASEC and STRNCASE unresolved.  That is also the cheapest control
 //* that the module under test is the branch build.
 //*
-//* Run:     mvsdev JOB00409, CC 0000, 37/37, 2026-09-22.
+//* Run:     mvsdev JOB00422, CC 0000, 37/37, 2026-09-22.  Proven red at
+//*          11 of the 37 against a deliberately broken build, JOB00423.
 //*
 //* RC 0 = every check passed, 1 = a check failed (it is the COND CODE).
 //*

@@ -15,17 +15,33 @@
  *
  * Build:   cc370 -O1 -Iinclude -L build/sdk test/mvs/tststrci.c \
  *                -o TSTSTRCI -flinker-output=iebcopy
+ *          ld370 --pack TSTSTRCI=TSTSTRCI.iebcopy -o tststrci -xmit \
+ *                --dsn IBMUSER.LIBC370.TEST.LINKLIB
  * Install: RECEIVE the XMIT into the STEPLIB of jcl/tststrci.jcl.
+ *          -L build/sdk is not optional: without it the link takes the
+ *          installed sysroot libc and ld370 reports STRCASEC and STRNCASE
+ *          unresolved -- which is the cheapest control that the module
+ *          under test is the branch build.
  * RC: 0 = every check passed, 1 = a check failed (it is the COND CODE).
  *
- * Run:     mvsdev JOB00409, CC 0000, 37/37, 2026-09-22.
+ * Run:     mvsdev JOB00422, CC 0000, 37/37, 2026-09-22.
  *
  * Proven red the same day against a build with two deliberate defects --
  * an n-compare that never looks for the NUL, and an ASCII-style fold --
- * which fails 12 of the 37 (JOB00421).  The two are separable, which is
- * what makes the control worth anything: the NUL defect alone accounts
- * for 2 of those failures, (5) and (7), measured on its own in JOB00414;
- * the fold adds the other 10, across (2), (3), (4), (5) and (8).
+ * which fails 11 of the 37 (JOB00423).  The two are separable, which is
+ * what makes the control worth anything: the NUL defect accounts for 1,
+ * case (7); the fold for the other 10, across (2), (3), (4), (5) and (8).
+ *
+ * That split is only meaningful with one defect per name -- the fold in
+ * strcasecmp alone, the NUL defect in strncasecmp alone.  Injected into
+ * all four it gives a different and less informative number.
+ *
+ * It was 12 before case (5)'s two n=64 calls came down to n=3.  Those
+ * caught the NUL defect a second time, but only by reading ~60 bytes past
+ * a 3-byte literal to do it -- undefined behaviour in the red control,
+ * which is the one build that has to be trustworthy.  (7) covers the same
+ * property with n far past the terminator inside buffers that can afford
+ * it, so what was lost is a duplicate, and the unsafe one.
  *
  * Worth keeping from building that control: the ASCII fold has to be
  * written `c | 0x20`.  A `c | 0x40` fold looks equally wrong and is not
@@ -88,8 +104,10 @@ int main(void)
           "(2) strncasecmp folds s-z");
 
     printf("(3) non-letters pass through unfolded\n");
+    /* identical inputs fold identically under ANY fold, so this one cannot
+       fail; it is a smoke check, and (4) carries the digit ordering. */
     CHECK(strcasecmp("0123456789", "0123456789") == 0,
-          "(3) digits compare equal");
+          "(3) smoke: identical digit strings compare equal");
     CHECK(strcasecmp("a.b,c;d", "A.B,C;D") == 0,
           "(3) punctuation between letters is preserved");
     CHECK(strcasecmp("a#b", "a@b") != 0,
@@ -107,10 +125,14 @@ int main(void)
     CHECK_SIGN(strcasecmp("abcd", "ABC"),  1, "(5) the longer is greater");
     CHECK(strcasecmp("", "") == 0, "(5) two empty strings are equal");
     CHECK_SIGN(strcasecmp("", "a"), -1, "(5) empty is less than non-empty");
-    /* n past both terminators must stop, not run on into whatever follows */
-    CHECK(strncasecmp("ab", "AB", 64) == 0,
+    /* n past the terminator must stop there.  n is 3, not 64: against a
+       BROKEN implementation a bigger n reads past the literal's own
+       storage, which is undefined behaviour in the red control exactly
+       where the control has to be trustworthy.  Case (7) takes the same
+       property past a much larger n, inside buffers that can afford it. */
+    CHECK(strncasecmp("ab", "AB", 3) == 0,
           "(5) strncasecmp stops at the terminator, not at n");
-    CHECK_SIGN(strncasecmp("ab", "abc", 64), -1,
+    CHECK_SIGN(strncasecmp("ab", "abc", 3), -1,
           "(5) strncasecmp sees the shorter string end");
 
     printf("(6) n bounds the comparison\n");
@@ -142,10 +164,15 @@ int main(void)
           "(7) the verdict comes from before the terminator");
 
     printf("(8) the MS-style aliases agree with the POSIX names\n");
+    /* these two compare the pair against each other, so they are silent
+       while both are right and both wrong the same way: a divergence
+       guard for the day one of the four is edited, not an equality test.
+       They did fire in the red control, where only one of each pair was
+       defective. */
     CHECK(stricmp("Hello", "HELLO") == strcasecmp("Hello", "HELLO"),
-          "(8) stricmp agrees on equality");
+          "(8) divergence guard: stricmp vs strcasecmp");
     CHECK(strncmpi("Hello", "HELLO", 5) == strncasecmp("Hello", "HELLO", 5),
-          "(8) strncmpi agrees on equality");
+          "(8) divergence guard: strncmpi vs strncasecmp");
     CHECK_SIGN(stricmp("abc", "ABD"), -1, "(8) stricmp orders like strcasecmp");
     CHECK_SIGN(strncmpi("abd", "ABC", 3), 1,
           "(8) strncmpi orders like strncasecmp");

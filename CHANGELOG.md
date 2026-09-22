@@ -32,11 +32,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `strncmpi` has no such caller, so there the wrapper really would have cost
   its whole CSECT on top of its own.
 
-  The CSECTs, from the ESD: **X'E8' (232 bytes)** each for `strncasecmp` and
-  `strncmpi`, **X'F0' (240)** each for `strcasecmp` and `stricmp`. So
-  standalone saves 232 bytes on the `n` side and saves nothing on the other.
-  Keeping `strcasecmp` standalone anyway is symmetry with its sibling and one
-  less call frame on a limited stack — not member count.
+  The CSECTs, from the ESD, with a house-style wrapper built and measured
+  rather than guessed at:
+
+  | | standalone | wrapper |
+  |---|---|---|
+  | `strncasecmp` | X'E8' = **232** | X'74' = 116 + `STRNCMPI` X'E8' = 232 → **348** |
+  | `strcasecmp` | X'F0' = **240** | X'6C' = 108 + `STRICMP` **0** → **108** |
+
+  So standalone saves **116 bytes** on the `n` side and **costs 132** on the
+  other, because `STRICMP` is already resident there. Keeping `strcasecmp`
+  standalone is therefore the *more expensive* option, chosen for symmetry
+  with its sibling and one less call frame on a limited stack. That is the
+  whole of the argument; there is no member-count saving on that side.
 
   They fold through
   `tolower()`, i.e. the `__tolow` table, which is what makes them
@@ -64,11 +72,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   computed the right answer throughout — and it had no in-tree caller and no
   test, so nothing had ever run it.
 
-  This one is **not in #39's list**, which records `stricmp` but neither
-  `strncmpi` nor its `tolower`: the same shape as the `@@freepd.c` pair
-  `TODO.md` already notes as found outside the issue. The three TUs touched
-  here now compile clean under `-Wall -Werror` (the pre-change `strncmpi.c`
-  does not — RC 1 on the implicit `tolower`), which is #39's step 3.
+  #39 **did** count this one — its sweep compiles every TU with `-Wall`, and
+  the pre-change `strncmpi.c:20` warns on the implicit `tolower`. What omits
+  it is the issue's *abridged* table, which shows the top 8 of 27 distinct
+  functions (109 of 135 instances) in the missing-`#include` bucket. The
+  three TUs touched here now compile clean under `-Wall -Werror` (the
+  pre-change `strncmpi.c` does not — RC 1), which is #39's step 3 on a
+  three-file scale; the step itself is turning `-Wall` on in
+  `sdk/mklibc.py`, and that is still open.
 
 ## [1.0.6] - 2026-09-13
 

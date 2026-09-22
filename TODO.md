@@ -451,14 +451,21 @@ link on the target only because the `__` → `@@` symbol mapping happens to prod
 the right CSECT — the same invisible-call shape the issue records for httpd's
 `__arcou()`. Worth folding into step 1 when it runs.
 
-A third, found while fixing #183 and also not in the issue's list: `strncmpi.c`
-called `tolower()` with no `<ctype.h>` in scope, so it resolved to the
-out-of-line function in `tolower.c` instead of the `__tolow[c]` macro — two
-`L 15,=V(TOLOWER)` call sequences per character where there should be one table
-load. It computed the right answer throughout, and it had **no in-tree caller
-and no test**, which is how it kept that for as long as it did. The pattern is
-worth naming for step 2: the TUs that keep a missing `#include` longest are the
-ones nothing calls.
+**Correction to the paragraph above, found while fixing #183:** `__arcou` and
+`__arfre` are *not* outside the issue's list — they are in its 14-routine table
+at 1 each, and the sweep's hits are `@@freepd.c:15` and `:26`. The list that
+omits things is the **missing-`#include`** table, which prints the top 8 of 27
+distinct functions, 109 of 135 instances; everything else is in an unshown tail.
+**Read the counts, not the tables** — #39 says 161 and 135 in its own text, and
+both tables are abridged without saying so.
+
+`strncmpi.c` is in that tail: it called `tolower()` with no `<ctype.h>` in
+scope, so it resolved to the out-of-line function in `tolower.c` instead of the
+`__tolow[c]` macro — two `L 15,=V(TOLOWER)` call sequences per character where
+there should be one table load. It computed the right answer throughout, and it
+had **no in-tree caller and no test**, which is how it kept that for as long as
+it did. The pattern is worth naming for step 2: the TUs that keep a missing
+`#include` longest are the ones nothing calls.
 
 PR #185 does move step 1 forward by one: `stricmp` is now declared, which is
 2 of the 26 recorded instances (`@@finden.c` and `@@listds.c`, six calls between
