@@ -51,6 +51,46 @@ Also filed off the back of this work: **#171** (overlapping `strcpy(p, p+1)` in
 `@@fpnew.c`/`@@dsalc.c` — benign on target, aborts every ASAN host run) and
 **#172** (`__fpnew()` sends no UNIT text unit).
 
+**#184 was merged on PR #186, and it is the second issue in a row whose
+filed shape was not its real one.** It reads "fopen of an instream DD abends
+S013", and the fix is not in the OPEN at all: JES2 refuses a second
+*concurrent* DCB on a spool SYSIN by design — `HASPSSSM`'s `HO300`, already
+open and not an execution batch monitor means `HOERR`, unconditionally — so
+`fopen()` now answers `NULL` + `EBUSY` instead of letting the address space
+die. Plain SYSOUT never reaches that code; `HO200` keeps an open count and is
+re-entrant, which is why the check has to look at the direction of the stream
+*already holding* the DD rather than the caller's mode.
+
+**Three things from it are worth more than the fix.**
+
+The `ieftiot.h` comment points at `TIOESYIN` (X'04') for "spooled SYSIN" and
+X'04' is never set on 3.8j; the marker is `TIOESSDS` (X'02'). A check written
+from the header comment compiles, runs and never fires. **A vendored header's
+prose is not a measurement** — the code now masks the pair, as
+`IFG0RR0B.asm:500` does.
+
+A review claim about `fseek()` was reasoned, plausible, agreed by two readers
+and wrong, and **the test caught it, not either reader**: the assertion went
+red (`JOB00434`) because `@@fseek.c` satisfies an in-buffer backward seek
+without reopening. Writing the claim down as an assertion and running it is
+what closed it.
+
+And a run nearly reported a stale pass. `JOB00437` showed REALDS 8/8 with
+nothing else printed: IEBCOPY replace does not reclaim the old member's space,
+`TEST.LINKLIB` had filled up, MERGE abended `IEC032I E37-04`, SPOOL was
+`NOXEC`, and REALDS ran on a bare `COND=EVEN` against the **previous** member.
+**Gate every step on the one that installs the thing under test**, and compress
+before an IEBCOPY re-deploy. Written into `jcl/tstsysin.jcl`.
+
+Gate: `JOB00438` 13/13 + 8/8, every step 00000; proven red by the same source
+on the pre-fix libc, `JOB00439`, `IEC141I 013-C0`. **One stand** — all of it
+mvsdev, nothing on TK5.
+
+Open and named, not fixed: `@@start.c:77` opens `dd:SYSIN` unconditionally and
+is what creates the collision; a lazily-opened stdin would retire the class.
+`ropen.c:102` calls `__aopen()` directly, so `ropen("dd:SYSIN",...)` still
+abends — the `grtfile` walk cannot see it.
+
 **#183 was merged on PR #185 and never needed a rank either — it turned out
 not to be the issue it was filed as.** It reads "No strncasecmp", and the POSIX
 names were indeed missing; what it did not know is that the capability has been
