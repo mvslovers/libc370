@@ -13,10 +13,21 @@
  * spans all three deliberately.  Case (1) is the control: if it fails,
  * the run is not EBCDIC and nothing below means what it says.
  *
- * Build:   cc370 -O1 -Iinclude test/mvs/tststrci.c -o TSTSTRCI \
- *                -flinker-output=xmit
+ * Build:   cc370 -O1 -Iinclude -L build/sdk test/mvs/tststrci.c \
+ *                -o TSTSTRCI -flinker-output=iebcopy
  * Install: RECEIVE the XMIT into the STEPLIB of jcl/tststrci.jcl.
  * RC: 0 = every check passed, 1 = a check failed (it is the COND CODE).
+ *
+ * Run:     mvsdev JOB00409, CC 0000, 37/37, 2026-09-22.
+ *
+ * Proven red the same day against a build with two deliberate defects --
+ * an n-compare that never looks for the NUL, and an ASCII-style fold --
+ * which fails 12 of the 37 (JOB00421).  Worth keeping from building that
+ * control: the ASCII fold has to be written `c | 0x20`.  A `c | 0x40`
+ * fold looks equally wrong and is not: it maps all 26 EBCDIC letters to
+ * their uppercase exactly (X'81'|X'40' = X'C1', and so on through all
+ * three runs), so a control built on it passes case (2) and measures
+ * nothing (JOB00414).
  */
 #include <stdio.h>
 #include <string.h>

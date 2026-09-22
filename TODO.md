@@ -68,9 +68,10 @@ it is a gap everybody routed around.** The sweep that found them costs one grep
 across the ecosystem checkouts and is worth running before deciding a libc
 addition is speculative.
 
-The MVS run of `test/mvs/tststrci.c` is the outstanding gate — a host run folds
-through the host's ASCII table and cannot observe the EBCDIC property the
-compares exist for.
+The MVS gate is met: `test/mvs/tststrci.c` is 37/37 on mvsdev, JOB00409,
+CC 0000, and **proven red** at 12 of the 37 against a deliberately broken build
+(JOB00421). A host run would have folded through the host's ASCII table and
+observed none of it.
 
 **#168 was filed, fixed and merged on the same pass and never needed a rank
 either — but it carries an unpaid gate.** There was no way to close a `FILE`
