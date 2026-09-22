@@ -22,12 +22,16 @@
  *
  * Proven red the same day against a build with two deliberate defects --
  * an n-compare that never looks for the NUL, and an ASCII-style fold --
- * which fails 12 of the 37 (JOB00421).  Worth keeping from building that
- * control: the ASCII fold has to be written `c | 0x20`.  A `c | 0x40`
- * fold looks equally wrong and is not: it maps all 26 EBCDIC letters to
- * their uppercase exactly (X'81'|X'40' = X'C1', and so on through all
- * three runs), so a control built on it passes case (2) and measures
- * nothing (JOB00414).
+ * which fails 12 of the 37 (JOB00421).  The two are separable, which is
+ * what makes the control worth anything: the NUL defect alone accounts
+ * for 2 of those failures, (5) and (7), measured on its own in JOB00414;
+ * the fold adds the other 10, across (2), (3), (4), (5) and (8).
+ *
+ * Worth keeping from building that control: the ASCII fold has to be
+ * written `c | 0x20`.  A `c | 0x40` fold looks equally wrong and is not
+ * -- it maps all 26 EBCDIC letters to their uppercase exactly
+ * (X'81'|X'40' = X'C1', and so on through all three runs) -- so JOB00414
+ * caught only its NUL defect and said nothing at all about folding.
  */
 #include <stdio.h>
 #include <string.h>
