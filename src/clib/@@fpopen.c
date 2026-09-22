@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include <errno.h>
 #include <mvssupa.h>
 #include "osdcb.h"
 #include "osjfcb.h"
@@ -32,6 +33,15 @@ __fpopen(FILE *fp)
         ddname[i] = fp->ddname[i];
     }
     for(;i<8; i++) ddname[i] = ' ';
+
+    /* #184: a second concurrent DCB on a spool SYSIN is refused by JES2
+       with ABEND S013-C0, which kills the address space instead of the
+       call.  Tell the caller instead.  __ddbusy() answers 0 for anything
+       it cannot establish, so nothing that used to open stops opening. */
+    if (__ddbusy(fp)) {
+        errno = EBUSY;
+        goto quit;
+    }
 
     if (fp->flags & _FILE_FLAG_WRITE) mode = mode + 1;
     if (fp->flags & _FILE_FLAG_BSAM)  mode = mode + 8;

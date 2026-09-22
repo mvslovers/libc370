@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <errno.h>
 #include "cliblock.h"
 #include "clibary.h"
 #include "clibcrt.h"
@@ -144,12 +145,17 @@ doopen:
 
 quit:
     if (err) {
-        /* an error occured, return NULL */
+        /* an error occured, return NULL.  Preserve the errno that says
+           WHY across the cleanup: fclose() runs a teardown of its own,
+           and there is no reason its last step should be what the caller
+           reads.  #184 needs EBUSY to survive this. */
+        int save = errno;
         if (fp) {
             /* close the file handle */
             fclose(fp);
             fp = 0;
         }
+        errno = save;
     }
 
     if (fp) {
