@@ -25,13 +25,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   The two new functions are **standalone** translation units rather than
   wrappers around `stricmp`/`strncmpi`. That is right for `strncasecmp` and a
   wash for `strcasecmp`, which is not what the first draft of this entry
-  claimed — the measurement: a program calling only `strlen()` already links
-  `STRICMP`, because `@@FINDEN`, the environment lookup the CRT pulls in,
-  calls it. So `stricmp` is resident in **every** link and a wrapper around it
-  would have dragged nothing extra. `strncmpi` has no such caller: adding one
-  costs **344 bytes**, against **340** for the standalone member that replaces
-  it. Keeping `strcasecmp` standalone too is then symmetry with its sibling
-  and one less call frame on a limited stack, not member count.
+  claimed. The measurement: a program calling only `strlen()` already links
+  `STRICMP`, because `@@FINDEN` — the environment lookup the CRT pulls in —
+  calls it. So `stricmp` is resident in **every** link whatever anyone does,
+  and a `strcasecmp` wrapper around it would have dragged nothing extra.
+  `strncmpi` has no such caller, so there the wrapper really would have cost
+  its whole CSECT on top of its own.
+
+  The CSECTs, from the ESD: **X'E8' (232 bytes)** each for `strncasecmp` and
+  `strncmpi`, **X'F0' (240)** each for `strcasecmp` and `stricmp`. So
+  standalone saves 232 bytes on the `n` side and saves nothing on the other.
+  Keeping `strcasecmp` standalone anyway is symmetry with its sibling and one
+  less call frame on a limited stack — not member count.
 
   They fold through
   `tolower()`, i.e. the `__tolow` table, which is what makes them
