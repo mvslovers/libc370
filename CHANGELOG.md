@@ -81,6 +81,85 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   three-file scale; the step itself is turning `-Wall` on in
   `sdk/mklibc.py`, and that is still open.
 
+- **A second concurrent open of a spool SYSIN is refused, not fatal (#184).**
+  `@@start` opens `dd:SYSIN` as stdin, so every user
+  `fopen("dd:SYSIN", "r")` is inherently a *second* open of that DD — and on
+  an instream `DD *` that is the one thing JES2 will not do. `HOSOPEN`
+  dispatches by data set **type** — `HO000` internal reader, `HO100` `'SI'`,
+  `HO200` `'SO'`, `HO300` `'PS'` — and an instream SYSIN reaches `HO100`,
+  whose non-XBM path falls through `HO107` into the process-SYSOUT open
+  code. Plain SYSOUT never comes here; `HO200` is its own block:
+
+  ```
+  HO300    DS    0H
+           L     R0,SDBDEB        GET SDB'S DEB POINTER.
+           LTR   R0,R0            IF NO DEB, DATA SET IS
+           BZ    HO110            CLOSED.  GO OPEN IT.
+           TM    SJBFLG1,SJB1XBM  IF OPEN ALREADY AND XBM,
+           BO    HORET            IGNORE OPEN.
+           B     HOERR            NOT XBM BUT OPEN - ERROR.
+  ```
+
+  Already open and not an execution batch monitor is `HOERR`,
+  unconditionally, and `IEC141I 013-C0` follows. It cannot be negotiated,
+  so `fopen()` now answers **`NULL` with `errno == EBUSY`** instead of
+  letting the address space die in OPEN — the shape #149 and #176 already
+  established here (`clibio.h` cites #149 for exactly this).
+
+  Three bounds on the new check, each measured rather than reasoned about,
+  because getting any of them wrong breaks code that works today:
+
+  | bound | why | measured |
+  |---|---|---|
+  | an input **DD**, not an input open | `HOCSETUP` dispatches on `DSNDSTYP`, the data set's *type*, not the DCB's mode — so the check tests the direction of the stream **already holding** the DD | `fopen("dd:SYSPRINT","r")` with stdout open **succeeds** pre-fix, `JOB00429`; keying on the caller's mode alone would have broken it |
+  | spool only | a real data set tolerates two concurrent DCBs | `JOB00424` step SI3 |
+  | already open here | the refusal is about a live DEB | `fclose(stdin)` then `fopen` succeeds **and re-reads from the top**, `JOB00424` step SI2 |
+
+  **The direction test is a proxy, not JES2's discriminator**, and the
+  entry should say so: the exact one is the JFCB's SYSOUT class, which is
+  out of reach before the OPEN. The residual cell is an `'SO'` data set
+  opened for read while another *read* stream already holds it — rarer
+  than the one measured, unmeasured, and the same class. The check also
+  only sees DCBs `fopen()` registered, so a DD opened by `ropen()` (which
+  calls `__aopen()` directly), by assembler, or by a subtask with another
+  GRT still abends exactly as before.
+
+  **`fseek()` can reach it, but not the way it first looked.** A backward
+  seek reopens the DD through `__reopen()`, which calls `fopen()` while
+  the old `FILE` is still open and registered — so the refusal would
+  surface there. It does not, for a small instream SYSIN: `@@fseek.c`
+  satisfies a seek whose target is still inside the current buffer
+  without reopening anything, and one block of instream data is entirely
+  inside it. Measured, after the check asserting the opposite went red.
+  What a seek *past* the buffer does on a spool SYSIN is **not** measured
+  — it needs more than one block of instream data, and nothing here
+  produces that.
+
+  That third bound is worth keeping: instream SYSIN is **not** one-shot, only
+  non-concurrent — so `fclose(stdin)` is a one-line workaround that needs
+  no staging data set.
+
+  **The discriminator is not the one the header points at.** `ieftiot.h`
+  documents `TIOESYIN` (X'04') as "ENTRY FOR SPOOLED SYSIN DATA SET", and
+  that bit is **never set** on MVS 3.8j (`JOB00426`). A spool DD is marked
+  by `TIOESSDS` (X'02'), the VS2 meaning of the same byte. A check written
+  from the comment would compile, run and never fire; `test/mvs/tstsysin.c`
+  asserts the right bit so it cannot rot silently.
+
+  `fopen()` also preserves `errno` across its failure cleanup now. The
+  quit path calls `fclose()`, which runs a teardown of its own, and there
+  was no reason its last step should be what the caller reads.
+
+  Gate: `JOB00438`, CC 0000, 13/13 in the spool step and 8/8 against a
+  real data set. **Proven red by the same source linked against the
+  pre-fix libc**, which abends `IEC141I 013-C0,IGG0199G,TSTSYSOL,SPOOL,SYSIN`
+  (`JOB00439`) — the issue verbatim.
+
+  **One stand.** Every job number here is mvsdev; nothing has run on TK5,
+  and the SO-read cell the fix now deliberately permits (`JOB00429`) has
+  been measured on that one system only. The issue author has a TK5 rig
+  and offered a run.
+
 ## [1.0.6] - 2026-09-13
 
 ### Fixed

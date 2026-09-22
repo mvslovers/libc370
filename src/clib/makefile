@@ -77,6 +77,7 @@ C_FILES := abort.c \
 	@dbleps.c \
 	@dblmax.c \
 	@dblmin.c \
+	@@ddbusy.c \
 	@@dec.c \
 	@@delete.c \
 	difftime.c \

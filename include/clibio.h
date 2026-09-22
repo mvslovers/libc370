@@ -219,4 +219,9 @@ extern int __delmem(const char *dsn, const char *mem);
  */
 extern int __fabandon(FILE *fp);
 
+/* __ddbusy() - would this OPEN be the second concurrent DCB on a spool
+ * data set?  JES2 refuses that with ABEND S013-C0 (#184); this is what
+ * lets fopen() answer NULL + EBUSY instead of dying inside OPEN. */
+extern int __ddbusy(FILE *fp);
+
 #endif
