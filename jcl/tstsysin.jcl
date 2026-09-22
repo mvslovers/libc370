@@ -26,9 +26,17 @@
 //* REALDS needs an FB80 data set with at least one record:
 //*   IBMUSER.LIBC370.SIDATA
 //*
-//* Run:     mvsdev JOB00435, CC 0000 - 13/13 SPOOL, 8/8 REALDS.  Proven
+//* Run:     mvsdev JOB00438, CC 0000 - 13/13 SPOOL, 8/8 REALDS.  Proven
 //*          red by linking the same source against the pre-fix libc:
-//*          IEC141I 013-C0 in the SPOOL step (JOB00436).
+//*          IEC141I 013-C0 in the SPOOL step (JOB00439).
+//*
+//* If you deploy with an IEBCOPY merge, COMPRESS the library first and
+//* gate BOTH steps on the merge.  IEBCOPY replace does not reclaim the
+//* old member's space, so the library fills up (IEC032I E37-04); and
+//* with REALDS on a bare COND=EVEN a failed merge still runs it against
+//* the PREVIOUS member and reports a clean 8/8 while SPOOL shows NOXEC.
+//* Measured, JOB00437 - the condition code was S-E37 and the output
+//* looked like a pass.
 //*
 //* RC 0 = every check passed, 1 = a check failed (it is the COND CODE).
 //*

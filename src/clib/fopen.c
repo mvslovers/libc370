@@ -148,7 +148,15 @@ quit:
         /* an error occured, return NULL.  Preserve the errno that says
            WHY across the cleanup: fclose() runs a teardown of its own,
            and there is no reason its last step should be what the caller
-           reads.  #184 needs EBUSY to survive this. */
+           reads.  #184 needs EBUSY to survive this.
+
+           One pre-existing path changes, in the right direction: a
+           _FILE_FLAG_DYNAMIC FILE reaches __fpfree()'s SVC 99, whose
+           errno used to be what the caller read.  fopen() documents
+           no errno, so that was never meaningful -- this replaces one
+           unrelated value with an older one.  Making "NULL implies a
+           meaningful errno" a real contract needs errno = 0 on entry
+           and a sweep of every path above; not this change. */
         int save = errno;
         if (fp) {
             /* close the file handle */

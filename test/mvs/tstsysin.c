@@ -28,7 +28,8 @@
  * and the test reads the TIOT to find out rather than being told:
  *   SYSIN DD *          -> (2) the refusal, (3) reopen after close
  *   SYSIN DD DSN=...    -> (4) a real data set still opens twice
- * (1) and (5) run in both.  Run BOTH steps; either alone is half a test.
+ * (1), (5) and (6) run in both.  Run BOTH steps; either alone is half
+ * a test -- and (4) is the half that catches an over-refusal.
  *
  * Build:   cc370 -O1 -Iinclude -L build/sdk test/mvs/tstsysin.c \
  *                -o TSTSYSIN -flinker-output=iebcopy
@@ -40,7 +41,7 @@
  *          the probe for a reason that has nothing to do with the test.
  * RC: 0 = every check passed, 1 = a check failed (it is the COND CODE).
  *
- * Run:     mvsdev JOB00435, CC 0000, 2026-09-22 -- 13/13 in the SPOOL
+ * Run:     mvsdev JOB00438, CC 0000, 2026-09-22 -- 13/13 in the SPOOL
  *          step and 8/8 in REALDS (different steps run different cases).
  *
  * Proven red by the cleanest control there is: THE SAME SOURCE linked
@@ -50,7 +51,7 @@
  *     IEC141I 013-C0,IGG0199G,TSTSYSOL,SPOOL,SYSIN
  *     IEF450I TSTSYSOL SPOOL - ABEND S013 U0000
  *
- * -- which is issue #184 verbatim (JOB00436).  So the green run is not a
+ * -- which is issue #184 verbatim (JOB00439).  So the green run is not a
  * test that happens to pass; it is the same program surviving what used
  * to kill it.
  */
@@ -149,8 +150,9 @@ int main(void)
         CHECK(fgets(line, sizeof line, stdin) != NULL,
               "(2) stdin still reads normally after the refusal");
         CHECK(fseek(stdin, 0L, SEEK_SET) == 0,
-              "(2) a backward fseek inside the buffer still succeeds");
-        CHECK(ferror(stdin) == 0, "(2) and leaves the stream unerrored");
+              "(2) @@fseek satisfies an in-buffer backward seek, no reopen");
+        CHECK(ferror(stdin) == 0,
+              "(2) @@fseek leaves the stream unerrored");
 
         printf("(3) and it is only CONCURRENCY - close first and it opens\n");
         fclose(stdin);
@@ -160,7 +162,8 @@ int main(void)
         f = fopen("dd:SYSIN", "r");
         CHECK(f != NULL, "(3) fopen() succeeds once no DCB is held");
         if (f) {
-            CHECK(readlines(f) > 0, "(3) and it reads from the top, not EOF");
+            CHECK(readlines(f) == 1,
+                  "(3) and it reads the 1 line from the top, not EOF");
             fclose(f);
         }
         else {
@@ -173,7 +176,8 @@ int main(void)
         f = fopen("dd:SYSIN", "r");
         CHECK(f != NULL, "(4) fopen() of a real SYSIN still succeeds");
         if (f) {
-            CHECK(readlines(f) > 0, "(4) and the second stream reads it");
+            CHECK(readlines(f) == 1,
+                  "(4) and the second stream reads its 1 line");
             fclose(f);
         }
         else {

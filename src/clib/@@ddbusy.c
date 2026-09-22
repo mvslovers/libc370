@@ -58,10 +58,13 @@
  *
  *  - SPOOL ONLY.  A real data set tolerates two concurrent DCBs
  *    (JOB00424 step SI3).  The discriminator is the TIOT entry's flag
- *    byte -- and it is TIOESSDS (X'02', "subsystem data set", the VS2
- *    meaning), NOT the TIOESYIN (X'04') that ieftiot.h's comment points
- *    at: X'04' is never set on 3.8j (JOB00426).  A check written from
- *    that comment compiles, runs and never fires.
+ *    byte.  ieftiot.h's comment points at TIOESYIN (X'04', "spooled
+ *    SYSIN"), and that is not what marks one here: across the DDs
+ *    measured X'04' is never set and X'02' (TIOESSDS, the VS2
+ *    "subsystem data set") always is (JOB00426).  A check written from
+ *    that comment alone would compile, run and never fire.  The mask
+ *    below tests the PAIR, as IBM's own OPEN does, so the code does not
+ *    rest on that observation either way.
  *
  *  - ALREADY OPEN HERE.  The refusal is about a live DEB, so a spool DD
  *    that nothing holds open is fine: fclose(stdin) then fopen("dd:SYSIN")

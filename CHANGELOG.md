@@ -150,10 +150,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   quit path calls `fclose()`, which runs a teardown of its own, and there
   was no reason its last step should be what the caller reads.
 
-  Gate: `JOB00435`, CC 0000, 13/13 in the spool step and 8/8 against a
+  Gate: `JOB00438`, CC 0000, 13/13 in the spool step and 8/8 against a
   real data set. **Proven red by the same source linked against the
   pre-fix libc**, which abends `IEC141I 013-C0,IGG0199G,TSTSYSOL,SPOOL,SYSIN`
-  (`JOB00436`) — the issue verbatim.
+  (`JOB00439`) — the issue verbatim.
 
   **One stand.** Every job number here is mvsdev; nothing has run on TK5,
   and the SO-read cell the fix now deliberately permits (`JOB00429`) has
