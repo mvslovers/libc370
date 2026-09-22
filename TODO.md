@@ -51,6 +51,28 @@ Also filed off the back of this work: **#171** (overlapping `strcpy(p, p+1)` in
 `@@fpnew.c`/`@@dsalc.c` — benign on target, aborts every ASAN host run) and
 **#172** (`__fpnew()` sends no UNIT text unit).
 
+**#183 is in flight on PR #185 and never needed a rank either — it turned out
+not to be the issue it was filed as.** It reads "No strncasecmp", and the POSIX
+names were indeed missing; what it did not know is that the capability has been
+in the archive all along under the MS-style names `stricmp`/`strncmpi`, and that
+**nothing declared either of them in any header**, so those were unreachable too
+without writing the prototype by hand. A naming and declaration gap, not a
+missing implementation, and most of the fix is eight lines of `clibstr.h`.
+
+Worth keeping is how wide the demand already was: three projects had
+independently worked around it before anyone filed anything — rexx370
+(`src/irx#init.c:210`, *"without strcasecmp (not in crent370)"*), ftpd
+(`src/ftpd#adr.c:18`, *"Spelled out instead of `strcasecmp()`"*) and the cobc370
+port that eventually did file. **A gap with no ticket is not a gap nobody hit;
+it is a gap everybody routed around.** The sweep that found them costs one grep
+across the ecosystem checkouts and is worth running before deciding a libc
+addition is speculative.
+
+The MVS gate is met: `test/mvs/tststrci.c` is 37/37 on mvsdev, JOB00409,
+CC 0000, and **proven red** at 12 of the 37 against a deliberately broken build
+(JOB00421). A host run would have folded through the host's ASCII table and
+observed none of it.
+
 **#168 was filed, fixed and merged on the same pass and never needed a rank
 either — but it carries an unpaid gate.** There was no way to close a `FILE`
 whose last write failed: `fclose()` flushes first, so when the pending block is
@@ -428,6 +450,29 @@ Two more found while building the #80 host test, not in the issue's list:
 link on the target only because the `__` → `@@` symbol mapping happens to produce
 the right CSECT — the same invisible-call shape the issue records for httpd's
 `__arcou()`. Worth folding into step 1 when it runs.
+
+**Correction to the paragraph above, found while fixing #183:** `__arcou` and
+`__arfre` are *not* outside the issue's list — they are in its 14-routine table
+at 1 each, and the sweep's hits are `@@freepd.c:15` and `:26`. The list that
+omits things is the **missing-`#include`** table, which prints the top 8 of 27
+distinct functions, 109 of 135 instances; everything else is in an unshown tail.
+**Read the counts, not the tables** — #39 says 161 and 135 in its own text, and
+both tables are abridged without saying so.
+
+`strncmpi.c` is in that tail: it called `tolower()` with no `<ctype.h>` in
+scope, so it resolved to the out-of-line function in `tolower.c` instead of the
+`__tolow[c]` macro — two `L 15,=V(TOLOWER)` call sequences per character where
+there should be one table load. It computed the right answer throughout, and it
+had **no in-tree caller and no test**, which is how it kept that for as long as
+it did. The pattern is worth naming for step 2: the TUs that keep a missing
+`#include` longest are the ones nothing calls.
+
+PR #185 does move step 1 forward by one: `stricmp` is now declared, which is
+2 of the 26 recorded instances (`@@finden.c` and `@@listds.c`, six calls between
+them — the issue's count of 2 is warnings, one per TU). Measured against the
+pre-change header, `-Wall` gives 1 + 1 before and 0 + 0 after. The three TUs
+that PR touches also compile clean under `-Wall -Werror`, which is step 3 on a
+three-file scale.
 
 ### 5 · #68 — `format(printf)` for `wtof()`/`wtodumpf()`/`wtorf()`
 
