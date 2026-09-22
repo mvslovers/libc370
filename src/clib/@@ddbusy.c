@@ -13,14 +13,21 @@
  * __ddbusy() - would this OPEN be the second concurrent DCB on a spool
  * data set, i.e. the one JES2 refuses with ABEND S013-C0 (#184)?
  *
- * HASPSSSM's SSI open path is unconditional about it:
+ * HOSOPEN dispatches by data set TYPE -- HO000 internal reader, HO100
+ * 'SI', HO200 'SO', HO300 'PS' -- and an instream SYSIN reaches HO100,
+ * whose non-XBM path falls through HO107 into the process-SYSOUT open
+ * code, which is unconditional about it:
  *
- *     HO300    L     R0,SDBDEB      GET SDB'S DEB POINTER.
- *              LTR   R0,R0          IF NO DEB, DATA SET IS
- *              BZ    HO110          CLOSED.  GO OPEN IT.
+ *     HO300    DS    0H
+ *              L     R0,SDBDEB        GET SDB'S DEB POINTER.
+ *              LTR   R0,R0            IF NO DEB, DATA SET IS
+ *              BZ    HO110            CLOSED.  GO OPEN IT.
  *              TM    SJBFLG1,SJB1XBM  IF OPEN ALREADY AND XBM,
  *              BO    HORET            IGNORE OPEN.
  *              B     HOERR            NOT XBM BUT OPEN - ERROR.
+ *
+ * Plain SYSOUT never comes here: HO200 is its own block, and it keeps an
+ * open count.
  *
  * Already open and not an execution batch monitor means HOERR, and the
  * S013 follows.  There is nothing to negotiate: the caller has to be told
@@ -29,9 +36,18 @@
  * Three things bound the test, each measured on mvsdev 2026-09-22 rather
  * than reasoned about:
  *
- *  - INPUT ONLY.  SYSOUT goes to HASPSSSM HO200, which keeps an open
- *    count and returns happily on the second open.  A doubled open of
- *    SYSPRINT works (JOB00425), so refusing it would break working code.
+ *  - AN INPUT DD, WHICH IS NOT THE SAME AS AN INPUT OPEN.  HOCSETUP
+ *    dispatches on DSNDSTYP -- the data set's TYPE, 'SI'/'SO'/'PS' --
+ *    not on the DCB's mode, so the mode of the incoming open is only a
+ *    proxy for it.  The two partitions do not coincide, and the gap is
+ *    not theoretical: fopen("dd:SYSPRINT","r") while stdout holds
+ *    SYSPRINT SUCCEEDS on the pre-fix library (JOB00429), because JES2
+ *    routes an 'SO' data set to HO200, which keeps an open count and is
+ *    re-entrant.  Refusing on the incoming mode alone would have broken
+ *    that.  So the test is on the direction of the stream ALREADY
+ *    holding the DD: an output DD is held for write, an input DD for
+ *    read.  That reads JES2's own discriminator off the state libc370
+ *    already has, instead of guessing it from the caller's mode.
  *
  *  - SPOOL ONLY.  A real data set tolerates two concurrent DCBs
  *    (JOB00424 step SI3).  The discriminator is the TIOT entry's flag
@@ -60,7 +76,7 @@ int __ddbusy(FILE *fp)
     if (!fp) return 0;
     if (!fp->ddname[0]) return 0;
 
-    /* input opens only - see SYSOUT above */
+    /* an input open of an input DD.  Both halves are needed: see above */
     if (!(fp->flags & _FILE_FLAG_READ)) return 0;
     if (fp->flags & _FILE_FLAG_WRITE) return 0;
 
@@ -90,6 +106,11 @@ int __ddbusy(FILE *fp)
         /* a FILE with no DCB is registered but not open, so it holds no
            DEB and cannot be what JES2 is objecting to */
         if (!other->dcb) continue;
+        /* the holder's direction is the DD's direction, and that is what
+           JES2 keys on.  A DD held for WRITE is an 'SO' data set, whose
+           second open HO200 allows -- measured, JOB00429. */
+        if (!(other->flags & _FILE_FLAG_READ)) continue;
+        if (other->flags & _FILE_FLAG_WRITE) continue;
         if (memcmp(other->ddname, fp->ddname, sizeof(fp->ddname)) == 0) {
             busy = 1;
             break;

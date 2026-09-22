@@ -10,11 +10,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - **A second concurrent open of a spool SYSIN is refused, not fatal (#184).**
   `@@start` opens `dd:SYSIN` as stdin, so every user
   `fopen("dd:SYSIN", "r")` is inherently a *second* open of that DD — and on
-  an instream `DD *` that is the one thing JES2 will not do. From
-  `HASPSSSM`, the SSI open path SYSIN and SYSOUT both reach:
+  an instream `DD *` that is the one thing JES2 will not do. `HOSOPEN`
+  dispatches by data set **type** — `HO000` internal reader, `HO100` `'SI'`,
+  `HO200` `'SO'`, `HO300` `'PS'` — and an instream SYSIN reaches `HO100`,
+  whose non-XBM path falls through `HO107` into the process-SYSOUT open
+  code. Plain SYSOUT never comes here; `HO200` is its own block:
 
   ```
-  HO300    L     R0,SDBDEB        GET SDB'S DEB POINTER.
+  HO300    DS    0H
+           L     R0,SDBDEB        GET SDB'S DEB POINTER.
            LTR   R0,R0            IF NO DEB, DATA SET IS
            BZ    HO110            CLOSED.  GO OPEN IT.
            TM    SJBFLG1,SJB1XBM  IF OPEN ALREADY AND XBM,
@@ -33,7 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
   | bound | why | measured |
   |---|---|---|
-  | input only | SYSOUT reaches `HO200`, which keeps an **open count** and returns happily on the second open | a doubled `SYSPRINT` open works, `JOB00425` |
+  | an input **DD**, not an input open | `HOCSETUP` dispatches on `DSNDSTYP`, the data set's *type*, not the DCB's mode — so the check tests the direction of the stream **already holding** the DD | `fopen("dd:SYSPRINT","r")` with stdout open **succeeds** pre-fix, `JOB00429`; keying on the caller's mode alone would have broken it |
   | spool only | a real data set tolerates two concurrent DCBs | `JOB00424` step SI3 |
   | already open here | the refusal is about a live DEB | `fclose(stdin)` then `fopen` succeeds **and re-reads from the top**, `JOB00424` step SI2 |
 
@@ -52,10 +56,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   quit path calls `fclose()`, which runs a teardown of its own, and there
   was no reason its last step should be what the caller reads.
 
-  Gate: `JOB00427`, CC 0000, 9/9 in the spool step and 7/7 against a real
-  data set. **Proven red by the same source linked against the pre-fix
-  libc**, which abends `IEC141I 013-C0,IGG0199G,TSTSYSOL,SPOOL,SYSIN`
-  (`JOB00428`) — the issue verbatim.
+  Gate: `JOB00430`, CC 0000, 10/10 in the spool step and 8/8 against a
+  real data set. **Proven red by the same source linked against the
+  pre-fix libc**, which abends `IEC141I 013-C0,IGG0199G,TSTSYSOL,SPOOL,SYSIN`
+  (`JOB00431`) — the issue verbatim.
 
 ### Added
 - **`strcasecmp()` and `strncasecmp()` (#183).** The POSIX names were missing

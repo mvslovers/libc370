@@ -3,9 +3,14 @@
  *
  * @@start opens dd:SYSIN as stdin, so every user fopen("dd:SYSIN","r") is
  * inherently a SECOND open.  On an instream DD that is the one thing JES2
- * refuses -- HASPSSSM's SSI open path, reached by SYSIN and SYSOUT alike:
+ * refuses.  HOSOPEN dispatches by data set TYPE -- HO000 internal reader,
+ * HO100 'SI', HO200 'SO', HO300 'PS' -- and an instream SYSIN reaches
+ * HO100, whose non-XBM path falls through HO107 into the process-SYSOUT
+ * open code.  Plain SYSOUT never comes here; HO200 is its own block and
+ * keeps an open count:
  *
- *     HO300    L     R0,SDBDEB        GET SDB'S DEB POINTER.
+ *     HO300    DS    0H
+ *              L     R0,SDBDEB        GET SDB'S DEB POINTER.
  *              LTR   R0,R0            IF NO DEB, DATA SET IS
  *              BZ    HO110            CLOSED.  GO OPEN IT.
  *              TM    SJBFLG1,SJB1XBM  IF OPEN ALREADY AND XBM,
@@ -35,8 +40,8 @@
  *          the probe for a reason that has nothing to do with the test.
  * RC: 0 = every check passed, 1 = a check failed (it is the COND CODE).
  *
- * Run:     mvsdev JOB00427, CC 0000, 2026-09-22 -- 9/9 in the SPOOL step
- *          and 7/7 in REALDS (different steps run different cases).
+ * Run:     mvsdev JOB00430, CC 0000, 2026-09-22 -- 10/10 in the SPOOL
+ *          step and 8/8 in REALDS (different steps run different cases).
  *
  * Proven red by the cleanest control there is: THE SAME SOURCE linked
  * against the installed pre-fix libc, which has no @@DDBUSY.  The SPOOL
@@ -45,7 +50,7 @@
  *     IEC141I 013-C0,IGG0199G,TSTSYSOL,SPOOL,SYSIN
  *     IEF450I TSTSYSOL SPOOL - ABEND S013 U0000
  *
- * -- which is issue #184 verbatim (JOB00428).  So the green run is not a
+ * -- which is issue #184 verbatim (JOB00431).  So the green run is not a
  * test that happens to pass; it is the same program surviving what used
  * to kill it.
  */
@@ -162,6 +167,18 @@ int main(void)
         fputs("TSTSYSIN wrote this through a second SYSPRINT stream\n", f);
         fclose(f);
     }
+
+    /* (6) The over-refusal guard, and the reason the check tests the
+       HOLDER's direction rather than the caller's mode.  JES2 dispatches
+       on DSNDSTYP -- the data set TYPE -- so an 'SO' data set opened for
+       READ still goes to HO200 and is allowed.  Measured on the pre-fix
+       library: this very call SUCCEEDS (JOB00429).  A check keyed on the
+       incoming mode alone refuses it and breaks working code. */
+    printf("(6) a SYSOUT DD opened for READ is not refused either\n");
+    errno = 0;
+    f = fopen("dd:SYSPRINT", "r");
+    CHECK(f != NULL, "(6) read open of a held SYSOUT DD still succeeds");
+    if (f) fclose(f);
 
     printf("\n=== TSTSYSIN: %d/%d passed", mbt_passed, mbt_run);
     if (mbt_failed) printf(" (%d FAILED)", mbt_failed);
