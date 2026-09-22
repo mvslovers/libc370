@@ -23,9 +23,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   against the pre-change header, `-Wall` gives 1 + 1 before and 0 + 0 after.
 
   The two new functions are **standalone** translation units rather than
-  wrappers around `stricmp`/`strncmpi`: under ld370 autocall a wrapper drags
-  two archive members into every link that uses one name, and ~40 bytes of
-  duplicated loop is the cheaper side of that trade. They fold through
+  wrappers around `stricmp`/`strncmpi`. That is right for `strncasecmp` and a
+  wash for `strcasecmp`, which is not what the first draft of this entry
+  claimed — the measurement: a program calling only `strlen()` already links
+  `STRICMP`, because `@@FINDEN`, the environment lookup the CRT pulls in,
+  calls it. So `stricmp` is resident in **every** link and a wrapper around it
+  would have dragged nothing extra. `strncmpi` has no such caller: adding one
+  costs **344 bytes**, against **340** for the standalone member that replaces
+  it. Keeping `strcasecmp` standalone too is then symmetry with its sibling
+  and one less call frame on a limited stack, not member count.
+
+  They fold through
   `tolower()`, i.e. the `__tolow` table, which is what makes them
   EBCDIC-correct — an ASCII-style fold (`c | 0x20`) would not be, since the
   letters sit in three runs with gaps: a-i X'81'-X'89', j-r X'91'-X'99', s-z

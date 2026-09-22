@@ -13,9 +13,18 @@
 //*
 //* See test/mvs/tststrci.c.
 //*
-//* Build:   cc370 -O1 -Iinclude test/mvs/tststrci.c -o TSTSTRCI \
-//*                -flinker-output=xmit
+//* Build:   cc370 -O1 -Iinclude -L build/sdk test/mvs/tststrci.c \
+//*                -o TSTSTRCI -flinker-output=iebcopy
+//*          ld370 --pack TSTSTRCI=TSTSTRCI.iebcopy -o tststrci -xmit \
+//*                --dsn IBMUSER.LIBC370.TEST.LINKLIB
 //* Install: RECEIVE the XMIT into the STEPLIB below.
+//*
+//* -L build/sdk is not optional: without it the link takes the INSTALLED
+//* sysroot libc, which has neither new function, and ld370 says so --
+//* STRCASEC and STRNCASE unresolved.  That is also the cheapest control
+//* that the module under test is the branch build.
+//*
+//* Run:     mvsdev JOB00409, CC 0000, 37/37, 2026-09-22.
 //*
 //* RC 0 = every check passed, 1 = a check failed (it is the COND CODE).
 //*
