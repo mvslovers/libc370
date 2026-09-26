@@ -598,6 +598,36 @@ typedef uint_least32_t uint_fast32_t;
 # define STDINT_H_UINTPTR_T_DEFINED
 #endif
 
+/*
+ *  cc370 (__MVS__): pointers are 32-bit words.  intptr_t stays int - the
+ *  ptrdiff_t the generic fallback below gave it before uintptr_t existed
+ *  here (libc370 #187) - so that no consumer's intptr_t changes type.
+ */
+
+#if defined (__MVS__) && !defined (STDINT_H_UINTPTR_T_DEFINED)
+# ifndef PRINTF_INTPTR_MODIFIER
+#  define PRINTF_INTPTR_MODIFIER ""
+# endif
+# ifndef PTRDIFF_MAX
+#  define PTRDIFF_MAX INT_MAX
+# endif
+# ifndef PTRDIFF_MIN
+#  define PTRDIFF_MIN INT_MIN
+# endif
+# ifndef INTPTR_MAX
+#  define INTPTR_MAX  INT_MAX
+# endif
+# ifndef INTPTR_MIN
+#  define INTPTR_MIN  INT_MIN
+# endif
+# ifndef UINTPTR_MAX
+#  define UINTPTR_MAX UINT_MAX
+# endif
+  typedef int intptr_t;
+  typedef unsigned int uintptr_t;
+# define STDINT_H_UINTPTR_T_DEFINED
+#endif
+
 #ifndef STDINT_H_UINTPTR_T_DEFINED
 # if defined (__alpha__) || defined (__ia64__) || defined (__x86_64__) || defined (_WIN64)
 #  define stdint_intptr_bits 64
