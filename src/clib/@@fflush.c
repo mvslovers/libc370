@@ -101,9 +101,9 @@ flushrec(FILE *fp, int newline)
     }
 
 reset:
-    /* reset buffer */
+    /* reset buffer.  filepos is NOT reset: it is the position in the
+       file, not in the record, and ftell() returns it (#200) */
     fp->upto = fp->buf;
-    fp->filepos = 0;
 
 quit:
     return err;

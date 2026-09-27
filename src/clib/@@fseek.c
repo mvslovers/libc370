@@ -1,5 +1,6 @@
 /* @@FSEEK.C - caller should hold lock on file handle */
 #include <stdio.h>
+#include <errno.h>
 
 int
 __fseek(FILE *fp, long int offset, int whence)
@@ -30,6 +31,10 @@ __fseek(FILE *fp, long int offset, int whence)
     else if (whence == SEEK_CUR) {
         newpos = oldpos + offset;
     }
+    else if (whence == SEEK_END && !(fp->flags & _FILE_FLAG_READ)) {
+        /* a write-only stream is always at its end (#200) */
+        newpos = oldpos + offset;
+    }
     else if (whence == SEEK_END) {
         /* read until end of file or error */
         while (__fread(buf, sizeof(buf), 1, fp) == 1) {
@@ -40,6 +45,21 @@ __fseek(FILE *fp, long int offset, int whence)
     else {
         /* not a whence we know -- there is no position to seek to, and
         ** every use of newpos below would be reading an unset local. */
+        return (-1);
+    }
+
+    /* A stream not open for reading cannot move (#200).  Every way of
+       getting somewhere else goes through a read - forward by __fgetc(),
+       backward by a reopen, which for "w" truncates the data set - and a
+       read on an output DCB served the stale write buffer instead
+       (fseek(3) after "ABCDEF" wrote "ABCxy" as a second record).  So it
+       may only "seek" to where it already is, which is also its end.
+       Anything else fails without touching the stream: no error
+       indicator, because that would refuse every later write (#149).
+       w+/r+/a+ (#189) is what will make a writer movable. */
+    if (!(fp->flags & _FILE_FLAG_READ)) {
+        if (newpos == oldpos) goto quit;
+        errno = ESPIPE;
         return (-1);
     }
 
