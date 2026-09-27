@@ -257,7 +257,7 @@
 # define INT8_MAX 0x7f
 #endif
 #ifndef INT8_MIN
-# define INT8_MIN INT8_C(0x80)
+# define INT8_MIN (-127 - 1)
 #endif
 #ifndef int8_t
 # if (SCHAR_MAX == INT8_MAX) || defined (S_SPLINT_S)
@@ -293,7 +293,7 @@
 # define INT16_MAX 0x7fff
 #endif
 #ifndef INT16_MIN
-# define INT16_MIN INT16_C(0x8000)
+# define INT16_MIN (-32767 - 1)
 #endif
 #ifndef int16_t
 #if (INT_MAX == INT16_MAX) || defined (S_SPLINT_S)
@@ -344,7 +344,7 @@
 # define INT32_MAX (0x7fffffffL)
 #endif
 #ifndef INT32_MIN
-# define INT32_MIN INT32_C(0x80000000)
+# define INT32_MIN (-INT32_C(2147483647) - 1)
 #endif
 #ifndef int32_t
 #if (LONG_MAX == INT32_MAX) || defined (S_SPLINT_S)
@@ -424,7 +424,7 @@
 # define INT64_MAX INT64_C (9223372036854775807)
 #endif
 #if !defined (INT64_MIN) && defined (INT64_C)
-# define INT64_MIN INT64_C (-9223372036854775808)
+# define INT64_MIN (-INT64_C (9223372036854775807) - 1)
 #endif
 #if !defined (UINT64_MAX) && defined (INT64_C)
 # define UINT64_MAX UINT64_C (18446744073709551615)
@@ -561,7 +561,7 @@ typedef uint_least32_t uint_fast32_t;
 #define  INT_FAST16_MAX  INT_LEAST16_MAX
 #define UINT_FAST32_MAX UINT_LEAST32_MAX
 #define  INT_FAST32_MAX  INT_LEAST32_MAX
-#define   INT_FAST8_MIN   IN_LEASTT8_MIN
+#define   INT_FAST8_MIN   INT_LEAST8_MIN
 #define  INT_FAST16_MIN  INT_LEAST16_MIN
 #define  INT_FAST32_MIN  INT_LEAST32_MIN
 #ifdef stdint_int64_defined
