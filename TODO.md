@@ -300,7 +300,7 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 
 ## Tier 1 — empty again
 
-### 1 · #198, #189 — the stdio write path (brexx370#140 waits on it)
+### 1 · #189 — the stdio write path (brexx370#140 waits on it)
 
 Measured on mvsdev 2026-09-27, all silent: every call reports success.
 **#198**: `"a"` truncates like `"w"`
@@ -308,10 +308,10 @@ everywhere except on a `DISP=MOD` DD (JOB00490, `test/mvs/tstappnd.c`, not yet
 committed; it lands with the fix), which hits brexx370 `EXECIO DISKA` and
 lua370 `io.open(f,"a")`. **#189** is the umbrella: direction check, `w+`/`a+`,
 and `r+` in place on sequential data sets. Goal and order are in the #189
-comment, agreed with brexx370: ~~#200~~ → ~~direction check~~ → #198 → `w+`/`a+`
+comment, agreed with brexx370: ~~#200~~ → ~~direction check~~ → ~~#198~~ → `w+`/`a+`
 → `r+`. In-place update of PDS members is out of scope.
 
-**Rolling tag `edge`** (since 2026-09-27, now on `96a2512` = direction check): brexx370's MVS CI
+**Rolling tag `edge`** (since 2026-09-27, now on `00a7978` = #198): brexx370's MVS CI
 clones libc370 at its `[toolchain]` pin, so it tracks `edge` in the meantime.
 **Move `edge` after each of these merges once its MVS gate is measured**
 (`git tag -fa edge <sha>` + `git push -f origin edge`), and cut a real release
@@ -1065,6 +1065,12 @@ changes: libc370 (an ABI change for `mbtowc` & co.) or cc370's `WCHAR_TYPE`.
 ## Recently landed
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
+
+- **#198** (PR #205, merged 2026-09-27) — `"a"` is OPEN EXTEND and appends. An
+  existing PDS member is refused (`EOPNOTSUPP`), whether it is named in the file
+  name or in the JCL, and a new one is created. `@@aopen` returns -45 for EXTEND
+  on a member: without that, a member named in the JCL abended SB14-04 at CLOSE
+  (JOB00538). Red JOB00536, green JOB00540. Appending to a member: #204.
 
 - **#189 direction check** (PR #203, merged 2026-09-27; #189 stays open) —
   `fgetc`/`fread`/`fputc`/`fwrite` in the wrong direction answer `EOF`/`0` +
