@@ -37,9 +37,22 @@
  * "missing binary operator" in #if and the wrong type in C, INT_FAST8_MIN
  * undeclared.  GREEN after the fix: rc 0, no output.
  *
- * Out of scope here and filed separately: INT8_C/INT16_C/UINT8_C/UINT16_C
- * are casts as well, and INT32_MAX has type int (limits.h defines it as
- * INT_MAX before <stdint.h> can).
+ * #192 extends it to the rest of 7.18.2 - 7.18.4, which failed as well:
+ *
+ *   INT32_MAX (and INT_LEAST32_MAX, INT_FAST32_MAX)  type int, not long:
+ *              limits.h, which <stdint.h> includes first, defined it as
+ *              INT_MAX
+ *   INT8_C, UINT8_C, INT16_C, UINT16_C  casts - the wrong type, not usable
+ *              in #if, and INT8_C(200) was -56 where C99 gives 200
+ *   SIZE_MAX   (~(size_t)0), a cast, so not usable in #if
+ *   SIG_ATOMIC_MAX  a shift through sizeof: wrong value, not usable in
+ *              #if; SIG_ATOMIC_MIN did not exist
+ *
+ * RED for #192, 2026-09-27, against main's header after #188: rc 1, 16
+ * lines of diagnostics.  GREEN after it: rc 0.  WCHAR_MIN/MAX and
+ * WINT_MIN/MAX are still missing; they wait on what wchar_t is (libc370
+ * says char, cc370 says int) and on a wint_t - #195 - and are not checked
+ * here.
  */
 #include <stdio.h>
 #include <stdint.h>
@@ -103,6 +116,55 @@ typedef char range_check[
 #endif
 #if INT32_MIN >= 0 || INT64_MIN >= 0
 #error a minimum is not negative in #if
+#endif
+
+/* ---- #192: the maximums, the constant macros, SIZE_MAX, SIG_ATOMIC ---- */
+
+/* type and value in C, and the same value in #if */
+#define LIM_OK(name, M, T, V)                                             \
+    typedef char name##_ltype[                                            \
+        __builtin_types_compatible_p(__typeof__(M), T) ? 1 : -1];         \
+    typedef char name##_lvalue[((M) == (V)) ? 1 : -1]
+
+LIM_OK(i32max,      INT32_MAX,        long,          2147483647L);
+LIM_OK(l32max,      INT_LEAST32_MAX,  long,          2147483647L);
+LIM_OK(f32max,      INT_FAST32_MAX,   long,          2147483647L);
+LIM_OK(u32max,      UINT32_MAX,       unsigned long, 4294967295UL);
+LIM_OK(u16max,      UINT16_MAX,       int,           65535);
+LIM_OK(sizemax,     SIZE_MAX,         unsigned long, 4294967295UL);
+LIM_OK(sigmax,      SIG_ATOMIC_MAX,   int,           2147483647);
+LIM_OK(sigmin,      SIG_ATOMIC_MIN,   int,           -2147483647 - 1);
+LIM_OK(c_i8,        INT8_C(1),        int,           1);
+LIM_OK(c_u8,        UINT8_C(1),       int,           1);
+LIM_OK(c_i16,       INT16_C(1),       int,           1);
+LIM_OK(c_u16,       UINT16_C(1),      int,           1);
+LIM_OK(c_i32,       INT32_C(1),       long,          1);
+LIM_OK(c_u32,       UINT32_C(1),      unsigned long, 1);
+LIM_OK(c_i64,       INT64_C(1),       long long,     1);
+LIM_OK(c_u64,       UINT64_C(1),      unsigned long long, 1);
+LIM_OK(c_imax,      INTMAX_C(1),      long long,     1);
+LIM_OK(c_umax,      UINTMAX_C(1),     unsigned long long, 1);
+/* a constant macro gives the value it is handed, not a truncated one */
+LIM_OK(c_i8_200,    INT8_C(200),      int,           200);
+LIM_OK(c_u16_max,   UINT16_C(65535),  int,           65535);
+
+/* the same in #if, where C99 requires every one of them to work */
+#if !(INT32_MAX == 2147483647) || !(INT_FAST32_MAX == 2147483647)
+#error INT32_MAX in #if
+#endif
+#if !(SIZE_MAX == 4294967295U)
+#error SIZE_MAX in #if
+#endif
+#if !(SIG_ATOMIC_MAX == 2147483647) || !(SIG_ATOMIC_MIN == -2147483647 - 1)
+#error SIG_ATOMIC_MAX / SIG_ATOMIC_MIN in #if
+#endif
+#if !(INT8_C(1) == 1) || !(UINT8_C(1) == 1) || !(INT16_C(1) == 1) \
+    || !(UINT16_C(1) == 1)
+#error INT8_C / UINT8_C / INT16_C / UINT16_C in #if
+#endif
+#if !(INT32_C(1) == 1) || !(UINT32_C(1) == 1) || !(INT64_C(1) == 1) \
+    || !(UINT64_C(1) == 1) || !(INTMAX_C(1) == 1) || !(UINTMAX_C(1) == 1)
+#error INT32_C ... UINTMAX_C in #if
 #endif
 
 int

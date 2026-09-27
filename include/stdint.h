@@ -178,7 +178,11 @@
 #include <signal.h>
 
 #ifndef SIZE_MAX
-# define SIZE_MAX (~(size_t)0)
+# if defined (__MVS__)
+#  define SIZE_MAX 4294967295UL  /* size_t is unsigned long; usable in #if */
+# else
+#  define SIZE_MAX (~(size_t)0)
+# endif
 #endif
 
 /*
@@ -247,7 +251,7 @@
 #ifndef uint8_t
 # if (UCHAR_MAX == UINT8_MAX) || defined (S_SPLINT_S)
     typedef unsigned char uint8_t;
-#   define UINT8_C(v) ((uint8_t) v)
+#   define UINT8_C(v) v
 # else
 #   error "Platform not supported"
 # endif
@@ -262,7 +266,7 @@
 #ifndef int8_t
 # if (SCHAR_MAX == INT8_MAX) || defined (S_SPLINT_S)
     typedef signed char int8_t;
-#   define INT8_C(v) ((int8_t) v)
+#   define INT8_C(v) v
 # else
 #   error "Platform not supported"
 # endif
@@ -277,10 +281,10 @@
 # ifndef PRINTF_INT16_MODIFIER
 #  define PRINTF_INT16_MODIFIER ""
 # endif
-# define UINT16_C(v) ((uint16_t) (v))
+# define UINT16_C(v) v ## U
 #elif (USHRT_MAX == UINT16_MAX)
   typedef unsigned short uint16_t;
-# define UINT16_C(v) ((uint16_t) (v))
+# define UINT16_C(v) v
 # ifndef PRINTF_INT16_MODIFIER
 #  define PRINTF_INT16_MODIFIER "h"
 # endif
@@ -298,13 +302,13 @@
 #ifndef int16_t
 #if (INT_MAX == INT16_MAX) || defined (S_SPLINT_S)
   typedef signed int int16_t;
-# define INT16_C(v) ((int16_t) (v))
+# define INT16_C(v) v
 # ifndef PRINTF_INT16_MODIFIER
 #  define PRINTF_INT16_MODIFIER ""
 # endif
 #elif (SHRT_MAX == INT16_MAX)
   typedef signed short int16_t;
-# define INT16_C(v) ((int16_t) (v))
+# define INT16_C(v) v
 # ifndef PRINTF_INT16_MODIFIER
 #  define PRINTF_INT16_MODIFIER "h"
 # endif
@@ -678,6 +682,15 @@ typedef uint_least32_t uint_fast32_t;
  *  Assumes sig_atomic_t is signed and we have a 2s complement machine.
  */
 
+#if defined (__MVS__)
+/* <signal.h> declares sig_atomic_t as int */
+# ifndef SIG_ATOMIC_MAX
+#  define SIG_ATOMIC_MAX INT_MAX
+# endif
+# ifndef SIG_ATOMIC_MIN
+#  define SIG_ATOMIC_MIN INT_MIN
+# endif
+#endif
 #ifndef SIG_ATOMIC_MAX
 # define SIG_ATOMIC_MAX ((((sig_atomic_t) 1) << (sizeof (sig_atomic_t)*CHAR_BIT-1)) - 1)
 #endif
