@@ -740,26 +740,16 @@ already settled the argument about where such a keyword has to live.
 
 ---
 
-### 38 · #187 — `long long` `*` `/` `%` `-` do not link — PR #191 open
-
-The six libgcc helpers cc370 calls (`@@MULDI3`, `@@DIVDI3`, `@@MODDI3`,
-`@@UDIVDI`, `@@UMODDI`, `@@NEGDI2`) plus `(u)intptr_t` for `__MVS__`. Green on
-host and mvsdev (JOB00449/00453), red on both (JOB00451). In this tier because
-brexx370's migration branch is waiting on it and carries `compat/libgcc64.c`
-until then. After merge, `ll / <const>` is still miscompiled (cc370#467) and
-`<<` still drops bit 63 (cc370#468); do not let consumers drop those workarounds.
-
----
-
 ## Tier 6 — latent, research, comfort
 
-### 39 · #190 — the remaining libgcc helpers cc370 can emit
+### 38 · #190 — the remaining libgcc helpers cc370 can emit
 
 `@@FIXDFD`/`@@FIXSFD` (float → `long long`, plain C, does not link today),
-`@@CMPDI2`, and `ffs`/`clz`/`ctz`. No consumer has asked for them. Four more
-names (`@@FIXUNS`, `@@FLOATD`, `@@POPCOU`, `@@PARITY`) collide through the
-8-character truncation and wait on cc370#470. The float conversions are hex
-float, so their gate is MVS-only.
+`@@CMPDI2`, `ffs`/`clz`/`ctz`, and the eight helpers cc370#470 (PR cc370#471,
+merged) renamed: `@@FXUNSF`/`@@FXUNDF`, `@@FLTDSF`/`@@FLTDDF`, `@@POPCSI`/
+`@@POPCDI`, `@@PARTSI`/`@@PARTDI` — the names and signatures are in the
+issue's second comment. No consumer has asked for them. The float conversions
+are hex float, so their gate is MVS-only.
 
 ### 15 · #114 — `osbclose()` does not free a buffer pool built by OPEN
 
@@ -1059,6 +1049,14 @@ survive at all: C99 7.19.5.4 closes it either way, and libc370 does not.
 ## Recently landed
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
+
+- **#187** (PR #191, merged 2026-09-27) — the six `long long` helpers cc370
+  calls (`@@MULDI3`, `@@DIVDI3`, `@@MODDI3`, `@@UDIVDI`, `@@UMODDI`, `@@NEGDI2`)
+  and `(u)intptr_t`. Reaches a consumer only after `make install` into the
+  sysroot and a relink. **Not fixed by it:** `ll / <const>` (cc370#467) and
+  `<<` dropping bit 63 (cc370#468, merged in cc370 but only once the installed
+  toolchain is rebuilt). A zero divisor abends S0C9, where brexx370's
+  `compat/libgcc64.c` returned all-ones.
 
 - **v1.0.6** (2026-09-13) — #176 and #149, both on what a `FILE` does when a
   write cannot be written, released together so consumers relink once.
