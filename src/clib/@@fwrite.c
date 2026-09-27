@@ -25,6 +25,13 @@ __fwrite(const void *vptr, size_t size, size_t nmemb, FILE *fp)
        returned full length and not one of those records was on disk.
        Rejecting at the call is the whole difference.  clearerr() lifts
        it, which is what a caller who has freed space must do. */
+    /* not open for writing (#189): record mode calls __awrite() directly,
+       on what is an input DCB */
+    if (!(fp->flags & _FILE_FLAG_WRITE)) {
+        errno = EBADF;
+        goto quit;
+    }
+
     if (fp->flags & _FILE_FLAG_ERROR) {
         errno = (fp->flags & _FILE_FLAG_ENOSPC) ? ENOSPC : EIO;
         goto quit;

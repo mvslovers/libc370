@@ -7,7 +7,12 @@ __fputc(int c, FILE *fp)
 {
     int     rc      = c;
 
-    if (!(fp->flags & _FILE_FLAG_WRITE)) goto quit; /* not in WRITE mode */
+    /* not open for writing (#189): this used to return c - success */
+    if (!(fp->flags & _FILE_FLAG_WRITE)) {
+        errno = EBADF;
+        rc = EOF;
+        goto quit;
+    }
     if (fp->flags & _FILE_FLAG_RECORD) goto quit;   /* in record mode    */
 
     /* Fail fast (#149).  fprintf(), fputs() and puts() all reach the

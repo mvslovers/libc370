@@ -18,6 +18,17 @@ __fgetc(FILE *fp)
     size_t          read;
     unsigned char   *dptr;
 
+    /* Not open for reading (#189).  A write stream's buffer holds what is
+       about to be written, and reading it handed that back (fgetc() after
+       "L1\n" on "w" returned 'L', and the next write produced "LL2",
+       mvsdev JOB00528); past the buffer, __aread() on the output DCB is
+       ABEND S400.  No error indicator: since #149 it would refuse every
+       later write on a stream that is fine. */
+    if (!(fp->flags & _FILE_FLAG_READ)) {
+        errno = EBADF;
+        goto quit;
+    }
+
     /* Fail fast (#149).  An input error is always a real device error -
        there is no x37 on a read - so re-driving it cannot succeed. */
     if (fp->flags & _FILE_FLAG_ERROR) {
