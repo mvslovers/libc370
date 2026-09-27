@@ -740,7 +740,26 @@ already settled the argument about where such a keyword has to live.
 
 ---
 
+### 38 · #187 — `long long` `*` `/` `%` `-` do not link — PR #191 open
+
+The six libgcc helpers cc370 calls (`@@MULDI3`, `@@DIVDI3`, `@@MODDI3`,
+`@@UDIVDI`, `@@UMODDI`, `@@NEGDI2`) plus `(u)intptr_t` for `__MVS__`. Green on
+host and mvsdev (JOB00449/00453), red on both (JOB00451). In this tier because
+brexx370's migration branch is waiting on it and carries `compat/libgcc64.c`
+until then. After merge, `ll / <const>` is still miscompiled (cc370#467) and
+`<<` still drops bit 63 (cc370#468); do not let consumers drop those workarounds.
+
+---
+
 ## Tier 6 — latent, research, comfort
+
+### 39 · #190 — the remaining libgcc helpers cc370 can emit
+
+`@@FIXDFD`/`@@FIXSFD` (float → `long long`, plain C, does not link today),
+`@@CMPDI2`, and `ffs`/`clz`/`ctz`. No consumer has asked for them. Four more
+names (`@@FIXUNS`, `@@FLOATD`, `@@POPCOU`, `@@PARITY`) collide through the
+8-character truncation and wait on cc370#470. The float conversions are hex
+float, so their gate is MVS-only.
 
 ### 15 · #114 — `osbclose()` does not free a buffer pool built by OPEN
 
