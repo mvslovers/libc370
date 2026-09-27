@@ -17,6 +17,8 @@ extern int  __fpshr(FILE *fp);
 extern int  __fpold(FILE *fp);
 extern int  __fpnew(FILE *fp);
 
+static int  appmem(FILE *fp);
+
 FILE *
 fopen(const char *fn, const char *mode)
 {
@@ -141,6 +143,11 @@ fopen(const char *fn, const char *mode)
     if (err) goto quit;
 
 doopen:
+    if ((fp->flags & _FILE_FLAG_APPEND) && fp->member[0] > ' ') {
+        /* "a" on a PDS member (#198) - see appmem() */
+        err = appmem(fp);
+        if (err) goto quit;
+    }
     err = __fpopen(fp);
 
 quit:
@@ -173,4 +180,45 @@ quit:
     }
 
     return fp;
+}
+
+/* appmem() - "a" on a PDS member (#198).
+
+   BPAM cannot extend a member in place: a member opened for output is
+   written at the end of the data set and replaces the old one only at the
+   STOW that CLOSE issues.  __aopen() therefore refuses EXTEND for a member,
+   and before #198 "a" never asked for EXTEND at all - it opened OUTPUT and
+   replaced the member, reporting success (mvsdev JOB00490).
+
+   So: a member that exists is refused with EOPNOTSUPP, and nothing is
+   written - its records stay as they are.  A member that does not exist
+   yet has nothing to append to, and "a" creates it as "w" would.
+   Appending by copying the old records forward is a separate issue.
+
+   The probe is an input open of the same DD and member: it succeeds
+   exactly when FIND finds the member. */
+__asm__("\n&FUNC    SETC 'appmem'");
+static int
+appmem(FILE *fp)
+{
+    char    fn[24];
+    FILE    *in;
+    int     dl;
+    int     ml;
+
+    /* the names may be blank padded */
+    for (dl = 0; dl < 8 && fp->ddname[dl] > ' '; dl++);
+    for (ml = 0; ml < 8 && fp->member[ml] > ' '; ml++);
+    sprintf(fn, "DD:%.*s(%.*s)", dl, fp->ddname, ml, fp->member);
+    in = fopen(fn, "r");
+    if (in) {
+        fclose(in);
+        errno = EOPNOTSUPP;
+        return 1;
+    }
+
+    /* no such member: create it, as "w" */
+    fp->flags &= ~_FILE_FLAG_APPEND;
+    errno = 0;
+    return 0;
 }
