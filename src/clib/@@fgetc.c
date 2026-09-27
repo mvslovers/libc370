@@ -36,6 +36,11 @@ __fgetc(FILE *fp)
         goto quit;
     }
 
+    /* a '+' stream whose DCB is writing turns it round first (#189) */
+    if (fp->flags & _FILE_FLAG_DCBOUT) {
+        if (__fpswt(fp, 0)) goto quit;
+    }
+
     if (fp->flags & (_FILE_FLAG_EOF |_FILE_FLAG_RECORD)) goto quit;
 
     if (fp->ungetch != -1) {

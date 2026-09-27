@@ -92,6 +92,20 @@ int __aread(void *handle, void *buf, size_t *len)
     return 0;
 }
 
+
+/* __fpswt() turns a '+' stream round (#189).  Plain streams never reach
+   it: fopen() gives a writer _FILE_FLAG_DCBOUT from the start, and the
+   FILEs below are built the same way.  A call here is a test failure. */
+static int fpswt_calls;
+int __fpswt(FILE *fp, int out)
+{
+    (void)fp; (void)out;
+    fpswt_calls++;
+    printf("  !! __fpswt() reached from a plain stream\n");
+    errno = EBADF;
+    return -1;
+}
+
 /* ---- the real thing ---------------------------------------------------- */
 
 #include "../../src/clib/@@fflush.c"
@@ -135,10 +149,10 @@ static void mkfile(unsigned short flags)
     errno = 0;
 }
 
-#define TXW (_FILE_FLAG_OPEN | _FILE_FLAG_WRITE)
+#define TXW (_FILE_FLAG_OPEN | _FILE_FLAG_WRITE | _FILE_FLAG_DCBOUT)
 #define TXR (_FILE_FLAG_OPEN | _FILE_FLAG_READ)
 #define RCW (_FILE_FLAG_OPEN | _FILE_FLAG_WRITE | _FILE_FLAG_BINARY \
-             | _FILE_FLAG_RECORD)
+             | _FILE_FLAG_RECORD | _FILE_FLAG_DCBOUT)
 #define RCR (_FILE_FLAG_OPEN | _FILE_FLAG_READ  | _FILE_FLAG_BINARY \
              | _FILE_FLAG_RECORD)
 

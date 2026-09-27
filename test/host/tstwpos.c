@@ -21,7 +21,8 @@
  * reaches the access method, and a __reopen() shim that only counts.
  *
  * CHECKS
- *   (1) ftell() after "L1\n", "L2\n", "AB" is 3, 6, 8                  RED
+ *   (1) ftell() after "L1\n", "L2\n", "AB" is 3, 6, 8 on V, and 81, 162,
+ *       164 on F 80 - the byte view of #189                            RED
  *   (2) fseek(3) on a write stream at 6 fails, errno ESPIPE             RED
  *   (3) ...without reading and without reopening                        RED
  *   (4) ...and the next write lands as its own record: no "ABCxy"       RED
@@ -109,6 +110,20 @@ FILE *__reopen(const char *fn, const char *mode, FILE *fp)
     return NULL;
 }
 
+
+/* __fpswt() turns a '+' stream round (#189).  Plain streams never reach
+   it: fopen() gives a writer _FILE_FLAG_DCBOUT from the start, and the
+   FILEs below are built the same way.  A call here is a test failure. */
+static int fpswt_calls;
+int __fpswt(FILE *fp, int out)
+{
+    (void)fp; (void)out;
+    fpswt_calls++;
+    printf("  !! __fpswt() reached from a plain stream\n");
+    errno = EBADF;
+    return -1;
+}
+
 /* ---- the real thing ---------------------------------------------------- */
 
 #include "../../src/clib/@@fflush.c"
@@ -165,7 +180,7 @@ static int anyrec(const char *s)
     return 0;
 }
 
-#define TXW (_FILE_FLAG_OPEN | _FILE_FLAG_WRITE)
+#define TXW (_FILE_FLAG_OPEN | _FILE_FLAG_WRITE | _FILE_FLAG_DCBOUT)
 #define TXR (_FILE_FLAG_OPEN | _FILE_FLAG_READ)
 
 int main(void)
@@ -176,14 +191,25 @@ int main(void)
 
     printf("=== tstwpos: #200 - the position of a write stream ===\n\n");
 
-    /* (1) ftell() counts from the start of the file */
+    /* (1) ftell() counts from the start of the file - in the byte view a
+       reader of the same data set sees (#189): on F 80 a text record is
+       80 bytes plus '\n', on V it is what was written plus '\n' */
     mkfile(TXW);
     put("L1\n");    t1 = f.filepos;
     put("L2\n");    t2 = f.filepos;
     put("AB");      t3 = f.filepos;
-    printf("  ftell: %ld %ld %ld\n", t1, t2, t3);
+    printf("  ftell F 80: %ld %ld %ld\n", t1, t2, t3);
+    check(t1 == 81 && t2 == 162 && t3 == 164,
+          "(1) F 80: ftell() after \"L1\\n\", \"L2\\n\", \"AB\" is 81, 162, 164");
+    mkfile(TXW);
+    f.recfm = _FILE_RECFM_V;
+    f.lrecl = 84;
+    put("L1\n");    t1 = f.filepos;
+    put("L2\n");    t2 = f.filepos;
+    put("AB");      t3 = f.filepos;
+    printf("  ftell V 84: %ld %ld %ld\n", t1, t2, t3);
     check(t1 == 3 && t2 == 6 && t3 == 8,
-          "(1) ftell() after \"L1\\n\", \"L2\\n\", \"AB\" is 3, 6, 8");
+          "(1v) V 84: ftell() after \"L1\\n\", \"L2\\n\", \"AB\" is 3, 6, 8");
 
     /* (2)-(5) seek backwards on a write stream */
     mkfile(TXW);
@@ -217,11 +243,12 @@ int main(void)
     mkfile(TXW);
     put("L1\nAB");
     rc = __fseek(&f, 0, SEEK_CUR);
-    check(rc == 0 && f.filepos == 5 && aread_calls == 0 && nrec == 2,
-          "(7a) fseek(0, SEEK_CUR) succeeds, flushes, stays at 5");
+    /* the flush ends "AB" as a record of its own: 81 + 81 */
+    check(rc == 0 && f.filepos == 162 && aread_calls == 0 && nrec == 2,
+          "(7a) fseek(0, SEEK_CUR) succeeds, flushes, is at 162");
     rc = __fseek(&f, 0, SEEK_END);
-    check(rc == 0 && f.filepos == 5 && aread_calls == 0 && reopen_calls == 0,
-          "(7b) fseek(0, SEEK_END) on a write stream succeeds, stays at 5");
+    check(rc == 0 && f.filepos == 162 && aread_calls == 0 && reopen_calls == 0,
+          "(7b) fseek(0, SEEK_END) on a write stream succeeds, stays at 162");
 
     /* (8) a read stream still counts what it hands out */
     mkfile(TXR);

@@ -47,8 +47,10 @@ __fpopen(FILE *fp)
        which overwrote the data set from the start: "a" was "w" except on a
        DISP=MOD DD (mvsdev JOB00490).  __aopen() takes EXTEND on DASD and
        tape and quietly makes it OUTPUT on anything else (SYSOUT, units). */
-    if (fp->flags & _FILE_FLAG_WRITE) {
-        mode = (fp->flags & _FILE_FLAG_APPEND) ? 3 : 1;
+    if (fp->flags & _FILE_FLAG_DCBOUT) {
+        /* EXTEND also for any output open of a '+' stream after its first:
+           a direction switch must not truncate (#189) */
+        mode = (fp->flags & (_FILE_FLAG_APPEND | _FILE_FLAG_EXTEND)) ? 3 : 1;
     }
     if (fp->flags & _FILE_FLAG_BSAM)  mode = mode + 8;
 
@@ -96,6 +98,23 @@ __fpopen(FILE *fp)
 
     /* get the recfm, lrecl, and blksize from the DCB */
     dcb = fp->dcb;
+
+    if ((fp->flags & _FILE_FLAG_READ) && (fp->flags & _FILE_FLAG_WRITE)) {
+        /* '+' needs a device it can reopen the other way and position on:
+           DASD.  Not SYSOUT, not a terminal, not tape (#189) */
+        if ((dcb->dcbdevt & 0xF0) != 0x20) {
+            __aclose(fp->dcb);
+            fp->dcb     = 0;
+            fp->asmbuf  = 0;
+            fp->flags  &= ~_FILE_FLAG_OPEN;
+            errno       = EINVAL;
+            err         = 1;
+            goto quit;
+        }
+        /* from now on, output opens are EXTEND */
+        if (fp->flags & _FILE_FLAG_DCBOUT) fp->flags |= _FILE_FLAG_EXTEND;
+    }
+
     fp->recfm   = dcb->dcbrecfm;
     fp->lrecl   = dcb->dcblrecl;
     fp->blksize = dcb->dcbblksi;
@@ -111,10 +130,15 @@ __fpopen(FILE *fp)
         fp->buf     = calloc(1, i + 8);
         if (!fp->buf) goto quit;
 
-        if (fp->flags & _FILE_FLAG_WRITE) {
+        if (fp->flags & _FILE_FLAG_DCBOUT) {
             /* set file handle buffer pointers */
             fp->upto    = fp->buf;
             fp->endbuf  = fp->buf + i;
+        }
+        else {
+            /* empty: the first read goes to the access method */
+            fp->upto    = fp->buf;
+            fp->endbuf  = fp->buf;
         }
     }
 
