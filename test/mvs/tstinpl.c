@@ -25,6 +25,13 @@
  *   VBSHORT  INV2 the same, fseek(3), "Q\n" -> refused errno 45 at the
  *                 '\n'; the Q stays written -> L1,Q2,L3
  *   MEMBER   INM(MEMR) L1,L2: r+ reads L1, a write -> errno 45, unchanged
+ *   ALT      INA2 L1..L5, brexx370's way - a seek before every call:
+ *                 Done 3 at 162, back to 81 and read (L2), to 162 and read
+ *                 (Done 3), M1 at 0, to 324 and read (L5)
+ *                 -> L2, Done 3, L5; disk M1,L2,Done 3,L4,L5.  Every
+ *                 backward seek commits the dirty record, closes the UPDAT
+ *                 DCB (@@atrout rewrites) and reopens - the path none of
+ *                 the cases above runs
  *
  * RC: 0 = every case matched, 8 = at least one did not.  Every verdict also
  * goes to the console via wtof().
@@ -51,6 +58,11 @@
  *   VBSHORT  fputs=-1 errno=45 disk=[L1,Q2,L3]
  *   MEMBER   read=[L1] fputc=-1 errno=45 disk=[L1,L2]
  *
+ * ALT added after review, JOB00576, CC 0000:
+ *   ALT      at81=[L2] at162=[Done 3] at324=[L5] disk=[M1,L2,Done 3,L4,L5]
+ *   sizeof(FILE)=192.  Same run: tstplus 15/15, tstwrpos, tstappnd and
+ *   tstupdat unchanged (JOB00577-00580).
+ *
  * The first run (JOB00565) failed VBSAME/VBSHORT on the TEST DATA: IEBGENER
  * from cards writes VB records of 80 data bytes, so fseek(3) landed inside
  * record 1 and the library, correctly, wrote there and refused the '\n'.
@@ -64,6 +76,11 @@
 #include <clibwto.h>
 
 static int bad = 0;
+
+/* the FILE keeps its size and layout: xflags was carved from mode[], and
+   httpd's display module reads the struct by offset.  cc370 refuses to
+   compile this probe if the size moved */
+typedef char file_is_192_bytes[(sizeof(FILE) == 192) ? 1 : -1];
 
 static void
 trim(char *s)
@@ -248,6 +265,33 @@ main(int argc, char **argv)
                 && !strcmp(seen, "L1,L2"), d);
     }
 
-    printf("TSTINPL RC=%d\n", bad ? 8 : 0);
+    /* ALT */
+    if ((fp = rplus("ALT", "'IBMUSER.LIBC370.T189.INA2'", "r+")) != NULL) {
+        char r2[100], r3[100], r5[100];
+        int  o2, o3, o5;
+
+        fseek(fp, 162, SEEK_SET);
+        fputs("Done 3\n", fp);
+        fseek(fp, 81, SEEK_SET);
+        o2 = fgets(r2, sizeof(r2), fp) != NULL;
+        if (o2) trim(r2);
+        fseek(fp, 162, SEEK_SET);
+        o3 = fgets(r3, sizeof(r3), fp) != NULL;
+        if (o3) trim(r3);
+        fseek(fp, 0, SEEK_SET);
+        fputs("M1", fp);
+        fseek(fp, 324, SEEK_SET);
+        o5 = fgets(r5, sizeof(r5), fp) != NULL;
+        if (o5) trim(r5);
+        fclose(fp);
+        contents("'IBMUSER.LIBC370.T189.INA2'", seen, sizeof(seen));
+        sprintf(d, "at81=[%s] at162=[%s] at324=[%s] disk=[%s]",
+                o2 ? r2 : "EOF", o3 ? r3 : "EOF", o5 ? r5 : "EOF", seen);
+        verdict("ALT", o2 && !strcmp(r2, "L2") && o3 && !strcmp(r3, "Done 3")
+                && o5 && !strcmp(r5, "L5")
+                && !strcmp(seen, "M1,L2,Done 3,L4,L5"), d);
+    }
+
+    printf("TSTINPL RC=%d sizeof(FILE)=%d\n", bad ? 8 : 0, (int)sizeof(FILE));
     return bad ? 8 : 0;
 }

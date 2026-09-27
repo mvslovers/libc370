@@ -77,6 +77,8 @@ static int              nrec;           /* records on "disk"               */
 static int              cur;            /* next record to read             */
 static int              n_open, n_output, n_extend, n_input, n_updat, n_close;
 static int              updat;          /* open UPDAT: __awrite replaces  */
+static int              n_upwrite;      /* __awrite calls in UPDAT mode    */
+static int              upwrite_rc;     /* what the next UPDAT write answers */
 static unsigned char    devt = 0x2E;    /* 3380                            */
 static DCB              fake_dcb;
 static unsigned char    ab[128];
@@ -117,6 +119,8 @@ int __awrite(void *handle, unsigned char **buf, size_t *sz)
     (void)handle;
     if (updat) {
         /* UPDAT: replace the record __aread() returned last, same length */
+        n_upwrite++;
+        if (upwrite_rc) { int rc = upwrite_rc; upwrite_rc = 0; return rc; }
         if (cur > 0 && *sz == 80) memcpy(disk[cur-1], *buf, 80);
         return 0;
     }
@@ -429,6 +433,48 @@ int main(void)
         put("L3\n");
         shut();
         check(n_extend == 1 && ondisk(L123, 3), "at the end a write still appends (EXTEND)");
+
+        /* fflush() in the middle of a record, then more of the same record */
+        {
+            static const char *const XYZ[] = { "XYZ", "L2", "L3" };
+            preload(L123, 3);
+            op("r+");
+            n_upwrite = 0;
+            put("X");
+            __fflush(&f);
+            put("YZ");
+            shut();
+            check(n_upwrite == 2 && ondisk(XYZ, 3),
+                  "fflush() mid-record, then more: two rewrites, record XYZ");
+        }
+
+        /* a failed rewrite: EIO and the error indicator */
+        preload(L123, 3);
+        op("r+");
+        n_upwrite = 0;
+        put("X");
+        upwrite_rc = 8;
+        rc = __fflush(&f);
+        e = errno;
+        shut();
+        check(rc == 8 && e == EIO && (f.flags & _FILE_FLAG_ERROR) && n_upwrite == 1,
+              "a failed rewrite: EIO, error indicator");
+
+        /* fail fast (#149): a dirty record on a stream already in error is
+           not driven to the access method.  updrec() clears DIRTY before
+           it writes, so a failed rewrite leaves nothing dirty; this is the
+           guard for any other way into that state */
+        preload(L123, 3);
+        op("r+");
+        n_upwrite = 0;
+        put("X");
+        f.flags |= _FILE_FLAG_ERROR;
+        errno = 0;
+        rc = __fflush(&f);
+        e = errno;
+        shut();
+        check(rc != 0 && e == EIO && n_upwrite == 0 && !(f.xflags & _FILE_XFLAG_DIRTY),
+              "dirty + error indicator: no __awrite, EIO, the record is dropped");
     }
 
     printf("cheap seeks (brexx370)\n");

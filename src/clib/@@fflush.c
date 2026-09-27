@@ -47,6 +47,13 @@ flushrec(FILE *fp, int newline)
     /* a record overwritten in place goes back through the UPDAT DCB
        it was read from (#189) - that DCB reads, so it comes first */
     if (fp->xflags & _FILE_XFLAG_DIRTY) {
+        if (fp->flags & _FILE_FLAG_ERROR) {
+            /* fail fast (#149): a rewrite that failed is not re-driven */
+            fp->xflags &= ~_FILE_XFLAG_DIRTY;
+            if (fp->flags & _FILE_FLAG_ENOSPC) { err = 12; errno = ENOSPC; }
+            else                               { err =  8; errno = EIO;    }
+            goto quit;
+        }
         err = updrec(fp);
         goto quit;
     }
