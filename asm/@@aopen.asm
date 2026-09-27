@@ -60,6 +60,8 @@ SUBPOOL  EQU   0                                                      *
 *                                                                     *
 *  OPEN input failed return code is: -37                              *
 *  OPEN output failed return code is: -39                             *
+*  EXTEND/UPDAT refused for a PDS member return code is: -45          *
+*  (named by the caller or in the JCL; libc370 #198)                  *
 *  OPEN out of storage return code is: -12 (ENOMEM); -1 when even    *
 *  the internal save area could not be obtained (#83)                 *
 *                                                                     *
@@ -418,6 +420,8 @@ BADOPIN  DS    0H
 BADOPOUT DS    0H
 FAILDCB  N     R4,=F'1'           Mask other option bits
          LA    R7,37(R4,R4)       Preset OPEN error code
+         B     FREEDCB
+FAILMEM  LA    R7,45              Refused for a PDS member (#198)
 FREEDCB  FREEMAIN R,LV=ZDCBLEN,A=(R10),SP=SUBPOOL  Free DCB area
          LCR   R7,R7              Set return and reason code
          B     RETURNOP           Go return to caller with negative RC
@@ -432,14 +436,21 @@ WRITING  LTR   R9,R9
          TM    DS1DSORG,DS1DSGPO  See if DSORG=PO
          BZ    BADOPOUT           Is not PDS, fail request
          TM    WWORK,X'06'   ANY NON-RITE OPTION ?
-         BNZ   FAILDCB            NOT ALLOWED FOR PDS
+         BNZ   FAILMEM            NOT ALLOWED FOR PDS
          MVC   JFCBELNM,0(R9)
          OI    JFCBIND1,JFCPDS
          OI    JFCBTSDM,JFCVSL    Just in case
          B     WNOMEM2            Go to move DCB info
 WNOMEM   DS    0H
          TM    JFCBIND1,JFCPDS    See if a member name in JCL
-         BO    WNOMEM2            Is member name, go to continue OPEN
+         BZ    WNOPDS             No member name in JCL
+* A member named in the JCL takes the same restriction as one passed
+* in R9.  OPEN EXTEND on it writes a new copy that CLOSE cannot STOW
+* over the old one: ABEND B14-04 (libc370 #198, mvsdev JOB00538).
+         TM    WWORK,X'06'   ANY NON-RITE OPTION ?
+         BNZ   FAILMEM            NOT ALLOWED FOR A MEMBER
+         B     WNOMEM2            Is member name, go to continue OPEN
+WNOPDS   DS    0H
 * See if DSORG=PO but no member so OPEN output would destroy directory
          TM    DS1DSORG,DS1DSGPO  See if DSORG=PO
          BZ    WNOMEM2            Is not PDS, go OPEN

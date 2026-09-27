@@ -43,7 +43,13 @@ __fpopen(FILE *fp)
         goto quit;
     }
 
-    if (fp->flags & _FILE_FLAG_WRITE) mode = mode + 1;
+    /* "a" is OPEN EXTEND, mode 3 (#198).  It used to be mode 1, OUTPUT,
+       which overwrote the data set from the start: "a" was "w" except on a
+       DISP=MOD DD (mvsdev JOB00490).  __aopen() takes EXTEND on DASD and
+       tape and quietly makes it OUTPUT on anything else (SYSOUT, units). */
+    if (fp->flags & _FILE_FLAG_WRITE) {
+        mode = (fp->flags & _FILE_FLAG_APPEND) ? 3 : 1;
+    }
     if (fp->flags & _FILE_FLAG_BSAM)  mode = mode + 8;
 
     if (fp->member[0] > ' ') {
@@ -75,7 +81,13 @@ __fpopen(FILE *fp)
     fp->dcb = __aopen(ddname, &mode, &recfm, &lrecl,
                 &blksize, &asmbuf, pmember);
 
-    if ((int)fp->dcb < 0) goto quit;
+    if ((int)fp->dcb < 0) {
+        /* -45: EXTEND refused for a PDS member, the one named in the
+           JCL included - OPEN would take it and CLOSE would abend
+           B14-04 (#198, mvsdev JOB00538) */
+        if ((int)fp->dcb == -45) errno = EOPNOTSUPP;
+        goto quit;
+    }
 
     /* success */
     fp->flags   |= _FILE_FLAG_OPEN;
