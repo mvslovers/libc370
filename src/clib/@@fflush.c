@@ -10,6 +10,7 @@
 #define finwrite(fp)        (__awrite((fp)->dcb, &dptr, &lenwrite))
 
 static int flushrec(FILE *fp, int newline);
+static int updrec(FILE *fp);
 static int fixflush(FILE *fp, int fill);
 static int varflush(FILE *fp);
 static int tso_putline(char *buf, unsigned len);
@@ -42,6 +43,20 @@ flushrec(FILE *fp, int newline)
     unsigned char   *dptr;
     size_t          lenwrite;
     int             fill;
+
+    /* a record overwritten in place goes back through the UPDAT DCB
+       it was read from (#189) - that DCB reads, so it comes first */
+    if (fp->xflags & _FILE_XFLAG_DIRTY) {
+        if (fp->flags & _FILE_FLAG_ERROR) {
+            /* fail fast (#149): a rewrite that failed is not re-driven */
+            fp->xflags &= ~_FILE_XFLAG_DIRTY;
+            if (fp->flags & _FILE_FLAG_ENOSPC) { err = 12; errno = ENOSPC; }
+            else                               { err =  8; errno = EIO;    }
+            goto quit;
+        }
+        err = updrec(fp);
+        goto quit;
+    }
 
     if (fp->flags & _FILE_FLAG_RECORD)   goto quit; /* not using buffer  */
     if (!(fp->flags & _FILE_FLAG_DCBOUT)) goto quit; /* DCB does not write */
@@ -127,6 +142,57 @@ reset:
     fp->upto = fp->buf;
 
 quit:
+    return err;
+}
+
+/* updrec() - hand the record in fp->buf, changed in place, to __awrite()
+ * (#189).  On an UPDAT DCB __awrite() replaces the record __aread() last
+ * returned - which is the one in fp->buf, because __fgetc() commits
+ * before it reads the next - and the block goes back to the disk when
+ * the next block is read or at CLOSE.  The record keeps its length: F is
+ * padded to LRECL (text with blanks), V and U go back as long as they
+ * came.  filepos does not move.
+ */
+__asm__("\n&FUNC    SETC 'updrec'");
+static int
+updrec(FILE *fp)
+{
+    int             err;
+    unsigned char   *dptr   = fp->asmbuf;
+    size_t          len     = fp->endbuf - fp->buf;
+    size_t          lenwrite;
+
+    fp->xflags &= ~_FILE_XFLAG_DIRTY;
+
+    /* text records carry the '\n' __fgetc() added; it is not data */
+    if (!(fp->flags & _FILE_FLAG_BINARY) && len > 0) len--;
+
+    switch(fp->recfm & _FILE_RECFM_TYPE) {
+    case _FILE_RECFM_F:
+        memset(dptr, (fp->flags & _FILE_FLAG_BINARY) ? 0 : ' ', fp->lrecl);
+        memcpy(dptr, fp->buf, len);
+        lenwrite = fp->lrecl;
+        break;
+    case _FILE_RECFM_V:
+        dptr[0] = (unsigned char)((len + 4) >> 8);
+        dptr[1] = (unsigned char)((len + 4) & 0xFF);
+        dptr[2] = 0;
+        dptr[3] = 0;
+        memcpy(dptr + 4, fp->buf, len);
+        lenwrite = len + 4;
+        break;
+    default:
+        memcpy(dptr, fp->buf, len);
+        lenwrite = len;
+        break;
+    }
+
+    err = __awrite(fp->dcb, &dptr, &lenwrite);
+    if (err) {
+        fp->flags |= _FILE_FLAG_ERROR;
+        if (err == 12) fp->flags |= _FILE_FLAG_ENOSPC;
+        errno = (err == 12) ? ENOSPC : EIO;
+    }
     return err;
 }
 

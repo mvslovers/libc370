@@ -85,9 +85,9 @@ __fpswt(FILE *fp, int out)
         }
 
     }
-    else if (fp->flags & _FILE_FLAG_DCBOUT) {
-        if (__fflush(fp)) return -1;
-    }
+
+    /* pending output, or a record overwritten in place, goes first */
+    if (__fflush(fp)) return -1;
 
     if (redcb(fp, out)) {
         e = errno ? errno : EIO;
@@ -143,4 +143,82 @@ skipto(FILE *fp, long pos)
     while (fp->filepos < pos) {
         if (__fgetc(fp) == EOF) break;
     }
+}
+
+/* __fpupc() - write c over the byte at the position (#189, slice 2).
+ *
+ * For a '+' stream whose reading DCB is open UPDAT (_FILE_XFLAG_UPDAT):
+ * the record that holds the position is in fp->buf; c replaces a byte of
+ * it, and the record goes back to the disk, same length, when the next
+ * record is read, the stream turns round or closes (_FILE_XFLAG_DIRTY,
+ * @@fflush.c updrec()).  A record never grows and never moves:
+ *
+ *   - text, '\n' where the record's own '\n' is: nothing to change, the
+ *     position moves on to the next record;
+ *   - text, '\n' inside an F record: the rest of the record becomes
+ *     blanks and the position moves to the next record - the byte view,
+ *     so LINEOUT f,"Done 3",3 over "Line 3" works;
+ *   - text, '\n' inside a V or U record: it would shorten the record -
+ *     EOPNOTSUPP;
+ *   - any other byte where the record's '\n' is: it would lengthen the
+ *     record - EOPNOTSUPP.  Bytes before it in the same write stay
+ *     written.
+ *
+ * At the end of the data set there is nothing to overwrite: the stream
+ * turns round to EXTEND, as in slice 1, and the caller writes normally.
+ *
+ * Returns 0 when c was written here, 1 when the DCB now writes at the end
+ * and the caller carries on, -1 with errno set on refusal or error.
+ */
+int
+__fpupc(FILE *fp, int c)
+{
+    unsigned char   *last;
+    int             k;
+    int             text = !(fp->flags & _FILE_FLAG_BINARY);
+
+    fp->ungetch = -1;
+
+    if (fp->upto >= fp->endbuf) {
+        /* at a record boundary: bring in the record to overwrite */
+        k = __fgetc(fp);
+        if (fp->flags & _FILE_FLAG_ERROR) return -1;
+        if (k == EOF) {
+            /* the end: append */
+            if (__fpswt(fp, 1)) return -1;
+            return 1;
+        }
+        fp->upto--;
+        fp->filepos--;
+    }
+
+    /* where a text record's '\n' is */
+    last = text ? fp->endbuf - 1 : fp->endbuf;
+
+    if (text && fp->upto >= last) {
+        if (c == '\n') {
+            fp->upto++;
+            fp->filepos++;
+            return 0;
+        }
+        errno = EOPNOTSUPP;
+        return -1;
+    }
+
+    if (text && c == '\n') {
+        if ((fp->recfm & _FILE_RECFM_TYPE) != _FILE_RECFM_F) {
+            errno = EOPNOTSUPP;
+            return -1;
+        }
+        memset(fp->upto, ' ', (size_t)(last - fp->upto));
+        fp->filepos += (unsigned)(fp->endbuf - fp->upto);
+        fp->upto     = fp->endbuf;
+        fp->xflags  |= _FILE_XFLAG_DIRTY;
+        return 0;
+    }
+
+    *fp->upto++ = (unsigned char)c;
+    fp->filepos++;
+    fp->xflags |= _FILE_XFLAG_DIRTY;
+    return 0;
 }

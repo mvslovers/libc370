@@ -24,8 +24,15 @@ SUBPOOL  EQU   0                                                      *
          SR    R0,R0
          ST    R0,0(,R3)          Return null in case of EOF
          ST    R0,0(,R4)          Return null in case of EOF
+* In UPDAT mode the rewrite waits until the block is left - see REREAD.
+* Rewriting here, before every record, made @@ATROUT clear BUFFCURR and
+* the next record came from the NEXT block: the rest of the rewritten
+* block was skipped, and a second rewrite landed on the wrong record
+* (libc370 #189, mvsdev JOB00557/JOB00559).
+         CLI   OPENCLOS,X'84'     UPDAT mode?
+         BE    READNOFX           Yes; not here
          FIXWRITE ,               For OUTIN request
-         L     R6,=F'-1'          Prepare for EOF signal
+READNOFX L     R6,=F'-1'          Prepare for EOF signal
          TM    IOPFLAGS,IOFKEPT   Saved record ?
          BZ    READQEOF           No; check for EOF
          LM    R8,R9,KEPTREC      Get prior address & length
@@ -45,7 +52,10 @@ READQEOF TM    IOPFLAGS,IOFLEOF   Prior EOF ?
 REREAD   SLR   R6,R6              Clear default end-of-file indicator
          ICM   R8,B'1111',BUFFCURR  Load address of next record
          BNZ   DEBLOCK            Block in memory, go de-block it
-         L     R8,BUFFADDR        Load address of input buffer
+         CLI   OPENCLOS,X'84'     UPDAT mode?
+         BNE   READNOUP           No
+         FIXWRITE ,               Rewrite the block being left (#189)
+READNOUP L     R8,BUFFADDR        Load address of input buffer
          L     R9,BLKSIZE         Load block size to read
          CLI   RECFMIX,4          RECFM=Vxx ?
          BE    READ               No, deblock

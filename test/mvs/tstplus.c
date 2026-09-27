@@ -11,7 +11,8 @@
  * CASES (FB 80 unless said; the JCL pre-loads and pre-allocates):
  *   WPLUS   w+  on an empty data set: L1 L2, ftell, fseek(0), read back,
  *               write L3 at the end            -> L1,L2,L3
- *   WMID    w+  write in the middle            -> EOF, errno 45, L1,L2
+ *   WMID    w+  write in the middle            -> slice 1: EOF, errno 45;
+ *               since slice 2 it overwrites in place: L1,X2
  *   RPLUS   r+  on L1..L3: read L1, SEEK_END, ftell, write L4 -> L1..L4
  *   APLUS   a+  on L1,L2: ftell, write L3, fseek(0), read L1, write L4
  *                                              -> L1..L4
@@ -68,6 +69,9 @@
  *   PARTW   ftell=2 seek=0 disk=[ABCD]
  *   PARTWP  ftell=2 seek=0 disk=[ABCD]
  *   PARTA   ftell=164 seek=0 disk=[L1,L2,ABCD]
+ *
+ * With #189 slice 2 (in place), JOB00572: all fifteen OK; WMID now reads
+ * fputc=231 ('X') disk=[L1,X2] - the write in the middle overwrites.
  *
  * Before slice 1 every one of these opens returned NULL: __fpmode()
  * refused '+'.  Regression on the same library: tstwrpos JOB00547 (FTELL
@@ -171,7 +175,9 @@ main(int argc, char **argv)
         fclose(fp);
         contents("'IBMUSER.LIBC370.T189.PLW'", seen, sizeof(seen));
         sprintf(d, "fputc=%d errno=%d disk=[%s]", rc, e, seen);
-        verdict("WMID", rc == EOF && e == EOPNOTSUPP && !strcmp(seen, "L1,L2"), d);
+        /* slice 2: the write overwrites in place (was EOPNOTSUPP in
+           slice 1, JOB00545/00553) */
+        verdict("WMID", rc == 'X' && !strcmp(seen, "L1,X2"), d);
     }
     else verdict("WMID", 0, "fopen w+ NULL");
 
