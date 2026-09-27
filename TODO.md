@@ -738,6 +738,13 @@ wants the coordinated rebuild this tier exists for. A mode-string keyword in the
 same comma-separated family as #167's `rlse` is the obvious shape, and #167
 already settled the argument about where such a keyword has to live.
 
+### 39 · #188 — the `<stdint.h>` minimums were positive or unusable — PR open
+
+`INT32_MIN` was +2147483648, `INT64_MIN`/`INTMAX_MIN` warn on every use (an
+error under `-Werror`), `INT8_MIN`/`INT16_MIN` fail in `#if`, `INT_FAST8_MIN`
+was undefined. In this tier because brexx370 carries its own `INT32_MIN` until
+the fix reaches the sysroot. The gate is compile-time: `test/mvs/tststdint.c`.
+
 ---
 
 ## Tier 6 — latent, research, comfort
@@ -750,6 +757,13 @@ merged) renamed: `@@FXUNSF`/`@@FXUNDF`, `@@FLTDSF`/`@@FLTDDF`, `@@POPCSI`/
 `@@POPCDI`, `@@PARTSI`/`@@PARTDI` — the names and signatures are in the
 issue's second comment. No consumer has asked for them. The float conversions
 are hex float, so their gate is MVS-only.
+
+### 40 · #192 — the rest of `<stdint.h>`: `INT8_C`/`INT16_C` casts, `INT32_MAX` type
+
+Split off #188. `INT8_C`/`INT16_C`/`UINT8_C`/`UINT16_C` are casts (`INT8_C(200)` is
+-56 today, 200 in C99), `INT32_MAX` has type `int` because `limits.h` defines it
+first, `SIZE_MAX` fails in `#if`. No consumer uses any of them; the `INT32_MAX`
+type change is the one that could reach a format check.
 
 ### 15 · #114 — `osbclose()` does not free a buffer pool built by OPEN
 
