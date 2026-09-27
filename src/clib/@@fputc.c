@@ -23,9 +23,9 @@ __fputc(int c, FILE *fp)
     if (!(fp->flags & _FILE_FLAG_BINARY)) {
         /* yes, is this character a newline? */
         if (c == '\n') {
-            /* yes, flush buffer to disk */
+            /* yes, end the record - an empty one too (#199) */
             fp->filepos++;
-            if (__fflush(fp)) rc = EOF;
+            if (__fflnl(fp)) rc = EOF;
             goto quit;
         }
     }
