@@ -44,7 +44,7 @@ flushrec(FILE *fp, int newline)
     int             fill;
 
     if (fp->flags & _FILE_FLAG_RECORD)   goto quit; /* not using buffer  */
-    if (!(fp->flags & _FILE_FLAG_WRITE)) goto quit; /* not in WRITE mode */
+    if (!(fp->flags & _FILE_FLAG_DCBOUT)) goto quit; /* DCB does not write */
     if (fp->upto == fp->buf && !newline) goto quit; /* nothing pending   */
 
     /* Fail fast (#149).  Re-driving a stream that has already failed
@@ -98,6 +98,27 @@ flushrec(FILE *fp, int newline)
         fp->flags |= _FILE_FLAG_ERROR;
         if (err == 12) fp->flags |= _FILE_FLAG_ENOSPC;
         errno = (err == 12) ? ENOSPC : EIO;
+    }
+    else if (!(fp->flags & _FILE_FLAG_BINARY)) {
+        /* The byte view (#189): a text record reads back as its data -
+           on F padded with blanks to LRECL, on U an empty line is the
+           one blank fixflush() wrote - followed by '\n'.  Count what was
+           written the same way, or fseek(ftell()) would not land where
+           a reader of the same data set is: after "L1\n" on FB 80 the
+           position is 81, not 3.  A flush without a '\n' still ends the
+           record, which reads back with one. */
+        size_t  len = fp->upto - fp->buf;
+        long    pad = 0;
+
+        switch(fp->recfm & _FILE_RECFM_TYPE) {
+        case _FILE_RECFM_F:
+            if (len < (size_t)fp->lrecl) pad = (long)(fp->lrecl - len);
+            break;
+        case _FILE_RECFM_U:
+            if (len == 0) pad = 1;
+            break;
+        }
+        fp->filepos += pad + (newline ? 0 : 1);
     }
 
 reset:

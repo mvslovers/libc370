@@ -33,6 +33,21 @@ struct _file {
 #define _FILE_FLAG_TERM		0x0080	/* ... TERM opened in __fpstar()		*/
 #define _FILE_FLAG_RLSE     0x0040  /* ... release unused space at CLOSE    */
 
+/* '+' streams (#189).  A stream opened "r+", "w+" or "a+" has both
+   _FILE_FLAG_READ and _FILE_FLAG_WRITE set: those say what the caller may
+   do.  Its DCB is still opened one way at a time, and _FILE_FLAG_DCBOUT
+   says which: set, the open DCB writes (OUTPUT or EXTEND); clear, it
+   reads.  __fpswt() turns it round.  Plain "w" and "a" streams carry
+   DCBOUT from the start, plain "r" never.
+   _FILE_FLAG_EXTEND: any output open from here on is EXTEND, never OUTPUT
+   - a direction switch must not truncate what "w+" already wrote.
+   _FILE_FLAG_POSEND: "a+" - the position is the end of the data set, and
+   its size has not been counted yet.  fopen() counts it before it returns;
+   ftell()/fseek() would count it if anything else left it set. */
+#define _FILE_FLAG_POSEND   0x0020  /* ... position = end, size not known   */
+#define _FILE_FLAG_DCBOUT   0x0010  /* ... the open DCB writes              */
+#define _FILE_FLAG_EXTEND   0x0008  /* ... reopen for output as EXTEND      */
+
 /* _FILE_FLAG_ENOSPC rides along with _FILE_FLAG_ERROR and records WHICH
    error set it, because the FILE itself keeps no errno and @@AWRITE clears
    IOSFLAGS before it returns.  A fail-fast return (#149) needs it to say
@@ -158,6 +173,7 @@ extern char *   __caller(char   *caller);
 */
 extern int      __fflush(FILE *fp);
 extern int      __fflnl(FILE *fp);  /* '\n' on a text stream: always a record */
+extern int      __fpswt(FILE *fp, int out); /* turn a '+' stream's DCB (#189) */
 extern int      __fgetc(FILE *fp);
 extern char *   __fgets(char *s, int n, FILE *fp);
 extern int      __fputc(int c, FILE *fp);

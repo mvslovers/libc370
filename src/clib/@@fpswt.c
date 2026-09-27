@@ -1,0 +1,146 @@
+/* @@FPSWT.C - caller should hold lock on file handle */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <mvssupa.h>
+
+extern int  __fpopen(FILE *fp);
+
+static int  redcb(FILE *fp, int out);
+static void skipto(FILE *fp, long pos);
+
+/* __fpswt() - turn a '+' stream's DCB round (#189).
+ *
+ * A stream opened "r+", "w+" or "a+" may read and write, but its DCB is
+ * opened one way at a time (_FILE_FLAG_DCBOUT).  A read on a writing DCB,
+ * or a write on a reading one, lands here: the DCB is closed and the SAME
+ * DD is opened again the other way.  Nothing is allocated, so DISP and
+ * the data set stay as they are, and an output open after the first is
+ * EXTEND (_FILE_FLAG_EXTEND, set by __fpopen()), so a switch never
+ * truncates.
+ *
+ * out == 0, to reading: pending output is flushed, the DD reopens for
+ *   input and the stream skips forward to where it was - O(n), the price
+ *   of a backward seek.  "a+" right after fopen() (_FILE_FLAG_POSEND)
+ *   reads to the end instead: that is its position, and fopen() counts it
+ *   this way before anything can be pending.
+ *
+ * out != 0, to writing: only at the end of the data set for now.  "a+"
+ *   always writes there, whatever its read position - it reads on to the
+ *   end first, so its position stays known.  "r+"/"w+" must BE
+ *   at the end: the next byte is peeked, and a stream that still has data
+ *   refuses the write with EOPNOTSUPP - overwriting in the middle is the
+ *   UPDAT half of #189.  A PDS member cannot be extended, so a member
+ *   that has switched to reading only reads from then on.
+ *
+ * Returns 0, or -1 with errno set.  A stream whose reopen fails is left
+ * open the way it was where that is possible; otherwise it is marked in
+ * error, since there is no DCB left to use.
+ */
+int
+__fpswt(FILE *fp, int out)
+{
+    long    pos = fp->filepos;
+    int     had;
+    int     c;
+    int     e;
+
+    if (!(fp->flags & _FILE_FLAG_OPEN)) {
+        errno = EBADF;
+        return -1;
+    }
+
+    if (out) {
+        if (fp->member[0] > ' ') {
+            errno = EOPNOTSUPP;
+            return -1;
+        }
+
+        if ((fp->flags & _FILE_FLAG_APPEND) && !(fp->flags & _FILE_FLAG_EOF)) {
+            /* "a+" writes at the end whatever its read position: read on
+               to it, so that the position stays known */
+            while (__fgetc(fp) != EOF) ;
+            if (fp->flags & _FILE_FLAG_ERROR) return -1;
+            pos = fp->filepos;
+        }
+        else if (!(fp->flags & _FILE_FLAG_APPEND) && !(fp->flags & _FILE_FLAG_EOF)) {
+            /* "r+"/"w+": is there anything after the position? */
+            had = (fp->ungetch != -1);
+            c = __fgetc(fp);
+            if (fp->flags & _FILE_FLAG_ERROR) return -1;
+            if (c != EOF) {
+                /* put it back where it came from */
+                if (had) {
+                    fp->ungetch = c;
+                }
+                else {
+                    fp->upto--;
+                    fp->filepos--;
+                }
+                errno = EOPNOTSUPP;
+                return -1;
+            }
+            pos = fp->filepos;
+        }
+
+    }
+    else if (fp->flags & _FILE_FLAG_DCBOUT) {
+        if (__fflush(fp)) return -1;
+    }
+
+    if (redcb(fp, out)) {
+        e = errno ? errno : EIO;
+        /* a failed switch to writing: keep the stream readable */
+        if (out && redcb(fp, 0) == 0) {
+            fp->flags &= ~_FILE_FLAG_POSEND;
+            skipto(fp, pos);
+        }
+        if (!(fp->flags & _FILE_FLAG_OPEN)) fp->flags |= _FILE_FLAG_ERROR;
+        errno = e;
+        return -1;
+    }
+
+    if (out) {
+        fp->filepos = pos;
+        return 0;
+    }
+
+    skipto(fp, pos);
+    return 0;
+}
+
+/* close the DCB and open the same DD again, reading or writing */
+__asm__("\n&FUNC    SETC 'redcb'");
+static int
+redcb(FILE *fp, int out)
+{
+    if (fp->flags & _FILE_FLAG_OPEN) __aclose(fp->dcb);
+    fp->dcb     = 0;
+    fp->asmbuf  = 0;
+    if (fp->buf) free(fp->buf);
+    fp->buf     = 0;
+    fp->upto    = 0;
+    fp->endbuf  = 0;
+    fp->ungetch = -1;
+    fp->flags  &= ~(_FILE_FLAG_OPEN | _FILE_FLAG_DCBOUT | _FILE_FLAG_EOF);
+    if (out) fp->flags |= _FILE_FLAG_DCBOUT;
+    errno = 0;
+    return __fpopen(fp);
+}
+
+/* read forward from the start to pos - or to the end for POSEND */
+__asm__("\n&FUNC    SETC 'skipto'");
+static void
+skipto(FILE *fp, long pos)
+{
+    fp->filepos = 0;
+    if (fp->flags & _FILE_FLAG_POSEND) {
+        while (__fgetc(fp) != EOF) ;
+        fp->flags &= ~_FILE_FLAG_POSEND;
+        return;
+    }
+    while (fp->filepos < pos) {
+        if (__fgetc(fp) == EOF) break;
+    }
+}

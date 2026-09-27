@@ -11,8 +11,7 @@ __fpmode(FILE *fp, const char *mode)
     int     i;
     int     j;
 
-    /* mode="(r|w)[b][+][,][record]" */
-    /* no support for READ+WRITE, so error in that case */
+    /* mode="(r|w|a)[b][+][b][,options]" - '+' opens for update (#189) */
     memset(fp->mode, 0, sizeof(fp->mode));
     for(i=0;i < sizeof(fp->mode) && *mode; i++, mode++) {
         fp->mode[i] = tolower(*mode);
@@ -35,7 +34,11 @@ __fpmode(FILE *fp, const char *mode)
             fp->flags |= _FILE_FLAG_WRITE;
             break;
         case '+':
-            goto quit;
+            /* r+, w+, a+: the caller may read and write.  The letter
+               before it says how the data set is opened - see check: */
+            if (!(fp->flags & (_FILE_FLAG_READ | _FILE_FLAG_WRITE))) goto quit;
+            fp->flags |= _FILE_FLAG_READ | _FILE_FLAG_WRITE;
+            break;
         case ',':
             /* copy remaining mode string to file handle mode */
             for(j=i; j < sizeof(fp->mode) && *mode; j++) {
@@ -58,10 +61,29 @@ __fpmode(FILE *fp, const char *mode)
     }
 
 check:
-    if ((fp->flags & _FILE_FLAG_READ) || (fp->flags & _FILE_FLAG_WRITE)) {
-        /* success */
-        err = 0;
+    if (!(fp->flags & (_FILE_FLAG_READ | _FILE_FLAG_WRITE))) goto quit;
+
+    if ((fp->flags & _FILE_FLAG_READ) && (fp->flags & _FILE_FLAG_WRITE)) {
+        /* '+' works on the byte stream; record i/o has no position to
+           switch direction at */
+        if (fp->flags & _FILE_FLAG_RECORD) goto quit;
+        /* "a+": the position is the end, not yet counted */
+        if (fp->flags & _FILE_FLAG_APPEND) fp->flags |= _FILE_FLAG_POSEND;
+        /* only the first open of "w+" may truncate: every output open of
+           "r+" and "a+" is EXTEND.  Without this the first write on an
+           "r+" stream opened OUTPUT and emptied the data set */
+        if (fp->mode[0] != 'w') fp->flags |= _FILE_FLAG_EXTEND;
     }
+
+    /* the direction the DCB opens in first: "w", "a", "w+" and "a+"
+       write, "r" and "r+" read */
+    if ((fp->flags & _FILE_FLAG_WRITE)
+        && !((fp->flags & _FILE_FLAG_READ) && fp->mode[0] == 'r')) {
+        fp->flags |= _FILE_FLAG_DCBOUT;
+    }
+
+    /* success */
+    err = 0;
 
 quit:
     return err;

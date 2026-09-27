@@ -117,13 +117,16 @@ fopen(const char *fn, const char *mode)
         }
     }
 
-    if (fp->flags & _FILE_FLAG_READ) {
+    if ((fp->flags & _FILE_FLAG_READ) && !(fp->flags & _FILE_FLAG_WRITE)) {
         /* READ, allocate dataset DISP=SHR */
         err = __fpshr(fp);
     }
     else {
-        /* WRITE, allocate dataset */
-        if (fp->dataset[0]=='&') {
+        /* WRITE, allocate dataset.  A '+' stream can write, so it is
+           allocated as a writer - DISP=OLD for a data set (#189) */
+        int mustexist = (fp->flags & _FILE_FLAG_READ) && fp->mode[0] == 'r';
+
+        if (fp->dataset[0]=='&' && !mustexist) {
             /* temp dataset being allocated, try alloc DISP=NEW on VIO */
             err = __fptmp(fp);
             if (!err) goto doopen;
@@ -137,8 +140,8 @@ fopen(const char *fn, const char *mode)
         err = __fpold(fp);
         if (!err) goto doopen;
 
-        /* try allocating dataset DISP=NEW */
-        err = __fpnew(fp);
+        /* try allocating dataset DISP=NEW - but "r+" opens what exists */
+        if (!mustexist) err = __fpnew(fp);
     }
     if (err) goto quit;
 
@@ -149,6 +152,13 @@ doopen:
         if (err) goto quit;
     }
     err = __fpopen(fp);
+
+    if (!err && (fp->flags & _FILE_FLAG_POSEND)) {
+        /* "a+" is at the end of what is there (#189).  Count it now, while
+           nothing is pending: read to the end, then EXTEND.  Counting later
+           would flush a half-written line first and split it. */
+        if (__fpswt(fp, 0) || __fpswt(fp, 1)) err = 1;
+    }
 
 quit:
     if (err) {
@@ -217,8 +227,9 @@ appmem(FILE *fp)
         return 1;
     }
 
-    /* no such member: create it, as "w" */
-    fp->flags &= ~_FILE_FLAG_APPEND;
+    /* no such member: create it, as "w".  For "a+" that also means the
+       position is 0 and known */
+    fp->flags &= ~(_FILE_FLAG_APPEND | _FILE_FLAG_POSEND | _FILE_FLAG_EXTEND);
     errno = 0;
     return 0;
 }

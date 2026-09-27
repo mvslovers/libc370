@@ -57,6 +57,12 @@
  *                                          the same three records back
  *   FTELL / SEEKW unchanged - that is #200.
  *
+ * NOTE the FTELL expectation moved with #189 slice 1: on FB 80 the write
+ * side now counts in the byte view a reader sees - 80 bytes plus '\n'
+ * per record - so the answer is 81 162 164, not the 3 6 8 below.  On VB
+ * it is still 3 6 8.  C only asks that fseek(ftell()) come back to the
+ * same place, and a '+' stream needs writer and reader to agree.
+ *
  * AFTER the #200 fix, JOB00522, CC 0000:
  *
  *   FTELL   OK          3 6 8
@@ -164,10 +170,12 @@ ftells(const char *fn)
     fputs("AB", fp);    t3 = ftell(fp);
     fclose(fp);
 
-    printf("FTELL  after L1\\n=%ld L2\\n=%ld AB=%ld (C: 3 6 8) VERDICT %s\n",
-           t1, t2, t3, (t1 == 3 && t2 == 6 && t3 == 8) ? "OK" : "WRONG");
+    /* FB 80: the byte view of #189, 81 bytes per record (was 3 6 8
+       until the #189 slice-1 change; see the header) */
+    printf("FTELL  after L1\\n=%ld L2\\n=%ld AB=%ld (81 162 164) VERDICT %s\n",
+           t1, t2, t3, (t1 == 81 && t2 == 162 && t3 == 164) ? "OK" : "WRONG");
     wtof("TSTWRPOS FTELL %s %ld %ld %ld",
-         (t1 == 3 && t2 == 6 && t3 == 8) ? "OK" : "WRONG", t1, t2, t3);
+         (t1 == 81 && t2 == 162 && t3 == 164) ? "OK" : "WRONG", t1, t2, t3);
 }
 
 static void

@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <errno.h>
 
+static int plusseek(FILE *fp, long offset, int whence);
+
 int
 __fseek(FILE *fp, long int offset, int whence)
 {
@@ -19,11 +21,19 @@ __fseek(FILE *fp, long int offset, int whence)
     fp->flags   &= 0xFFFF - _FILE_FLAG_ERROR - _FILE_FLAG_ENOSPC;
     fp->flags   &= 0xFFFF - _FILE_FLAG_EOF;
 
-    /* get current offset in this stream */
-    oldpos = fp->filepos;
-    if (fp->flags & _FILE_FLAG_WRITE) {
-        __fflush(fp);
+    /* '+' streams position themselves - and never through __reopen(),
+       which would open "w+" for OUTPUT again and truncate (#189) */
+    if ((fp->flags & _FILE_FLAG_READ) && (fp->flags & _FILE_FLAG_WRITE)) {
+        return plusseek(fp, offset, whence);
     }
+
+    /* No flush here (#189).  On a text stream a flush ENDS the record, so
+       it would split a half-written line in two and move the position -
+       fseek(fp, ftell(fp), SEEK_SET) after fputs("AB") failed, and a line
+       built from several writes with a seek between them came out as
+       several records.  A writer can only "seek" to where it is (below),
+       and that needs nothing written. */
+    oldpos = fp->filepos;
 
     if (whence == SEEK_SET) {
         newpos = offset;
@@ -126,4 +136,90 @@ quit:
     /* success */
     fp->ungetch = -1;   /* discard the unget character  */
     return (0);
+}
+
+/* plusseek() - fseek() on a '+' stream (#189).
+ *
+ * Cheap where it can be, because brexx370 seeks before every read and
+ * write: to where the stream already is costs nothing, forward in a
+ * reading DCB reads on, backward within the current record moves in the
+ * buffer.  Anything else turns the DCB round - __fpswt(), which reopens
+ * the same DD for input and skips to the position: O(n).
+ */
+__asm__("\n&FUNC    SETC 'plusseek'");
+static int
+plusseek(FILE *fp, long offset, int whence)
+{
+    long    newpos;
+    long    start;
+
+    /* A writing DCB is at the end (slice 1 writes nowhere else), so a
+       target equal to where it is - SEEK_SET to ftell(), SEEK_CUR 0,
+       SEEK_END 0 - needs nothing: above all no flush, which would end a
+       half-written text line (see __fseek()) */
+    if ((fp->flags & _FILE_FLAG_DCBOUT) && !(fp->flags & _FILE_FLAG_POSEND)) {
+        newpos = (whence == SEEK_SET) ? offset : fp->filepos + offset;
+        if ((whence == SEEK_SET || whence == SEEK_CUR || whence == SEEK_END)
+            && newpos == fp->filepos) return 0;
+    }
+
+    /* the end: "a+" before its size is known, or SEEK_END */
+    if ((fp->flags & _FILE_FLAG_POSEND) || whence == SEEK_END) {
+        if (fp->flags & _FILE_FLAG_POSEND) {
+            /* __fpswt() reads to the end when POSEND is set */
+            if (__fpswt(fp, 0)) return -1;
+        }
+        else if (!(fp->flags & _FILE_FLAG_DCBOUT)) {
+            while (__fgetc(fp) != EOF) ;
+        }
+        /* a writing DCB without POSEND is at the end already: slice 1
+           writes only there */
+        fp->flags &= 0xFFFF - _FILE_FLAG_EOF;
+    }
+
+    if      (whence == SEEK_SET) newpos = offset;
+    else if (whence == SEEK_CUR) newpos = fp->filepos + offset;
+    else if (whence == SEEK_END) newpos = fp->filepos + offset;
+    else {
+        errno = EINVAL;
+        return -1;
+    }
+    if (newpos < 0) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    /* where it is: nothing to do */
+    if (newpos == fp->filepos) return 0;
+
+    if (!(fp->flags & _FILE_FLAG_DCBOUT)) {
+        if (newpos > fp->filepos) {
+            /* forward in the reading DCB */
+            while (fp->filepos < newpos) {
+                if (__fgetc(fp) == EOF) break;
+            }
+            goto check;
+        }
+        /* backward, but still in the buffer */
+        start = fp->filepos - (long)(fp->upto - fp->buf);
+        if (fp->ungetch == -1 && newpos >= start) {
+            fp->upto   -= (size_t)(fp->filepos - newpos);
+            fp->filepos = newpos;
+            return 0;
+        }
+    }
+
+    /* turn round (or reopen) and skip to it */
+    fp->filepos = newpos;
+    if (__fpswt(fp, 0)) return -1;
+
+check:
+    if (fp->filepos != newpos) {
+        /* past the end: the stream stays at the end */
+        fp->flags &= 0xFFFF - _FILE_FLAG_EOF;
+        errno = EINVAL;
+        return -1;
+    }
+    fp->flags &= 0xFFFF - _FILE_FLAG_EOF;
+    return 0;
 }

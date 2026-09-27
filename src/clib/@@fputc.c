@@ -24,6 +24,14 @@ __fputc(int c, FILE *fp)
         goto quit;
     }
 
+    /* a '+' stream whose DCB is reading turns it round first (#189) */
+    if (!(fp->flags & _FILE_FLAG_DCBOUT)) {
+        if (__fpswt(fp, 1)) {
+            rc = EOF;
+            goto quit;
+        }
+    }
+
     /* is this a text file? */
     if (!(fp->flags & _FILE_FLAG_BINARY)) {
         /* yes, is this character a newline? */
