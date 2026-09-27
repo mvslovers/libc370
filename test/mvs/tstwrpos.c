@@ -19,7 +19,12 @@
  *           back the stale write buffer.  Expected if the reading is right:
  *           records "ABCDEF","ABCxy".
  *
- * EMPTY runs on FB 80 and on VB 84; FTELL and SEEKW on FB 80.  The JCL
+ *   DIRECT  (added for #189 step 1) fgetc() on a "w" stream, fputs() on
+ *           an "r" stream.  The read drove __aread() against the output
+ *           DCB: ABEND S400, then B14-10 at CLOSE (brexx370 on MVS/CE).
+ *           Runs LAST, because before the fix it ends the step.
+ *
+ * EMPTY runs on FB 80 and on VB 84; FTELL, SEEKW and DIRECT on FB 80.  The JCL
  * pre-allocates the targets.  Records are read back with "r" and printed
  * with trailing blanks trimmed.
  *
@@ -59,6 +64,17 @@
  *           A write-only stream cannot move until #189 brings w+/r+/a+;
  *           the refused seek leaves the data set as written.
  *   EMPTYF / EMPTYV still KEPT n=3 [a||b].
+ *
+ * DIRECT, before the #189 direction check, JOB00528, CC 0000 - and no
+ * S400: the read did not get past the write buffer, so it was worse than
+ * an abend.  fgetc() on "w" returned 211 (EBCDIC 'L', the stale "L1") and
+ * the next fputs("L2\n") wrote "LL2"; fputs() on "r" returned 2, errno 0:
+ *
+ *   DIRECT  OTHER       fgetc=211/0 fputs=2/0 n=2 [L1|LL2]
+ *
+ * AFTER, JOB00533, CC 0000:
+ *
+ *   DIRECT  REFUSED     fgetc=-1/9 fputs=-1/9 n=2 [L1|L2]   (9 = EBADF)
  */
 #include <stdio.h>
 #include <string.h>
@@ -185,6 +201,47 @@ seekw(const char *fn)
     wtof("TSTWRPOS SEEKW %s rc=%d errno=%d n=%d [%s]", verdict, rc, e, n, seen);
 }
 
+static void
+direct(const char *fn)
+{
+    FILE    *fp = openw("DIRECT", fn);
+    char    seen[80];
+    int     n;
+    int     c;
+    int     er, ew;
+    int     rc;
+    const char *verdict;
+
+    if (!fp) return;
+    fputs("L1\n", fp);
+    wtof("TSTWRPOS DIRECT fgetc on \"w\" next");
+    errno = 0;
+    c = fgetc(fp);
+    er = errno;
+    fputs("L2\n", fp);
+    fclose(fp);
+
+    fp = fopen(fn, "r");
+    if (!fp) {
+        printf("DIRECT fopen(\"%s\",\"r\") failed errno=%d\n", fn, errno);
+        bad = 1;
+        return;
+    }
+    errno = 0;
+    rc = fputs("X\n", fp);
+    ew = errno;
+    fclose(fp);
+
+    n = readback("DIRECT", fn, seen, sizeof(seen));
+    if (n < 0) return;
+    verdict = (c == EOF && er == EBADF && rc == EOF && ew == EBADF
+               && n == 2 && strcmp(seen, "L1|L2") == 0) ? "REFUSED" : "OTHER";
+    printf("DIRECT fgetc(w)=%d errno=%d fputs(r)=%d errno=%d "
+           "VERDICT %s (%d records: %s)\n", c, er, rc, ew, verdict, n, seen);
+    wtof("TSTWRPOS DIRECT %s fgetc=%d/%d fputs=%d/%d n=%d [%s]",
+         verdict, c, er, rc, ew, n, seen);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -192,6 +249,7 @@ main(int argc, char **argv)
     empty("EMPTYV", "'IBMUSER.LIBC370.T189.VB'");
     ftells("'IBMUSER.LIBC370.T189.FB'");
     seekw("'IBMUSER.LIBC370.T189.FB'");
+    direct("'IBMUSER.LIBC370.T189.FB'");       /* last: S400 before the fix */
 
     printf("TSTWRPOS RC=%d\n", bad ? 8 : 0);
     return bad ? 8 : 0;
