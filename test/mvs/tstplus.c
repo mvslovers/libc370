@@ -20,6 +20,15 @@
  *                                              -> EOF errno 45, L1,L2
  *   RNEW    r+  on a data set that does not exist -> NULL
  *   SYSOUT  w+  on a SYSOUT DD                  -> NULL, errno 22 (EINVAL)
+ *   ANEW    a+  on a new member                 -> created, ftell 0
+ *   ANEWDS  a+  on a new data set               -> created, ftell 0
+ *   RMEM    r+  on an existing member: reads; a write -> EOF errno 45
+ *   DDMEM   w+  through a DD with the member in the JCL: write, read back,
+ *               write again -> EOF errno 45, the stream falls back to
+ *               reading (__fpswt's recovery path)
+ *   PARTW, PARTWP, PARTA   "AB", fseek(ftell()), "CD\n" with "w", "w+" and
+ *               "a+" -> ONE record ABCD: a seek to where the stream is must
+ *               not end a half-written line
  *
  * Every verdict also goes to the console via wtof().
  *
@@ -46,6 +55,19 @@
  *   WMEM    seek=0 read=[L1,L2] fputs=-1 errno=45 disk=[L1,L2]
  *   RNEW    fopen=NULL
  *   SYSOUT  fopen=NULL errno=22
+ *
+ * After the review fixes (a seek to the current position does not flush;
+ * "a+" counts its size at open), JOB00553, CC 0000 - all fifteen OK, the
+ * eight above unchanged, plus:
+ *
+ *   ANEW    ftell=0 seek=0 read=[L1] disk=[L1]
+ *   ANEWDS  ftell=0 seek=0 read=[L1] more=0 disk=[L1]
+ *   RMEM    read=[L1] fputs=-1 errno=45 disk=[L1,L2]
+ *   DDMEM   seek=0 read=[L1] fputs=-1 errno=45 ftell=162 disk=[L1,L2]
+ *           (@@aopen -45, and __fpswt() fell back to reading at 162)
+ *   PARTW   ftell=2 seek=0 disk=[ABCD]
+ *   PARTWP  ftell=2 seek=0 disk=[ABCD]
+ *   PARTA   ftell=164 seek=0 disk=[L1,L2,ABCD]
  *
  * Before slice 1 every one of these opens returned NULL: __fpmode()
  * refused '+'.  Regression on the same library: tstwrpos JOB00547 (FTELL
@@ -237,6 +259,127 @@ main(int argc, char **argv)
     if (fp) fclose(fp);
     sprintf(d, "fopen=%s errno=%d", fp ? "ok" : "NULL", e);
     verdict("SYSOUT", fp == NULL && e == EINVAL, d);
+
+    /* ANEW: a+ on a member that does not exist yet - created */
+    fp = fopen("'IBMUSER.LIBC370.T189.PLM(MEMA)'", "a+");
+    if (!fp) {
+        sprintf(d, "fopen a+ new member NULL errno=%d", errno);
+        verdict("ANEW", 0, d);
+    }
+    else {
+        t1 = ftell(fp);
+        fputs("L1\n", fp);
+        rc = fseek(fp, 0, SEEK_SET);
+        ok = getline1(fp, a, sizeof(a));
+        fclose(fp);
+        contents("'IBMUSER.LIBC370.T189.PLM(MEMA)'", seen, sizeof(seen));
+        sprintf(d, "ftell=%ld seek=%d read=[%s] disk=[%s]", t1, rc, ok ? a : "?", seen);
+        verdict("ANEW", t1 == 0 && rc == 0 && ok && !strcmp(a, "L1") && !strcmp(seen, "L1"), d);
+    }
+
+    /* ANEWDS: a+ on a data set that does not exist yet - created */
+    fp = fopen("'IBMUSER.LIBC370.T189.PLN2'", "a+");
+    if (!fp) {
+        sprintf(d, "fopen a+ new data set NULL errno=%d", errno);
+        verdict("ANEWDS", 0, d);
+    }
+    else {
+        t1 = ftell(fp);
+        fputs("L1\n", fp);
+        rc = fseek(fp, 0, SEEK_SET);
+        ok = getline1(fp, a, sizeof(a));
+        e  = getline1(fp, b, sizeof(b));
+        fclose(fp);
+        contents("'IBMUSER.LIBC370.T189.PLN2'", seen, sizeof(seen));
+        sprintf(d, "ftell=%ld seek=%d read=[%s] more=%d disk=[%s]", t1, rc, ok ? a : "?", e, seen);
+        verdict("ANEWDS", t1 == 0 && rc == 0 && ok && !strcmp(a, "L1") && !e
+                && !strcmp(seen, "L1"), d);
+    }
+
+    /* RMEM: r+ on an existing member - reads, cannot write */
+    fp = fopen("'IBMUSER.LIBC370.T189.PLM(MEMR)'", "r+");
+    if (!fp) {
+        sprintf(d, "fopen r+ member NULL errno=%d", errno);
+        verdict("RMEM", 0, d);
+    }
+    else {
+        ok = getline1(fp, a, sizeof(a));
+        fseek(fp, 0, SEEK_END);
+        errno = 0;
+        rc = fputs("L3\n", fp);
+        e = errno;
+        fclose(fp);
+        contents("'IBMUSER.LIBC370.T189.PLM(MEMR)'", seen, sizeof(seen));
+        sprintf(d, "read=[%s] fputs=%d errno=%d disk=[%s]", ok ? a : "?", rc, e, seen);
+        verdict("RMEM", ok && !strcmp(a, "L1") && rc == EOF && e == EOPNOTSUPP
+                && !strcmp(seen, "L1,L2"), d);
+    }
+
+    /* DDMEM: w+ through a DD whose MEMBER is in the JCL - the C side does
+       not see the member, so writing after a read reaches @@aopen's -45
+       and __fpswt() has to fall back to reading where it was */
+    fp = fopen("DD:DDMEM", "w+");
+    if (!fp) {
+        sprintf(d, "fopen w+ DD:DDMEM NULL errno=%d", errno);
+        verdict("DDMEM", 0, d);
+    }
+    else {
+        fputs("L1\nL2\n", fp);
+        rc = fseek(fp, 0, SEEK_SET);
+        ok = getline1(fp, a, sizeof(a));
+        fseek(fp, 0, SEEK_END);
+        errno = 0;
+        t1 = fputs("L3\n", fp);
+        e = errno;
+        t2 = ftell(fp);
+        fclose(fp);
+        contents("DD:DDMEM", seen, sizeof(seen));
+        sprintf(d, "seek=%d read=[%s] fputs=%ld errno=%d ftell=%ld disk=[%s]",
+                rc, ok ? a : "?", t1, e, t2, seen);
+        verdict("DDMEM", rc == 0 && ok && !strcmp(a, "L1") && t1 == EOF
+                && e == EOPNOTSUPP && !strcmp(seen, "L1,L2"), d);
+    }
+
+    /* PARTW / PARTWP / PARTA: one line from several writes with a seek
+       to the current position between them - one record, not two */
+    fp = fopen("'IBMUSER.LIBC370.T189.PLP'", "w");
+    if (fp) {
+        fputs("AB", fp);
+        t1 = ftell(fp);
+        rc = fseek(fp, t1, SEEK_SET);
+        fputs("CD\n", fp);
+        fclose(fp);
+        contents("'IBMUSER.LIBC370.T189.PLP'", seen, sizeof(seen));
+        sprintf(d, "ftell=%ld seek=%d disk=[%s]", t1, rc, seen);
+        verdict("PARTW", t1 == 2 && rc == 0 && !strcmp(seen, "ABCD"), d);
+    }
+    else verdict("PARTW", 0, "fopen w NULL");
+
+    fp = fopen("'IBMUSER.LIBC370.T189.PLQ'", "w+");
+    if (fp) {
+        fputs("AB", fp);
+        t1 = ftell(fp);
+        rc = fseek(fp, t1, SEEK_SET);
+        fputs("CD\n", fp);
+        fclose(fp);
+        contents("'IBMUSER.LIBC370.T189.PLQ'", seen, sizeof(seen));
+        sprintf(d, "ftell=%ld seek=%d disk=[%s]", t1, rc, seen);
+        verdict("PARTWP", t1 == 2 && rc == 0 && !strcmp(seen, "ABCD"), d);
+    }
+    else verdict("PARTWP", 0, "fopen w+ NULL");
+
+    fp = fopen("'IBMUSER.LIBC370.T189.PLS'", "a+");
+    if (fp) {
+        fputs("AB", fp);
+        t1 = ftell(fp);
+        rc = fseek(fp, t1, SEEK_SET);
+        fputs("CD\n", fp);
+        fclose(fp);
+        contents("'IBMUSER.LIBC370.T189.PLS'", seen, sizeof(seen));
+        sprintf(d, "ftell=%ld seek=%d disk=[%s]", t1, rc, seen);
+        verdict("PARTA", t1 == 164 && rc == 0 && !strcmp(seen, "L1,L2,ABCD"), d);
+    }
+    else verdict("PARTA", 0, "fopen a+ NULL");
 
     printf("TSTPLUS RC=%d\n", bad ? 8 : 0);
     return bad ? 8 : 0;

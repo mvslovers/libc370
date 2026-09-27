@@ -21,18 +21,19 @@ __fseek(FILE *fp, long int offset, int whence)
     fp->flags   &= 0xFFFF - _FILE_FLAG_ERROR - _FILE_FLAG_ENOSPC;
     fp->flags   &= 0xFFFF - _FILE_FLAG_EOF;
 
-    /* get current offset in this stream - after the flush, which ends a
-       pending text record and so moves it (#189) */
-    if (fp->flags & _FILE_FLAG_WRITE) {
-        __fflush(fp);
-    }
-    oldpos = fp->filepos;
-
     /* '+' streams position themselves - and never through __reopen(),
        which would open "w+" for OUTPUT again and truncate (#189) */
     if ((fp->flags & _FILE_FLAG_READ) && (fp->flags & _FILE_FLAG_WRITE)) {
         return plusseek(fp, offset, whence);
     }
+
+    /* No flush here (#189).  On a text stream a flush ENDS the record, so
+       it would split a half-written line in two and move the position -
+       fseek(fp, ftell(fp), SEEK_SET) after fputs("AB") failed, and a line
+       built from several writes with a seek between them came out as
+       several records.  A writer can only "seek" to where it is (below),
+       and that needs nothing written. */
+    oldpos = fp->filepos;
 
     if (whence == SEEK_SET) {
         newpos = offset;
@@ -151,6 +152,16 @@ plusseek(FILE *fp, long offset, int whence)
 {
     long    newpos;
     long    start;
+
+    /* A writing DCB is at the end (slice 1 writes nowhere else), so a
+       target equal to where it is - SEEK_SET to ftell(), SEEK_CUR 0,
+       SEEK_END 0 - needs nothing: above all no flush, which would end a
+       half-written text line (see __fseek()) */
+    if ((fp->flags & _FILE_FLAG_DCBOUT) && !(fp->flags & _FILE_FLAG_POSEND)) {
+        newpos = (whence == SEEK_SET) ? offset : fp->filepos + offset;
+        if ((whence == SEEK_SET || whence == SEEK_CUR || whence == SEEK_END)
+            && newpos == fp->filepos) return 0;
+    }
 
     /* the end: "a+" before its size is known, or SEEK_END */
     if ((fp->flags & _FILE_FLAG_POSEND) || whence == SEEK_END) {

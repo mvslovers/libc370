@@ -31,6 +31,8 @@
  *       (a reopen for "w" would truncate the data set)                  RED
  *   (7) fseek(SEEK_CUR, 0) and fseek(SEEK_END, 0) on a write stream
  *       succeed: both name the current position                         RED
+ *       ...and do not flush: a seek between two writes of one line must
+ *       not split the line into two records (#189)
  *   (8) a read stream still counts: 3 fgetc() -> ftell() 3   regression
  *
  * BUILD / RUN (host, from test/host; same flag recipe as tsterrfl.c):
@@ -243,12 +245,16 @@ int main(void)
     mkfile(TXW);
     put("L1\nAB");
     rc = __fseek(&f, 0, SEEK_CUR);
-    /* the flush ends "AB" as a record of its own: 81 + 81 */
-    check(rc == 0 && f.filepos == 162 && aread_calls == 0 && nrec == 2,
-          "(7a) fseek(0, SEEK_CUR) succeeds, flushes, is at 162");
+    /* no flush (#189): a flush would end "AB" as a record of its own */
+    check(rc == 0 && f.filepos == 83 && aread_calls == 0 && nrec == 1,
+          "(7a) fseek(0, SEEK_CUR) succeeds without flushing, stays at 83");
     rc = __fseek(&f, 0, SEEK_END);
-    check(rc == 0 && f.filepos == 162 && aread_calls == 0 && reopen_calls == 0,
-          "(7b) fseek(0, SEEK_END) on a write stream succeeds, stays at 162");
+    check(rc == 0 && f.filepos == 83 && aread_calls == 0 && reopen_calls == 0,
+          "(7b) fseek(0, SEEK_END) on a write stream succeeds, stays at 83");
+    rc = __fseek(&f, 83, SEEK_SET);
+    put("CD\n");
+    check(rc == 0 && nrec == 2 && anyrec("ABCD"),
+          "(7c) fseek(ftell()) mid-line, then \"CD\\n\": one record ABCD");
 
     /* (8) a read stream still counts what it hands out */
     mkfile(TXR);

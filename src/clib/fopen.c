@@ -153,6 +153,13 @@ doopen:
     }
     err = __fpopen(fp);
 
+    if (!err && (fp->flags & _FILE_FLAG_POSEND)) {
+        /* "a+" is at the end of what is there (#189).  Count it now, while
+           nothing is pending: read to the end, then EXTEND.  Counting later
+           would flush a half-written line first and split it. */
+        if (__fpswt(fp, 0) || __fpswt(fp, 1)) err = 1;
+    }
+
 quit:
     if (err) {
         /* an error occured, return NULL.  Preserve the errno that says
@@ -222,7 +229,7 @@ appmem(FILE *fp)
 
     /* no such member: create it, as "w".  For "a+" that also means the
        position is 0 and known */
-    fp->flags &= ~(_FILE_FLAG_APPEND | _FILE_FLAG_POSEND);
+    fp->flags &= ~(_FILE_FLAG_APPEND | _FILE_FLAG_POSEND | _FILE_FLAG_EXTEND);
     errno = 0;
     return 0;
 }

@@ -22,11 +22,13 @@ static void skipto(FILE *fp, long pos);
  *
  * out == 0, to reading: pending output is flushed, the DD reopens for
  *   input and the stream skips forward to where it was - O(n), the price
- *   of a backward seek.  "a+" before its size is known (_FILE_FLAG_POSEND)
- *   reads to the end instead: that is its position.
+ *   of a backward seek.  "a+" right after fopen() (_FILE_FLAG_POSEND)
+ *   reads to the end instead: that is its position, and fopen() counts it
+ *   this way before anything can be pending.
  *
  * out != 0, to writing: only at the end of the data set for now.  "a+"
- *   always writes there, whatever its read position.  "r+"/"w+" must BE
+ *   always writes there, whatever its read position - it reads on to the
+ *   end first, so its position stays known.  "r+"/"w+" must BE
  *   at the end: the next byte is peeked, and a stream that still has data
  *   refuses the write with EOPNOTSUPP - overwriting in the middle is the
  *   UPDAT half of #189.  A PDS member cannot be extended, so a member
@@ -55,7 +57,14 @@ __fpswt(FILE *fp, int out)
             return -1;
         }
 
-        if (!(fp->flags & _FILE_FLAG_APPEND) && !(fp->flags & _FILE_FLAG_EOF)) {
+        if ((fp->flags & _FILE_FLAG_APPEND) && !(fp->flags & _FILE_FLAG_EOF)) {
+            /* "a+" writes at the end whatever its read position: read on
+               to it, so that the position stays known */
+            while (__fgetc(fp) != EOF) ;
+            if (fp->flags & _FILE_FLAG_ERROR) return -1;
+            pos = fp->filepos;
+        }
+        else if (!(fp->flags & _FILE_FLAG_APPEND) && !(fp->flags & _FILE_FLAG_EOF)) {
             /* "r+"/"w+": is there anything after the position? */
             had = (fp->ungetch != -1);
             c = __fgetc(fp);
@@ -75,9 +84,6 @@ __fpswt(FILE *fp, int out)
             pos = fp->filepos;
         }
 
-        /* "a+" in the middle: the write goes to the end, whose offset is
-           not known until someone asks */
-        if (!(fp->flags & _FILE_FLAG_EOF)) fp->flags |= _FILE_FLAG_POSEND;
     }
     else if (fp->flags & _FILE_FLAG_DCBOUT) {
         if (__fflush(fp)) return -1;

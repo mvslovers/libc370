@@ -318,6 +318,44 @@ int main(void)
     shut();
     check(s1 == NULL && ondisk(L12, 2), "a read without a seek starts at the end: EOF");
 
+    printf("a line built from several writes (brexx370 CHAROUT)\n");
+    nrec = 0;
+    op("w");
+    put("AB");
+    t = ftell(&f);
+    rc = __fseek(&f, t, SEEK_SET);
+    put("CD\n");
+    shut();
+    {
+        static const char *const ABCD[] = { "ABCD" };
+        check(t == 2 && rc == 0 && ondisk(ABCD, 1), "plain w: \"AB\", fseek(ftell()), \"CD\\n\" -> one record ABCD");
+        nrec = 0;
+        op("w+");
+        put("AB");
+        t = ftell(&f);
+        before = n_open;
+        rc = __fseek(&f, t, SEEK_SET);
+        put("CD\n");
+        shut();
+        check(t == 2 && rc == 0 && n_open == before && ondisk(ABCD, 1),
+              "w+: the same, no reopen -> one record ABCD");
+    }
+    {
+        static const char *const L12ABCD[] = { "L1", "L2", "ABCD" };
+        preload(L12, 2);
+        op("a+");
+        /* what fopen() does for "a+": count the size now, then EXTEND */
+        rc = __fpswt(&f, 0) | __fpswt(&f, 1);
+        before = n_open;
+        put("AB");
+        t = ftell(&f);
+        __fseek(&f, t, SEEK_SET);
+        put("CD\n");
+        shut();
+        check(rc == 0 && t == 164 && n_open == before && ondisk(L12ABCD, 3),
+              "a+: counted at open (162), \"AB\" -> ftell 164 without a flush, one record ABCD");
+    }
+
     printf("cheap seeks (brexx370)\n");
     preload(L123, 3);
     op("r+");

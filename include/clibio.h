@@ -42,7 +42,8 @@ struct _file {
    _FILE_FLAG_EXTEND: any output open from here on is EXTEND, never OUTPUT
    - a direction switch must not truncate what "w+" already wrote.
    _FILE_FLAG_POSEND: "a+" - the position is the end of the data set, and
-   its size has not been counted yet; ftell()/fseek() count it once. */
+   its size has not been counted yet.  fopen() counts it before it returns;
+   ftell()/fseek() would count it if anything else left it set. */
 #define _FILE_FLAG_POSEND   0x0020  /* ... position = end, size not known   */
 #define _FILE_FLAG_DCBOUT   0x0010  /* ... the open DCB writes              */
 #define _FILE_FLAG_EXTEND   0x0008  /* ... reopen for output as EXTEND      */
