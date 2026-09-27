@@ -51,6 +51,14 @@
  *   EMPTYV  KEPT        n=3 [a||b]         RDW-only record; mvsMF reads
  *                                          the same three records back
  *   FTELL / SEEKW unchanged - that is #200.
+ *
+ * AFTER the #200 fix, JOB00522, CC 0000:
+ *
+ *   FTELL   OK          3 6 8
+ *   SEEKW   REFUSED     rc=-1 errno=29 (ESPIPE) n=2 [ABCDEF|xy]
+ *           A write-only stream cannot move until #189 brings w+/r+/a+;
+ *           the refused seek leaves the data set as written.
+ *   EMPTYF / EMPTYV still KEPT n=3 [a||b].
  */
 #include <stdio.h>
 #include <string.h>
@@ -153,12 +161,15 @@ seekw(const char *fn)
     char    seen[80];
     int     n;
     int     rc;
+    int     e;
     const char *verdict;
 
     if (!fp) return;
     fputs("ABCDEF", fp);
     fflush(fp);
+    errno = 0;
     rc = fseek(fp, 3, SEEK_SET);
+    e = errno;
     fputs("xy", fp);
     fclose(fp);
 
@@ -166,10 +177,12 @@ seekw(const char *fn)
     if (n < 0) return;
     if      (n == 1 && strcmp(seen, "ABCxy") == 0)        verdict = "C";
     else if (n == 2 && strcmp(seen, "ABCDEF|ABCxy") == 0) verdict = "DUPLICATED";
+    else if (rc != 0 && e == ESPIPE
+             && n == 2 && strcmp(seen, "ABCDEF|xy") == 0) verdict = "REFUSED";
     else                                                  verdict = "OTHER";
-    printf("SEEKW  fseek rc=%d VERDICT %s (%d records: %s)\n",
-           rc, verdict, n, seen);
-    wtof("TSTWRPOS SEEKW %s rc=%d n=%d [%s]", verdict, rc, n, seen);
+    printf("SEEKW  fseek rc=%d errno=%d VERDICT %s (%d records: %s)\n",
+           rc, e, verdict, n, seen);
+    wtof("TSTWRPOS SEEKW %s rc=%d errno=%d n=%d [%s]", verdict, rc, e, n, seen);
 }
 
 int
