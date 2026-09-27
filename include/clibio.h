@@ -157,6 +157,7 @@ extern char *   __caller(char   *caller);
 ** holding a lock on the file handle.
 */
 extern int      __fflush(FILE *fp);
+extern int      __fflnl(FILE *fp);  /* '\n' on a text stream: always a record */
 extern int      __fgetc(FILE *fp);
 extern char *   __fgets(char *s, int n, FILE *fp);
 extern int      __fputc(int c, FILE *fp);

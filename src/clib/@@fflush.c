@@ -9,12 +9,33 @@
 #define begwrite(fp, len)   (lenwrite = (len), dptr = (fp)->asmbuf)
 #define finwrite(fp)        (__awrite((fp)->dcb, &dptr, &lenwrite))
 
+static int flushrec(FILE *fp, int newline);
 static int fixflush(FILE *fp, int fill);
 static int varflush(FILE *fp);
 static int tso_putline(char *buf, unsigned len);
 
+/* __fflush() - write what is pending; with nothing pending, write nothing.
+   This is what fflush(), fclose(), fseek() and freopen() need. */
 int
 __fflush(FILE *fp)
+{
+    return flushrec(fp, 0);
+}
+
+/* __fflnl() - a '\n' on a text stream.  A newline asks for a record whether
+   or not it carries data, so an empty buffer here is an empty line and
+   still becomes a record (#199).  Before this, __fputc() called __fflush()
+   and the empty line was dropped: fputs("a\n\nb\n") wrote two records,
+   measured on mvsdev JOB00495 on FB 80 and VB 84. */
+int
+__fflnl(FILE *fp)
+{
+    return flushrec(fp, 1);
+}
+
+__asm__("\n&FUNC    SETC 'flushrec'");
+static int
+flushrec(FILE *fp, int newline)
 {
 	DCB				*dcb 	= fp->dcb;
     int             err     = 0;
@@ -24,7 +45,7 @@ __fflush(FILE *fp)
 
     if (fp->flags & _FILE_FLAG_RECORD)   goto quit; /* not using buffer  */
     if (!(fp->flags & _FILE_FLAG_WRITE)) goto quit; /* not in WRITE mode */
-    if (fp->upto == fp->buf) goto quit;             /* empty buffer      */
+    if (fp->upto == fp->buf && !newline) goto quit; /* nothing pending   */
 
     /* Fail fast (#149).  Re-driving a stream that has already failed
        cannot succeed, and what is in the buffer is undeliverable either
@@ -103,8 +124,16 @@ fixflush(FILE *fp, int fill)
     /* fill and copy data to internal buffer */
     if ((fp->recfm & _FILE_RECFM_TYPE)==_FILE_RECFM_U) {
         /* RECFM=U, no fill, just copy */
-        begwrite(fp, len);
-        memcpy(dptr, fp->buf, len);
+        if (len == 0) {
+            /* an empty line (#199): a zero-length block cannot be
+               written, so it becomes one fill byte */
+            begwrite(fp, 1);
+            *dptr = (unsigned char)fill;
+        }
+        else {
+            begwrite(fp, len);
+            memcpy(dptr, fp->buf, len);
+        }
     }
     else {
         /* RECFM=F, fill and copy */
