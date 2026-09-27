@@ -1,0 +1,37 @@
+//TSTUPDAT JOB (SYS),'LIBC370 189 UPDAT',CLASS=A,MSGCLASS=H,
+//             MSGLEVEL=(1,1)
+//*
+//* libc370 #189 - does the inherited UPDAT chain (@@aopen mode 2,
+//* @@aread KEPTREC, @@awrite replace, @@atrout rewrite) work at all?
+//* Measures, decides nothing.  Grep the job log for TSTUPDAT.
+//*   expected A: L1,L2,DONE 3,L4,L5
+//*   expected B: L1,DONE 2,DONE 3,L4,L5
+//*
+//CLEAN    EXEC PGM=IDCAMS
+//SYSPRINT DD  SYSOUT=*
+//SYSIN    DD  *
+  DELETE IBMUSER.LIBC370.T189.UPD PURGE
+  SET MAXCC=0
+/*
+//*
+//LOAD     EXEC PGM=IEBGENER
+//SYSPRINT DD  SYSOUT=*
+//SYSIN    DD  DUMMY
+//SYSUT1   DD  *
+L1
+L2
+L3
+L4
+L5
+/*
+//SYSUT2   DD  DSN=IBMUSER.LIBC370.T189.UPD,DISP=(NEW,CATLG),
+//             UNIT=SYSDA,SPACE=(TRK,(2,1)),
+//             DCB=(RECFM=FB,LRECL=80,BLKSIZE=800)
+//*
+//S1       EXEC PGM=TSTUPDAT,REGION=4096K
+//STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.T189SCR
+//UPD      DD  DISP=OLD,DSN=IBMUSER.LIBC370.T189.UPD
+//SYSPRINT DD  SYSOUT=*
+//SYSTERM  DD  SYSOUT=*
+//SYSUDUMP DD  SYSOUT=*
+//
