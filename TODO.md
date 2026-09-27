@@ -300,18 +300,18 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 
 ## Tier 1 — empty again
 
-### 1 · #189 — the stdio write path (brexx370#140 waits on it)
+### 1 · #189 slice 2 — overwrite in place (brexx370#140 waits on it)
 
-Measured on mvsdev 2026-09-27, all silent: every call reports success.
-**#198**: `"a"` truncates like `"w"`
-everywhere except on a `DISP=MOD` DD (JOB00490, `test/mvs/tstappnd.c`, not yet
-committed; it lands with the fix), which hits brexx370 `EXECIO DISKA` and
-lua370 `io.open(f,"a")`. **#189** is the umbrella: direction check, `w+`/`a+`,
-and `r+` in place on sequential data sets. Goal and order are in the #189
-comment, agreed with brexx370: ~~#200~~ → ~~direction check~~ → ~~#198~~ → `w+`/`a+`
-→ `r+`. In-place update of PDS members is out of scope.
+#200, the direction check, #198 and slice 1 (`r+`/`w+`/`a+`, read anywhere,
+write at the end) are merged - see Recently landed. **What is left is slice 2:
+overwriting in the middle of a sequential data set via UPDAT.** Design and
+decisions are in the #189 comments. Start from `probe/189-updat` (a95e509,
+`test/mvs/tstupdat.c`): the inherited replace works, but the read after a
+rewrite answers EOF (JOB00542), and a rewriting DCB needs a third state - it
+reads, with a dirty record - where slice 1 assumes a writing DCB is at the end.
+In-place update of PDS members is out of scope.
 
-**Rolling tag `edge`** (since 2026-09-27, now on `00a7978` = #198): brexx370's MVS CI
+**Rolling tag `edge`** (since 2026-09-27, now on `7f25d05` = #189 slice 1): brexx370's MVS CI
 clones libc370 at its `[toolchain]` pin, so it tracks `edge` in the meantime.
 **Move `edge` after each of these merges once its MVS gate is measured**
 (`git tag -fa edge <sha>` + `git push -f origin edge`), and cut a real release
@@ -1065,6 +1065,16 @@ changes: libc370 (an ABI change for `mbtowc` & co.) or cc370's `WCHAR_TYPE`.
 ## Recently landed
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
+
+- **#189 slice 1** (PR #207, merged 2026-09-27; #189 stays open) - `r+`, `w+`,
+  `a+`: read anywhere, write at the end. One DCB, turned round by `__fpswt()` on
+  the same DD, never truncating (`_FILE_FLAG_EXTEND`). `a+` counts its size at
+  open. A seek to the current position is free and does not flush. **`ftell()`
+  on FB text writers now counts in the byte view** (81 per FB 80 record), which
+  supersedes #200's 3 6 8. mvsdev JOB00553 15/15. Follow-ups: #206 (O(1)
+  backward seek via NOTE/POINT), #204 (append to a member). GitHub closed #189
+  twice on keywords (`fix(#189)`, and "does not close" before the number) -
+  write "Part of".
 
 - **#198** (PR #205, merged 2026-09-27) — `"a"` is OPEN EXTEND and appends. An
   existing PDS member is refused (`EOPNOTSUPP`), whether it is named in the file
