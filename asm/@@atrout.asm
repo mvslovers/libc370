@@ -30,6 +30,13 @@ SUBPOOL  EQU   0                                                      *
          BZ    TRUNCOEX      NO; JUST RETURN
          NI    IOPFLAGS,255-IOFLDATA  Reset it
          GO24  ,             GET LOW
+* UPDAT: the rewrite reuses the READ's DECB, so the length below does
+* not matter - and it is wrong once the block has been read to its end:
+* BUFFCURR is then 0, the length comes out negative and the rewrite was
+* skipped.  Changes to the last record of a block, or to any record of
+* a block read to its end, were lost (libc370 #189, mvsdev JOB00561).
+         CLI   OPENCLOS,X'84'     Update mode?
+         BE    TRUNSHRT           Yes; rewrite the block last READ
          LM    R4,R5,BUFFADDR  START/NEXT ADDRESS
          CLI   RECFMIX,4          RECFM=V?
          BNE   TRUNLEN5

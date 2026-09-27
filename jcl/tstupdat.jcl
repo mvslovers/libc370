@@ -6,11 +6,14 @@
 //* Measures, decides nothing.  Grep the job log for TSTUPDAT.
 //*   expected A: L1,L2,DONE 3,L4,L5
 //*   expected B: L1,DONE 2,DONE 3,L4,L5
+//*   C (BLKSIZE 240): does the read after a rewrite return L5, or skip
+//*   to L7 - the rest of the rewritten block lost?
 //*
 //CLEAN    EXEC PGM=IDCAMS
 //SYSPRINT DD  SYSOUT=*
 //SYSIN    DD  *
   DELETE IBMUSER.LIBC370.T189.UPD PURGE
+  DELETE IBMUSER.LIBC370.T189.UPD3 PURGE
   SET MAXCC=0
 /*
 //*
@@ -28,9 +31,28 @@ L5
 //             UNIT=SYSDA,SPACE=(TRK,(2,1)),
 //             DCB=(RECFM=FB,LRECL=80,BLKSIZE=800)
 //*
+//LOAD3    EXEC PGM=IEBGENER
+//SYSPRINT DD  SYSOUT=*
+//SYSIN    DD  DUMMY
+//SYSUT1   DD  *
+L1
+L2
+L3
+L4
+L5
+L6
+L7
+L8
+L9
+/*
+//SYSUT2   DD  DSN=IBMUSER.LIBC370.T189.UPD3,DISP=(NEW,CATLG),
+//             UNIT=SYSDA,SPACE=(TRK,(2,1)),
+//             DCB=(RECFM=FB,LRECL=80,BLKSIZE=240)
+//*
 //S1       EXEC PGM=TSTUPDAT,REGION=4096K
 //STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.T189SCR
 //UPD      DD  DISP=OLD,DSN=IBMUSER.LIBC370.T189.UPD
+//UPD3     DD  DISP=OLD,DSN=IBMUSER.LIBC370.T189.UPD3
 //SYSPRINT DD  SYSOUT=*
 //SYSTERM  DD  SYSOUT=*
 //SYSUDUMP DD  SYSOUT=*
