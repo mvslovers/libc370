@@ -742,13 +742,6 @@ already settled the argument about where such a keyword has to live.
 
 ## Tier 6 — latent, research, comfort
 
-### 38 · #192 — the rest of `<stdint.h>`: `INT8_C`/`INT16_C` casts, `INT32_MAX` type
-
-Split off #188. `INT8_C`/`INT16_C`/`UINT8_C`/`UINT16_C` are casts (`INT8_C(200)` is
--56 today, 200 in C99), `INT32_MAX` has type `int` because `limits.h` defines it
-first, `SIZE_MAX` fails in `#if`. No consumer uses any of them; the `INT32_MAX`
-type change is the one that could reach a format check.
-
 ### 15 · #114 — `osbclose()` does not free a buffer pool built by OPEN
 
 Latent by our own analysis: `MACRF=R` and no BUFNO in the prototype DCB, so OPEN
@@ -1010,6 +1003,14 @@ now silently kills a healthy stream. Smallest fix is to drop the line. Worth
 deciding at the same time whether keeping the old stream open on failure should
 survive at all: C99 7.19.5.4 closes it either way, and libc370 does not.
 
+### 38 · #195 — `wchar_t` is `char` in libc370 and `int` in cc370
+
+`sizeof(L"x"[0])` is 4 and `sizeof(wchar_t)` is 1, so `wchar_t *p = L"abc"` is an
+incompatible-pointer error under `-Werror`; `wint_t`, `WEOF`, `WCHAR_*` and
+`WINT_*` do not exist. Low because no consumer has been seen to use wide
+characters — but that sweep has not been run yet, and it decides which side
+changes: libc370 (an ABI change for `mbtowc` & co.) or cc370's `WCHAR_TYPE`.
+
 ---
 
 ## Five campaigns instead of forty-one tickets
@@ -1047,6 +1048,11 @@ survive at all: C99 7.19.5.4 closes it either way, and libc370 does not.
 ## Recently landed
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
+
+- **#192** (PR #196, merged 2026-09-27) — the rest of `<stdint.h>`: `INT32_MAX` is
+  `long`, the `INTn_C` macros are no longer casts (`INT8_C(200)` is 200, was -56),
+  `SIZE_MAX` and `SIG_ATOMIC_MIN/MAX` work in `#if`. `WCHAR_*`/`WINT_*` wait on
+  #195, the `wchar_t` disagreement between libc370 (`char`) and cc370 (`int`).
 
 - **#190** (PR #194, merged 2026-09-27) — the other sixteen libgcc helpers:
   float/double ↔ `long long`, `__cmpdi2`, popcount/parity/ffs/clz/ctz. The
