@@ -300,18 +300,13 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 
 ## Tier 1 — empty again
 
-### 1 · #189 slice 2 — overwrite in place (brexx370#140 waits on it)
+### ~~1 · #189~~ — complete, PR #208, 2026-09-27
 
-#200, the direction check, #198 and slice 1 (`r+`/`w+`/`a+`, read anywhere,
-write at the end) are merged - see Recently landed. **What is left is slice 2:
-overwriting in the middle of a sequential data set via UPDAT.** Design and
-decisions are in the #189 comments. Start from `probe/189-updat` (a95e509,
-`test/mvs/tstupdat.c`): the inherited replace works, but the read after a
-rewrite answers EOF (JOB00542), and a rewriting DCB needs a third state - it
-reads, with a dirty record - where slice 1 assumes a writing DCB is at the end.
-In-place update of PDS members is out of scope.
+All six steps are merged (#201, #202, #203, #205, #207, #208); the closing
+comment on #189 has the table. Left open by decision: #204 (append to a
+member) and #206 (O(1) backward seek via NOTE/POINT).
 
-**Rolling tag `edge`** (since 2026-09-27, now on `7f25d05` = #189 slice 1): brexx370's MVS CI
+**Rolling tag `edge`** (since 2026-09-27, now on `f3292f2` = #189 complete; the sysroot here is installed from the same commit): brexx370's MVS CI
 clones libc370 at its `[toolchain]` pin, so it tracks `edge` in the meantime.
 **Move `edge` after each of these merges once its MVS gate is measured**
 (`git tag -fa edge <sha>` + `git push -f origin edge`), and cut a real release
@@ -1065,6 +1060,14 @@ changes: libc370 (an ABI change for `mbtowc` & co.) or cc370's `WCHAR_TYPE`.
 ## Recently landed
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
+
+- **#189 slice 2** (PR #208, merged 2026-09-27, closes #189) - `r+`/`w+`
+  overwrite in place through UPDAT: on F a `'\n'` blank-fills the rest of the
+  record, a record never grows or shrinks, and a refusal is `EOPNOTSUPP`. Two
+  defects in the inherited UPDAT assembler are fixed: the read after a rewrite
+  skipped the rest of the block and a second rewrite landed on the wrong record
+  (JOB00559), and a rewrite in a block read to its end was dropped (JOB00561).
+  `sizeof(FILE)` stays 192 (`xflags` taken from `mode[]`). mvsdev JOB00576-00580.
 
 - **#189 slice 1** (PR #207, merged 2026-09-27; #189 stays open) - `r+`, `w+`,
   `a+`: read anywhere, write at the end. One DCB, turned round by `__fpswt()` on
