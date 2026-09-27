@@ -300,20 +300,18 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 
 ## Tier 1 — empty again
 
-### 1 · #200, #198, #189 — the stdio write path (brexx370#140 waits on it)
+### 1 · #198, #189 — the stdio write path (brexx370#140 waits on it)
 
 Measured on mvsdev 2026-09-27, all silent: every call reports success.
-**#200**: `ftell()` on a write stream reads 0 0 2 where C wants 3 6 8, and
-`fseek()` on a `"w"` stream writes the stale buffer out again as a second record
-(JOB00495, `test/mvs/tstwrpos.c`). **#198**: `"a"` truncates like `"w"`
+**#198**: `"a"` truncates like `"w"`
 everywhere except on a `DISP=MOD` DD (JOB00490, `test/mvs/tstappnd.c`, not yet
 committed; it lands with the fix), which hits brexx370 `EXECIO DISKA` and
 lua370 `io.open(f,"a")`. **#189** is the umbrella: direction check, `w+`/`a+`,
 and `r+` in place on sequential data sets. Goal and order are in the #189
-comment, agreed with brexx370: #200 → direction check → #198 → `w+`/`a+` →
-`r+`. In-place update of PDS members is out of scope.
+comment, agreed with brexx370: ~~#200~~ → direction check → #198 → `w+`/`a+`
+→ `r+`. In-place update of PDS members is out of scope.
 
-**Rolling tag `edge`** (since 2026-09-27, on `ea7dd66`): brexx370's MVS CI
+**Rolling tag `edge`** (since 2026-09-27, now on `4c55ef1` = #200): brexx370's MVS CI
 clones libc370 at its `[toolchain]` pin, so it tracks `edge` in the meantime.
 **Move `edge` after each of these merges once its MVS gate is measured**
 (`git tag -fa edge <sha>` + `git push -f origin edge`), and cut a real release
@@ -1067,6 +1065,12 @@ changes: libc370 (an ABI change for `mbtowc` & co.) or cc370's `WCHAR_TYPE`.
 ## Recently landed
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
+
+- **#200** (PR #202, merged 2026-09-27) — `ftell()` on a write stream counts from
+  the start of the file (a flush no longer resets `filepos`). `fseek()` on a
+  stream not open for reading only "seeks" to where it already is: anything else
+  is `ESPIPE`, and nothing is read. Before, it re-emitted the stale buffer, and a
+  backward seek on `"w"` truncated by reopening. Red JOB00495, green JOB00522.
 
 - **#199** (PR #201, merged 2026-09-27) — an empty line on a text stream is a
   record again: `fputs("a\n\nb\n")` wrote two. The new `__fflnl()` is the newline
