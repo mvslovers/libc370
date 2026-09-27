@@ -742,16 +742,7 @@ already settled the argument about where such a keyword has to live.
 
 ## Tier 6 — latent, research, comfort
 
-### 38 · #190 — the remaining libgcc helpers cc370 can emit
-
-`@@FIXDFD`/`@@FIXSFD` (float → `long long`, plain C, does not link today),
-`@@CMPDI2`, `ffs`/`clz`/`ctz`, and the eight helpers cc370#470 (PR cc370#471,
-merged) renamed: `@@FXUNSF`/`@@FXUNDF`, `@@FLTDSF`/`@@FLTDDF`, `@@POPCSI`/
-`@@POPCDI`, `@@PARTSI`/`@@PARTDI` — the names and signatures are in the
-issue's second comment. No consumer has asked for them. The float conversions
-are hex float, so their gate is MVS-only.
-
-### 39 · #192 — the rest of `<stdint.h>`: `INT8_C`/`INT16_C` casts, `INT32_MAX` type
+### 38 · #192 — the rest of `<stdint.h>`: `INT8_C`/`INT16_C` casts, `INT32_MAX` type
 
 Split off #188. `INT8_C`/`INT16_C`/`UINT8_C`/`UINT16_C` are casts (`INT8_C(200)` is
 -56 today, 200 in C99), `INT32_MAX` has type `int` because `limits.h` defines it
@@ -1056,6 +1047,12 @@ survive at all: C99 7.19.5.4 closes it either way, and libc370 does not.
 ## Recently landed
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
+
+- **#190** (PR #194, merged 2026-09-27) — the other sixteen libgcc helpers:
+  float/double ↔ `long long`, `__cmpdi2`, popcount/parity/ffs/clz/ctz. The
+  conversions copy the semantics of cc370's inline 32-bit ones (measured,
+  JOB00464). Eight names exist only with cc370 at `f3f7e21` or later. Found on
+  the way: cc370#477, `printf("\n")` folds to `putchar(10)`, which is ASCII.
 
 - **#188** (PR #193, merged 2026-09-27) — every signed `*_MIN` in `<stdint.h>`
   is negative, of the promoted type and usable in `#if`; `INT64_MIN` no longer
