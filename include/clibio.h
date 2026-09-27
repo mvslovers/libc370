@@ -80,7 +80,12 @@ struct _file {
     char            ddname[9];      /* 2B DD name                           */
     char            member[9];      /* 34 member name                       */
     char            dataset[45];    /* 3D dataset name                      */
-    char            mode[86];       /* 6A open mode string                  */
+    char            mode[85];       /* 6A open mode string                  */
+    unsigned char   xflags;         /* BF more flags - '+' streams (#189)   */
+#define _FILE_XFLAG_UPDAT   0x01    /* ... the reading DCB is open UPDAT:   */
+                                    /*     a write overwrites in place      */
+#define _FILE_XFLAG_DIRTY   0x02    /* ... the record in buf was changed    */
+                                    /*     and not yet handed to __awrite() */
 };                                  /* C0 (192 bytes)                       */
 
 typedef unsigned long fpos_t;
@@ -174,6 +179,7 @@ extern char *   __caller(char   *caller);
 extern int      __fflush(FILE *fp);
 extern int      __fflnl(FILE *fp);  /* '\n' on a text stream: always a record */
 extern int      __fpswt(FILE *fp, int out); /* turn a '+' stream's DCB (#189) */
+extern int      __fpupc(FILE *fp, int c);   /* a byte written in place (#189) */
 extern int      __fgetc(FILE *fp);
 extern char *   __fgets(char *s, int n, FILE *fp);
 extern int      __fputc(int c, FILE *fp);

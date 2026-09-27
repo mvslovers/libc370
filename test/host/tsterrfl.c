@@ -138,6 +138,14 @@ int __fpswt(FILE *fp, int out)
     errno = EBADF;
     return -1;
 }
+int __fpupc(FILE *fp, int c)
+{
+    (void)fp; (void)c;
+    fpswt_calls++;
+    printf("  !! __fpupc() reached from a plain stream\n");
+    errno = EBADF;
+    return -1;
+}
 
 /* ---- the real thing ---------------------------------------------------- */
 

@@ -75,7 +75,8 @@ static void check(int cond, const char *what)
 static unsigned char    disk[MAXREC][80];
 static int              nrec;           /* records on "disk"               */
 static int              cur;            /* next record to read             */
-static int              n_open, n_output, n_extend, n_input, n_close;
+static int              n_open, n_output, n_extend, n_input, n_updat, n_close;
+static int              updat;          /* open UPDAT: __awrite replaces  */
 static unsigned char    devt = 0x2E;    /* 3380                            */
 static DCB              fake_dcb;
 static unsigned char    ab[128];
@@ -85,9 +86,11 @@ void *__aopen(const char *ddname, int *mode, int *recfm, int *lrecl,
 {
     (void)ddname; (void)recfm; (void)lrecl; (void)blksize; (void)member;
     n_open++;
+    updat = 0;
     switch (*mode & 7) {
     case 0:  n_input++;  cur = 0;               break;
     case 1:  n_output++; nrec = 0; cur = 0;     break;
+    case 2:  n_updat++;  cur = 0; updat = 1;    break;
     case 3:  n_extend++; cur = nrec;            break;
     default: return (void *)-37;
     }
@@ -112,6 +115,11 @@ int __aread(void *handle, void *buf, size_t *len)
 int __awrite(void *handle, unsigned char **buf, size_t *sz)
 {
     (void)handle;
+    if (updat) {
+        /* UPDAT: replace the record __aread() returned last, same length */
+        if (cur > 0 && *sz == 80) memcpy(disk[cur-1], *buf, 80);
+        return 0;
+    }
     if (nrec < MAXREC) memcpy(disk[nrec++], *buf, 80);
     cur = nrec;
     return 0;
@@ -181,7 +189,7 @@ static int op(const char *mode)
 {
     memset(&f, 0, sizeof(f));
     strcpy(f.ddname, "TESTDD");
-    n_open = n_output = n_extend = n_input = n_close = 0;
+    n_open = n_output = n_extend = n_input = n_updat = n_close = 0;
     errno = 0;
     if (__fpmode(&f, mode)) return -2;
     if (__fpopen(&f))       return -3;
@@ -235,12 +243,13 @@ int main(void)
     int     rc, e, before;
 
     init_tolow();
-    printf("=== tstplus: #189 slice 1 - r+, w+, a+ ===\n\n");
+    printf("=== tstplus: #189 - r+, w+, a+ (slices 1 and 2) ===\n\n");
 
     printf("mode parsing\n");
     check(op("r+") == 0 && (f.flags & _FILE_FLAG_READ) && (f.flags & _FILE_FLAG_WRITE)
-          && !(f.flags & _FILE_FLAG_DCBOUT) && n_input == 1,
-          "r+ : read+write, DCB opens INPUT");
+          && !(f.flags & _FILE_FLAG_DCBOUT) && n_updat == 1
+          && (f.xflags & _FILE_XFLAG_UPDAT),
+          "r+ : read+write, DCB opens UPDAT (slice 2)");
     check(op("w+") == 0 && (f.flags & _FILE_FLAG_DCBOUT) && n_output == 1,
           "w+ : DCB opens OUTPUT");
     check(op("a+") == 0 && (f.flags & _FILE_FLAG_DCBOUT) && n_extend == 1
@@ -277,10 +286,12 @@ int main(void)
     line();
     errno = 0;
     rc = __fputc('X', &f);
-    e = errno;
     shut();
-    check(rc == EOF && e == EOPNOTSUPP && ondisk(L12, 2),
-          "a write in the middle fails EOPNOTSUPP and changes nothing");
+    {
+        static const char *const L1X2[] = { "L1", "X2" };
+        check(rc == 'X' && n_updat == 1 && ondisk(L1X2, 2),
+              "a write in the middle overwrites in place (slice 2): L1 X2");
+    }
 
     printf("r+\n");
     preload(L123, 3);
@@ -354,6 +365,70 @@ int main(void)
         shut();
         check(rc == 0 && t == 164 && n_open == before && ondisk(L12ABCD, 3),
               "a+: counted at open (162), \"AB\" -> ftell 164 without a flush, one record ABCD");
+    }
+
+    printf("in place (slice 2)\n");
+    {
+        static const char *const D3[]   = { "L1", "L2", "Done 3" };
+        static const char *const XY[]   = { "L1XY", "L2", "L3" };
+        static const char *const M1[]   = { "M1", "L2", "L3" };
+        static const char *const AB[]   = { "A", "B", "L3" };
+        char r1[81];
+
+        preload(L123, 3);
+        op("r+");
+        rc = __fseek(&f, 162, SEEK_SET);
+        put("Done 3\n");
+        t = ftell(&f);
+        s1 = line();
+        shut();
+        check(rc == 0 && t == 243 && s1 == NULL && ondisk(D3, 3),
+              "LINEOUT f,\"Done 3\",3: '\\n' blank-fills, position 243, then EOF");
+
+        preload(L123, 3);
+        op("r+");
+        __fseek(&f, 2, SEEK_SET);
+        put("XY");
+        shut();
+        check(ondisk(XY, 3), "CHAROUT at byte 2: L1XY, the rest unchanged");
+
+        preload(L123, 3);
+        op("r+");
+        __fseek(&f, 78, SEEK_SET);
+        put("AB");
+        errno = 0;
+        rc = __fputc('C', &f);
+        e = errno;
+        shut();
+        memcpy(r1, disk[0], 80);
+        check(rc == EOF && e == EOPNOTSUPP && !memcmp(r1 + 78, "AB", 2)
+              && !memcmp(r1, "L1", 2) && nrec == 3,
+              "past the record end: bytes 78-79 written, the separator refuses EOPNOTSUPP");
+
+        preload(L123, 3);
+        op("r+");
+        put("M1");
+        line();
+        s1 = line();
+        s1 = s1 ? strdup(s1) : NULL;
+        shut();
+        check(s1 && !strcmp(s1, "L2") && ondisk(M1, 3),
+              "overwrite then read on: M1, next line L2, record committed");
+        free(s1);
+
+        preload(L123, 3);
+        op("r+");
+        put("A\nB\n");
+        t = ftell(&f);
+        shut();
+        check(t == 162 && ondisk(AB, 3), "two lines in place: A, B, L3; ftell 162");
+
+        preload(L12, 2);
+        op("r+");
+        __fseek(&f, 0, SEEK_END);
+        put("L3\n");
+        shut();
+        check(n_extend == 1 && ondisk(L123, 3), "at the end a write still appends (EXTEND)");
     }
 
     printf("cheap seeks (brexx370)\n");

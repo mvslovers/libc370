@@ -15,6 +15,7 @@ __fpopen(FILE *fp)
     int     err     = 1;
     int     i       = 0;
     int     mode    = 0;    /* 0==read, 1==write */
+    int     want;
     int     recfm   = 0;    /* 0==fixed, 1==variable, 2==undefined */
     int     lrecl   = 0;
     int     blksize = 0;
@@ -52,6 +53,14 @@ __fpopen(FILE *fp)
            a direction switch must not truncate (#189) */
         mode = (fp->flags & (_FILE_FLAG_APPEND | _FILE_FLAG_EXTEND)) ? 3 : 1;
     }
+    else if ((fp->flags & _FILE_FLAG_WRITE) && !(fp->flags & _FILE_FLAG_APPEND)
+             && !(fp->member[0] > ' ')) {
+        /* "r+"/"w+" reading: UPDAT, so that a write can overwrite the
+           record just read in place (#189).  Not "a+" - it writes at the
+           end only - and not a member, which BPAM cannot update */
+        mode = 2;
+    }
+    fp->xflags &= ~(_FILE_XFLAG_UPDAT | _FILE_XFLAG_DIRTY);
     if (fp->flags & _FILE_FLAG_BSAM)  mode = mode + 8;
 
     if (fp->member[0] > ' ') {
@@ -80,8 +89,22 @@ __fpopen(FILE *fp)
     blksize = fp->blksize;
 
     /* open dataset */
+    want = mode;            /* __aopen() hands the mode back, amended */
     fp->dcb = __aopen(ddname, &mode, &recfm, &lrecl,
                 &blksize, &asmbuf, pmember);
+
+    if ((want & 7) == 2) {
+        if ((int)fp->dcb < 0) {
+            /* UPDAT refused - a member named in the JCL, say: read only,
+               and a write in the middle stays EOPNOTSUPP */
+            mode = want - 2;
+            fp->dcb = __aopen(ddname, &mode, &recfm, &lrecl,
+                        &blksize, &asmbuf, pmember);
+        }
+        else {
+            fp->xflags |= _FILE_XFLAG_UPDAT;
+        }
+    }
 
     if ((int)fp->dcb < 0) {
         /* -45: EXTEND refused for a PDS member, the one named in the

@@ -24,9 +24,19 @@ __fputc(int c, FILE *fp)
         goto quit;
     }
 
-    /* a '+' stream whose DCB is reading turns it round first (#189) */
+    /* a '+' stream whose DCB is reading (#189): open UPDAT, the byte is
+       written over in place; otherwise the DCB turns round to the end */
     if (!(fp->flags & _FILE_FLAG_DCBOUT)) {
-        if (__fpswt(fp, 1)) {
+        if (fp->xflags & _FILE_XFLAG_UPDAT) {
+            int r = __fpupc(fp, c);
+            if (r < 0) {
+                rc = EOF;
+                goto quit;
+            }
+            if (r == 0) goto quit;      /* written in place */
+            /* r == 1: at the end, the DCB now writes - carry on */
+        }
+        else if (__fpswt(fp, 1)) {
             rc = EOF;
             goto quit;
         }

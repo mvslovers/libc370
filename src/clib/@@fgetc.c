@@ -68,6 +68,12 @@ __fgetc(FILE *fp)
 		goto success;
 	}
 
+	/* a record overwritten in place goes back before the next is read:
+	   __awrite() replaces the record __aread() returned last (#189) */
+	if (fp->xflags & _FILE_XFLAG_DIRTY) {
+		if (__fflush(fp)) goto quit;
+	}
+
 	do {
 		/* read one record from dataset */
 		int rc = __aread(fp->dcb, &dptr, &lenread);
