@@ -738,13 +738,6 @@ wants the coordinated rebuild this tier exists for. A mode-string keyword in the
 same comma-separated family as #167's `rlse` is the obvious shape, and #167
 already settled the argument about where such a keyword has to live.
 
-### 39 · #188 — the `<stdint.h>` minimums were positive or unusable — PR open
-
-`INT32_MIN` was +2147483648, `INT64_MIN`/`INTMAX_MIN` warn on every use (an
-error under `-Werror`), `INT8_MIN`/`INT16_MIN` fail in `#if`, `INT_FAST8_MIN`
-was undefined. In this tier because brexx370 carries its own `INT32_MIN` until
-the fix reaches the sysroot. The gate is compile-time: `test/mvs/tststdint.c`.
-
 ---
 
 ## Tier 6 — latent, research, comfort
@@ -758,7 +751,7 @@ merged) renamed: `@@FXUNSF`/`@@FXUNDF`, `@@FLTDSF`/`@@FLTDDF`, `@@POPCSI`/
 issue's second comment. No consumer has asked for them. The float conversions
 are hex float, so their gate is MVS-only.
 
-### 40 · #192 — the rest of `<stdint.h>`: `INT8_C`/`INT16_C` casts, `INT32_MAX` type
+### 39 · #192 — the rest of `<stdint.h>`: `INT8_C`/`INT16_C` casts, `INT32_MAX` type
 
 Split off #188. `INT8_C`/`INT16_C`/`UINT8_C`/`UINT16_C` are casts (`INT8_C(200)` is
 -56 today, 200 in C99), `INT32_MAX` has type `int` because `limits.h` defines it
@@ -1063,6 +1056,10 @@ survive at all: C99 7.19.5.4 closes it either way, and libc370 does not.
 ## Recently landed
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
+
+- **#188** (PR #193, merged 2026-09-27) — every signed `*_MIN` in `<stdint.h>`
+  is negative, of the promoted type and usable in `#if`; `INT64_MIN` no longer
+  warns on every use. The rest of the header is #192.
 
 - **#187** (PR #191, merged 2026-09-27) — the six `long long` helpers cc370
   calls (`@@MULDI3`, `@@DIVDI3`, `@@MODDI3`, `@@UDIVDI`, `@@UMODDI`, `@@NEGDI2`)
