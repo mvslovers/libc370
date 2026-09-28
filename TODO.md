@@ -298,7 +298,7 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 
 ---
 
-## Tier 1 — empty again
+## Tier 1
 
 ### 1 · #211 — PR #212 open, MVS gate owed
 
