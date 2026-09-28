@@ -300,6 +300,15 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 
 ## Tier 1 — empty again
 
+### 1 · #211 — PR #212 open, MVS gate owed
+
+`printf("%zd")` printed `d`: `__examin()` (`@@examin.c`, the one engine behind
+the whole printf family; `vsnprint.c`'s `examine()` is `#if 0`) did not know `z`,
+`t`, `j` or `hh`, and did not consume the argument, so later conversions read
+shifted slots. Host test green (tstvsnp 21/21). Still owed: an mvsdev probe
+(`%6zd`, `%zu|%s|%d`, `%jd`) or brexx370's TRACE against the new `libc.a`; then
+merge and move `edge`.
+
 ### ~~1 · #189~~ — complete, PR #208, 2026-09-27
 
 All six steps are merged (#201, #202, #203, #205, #207, #208); the closing
