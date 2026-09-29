@@ -138,6 +138,17 @@ __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax)
            so we should be able to ignore the 'h' specifier.
            It will create problems otherwise. */
         /* half = 1; */
+        if (*(format+1) == 'h') {
+            format++;               /* hh: char promotes to int too */
+        }
+    }
+    else if (*format == 'z' || *format == 't') {
+        /* size_t and ptrdiff_t are 32 bit, like long (#211) */
+        lng = 1;
+    }
+    else if (*format == 'j') {
+        /* intmax_t is 64 bit, like long long (#211) */
+        lng = 2;
     }
     else if (*format == 'l') {
         lng = 1;

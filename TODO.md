@@ -298,7 +298,17 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 
 ---
 
-## Tier 1 — empty again
+## Tier 1
+
+### 1 · #211 — PR #212 open, MVS gate measured, ready to merge
+
+`printf("%zd")` printed `d`: `__examin()` (`@@examin.c`, the one engine behind
+the whole printf family; `vsnprint.c`'s `examine()` is `#if 0`) did not know `z`,
+`t`, `j` or `hh`, and did not consume the argument, so later conversions read
+shifted slots. Host test green (tstvsnp 21/21); MVS gate `test/mvs/tstzjt.c`,
+mvsdev JOB00640: branch 24/24, pre-fix libc 20 of 24 failed. Left: merge, move
+`edge`. Side finding filed as **#213** (not ranked yet): libc370's `ptrdiff_t` is
+`int` where cc370's is `long`, so `%td` of it warns under `-Wall`.
 
 ### ~~1 · #189~~ — complete, PR #208, 2026-09-27
 

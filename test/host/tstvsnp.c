@@ -26,6 +26,14 @@
  *   3. The %f path's memcpy is bounded too (its __dblcvt is stubbed here,
  *      so the case exercises the copy, not the conversion).
  *   4. n = 1 and n = 0 degenerate correctly.
+ *   5. The C99 length modifiers z and t, and hh (#211).  __examin() knew
+ *      only h, l, ll, L and LL, so "%6zd" took the 'z' for the specifier,
+ *      printed nothing for it, left the size_t unconsumed and let the 'd'
+ *      through as text: brexx370's trace line came out "d *-* ".  Every
+ *      later argument of the call was read one slot early - case (10)
+ *      dereferences the size_t as the %s pointer.  j (intmax_t, 64 bit)
+ *      goes through the __64 helpers, which are stubbed here, so it is
+ *      not pinned on the host.
  *
  * Buffers are heap allocations of exactly the size handed to vsnprintf, so
  * one byte past the bound is a diagnosable overflow: RUN THIS UNDER ASAN,
@@ -74,6 +82,11 @@ void    __64_divmod(__64 *a, __64 *b, __64 *c, __64 *d)
 { (void)a; (void)b; c->u32[0] = c->u32[1] = 0; d->u32[0] = d->u32[1] = 0; }
 
 int *__errno(void) { static int e; return &e; }
+
+/* The FILE sink of __examin() (#145); snprintf only uses the string sink,
+** so these only have to resolve. */
+int __fputc(int c, FILE *fp) { (void)fp; return c; }
+int __fputs(const char *str, FILE *fp) { (void)str; (void)fp; return 0; }
 
 /* libc370's ctype is table-driven and __examin() uses it LIVE: isdigit()
 ** parses the width, toupper() classifies the specifier.  So unlike
@@ -191,6 +204,32 @@ int main(void)
     rc = snprintf(b, 4, "%s", "IBMUSER");
     CHECK_STR(b, "IBM", "(8) %s truncated to n-1 and terminated");
     CHECK_EQ(rc, 7, "(8) return = untruncated length");
+    free(b);
+
+    printf("\n(9) %%zd, the brexx370 trace line (#211):\n");
+    b = calloc(1, 32);
+    rc = snprintf(b, 32, "%6zd *-* ", (size_t)15);
+    CHECK_STR(b, "    15 *-* ", "(9) z is a length modifier, not a specifier");
+    CHECK_EQ(rc, 11, "(9) return = length");
+    free(b);
+
+    printf("\n(10) %%zu, then more arguments - the va_list stays in step "
+           "(#211):\n");
+    b = calloc(1, 32);
+    rc = snprintf(b, 32, "%zu|%s|%d", (size_t)4096, "X", 7);
+    CHECK_STR(b, "4096|X|7", "(10) z consumes its argument");
+    free(b);
+
+    printf("\n(11) %%td and %%zx (#211):\n");
+    b = calloc(1, 32);
+    rc = snprintf(b, 32, "%td/%zx/%d", (ptrdiff_t)-3, (size_t)0xC4, 1);
+    CHECK_STR(b, "-3/c4/1", "(11) t and z with d and x");
+    free(b);
+
+    printf("\n(12) %%hhd, then more arguments (#211):\n");
+    b = calloc(1, 32);
+    rc = snprintf(b, 32, "%hhd|%d", 5, 6);
+    CHECK_STR(b, "5|6", "(12) hh is skipped like h");
     free(b);
 
     return mbt_test_summary("tstvsnp");
