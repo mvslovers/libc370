@@ -326,6 +326,9 @@ mvslovers/mvsmf#371 (PUT 204, closes #366's KNOWN GAP), mvslovers/httplua#10
 (STDOUT temp data set). ftpd and mvsMF pin `libc370 = "1.0.6"`, so **#182 only
 reaches them with a release**. brexx370 (pins `edge`) is handled by its own
 session. cobc370 and RAKF are outside mvslovers and not filed; RAKF links crent370.
+**Released in v1.0.7 (2026-09-29, `1fdbde1`)** together with the 20 other PRs
+since 1.0.6 - 17 of them had no CHANGELOG entry until the release commit. The
+consumer issues carry a comment pointing at the release notes' contract list.
 
 ### ~~1 · #222~~ — fixed, PR #224, 2026-09-29
 
