@@ -1,16 +1,21 @@
-//TSTCLSPC JOB (SYS),'LIBC370 182 CLOSE',CLASS=A,MSGCLASS=H,
+//TSTCLSPC JOB (SYS),'LIBC370 228 CLOSE',CLASS=A,MSGCLASS=H,
 //             MSGLEVEL=(1,1)
 //*
-//* libc370 #182 - an out-of-space on the block CLOSE writes.
+//* libc370 #182, #228 - an out-of-space on the block CLOSE writes.
 //*
 //* The probe fills a TRK(1,0) data set to learn how many records fit in
 //* full blocks (R), then rewrites it with R+1 .. R+9 records, so the last
 //* block is a short one that only CLOSE writes.  fclose() must answer EOF
 //* (errno ENOSPC) exactly when the read-back comes up short.
 //*
+//* #228 repeats the cases closing through freopen() (onto DD OTHER),
+//* through a "w+" stream turned round by a read, and through rclose()
+//* (ropen/rwrite onto IBMUSER.TSTCLSPC.WORKR, a data set of its own).
+//*
 //*   GREEN  = CC 0000 in step S1, no FAIL line.
-//*   RED    = CC 0008; before the fix check (4) fails - fclose() says 0
-//*            while the short block is gone.
+//*   RED    = CC 0008; before #182 check (4) fails - fclose() says 0
+//*            while the short block is gone; before #228 checks (10),
+//*            (12) and (17) fail the same way.
 //*
 //* Every line also goes to the console (grep the job log for TSTCLSPC).
 //*
@@ -39,6 +44,7 @@
 //SYSPRINT DD  SYSOUT=*
 //SYSTERM  DD  SYSOUT=*
 //SYSUDUMP DD  SYSOUT=*
+//OTHER    DD  DUMMY,DCB=(RECFM=FB,LRECL=80,BLKSIZE=800)
 //*
 //* A net: the probe deletes the data set itself on a green run.
 //*
@@ -46,6 +52,7 @@
 //SYSPRINT DD  SYSOUT=*
 //SYSIN    DD  *
   DELETE IBMUSER.TSTCLSPC.WORK PURGE
+  DELETE IBMUSER.TSTCLSPC.WORKR PURGE
   SET MAXCC=0
 /*
 //

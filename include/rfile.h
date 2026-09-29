@@ -29,7 +29,11 @@ struct rfile {
 */
 extern int  ropen(const char *fnm, int write, RFILE **fp);
 
-/* rclose() - close handle created by ropen() */
+/* rclose() - close handle created by ropen()
+** rc: 0==success, -1 when the final block could not be written
+**     (errno ENOSPC out of space, EIO I/O error); the handle is freed
+**     either way.
+*/
 extern int  rclose(RFILE *fp);
 
 /* rread() - read record from dataset

@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
+#include <mvssupa.h>
 #include "clibcrt.h"
 #include "cliblock.h"
 #include "clibary.h"
@@ -12,6 +14,8 @@ __reopen(const char *fn, const char *mode, FILE *fp)
     CLIBGRT *grt    = __grtget();
     int     err     = 1;
     int     dynamic = 0;
+    int     lost    = 0;
+    int     rc;
     unsigned count;
     FILE    *f;
 
@@ -20,8 +24,9 @@ __reopen(const char *fn, const char *mode, FILE *fp)
 
     if (fp->flags & _FILE_FLAG_OPEN) {
         /* flush any pending data to disk; __fflush, not fflush - our
-           caller freopen() already holds the FILE lock (#145) */
-        __fflush(fp);
+           caller freopen() already holds the FILE lock (#145).  It sets
+           errno itself, but the fopen() below may overwrite it */
+        if (__fflush(fp)) lost = errno ? errno : EIO;
     }
 
     /* open "new" file handle */
@@ -34,7 +39,13 @@ __reopen(const char *fn, const char *mode, FILE *fp)
     }
 
     /* success, copy "new" file handle into "old" file handle */
-    if (fp->flags & _FILE_FLAG_OPEN) __aclose(fp->dcb);
+    if (fp->flags & _FILE_FLAG_OPEN) {
+        /* the last, short block of the old file is written here (#182).
+           C99 7.19.5.4: a failure to close is ignored, so freopen() still
+           succeeds - errno is all that can carry the loss (#228) */
+        rc = __aclose(fp->dcb);
+        if (rc && !lost) lost = (rc == 12) ? ENOSPC : EIO;
+    }
     fp->dcb     = f->dcb;
     f->dcb      = 0;
     fp->asmbuf  = f->asmbuf;
@@ -86,6 +97,9 @@ __reopen(const char *fn, const char *mode, FILE *fp)
 
     /* free "new" file handle (f) storage */
     free(f);
+
+    /* last, so nothing above overwrites it */
+    if (lost) errno = lost;
 
 quit:
     return (fp);
