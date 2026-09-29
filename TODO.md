@@ -321,6 +321,11 @@ through `__aclose()` into `fclose()`'s return value.
 `EOF` + `ENOSPC`/`EIO`. `test/mvs/tstclspc.c`: R=190 on mvsdev, 195..199 lose
 the short block; red JOB00729 (`fclose()` 0), green JOB00730 (EOF, errno 28),
 7/7. The other `__aclose()` callers are **#228** (rank 40).
+Consumers informed 2026-09-29: mvslovers/ftpd#154 (STOR 250 on a lost tail),
+mvslovers/mvsmf#371 (PUT 204, closes #366's KNOWN GAP), mvslovers/httplua#10
+(STDOUT temp data set). ftpd and mvsMF pin `libc370 = "1.0.6"`, so **#182 only
+reaches them with a release**. brexx370 (pins `edge`) is handled by its own
+session. cobc370 and RAKF are outside mvslovers and not filed; RAKF links crent370.
 
 ### ~~1 · #222~~ — fixed, PR #224, 2026-09-29
 
