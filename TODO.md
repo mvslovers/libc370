@@ -10,8 +10,8 @@ libc370 is the base library of the whole ecosystem, so a defect here is a defect
 in httpd, mvsMF, ftpd, ufsd and every other consumer at once; that is what puts
 some cheap items high and some expensive ones low.
 
-*Last reconciled against the tracker: **2026-09-29**, 50 issues open (#182
-closed, #228 and #229 filed the same day), all 50 accounted for below.* That pass found **#181** and **#182** (filed 2026-09-13/14) in
+*Last reconciled against the tracker: **2026-09-29**, 49 issues open (#182
+and #228 closed, #228 and #229 filed the same day), all 49 accounted for below.* That pass found **#181** and **#182** (filed 2026-09-13/14) in
 no rank at all, fifteen days after they were filed — #182 is now rank 1 and
 #181 rank 39. The pass before was 2026-09-13 at 41 open, all 41 ranked. #149 was fixed and released the same day (PR #180, **v1.0.6**)
 and #178/#179 were filed out of that work; both are ranked at the end. The previous pass was 2026-08-30 at 29 open, and the gap it left
@@ -320,7 +320,7 @@ through `__aclose()` into `fclose()`'s return value.
 **Merged as PR #227 (2026-09-29, `14edfa7`), `edge` moved there, sysroot installed from main:** `@@ACLOSE` returns 12/8 like `@@AWRITE`, `fclose()` returns
 `EOF` + `ENOSPC`/`EIO`. `test/mvs/tstclspc.c`: R=190 on mvsdev, 195..199 lose
 the short block; red JOB00729 (`fclose()` 0), green JOB00730 (EOF, errno 28),
-7/7. The other `__aclose()` callers are **#228** (rank 40).
+7/7. The other `__aclose()` callers were **#228** (rank 40, PR #230, merged the same day).
 Consumers informed 2026-09-29: mvslovers/ftpd#154 (STOR 250 on a lost tail),
 mvslovers/mvsmf#371 (PUT 204, closes #366's KNOWN GAP), mvslovers/httplua#10
 (STDOUT temp data set). ftpd and mvsMF pin `libc370 = "1.0.6"`, so **#182 only
@@ -510,14 +510,17 @@ resumed correctly and never faulted, and the guest cannot tell them apart.
 
 ## Tier 2 — campaign: unchecked allocation
 
-### 40 · #228 — `freopen()`, backward `fseek()`, `+`-stream turn and `rclose()` still lose the final block
+### ~~40 · #228~~ — fixed, PR #230, 2026-09-29
 
-#182's other paths: `@@reopen.c:24,37`, `@@fpswt.c:118`, `rclose.c:21` all
-ignore `__aclose()`'s rc. Same silent data loss as #182, but only
-on paths that close *through* something else, so it sits after #182 and
-before the campaigns. Derived from the code, not measured; `tstclspc.c` is the
-template. Open decision: `freopen()` may not fail on a failed close (C99
-7.19.5.4), so its half is "make it observable", not "fail".
+#182's other paths: `freopen()`, the `+`-stream turn and `rclose()`. Backward
+`fseek()` was never one (the issue's own correction, #200's `ESPIPE`).
+`rclose()` returns -1 + `ENOSPC`/`EIO`; a turned `+` stream stays open and
+readable with `ferror()` set; `freopen()` still succeeds (C99 7.19.5.4) and
+leaves `errno` at `ENOSPC`/`EIO`, documented in `doc/consumer-notes.md`.
+`tstclspc.c` 18/18: red JOB00744 (1.0.7), green JOB00745, mvsdev only.
+Contract change with live consumers on the turn (brexx370 stream I/O, Lua
+`file:seek` on `w+`/`r+`). Not released yet; `edge` and the sysroot follow
+the merge.
 
 ### 2 · #61, #80 defect 3, #157, #158 — four list builders hand back a silently short list
 
@@ -1137,7 +1140,8 @@ survive at all: C99 7.19.5.4 closes it either way, and libc370 does not.
 `rclose()` only `__aclose()`s and `free()`s - `__fdclr()` is declared there and
 never called. One TIOT entry and a held allocation per pair. From the code,
 not measured; no consumer anywhere in the ecosystem (2026-09-29 sweep), so
-latent. One line, best done together with #228's `rclose()` rc.
+latent. One line; #228 (PR #230) now gives `rclose()` a return value the
+`__fdclr()` rc can feed.
 
 ### ~~38 · #195 (+ #213)~~ — fixed, PR #214, 2026-09-29
 
@@ -1213,6 +1217,11 @@ unmounted volser.
 ## Recently landed
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
+
+- **#228** (PR #230, merged 2026-09-29) - `freopen()`, the `+`-stream turn
+  and `rclose()` report a lost last block like `fclose()` does since #182:
+  `rclose()` -1, the turn `ferror()`, `freopen()` errno only. mvsdev
+  `tstclspc.c` red JOB00744, green JOB00745 18/18.
 
 - **#195 + #213** (PR #214, merged 2026-09-29) - `wchar_t` is `__WCHAR_TYPE__`
   (int), `ptrdiff_t` is `__PTRDIFF_TYPE__` (long); new types-only `<wchar.h>`
