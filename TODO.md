@@ -300,7 +300,7 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 
 ## Tier 1 — empty again
 
-### ~~1 · #218~~ — fixed on `fix/218-grtptrs-cppl`, PR pending, 2026-09-29
+### ~~1 · #218~~ — fixed on `fix/218-grtptrs-cppl`, PR #219 (open), 2026-09-29
 
 `__start()` copied ten words of a CPPL into `grtptrs` (no VL bit to stop at),
 six from past the list. The CPPL is now recognised *before* the copy by the
