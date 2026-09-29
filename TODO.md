@@ -300,6 +300,15 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 
 ## Tier 1 — empty again
 
+### 1 · #197 — `racf_auth()` S047 without APF: fix on PR #215
+
+The `MODESET` now happens only for an APF-authorized caller that is not
+already in supervisor state. Red on mvsdev JOB00655, green on JOB00659
+(`test/mvs/tstracun.c`, not authorized). This unblocks brexx370's `rac/` →
+libc370 cleanup (brexx370 #134). Move `edge` once it is merged. Not measured:
+TK5, and the AC=1 probes `tstracau`/`tstracmx` against the new library; cell
+(3) covers the same authorized path through JSCBAUTH.
+
 ### ~~1 · #211~~ — fixed, PR #212, 2026-09-29
 
 `%zd` printed `d`: `__examin()` (`@@examin.c`) did not know `z`, `t`, `j` or `hh`.

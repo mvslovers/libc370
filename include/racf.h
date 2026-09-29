@@ -47,10 +47,13 @@ extern int      racf_logout(ACEE **acee)                                asm("RAC
 **    8  not authorized
 **   12+ see the table at the top of src/racf/racauth.c
 **
-** Which of 0 and 4 an unprotected resource answers depends on a flag in the
-** RACHECK parameter list that libc370 currently sets wrongly, so today it is
-** always 0 -- see #63 and the comment at that assignment.  Consumers should
-** already accept both.
+** Which of 0 and 4 an unprotected resource answers depends on the LOG bit in
+** the RACHECK parameter list.  Since #63 libc370 sets LOG=NONE and the answer
+** is 4.  Consumers should accept both.
+**
+** No APF needed (#197): an authorized caller is switched to supervisor state
+** for the RACHECK as before; any other caller issues it from problem state,
+** which SVC 130 answers the same way.
 */
 extern int      racauth(ACEE *acee, const char *classname,
                         const char *resource, int attr);

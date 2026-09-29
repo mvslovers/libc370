@@ -53,6 +53,7 @@ __asm__("\n&FUNC    SETC 'racf_auth'");
 int racf_auth(ACEE *acee, const char *classname, const char *resource,
               int attr) {
   int rc = 0;
+  int modeset = 0;
   int len;
   RACLASS cclass;
   char resname[80];
@@ -121,14 +122,49 @@ int racf_auth(ACEE *acee, const char *classname, const char *resource,
   */
   plist.acee = acee;
 
+  /* Enter supervisor state only when we are allowed to and not already in
+  ** it (#197).  SVC 130 answers from problem state and unauthorized: RAKF's
+  ** SVC entry has no TESTAUTH, and test/mvs/tstracun.c measured the same
+  ** answers with and without the MODESET for the runner's own identity.  A
+  ** foreign ACEE in the plist is honoured from problem state too (same
+  ** probe, cell 5; tstracmx.c is the authorized side).  An unconditional
+  ** MODESET made every unauthorized caller S047, and the unconditional
+  ** MODESET back left a caller that was already in supervisor state in
+  ** problem state.
+  */
   __asm__("\n"
           "*\n"
-          "* enter supervisor state\n"
+          "* see if we're in supervisor state\n"
           "*\n"
-          "         MODESET KEY=ZERO,MODE=SUP\n"
+          "         TESTAUTH FCTN=0,STATE=YES,KEY=NO,RBLEVEL=1\n"
+          "         ST    15,%0"
+          : "=m"(rc)
           :
-          :
-          : "1", "14", "15");
+          : "0", "1", "14", "15");
+  if (rc != 0) {
+    /* problem state: switch only if APF-authorized */
+    __asm__("\n"
+            "*\n"
+            "* see if we're APF authorized\n"
+            "*\n"
+            "         TESTAUTH FCTN=1,STATE=NO,KEY=NO,RBLEVEL=1\n"
+            "         ST    15,%0"
+            : "=m"(rc)
+            :
+            : "0", "1", "14", "15");
+    modeset = (rc == 0);
+  }
+
+  if (modeset) {
+    __asm__("\n"
+            "*\n"
+            "* enter supervisor state\n"
+            "*\n"
+            "         MODESET KEY=ZERO,MODE=SUP\n"
+            :
+            :
+            : "1", "14", "15");
+  }
 
   __asm__("\n"
           "*\n"
@@ -140,14 +176,16 @@ int racf_auth(ACEE *acee, const char *classname, const char *resource,
           : "r"(resname), "r"(&cclass), "r"(attr), "m"(plist)
           : "1", "14", "15");
 
-  __asm__("\n"
-          "*\n"
-          "* return to problem state\n"
-          "*\n"
-          "         MODESET KEY=NZERO,MODE=PROB\n"
-          :
-          :
-          : "1", "14", "15");
+  if (modeset) {
+    __asm__("\n"
+            "*\n"
+            "* return to problem state\n"
+            "*\n"
+            "         MODESET KEY=NZERO,MODE=PROB\n"
+            :
+            :
+            : "1", "14", "15");
+  }
 
   return rc;
 }
