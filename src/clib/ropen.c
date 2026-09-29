@@ -33,11 +33,12 @@ ropen(const char *fnm, int write, RFILE **rfile)
 
     while(*fnm==' ') fnm++;
 
-    if (toupper(fnm[0])=='D' && toupper(fnm[1])=='D' && fnm[2]==':') {
+    if (toupper((unsigned char)fnm[0])=='D' &&
+        toupper((unsigned char)fnm[1])=='D' && fnm[2]==':') {
         p=(char*)&fnm[3];
         for(i=0;i<8 && p[i];i++) {
             if (p[i]=='(') break;
-            tmpdd[i] = toupper(p[i]);
+            tmpdd[i] = toupper((unsigned char)p[i]);
         }
         p=&p[i];
         while(i<8) tmpdd[i++] = ' ';
@@ -46,7 +47,7 @@ ropen(const char *fnm, int write, RFILE **rfile)
             p++;
             for(i=0;i<8 && p[i];i++) {
                 if (p[i]==')') break;
-                member[i] = toupper(p[i]);
+                member[i] = toupper((unsigned char)p[i]);
             }
             member[i] = 0;
         }
@@ -75,7 +76,7 @@ ropen(const char *fnm, int write, RFILE **rfile)
 
     p = &newfnm[i];
     for(i=0; fnm[i] && fnm[i] != '('; i++) {
-        p[i] = toupper(fnm[i]);
+        p[i] = toupper((unsigned char)fnm[i]);
     }
     p[i] = 0;
 
@@ -84,7 +85,7 @@ ropen(const char *fnm, int write, RFILE **rfile)
         while(*p==' ') p++;
         for(i=0;i<8 && p[i]!=' ' && p[i];i++) {
             if (p[i]==')') break;
-            member[i] = toupper(p[i]);
+            member[i] = toupper((unsigned char)p[i]);
         }
         while(i<8) member[i++] = ' ';
         member[i] = 0;
@@ -102,6 +103,7 @@ doopen:
     hfile   = __aopen(tmpdd, &mode, &recfm, &lrecl, &blksize, &asmbuf, member);
     /* errors from MVS __aopen are negative numbers */
     if ((int)hfile <= 0) {
+        if (dyn) __fdclr(tmpdd);    /* #229 */
         err = 1;
         errno = -(int)hfile;
         goto quit;
