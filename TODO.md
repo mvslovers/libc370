@@ -298,7 +298,23 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 
 ---
 
-## Tier 1 — empty again
+## Tier 1 — #222 open, #209 in review
+
+### 1 · #222 — `%f` of a value >= 1e41 overflows a stack buffer
+
+Filed 2026-09-29 out of #209. `__dblcvt()` writes with `strcat` into a caller
+buffer it has no length for: 50 bytes on the plain `%f` path (`vsnprint.c`,
+`vvprintf.c`), 80 in `__examin()`, and its own `work[125]`. Plain
+`printf("%f", 1e41)` is enough, measured under ASAN on the host; on MVS every one
+of those buffers is an automatic. A length parameter for the internal
+`__dblcvt()` fixes it, and three call sites change.
+
+### 1 · #209 — `%.30g` added 5e-15 — PR #223 open, 2026-09-29
+
+The rounding cap was `DBL_MANT_DIG`, 14 *hex* digits on S/370. Now 17 decimal
+digits, and zero is not rounded. Red JOB00712, green JOB00714 (29/29, mvsdev);
+host `test/host/tstdblcv.c`. mvslovers/brexx370#156 waits for it. Its two
+neighbours are ranked at 38: #220 and #221.
 
 ### ~~1 · #218~~ — fixed, PR #219, 2026-09-29
 
@@ -1061,6 +1077,16 @@ survive at all: C99 7.19.5.4 closes it either way, and libc370 does not.
 ### ~~38 · #195 (+ #213)~~ — fixed, PR #214, 2026-09-29
 
 See "Recently landed". Follow-up outside libc370: cc370#484 (`L'a'` is ASCII 97).
+
+---
+
+### 38 · #220, #221 — `%g` output does not follow C99
+
+Filed 2026-09-29 out of #209, both in `@@dblcvt.c`, both output-only. #220:
+`%g` counts its precision as fractional digits (`%.6g` of 0.000123456 is
+`0.000123`), and `%.2f` of 0.004 prints `0.009`. #221: `%g` in e-style keeps
+its trailing zeros, and the exponent is always `E`. Best done together once
+#222 has given `__dblcvt()` its length parameter.
 
 ---
 
