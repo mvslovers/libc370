@@ -10,9 +10,9 @@ libc370 is the base library of the whole ecosystem, so a defect here is a defect
 in httpd, mvsMF, ftpd, ufsd and every other consumer at once; that is what puts
 some cheap items high and some expensive ones low.
 
-*Last reconciled against the tracker: **2026-09-29**, 50 issues open (#182,
-#228, #229, #231 and #232 closed, #228, #229, #231, #232, #235 and #236 filed
-the same day), all 50 accounted for below.* That pass found **#181** and **#182** (filed 2026-09-13/14) in
+*Last reconciled against the tracker: **2026-09-29**, 49 issues open (#182,
+#228, #229, #231, #232 and #235 closed, #228, #229, #231, #232, #235 and #236
+filed the same day), all 49 accounted for below.* That pass found **#181** and **#182** (filed 2026-09-13/14) in
 no rank at all, fifteen days after they were filed — #182 is now rank 1 and
 #181 rank 39. The pass before was 2026-09-13 at 41 open, all 41 ranked. #149 was fixed and released the same day (PR #180, **v1.0.6**)
 and #178/#179 were filed out of that work; both are ranked at the end. The previous pass was 2026-08-30 at 29 open, and the gap it left
@@ -523,14 +523,10 @@ Contract change with live consumers on the turn (brexx370 stream I/O, Lua
 `file:seek` on `w+`/`r+`). Not released yet; `edge` and the sysroot follow
 the merge.
 
-### 1 · #235 — `jesiropn.s` stops the build once cc370#483 lands
+### ~~1 · #235~~ — fixed, PR #238, 2026-09-29
 
-Line 63 names `&FUNC` with two EN DASHes (U+2013) where `__` belongs. Today
-as370 assembles the UTF-8 bytes silently into the eyecatcher; with cc370#483 a
-character without an EBCDIC image in a constant is RC 8, and the build stops.
-The only module of the corpus that moves with that fix. One line - check
-first whether the `.s` is generated from a `.c`, and fix it there. **Gates
-cc370#483**, which is why it sits at rank 1 despite touching no running code.
+See "Recently landed". cc370#483 (PR cc370#512) no longer breaks the libc370
+build. `edge` moved to the merge (`9ed55db`), sysroot installed from main.
 
 ### 2 · #61, #80 defect 3, #157, #158 — four list builders hand back a silently short list
 
@@ -1246,6 +1242,11 @@ unmounted volser.
 ## Recently landed
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
+
+- **#235** (PR #238, merged 2026-09-29) - `jesiropn.c`'s `&FUNC` for
+  `__alloc_intrdr` had two EN DASHes where `__` belongs. `make build` with the
+  as370 of cc370 PR #512: `main` 1 failure (rc 8), the fix 0; no other
+  non-ASCII byte in the tree reaches the assembler.
 
 - **#232** (PR #237, merged 2026-09-29) - `rwrite()` refuses with `EINVAL`
   what `@@AWRITE` cannot take (size > LRECL, LRECL-4 spanned; on V an RDW
