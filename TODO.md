@@ -300,15 +300,16 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 
 ## Tier 1 — empty again
 
-### 1 · #210 — `ppacppl` was never set; fix on PR #217
+### ~~1 · #210~~ — fixed, PR #217, 2026-09-29
 
 `tsocmd()` (and `ispexec()` on top of it) always returned 8 with "No CPPL":
 `@@CRT0` clears the PPA and nothing wrote +X'2C'. `__start()` now records
 `pgmr1` as the CPPL when `GRTFLAG1_TSO` is on **and** the CPPL's PSCB word
 equals `ppapscb` from EXTRACT. Red JOB00677/00681, green JOB00683
 (`test/mvs/tstcppl.c`: batch, TSO CALL and TSO command, the last LINKing
-itself through `tsocmd()`). After merge: move `edge`, tell brexx370 its
-`jccompat.c` CPPL workaround can go once it builds against it. Side datum for
+itself through `tsocmd()`), and in a real TSO foreground session (3270 as
+MVSCE01, module briefly in SYS2.LINKLIB). `edge` moved to `832d794`; brexx370
+told its `jccompat.c` CPPL workaround can go once it builds against it. Side datum for
 #105: a second `__start()` in one address space does happen - a C program
 LINKed by `tsocmd()` (the CHILD in JOB00683) - and the CHILD's `grtptrs` start
 fresh (n=10, its own CBUF at [0]), not appended to the parent's, and the
@@ -336,7 +337,7 @@ All six steps are merged (#201, #202, #203, #205, #207, #208); the closing
 comment on #189 has the table. Left open by decision: #204 (append to a
 member) and #206 (O(1) backward seek via NOTE/POINT).
 
-**Rolling tag `edge`** (since 2026-09-27, now on `f7c836c` = #197 merged; the sysroot here is still installed from `0b8ac37`): brexx370's MVS CI
+**Rolling tag `edge`** (since 2026-09-27, now on `832d794` = #210 merged; the sysroot here is still installed from `0b8ac37`): brexx370's MVS CI
 clones libc370 at its `[toolchain]` pin, so it tracks `edge` in the meantime.
 **Move `edge` after each of these merges once its MVS gate is measured**
 (`git tag -fa edge <sha>` + `git push -f origin edge`), and cut a real release
