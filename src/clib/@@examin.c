@@ -28,7 +28,8 @@ static const char DIGITS[] = "0123456789ABCDEF";
 static const char digits[] = "0123456789abcdef";
 
 extern void
-__dblcvt(double num, char cnvtype, size_t nwidth, int nprecision, char *result);
+__dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
+         char *result, size_t rsize);
 
 int
 __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax)
@@ -52,7 +53,7 @@ __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax)
     unsigned    ulvalue;
     double      vdbl;
     char        *svalue;
-    char        work[80];
+    char        work[128];
     int         x;
     int         y;
     int         rem;
@@ -313,7 +314,8 @@ __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax)
         }
 
         vdbl = va_arg(*arg, double);
-        __dblcvt(vdbl, specifier, width, precision, work);   /* 'e','f' etc. */
+        __dblcvt(vdbl, specifier, width, precision, work,
+                 sizeof(work) - 1);   /* keep a byte for the sign (#222) */
         slen = strlen(work);
         if ((flagSpace || flagPlus) && (work[0] != '-')) {
             slen++;

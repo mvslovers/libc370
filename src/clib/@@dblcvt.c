@@ -9,12 +9,28 @@
 #include <limits.h>
 #include <stddef.h>
 
+/*
+   result has rsize bytes, and nothing is written past them (#222).
+   What does not fit is cut off: the NUL always stays, an exponent
+   before any fraction digit, digits before padding.
+*/
 void
-__dblcvt(double num, char cnvtype, size_t nwidth, int nprecision, char *result)
+__dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
+         char *result, size_t rsize)
 {
     double b,round;
     int i,j,exp,pdigits,format;
-    char sign, work[125];
+    char sign;
+    size_t n,lim,dlim,pad;
+
+/* append one character while there is room below dlim */
+#define DBLCVT_PUT(c) do { if (n < dlim) result[n++] = (c); } while (0)
+
+    if (rsize == 0) {
+        return;
+    }
+    n = 0;
+    lim = rsize - 1;
 
     /* save original data & set sign */
     if ( num < 0 ) {
@@ -144,36 +160,40 @@ __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision, char *result)
     }
 
     /*
-       Now extract the requisite number of digits
+       Now extract the requisite number of digits.  A positive number
+       gets no sign position; the digits of an e-style number stop four
+       bytes short, so its exponent always fits.
     */
+    dlim = lim;
+    if (format == 0) {
+        dlim = (lim > 4) ? lim - 4 : 0;
+    }
+    if (sign == '-') {
+        DBLCVT_PUT(sign);
+    }
+
     if (format==-1) {
         /*
              Number < 1.0 so we need to print the "0."
              and the leading zeros...
         */
-        result[0]=sign;
-        result[1]='0';
-        result[2]='.';
-        result[3]=0x00;
+        DBLCVT_PUT('0');
+        DBLCVT_PUT('.');
         while (++exp) {
             --nprecision;
-            strcat(result,"0");
+            DBLCVT_PUT('0');
         }
         i=b;
         --nprecision;
-        work[0] = (char)('0' + i % 10);
-        work[1] = 0x00;
-        strcat(result,work);
+        DBLCVT_PUT((char)('0' + i % 10));
 
         pdigits = nprecision;
 
-        while (pdigits-- > 0) {
+        while (pdigits-- > 0 && n < dlim) {
             b = b - i;
             b = b * 10.0;
             i = b;
-            work[0] = (char)('0' + i % 10);
-            work[1] = 0x00;
-            strcat(result,work);
+            DBLCVT_PUT((char)('0' + i % 10));
         }
     }
     /*
@@ -181,24 +201,18 @@ __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision, char *result)
     */
     else if (format==+1) {
         i = b;
-        result[0] = sign;
-        result[1] = '\0';
-        work[0] = (char)('0' + i % 10);
-        work[1] = 0x00;
-        strcat(result,work);
+        DBLCVT_PUT((char)('0' + i % 10));
         nprecision = nprecision + exp;
         pdigits = nprecision ;
 
-        while (pdigits-- > 0) {
+        while (pdigits-- > 0 && n < dlim) {
             if ( ((nprecision-pdigits-1)==exp) ) {
-                strcat(result,".");
+                DBLCVT_PUT('.');
             }
             b = b - i;
             b = b * 10.0;
             i = b;
-            work[0] = (char)('0' + i % 10);
-            work[1] = 0x00;
-            strcat(result,work);
+            DBLCVT_PUT((char)('0' + i % 10));
         }
     }
     /*
@@ -206,38 +220,33 @@ __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision, char *result)
     */
     else {
         i = b;
-        result[0] = sign;
-        result[1] = '\0';
-        work[0] = (char)('0' + i % 10);
-        work[1] = 0x00;
-        strcat(result,work);
-        strcat(result,".");
+        DBLCVT_PUT((char)('0' + i % 10));
+        DBLCVT_PUT('.');
 
         pdigits = nprecision;
 
-        while (pdigits-- > 0) {
+        while (pdigits-- > 0 && n < dlim) {
             b = b - i;
             b = b * 10.0;
             i = b;
-            work[0] = (char)('0' + i % 10);
-            work[1] = 0x00;
-            strcat(result,work);
+            DBLCVT_PUT((char)('0' + i % 10));
         }
     }
+    result[n] = '\0';
 
     if (format==0) { /* exp format - put exp on end */
-        work[0] = 'E';
+        dlim = lim;
+        DBLCVT_PUT('E');
         if ( exp < 0 ) {
             exp = -exp;
-            work[1]= '-';
+            DBLCVT_PUT('-');
         }
         else {
-            work[1]= '+';
+            DBLCVT_PUT('+');
         }
-        work[2] = (char)('0' + (exp/10) % 10);
-        work[3] = (char)('0' + exp % 10);
-        work[4] = 0x00;
-        strcat(result, work);
+        DBLCVT_PUT((char)('0' + (exp/10) % 10));
+        DBLCVT_PUT((char)('0' + exp % 10));
+        result[n] = '\0';
     }
     else {
         /* get rid of trailing zeros for g specifier */
@@ -256,26 +265,25 @@ __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision, char *result)
                     *p = '\0';
                 }
             }
+            n = strlen(result);
         }
     }
 
     /* printf(" Final Answer = <%s> fprintf gives=%g\n",
                 result,num); */
     /*
-     do we need to pad
+     do we need to pad - only as far as the buffer goes
     */
-    if(result[0] == ' ') {
-        strcpy(work,result+1);
+    if (nwidth > n) {
+        pad = nwidth - n;
+        if (pad > lim - n) {
+            pad = lim - n;
+        }
+        memmove(result + pad, result, n + 1);
+        while (pad > 0) {
+            result[--pad] = ' ';
+        }
     }
-    else {
-        strcpy(work,result);
-    }
-    pdigits=nwidth-strlen(work);
-    result[0]= 0x00;
-    while(pdigits>0) {
-        strcat(result," ");
-        pdigits--;
-    }
-    strcat(result,work);
     return;
+#undef DBLCVT_PUT
 }
