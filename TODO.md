@@ -1148,9 +1148,10 @@ sysroot installed from main.
 ### 41 · #231, #232 — `ropen()`/`rwrite()` break on documented forms
 
 Found by #229's probe, both measured on mvsdev, no consumer anywhere
-(2026-09-29 sweep). **#231**: a quoted name without a member keeps its closing
-quote in the DSN (`ropen.c` copy loop stops only at `(`/NUL), SVC 99
-`X'035C'`, JOB00766. **#232**: `rwrite()` on RECFM=V hands a record without
+(2026-09-29 sweep). **#231** — fix on PR #234: a quoted name without a member
+kept its closing quote in the DSN (`ropen.c` copy loop stopped only at
+`(`/NUL), SVC 99 `X'035C'`, JOB00766; `tstrfree.c` (11)/(12) red against the
+sysroot, green 12/12 in JOB00789. **#232**: `rwrite()` on RECFM=V hands a record without
 RDW to `@@AWRITE`, which abends U0002 on the length check (`WRITENEW`),
 JOB00767 - document the RDW or build it, but return an error either way.
 
