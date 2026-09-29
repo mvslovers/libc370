@@ -82,6 +82,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   where `__` belongs); the as370 of cc370#483 rejects a character without
   an EBCDIC image in a constant, rc 8, and `make build` stopped there -
   the only one of the 756 sources (728 `.s`, 28 `.asm`) that did. No change in behaviour.
+- **`fwrite()` in record mode refuses a record it cannot write (#236).**
+  The `",record"` path had #232's defect: `size*nmemb` bytes went into the
+  LRECL-sized work buffer and to `@@AWRITE` unchecked. It now answers 0
+  with `errno` **`EINVAL`**, writes nothing and leaves `ferror()` clear
+  when the record exceeds LRECL (LRECL-4 spanned) or, on RECFM=V, when
+  the RDW the caller supplies is short, does not match, or has bytes 2-3
+  set. `size` or `nmemb` 0 now writes nothing and answers 0 (C99
+  7.19.8.2); before, each wrote a blank record on FB, and so did a
+  `size*nmemb` that wrapped to 0. The contract is documented at
+  `_FILE_FLAG_RECORD` in `include/clibio.h`.
+
+  Measured on mvsdev with `test/mvs/tstfwrec.c`, JOB00805: against the
+  installed sysroot VB accepts a record of LRECL+1 and its read-back abends
+  U1234, a plain V record and a spanned one of LRECL-3 abend U0002, and FB
+  ends with 5 records where 1 was written; green in the same job, 19/19.
+  Every record-mode user in the ecosystem only reads (`"r,record"`, sweep
+  2026-09-29); nobody writes.
 
 ## [1.0.7] - 2026-09-29
 

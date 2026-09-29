@@ -29,6 +29,13 @@ struct _file {
 #define _FILE_FLAG_APPEND   0x0800  /* ... open for append                  */
 #define _FILE_FLAG_BINARY   0x0400  /* ... file data is binary              */
 #define _FILE_FLAG_RECORD   0x0200  /* ... fread/fwrite uses record i/o     */
+/* Record mode (",record" in the fopen() mode): one fread()/fwrite() is one
+   record.  On RECFM=V the record carries its RDW both ways - bytes 0-1 the
+   length including the RDW, bytes 2-3 zero - as rread()/rwrite() do.
+   fwrite() of size*nmemb bytes refuses with EINVAL, writing nothing and
+   leaving the stream usable, what exceeds LRECL (LRECL-4 spanned) or, on V,
+   an RDW that is short or does not match; size or nmemb 0 writes nothing
+   (#236). */
 #define _FILE_FLAG_BSAM     0x0100  /* ... BSAM instead of QSAM access      */
 #define _FILE_FLAG_TERM		0x0080	/* ... TERM opened in __fpstar()		*/
 #define _FILE_FLAG_RLSE     0x0040  /* ... release unused space at CLOSE    */

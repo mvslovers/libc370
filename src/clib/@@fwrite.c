@@ -39,7 +39,31 @@ __fwrite(const void *vptr, size_t size, size_t nmemb, FILE *fp)
 
     if (fp->flags & _FILE_FLAG_RECORD) {
         /* use record oriented i/o */
+        size_t  max = fp->lrecl;
+
+        /* C99 7.19.8.2: nothing to write, nothing written (#236) - a
+           record of length 0 used to go out, blank on F */
+        if (!size || !nmemb) goto quit;
+
+        /* #236: the record must fit asmbuf (LRECL bytes) and what
+           @@AWRITE takes without ABEND 002: on V the caller's RDW equal
+           to the length, bytes 2-3 zero, at most LRECL-4 when spanned -
+           the OPEN exit sets spanned whenever LRECL+4 does not fit the
+           block.  A refused record is the caller's error, not the
+           stream's: no error flag, the next record may be written. */
+        if ((fp->recfm & _FILE_RECFM_TYPE) == _FILE_RECFM_V
+            && (fp->recfm & _FILE_RECFM_S)) max -= 4;
+        if (nmemb > max / size) {   /* size * nmemb > max, no overflow */
+            errno = EINVAL;
+            goto quit;
+        }
         size *= nmemb;
+        if ((fp->recfm & _FILE_RECFM_TYPE) == _FILE_RECFM_V
+            && (size < 4 || (size_t)((ptr[0] << 8) | ptr[1]) != size
+                || ptr[2] || ptr[3])) {
+            errno = EINVAL;
+            goto quit;
+        }
         begwrite(fp, size);
         memcpy(dptr, ptr, size);
         if ((err = finwrite(fp)) != 0) {
