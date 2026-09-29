@@ -10,8 +10,9 @@ libc370 is the base library of the whole ecosystem, so a defect here is a defect
 in httpd, mvsMF, ftpd, ufsd and every other consumer at once; that is what puts
 some cheap items high and some expensive ones low.
 
-*Last reconciled against the tracker: **2026-09-29**, 49 issues open (#182
-and #228 closed, #228 and #229 filed the same day), all 49 accounted for below.* That pass found **#181** and **#182** (filed 2026-09-13/14) in
+*Last reconciled against the tracker: **2026-09-29**, 50 issues open (#182,
+#228 and #229 closed, #228, #229, #231 and #232 filed the same day), all 50
+accounted for below.* That pass found **#181** and **#182** (filed 2026-09-13/14) in
 no rank at all, fifteen days after they were filed — #182 is now rank 1 and
 #181 rank 39. The pass before was 2026-09-13 at 41 open, all 41 ranked. #149 was fixed and released the same day (PR #180, **v1.0.6**)
 and #178/#179 were filed out of that work; both are ranked at the end. The previous pass was 2026-08-30 at 29 open, and the gap it left
@@ -90,7 +91,7 @@ mvsdev, nothing on TK5.
 
 Open and named, not fixed: `@@start.c:77` opens `dd:SYSIN` unconditionally and
 is what creates the collision; a lazily-opened stdin would retire the class.
-`ropen.c:102` calls `__aopen()` directly, so `ropen("dd:SYSIN",...)` still
+`ropen.c:103` calls `__aopen()` directly, so `ropen("dd:SYSIN",...)` still
 abends — the `grtfile` walk cannot see it.
 
 **#183 was merged on PR #185 and never needed a rank either — it turned out
@@ -1134,14 +1135,23 @@ now silently kills a healthy stream. Smallest fix is to drop the line. Worth
 deciding at the same time whether keeping the old stream open on failure should
 survive at all: C99 7.19.5.4 closes it either way, and libc370 does not.
 
-### 41 · #229 — `rclose()` never frees the DD `ropen()` allocated
+### ~~41 · #229~~ — fixed, PR #233, 2026-09-29
 
-`ropen()` of a data set name allocates through `__fildef()` and records `dyn`;
-`rclose()` only `__aclose()`s and `free()`s - `__fdclr()` is declared there and
-never called. One TIOT entry and a held allocation per pair. From the code,
-not measured; no consumer anywhere in the ecosystem (2026-09-29 sweep), so
-latent. One line; #228 (PR #230) now gives `rclose()` a return value the
-`__fdclr()` rc can feed.
+`rclose()` unallocates the DD `ropen()` allocated by name (-1 + `EIO` if that
+fails), and `ropen()` does the same when `__aopen()` fails after the
+allocation. `tstrfree.c` counts the DSAB chain: red step against the installed
+sysroot 6 -> 28 over 22 opens, green step 10/10, both in mvsdev JOB00768.
+Not covered: `__fildef()`'s `DISP=NEW` fallback without a normal disposition
+(comment on #229). Not released; `edge` and the sysroot not moved yet.
+
+### 41 · #231, #232 — `ropen()`/`rwrite()` break on documented forms
+
+Found by #229's probe, both measured on mvsdev, no consumer anywhere
+(2026-09-29 sweep). **#231**: a quoted name without a member keeps its closing
+quote in the DSN (`ropen.c` copy loop stops only at `(`/NUL), SVC 99
+`X'035C'`, JOB00766. **#232**: `rwrite()` on RECFM=V hands a record without
+RDW to `@@AWRITE`, which abends U0002 on the length check (`WRITENEW`),
+JOB00767 - document the RDW or build it, but return an error either way.
 
 ### ~~38 · #195 (+ #213)~~ — fixed, PR #214, 2026-09-29
 
