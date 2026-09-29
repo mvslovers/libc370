@@ -67,6 +67,11 @@
  * tsocmd rc=8.  grtptrs[2] there equals ppapscb, so the words at R1 are
  * the CPPL.  Green with the fix: JOB00683, every cell passes and the
  * CHILD returns 42; with (c4) added and the statics removed: JOB00686.
+ * TSO foreground, 2026-09-29: a 3270 session as MVSCE01 (TN3270 port
+ * 3270 on mvsdev - 3272 is a different system), the module IEBCOPYed
+ * into SYS2.LINKLIB for the run and removed afterwards: "TSTCPPL CP"
+ * passes c1-c4 and k1-k3, "CALL ...(TSTCPPL) 'CALL'" passes n1-n3.
+ * From the link list in batch too (no STEPLIB): JOB00689.
  *
  * BUILD (host):
  *     make build
