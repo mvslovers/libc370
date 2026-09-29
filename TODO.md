@@ -303,8 +303,8 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 ### ~~1 · #211~~ — fixed, PR #212, 2026-09-29
 
 `%zd` printed `d`: `__examin()` (`@@examin.c`) did not know `z`, `t`, `j` or `hh`.
-Side finding **#213** (not ranked yet): libc370's `ptrdiff_t` is `int` where
-cc370's is `long`, so `%td` of it warns under `-Wall`.
+Side finding **#213**: libc370's `ptrdiff_t` was `int` where cc370's is `long` -
+fixed together with #195, see item 38.
 
 ### ~~1 · #189~~ — complete, PR #208, 2026-09-27
 
@@ -1021,13 +1021,14 @@ now silently kills a healthy stream. Smallest fix is to drop the line. Worth
 deciding at the same time whether keeping the old stream open on failure should
 survive at all: C99 7.19.5.4 closes it either way, and libc370 does not.
 
-### 38 · #195 — `wchar_t` is `char` in libc370 and `int` in cc370
+### 38 · #195 (+ #213) — PR #214 open, MVS gate measured, ready to merge
 
-`sizeof(L"x"[0])` is 4 and `sizeof(wchar_t)` is 1, so `wchar_t *p = L"abc"` is an
-incompatible-pointer error under `-Werror`; `wint_t`, `WEOF`, `WCHAR_*` and
-`WINT_*` do not exist. Low because no consumer has been seen to use wide
-characters — but that sweep has not been run yet, and it decides which side
-changes: libc370 (an ABI change for `mbtowc` & co.) or cc370's `WCHAR_TYPE`.
+`wchar_t` and `ptrdiff_t` now come from the compiler (`__WCHAR_TYPE__` int,
+`__PTRDIFF_TYPE__` long); new types-only `<wchar.h>` (`wint_t`, `WEOF`, limits);
+the multibyte functions rewritten for an int `wchar_t`. Consumer sweep
+2026-09-29: no wide-character use on MVS. Host tstwchar 31/31; mvsdev JOB00649
+18/18, old libc 11 of 18 failed. Left: merge, move `edge`. Found on the way:
+cc370#484 (`L'a'` is ASCII 97).
 
 ---
 
