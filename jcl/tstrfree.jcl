@@ -1,4 +1,4 @@
-//TSTRFREE JOB (SYS),'LIBC370 229 RCLOSE',CLASS=A,MSGCLASS=H,
+//TSTRFREE JOB (SYS),'LIBC370 229 231',CLASS=A,MSGCLASS=H,
 //             MSGLEVEL=(1,1)
 //*
 //* libc370 #229 - rclose() frees the DD ropen() allocated by name, and
@@ -7,8 +7,12 @@
 //* The probe measures the step's DSAB chain around ropen()/rclose() by
 //* data set name; see test/mvs/tstrfree.c for the checks.
 //*
+//* #231: ropen() of a quoted name without a member, checks (11)/(12).
+//*
 //*   RED    = step RED ends CC 0008: TSTRFRED is the same source linked
-//*            against the installed sysroot, and (5), (6), (8), (10) fail.
+//*            against the installed sysroot.  Before #229 reached it,
+//*            (5), (6), (8), (10) failed; with #229 but not #231 only
+//*            (11) fails.
 //*   GREEN  = step GREEN ends CC 0000, no FAIL line.
 //*
 //* Every line also goes to the console (grep the job log for TSTRFREE).
