@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
-## [Unreleased]
+## [1.0.7] - 2026-09-29
 
 ### Added
 - **`strcasecmp()` and `strncasecmp()` (#183).** The POSIX names were missing
@@ -61,6 +61,55 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   and opens with a control that asserts the run is EBCDIC at all — on a host
   the fold goes through the host's ASCII table and cannot observe the property
   under test.
+
+- **`long long` arithmetic links: the libgcc helpers cc370 calls (#187,
+  #190).** cc370 emits calls for 64-bit `*`, `/`, `%`, unary `-`, float/double
+  <-> `long long`, `__cmpdi2` and the bit builtins, and libc370 defined none
+  of them, so any such program failed in ld370. Now present: `@@MULDI3`,
+  `@@DIVDI3`, `@@MODDI3`, `@@UDIVDI`, `@@UMODDI`, `@@NEGDI2` (PR #191) and 16
+  more, `@@FIXDFD`, `@@FIXSFD`, `@@FXUNDF`, `@@FXUNSF`, `@@FLTDDF`,
+  `@@FLTDSF`, `@@CMPDI2`, `@@POPCSI/DI`, `@@PARTSI/DI`, `@@FFSDI2`,
+  `@@CLZSI2/DI2`, `@@CTZSI2/DI2` (PR #194). The conversions follow cc370's
+  inline 32-bit ones (toward zero, modulo on overflow; JOB00464). A zero
+  divisor abends **S0C9**. mvsdev: JOB00449/JOB00453 1138/1138, JOB00483
+  565/565. **Requires cc370 at `f3f7e21` or later** (cc370#470) for the eight
+  new names; an older cc370 still calls
+  `@@FIXUNS`/`@@FLOATD`/`@@POPCOU`/`@@PARITY` and still fails to link. Not
+  fixed here: `ll / <constant>` (cc370#467) and `<<` dropping bit 63
+  (cc370#468).
+- **`intptr_t` / `uintptr_t` in `<stdint.h>` (#187).** With `INTPTR_MIN/MAX`,
+  `UINTPTR_MAX` and `PTRDIFF_MIN/MAX` for `__MVS__`. `intptr_t` is `int`, the
+  type it had through the generic fallback, so no consumer's type changes (PR
+  #191).
+- **`r+`, `w+` and `a+` (#189, PRs #207, #208).** `fopen()` refused every `+`
+  mode with `NULL`. A `+` stream now reads and writes one DD, turned round by
+  the new `__fpswt()` (CLOSE, OPEN the other way, skip to the position) and
+  never truncating on a switch. `r+`/`w+` overwrite in place through UPDAT
+  with the record length fixed: on F a `'\n'` blank-fills the rest of the
+  record; anything that would lengthen a record, or shorten a V/U one, is
+  `EOPNOTSUPP`. `a+` counts the size at open, so `ftell()` is the size. `+`
+  needs DASD: SYSOUT, terminal and tape answer `EINVAL`; a member is read-only
+  on `r+` and after `w+` has switched to reading. `sizeof(FILE)` stays 192.
+  mvsdev JOB00553 15/15, JOB00576 9/9. Direction switches and backward seeks
+  past the buffer are O(n) (#206).
+- **`<wchar.h>`, types and macros only (#195).** `wint_t`, `WEOF`,
+  `WCHAR_MIN/MAX`, `WINT_MIN/MAX` (also in `<stdint.h>` for `__MVS__`). The
+  wide-character functions are not implemented and not declared, so a call
+  fails at compile time rather than at link time (PR #214).
+
+### Changed
+- **`wchar_t` is `int` and `ptrdiff_t` is `long`, as cc370 has them (#195,
+  #213).** libc370 declared `wchar_t` as `char` and `ptrdiff_t` as `int`, so
+  `wchar_t *p = L"abc"` failed under `-Werror` and `%td` of a `ptrdiff_t`
+  warned. Both now come from `__WCHAR_TYPE__` / `__PTRDIFF_TYPE__`;
+  `PTRDIFF_MIN/MAX` become `LONG_MIN/MAX` with the same values. `mbstowcs()` /
+  `wcstombs()` (a `strncpy` through a cast) now convert element by element,
+  `mblen()` / `mbtowc()` follow C99 7.20.7, and `wcstombs()` / `wctomb()`
+  refuse a value that does not fit a byte. mvsdev JOB00649: 18/18, old libc 11
+  of 18 failed. Sweep of 24 repos, 2026-09-29: no wide-character use on MVS
+  (PR #214). **Contract change:** header types change (recompile); code
+  outside the sweep that passes a `wchar_t` buffer to `mbtowc`, `mbstowcs` or
+  `wcstombs` must be recompiled, the element goes from 1 byte to 4.
 
 ### Fixed
 - **`fclose()` reports an out-of-space on the last block (#182).** The final,
@@ -197,6 +246,102 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   and the SO-read cell the fix now deliberately permits (`JOB00429`) has
   been measured on that one system only. The issue author has a TK5 rig
   and offered a run.
+- **`<stdint.h>` limits and constant macros conform to C99 7.18 (#188,
+  #192).** The signed minimums were wrong: `INT32_MIN` was **+2147483648**
+  (unsigned), `INT64_MIN`/`INTMAX_MIN` warned on every use (an error under
+  `-Werror`), `INT8_MIN`/`INT16_MIN` were casts unusable in `#if`, and
+  `INT_FAST8_MIN` expanded to the typo `IN_LEASTT8_MIN` (PR #193). Then (PR
+  #196): `INT32_MAX` is `long` (was `int`),
+  `INT8_C`/`UINT8_C`/`INT16_C`/`UINT16_C` expand to their argument instead of
+  casting, `SIZE_MAX` and `SIG_ATOMIC_MAX` work in `#if`, and `SIG_ATOMIC_MIN`
+  exists. Compile-time gate `test/mvs/tststdint.c`; all TUs under `src/`
+  compile to byte-identical `.s`. **Contract change:** `INT32_MIN` changes
+  sign in C and `#if`; `INT32_MAX` changes type; `INT8_C(200)` is 200, was
+  −56.
+- **An empty line on a text stream is a record (#199).** `fputs("a\n\nb\n")`
+  wrote two records: every `'\n'` went to `__fflush()`, which returns at once
+  on an empty buffer. A newline now goes to the new `__fflnl()`, which always
+  writes a record (FB: LRECL blanks, VB: RDW only, U: one blank); `fflush()` /
+  `fclose()` still write nothing when nothing is pending. mvsdev red JOB00495,
+  green JOB00497 (PR #201). **Contract change:** blank lines now appear in
+  SYSOUT, logs and data sets. Not covered: a TSO terminal (TPUT skips length
+  0) and `printf("\n")` (cc370#477).
+- **A write stream knows its position (#200).** `ftell()` on a writer counted
+  from the last record (`0 0 2` for `3 6 8`), and `fseek()` on a writer
+  re-served the stale buffer and wrote it again (`ABCxy`). A flush no longer
+  resets the position, and a stream not open for reading can only seek to
+  where it is; anything else is `-1`, `errno` `ESPIPE`, stream untouched,
+  error indicator not set. mvsdev red JOB00495, green JOB00522 (PR #202).
+  **Contract change:** `rewind()` / a backward `fseek()` on a `"w"` stream
+  used to reopen and truncate (when the position was non-zero); it now fails
+  with `ESPIPE`. Lua `file:seek()` backwards on a `"w"` file gets an error.
+- **A stream refuses the wrong direction with `EBADF` (#189, PR #203).**
+  `fgetc()` on a `"w"` stream returned bytes from the write buffer — the next
+  write produced the record `LL2` (JOB00528) — and past the buffer abended
+  S400. `fputs()` on `"r"` returned success with `errno` 0. `fgetc`, `fread`,
+  `fputc` and `fwrite` now answer `EOF`/`0` with `errno` `EBADF` (`fgets`
+  `NULL`); the error indicator is not set, so the stream keeps working in its
+  own direction. Green JOB00533. **Contract change:** new `EBADF` returns.
+- **`"a"` appends: OPEN EXTEND (#198).** `fopen(…, "a")` opened for OUTPUT and
+  overwrote the data set, by name, as a member or through `DISP=OLD`; only
+  `DISP=MOD` appended (JOB00490). `"a"` now opens EXTEND (OUTPUT on SYSOUT and
+  unit record, as before). An existing PDS member cannot be extended by BPAM
+  and is refused with `NULL`, `errno` `EOPNOTSUPP` (45), left intact; a new
+  member is created. `@@aopen` returns -45 for EXTEND on a member named in the
+  JCL, which otherwise abended SB14-04 at CLOSE (JOB00538). Red JOB00536,
+  green JOB00540 (PR #205). **Contract change:** existing data sets are
+  appended to instead of replaced; `"a"` on an existing member fails;
+  `ropen()` reports `errno` 45. Appending to a member is #204.
+- **Two defects in the inherited UPDAT assembler (#189, PR #208).** `@@aread`
+  rewrote the block before every record, so the read after a rewrite skipped
+  the rest of the block and a second rewrite in the same block landed on the
+  wrong record (JOB00559); `@@atrout` skipped the rewrite of a block read to
+  its end (JOB00561). Both changes are guarded by UPDAT (`OPENCLOS == X'84'`);
+  every other open mode takes the old path. Green JOB00563.
+- **`ftell()` on FB text writers counts in the byte view, and `fseek()` on a
+  writer no longer flushes (#189, PR #207).** A writer now counts LRECL + 1
+  per F record, as a reader of the same data set does: after `"L1\n"` on FB 80
+  `ftell()` is **81** (was 3). `fputs("AB"); fseek(fp, ftell(fp), SEEK_SET);
+  fputs("CD\n")` gives one record `ABCD`, not `AB` and `CD`. **Contract
+  change:** both. The `3 6 8` of #200 still holds for V.
+- **`printf` accepts `z`, `t`, `j` and `hh` (#211).** `__examin()`, the parser
+  behind the whole printf family, did not know them, so the argument was never
+  consumed and every later conversion read one slot early — `"%zu|%s|%d"`
+  crashed on the host. `z`/`t` map to `l`, `j` to `ll`, `hh` is skipped like
+  `h`. mvsdev JOB00640: 24/24, pre-fix libc 20 of 24 failed (PR #212).
+  **Contract change:** new modifiers accepted. A negative `%jd` prints its
+  two's complement, as `%lld` does; `@@prtfx.c` is not changed.
+- **`tsocmd()` works from a TSO command processor (#210).** `ppacppl` was read
+  by `tsocmd()` and written by nobody, so `tsocmd()` — and `ispexec()` through
+  it — always returned 8 (`No CPPL`). `__start()` now records R1 as the CPPL
+  when `GRTFLAG1_TSO` is on and the CPPL's PSCB word equals `ppapscb`. mvsdev
+  red JOB00677/JOB00681, green JOB00683, caller unchanged after the call
+  JOB00686, TSO foreground and link list JOB00689 (PR #217). **Contract
+  change:** `tsocmd()`/`ispexec()` now LINK instead of returning 8. brexx370's
+  `jccompat.c` workaround is skipped and can go.
+- **A CPPL fills four words of `grtptrs`, not ten (#218).** A CPPL has no VL
+  bit, so `__start()` copied ten words, six from past the list — for a command
+  LINKed by `tsocmd()` the caller's stack frame. A recognised CPPL now gives
+  exactly four; a PARM list is not read past its VL bit. A list with neither
+  still gets ten. mvsdev red JOB00699, green JOB00701/JOB00704 (PR #219).
+  **Contract change:** `n` is 4 for a CP.
+- **`__dblcvt()` rounds correctly past 14 digits and never rounds zero
+  (#209).** The rounding cap used `DBL_MANT_DIG` (14, in hex digits), so every
+  `%e`/`%f`/`%g` of 14+ digits got a fixed 5e-15 (`…4884981308350688`), and
+  `%.20g` of 0.0 printed `0.000000000000005`. The cap is now 17 decimal digits
+  and 0.0 is not rounded; 6.96 million conversions below the old cap are
+  byte-identical. mvsdev red JOB00712 (22/29 failed), green JOB00714 (PR
+  #223). **Contract change:** output digits change at precision 14+.
+- **`__dblcvt()` overflowed its caller's buffer (#222).** It `strcat`ed into
+  buffers it had no length for (`numbuf[50]`, `work[80]`, its own
+  `work[125]`): `%f` of ≥ 1e41, `%.100f`, `%90f` and more overwrote the stack
+  — JOB00724, S0C4, PSW `078D1000 00F0F0F6`. It now takes the buffer size and
+  truncates (NUL always, exponent before fraction digits, digits before
+  padding); `numbuf` is 96, `__examin()`'s `work` 128. 30,596,740 conversions
+  unchanged; mvsdev green JOB00722 59/59 (PR #224). **Contract change:**
+  `__examin()` output longer than 126 characters (127 with sign) is cut off:
+  `%.150f` of 1.0 gives 126 characters, not 152. `__dblcvt()`'s signature
+  changed, but it is internal and in no header.
 
 ## [1.0.6] - 2026-09-13
 
