@@ -298,17 +298,13 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 
 ---
 
-## Tier 1
+## Tier 1 — empty again
 
-### 1 · #211 — PR #212 open, MVS gate measured, ready to merge
+### ~~1 · #211~~ — fixed, PR #212, 2026-09-29
 
-`printf("%zd")` printed `d`: `__examin()` (`@@examin.c`, the one engine behind
-the whole printf family; `vsnprint.c`'s `examine()` is `#if 0`) did not know `z`,
-`t`, `j` or `hh`, and did not consume the argument, so later conversions read
-shifted slots. Host test green (tstvsnp 21/21); MVS gate `test/mvs/tstzjt.c`,
-mvsdev JOB00640: branch 24/24, pre-fix libc 20 of 24 failed. Left: merge, move
-`edge`. Side finding filed as **#213** (not ranked yet): libc370's `ptrdiff_t` is
-`int` where cc370's is `long`, so `%td` of it warns under `-Wall`.
+`%zd` printed `d`: `__examin()` (`@@examin.c`) did not know `z`, `t`, `j` or `hh`.
+Side finding **#213** (not ranked yet): libc370's `ptrdiff_t` is `int` where
+cc370's is `long`, so `%td` of it warns under `-Wall`.
 
 ### ~~1 · #189~~ — complete, PR #208, 2026-09-27
 
@@ -316,7 +312,7 @@ All six steps are merged (#201, #202, #203, #205, #207, #208); the closing
 comment on #189 has the table. Left open by decision: #204 (append to a
 member) and #206 (O(1) backward seek via NOTE/POINT).
 
-**Rolling tag `edge`** (since 2026-09-27, now on `f3292f2` = #189 complete; the sysroot here is installed from the same commit): brexx370's MVS CI
+**Rolling tag `edge`** (since 2026-09-27, now on `8928b2a` = #211 merged; the sysroot here is still installed from `f3292f2`): brexx370's MVS CI
 clones libc370 at its `[toolchain]` pin, so it tracks `edge` in the meantime.
 **Move `edge` after each of these merges once its MVS gate is measured**
 (`git tag -fa edge <sha>` + `git push -f origin edge`), and cut a real release
@@ -1070,6 +1066,13 @@ changes: libc370 (an ABI change for `mbtowc` & co.) or cc370's `WCHAR_TYPE`.
 ## Recently landed
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
+
+- **#211** (PR #212, merged 2026-09-29) - the C99 length modifiers `z`, `t`,
+  `j` and `hh` in `__examin()`, the one parser behind the printf family
+  (`vsnprint.c`'s `examine()` is `#if 0`). A missing modifier also left its
+  argument on the va_list, so later conversions read shifted slots. Host
+  tstvsnp 21/21; MVS tstzjt, mvsdev JOB00640: 24/24, pre-fix libc 20 of 24
+  failed. `%jd` of a negative value still prints unsigned, as `%lld` does.
 
 - **#189 slice 2** (PR #208, merged 2026-09-27, closes #189) - `r+`/`w+`
   overwrite in place through UPDAT: on F a `'\n'` blank-fills the rest of the
