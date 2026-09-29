@@ -10,8 +10,8 @@ libc370 is the base library of the whole ecosystem, so a defect here is a defect
 in httpd, mvsMF, ftpd, ufsd and every other consumer at once; that is what puts
 some cheap items high and some expensive ones low.
 
-*Last reconciled against the tracker: **2026-09-29**, 49 issues open (#182
-closed, #228 filed the same day), all 49 accounted for below.* That pass found **#181** and **#182** (filed 2026-09-13/14) in
+*Last reconciled against the tracker: **2026-09-29**, 50 issues open (#182
+closed, #228 and #229 filed the same day), all 50 accounted for below.* That pass found **#181** and **#182** (filed 2026-09-13/14) in
 no rank at all, fifteen days after they were filed — #182 is now rank 1 and
 #181 rank 39. The pass before was 2026-09-13 at 41 open, all 41 ranked. #149 was fixed and released the same day (PR #180, **v1.0.6**)
 and #178/#179 were filed out of that work; both are ranked at the end. The previous pass was 2026-08-30 at 29 open, and the gap it left
@@ -1127,6 +1127,14 @@ Since #149 that flag is a refusal rather than a note, so a failed `freopen()`
 now silently kills a healthy stream. Smallest fix is to drop the line. Worth
 deciding at the same time whether keeping the old stream open on failure should
 survive at all: C99 7.19.5.4 closes it either way, and libc370 does not.
+
+### 41 · #229 — `rclose()` never frees the DD `ropen()` allocated
+
+`ropen()` of a data set name allocates through `__fildef()` and records `dyn`;
+`rclose()` only `__aclose()`s and `free()`s - `__fdclr()` is declared there and
+never called. One TIOT entry and a held allocation per pair. From the code,
+not measured; no consumer anywhere in the ecosystem (2026-09-29 sweep), so
+latent. One line, best done together with #228's `rclose()` rc.
 
 ### ~~38 · #195 (+ #213)~~ — fixed, PR #214, 2026-09-29
 
