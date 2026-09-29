@@ -10,8 +10,8 @@ libc370 is the base library of the whole ecosystem, so a defect here is a defect
 in httpd, mvsMF, ftpd, ufsd and every other consumer at once; that is what puts
 some cheap items high and some expensive ones low.
 
-*Last reconciled against the tracker: **2026-09-29**, 50 issues open (#182,
-#228 and #229 closed, #228, #229, #231 and #232 filed the same day), all 50
+*Last reconciled against the tracker: **2026-09-29**, 49 issues open (#182,
+#228, #229 and #231 closed, #228, #229, #231 and #232 filed the same day), all 49
 accounted for below.* That pass found **#181** and **#182** (filed 2026-09-13/14) in
 no rank at all, fifteen days after they were filed — #182 is now rank 1 and
 #181 rank 39. The pass before was 2026-09-13 at 41 open, all 41 ranked. #149 was fixed and released the same day (PR #180, **v1.0.6**)
@@ -1145,13 +1145,15 @@ Not covered: `__fildef()`'s `DISP=NEW` fallback without a normal disposition
 (comment on #229). Not released; `edge` moved to the merge (`ad516f1`),
 sysroot installed from main.
 
-### 41 · #231, #232 — `ropen()`/`rwrite()` break on documented forms
+### ~~41 · #231~~ — fixed, PR #234, 2026-09-29
 
-Found by #229's probe, both measured on mvsdev, no consumer anywhere
-(2026-09-29 sweep). **#231** — fix on PR #234: a quoted name without a member
-kept its closing quote in the DSN (`ropen.c` copy loop stopped only at
-`(`/NUL), SVC 99 `X'035C'`, JOB00766; `tstrfree.c` (11)/(12) red against the
-sysroot, green 12/12 in JOB00789. **#232**: `rwrite()` on RECFM=V hands a record without
+See "Recently landed". Not released; `edge` moved to the merge (`ed2a9e7`),
+sysroot installed from main.
+
+### 41 · #232 — `rwrite()` breaks on RECFM=V
+
+Found by #229's probe, measured on mvsdev, no consumer anywhere
+(2026-09-29 sweep). **#232**: `rwrite()` on RECFM=V hands a record without
 RDW to `@@AWRITE`, which abends U0002 on the length check (`WRITENEW`),
 JOB00767 - document the RDW or build it, but return an error either way.
 
@@ -1229,6 +1231,11 @@ unmounted volser.
 ## Recently landed
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
+
+- **#231** (PR #234, merged 2026-09-29) - `ropen()` stops the DSN at the
+  closing quote of a quoted name without a member (it was copied in, SVC 99
+  `X'035C'`). mvsdev `tstrfree.c` (11)/(12): red rc=12 errno=860, green 12/12,
+  both JOB00789.
 
 - **#228** (PR #230, merged 2026-09-29) - `freopen()`, the `+`-stream turn
   and `rclose()` report a lost last block like `fclose()` does since #182:
