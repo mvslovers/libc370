@@ -19,6 +19,6 @@ PPAHEAPS DS     X                 22 heap (malloc) subpool number
          DS     X                 23 unused / available
 PPASTKLN DS     F                 24 stack area length
 PPAEXITA DS     A(0)              28 EXITA entry point address
-         DS     F                 2C unused / available
+PPACPPL  DS     A                 2C TSO CPPL (command processor)
          DS     0D                force double word alignment
 CLIBPPA  EQU    @CLIBPPA,*-@CLIBPPA

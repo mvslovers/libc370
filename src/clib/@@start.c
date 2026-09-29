@@ -36,6 +36,7 @@
 #include "string.h"
 #include "stddef.h"
 #include "clibcrt.h"
+#include "clibppa.h"
 
 #define MAXPARMS 50 /* maximum number of arguments we can handle */
 
@@ -121,6 +122,24 @@ __start(char *p, char *pgmname, int tsojbid, void **pgmr1)
             /* add to array of pointers from caller */
             arrayadd(&grt->grtptrs, (void*)(u&0x7FFFFFFF));
             if (u&0x80000000) break; /* end of VL style address list */
+        }
+    }
+
+    /* A TSO command processor is entered with R1 pointing at its CPPL
+       (CBUF, UPT, PSCB, ECT), so pgmr1 is the CPPL itself.  Record it
+       for tsocmd(), which reads nothing else (#210).  GRTFLAG1_TSO alone
+       is a guess from the shape of the parameter, so the CPPL's PSCB
+       word must also be the PSCB that @@CRT0 took from EXTRACT: TSO
+       CALL passes a PARM-style list, which fails that test, and so does
+       a program entered through a startup that hands __start() anything
+       but the words at R1. */
+    if ((grt->grtflag1 & GRTFLAG1_TSO) && pgmr1 && grt->grtptrs
+        && arraycount(&grt->grtptrs) >= 4) {
+        CLIBPPA *ppa = __ppaget();
+
+        if (ppa && ppa->ppapscb
+            && grt->grtptrs[2] == (void*)((unsigned)ppa->ppapscb & 0x7FFFFFFF)) {
+            ppa->ppacppl = pgmr1;
         }
     }
 
