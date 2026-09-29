@@ -298,7 +298,7 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 
 ---
 
-## Tier 1 — #222 open, #209 in review
+## Tier 1 — #222 open
 
 ### 1 · #222 — `%f` of a value >= 1e41 overflows a stack buffer
 
@@ -309,7 +309,7 @@ buffer it has no length for: 50 bytes on the plain `%f` path (`vsnprint.c`,
 of those buffers is an automatic. A length parameter for the internal
 `__dblcvt()` fixes it, and three call sites change.
 
-### 1 · #209 — `%.30g` added 5e-15 — PR #223 open, 2026-09-29
+### ~~1 · #209~~ — fixed, PR #223, 2026-09-29
 
 The rounding cap was `DBL_MANT_DIG`, 14 *hex* digits on S/370. Now 17 decimal
 digits, and zero is not rounded. Red JOB00712, green JOB00714 (29/29, mvsdev);
@@ -365,7 +365,7 @@ All six steps are merged (#201, #202, #203, #205, #207, #208); the closing
 comment on #189 has the table. Left open by decision: #204 (append to a
 member) and #206 (O(1) backward seek via NOTE/POINT).
 
-**Rolling tag `edge`** (since 2026-09-27, now on `275b350` = the #209 fix, **ahead of its merge** - PR #223 is open; the sysroot here is installed from that branch, 2026-09-29. PR #223 must be merged with a merge commit, not squashed, or `edge` points off `main`): brexx370's MVS CI
+**Rolling tag `edge`** (since 2026-09-27, now on `fe0a6f3` = #209 merged; the sysroot here is installed from `fe0a6f3`, 2026-09-29): brexx370's MVS CI
 clones libc370 at its `[toolchain]` pin, so it tracks `edge` in the meantime.
 **Move `edge` after each of these merges once its MVS gate is measured**
 (`git tag -fa edge <sha>` + `git push -f origin edge`), and cut a real release
