@@ -19,9 +19,28 @@ SUBPOOL  EQU   0                                                      *
 *                                                                     *
 ***********************************************************************
 @@ACLOSE FUNHEAD IO=YES,SAVE=(WORKAREA,WORKLEN,SUBPOOL)  CLOSE
+         SR    R9,R9              RC=0 unless the final block failed
          TM    IOMFLAGS,IOFTERM   TERMINAL I/O MODE?
          BNZ   FREEBUFF           YES; JUST FREE STUFF
          FIXWRITE ,          WRITE FINAL BUFFER, IF ONE
+*
+*  The final block goes out here and not through @@AWRITE, so its
+*  failure has to be reported here too - the same RC as @@AWRITE:
+*  12 the x37 exit took an out-of-space, 8 SYNAD took an I/O error.
+*  Test IOFX37 first, the exit drives SYNAD as well (#176).  @@AWRITE
+*  and @@AREAD reset what they report, so a flag still set here is a
+*  failed write nobody has reported - this one, or a FIXWRITE in
+*  @@ANOTE/@@APOINT/@@AREAD - and fclose() is the last chance to.  R9
+*  survives the CLOSE and the FREEMAINs below; the flags do not, they
+*  live in the work area freed at the end (#182).
+*
+         TM    IOSFLAGS,IOFX37    Out of space on the final block?
+         BZ    CLOSSYN            No
+         LA    R9,12              Yes; ENOSPC to the C layer
+         B     FREEBUFF
+CLOSSYN  TM    IOSFLAGS,IOFSYNAD  I/O error on the final block?
+         BZ    FREEBUFF           No
+         LA    R9,8               Yes; EIO to the C layer
 FREEBUFF LM    R1,R2,ZBUFF1       Look at first buffer
          LTR   R0,R2              Any ?
          BZ    FREEDBF1           No
@@ -41,7 +60,7 @@ FREEDBF2 TM    IOMFLAGS,IOFTERM   TERMINAL I/O MODE?
          FREEPOOL ((R10))
 NOPOOL   DS    0H
          FREEMAIN R,LV=ZDCBLEN,A=(R10),SP=SUBPOOL
-         FUNEXIT RC=0
+         FUNEXIT RC=(R9)
 *
          LTORG ,
          SPACE 2
