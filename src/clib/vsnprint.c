@@ -19,7 +19,8 @@ examine(char *s, int n, const char **formt, va_list *arg);
 #endif
 
 extern void
-__dblcvt(double num, char cnvtype, size_t nwidth, int nprecision, char *result);
+__dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
+         char *result, size_t rsize);
 
 /* smax = space left in s (fq == NULL); the budget is honoured since #128 */
 extern int
@@ -40,7 +41,7 @@ vsnprintf(char *s, int n, const char *format, va_list arg)
     const char  *vcptr;
     int         len;
     int         i;
-    char        numbuf[50];
+    char        numbuf[96];      /* %f of any HFP value (#222) */
     char        *nptr;
     int         *viptr;
 
@@ -83,7 +84,7 @@ vsnprintf(char *s, int n, const char *format, va_list arg)
             else if (strchr("eEgGfF", *format) != NULL && *format != 0)  {
                 /* format floating point */
                 vdbl = va_arg(arg, double);
-                __dblcvt(vdbl, *format, 0, 6, numbuf);   /* 'e','f' etc. */
+                __dblcvt(vdbl, *format, 0, 6, numbuf, sizeof(numbuf));   /* 'e','f' etc. */
                 len = strlen(numbuf);
 
                 for(i=0; i < len; i++) {
@@ -436,7 +437,7 @@ examine(char *s, int n, const char **formt, va_list *arg)
         }
 
         vdbl = va_arg(*arg, double);
-        __dblcvt(vdbl, specifier, width, precision, work);   /* 'e','f' etc. */
+        __dblcvt(vdbl, specifier, width, precision, work, sizeof(work));   /* 'e','f' etc. */
         slen = strlen(work);
 
         for(i=0; i < slen; i++) {

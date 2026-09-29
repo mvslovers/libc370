@@ -54,7 +54,7 @@ static void check_cvt(double v, char type, int prec, const char *want)
 {
     char got[256];
 
-    __dblcvt(v, type, 0, prec, got);
+    __dblcvt(v, type, 0, prec, got, sizeof(got));
     mbt_run++;
     if (strcmp(got, want) == 0) {
         mbt_passed++;
@@ -70,7 +70,7 @@ static void check_prefix(double v, char type, int prec, const char *want)
 {
     char got[256];
 
-    __dblcvt(v, type, 0, prec, got);
+    __dblcvt(v, type, 0, prec, got, sizeof(got));
     mbt_run++;
     if (strncmp(got, want, strlen(want)) == 0) {
         mbt_passed++;

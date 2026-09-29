@@ -17,7 +17,8 @@
 #endif
 
 extern void
-__dblcvt(double num, char cnvtype, size_t nwidth, int nprecision, char *result);
+__dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
+         char *result, size_t rsize);
 extern int
 __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax);
 
@@ -31,7 +32,7 @@ vvprintf(const char *format, va_list arg, FILE *fq, char *s)
     const char  *vcptr;
     int         chcount = 0;
     size_t      len;
-    char        numbuf[50];
+    char        numbuf[96];      /* %f of any HFP value (#222) */
     char        *nptr;
     int         *viptr;
     int         owned   = 0;
@@ -74,7 +75,7 @@ vvprintf(const char *format, va_list arg, FILE *fq, char *s)
             }
             else if (strchr("eEgGfF", *format) != NULL && *format != 0) {
                 vdbl = va_arg(arg, double);
-                __dblcvt(vdbl, *format, 0, 6, numbuf);   /* 'e','f' etc. */
+                __dblcvt(vdbl, *format, 0, 6, numbuf, sizeof(numbuf));   /* 'e','f' etc. */
                 len = strlen(numbuf);
                 if (fq == NULL) {
                     memcpy(s, numbuf, len);

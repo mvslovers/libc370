@@ -67,9 +67,9 @@
  * uses; they only have to resolve.
  */
 void __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
-              char *result)
+              char *result, size_t rsize)
 {
-    (void)num; (void)cnvtype; (void)nwidth; (void)nprecision;
+    (void)num; (void)cnvtype; (void)nwidth; (void)nprecision; (void)rsize;
     strcpy(result, "1.500000");
 }
 
