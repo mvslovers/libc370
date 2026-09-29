@@ -300,6 +300,18 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 
 ## Tier 1 — empty again
 
+### 1 · #210 — `ppacppl` was never set; fix on PR (branch `fix/210-ppacppl`)
+
+`tsocmd()` (and `ispexec()` on top of it) always returned 8 with "No CPPL":
+`@@CRT0` clears the PPA and nothing wrote +X'2C'. `__start()` now records
+`pgmr1` as the CPPL when `GRTFLAG1_TSO` is on **and** the CPPL's PSCB word
+equals `ppapscb` from EXTRACT. Red JOB00677/00681, green JOB00683
+(`test/mvs/tstcppl.c`: batch, TSO CALL and TSO command, the last LINKing
+itself through `tsocmd()`). After merge: move `edge`, tell brexx370 its
+`jccompat.c` CPPL workaround can go once it builds against it. Side datum for
+#105: a second `__start()` in one address space does happen - a C program
+LINKed by `tsocmd()` (the CHILD in JOB00683).
+
 ### ~~1 · #197~~ — fixed, PR #215, 2026-09-29
 
 The `MODESET` now happens only for an APF-authorized caller that is not
