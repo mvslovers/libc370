@@ -300,7 +300,7 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 
 ## Tier 1 — empty again
 
-### 1 · #197 — `racf_auth()` S047 without APF: fix on branch `racf/197-racauth-unauth`
+### 1 · #197 — `racf_auth()` S047 without APF: fix on PR #215
 
 The `MODESET` now happens only for an APF-authorized caller that is not
 already in supervisor state. Red on mvsdev JOB00655, green on JOB00659
