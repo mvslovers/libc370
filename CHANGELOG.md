@@ -63,6 +63,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   under test.
 
 ### Fixed
+- **`fclose()` reports an out-of-space on the last block (#182).** The final,
+  short block of a data set is written by `@@ACLOSE`, not by `@@AWRITE`, and
+  `@@ACLOSE` ended `RC=0` whatever happened while `fclose()` returned 0 on
+  every path. Since #176 turned the SD37 into a return, a data set with room
+  for its full blocks but not for the short one lost its tail and the caller
+  was told it had succeeded. `__aclose()` now returns the final write's rc
+  (12 out of space, 8 I/O error) and `fclose()` returns **`EOF`** with
+  `errno` `ENOSPC`/`EIO` — also when the flush it runs first fails, as C99
+  7.19.5.1 requires. Measured on mvsdev with `test/mvs/tstclspc.c`: a
+  `TRK(1,0)` FB 80/800 data set holds 190 records in full blocks; 191–194
+  still fit and close with 0, 195–199 lose the short block — red JOB00729
+  (`fclose()` 0), green JOB00730 (`EOF`, `errno` 28). **Contract change:** a
+  caller that ignored `fclose()`'s result is unaffected; one that treats any
+  non-zero as fatal now sees the failure it was previously not told about.
 - **`racf_auth()` no longer needs APF (#197).** It issued `MODESET
   KEY=ZERO,MODE=SUP` before every `RACHECK`, so any caller that was not
   APF-authorized ended **S047**, although SVC 130 answers from problem state

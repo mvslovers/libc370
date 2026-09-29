@@ -7,8 +7,11 @@ void *__aopen(const char *ddname, int *mode, int *recfm,
 int __aread(void *handle, void *buf, size_t *len);
 #pragma linkage(__awrite, OS)
 int __awrite(void *handle, unsigned char **buf, size_t *sz);
+/* __aclose() - write the final block, CLOSE, free the work area.  0, or
+   the rc of the final block's write as __awrite() gives it: 12 out of
+   space, 8 I/O error (#182).  The handle is gone either way. */
 #pragma linkage(__aclose, OS)
-void __aclose(void *handle);
+int __aclose(void *handle);
 /* __adisc() - discard whatever output is pending in the DCB work area, so
    that the next __aclose() writes nothing (#168).  Clears IOFLDATA, IOFLSDW,
    BUFFCURR and KEPTREC; issues no MVS service. */
