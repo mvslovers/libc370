@@ -613,10 +613,10 @@ typedef uint_least32_t uint_fast32_t;
 #  define PRINTF_INTPTR_MODIFIER ""
 # endif
 # ifndef PTRDIFF_MAX
-#  define PTRDIFF_MAX INT_MAX
+#  define PTRDIFF_MAX LONG_MAX   /* <stddef.h>: ptrdiff_t is long (#213) */
 # endif
 # ifndef PTRDIFF_MIN
-#  define PTRDIFF_MIN INT_MIN
+#  define PTRDIFF_MIN LONG_MIN
 # endif
 # ifndef INTPTR_MAX
 #  define INTPTR_MAX  INT_MAX
@@ -693,6 +693,27 @@ typedef uint_least32_t uint_fast32_t;
 #endif
 #ifndef SIG_ATOMIC_MAX
 # define SIG_ATOMIC_MAX ((((sig_atomic_t) 1) << (sizeof (sig_atomic_t)*CHAR_BIT-1)) - 1)
+#endif
+
+/*
+ *  wchar_t is the compiler's __WCHAR_TYPE__ (int on cc370) and wint_t its
+ *  __WINT_TYPE__ (unsigned int) - see <stddef.h> and <wchar.h> (#195).
+ *  <wchar.h> defines the same values under the same guards.
+ */
+
+#if defined (__MVS__)
+# ifndef WCHAR_MAX
+#  define WCHAR_MAX INT_MAX
+# endif
+# ifndef WCHAR_MIN
+#  define WCHAR_MIN INT_MIN
+# endif
+# ifndef WINT_MAX
+#  define WINT_MAX UINT_MAX
+# endif
+# ifndef WINT_MIN
+#  define WINT_MIN 0U
+# endif
 #endif
 
 #endif

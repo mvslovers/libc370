@@ -28,7 +28,13 @@ typedef unsigned int size_t;
 #ifndef _WCHAR_T_DEFINED
 #define _WCHAR_T_DEFINED
 #endif
-typedef char wchar_t;
+/* the compiler's type: cc370 builds L"..." from int-wide elements, so a
+   char wchar_t cannot hold a wide literal (#195) */
+#ifdef __WCHAR_TYPE__
+typedef __WCHAR_TYPE__ wchar_t;
+#else
+typedef int wchar_t;
+#endif
 #endif
 typedef struct { int quot; int rem; } div_t;
 typedef struct { long int quot; long int rem; } ldiv_t;
