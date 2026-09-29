@@ -26,6 +26,8 @@
  *     (n1) GRTFLAG1_TSO is off
  *     (n2) ppacppl is NULL
  *     (n3) tsocmd() returns 8 without LINKing (no CPPL to pass on)
+ *     (n4) grtptrs holds one word: PARM and CALL lists carry the VL bit
+ *          on their first word, and the copy stops there (#218 control)
  *   CP
  *     (c0) precondition: GRTFLAG1_TSO is on.  Otherwise the run was not a
  *          command processor and measures nothing (RC 12).
@@ -39,10 +41,16 @@
  *          (array, count, words 0-3) are what they were before.  The CHILD
  *          runs its own __start() in the same address space and task, so
  *          this is where a shared anchor would show.
+ *     (c5) grtptrs holds exactly the CPPL's four words     RED before #218
+ *          (n=10: a CPPL has no VL bit, and __start() copied on for
+ *          ten words, six of them from past the list)
  *   CHILD
  *     GRTFLAG1_TSO on, ppacppl not NULL, and its CBUF holds the command
- *     line "TSTCPPL CHILD" that tsocmd() built.  Returns 42 when all hold,
- *     9 otherwise - so (c3) tells the two failures apart.
+ *     line "TSTCPPL CHILD" that tsocmd() built, and (k4) grtptrs holds
+ *     four words - here the words past the CPPL are the caller's stack
+ *     frame (RED before #218).  Returns 42 when all hold, 9 otherwise -
+ *     so (c3) tells the two failures apart; the CHILD's WTOs say which
+ *     cell it was.
  *
  * The CHILD is the probe itself, LINKed from the same STEPLIB.  No system
  * command is used: TIME, which brexx370 met the bug with, has no load
@@ -72,6 +80,12 @@
  * into SYS2.LINKLIB for the run and removed afterwards: "TSTCPPL CP"
  * passes c1-c4 and k1-k3, "CALL ...(TSTCPPL) 'CALL'" passes n1-n3.
  * From the link list in batch too (no STEPLIB): JOB00689.
+ *
+ * #218, mvsdev 2026-09-29, batch IKJEFT01 only (the foreground and
+ * link-list runs above predate these cells).  Red JOB00699: CP and CHILD
+ * see n=10, (c5) and (k4) fail, (c3) with them because the CHILD returns
+ * 9; BATCH and CALL n=1, (n4) passes.  Green with the fix: JOB00701,
+ * every cell passes, CP and CHILD n=4; with (c5) after (c2): JOB00704.
  *
  * BUILD (host):
  *     make build
@@ -142,6 +156,8 @@ child(CLIBPPA *ppa, CLIBGRT *grt)
              && memcmp(cbuf->cmdname, want, len) == 0,
              "CBUF is the command line tsocmd() built");
     }
+    cell(&fails, "CHILD", "k4", grt->grtptrs
+         && arraycount(&grt->grtptrs) == 4, "grtptrs is the CPPL, n=4");
     return fails ? 9 : 42;
 }
 
@@ -161,6 +177,8 @@ nocppl(const char *mode, CLIBPPA *ppa, CLIBGRT *grt)
         wtof("TSTCPPL %s tsocmd rc=%d", mode, rc);
         cell(&fails, mode, "n3", rc == 8, "tsocmd() refuses with 8");
     }
+    cell(&fails, mode, "n4", grt->grtptrs
+         && arraycount(&grt->grtptrs) == 1, "grtptrs stops at the VL bit, n=1");
     return fails ? 8 : 0;
 }
 
@@ -192,6 +210,8 @@ cp(CLIBPPA *ppa, CLIBGRT *grt)
     cell(&fails, "CP", "c2", memcmp(cppl, grt->grtptrs, sizeof(CPPL)) == 0
          && cppl->cpplpscb == ppa->ppapscb,
          "ppacppl is the CPPL (grtptrs, ppapscb)");
+    cell(&fails, "CP", "c5", arraycount(&grt->grtptrs) == 4,
+         "grtptrs is the CPPL, n=4");
 
     /* the caller's state, to compare after the CHILD has run */
     memcpy(&words, cppl, sizeof(words));

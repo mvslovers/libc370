@@ -51,6 +51,11 @@ struct clibgrt {
     void        **grtwsa;           /* 44 writable static array             */
     void        **grtdevtb;         /* 48 device array                      */
     void        **grtptrs;          /* 4C pointers passed in via argv       */
+                                    /* ... the words at R1: up to the VL    */
+                                    /* ... bit, or the 4 words of a CPPL.   */
+                                    /* ... Any other list gets 10 words,    */
+                                    /* ... valid only within the caller's   */
+                                    /* ... own list (#218).                 */
 };                                  /* 50 (80 bytes)                        */
 
 extern CLIBGRT  *__grtget(void);
