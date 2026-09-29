@@ -49,6 +49,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   allocation only; `ropen()`'s fallback that allocates a data set `NEW`
   (without a normal disposition) is not measured. No swept consumer calls
   `ropen()`.
+- **`ropen()` opens a quoted data set name without a member (#231).** The
+  form `include/rfile.h` documents, `"'my.dataset.name'"`, failed: the
+  opening quote was skipped but the closing one was copied into the DSN,
+  and SVC 99 rejected the name (`errno` 860, `X'035C'`). With a member the
+  copy stopped at `(` first, so `'x.pds(member)'` was not affected. Under
+  TSO a fully qualified name had no working spelling at all, since the
+  unquoted form gets the prefix. Measured on mvsdev with
+  `test/mvs/tstrfree.c` checks (11)/(12), JOB00789: red against the
+  installed sysroot (`rc=12 errno=860`, the only FAIL), green in the same
+  job, 12/12.
 
 ## [1.0.7] - 2026-09-29
 

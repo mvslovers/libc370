@@ -26,6 +26,7 @@ ropen(const char *fnm, int write, RFILE **rfile)
     void    *asmbuf = (void*)0;
     int     i;
     int     err;
+    int     quoted  = 0;
     char    *p;
     char    newfnm[FILENAME_MAX]    = {0};
     char    member[9]               = {0};
@@ -60,6 +61,7 @@ ropen(const char *fnm, int write, RFILE **rfile)
     if (fnm[0]=='\'') {
         /* quoted dataset name */
         fnm++;
+        quoted = 1;
     }
     else {
         /* unquoted dataset name */
@@ -75,7 +77,8 @@ ropen(const char *fnm, int write, RFILE **rfile)
     }
 
     p = &newfnm[i];
-    for(i=0; fnm[i] && fnm[i] != '('; i++) {
+    /* #231: the closing quote ends the name when there is no member */
+    for(i=0; fnm[i] && fnm[i] != '(' && !(quoted && fnm[i] == '\''); i++) {
         p[i] = toupper((unsigned char)fnm[i]);
     }
     p[i] = 0;

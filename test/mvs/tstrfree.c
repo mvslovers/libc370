@@ -1,5 +1,6 @@
 /*
- * tstrfree.c - libc370 #229: rclose() frees the DD ropen() allocated.
+ * tstrfree.c - libc370 #229: rclose() frees the DD ropen() allocated,
+ *              and #231: ropen() of a quoted name without a member.
  *
  * ropen() on a data set name allocates a DD with __fildef() (SVC 99,
  * DALRTDDN) and records it in the handle - fp->dyn, fp->ddname.  rclose()
@@ -25,6 +26,17 @@
  *   (8) after the cycles the chain is back to its length      - THE FIX
  *   (9) control: ropen(<pds>(NOSUCH)) fails - __aopen() finds no member
  *  (10) after that failure the chain is back to its length    - THE FIX
+ *  (11) ropen('<ps>', read) - quoted, no member - succeeds and reads the
+ *       record back                                       - THE FIX #231
+ *  (12) after its rclose() the chain is back to its length (checked only
+ *       when (11) opened: a failed allocation leaves nothing to count)
+ *
+ * #231: ropen() dropped the opening quote of a quoted name but copied the
+ * closing one into the DSN when no member followed, so the allocation
+ * failed with SVC 99 X'035C' (errno 860, mvsdev JOB00766).  With a member
+ * the copy stopped at '(' first, which is why (9) always allocated.
+ * Against a sysroot that has #229 but not #231, (11) is the only FAIL:
+ * mvsdev JOB00789, step RED rc=12 errno=860, step GREEN 12/12.
  *
  * RED before the fix: (5), (6), (8) and (10) fail - the chain grows by one
  * per ropen() by name, the failed one included.  Nothing abends.  mvsdev
@@ -134,9 +146,7 @@ int main(int argc, char **argv)
           "(2) control: __fdclr() removes it again");
 
     /* ---- rclose() after a write by name --------------------------------- */
-    /* unquoted: ropen() drops the opening quote of a name without a member
-       but copies the closing one into the DSN (SVC 99 X'035C'), and in
-       batch no prefix is added */
+    /* unquoted: in batch no prefix is added; the quoted form is (11) */
     sprintf(name, "%s", ps);
     memset(dd, 0, sizeof(dd));
     rc = ropen(name, 1, &rf);
@@ -182,6 +192,34 @@ int main(int argc, char **argv)
     wtof("TSTRFREE loop cycles=%d ok=%d dsabs=%d", i, ok, n);
     check(ok == LOOP, "(7) every ropen()/rread()/rclose() cycle read it back");
     check(n == base, "(8) after the cycles the DSAB chain is back");
+
+    /* ---- #231: a quoted name without a member ------------------------- */
+    sprintf(name, "'%s'", ps);
+    rf    = NULL;
+    errno = 0;
+    rc    = ropen(name, 0, &rf);
+    if (rc == 0 && rf) {
+        memset(buf, 0, sizeof(buf));
+        got = 0;
+        rc  = rread(rf, buf, &got);
+        rc2 = rclose(rf);
+        n   = dsabs();
+        printf("      ropen(%s, 0) rc=0 rread rc=%d got=%d rclose rc=%d "
+               "dsabs=%d\n", name, rc, (int)got, rc2, n);
+        wtof("TSTRFREE quoted rread=%d got=%d rclose=%d dsabs=%d",
+             rc, (int)got, rc2, n);
+        check(rc == 0 && rc2 == 0 && got == LRECL
+              && memcmp(buf, rec, LRECL) == 0,
+              "(11) ropen() of a quoted name reads the record back");
+        check(n == base, "(12) after its rclose() the DSAB chain is back");
+    }
+    else {
+        n = dsabs();
+        printf("      ropen(%s, 0) rc=%d errno=%d dsabs=%d\n",
+               name, rc, errno, n);
+        wtof("TSTRFREE quoted rc=%d errno=%d dsabs=%d", rc, errno, n);
+        check(0, "(11) ropen() of a quoted name reads the record back");
+    }
 
     /* ---- ropen()'s own error path --------------------------------------- */
     sprintf(name, "'%s(NOSUCH)'", pds);
