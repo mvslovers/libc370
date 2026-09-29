@@ -1142,7 +1142,8 @@ fails), and `ropen()` does the same when `__aopen()` fails after the
 allocation. `tstrfree.c` counts the DSAB chain: red step against the installed
 sysroot 6 -> 28 over 22 opens, green step 10/10, both in mvsdev JOB00768.
 Not covered: `__fildef()`'s `DISP=NEW` fallback without a normal disposition
-(comment on #229). Not released; `edge` and the sysroot not moved yet.
+(comment on #229). Not released; `edge` moved to the merge (`ad516f1`),
+sysroot installed from main.
 
 ### 41 · #231, #232 — `ropen()`/`rwrite()` break on documented forms
 
