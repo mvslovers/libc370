@@ -63,6 +63,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   under test.
 
 ### Fixed
+- **`racf_auth()` no longer needs APF (#197).** It issued `MODESET
+  KEY=ZERO,MODE=SUP` before every `RACHECK`, so any caller that was not
+  APF-authorized ended **S047**, although SVC 130 answers from problem state
+  — RAKF's SVC entry has no `TESTAUTH`. It now enters supervisor state only
+  when the caller is APF-authorized and not already there. Otherwise it issues
+  the `RACHECK` as it is. That opens the call to brexx370's `RACCHECK()` and
+  anything else unauthorized.
+
+  The same fix closes a second defect: the unconditional `MODESET
+  KEY=NZERO,MODE=PROB` afterwards put a caller that was **already in
+  supervisor state** back into problem state.
+
+  `test/mvs/tstracun.c` runs unauthorized from a library outside IEAAPF00 and
+  compares `racf_auth()` against a raw SVC 130 on seven resources. mvsdev,
+  2026-09-29: red on the old library (JOB00655: S047 without APF, supervisor
+  state lost), green on the new one (JOB00659, CC 0000). Authorized callers
+  (httpd, ftpd, mvsMF) go through the same `MODESET` as before, and cell (3)
+  checks that they return in problem state.
+
+  The probe also answers the question #197 left open. A **foreign ACEE**
+  passed in the parameter list from problem state is honoured: for MVSCE02,
+  `LIBC370.TSTRACMX.ALLOW` answers 0, the runner's own identity gets 8. So
+  RAKF trusts the plist ACEE of any caller. The `MODESET` protects nothing
+  there, and on this platform it never did.
 - **`strncmpi()` called `tolower()` out of line, twice per character (#183).**
   The TU was missing `#include <ctype.h>` (`stdio.h` → `clibio.h` does not
   pull ctype in), so `tolower` was an implicit declaration resolving to the

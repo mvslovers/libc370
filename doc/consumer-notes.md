@@ -227,8 +227,12 @@ empty three times.
 ## Authorized programs: the AC has to be set by ld370, twice
 
 Anything calling a libc370 routine that issues `MODESET KEY=ZERO,MODE=SUP` —
-`racf_auth()`, `racf_login()`, `racf_set_acee()` — has to be linked **AC=1** and
+`racf_login()`, `racf_logout()`, `racf_set_acee()` — has to be linked **AC=1** and
 fetched from an APF-authorized library, or the step ends S047.
+
+`racf_auth()` is no longer on that list (#197). It switches only when the
+caller is authorized, and otherwise issues the `RACHECK` from problem state,
+which SVC 130 answers the same way (`test/mvs/tstracun.c`).
 
 `cc370` accepts `-Wl,--ac,1` and **silently drops it**: the output is
 byte-identical to a link without it. And `ld370 --pack` loses the flag again
