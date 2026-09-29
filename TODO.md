@@ -300,6 +300,17 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 
 ## Tier 1 — empty again
 
+### ~~1 · #218~~ — fixed on `fix/218-grtptrs-cppl`, PR pending, 2026-09-29
+
+`__start()` copied ten words of a CPPL into `grtptrs` (no VL bit to stop at),
+six from past the list. The CPPL is now recognised *before* the copy by the
+#210 test (`GRTFLAG1_TSO` + PSCB word == `ppapscb`, words 1-2 read only if no
+VL bit precedes them) and gets exactly four words. Red JOB00699 (CP and CHILD
+n=10), green JOB00701/00704 (n=4; BATCH and CALL stay n=1) - batch IKJEFT01
+only. Left as is: a list with no VL bit that is not a CPPL still gets ten
+words, documented in `clibgrt.h`. brexx370's `jccompat.c` `>= 4` check holds
+at exactly 4.
+
 ### ~~1 · #210~~ — fixed, PR #217, 2026-09-29
 
 `tsocmd()` (and `ispexec()` on top of it) always returned 8 with "No CPPL":
@@ -314,7 +325,8 @@ told its `jccompat.c` CPPL workaround can go once it builds against it. Side dat
 LINKed by `tsocmd()` (the CHILD in JOB00683) - and the CHILD's `grtptrs` start
 fresh (n=10, its own CBUF at [0]), not appended to the parent's, and the
 caller's CPPL and `grtptrs` are unchanged after it returns (cell c4,
-JOB00686). The `grtptrs` loop reading 10 words for a CPPL is **#218**.
+JOB00686). The `grtptrs` loop reading 10 words for a CPPL is **#218**, fixed
+below.
 
 ### ~~1 · #197~~ — fixed, PR #215, 2026-09-29
 
