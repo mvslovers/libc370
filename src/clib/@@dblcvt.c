@@ -98,78 +98,49 @@ __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision, char *result)
     }
 
     /*
-    Now round
+    Now round: add half a unit of the last digit printed, which is
+    fractional digit j of b.  j only has to be bounded so the addend
+    stays representable.  It must not be DBL_MANT_DIG - on S/370 that
+    counts hex digits (14), and capping there added a fixed 5e-15 to
+    every value printed with 14 or more digits (#209).  From digit
+    DBLCVT_MAXRND on, the addend is below half an ulp of b in [1,10)
+    (HFP: 16**-13, about 2.2e-16) and changes no digit.
+    Zero is not rounded: no ulp absorbs the addend there, and it would
+    print as a stray 5 (#209).
     */
+#define DBLCVT_MAXRND 17
     switch (format) {
         case 0:    /* we are printing in standard form */
-            if (nprecision < DBL_MANT_DIG) /* we need to round */ {
-                j = nprecision;
-            }
-            else {
-                j=DBL_MANT_DIG;
-            }
-
-            round = 1.0/2.0;
-            i = 0;
-            while (++i <= j) {
-                round = round/10.0;
-            }
-            b = b + round;
-            if (b >= 10.0) {
-                b = b/10.0;
-                exp = exp + 1;
-            }
+            j = nprecision;
             break;
-
-        case 1:      /* we have a number > 1  */
-                         /* need to round at the exp + nprecisionth digit */
-            if (exp + nprecision < DBL_MANT_DIG) /* we need to round */ {
-                j = exp + nprecision;
-            }
-            else {
-                j = DBL_MANT_DIG;
-            }
-
-            round = 0.5;
-            i = 0;
-            while (i++ < j) {
-                round = round/10;
-            }
-
-            b = b + round;
-            if (b >= 10.0) {
-                b = b/10.0;
-                exp = exp + 1;
-            }
+        case 1:    /* we have a number > 1, round at digit exp+nprecision */
+            j = exp + nprecision;
             break;
-
-        case -1:   /* we have a number that starts 0.xxxx */
-            if (nprecision < DBL_MANT_DIG) /* we need to round */ {
-                j = nprecision + exp + 1;
-            }
-            else {
-                j = DBL_MANT_DIG;
-            }
-
-            round = 5.0;
-            i = 0;
-            while (i++ < j) {
-                round = round/10;
-            }
-
-            if (j >= 0) {
-                b = b + round;
-            }
-
-            if (b >= 10.0) {
-                b = b/10.0;
-                exp = exp + 1;
-            }
-
-            if (exp >= 0) {
-                format = 1;
-            }
+        default:   /* we have a number that starts 0.xxxx */
+            /* j = -1: the first digit printed is the one before b's
+               first, e.g. %.2f of 0.006 must round up to 0.01 */
+            j = nprecision + exp;
             break;
+    }
+    if (j > DBLCVT_MAXRND) {
+        j = DBLCVT_MAXRND;
+    }
+
+    if (j >= -1 && b != 0.0) {
+        round = (j < 0) ? 5.0 : 0.5;
+        i = 0;
+        while (i++ < j) {
+            round = round/10.0;
+        }
+        b = b + round;
+        if (b >= 10.0) {
+            b = b/10.0;
+            exp = exp + 1;
+        }
+    }
+
+    if (format == -1 && exp >= 0) {
+        format = 1;
     }
 
     /*
