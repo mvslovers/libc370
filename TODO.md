@@ -300,7 +300,7 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 
 ## Tier 1 — empty again
 
-### 1 · #210 — `ppacppl` was never set; fix on PR (branch `fix/210-ppacppl`)
+### 1 · #210 — `ppacppl` was never set; fix on PR #217
 
 `tsocmd()` (and `ispexec()` on top of it) always returned 8 with "No CPPL":
 `@@CRT0` clears the PPA and nothing wrote +X'2C'. `__start()` now records
