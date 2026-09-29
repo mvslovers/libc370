@@ -10,9 +10,9 @@ libc370 is the base library of the whole ecosystem, so a defect here is a defect
 in httpd, mvsMF, ftpd, ufsd and every other consumer at once; that is what puts
 some cheap items high and some expensive ones low.
 
-*Last reconciled against the tracker: **2026-09-29**, 49 issues open (#182,
-#228, #229, #231, #232 and #235 closed, #228, #229, #231, #232, #235 and #236
-filed the same day), all 49 accounted for below.* That pass found **#181** and **#182** (filed 2026-09-13/14) in
+*Last reconciled against the tracker: **2026-09-29**, 48 issues open (#182,
+#228, #229, #231, #232, #235 and #236 closed, #228, #229, #231, #232, #235 and
+#236 filed the same day), all 48 accounted for below.* That pass found **#181** and **#182** (filed 2026-09-13/14) in
 no rank at all, fifteen days after they were filed — #182 is now rank 1 and
 #181 rank 39. The pass before was 2026-09-13 at 41 open, all 41 ranked. #149 was fixed and released the same day (PR #180, **v1.0.6**)
 and #178/#179 were filed out of that work; both are ranked at the end. The previous pass was 2026-08-30 at 29 open, and the gap it left
@@ -1160,13 +1160,11 @@ sysroot installed from main.
 See "Recently landed". Not released; `edge` moved to the merge (`34301b2`),
 sysroot installed from main.
 
-### 41 · #236 — `fwrite()` record mode: the path #232 fixed in `rwrite()`
+### ~~41 · #236~~ — fixed, PR #239, 2026-09-29
 
-Filed out of #232. `@@fwrite.c`'s `_FILE_FLAG_RECORD` branch copies
-`size * nmemb` into `asmbuf` (LRECL bytes) and hands it to `__awrite()`
-unchecked: the same U0002 on V, the same overrun that on VB poisons the data
-set for every reader (U1234, measured for `rwrite()` in JOB00800). Not
-measured for `fwrite()` itself; consumers of `type=record` not yet swept.
+See "Recently landed". Not released; `edge` moved to the merge (`15c5041`),
+sysroot installed from main. Left open on purpose: a successful record-mode
+`fwrite()` answers 1, not `nmemb` - no caller, no issue filed.
 
 ### ~~38 · #195 (+ #213)~~ — fixed, PR #214, 2026-09-29
 
@@ -1242,6 +1240,13 @@ unmounted volser.
 ## Recently landed
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
+
+- **#236** (PR #239, merged 2026-09-29) - `fwrite()` in record mode refuses
+  with `EINVAL`, error flag clear, what exceeds LRECL (LRECL-4 spanned, a
+  wrapping `size*nmemb` included) or, on V, a bad RDW; `size`/`nmemb` 0 write
+  nothing. Contract at `_FILE_FLAG_RECORD` in `clibio.h`. mvsdev `tstfwrec.c`
+  JOB00805: red U1234/U0002/U0002 and FB 5 records for 1, green 19/19. Every
+  record-mode user in the ecosystem only reads.
 
 - **#235** (PR #238, merged 2026-09-29) - `jesiropn.c`'s `&FUNC` for
   `__alloc_intrdr` had two EN DASHes where `__` belongs. `make build` with the
