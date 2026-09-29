@@ -317,6 +317,11 @@ for any consumer whose final block meets a full data set. Measured with a mvsMF 
 final short block does not fit, then carry the condition out of `@@ACLOSE`
 through `__aclose()` into `fclose()`'s return value.
 
+**PR #227 (open):** `@@ACLOSE` returns 12/8 like `@@AWRITE`, `fclose()` returns
+`EOF` + `ENOSPC`/`EIO`. `test/mvs/tstclspc.c`: R=190 on mvsdev, 195..199 lose
+the short block; red JOB00729 (`fclose()` 0), green JOB00730 (EOF, errno 28),
+7/7. Left out: `@@fpswt`/`@@reopen`/`ropen`/`rclose` still ignore `__aclose()`.
+
 ### ~~1 · #222~~ — fixed, PR #224, 2026-09-29
 
 Filed 2026-09-29 out of #209. `__dblcvt()` writes with `strcat` into a caller
