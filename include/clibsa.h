@@ -51,7 +51,7 @@ static __inline SAVEAREA *sa_next(SAVEAREA *sa)
 static __inline void sa_get_epname(SAVEAREA *sa, char *epname)
 {
     void    *ep = (void*) sa->r15;
-    char    *p  = (char*) ep;
+    unsigned char *p = (unsigned char*) ep;
 
     epname[0] = 0;
 
@@ -62,7 +62,7 @@ static __inline void sa_get_epname(SAVEAREA *sa, char *epname)
         epname[*p] = 0;
     }
     else {
-        sprintf(epname, "%08X (unknown)", ep);
+        sprintf(epname, "%08X (unknown)", (unsigned) ep);
     }
 }
 

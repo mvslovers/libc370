@@ -34,6 +34,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   and Lua `file:seek` on a `w+`/`r+` file, and both now get an error where
   they got silent loss. No swept consumer calls `rclose()` or `freopen()` on
   a writing stream.
+- **`rclose()` frees the DD `ropen()` allocated (#229).** `ropen()` on a data
+  set name, rather than `dd:name`, allocates a DD by SVC 99 and records it in
+  the handle; `rclose()` never released it, so every open by name held one
+  allocation, with the data set, until step end. `rclose()` now unallocates
+  it and returns **-1** with `errno` `EIO` if that fails (an `__aclose()`
+  failure keeps its `ENOSPC`/`EIO`). `ropen()` also releases the DD when the
+  open itself fails after the allocation, e.g. on a missing member.
+
+  Measured on mvsdev with `test/mvs/tstrfree.c`, which counts the step's
+  DSAB chain: red JOB00768 against the installed sysroot, without the fix
+  (the chain grew from 6 to 28 over 22 opens by name, the failed one
+  included), green in the same job, 10/10. The data set existed, so the probe covers the SHR
+  allocation only; `ropen()`'s fallback that allocates a data set `NEW`
+  (without a normal disposition) is not measured. No swept consumer calls
+  `ropen()`.
 
 ## [1.0.7] - 2026-09-29
 

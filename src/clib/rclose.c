@@ -7,9 +7,7 @@
 #include <mvssupa.h>
 #include "rfile.h"
 
-extern int      __fildef(char *fdddname, char *fnm, int mymode, int type);
 extern int      __fdclr(char *fdddname);
-extern char *   __getpfx(void);
 
 int
 rclose(RFILE *fp)
@@ -27,6 +25,17 @@ rclose(RFILE *fp)
         if (rc) {
             err   = -1;
             errno = (rc == 12) ? ENOSPC : EIO;
+        }
+    }
+
+    if (fp->dyn) {
+        /* ropen() allocated the DD from a data set name; without this the
+           allocation outlived the handle until step end (#229).  A close
+           failure keeps its errno */
+        rc = __fdclr(fp->ddname);
+        if (rc && !err) {
+            err   = -1;
+            errno = EIO;
         }
     }
 
