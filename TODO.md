@@ -10,9 +10,9 @@ libc370 is the base library of the whole ecosystem, so a defect here is a defect
 in httpd, mvsMF, ftpd, ufsd and every other consumer at once; that is what puts
 some cheap items high and some expensive ones low.
 
-*Last reconciled against the tracker: **2026-09-29**, 49 issues open (#182,
-#228, #229 and #231 closed, #228, #229, #231 and #232 filed the same day), all 49
-accounted for below.* That pass found **#181** and **#182** (filed 2026-09-13/14) in
+*Last reconciled against the tracker: **2026-09-29**, 50 issues open (#182,
+#228, #229, #231 and #232 closed, #228, #229, #231, #232, #235 and #236 filed
+the same day), all 50 accounted for below.* That pass found **#181** and **#182** (filed 2026-09-13/14) in
 no rank at all, fifteen days after they were filed — #182 is now rank 1 and
 #181 rank 39. The pass before was 2026-09-13 at 41 open, all 41 ranked. #149 was fixed and released the same day (PR #180, **v1.0.6**)
 and #178/#179 were filed out of that work; both are ranked at the end. The previous pass was 2026-08-30 at 29 open, and the gap it left
@@ -522,6 +522,15 @@ leaves `errno` at `ENOSPC`/`EIO`, documented in `doc/consumer-notes.md`.
 Contract change with live consumers on the turn (brexx370 stream I/O, Lua
 `file:seek` on `w+`/`r+`). Not released yet; `edge` and the sysroot follow
 the merge.
+
+### 1 · #235 — `jesiropn.s` stops the build once cc370#483 lands
+
+Line 63 names `&FUNC` with two EN DASHes (U+2013) where `__` belongs. Today
+as370 assembles the UTF-8 bytes silently into the eyecatcher; with cc370#483 a
+character without an EBCDIC image in a constant is RC 8, and the build stops.
+The only module of the corpus that moves with that fix. One line - check
+first whether the `.s` is generated from a `.c`, and fix it there. **Gates
+cc370#483**, which is why it sits at rank 1 despite touching no running code.
 
 ### 2 · #61, #80 defect 3, #157, #158 — four list builders hand back a silently short list
 
@@ -1150,12 +1159,18 @@ sysroot installed from main.
 See "Recently landed". Not released; `edge` moved to the merge (`ed2a9e7`),
 sysroot installed from main.
 
-### 41 · #232 — `rwrite()` breaks on RECFM=V
+### ~~41 · #232~~ — fixed, PR #237, 2026-09-29
 
-Found by #229's probe, measured on mvsdev, no consumer anywhere
-(2026-09-29 sweep). **#232**: `rwrite()` on RECFM=V hands a record without
-RDW to `@@AWRITE`, which abends U0002 on the length check (`WRITENEW`),
-JOB00767 - document the RDW or build it, but return an error either way.
+See "Recently landed". Not released; `edge` moved to the merge (`34301b2`),
+sysroot installed from main.
+
+### 41 · #236 — `fwrite()` record mode: the path #232 fixed in `rwrite()`
+
+Filed out of #232. `@@fwrite.c`'s `_FILE_FLAG_RECORD` branch copies
+`size * nmemb` into `asmbuf` (LRECL bytes) and hands it to `__awrite()`
+unchecked: the same U0002 on V, the same overrun that on VB poisons the data
+set for every reader (U1234, measured for `rwrite()` in JOB00800). Not
+measured for `fwrite()` itself; consumers of `type=record` not yet swept.
 
 ### ~~38 · #195 (+ #213)~~ — fixed, PR #214, 2026-09-29
 
@@ -1231,6 +1246,13 @@ unmounted volser.
 ## Recently landed
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
+
+- **#232** (PR #237, merged 2026-09-29) - `rwrite()` refuses with `EINVAL`
+  what `@@AWRITE` cannot take (size > LRECL, LRECL-4 spanned; on V an RDW
+  that is short, differs from size or has bytes 2-3 set) and maps `__awrite()`
+  failures to `ENOSPC`/`EIO`. The RDW stays the caller's, `rfile.h` says so.
+  mvsdev `tstrwrv.c` JOB00800: red per group (U0002 x2, U1234 on the
+  read-back of an oversized VB record), green 16/16. #236 filed on the way.
 
 - **#231** (PR #234, merged 2026-09-29) - `ropen()` stops the DSN at the
   closing quote of a quoted name without a member (it was copied in, SVC 99
