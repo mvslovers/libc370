@@ -298,9 +298,9 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 
 ---
 
-## Tier 1 — #222 open
+## Tier 1 — empty since #222 (PR #224, 2026-09-29)
 
-### 1 · #222 — `%f` of a value >= 1e41 overflows a stack buffer
+### ~~1 · #222~~ — fixed, PR #224, 2026-09-29
 
 Filed 2026-09-29 out of #209. `__dblcvt()` writes with `strcat` into a caller
 buffer it has no length for: 50 bytes on the plain `%f` path (`vsnprint.c`,
@@ -308,6 +308,16 @@ buffer it has no length for: 50 bytes on the plain `%f` path (`vsnprint.c`,
 `printf("%f", 1e41)` is enough, measured under ASAN on the host; on MVS every one
 of those buffers is an automatic. A length parameter for the internal
 `__dblcvt()` fixes it, and three call sites change.
+
+**Merged as PR #224 (2026-09-29, `7906cee`):** `__dblcvt(..., rsize)`, `numbuf` 96, `__examin()`
+`work` 128. Host `tstdblrb` red 18 ASAN / green 79/79; old vs new identical
+over 30.6M conversions; mvsdev JOB00722 59/59, pre-fix JOB00724 S0C4 (PSW
+00F0F0F6). Found along the way and filed: #225 (the HFP `/10` scaling, 1e60
+prints 9999...8) and #226 (`%+8.2f` puts the sign before the padding).
+brexx370 (2026-09-29): #222 reaches its TRUNC/FORMAT/ROUND (`%.*f`,
+`%*.*lf`, via `__examin()`); nothing to pull forward, `edge` after the merge.
+#226 does not touch FORMAT: a plain width puts `-` after the padding
+correctly (`%8.2f` of -1 is `   -1.00`, host, main and #224).
 
 ### ~~1 · #209~~ — fixed, PR #223, 2026-09-29
 
@@ -365,7 +375,15 @@ All six steps are merged (#201, #202, #203, #205, #207, #208); the closing
 comment on #189 has the table. Left open by decision: #204 (append to a
 member) and #206 (O(1) backward seek via NOTE/POINT).
 
-**Rolling tag `edge`** (since 2026-09-27, now on `fe0a6f3` = #209 merged; the sysroot here is installed from `fe0a6f3`, 2026-09-29): brexx370's MVS CI
+**#206 is `parked` (2026-09-29).** Its `LINES()` motivation does not hold:
+brexx370's `Llines()` reads forward to EOF before it seeks back, so NOTE/POINT
+only halves `do while lines(f) > 0`, and nothing in the ecosystem calls it
+outside brexx370's own tests. The one case it would fix is the direction
+switch on a `+` stream (`__fpswt()`, O(n) per switch). **Trigger:** a measured
+direction-switching `+`-stream workload - not `LINES()`, which is brexx370's
+to solve with a 0/1 look-ahead.
+
+**Rolling tag `edge`** (since 2026-09-27, now on `7906cee` = #222 merged; the sysroot here is installed from `7906cee`, 2026-09-29): brexx370's MVS CI
 clones libc370 at its `[toolchain]` pin, so it tracks `edge` in the meantime.
 **Move `edge` after each of these merges once its MVS gate is measured**
 (`git tag -fa edge <sha>` + `git push -f origin edge`), and cut a real release
@@ -1085,8 +1103,18 @@ See "Recently landed". Follow-up outside libc370: cc370#484 (`L'a'` is ASCII 97)
 Filed 2026-09-29 out of #209, both in `@@dblcvt.c`, both output-only. #220:
 `%g` counts its precision as fractional digits (`%.6g` of 0.000123456 is
 `0.000123`), and `%.2f` of 0.004 prints `0.009`. #221: `%g` in e-style keeps
-its trailing zeros, and the exponent is always `E`. Best done together once
-#222 has given `__dblcvt()` its length parameter.
+its trailing zeros, and the exponent is always `E`. Best done together, now
+that #222 has given `__dblcvt()` its length parameter.
+
+### 38 · #225, #226 — `__dblcvt` accuracy on HFP, float flags in `__examin()`
+
+Filed 2026-09-29 out of #222, both on `main` before it. #225: the `/10`
+scaling loop truncates on HFP, so 1e60 prints `999999999999998046...` and
+`%e` of 1e-30 prints `9.99...E-31` - a wrong exponent (JOB00720). Host IEEE
+does not show it; the gate has to be MVS. #226: `+`/space goes in front of the
+already padded result, `-`/`0` are ignored for floats - derived from the code,
+not measured. brexx370 waits on neither (FORMAT uses a plain width, which is
+correct).
 
 ---
 
