@@ -310,7 +310,8 @@ equals `ppapscb` from EXTRACT. Red JOB00677/00681, green JOB00683
 itself through `tsocmd()`). After merge: move `edge`, tell brexx370 its
 `jccompat.c` CPPL workaround can go once it builds against it. Side datum for
 #105: a second `__start()` in one address space does happen - a C program
-LINKed by `tsocmd()` (the CHILD in JOB00683).
+LINKed by `tsocmd()` (the CHILD in JOB00683) - and the CHILD's `grtptrs` start
+fresh (n=10, its own CBUF at [0]), not appended to the parent's.
 
 ### ~~1 · #197~~ — fixed, PR #215, 2026-09-29
 

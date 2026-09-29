@@ -40,9 +40,10 @@
  *     9 otherwise - so (c3) tells the two failures apart.
  *
  * The CHILD is the probe itself, LINKed from the same STEPLIB.  No system
- * command is used: TIME, which brexx370 met the bug with, is handled
- * inside the TMP and is not a load module on mvsdev (no member in
- * SYS1.CMDLIB or SYS1.LINKLIB), so a LINK to it would S806.
+ * command is used: TIME, which brexx370 met the bug with, has no load
+ * module of that name in SYS1.CMDLIB, SYS1.LINKLIB, SYS2.CMDLIB or
+ * SYS2.LINKLIB on mvsdev (LPALIB not checked), so it is not a safe LINK
+ * target for tsocmd().
  *
  * Every cell is reported by wtof() before the next one runs: a wrong
  * ppacppl makes tsocmd() copy from a wild address, and stdio output does
