@@ -40,12 +40,20 @@ extern int  rclose(RFILE *fp);
 /* rread() - read record from dataset
 ** rc: 0==success, otherwise eof or error.
 ** read: number of bytes actually read. *read can be NULL*
+** ptr must hold lrecl bytes.  A RECFM=V record comes with its RDW: bytes
+** 0-1 the record length including the RDW, bytes 2-3 zero, then the data;
+** *read counts the RDW.
 */
 extern int  rread(RFILE *fp, void *ptr, size_t *read);
 
 /* rwrite() - write record to dataset
-** rc: 0==success, otherwise error.
-** size: record length or 0 to use lrecl.
+** rc: 0==success, otherwise error: errno EINVAL for a record rwrite()
+**     cannot take (nothing is written), ENOSPC out of space, EIO I/O error.
+** size: record length or 0 to use lrecl, at most lrecl.  RECFM=F pads a
+**     shorter record with blanks.
+** RECFM=V: the record carries its RDW, as rread() returns it - bytes 0-1
+**     equal to size, bytes 2-3 zero, then the data - so size is at least 4.
+**     On a spanned data set (VS, VBS) size is at most lrecl-4.
 */
 extern int  rwrite(RFILE *fp, const void *ptr, size_t size);
 
