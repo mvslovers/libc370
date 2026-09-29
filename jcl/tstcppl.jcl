@@ -16,6 +16,10 @@
 //* cc370 b91f913, JOB00681.  Green with the fix: JOB00683, all 0000;
 //* with (c4): JOB00686, all 0000.
 //*
+//* #218 (grtptrs holds the CPPL's four words, cells c5/k4/n4): red on
+//* the old library JOB00699 - TSOCP 0008 (c5, k4, and c3 through the
+//* CHILD's RC 9); green with the fix JOB00701 and JOB00704, all 0000.
+//*
 //* BATCH   EXEC PGM=      no CPPL           control
 //* TSOCALL TSO CALL       no CPPL           control
 //* TSOCP   TSO command    CPPL, and tsocmd() LINKs the probe again
