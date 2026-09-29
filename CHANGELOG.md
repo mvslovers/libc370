@@ -59,6 +59,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `test/mvs/tstrfree.c` checks (11)/(12), JOB00789: red against the
   installed sysroot (`rc=12 errno=860`, the only FAIL), green in the same
   job, 12/12.
+- **`rwrite()` refuses a record it cannot write instead of abending or
+  corrupting the data set (#232).** On RECFM=V the record carries its RDW,
+  as `rread()` has always returned it; `include/rfile.h` now says so for
+  both directions. `rwrite()` answers non-zero with `errno` **`EINVAL`** and
+  writes nothing when the record is longer than LRECL (LRECL-4 on a spanned
+  data set), or on V shorter than 4 bytes, with an RDW that does not equal
+  `size`, or with RDW bytes 2-3 not zero. Before, a V record without its
+  RDW abended U0002 in `@@AWRITE`, and a record longer than LRECL overran
+  the LRECL-sized work buffer and was written as it was: on VB it made
+  every later read of the data set abend U1234, on FB it was cut to LRECL.
+  An `__awrite()` failure now sets `errno` `ENOSPC` or `EIO` (it set none).
+
+  Measured on mvsdev with `test/mvs/tstrwrv.c`, JOB00800: against the
+  installed sysroot each of the five groups fails or abends (U0002 twice,
+  U1234 once), green in the same job, 16/16. No swept consumer calls
+  `rwrite()`.
 
 ## [1.0.7] - 2026-09-29
 
