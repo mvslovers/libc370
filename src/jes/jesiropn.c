@@ -43,7 +43,7 @@ quit:
     return err;
 }
 
-__asm__("\n&FUNC    SETC '––alloc_intrdr'");
+__asm__("\n&FUNC    SETC '__alloc_intrdr'");
 static int __alloc_intrdr(char *ddname)
 {
     int         err     = 1;

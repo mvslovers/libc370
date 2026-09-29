@@ -75,6 +75,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   installed sysroot each of the five groups fails or abends (U0002 twice,
   U1234 once), green in the same job, 16/16. No swept consumer calls
   `rwrite()`.
+- **libc370 builds with an as370 that diagnoses non-EBCDIC source
+  (#235).** `src/jes/jesiropn.c` named `__alloc_intrdr`'s `&FUNC` with two
+  EN DASHes (U+2013) instead of `__`. The current as370 assembled their
+  UTF-8 bytes silently into the prologue's identifier (six bytes of garbage
+  where `__` belongs); the as370 of cc370#483 rejects a character without
+  an EBCDIC image in a constant, rc 8, and `make build` stopped there -
+  the only one of the 756 sources (728 `.s`, 28 `.asm`) that did. No change in behaviour.
 
 ## [1.0.7] - 2026-09-29
 
