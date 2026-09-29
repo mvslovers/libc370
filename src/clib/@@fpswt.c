@@ -37,6 +37,13 @@ static void skipto(FILE *fp, long pos);
  * Returns 0, or -1 with errno set.  A stream whose reopen fails is left
  * open the way it was where that is possible; otherwise it is marked in
  * error, since there is no DCB left to use.
+ *
+ * The last, short block a writing DCB holds goes out at its CLOSE, not at
+ * the flush.  When that write fails (#228) the switch still completes -
+ * the data set is valid, only shorter - but the stream is marked in error
+ * (ferror(), _FILE_FLAG_ENOSPC for an out-of-space) and the call answers
+ * -1 with errno ENOSPC or EIO, so a reader cannot take the lost tail for
+ * the end of the data.
  */
 int
 __fpswt(FILE *fp, int out)
@@ -45,6 +52,7 @@ __fpswt(FILE *fp, int out)
     int     had;
     int     c;
     int     e;
+    int     r;
 
     if (!(fp->flags & _FILE_FLAG_OPEN)) {
         errno = EBADF;
@@ -89,7 +97,22 @@ __fpswt(FILE *fp, int out)
     /* pending output, or a record overwritten in place, goes first */
     if (__fflush(fp)) return -1;
 
-    if (redcb(fp, out)) {
+    r = redcb(fp, out);
+    if (r > 0) {
+        /* reopened, but the old DCB's last block is lost: finish the
+           switch, then report it (#228).  Only a writing DCB holds a
+           block, so this is the turn to reading; every caller of
+           __fpswt(fp, 1) has a reading DCB, the out arm is only there
+           to leave the position right if that ever changes */
+        e = errno;
+        if (out) fp->filepos = pos;
+        else     skipto(fp, pos);
+        fp->flags |= _FILE_FLAG_ERROR;
+        if (e == ENOSPC) fp->flags |= _FILE_FLAG_ENOSPC;
+        errno = e;
+        return -1;
+    }
+    if (r) {
         e = errno ? errno : EIO;
         /* a failed switch to writing: keep the stream readable */
         if (out && redcb(fp, 0) == 0) {
@@ -110,12 +133,20 @@ __fpswt(FILE *fp, int out)
     return 0;
 }
 
-/* close the DCB and open the same DD again, reading or writing */
+/* close the DCB and open the same DD again, reading or writing.
+   0 done, -1 the reopen failed (errno set), 1 reopened but the CLOSE
+   could not write the last block (errno ENOSPC or EIO, #228) */
 __asm__("\n&FUNC    SETC 'redcb'");
 static int
 redcb(FILE *fp, int out)
 {
-    if (fp->flags & _FILE_FLAG_OPEN) __aclose(fp->dcb);
+    int     lost = 0;
+    int     rc;
+
+    if (fp->flags & _FILE_FLAG_OPEN) {
+        rc = __aclose(fp->dcb);
+        if (rc) lost = (rc == 12) ? ENOSPC : EIO;
+    }
     fp->dcb     = 0;
     fp->asmbuf  = 0;
     if (fp->buf) free(fp->buf);
@@ -126,7 +157,12 @@ redcb(FILE *fp, int out)
     fp->flags  &= ~(_FILE_FLAG_OPEN | _FILE_FLAG_DCBOUT | _FILE_FLAG_EOF);
     if (out) fp->flags |= _FILE_FLAG_DCBOUT;
     errno = 0;
-    return __fpopen(fp);
+    if (__fpopen(fp)) return -1;
+    if (lost) {
+        errno = lost;
+        return 1;
+    }
+    return 0;
 }
 
 /* read forward from the start to pos - or to the end for POSEND */

@@ -4,6 +4,37 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Fixed
+- **`freopen()`, the `+`-stream turn and `rclose()` report a lost last block
+  (#228).** #182 made `fclose()` report an out-of-space on the final, short
+  block, which only its CLOSE writes; these three paths close the DCB
+  themselves and still ignored that rc, so the tail went missing and the
+  caller was told it had succeeded.
+  - **`rclose()`** returns **-1** with `errno` `ENOSPC`/`EIO` (it returned 0
+    on every path). The handle is freed either way.
+  - **A `+` stream turned from writing to reading** (the `fgetc()`,
+    `fseek()` or `rewind()` after a write) still completes the turn, since
+    the data set is valid, only shorter, but the call answers `EOF`/-1 with
+    **`ferror()`** set and `errno` `ENOSPC`/`EIO`. Before, `fgetc()` answered
+    a plain `EOF`, which read as the end of the data. After `clearerr()` the
+    stream reads what is on disk.
+  - **`freopen()`** still succeeds: C99 7.19.5.4 ignores a failure to close
+    the old file. It now leaves `errno` at `ENOSPC`/`EIO` when the old
+    stream lost its tail, which is the only place the loss can go. An
+    `fflush()` before the `freopen()` does not help, because the short block
+    is written at CLOSE, not at the flush.
+
+  Measured on mvsdev with `test/mvs/tstclspc.c`, extended by these three
+  paths over the same `TRK(1,0)` FB 80/800 cases (190 records in full
+  blocks, 195–199 lose the short block): red JOB00744 against 1.0.7 (all
+  three silent), green JOB00745, 18/18. **Contract change**, with live
+  consumers on the turn: brexx370 stream I/O seeks before every operation
+  and Lua `file:seek` on a `w+`/`r+` file, and both now get an error where
+  they got silent loss. No swept consumer calls `rclose()` or `freopen()` on
+  a writing stream.
+
 ## [1.0.7] - 2026-09-29
 
 ### Added

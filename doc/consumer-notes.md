@@ -262,6 +262,17 @@ template is commented out (`*DEFUNCT` at `@@aopen.asm:209`). The open-mode table
 at the top of that file is the reference. `fopen()` takes both
 `"DD:ddname(member)"` and a dataset name.
 
+**The last block of a data set is written at CLOSE**, so an out-of-space
+on it shows up in a close and nowhere else: `fclose()` returns `EOF`
+(#182), `rclose()` returns -1 and a `+` stream turning from writing to
+reading sets `ferror()` (#228), each with `errno` `ENOSPC` or `EIO`. An
+`fflush()` does not write it, and cannot be used to find out early.
+**`freopen()` cannot fail on it**, because C99 7.19.5.4 ignores a failure to
+close the old file. If the tail matters, set `errno = 0` before the
+`freopen()` and treat `ENOSPC`/`EIO` afterwards as a lost tail on the old
+file. Any other `errno` value there means nothing. Better still,
+`fclose()` + `fopen()`, which report it directly.
+
 VSAM has no stdio path. What exists is `src/clib/@@vs*.c`, ACB/MODCB/GENCB via
 inline assembler. It is built into `libc.a`, but **no test covers it** — verify
 against your own data set before relying on it. The same caveat applies to

@@ -15,10 +15,20 @@ int
 rclose(RFILE *fp)
 {
     int     err = 0;
+    int     rc;
 
     if (!fp) goto quit;
 
-    if (fp->hfile) __aclose(fp->hfile);
+    if (fp->hfile) {
+        /* rwrite() fills the block record by record, so the last, short
+           block is written here - an out-of-space on it only shows up in
+           this rc (#182, #228) */
+        rc = __aclose(fp->hfile);
+        if (rc) {
+            err   = -1;
+            errno = (rc == 12) ? ENOSPC : EIO;
+        }
+    }
 
     free(fp);
 
