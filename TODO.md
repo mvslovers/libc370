@@ -304,7 +304,7 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 
 `%zd` printed `d`: `__examin()` (`@@examin.c`) did not know `z`, `t`, `j` or `hh`.
 Side finding **#213**: libc370's `ptrdiff_t` was `int` where cc370's is `long` -
-fixed together with #195, see item 38.
+fixed together with #195 (PR #214).
 
 ### ~~1 · #189~~ — complete, PR #208, 2026-09-27
 
@@ -312,7 +312,7 @@ All six steps are merged (#201, #202, #203, #205, #207, #208); the closing
 comment on #189 has the table. Left open by decision: #204 (append to a
 member) and #206 (O(1) backward seek via NOTE/POINT).
 
-**Rolling tag `edge`** (since 2026-09-27, now on `8928b2a` = #211 merged; the sysroot here is still installed from `f3292f2`): brexx370's MVS CI
+**Rolling tag `edge`** (since 2026-09-27, now on `0b8ac37` = #195/#213 merged; the sysroot here is installed from the same commit): brexx370's MVS CI
 clones libc370 at its `[toolchain]` pin, so it tracks `edge` in the meantime.
 **Move `edge` after each of these merges once its MVS gate is measured**
 (`git tag -fa edge <sha>` + `git push -f origin edge`), and cut a real release
@@ -1021,14 +1021,9 @@ now silently kills a healthy stream. Smallest fix is to drop the line. Worth
 deciding at the same time whether keeping the old stream open on failure should
 survive at all: C99 7.19.5.4 closes it either way, and libc370 does not.
 
-### 38 · #195 (+ #213) — PR #214 open, MVS gate measured, ready to merge
+### ~~38 · #195 (+ #213)~~ — fixed, PR #214, 2026-09-29
 
-`wchar_t` and `ptrdiff_t` now come from the compiler (`__WCHAR_TYPE__` int,
-`__PTRDIFF_TYPE__` long); new types-only `<wchar.h>` (`wint_t`, `WEOF`, limits);
-the multibyte functions rewritten for an int `wchar_t`. Consumer sweep
-2026-09-29: no wide-character use on MVS. Host tstwchar 31/31; mvsdev JOB00649
-18/18, old libc 11 of 18 failed. Left: merge, move `edge`. Found on the way:
-cc370#484 (`L'a'` is ASCII 97).
+See "Recently landed". Follow-up outside libc370: cc370#484 (`L'a'` is ASCII 97).
 
 ---
 
@@ -1067,6 +1062,13 @@ cc370#484 (`L'a'` is ASCII 97).
 ## Recently landed
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
+
+- **#195 + #213** (PR #214, merged 2026-09-29) - `wchar_t` is `__WCHAR_TYPE__`
+  (int), `ptrdiff_t` is `__PTRDIFF_TYPE__` (long); new types-only `<wchar.h>`
+  (`wint_t`, `WEOF`, `WCHAR_*`/`WINT_*`); `mbstowcs`/`wcstombs` rewritten for an
+  int `wchar_t`, `mblen`/`mbtowc`/`wctomb` to C99 7.20.7. Consumer sweep
+  2026-09-29: no wide-character use on MVS. Host tstwchar 31/31; mvsdev
+  JOB00649 18/18, old libc 11 of 18 failed. cc370#484 filed on the way.
 
 - **#211** (PR #212, merged 2026-09-29) - the C99 length modifiers `z`, `t`,
   `j` and `hh` in `__examin()`, the one parser behind the printf family
