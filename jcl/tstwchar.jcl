@@ -6,12 +6,14 @@
 //* test/mvs/tstwchar.c.
 //*
 //* STEPLIB is the scratch PDS recvwch.jcl restores into.  TSTWCH is
-//* linked against the branch libc.a, TSTWCR against the sysroot libc
-//* before the fix - the red control.  Both are compiled with the new
+//* linked against the current libc.a, TSTWCR against libc 8928b2a
+//* (before #195) - the red control.  Both are compiled with the new
 //* headers; the old ones do not compile the probe at all.
 //*
 //* Run:     mvsdev JOB00649, 2026-09-29: GREEN CC 0000, 18/18;
 //*          RED CC 0001, 11 of 18 failed.
+//*          With (5) for cc370#484 (cc370 6ba027d): JOB00665,
+//*          GREEN CC 0000, 22/22; RED CC 0001, the same 11 failed.
 //*
 //* RC 0 = every check passed, 1 = a check failed (it is the COND CODE).
 //*

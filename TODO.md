@@ -300,12 +300,12 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 
 ## Tier 1 — empty again
 
-### 1 · #197 — `racf_auth()` S047 without APF: fix on PR #215
+### ~~1 · #197~~ — fixed, PR #215, 2026-09-29
 
 The `MODESET` now happens only for an APF-authorized caller that is not
 already in supervisor state. Red on mvsdev JOB00655, green on JOB00659
 (`test/mvs/tstracun.c`, not authorized). This unblocks brexx370's `rac/` →
-libc370 cleanup (brexx370 #134). Move `edge` once it is merged. Not measured:
+libc370 cleanup (brexx370 #134); `edge` has moved to it. Not measured:
 TK5, and the AC=1 probes `tstracau`/`tstracmx` against the new library; cell
 (3) covers the same authorized path through JSCBAUTH.
 
@@ -321,7 +321,7 @@ All six steps are merged (#201, #202, #203, #205, #207, #208); the closing
 comment on #189 has the table. Left open by decision: #204 (append to a
 member) and #206 (O(1) backward seek via NOTE/POINT).
 
-**Rolling tag `edge`** (since 2026-09-27, now on `0b8ac37` = #195/#213 merged; the sysroot here is installed from the same commit): brexx370's MVS CI
+**Rolling tag `edge`** (since 2026-09-27, now on `f7c836c` = #197 merged; the sysroot here is still installed from `0b8ac37`): brexx370's MVS CI
 clones libc370 at its `[toolchain]` pin, so it tracks `edge` in the meantime.
 **Move `edge` after each of these merges once its MVS gate is measured**
 (`git tag -fa edge <sha>` + `git push -f origin edge`), and cut a real release

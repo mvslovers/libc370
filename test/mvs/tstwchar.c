@@ -11,17 +11,23 @@
  *       bytes as the narrow literal, and back through mbstowcs()
  *   (3) mbtowc / mblen / wctomb on the S/370 code
  *   (4) %td of a ptrdiff_t prints (#211's parser, #213's type)
+ *   (5) cc370's wide character constant is EBCDIC: L'a' == 'a' ==
+ *       L"a"[0], and a numeric escape keeps its value in a wide constant
+ *       and a wide string.  This is a compiler property, not libc370's:
+ *       mvslovers/cc370#484, fixed in cc370 6ba027d (no release yet).  An
+ *       older cc370 fails (5) by design - JOB00649 printed L'a' = 97.
  *
- * Printed only, not checked: L'a' against 'a'.  cc370 builds a wide
- * CHARACTER constant in the host charset (97) while the narrow one and the
- * elements of a wide STRING are EBCDIC (129) - a compiler defect, not
- * libc370's: mvslovers/cc370#484.
+ * Keep (5) inside 0..0xFF and out of #if: above a byte and in #if, cc370
+ * still uses the host charset (mvslovers/cc370#485).  And never compare
+ * 'a' against the NARROW "a"[0]: cc370 folds that to the host byte
+ * (cc370#477 class).  L"a"[0] is not folded, so (5) compares at run time.
  *
  * Build:   make build
  *          cc370 -O1 -Wall -Werror -Iinclude -L build/sdk \
  *                test/mvs/tstwchar.c -o TSTWCH -flinker-output=iebcopy
- *          cc370 -O1 -Iinclude test/mvs/tstwchar.c \
- *                -o TSTWCR -flinker-output=iebcopy      (red: sysroot libc)
+ *          git worktree add <old> 8928b2a && make -C <old> build
+ *          cc370 -O1 -Iinclude -L <old>/build/sdk test/mvs/tstwchar.c \
+ *                -o TSTWCR -flinker-output=iebcopy      (red: libc before #195)
  *          ld370 --pack TSTWCH=TSTWCH.iebcopy TSTWCR=TSTWCR.iebcopy \
  *                -o tstwchar -xmit --dsn IBMUSER.LIBC370.WCHSCR
  * Install: jcl/recvwch.jcl (its own staging data set, not the mbt one).
@@ -32,7 +38,12 @@
  * sysroot libc from 8928b2a (before #195), CC 0001, 11 of 18 failed - all
  * of (2) and all of (3) but wctomb of a byte value.  The types in (1) and
  * %td in (4) pass there too: they are header and parser, not library.
- * Printed by both: L'a' = 97, 'a' = 129, L"a"[0] = 129.
+ * Printed by both: L'a' = 97, 'a' = 129, L"a"[0] = 129 (cc370 before #484).
+ *
+ * With (5), cc370 6ba027d: mvsdev JOB00665, 2026-09-29 - GREEN CC 0000,
+ * 22/22, printing 129 / 129 / 129; RED CC 0001, the same 11 of 22 failed.
+ * (5) passes in RED too - it is the compiler's, and both steps were built
+ * with the fixed cc370.  Its red is JOB00649's 97, under the cc370 before.
  *
  * RC: 0 = every check passed, 1 = a check failed (it is the COND CODE).
  */
@@ -114,9 +125,13 @@ int main(void)
     snprintf(b, sizeof(b), "%td|%d", d, 7);
     CHECK(strcmp(b, "-5|7") == 0, "(4) %td of p - q, then %d");
 
-    printf("\nprinted only - cc370's wide character constant:\n");
+    printf("\n(5) cc370's wide character constant (cc370#484):\n");
     printf("  L'a' = %d, 'a' = %d, L\"a\"[0] = %d\n",
            (int)L'a', (int)'a', (int)L"a"[0]);
+    CHECK_EQ(L'a', 'a', "(5) L'a' is 'a' (EBCDIC X'81')");
+    CHECK_EQ(L'a', L"a"[0], "(5) L'a' is L\"a\"[0]");
+    CHECK_EQ(L'\x81', 0x81, "(5) L'\\x81' keeps its value");
+    CHECK_EQ(L"\x81"[0], 0x81, "(5) L\"\\x81\"[0] keeps its value");
 
     printf("\n=== tstwchar: %d/%d passed", mbt_passed, mbt_run);
     if (mbt_failed > 0) printf(" (%d FAILED)", mbt_failed);
