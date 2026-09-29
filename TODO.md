@@ -300,7 +300,7 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 
 ## Tier 1 — empty again
 
-### ~~1 · #218~~ — fixed on `fix/218-grtptrs-cppl`, PR #219 (open), 2026-09-29
+### ~~1 · #218~~ — fixed, PR #219, 2026-09-29
 
 `__start()` copied ten words of a CPPL into `grtptrs` (no VL bit to stop at),
 six from past the list. The CPPL is now recognised *before* the copy by the
@@ -325,8 +325,8 @@ told its `jccompat.c` CPPL workaround can go once it builds against it. Side dat
 LINKed by `tsocmd()` (the CHILD in JOB00683) - and the CHILD's `grtptrs` start
 fresh (n=10, its own CBUF at [0]), not appended to the parent's, and the
 caller's CPPL and `grtptrs` are unchanged after it returns (cell c4,
-JOB00686). The `grtptrs` loop reading 10 words for a CPPL is **#218**, fixed
-below.
+JOB00686). The `grtptrs` loop reading 10 words for a CPPL was **#218**, fixed
+above.
 
 ### ~~1 · #197~~ — fixed, PR #215, 2026-09-29
 
