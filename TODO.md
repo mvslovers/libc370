@@ -365,7 +365,7 @@ All six steps are merged (#201, #202, #203, #205, #207, #208); the closing
 comment on #189 has the table. Left open by decision: #204 (append to a
 member) and #206 (O(1) backward seek via NOTE/POINT).
 
-**Rolling tag `edge`** (since 2026-09-27, now on `d4540f7` = #218 merged; the sysroot here is installed from `1e1b81b` (= `d4540f7` + TODO), 2026-09-29): brexx370's MVS CI
+**Rolling tag `edge`** (since 2026-09-27, now on `275b350` = the #209 fix, **ahead of its merge** - PR #223 is open; the sysroot here is installed from that branch, 2026-09-29. PR #223 must be merged with a merge commit, not squashed, or `edge` points off `main`): brexx370's MVS CI
 clones libc370 at its `[toolchain]` pin, so it tracks `edge` in the meantime.
 **Move `edge` after each of these merges once its MVS gate is measured**
 (`git tag -fa edge <sha>` + `git push -f origin edge`), and cut a real release
