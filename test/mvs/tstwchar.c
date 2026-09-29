@@ -15,7 +15,7 @@
  * Printed only, not checked: L'a' against 'a'.  cc370 builds a wide
  * CHARACTER constant in the host charset (97) while the narrow one and the
  * elements of a wide STRING are EBCDIC (129) - a compiler defect, not
- * libc370's; see the cc370 issue referenced in the PR.
+ * libc370's: mvslovers/cc370#484.
  *
  * Build:   make build
  *          cc370 -O1 -Wall -Werror -Iinclude -L build/sdk \
