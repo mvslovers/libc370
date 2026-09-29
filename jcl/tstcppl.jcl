@@ -13,7 +13,8 @@
 //*
 //* Red on the old library: mvsdev JOB00677, 2026-09-29 - BATCH 0000,
 //* TSOCALL 0000, TSOCP 0008 (c1, c3 FAIL, tsocmd rc=8); again with
-//* cc370 b91f913, JOB00681.  Green with the fix: JOB00683, all 0000.
+//* cc370 b91f913, JOB00681.  Green with the fix: JOB00683, all 0000;
+//* with (c4): JOB00686, all 0000.
 //*
 //* BATCH   EXEC PGM=      no CPPL           control
 //* TSOCALL TSO CALL       no CPPL           control

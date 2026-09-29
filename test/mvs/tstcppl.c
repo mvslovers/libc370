@@ -34,6 +34,11 @@
  *          and its PSCB word equals the PSCB that @@CRT0 took from
  *          EXTRACT (ppapscb) - an independent control
  *     (c3) tsocmd("TSTCPPL", "CHILD") returns 42      RED before the fix (8)
+ *     (c4) the CHILD leaves the caller alone: after tsocmd() returns, the
+ *          caller's ppacppl, the four words it points at and its grtptrs
+ *          (array, count, words 0-3) are what they were before.  The CHILD
+ *          runs its own __start() in the same address space and task, so
+ *          this is where a shared anchor would show.
  *   CHILD
  *     GRTFLAG1_TSO on, ppacppl not NULL, and its CBUF holds the command
  *     line "TSTCPPL CHILD" that tsocmd() built.  Returns 42 when all hold,
@@ -44,6 +49,11 @@
  * module of that name in SYS1.CMDLIB, SYS1.LINKLIB, SYS2.CMDLIB or
  * SYS2.LINKLIB on mvsdev (LPALIB not checked), so it is not a safe LINK
  * target for tsocmd().
+ *
+ * NO WRITABLE STATICS.  For the foreground run the module has to sit in
+ * the link list (the logon procedure has no STEPLIB), and a module fetched
+ * from the LNKLST cannot store into its own statics - S0C4.  The failure
+ * count therefore travels through automatic storage.
  *
  * Every cell is reported by wtof() before the next one runs: a wrong
  * ppacppl makes tsocmd() copy from a wild address, and stdio output does
@@ -56,7 +66,7 @@
  * with cc370 b91f913): BATCH and CALL pass, CP fails (c1) and (c3),
  * tsocmd rc=8.  grtptrs[2] there equals ppapscb, so the words at R1 are
  * the CPPL.  Green with the fix: JOB00683, every cell passes and the
- * CHILD returns 42.
+ * CHILD returns 42; with (c4) added and the statics removed: JOB00686.
  *
  * BUILD (host):
  *     make build
@@ -81,12 +91,10 @@
 #include "clibwto.h"
 #include "ikjcppl.h"
 
-static int fails;
-
 static void
-cell(const char *mode, const char *id, int ok, const char *what)
+cell(int *fails, const char *mode, const char *id, int ok, const char *what)
 {
-    if (!ok) fails++;
+    if (!ok) (*fails)++;
     printf("%-5s %-3s %s  %s\n", mode, id, ok ? "PASS" : "FAIL", what);
     wtof("TSTCPPL %s %s %s %s", mode, id, ok ? "PASS" : "FAIL", what);
 }
@@ -114,16 +122,18 @@ child(CLIBPPA *ppa, CLIBGRT *grt)
     CPPL    *cppl   = ppa->ppacppl;
     TSOCBUF *cbuf;
     int     len;
+    int     fails   = 0;
 
     state("CHILD", ppa, grt);
-    cell("CHILD", "k1", (grt->grtflag1 & GRTFLAG1_TSO) != 0, "GRTFLAG1_TSO on");
-    cell("CHILD", "k2", cppl != NULL, "ppacppl set");
+    cell(&fails, "CHILD", "k1", (grt->grtflag1 & GRTFLAG1_TSO) != 0,
+         "GRTFLAG1_TSO on");
+    cell(&fails, "CHILD", "k2", cppl != NULL, "ppacppl set");
     if (cppl) {
         cbuf = cppl->cpplcbuf;
         len  = cbuf ? cbuf->cbuflen - 4 : -1;
         wtof("TSTCPPL CHILD CBUF len=%d '%.*s'", len,
              len > 0 && len < 80 ? len : 0, cbuf ? cbuf->cmdname : "");
-        cell("CHILD", "k3", len == (int)strlen(want)
+        cell(&fails, "CHILD", "k3", len == (int)strlen(want)
              && memcmp(cbuf->cmdname, want, len) == 0,
              "CBUF is the command line tsocmd() built");
     }
@@ -135,14 +145,16 @@ static int
 nocppl(const char *mode, CLIBPPA *ppa, CLIBGRT *grt)
 {
     int     rc;
+    int     fails   = 0;
 
     state(mode, ppa, grt);
-    cell(mode, "n1", (grt->grtflag1 & GRTFLAG1_TSO) == 0, "GRTFLAG1_TSO off");
-    cell(mode, "n2", ppa->ppacppl == NULL, "ppacppl NULL");
+    cell(&fails, mode, "n1", (grt->grtflag1 & GRTFLAG1_TSO) == 0,
+         "GRTFLAG1_TSO off");
+    cell(&fails, mode, "n2", ppa->ppacppl == NULL, "ppacppl NULL");
     if (ppa->ppacppl == NULL) {
         rc = tsocmd("TSTCPPL", "CHILD");
         wtof("TSTCPPL %s tsocmd rc=%d", mode, rc);
-        cell(mode, "n3", rc == 8, "tsocmd() refuses with 8");
+        cell(&fails, mode, "n3", rc == 8, "tsocmd() refuses with 8");
     }
     return fails ? 8 : 0;
 }
@@ -150,8 +162,13 @@ nocppl(const char *mode, CLIBPPA *ppa, CLIBGRT *grt)
 static int
 cp(CLIBPPA *ppa, CLIBGRT *grt)
 {
-    CPPL    *cppl   = ppa->ppacppl;
-    int     rc;
+    CPPL        *cppl   = ppa->ppacppl;
+    CPPL        words;
+    void        **ptrs;
+    void        *ptr4[4];
+    unsigned    n;
+    int         rc;
+    int         fails   = 0;
 
     state("CP", ppa, grt);
     if (!(grt->grtflag1 & GRTFLAG1_TSO) || !grt->grtptrs
@@ -159,20 +176,34 @@ cp(CLIBPPA *ppa, CLIBGRT *grt)
         wtof("TSTCPPL CP VOID - not started as a command processor");
         return 12;
     }
-    cell("CP", "c1", cppl != NULL, "ppacppl set");
+    cell(&fails, "CP", "c1", cppl != NULL, "ppacppl set");
     if (!cppl) {
         /* what the fix is for: tsocmd() cannot run without it */
         rc = tsocmd("TSTCPPL", "CHILD");
         wtof("TSTCPPL CP tsocmd rc=%d", rc);
-        cell("CP", "c3", rc == 42, "tsocmd() runs the CHILD");
+        cell(&fails, "CP", "c3", rc == 42, "tsocmd() runs the CHILD");
         return 8;
     }
-    cell("CP", "c2", memcmp(cppl, grt->grtptrs, sizeof(CPPL)) == 0
+    cell(&fails, "CP", "c2", memcmp(cppl, grt->grtptrs, sizeof(CPPL)) == 0
          && cppl->cpplpscb == ppa->ppapscb,
          "ppacppl is the CPPL (grtptrs, ppapscb)");
+
+    /* the caller's state, to compare after the CHILD has run */
+    memcpy(&words, cppl, sizeof(words));
+    ptrs = grt->grtptrs;
+    n    = arraycount(&grt->grtptrs);
+    memcpy(ptr4, ptrs, sizeof(ptr4));
+
     rc = tsocmd("TSTCPPL", "CHILD");
     wtof("TSTCPPL CP tsocmd rc=%d", rc);
-    cell("CP", "c3", rc == 42, "tsocmd() runs the CHILD");
+    cell(&fails, "CP", "c3", rc == 42, "tsocmd() runs the CHILD");
+
+    state("CP", ppa, grt);
+    cell(&fails, "CP", "c4", ppa->ppacppl == cppl
+         && memcmp(cppl, &words, sizeof(words)) == 0
+         && grt->grtptrs == ptrs && arraycount(&grt->grtptrs) == n
+         && memcmp(grt->grtptrs, ptr4, sizeof(ptr4)) == 0,
+         "caller's CPPL and grtptrs unchanged by the CHILD");
     return fails ? 8 : 0;
 }
 

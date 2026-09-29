@@ -311,7 +311,9 @@ itself through `tsocmd()`). After merge: move `edge`, tell brexx370 its
 `jccompat.c` CPPL workaround can go once it builds against it. Side datum for
 #105: a second `__start()` in one address space does happen - a C program
 LINKed by `tsocmd()` (the CHILD in JOB00683) - and the CHILD's `grtptrs` start
-fresh (n=10, its own CBUF at [0]), not appended to the parent's.
+fresh (n=10, its own CBUF at [0]), not appended to the parent's, and the
+caller's CPPL and `grtptrs` are unchanged after it returns (cell c4,
+JOB00686). The `grtptrs` loop reading 10 words for a CPPL is **#218**.
 
 ### ~~1 · #197~~ — fixed, PR #215, 2026-09-29
 
