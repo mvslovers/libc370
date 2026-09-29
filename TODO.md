@@ -10,8 +10,10 @@ libc370 is the base library of the whole ecosystem, so a defect here is a defect
 in httpd, mvsMF, ftpd, ufsd and every other consumer at once; that is what puts
 some cheap items high and some expensive ones low.
 
-*Last reconciled against the tracker: **2026-09-13**, 41 issues open, all 41
-ranked below.* #149 was fixed and released the same day (PR #180, **v1.0.6**)
+*Last reconciled against the tracker: **2026-09-29**, 49 issues open, all 49
+accounted for below.* That pass found **#181** and **#182** (filed 2026-09-13/14) in
+no rank at all, fifteen days after they were filed — #182 is now rank 1 and
+#181 rank 39. The pass before was 2026-09-13 at 41 open, all 41 ranked. #149 was fixed and released the same day (PR #180, **v1.0.6**)
 and #178/#179 were filed out of that work; both are ranked at the end. The previous pass was 2026-08-30 at 29 open, and the gap it left
 is the reason this note now says "all": six issues filed on 2026-09-06
 (#160–#165) never reached this file at all, and the four it had parked as *not
@@ -298,7 +300,22 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 
 ---
 
-## Tier 1 — empty since #222 (PR #224, 2026-09-29)
+## Tier 1 — #182 (ranked 2026-09-29)
+
+### 1 · #182 — a close-time out-of-space is lost without a trace
+
+Fallout of #176, found relinking mvsMF against v1.0.6 (mvslovers/mvsmf#366).
+#176's EXLST X'08' exit turns an out-of-space on a WRITE into a return code,
+but only for the writes that go out through `@@AWRITE`. The last block is
+written by `FIXWRITE` inside `@@ACLOSE` (`asm/@@aclose.asm:24`), which ends
+`FUNEXIT RC=0` unconditionally (`:44`, untouched since the initial commit);
+`fclose()` ignores both `__fflush()` and `__aclose()` and returns 0
+(`src/clib/fclose.c:30,33,42`). No return code, no `_FILE_FLAG_ERROR`, no
+`errno`: **before #176 this was an abend, now it is silent data loss**
+for any consumer whose final block meets a full data set. Measured with a mvsMF PUT into a
+`TRK(1,0)` PS on mvsdev (2026-09-14). Next: a red MVS probe where exactly the
+final short block does not fit, then carry the condition out of `@@ACLOSE`
+through `__aclose()` into `fclose()`'s return value.
 
 ### ~~1 · #222~~ — fixed, PR #224, 2026-09-29
 
@@ -1115,6 +1132,15 @@ does not show it; the gate has to be MVS. #226: `+`/space goes in front of the
 already padded result, `-`/`0` are ignored for floats - derived from the code,
 not measured. brexx370 waits on neither (FORMAT uses a plain width, which is
 correct).
+
+### 39 · #181 — `__dsalc()` without `S99NOMNT` waits on the operator
+
+`src/clib/@@dsalc.c` sets `S99NOCNV` only, so an allocation naming a volume
+that is not mounted does not fail: SVC 99 raises `IEF238D` and the caller's
+task sits there until someone replies. A hang instead of a return code, but
+only on a path that names a `VOLSER=` explicitly — hence below the
+campaigns and not in Tier 1. Small: one flag plus a probe against an
+unmounted volser.
 
 ---
 
