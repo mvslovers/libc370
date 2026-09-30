@@ -73,8 +73,8 @@
  *   a PGRLSE that quietly did nothing would look exactly like a fixed emulator
  *
  * BUILD (host), both halves:
- *     cc370 -Iinclude test/mvs/tst75cap.c -flinker-output=iebcopy -o TST75CAP
- *     cc370 -Iinclude -L build/sdk test/mvs/tst75cap.c \
+ *     cc370 -Iinclude -Isrc/internal test/mvs/tst75cap.c -flinker-output=iebcopy -o TST75CAP
+ *     cc370 -Iinclude -Isrc/internal -L build/sdk test/mvs/tst75cap.c \
  *           -flinker-output=iebcopy -o TST75CPN
  *
  * RUN: see jcl/tst75cap.jcl.  Built by hand - libc370 is the cc370 sysroot,

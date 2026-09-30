@@ -212,9 +212,9 @@ Summary:
 | `ibm/jes2/` | 13 |
 | `libc370/` | 5 |
 | `s370/` | 2 |
-| internal | 14 |
+| internal | 12 |
 | split across several | 5 |
-| removed or moved out | 18 |
+| removed or moved out | 20 |
 | **total** | **153** |
 
 | today | 2.0 | users | note |
@@ -279,21 +279,21 @@ Summary:
 | `ikjpscb.h` | `ibm/mvs/ikjpscb.h` |  | IBM data area |
 | `ikjtcb.h` | `ibm/mvs/ikjtcb.h` |  | IBM data area |
 | `ikjupt.h` | `ibm/mvs/ikjupt.h` |  | IBM data area |
-| `@@75.h` | internal |  | dyn75 parameter list |
+| `@@75.h` | — |  | byte-identical copy of __75.h, no includer |
 | `@@memmgr.h` | internal |  | allocator internals |
-| `__75.h` | internal |  | duplicate of @@75.h |
+| `__75.h` | internal |  | dyn75 parameter list (PL75, __75()); the copy in use, @@75.h dropped |
 | `clibjpa.h` | internal |  | @@JPA anchor mapping |
 | `clibjs.h` | internal |  | JES spool internals, included by clibjes2.h |
 | `clibprtf.h` | internal |  | printf engine |
 | `clibprti.h` | internal |  | printf engine |
-| `clibres.h` | internal |  | resident structs; no user, review |
+| `clibres.h` | internal |  | resident-function dispatch (RES/RESFUNC); no includer, kept for a later review |
 | `clibsock.h` | `libc370/socket.h` | 1 | socket bookkeeping; httpd walks grt->grtsock as CLIBSOCK, so it stays public (#264 A); internal once libc370 closes sockets itself |
-| `clibspl.h` | internal |  | inline helpers; no user, review |
+| `clibspl.h` | internal |  | MVCL inline helpers (spl_*); no includer, kept as a Metal C candidate; guard lacks its #define |
 | `clibsvc.h` | internal |  | @@SVC work area |
 | `clibthdi.h` | `mvs/thread.h` | 2 | thread manager; httpd and ftpd use its API, so public, merged into mvs/thread.h (#264 B); absorbs #140 |
 | `clibwsa.h` | internal |  | work-save-area internals |
 | `enqpl.h` | internal |  | ENQ parameter list |
-| `get3.h` | internal |  | GET3/SET3 macros; no user, review |
+| `get3.h` | — |  | GET3/SET3, no includer; modmap.h carries its own GET3 |
 | `modmap.h` | internal |  | load module map, used by __loadhi() |
 | `clibary.h` | `libc370/array.h` | 7 | dynamic arrays; portable |
 | `clib64.h` | `libc370/int64.h` | 2 | 64-bit helpers; review against cc370 long long |
