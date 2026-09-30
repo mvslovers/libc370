@@ -1,3 +1,4 @@
+#include <string.h>
 #include "enqpl.h"
 #include "mvs/enq.h"
 

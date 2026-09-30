@@ -1,4 +1,6 @@
 /* @@FILDEF.C - dynamic allocation */
+#include <mvs/dynalloc.h>
+#include <string.h>
 #include <stdio.h>
 #include <errno.h>
 

@@ -61,28 +61,41 @@ def names(text):
     out = set()
     code = re.sub(r"/\*.*?\*/", " ", text, flags=re.S)
     code = re.sub(r"//[^\n]*", " ", code)
-    # a dead "#if 0" block declares nothing (socket.h had one defining
-    # socket(), select() ... as macros over the DYN75 vector); nested
-    # conditionals inside it are counted so its own #endif ends it
-    kept, depth = [], 0
+    # a dead "#if 0" branch declares nothing (socket.h had one defining
+    # socket(), select() ... as macros over the DYN75 vector), but its
+    # "#else" branch is live (string.h's memset is in one).  A stack of
+    # conditionals: each entry says whether that level is dead.
+    kept, stack = [], []
     for l in code.split("\n"):
         s = l.strip()
-        if depth:
-            if re.match(r"#[ \t]*if", s):
-                depth += 1
-            elif re.match(r"#[ \t]*endif", s):
-                depth -= 1
+        dead = any(stack)
+        if re.match(r"#[ \t]*if", s):
+            stack.append(bool(re.match(r"#[ \t]*if[ \t]+0\b", s)))
+            if not dead and not stack[-1]:
+                kept.append(l)
             continue
-        if re.match(r"#[ \t]*if[ \t]+0\b", s):
-            depth = 1
+        if re.match(r"#[ \t]*(else|elif)\b", s) and stack:
+            was = stack[-1]
+            stack[-1] = not was if re.match(r"#[ \t]*else\b", s) else stack[-1]
+            if not any(stack[:-1]) and not was:
+                kept.append(l)
             continue
-        kept.append(l)
+        if re.match(r"#[ \t]*endif", s) and stack:
+            was = stack.pop()
+            if not any(stack) and not was:
+                kept.append(l)
+            continue
+        if not dead:
+            kept.append(l)
     code = "\n".join(kept)
     out |= set(re.findall(r"#[ \t]*define[ \t]+([A-Za-z_]\w*)", code))
     # the rest of the preprocessor must not reach the function pattern: a
     # "#pragma linkage(f, OS)" line would otherwise swallow the declaration
     # after it, as one long "linkage(...) ... f(...);" match
     code = re.sub(r"^[ \t]*#[^\n]*", " ", code, flags=re.M)
+    # the body of an inline function calls things, it does not declare them:
+    # keep "f(...)" of the definition, drop what is between its braces
+    code = re.sub(r"(\)\s*)\{(?:[^{}]|\{[^{}]*\})*\}", r"\1;", code)
     # a tag is declared where it gets a body, "struct x {", not where it is used
     out |= set(re.findall(r"\b(?:struct|union|enum)[ \t]+([A-Za-z_]\w*)[ \t\n]*\{", code))
     out |= set(re.findall(r"\btypedef\b[^;]*?\b([A-Za-z_]\w*)[ \t]*;", code))

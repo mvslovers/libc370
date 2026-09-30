@@ -32,6 +32,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 */
 
+#include <string.h>
 #include "clibprti.h"       /* CLIB private printf() internal functions */
 #include "stdio.h"         /* CLIB IO routines                         */
 

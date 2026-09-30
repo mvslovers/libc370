@@ -1,4 +1,5 @@
 /* WTODUMPF.C */
+#include <mvs/wto.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>

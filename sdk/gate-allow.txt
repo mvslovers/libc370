@@ -1,5 +1,12 @@
 # Differences sdk/gate.py accepts for THIS change only: '<asm|symbol|member>
 # <name> <reason>'.  An entry that matches no difference fails the gate, so
 # the next change finds these stale and empties the file.  See sdk/gate.py.
-asm src/clib/@@abrpt.s format string only: "U%04D" -> "U%04d", a user abend printed as "UD" (#68)
-asm src/time64/tm64ltmr.s format string only: "%016LLX" -> "%016llX", printed "LLX" instead of the value (#68)
+asm src/clib/@@64fstr.s ctype.h now included: tolower() is the table macro, not a call (#39 step 2)
+asm src/clib/@@fgetc.s ctype.h now included: isspace() is the table macro, not a call (#39 step 2)
+asm src/clib/@@gtdsab.s ctype.h now included: toupper() is the table macro, not a call (#39 step 2)
+asm src/clib/tzset.s ctype.h now included: isdigit() is the table macro, not a call (#39 step 2)
+asm src/jes/jesjob.s ctype.h now included: toupper() is the table macro, not a call (#39 step 2)
+asm src/clib/@@fdclr.s string.h now included: memset() is the inline MVCL, not a call to MEMSET (#39 step 2)
+asm src/clib/@@fildef.s string.h now included: memset() is the inline MVCL, not a call to MEMSET (#39 step 2)
+asm src/clib/@@listc.s string.h now included: memset() is the inline MVCL, not a call to MEMSET (#39 step 2)
+asm src/racf/racauth.s string.h now included: memset() is the inline MVCL, not a call to MEMSET (#39 step 2)

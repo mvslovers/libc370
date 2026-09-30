@@ -2,6 +2,7 @@
 ** create a thread (subtask) instance with stack size
 ** returns CTHDTASK handle or NULL on error.
 */
+#include <mvs/wto.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include "mvs/thread.h"

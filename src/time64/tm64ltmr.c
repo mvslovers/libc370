@@ -32,6 +32,7 @@ values will depend on the operating system.
 localtime64_r() is a 64-bit equivalent of localtime_r().
 gmtime64_r() is a 64-bit equivalent of gmtime_r().
 */
+#include <mvs/wto.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>

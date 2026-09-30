@@ -1,4 +1,6 @@
 /* @@LISTC.C */
+#include <mvs/wto.h>
+#include <string.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <stddef.h>

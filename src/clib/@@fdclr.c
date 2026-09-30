@@ -1,4 +1,6 @@
 /* @@FDCLR.C - dynamic deallocation */
+#include <mvs/dynalloc.h>
+#include <string.h>
 #include <stdio.h>
 
 struct rb {
