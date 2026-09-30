@@ -27,7 +27,9 @@
  * RC: 0 = every check passed, 1 = a check failed (it is the COND CODE).
  *
  * Run:     mvsdev JOB00422, CC 0000, 37/37, 2026-09-22 -- with the aliases.
- *          The 30-check version has not run on MVS yet.
+ *          mvsdev JOB01031, CC 0000, 30/30, 2026-09-30 -- without them,
+ *          linked against the 2.0 branch's libc.a (STRCASEC and STRNCASE
+ *          in the module, STRICMP and STRNCMPI not).
  *
  * Proven red the same day against a build with two deliberate defects --
  * an n-compare that never looks for the NUL, and an ASCII-style fold --
