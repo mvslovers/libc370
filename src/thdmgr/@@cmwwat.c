@@ -1,6 +1,8 @@
 /* @@CMWWAT.C - cthread_worker_wait()
 */
-#include "clibthdi.h"
+#include "time.h"
+#include "libc370/time64.h"
+#include "mvs/thread.h"
 
 __asm__("\n&FUNC    SETC 'cthread_worker_wait'");
 int

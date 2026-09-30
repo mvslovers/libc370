@@ -1,6 +1,8 @@
 /* @@CMINIT.C - cthread_init()
 */
-#include "clibthdi.h"
+#include "time.h"
+#include "libc370/time64.h"
+#include "mvs/thread.h"
 
 #if 0
 #define WTODEBUG    /* define for wtof() debug messages */
