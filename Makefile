@@ -8,9 +8,10 @@
 #   make            build libc.a + crt0/1/m.o + stage headers & macros
 #   make install    install all of it into the cc370 sysroot
 #   make clean      remove build/sdk and the generated .s in src/
+#   make test-host  build and run the host tests (test/host/run.sh)
 PY := python3
 
-.PHONY: all build install clean
+.PHONY: all build install clean test-host
 all: build
 build:
 	$(PY) sdk/mklibc.py build
@@ -18,3 +19,5 @@ install:
 	$(PY) sdk/mklibc.py all
 clean:
 	$(PY) sdk/mklibc.py clean
+test-host:
+	sh test/host/run.sh

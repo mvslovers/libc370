@@ -1,0 +1,62 @@
+# Publish a GitHub release for a v* tag (#249).
+#
+# 1. build.yml, unchanged: the tag has to build and pass the host tests.
+# 2. VERSION has to equal the tag without its "v".  `release: vX.Y.Z` commits
+#    set it, so a mismatch means the tag sits on the wrong commit.
+# 3. The notes are the tag's CHANGELOG.md section (sdk/changelog-section.py),
+#    followed by the cc370 commit the build used.  A tag without a section
+#    fails here, so no release goes out without notes.  The minimum cc370 a
+#    release needs is written into that section by hand: the build can only
+#    say what it used, not what is required.
+# 4. If the release already exists (made by hand, with curated notes, as
+#    v1.0.7 was), it is left exactly as it is.
+#
+# No assets yet.  The sysroot tarball waits for cc370 releases
+# (mvslovers/cc370#523): before those, it could be reproduced only as far as
+# an unnamed compiler.
+
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: VERSION matches the tag
+        run: |
+          want="${GITHUB_REF_NAME#v}"
+          have="$(cat VERSION)"
+          if [ "$have" != "$want" ]; then
+            echo "::error::VERSION is '$have', the tag says '$want'"
+            exit 1
+          fi
+
+      - name: Release notes
+        run: |
+          python3 sdk/changelog-section.py "${GITHUB_REF_NAME#v}" > notes.md
+          printf '\n---\nBuilt with cc370 `%s`.\n' \
+            "${{ needs.build.outputs.cc370_sha }}" >> notes.md
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "Release $GITHUB_REF_NAME exists; its notes are left as they are."
+          else
+            gh release create "$GITHUB_REF_NAME" \
+              --title "libc370 $GITHUB_REF_NAME" --notes-file notes.md
+          fi
