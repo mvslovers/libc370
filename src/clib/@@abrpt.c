@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "clibstae.h"
-#include "clibcrt.h"
+#include "mvs/recovery.h"
+#include "mvs/crt.h"
 #include "mvs/wto.h"
 
 typedef struct {

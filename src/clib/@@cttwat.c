@@ -2,7 +2,7 @@
 **
 */
 #include "mvs/thread.h"
-#include "clibcrt.h"
+#include "mvs/crt.h"
 
 __asm__("\n&FUNC    SETC 'cthread_timed_wait'");
 int

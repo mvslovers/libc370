@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <time.h>       /* our own prototype, so the definition is checked */
 #include "mvs/env.h"
-#include "clibcrt.h"
+#include "mvs/crt.h"
 
 void
 tzset(void)

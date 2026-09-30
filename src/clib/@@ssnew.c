@@ -1,4 +1,4 @@
-#include <clibssct.h>
+#include <mvs/subsys.h>
 #include <clibos.h>
 #include <clibstr.h>
 

@@ -35,8 +35,7 @@
 #include "stdlib.h"
 #include "string.h"
 #include "stddef.h"
-#include "clibcrt.h"
-#include "clibppa.h"
+#include "mvs/crt.h"
 
 #define MAXPARMS 50 /* maximum number of arguments we can handle */
 

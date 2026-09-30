@@ -1,4 +1,4 @@
-#include <clibssct.h>
+#include <mvs/subsys.h>
 #include <clibos.h>
 
 __asm__("\n&FUNC    SETC 'ssct_install'");

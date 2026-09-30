@@ -1,6 +1,6 @@
 /* @@GTERR.C */
 #include <stdio.h>
-#include "clibcrt.h"
+#include "mvs/crt.h"
 
 FILE **
 __gterr(void)

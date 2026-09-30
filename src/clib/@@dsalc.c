@@ -6,7 +6,7 @@
 #include <mvssupa.h>
 #include "mvs/dynalloc.h"
 #include "libc370/array.h"
-#include "clibcrt.h"
+#include "mvs/crt.h"
 #include "clibio.h"
 
 typedef struct __dsalc    __DSALC;

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <mvssupa.h>
 #include "libc370/array.h"
-#include "clibstae.h"
+#include "mvs/recovery.h"
 
 /* Module Map */
 typedef struct modmap       MODMAP; /* Module Map                       */

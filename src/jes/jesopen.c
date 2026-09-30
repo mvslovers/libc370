@@ -6,7 +6,7 @@
 #include "ibm/jes2/pddb.h"   /* JES PDDB Print Datasets                          */
 #include "ibm/jes2/iot.h"    /* JES IOT                                          */
 #include "mvs/jes2.h"   /* JES prototypes */
-#include "clibstae.h"   /* ESTAE functions */
+#include "mvs/recovery.h"   /* ESTAE functions */
 #include "libc370/array.h"    /* dynamic array */
 #include "mvs/wto.h"    /* wtof                                             */
 

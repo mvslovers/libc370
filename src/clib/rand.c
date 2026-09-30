@@ -2,7 +2,7 @@
 #define STDLIB_C
 #include <stdlib.h>
 #include <stddef.h>
-#include "clibcrt.h"
+#include "mvs/crt.h"
 
 __PDPCLIB_API__ int rand(void)
 {

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <time.h>	/* our own prototype, so the definition is checked */
-#include "clibcrt.h"
+#include "mvs/crt.h"
 
 int
 __tzset(int tzoffset)

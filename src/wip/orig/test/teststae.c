@@ -1,7 +1,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "ctype.h"
-#include "clibstae.h"
+#include "mvs/recovery.h"
 
 __asm__("\n&FUNC    SETC 'die'");
 static int

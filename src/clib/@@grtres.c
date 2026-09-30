@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "clib.h"
-#include "clibppa.h"
+#include "mvs/crt.h"
 
 int
 __grtres(void)

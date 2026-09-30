@@ -13,11 +13,9 @@
 #include "clib.h"                   /* C library internals          */
 #include "clibos.h"                 /* OS specific routines         */
 #include "clibwsa.h"                /* writable static area         */
-#include "clibgrt.h"                /* global runtime               */
-#include "clibcrt.h"                /* C runtime area for each task */
-#include "clibppa.h"                /* C runtime program properties */
+#include "mvs/crt.h"                /* global runtime               */
 #include "mvs/env.h"                /* C runtime environment vars   */
-#include "clibstae.h"               /* C runtime recovery routines  */
+#include "mvs/recovery.h"               /* C runtime recovery routines  */
 #include "mvs/wto.h"                /* write to operator            */
 #include "mvs/console.h"                /* console information block    */
 #include "mvs/thread.h"               /* basic threads                */

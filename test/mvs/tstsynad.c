@@ -44,7 +44,7 @@
 #include <errno.h>
 #include <mvs/lock.h>
 #include <mvs/wto.h>
-#include <clibtry.h>
+#include <mvs/recovery.h>
 
 #define NRECS   20
 

@@ -4,7 +4,7 @@
 #include "stdio.h"
 #include "stddef.h"
 #include "mvssupa.h"
-#include "clibcrt.h"
+#include "mvs/crt.h"
 
 /* scalar date routines    --    public domain by Ray Gardner
 ** These will work over the range 1-01-01 thru 14699-12-31

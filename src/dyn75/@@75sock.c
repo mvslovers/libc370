@@ -5,7 +5,7 @@
 #include "socket.h"
 #include "errno.h"
 #include "clibsock.h"
-#include "clibgrt.h"
+#include "mvs/crt.h"
 
 /* socket() */
 __asm__("\n&FUNC    SETC 'socket'");

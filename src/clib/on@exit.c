@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include "mvs/lock.h"
-#include "clibcrt.h"
+#include "mvs/crt.h"
 #include "libc370/array.h"
 
 int

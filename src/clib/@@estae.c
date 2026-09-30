@@ -12,8 +12,8 @@
 **       will always be zero!
 */
 #include "stdio.h"
-#include "clibstae.h"
-#include "clibcrt.h"
+#include "mvs/recovery.h"
+#include "mvs/crt.h"
 
 typedef struct {
     unsigned u[2];

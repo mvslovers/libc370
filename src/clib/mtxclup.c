@@ -1,7 +1,7 @@
 /* MTXCLUP.C - mutex clean up */
 #include "mvs/mutex.h"
 #include "mvs/lock.h"
-#include "clibstae.h"
+#include "mvs/recovery.h"
 
 __asm__("\n&FUNC    SETC 'cleanup_mutex'");
 static void

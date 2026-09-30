@@ -1,6 +1,6 @@
 /* @@ERRNO.C */
 #include "errno.h"
-#include "clibcrt.h"
+#include "mvs/crt.h"
 
 static int  static_errno   = 0;
 

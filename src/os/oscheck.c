@@ -1,6 +1,6 @@
 /* OSCHECK.C - wait for io completion */
 #include "mvs/osio.h"
-#include "clibstae.h"
+#include "mvs/recovery.h"
 
 static void check(DECB *decb);
 

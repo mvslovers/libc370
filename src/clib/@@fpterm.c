@@ -14,7 +14,7 @@
 */
 #include <stdio.h>
 #include <stdlib.h>
-#include "clibcrt.h"
+#include "mvs/crt.h"
 #include "mvs/lock.h"
 #include "libc370/array.h"
 

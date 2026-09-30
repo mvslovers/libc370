@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <clib.h>
-#include <clibdsab.h>
+#include <mvs/dd.h>
 #include <ibm/mvs/iezjscb.h>
 #include <ibm/mvs/ieftiot1.h>
 #include <ibm/mvs/ikjtcb.h>

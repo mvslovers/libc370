@@ -5,7 +5,7 @@
 #include <libc370/time64.h>
 #include "__time64.h"
 #include "mvssupa.h"
-#include "clibcrt.h"
+#include "mvs/crt.h"
 
 struct tm *mgmtime64(const mtime64_t *mtimer)
 {

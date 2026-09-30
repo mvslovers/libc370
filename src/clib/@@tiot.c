@@ -1,4 +1,4 @@
-#include "clibtiot.h"
+#include "mvs/dd.h"
 
 TIOT *__tiot(void)
 {

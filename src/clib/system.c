@@ -4,7 +4,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <mvssupa.h>
-#include "clibcrt.h"
+#include "mvs/crt.h"
 
 /* The following code was taken from Paul Markham's "EXEC" program,
    and adapted to create a system() function.  The code is all

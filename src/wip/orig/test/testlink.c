@@ -1,7 +1,7 @@
 /* TESTLINK.C test __link() and __linkt() functions */
 #include "mvs/wto.h"
 #include "mvs/link.h"
-#include "clibgrt.h"
+#include "mvs/crt.h"
 #include "libc370/array.h"
 
 int main(int argc, char **argv)

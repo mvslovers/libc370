@@ -52,7 +52,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <mvssupa.h>
-#include <clibtry.h>
+#include <mvs/recovery.h>
 #include "mvs/lock.h"
 
 int

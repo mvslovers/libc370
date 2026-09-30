@@ -1,4 +1,4 @@
-#include "clibssib.h"
+#include "mvs/subsys.h"
 
 SSIB *__ssib(void)
 {

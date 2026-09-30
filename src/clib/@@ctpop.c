@@ -3,9 +3,9 @@
 #include <stddef.h>
 #include "mvs/thread.h"
 #include "mvs/lock.h"
-#include "clibcrt.h"
+#include "mvs/crt.h"
 #include "libc370/array.h"
-#include "clibstae.h"
+#include "mvs/recovery.h"
 
 __asm__("\n&FUNC    SETC 'cthread_pop'");
 int

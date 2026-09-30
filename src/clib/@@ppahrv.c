@@ -31,7 +31,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
-#include "clibppa.h"
+#include "mvs/crt.h"
 #include "libc370/array.h"
 
 void

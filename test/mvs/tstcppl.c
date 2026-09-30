@@ -104,8 +104,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "libc370/array.h"
-#include "clibgrt.h"
-#include "clibppa.h"
+#include "mvs/crt.h"
 #include "mvs/tso.h"
 #include "mvs/wto.h"
 #include "ibm/mvs/ikjcppl.h"

@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <time.h>
-#include "clibcrt.h"
+#include "mvs/crt.h"
 #include "mvs/lock.h"
 
 int

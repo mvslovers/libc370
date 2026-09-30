@@ -1,10 +1,8 @@
 #ifndef CLIB_H
 #define CLIB_H
 
-#include <clibcrt.h>
+#include <mvs/crt.h>
 #include <mvs/wto.h>
-#include <clibgrt.h>
-#include <clibppa.h>
 #include <clibos.h>
 
 #define __getcrt()              (__crtget())

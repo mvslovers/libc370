@@ -53,7 +53,7 @@
 #include <mvs/wto.h>
 #include <mvs/thread.h>
 #include <mvs/ecb.h>
-#include <clibtry.h>
+#include <mvs/recovery.h>
 
 #define LV      256             /* raw block size, no rounding surprises */
 #define TESTSP  5               /* the measured subpool */

@@ -1,7 +1,7 @@
 /* @@UATASK.C */
-#include "clibcrt.h"
+#include "mvs/crt.h"
 #include "mvs/apf.h"
-#include "clibstae.h"
+#include "mvs/recovery.h"
 
 static void authorize(void);
 static void unauthorize(void);

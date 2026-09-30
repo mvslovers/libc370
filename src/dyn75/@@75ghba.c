@@ -5,7 +5,7 @@
 #include "socket.h"
 #include "stdlib.h"
 #include "string.h"
-#include "clibcrt.h"
+#include "mvs/crt.h"
 
 extern unsigned char *asc2ebc;
 
