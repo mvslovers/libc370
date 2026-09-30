@@ -1289,9 +1289,18 @@ with several C names. It changes symbols, so every consumer's code changes too:
   crypto370, and consumers' build CI pinned to 1.x, so the cut does not redden
   them on `main`. The release concept (D6) is decided and #249 has landed.
   **1.0.8 was released on 2026-09-30 as the last 1.x**, and `main` is at
-  `2.0.0-dev`; cc370 gets releases first (mvslovers/cc370#523), and
-  consumers hold their build CI on `v1.0.8` via mvslovers/mbt#121. D1, D2 and
-  D7 were decided the same day, so no decision is left open.
+  `2.0.0-dev`. D1, D2 and D7 were decided the same day, so no decision is
+  left open.
+  **Phase 0 as of 2026-09-30:**
+  - done: CI (#249), v1.0.8, and mvslovers/mbt#121 (the `libc370_ref` input).
+    mbt `f88fd03` is in every maintained consumer.
+  - release pins: `libc370 = "1.0.8"` in httplua, httprexx, lstring370,
+    lua370 and nsf370; ufsd, ftpd, httpd and mvsMF are still on 1.0.6 and
+    raise it at their next release; rexx370 (1.0.2) has been asked to move;
+    brexx370 pins `edge`.
+  - open: crypto370 (#244); cc370 releases (mvslovers/cc370#523); and
+    `libc370_ref: v1.0.8` in each consumer's `build.yml`. That hold goes in
+    **right before the cut**, not earlier, or it silences the early warning.
 - **Relink round** — #79, #50, #51, #71, #172 and #80 defect 1's `max` parameter.
   Land struct and signature growth in one batch, with a CHANGELOG entry and a
   coordinated rebuild of httpd, mvsMF and ftpd.
@@ -1319,8 +1328,10 @@ Pointers only. The reasoning lives in the closing comments and the PRs.
   first one `release.yml` published. The notes are the CHANGELOG section plus
   the cc370 commit it was built with (`4c60aa2`). It needs cc370 `f3f7e21` or
   later, unchanged. Contents: #228, #229, #231, #232, #235, #236, #242, #249.
-  The sysroot is installed from the tag; `main` is at `2.0.0-dev`. Consumers
-  still pin 1.0.6.
+  The sysroot is installed from the tag; `main` is at `2.0.0-dev`. Pinned to
+  it the same day: httplua, httprexx, lstring370, lua370 and nsf370. httplua
+  and httprexx also moved off deleted httpd/ufsd prereleases, which had kept
+  their CI red since July.
 
 - **#249** (PR #252, merged 2026-09-30) - CI. `build.yml`: the library on
   Linux, with cc370 cached per commit and saved right after install; the host
