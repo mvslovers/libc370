@@ -9,7 +9,8 @@
 #include <time.h>
 #include "mvs/crt.h"
 #include "mvs/wto.h"
-#include "clibos.h"
+#include "stddef.h"
+#include "ibm/mvs/ihacde.h"
 
 void
 vwtorf(char *reply, unsigned replymax, const char *text, va_list tList)

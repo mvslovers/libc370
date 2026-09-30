@@ -6,7 +6,6 @@
 #include "ctype.h"
 #include "stddef.h"
 #include "errno.h"
-#include "mvssupa.h"
 
 __PDPCLIB_API__ void *calloc(size_t nmemb, size_t size)
 {

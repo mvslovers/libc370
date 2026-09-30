@@ -51,7 +51,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <clibos.h>
+#include <stddef.h>
+#include <ibm/mvs/ihacde.h>
+#include <mvs/wto.h>
+#include <mvs/storage.h>
 #include <mvs/link.h>
 #include <mvs/recovery.h>
 #include <mvs/wto.h>

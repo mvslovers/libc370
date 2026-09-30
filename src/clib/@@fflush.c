@@ -2,7 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <mvssupa.h>
+#include <stddef.h>
+#include <bsam.h>
 #include <ibm/mvs/dcbd.h>
 #include <ibm/mvs/ihadecb.h>
 

@@ -52,10 +52,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <clibos.h>
+#include <stddef.h>
+#include <ibm/mvs/ihacde.h>
+#include <mvs/wto.h>
+#include <mvs/storage.h>
 #include <mvs/wto.h>
 #include <mvs/thread.h>
-#include <mvssupa.h>
 
 #define TESTSP  5
 

@@ -1,4 +1,7 @@
-#include <clibos.h>
+#include <stddef.h>
+#include <ibm/mvs/ihacde.h>
+#include <mvs/wto.h>
+#include <mvs/link.h>
 
 __asm__("\n&FUNC    SETC '__call'");
 int

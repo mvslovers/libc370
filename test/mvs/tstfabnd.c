@@ -63,7 +63,7 @@
  * fails - which is at least loud.  Check the module really took it:
  *
  *     make build
- *     cc370 -O1 -Iinclude -L build/sdk test/mvs/tstfabnd.c \
+ *     cc370 -O1 -Iinclude -Isrc/internal -L build/sdk test/mvs/tstfabnd.c \
  *           -o TSTFABND -flinker-output=iebcopy
  *     python3 -c "print(open('TSTFABND','rb').read().count( \
  *                       '@@ADISC'.encode('cp037')))"        # must be > 0
@@ -123,7 +123,8 @@
 #include <ctype.h>
 #include <mvs/recovery.h>
 #include <mvs/wto.h>
-#include <mvssupa.h>   /* __aclose() - (3) drives it without fclose() */
+#include <stddef.h>
+#include <bsam.h>
 #include "clibio.h"     /* __dsalcf(), __dsfree(), __fabandon() */
 
 #define CREATE  "DSN=%s;DISP=(NEW,CATLG,DELETE);DSORG=PS;RECFM=FB;"          \

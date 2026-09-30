@@ -1,5 +1,8 @@
 #include <mvs/subsys.h>
-#include <clibos.h>
+#include <stddef.h>
+#include <ibm/mvs/ihacde.h>
+#include <mvs/wto.h>
+#include <mvs/apf.h>
 
 __asm__("\n&FUNC    SETC 'ssct_install'");
 int ssct_install(SSCT *ssct, const char *after_name)

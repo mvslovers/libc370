@@ -1,6 +1,9 @@
 #include <mvs/crt.h>
 #include <mvs/wto.h>
-#include <clibos.h>
+#include <stddef.h>
+#include <ibm/mvs/ihacde.h>
+#include <mvs/apf.h>
+#include <mvs/thread.h>
 
 static int unauth_setup(const char *name);
 static int auth_pgm(const char *name);

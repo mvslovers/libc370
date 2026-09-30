@@ -1,5 +1,9 @@
 #include <mvs/crt.h>
-#include <clibos.h>
+#include <stddef.h>
+#include <ibm/mvs/ihacde.h>
+#include <mvs/wto.h>
+#include <mvs/apf.h>
+#include <mvs/storage.h>
 #include <mvs/wto.h>
 #include <clibstr.h>
 

@@ -1,6 +1,6 @@
 /* @@FGETS.C */
 #include <stdio.h>
-#include <mvssupa.h>
+#include <stddef.h>
 
 char *
 __fgets(char *s, int n, FILE *fp)

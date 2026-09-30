@@ -1,7 +1,8 @@
 /* @@LISTC.C */
 #include <stdio.h>
 #include <ctype.h>
-#include <mvssupa.h>
+#include <stddef.h>
+#include <mvs/idcams.h>
 #include "mvs/dslist.h"
 #include "mvs/lock.h"
 

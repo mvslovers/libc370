@@ -3,7 +3,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <mvssupa.h>
+#include <stddef.h>
+#include <bsam.h>
 #include "mvs/crt.h"
 #include "mvs/lock.h"
 #include "libc370/array.h"

@@ -127,4 +127,8 @@ int cthread_unlock(const char *rname)                                           
 
 int cthread_yield(void)                                                             asm("@@CTYIEL");
 
+/* ---- from 1.x clibos.h -------------------------------------------------- */
+/* clib_identify_cthread() - find CDE for CTHREAD program and make APF authorized AC(1) */
+int clib_identify_cthread(void)                             asm("@@IDECTH");
+
 #endif

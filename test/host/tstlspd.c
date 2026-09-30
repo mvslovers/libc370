@@ -120,7 +120,7 @@
  *     R=../..
  *     cc -std=gnu99 -Wall -Wextra -fsanitize=address \
  *        -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
- *        -I $R/include -o t tstlspd.c "$R/src/clib/@@patmat.c"
+ *        -I $R/include -I $R/src/internal -o t tstlspd.c "$R/src/clib/@@patmat.c"
  *     ./t                                             # 15/15, rc 0
  *
  * RED, against the pre-fix source.  Same fixtures, same shims, the real

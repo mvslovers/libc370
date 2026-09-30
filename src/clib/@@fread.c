@@ -3,7 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <mvssupa.h>
+#include <stddef.h>
+#include <bsam.h>
 
 size_t
 __fread(void *ptr, size_t size, size_t nmemb, FILE *fp)

@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
-#include <mvssupa.h>
+#include <stddef.h>
+#include <bsam.h>
+#include <mvs/dynalloc.h>
 #include "mvs/dynalloc.h"
 #include "libc370/array.h"
 

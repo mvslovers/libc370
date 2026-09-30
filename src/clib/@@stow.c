@@ -1,5 +1,8 @@
 /* @@STOW.C - STOW (SVC 21) wrapper for PDS directory maintenance */
-#include <clibos.h>
+#include <stddef.h>
+#include <ibm/mvs/ihacde.h>
+#include <mvs/wto.h>
+#include <mvs/pds.h>
 
 /*
  * __stow() - update a partitioned data set directory entry.

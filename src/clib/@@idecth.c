@@ -1,6 +1,8 @@
 #include <mvs/crt.h>
 #include <mvs/wto.h>
-#include <clibos.h>
+#include <stddef.h>
+#include <ibm/mvs/ihacde.h>
+#include <mvs/thread.h>
 
 __asm__("\n&FUNC    SETC 'clib_identify_cthread'");
 int

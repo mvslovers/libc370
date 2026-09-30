@@ -2,7 +2,8 @@
 #define CLIB_C
 #include "mvs/crt.h"
 #include "mvs/wto.h"
-#include "clibos.h"
+#include "stddef.h"
+#include "ibm/mvs/ihacde.h"
 
 CLIBGRT *
 __grtget(void)

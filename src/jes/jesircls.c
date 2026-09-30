@@ -1,6 +1,6 @@
 
 #include <stdio.h>
-#include <mvssupa.h>
+#include <stddef.h>
 #include "mvs/vsam.h"
 #include "mvs/jes2.h"
 

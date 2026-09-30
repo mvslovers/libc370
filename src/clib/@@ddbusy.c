@@ -2,7 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <mvs/wto.h>
-#include <clibos.h>
+#include <stddef.h>
+#include <ibm/mvs/ihacde.h>
 #include <libc370/array.h>
 #include "mvs/lock.h"
 #include <mvs/dd.h>

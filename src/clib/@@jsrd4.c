@@ -3,7 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "mvs/wto.h"
-#include <mvssupa.h>
+#include <stddef.h>
 #include "mvs/dynalloc.h"
 #include "libc370/array.h"
 #include "ibm/mvs/dcbd.h"

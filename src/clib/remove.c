@@ -2,7 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include <mvssupa.h>
+#include <stddef.h>
+#include <mvs/idcams.h>
 #include "mvs/lock.h"
 #include "clibio.h"
 

@@ -3,7 +3,8 @@
 #include <stdlib.h>
 #include <mvs/crt.h>
 #include <mvs/wto.h>
-#include <clibos.h>
+#include <stddef.h>
+#include <ibm/mvs/ihacde.h>
 #include <mvs/subsys.h>
 #include <libc370/array.h>        /* dynamic array prototypes     */
 #include <mvs/ispf.h>		/* ISPF prototypes				*/

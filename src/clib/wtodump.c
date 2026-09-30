@@ -5,7 +5,8 @@
 #include <ctype.h>
 #include "mvs/crt.h"
 #include "mvs/wto.h"
-#include "clibos.h"
+#include "stddef.h"
+#include "ibm/mvs/ihacde.h"
 
 void
 wtodump(const char *title, void *varea, int size, int chunk)

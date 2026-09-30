@@ -110,7 +110,7 @@
  *     R=../..
  *     cc -std=gnu99 -Wall -Wextra -fsanitize=address -Wno-trigraphs \
  *        -D'__asm__(...)=' -D'asm(...)=' -D__volatile__= -D__32BIT__ \
- *        -I $R/include -o t tst75snd.c
+ *        -I $R/include -I $R/src/internal -o t tst75snd.c
  *     ./t                                             # 39/39, rc 0
  *
  * Four warnings are expected and are all host artefacts: two libc370 stdio

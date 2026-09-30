@@ -1,4 +1,7 @@
-#include <clibos.h>
+#include <stddef.h>
+#include <ibm/mvs/ihacde.h>
+#include <mvs/wto.h>
+#include <mvs/apf.h>
 
 __asm__("\n&FUNC    SETC 'super_key_do'");
 int super_key_do(unsigned char pswkey, void *func, ...)

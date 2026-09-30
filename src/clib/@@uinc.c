@@ -1,6 +1,9 @@
 /* @@UINC.C - increment unsigned value via compare and swap
 */
-#include "clibos.h"
+#include "stddef.h"
+#include "ibm/mvs/ihacde.h"
+#include "mvs/wto.h"
+#include "s370/atomic.h"
 
 unsigned __uinc(void *mem)
 {
