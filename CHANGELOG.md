@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Removed
+- **miniz headers (#243).** `clibmz.h`, `clibmzi.h`, `miniz.h`,
+  `miniz_common.h`, `miniz_tdef.h`, `miniz_tinfl.h` and `miniz_zip.h`, plus a
+  Windows download marker committed beside them. libc370 never shipped the
+  code: a call compiled and then failed to link. No consumer included them.
+  Compression belongs in zlib370.
+- **PDF, `emfile` and `ipc` headers, and the `emfile`/`ipc` sources (#248).**
+  `clibpdf.h`/`clibpdfi.h` (a PDF generator with no code in the tree),
+  `emfile.h`/`emfilei.h` (a byte-addressed file over FB 4096 blocks) and
+  `ipc.h`/`ipci.h` (message passing over loopback TCP), with the sources of
+  the latter two under `src/wip/orig/`, which was never built. None of the
+  90 symbols they declared was in `libc.a`, and no consumer included them.
+  `emfile.h` also `#undef`'d `errno.h`'s `EMFILE` for whoever included it.
+- **`clibsrb.h` is no longer installed (#248).** It moved to
+  `src/wip/mvs/srb.h` for later. It had no user; its out-of-line
+  `srb_getmain()`/`srb_freemain()` had no code behind them and are gone.
+
+### Fixed
+- **`inline_srb_freemain()` freed from subpool 0 (#248).** Its FREEMAIN read
+  `SP+(%2)`, which the macro accepts and then ignores, so storage got from
+  `SRB_SUBPOOL` went back to subpool 0. Now `SP=(%2)`; the expansion loads
+  the subpool into R0 as GETMAIN's does. It is in `src/wip/mvs/srb.h`, no
+  longer installed.
+
 ## [1.0.8] - 2026-09-30
 
 **The last 1.x release.** The next is 2.0.0, a hard cut to a new header
