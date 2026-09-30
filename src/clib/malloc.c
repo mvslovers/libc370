@@ -7,6 +7,8 @@
 #include "stddef.h"
 #include "errno.h"
 #include "mvssupa.h"
+#include "stdio.h"
+#include "clibwto.h"
 
 #if USE_MEMMGR
 #include "__memmgr.h"
@@ -87,7 +89,7 @@ __PDPCLIB_API__ void *malloc(size_t size)
     if (!ptr) {
         errno = ENOMEM;
         wtof("Out of memory, bytes needed=%u", size);
-        __wtotb(0);
+        wto_traceback(0);
     }
     return ptr;
 #endif /* not MEMMGR */
