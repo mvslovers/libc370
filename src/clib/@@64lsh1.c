@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include <clib64.h>
+#include <libc370/int64.h>
 
 __asm__("\n&FUNC    SETC '__64_lshift_one_bit'");
 void __64_lshift_one_bit(__64* a)

@@ -1,5 +1,5 @@
 #include <clibwto.h>
-#include <clibsa.h>
+#include <s370/savearea.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>

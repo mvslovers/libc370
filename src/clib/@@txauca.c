@@ -1,6 +1,6 @@
 /* @@TXAUCA.C */
 #include "svc99.h"
-#include "clibary.h"
+#include "libc370/array.h"
 
 int
 __txauca(TXT99 ***txt99, const char *unused)

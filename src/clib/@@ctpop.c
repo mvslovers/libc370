@@ -4,7 +4,7 @@
 #include "clibthrd.h"
 #include "cliblock.h"
 #include "clibcrt.h"
-#include "clibary.h"
+#include "libc370/array.h"
 #include "clibstae.h"
 
 __asm__("\n&FUNC    SETC 'cthread_pop'");

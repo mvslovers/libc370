@@ -6,7 +6,7 @@
 #include <mvssupa.h>
 #include <errno.h>
 #include "svc99.h"
-#include "clibary.h"
+#include "libc370/array.h"
 #include "ibm/mvs/iefzb4d2.h"
 #include "clibwto.h"
 #include "clibvsam.h"

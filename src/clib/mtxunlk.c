@@ -2,7 +2,7 @@
 #include "clibmutx.h"
 #include "cliblock.h"
 #include "clibcrt.h"
-#include "clibary.h"
+#include "libc370/array.h"
 
 void
 mtxunlk(CLIBMUTX *mutex)

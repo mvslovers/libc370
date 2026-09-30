@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
-#include <time64.h>
+#include <libc370/time64.h>
 
 __asm__("\n&FUNC    SETC 'utime64'");
 utime64_t utime64(utime64_t *utimer)

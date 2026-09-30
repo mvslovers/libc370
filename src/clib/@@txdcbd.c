@@ -1,6 +1,6 @@
 /* @@TXDCBD.C */
 #include "svc99.h"
-#include "clibary.h"
+#include "libc370/array.h"
 
 /* __txdcbd() - add text unit for a DCB model reference (DALDCBDS).
 **

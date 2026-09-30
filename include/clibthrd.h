@@ -62,7 +62,7 @@
 #include "cliblock.h"
 #include "clibstae.h"
 #include "clibcrt.h"
-#include "clibary.h"
+#include "libc370/array.h"
 #include "clibecb.h"
 
 typedef struct cthdtask     CTHDTASK;   /* a subtask instance               */

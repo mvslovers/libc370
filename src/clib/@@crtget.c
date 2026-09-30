@@ -4,7 +4,7 @@
 #include <string.h>
 #include "clib.h"
 #include "clibppa.h"
-#include "clibary.h"
+#include "libc370/array.h"
 #include "cliblock.h"
 
 CLIBCRT *

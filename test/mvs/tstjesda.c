@@ -72,7 +72,7 @@
 #include "clibcp.h"     /* checkpoint_open(), HASPCP                        */
 #include "cliblist.h"   /* __listvl(), VOLLIST                              */
 #include "clibdscb.h"   /* __locate(), __dscbdv(), LOCWORK, DSCB            */
-#include "clibary.h"    /* arraycount()                                     */
+#include "libc370/array.h"    /* arraycount()                                     */
 #include "clibio.h"     /* __dsalcf(), __dsfree()                           */
 #include "clibtry.h"    /* try(), tryrc()                                   */
 #include "clibwto.h"    /* wtof()                                           */

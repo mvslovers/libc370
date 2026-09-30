@@ -6,7 +6,7 @@
 #include <mvssupa.h>
 #include "clibcrt.h"
 #include "cliblock.h"
-#include "clibary.h"
+#include "libc370/array.h"
 
 FILE *
 __reopen(const char *fn, const char *mode, FILE *fp)

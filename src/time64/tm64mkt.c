@@ -30,7 +30,7 @@ THE SOFTWARE.
 #include <string.h>
 #include <time.h>
 #include <errno.h>
-#include <time64.h>
+#include <libc370/time64.h>
 #include "__time64.h"
 
 __asm__("\n&FUNC    SETC 'mktime64'");

@@ -7,7 +7,7 @@
 #include "clibthrd.h"
 #include "cliblock.h"
 #include "clibcrt.h"
-#include "clibary.h"
+#include "libc370/array.h"
 #include "clibmutx.h"
 
 static CTHDTASK *newthread(unsigned tcb, unsigned owntcb, unsigned stacksize);

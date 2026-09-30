@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stddef.h>
 #include "clibenv.h"
-#include "clibary.h"
+#include "libc370/array.h"
 #include "cliblock.h"
 #include "clibcrt.h"
 

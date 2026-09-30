@@ -90,9 +90,9 @@
  *                     array TUs (__asm__("\n&FUNC SETC 'arrayadd'")), which
  *                     the host assembler rejects.  Variadic because some of
  *                     them are extended asm with operand lists.  It does NOT
- *                     touch the asm("@@ARADD") labels in clibary.h - different
+ *                     touch the asm("@@ARADD") labels in libc370/array.h - different
  *                     spelling - so host symbols keep the library's names.
- *   -D'asm(x)='       erases the asm("@@ARADD") symbol labels in clibary.h.
+ *   -D'asm(x)='       erases the asm("@@ARADD") symbol labels in libc370/array.h.
  *                     Not needed on macOS/clang, REQUIRED on Linux with GNU
  *                     as: '@' is not valid in a symbol name in a .size/.type
  *                     directive.  Erasing them costs nothing here - the host
@@ -173,7 +173,7 @@ int     strcmp(const char *, const char *);
 #include <stdio.h>
 #include <stdlib.h>
 #include "svc99.h"
-#include "clibary.h"
+#include "libc370/array.h"
 
 /* Pre-fix fallback, so this file COMPILES and RUNS red against the library as
  * it was: without the fix the bit is simply never set, and cases (2), (3), (5)

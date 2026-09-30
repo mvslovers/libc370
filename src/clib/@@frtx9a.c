@@ -3,7 +3,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include "svc99.h"
-#include "clibary.h"
+#include "libc370/array.h"
 
 void
 __frtx9a(TXT99 ***txt99)

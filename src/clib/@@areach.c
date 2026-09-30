@@ -1,7 +1,7 @@
 /* @@ARADD.C
 ** Dynamic array
 */
-#include "clibary.h"
+#include "libc370/array.h"
 
 __asm__("\n&FUNC    SETC 'arrayeach'");
 int

@@ -1,7 +1,7 @@
 #ifndef CLIBTHDI_H
 #define CLIBTHDI_H
 #include <time.h>
-#include <time64.h>
+#include <libc370/time64.h>
 #include "clibthrd.h"
 
 typedef struct cthdmgr      CTHDMGR;    /* thread manager instance          */

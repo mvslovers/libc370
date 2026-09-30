@@ -5,7 +5,7 @@
 #include <string.h>
 #include <mvssupa.h>
 #include "svc99.h"
-#include "clibary.h"
+#include "libc370/array.h"
 
 int
 __fpfree(FILE *fp)

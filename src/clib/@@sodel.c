@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include "clibcrt.h"
-#include "clibary.h"
+#include "libc370/array.h"
 #include "clibsock.h"
 #include "cliblock.h"
 

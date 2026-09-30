@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
-#include "clibary.h"
+#include "libc370/array.h"
 #include "clibsock.h"
 #include "cliblock.h"
 

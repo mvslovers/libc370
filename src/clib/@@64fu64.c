@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "clib64.h"
+#include "libc370/int64.h"
 
 __asm__("\n&FUNC    SETC '__64_from_u64'");
 void __64_from_u64(__64* n, uint64_t u64)

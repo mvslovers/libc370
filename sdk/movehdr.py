@@ -49,9 +49,14 @@ def main():
              and (r["target"] == prefix or (prefix.endswith("/") and r["target"].startswith(prefix)))]
     if not moves:
         sys.exit(f"[movehdr] no row targets {prefix}")
-    shared = [r["target"] for r in moves if per_target[r["target"]] > 1]
+    shared = sorted({r["target"] for r in moves if per_target[r["target"]] > 1})
+    if shared and not prefix.endswith("/"):
+        sys.exit(f"[movehdr] {prefix} is a merge target, not a 1:1 move")
     if shared:
-        sys.exit(f"[movehdr] merge targets, not 1:1 moves: {', '.join(sorted(set(shared)))}")
+        # a directory holds 1:1 moves and merges side by side (mvs/): move
+        # the former, leave the merges to be done by hand
+        print(f"[movehdr] skipping merge targets: {', '.join(shared)}")
+        moves = [r for r in moves if r["target"] not in shared]
 
     inc = os.path.join(ROOT, "include")
     todo = [r for r in moves if os.path.exists(os.path.join(inc, r["today"]))]

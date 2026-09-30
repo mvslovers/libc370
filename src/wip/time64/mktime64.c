@@ -38,7 +38,7 @@ gmtime64_r() is a 64-bit equivalent of gmtime_r().
 #include <string.h>
 #include <time.h>
 #include <errno.h>
-#include <time64.h>
+#include <libc370/time64.h>
 #include "__time64.h"
 
 static char const wday_name[7][3] = {

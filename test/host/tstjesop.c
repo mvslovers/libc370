@@ -77,14 +77,14 @@
  *   -D'__asm__(x)='   erases the file-scope S/370 assembler statements
  *                     (__asm__("\n&FUNC SETC 'try_jesopen'")) that the host
  *                     assembler rejects.  It does not touch the asm("@@ARADD")
- *                     labels in clibary.h - different spelling - so the host
+ *                     labels in libc370/array.h - different spelling - so the host
  *                     symbols keep the library's names.  It does NOT reach
  *                     clibstr.h's inline memset() either, which is spelled
  *                     "__asm__ __volatile__(" - a function-like macro only
  *                     expands when the next token is an open paren.  Hence no
  *                     memset() anywhere in this file.
  *   -D__32BIT__       is what libc370's own stddef.h/stdlib.h key size_t off.
- *   -U__LP64__        libc370's time64.h is "#error Your time_t is already
+ *   -U__LP64__        libc370's libc370/time64.h is "#error Your time_t is already
  *                     64-bit" under __LP64__, and clibjes2.h pulls it in for
  *                     JESJOB.start_time64.  Undefining it selects the LP32
  *                     branch, which is the one the target compiles.  Nothing
@@ -142,7 +142,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include "clibjes2.h"
-#include "clibary.h"
+#include "libc370/array.h"
 
 /* --------------------------------------------------------------------------
  * Minimal mbtcheck.h-compatible harness, same inline copy as tsttxdsn.c.

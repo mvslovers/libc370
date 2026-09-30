@@ -60,7 +60,7 @@
  *   -D'__asm__(x)='   erases the file-scope S/370 assembler statements in the
  *                     array TUs (__asm__("\n&FUNC SETC 'arrayadd'")), which
  *                     the host assembler rejects.  It does not touch the
- *                     asm("@@ARADD") labels in clibary.h - different spelling
+ *                     asm("@@ARADD") labels in libc370/array.h - different spelling
  *                     - so the host symbols keep the library's names.
  *   -D__32BIT__       is what libc370's own stddef.h/stdlib.h key size_t off.
  *                     None of the macros they test is defined on a macOS or
@@ -105,7 +105,7 @@
  */
 #include <stdio.h>
 #include "svc99.h"
-#include "clibary.h"
+#include "libc370/array.h"
 
 /* --------------------------------------------------------------------------
  * Minimal mbtcheck.h-compatible harness, same inline copy as tstcmtt.c.

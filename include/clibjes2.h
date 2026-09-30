@@ -2,7 +2,7 @@
 #define CLIBJES2_H
 
 #include <time.h>
-#include <time64.h>
+#include <libc370/time64.h>
 #include "clibcp.h"                 /* JES Checkpoint prototypes            */
 #include "clibjs.h"                 /* JES Spool prototypes                 */
 #include "clibvsam.h"               /* needed for jesir*()                  */

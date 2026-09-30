@@ -4,7 +4,7 @@
 #include "string.h"
 #include "stddef.h"
 #include "clibcrt.h"
-#include "clibary.h"
+#include "libc370/array.h"
 
 extern void __exita(int status);
 

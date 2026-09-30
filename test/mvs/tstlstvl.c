@@ -57,7 +57,7 @@
  */
 #include <stdio.h>
 #include <string.h>
-#include "clibary.h"    /* array_count() over the returned VOLLIST array */
+#include "libc370/array.h"    /* array_count() over the returned VOLLIST array */
 #include "cliblist.h"   /* __listvl(), __freevl(), VOLLIST */
 #include "clibwto.h"    /* wtof() - the markers */
 

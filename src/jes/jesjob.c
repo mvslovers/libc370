@@ -9,7 +9,7 @@
 #include "ibm/mvs/ieftxtft.h"   /* text string types                                */
 #include "ibm/mvs/iefvkeys.h"   /* text key values                                  */
 #include "clibjes2.h"   /* JES prototypes */
-#include "clibary.h"    /* dynamic array                                    */
+#include "libc370/array.h"    /* dynamic array                                    */
 #include "jesprb.h"     /* hardened spool record walk (#25)                 */
 
 #ifndef MIN

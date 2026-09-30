@@ -1,7 +1,7 @@
 #ifndef CLIBWTO_H
 #define CLIBWTO_H
 #include <stdarg.h>
-#include <clibsa.h>
+#include <s370/savearea.h>
 
 extern void wto(char *buf);
 

@@ -1,6 +1,6 @@
 /* DIFFTIME64.C */
 #include <time.h>
-#include <time64.h>
+#include <libc370/time64.h>
 
 double difftime64(time64_t time1, time64_t time0)
 {

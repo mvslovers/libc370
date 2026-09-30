@@ -9,7 +9,7 @@
 #include "float.h"
 #include "limits.h"
 #include "stddef.h"
-#include <clib64.h>
+#include <libc370/int64.h>
 
 #define outch(ch) *s++ = (char)ch
 
