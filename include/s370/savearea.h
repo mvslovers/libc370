@@ -1,6 +1,7 @@
 #ifndef SA_H
 #define SA_H
 
+#include <stdio.h>
 #include <string.h>
 
 typedef struct savearea SAVEAREA;

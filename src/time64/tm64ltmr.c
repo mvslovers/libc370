@@ -66,7 +66,7 @@ struct tm *localtime64_r (const time64_t *time, struct tm *local_tm)
 	{
 		/* create gm_tm from time value */
     	if( gmtime64_r(time, &gm_tm) == NULL ) { 
-			wtof("%s: gmtime64_r failure for time value 0x%016LLX (%llu)", __func__, *time, *time);
+			wtof("%s: gmtime64_r failure for time value 0x%016llX (%llu)", __func__, *time, *time);
     	    return NULL;
     	}
 
