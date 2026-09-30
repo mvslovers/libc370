@@ -10,9 +10,9 @@ libc370 is the base library of the whole ecosystem, so a defect here is a defect
 in httpd, mvsMF, ftpd, ufsd and every other consumer at once; that is what puts
 some cheap items high and some expensive ones low.
 
-*Last reconciled against the tracker: **2026-09-30**, 50 issues open (none
-closed, #240 and #241 filed out of #39), all 50 accounted for below.* The pass
-before was **2026-09-29** at 48 open (#182, #228, #229, #231, #232, #235 and #236
+*Last reconciled against the tracker: **2026-09-30**, 54 issues open (none
+closed; #240 and #241 filed out of #39, #243–#246 out of the 2.0 plan), all 54
+accounted for below.* The pass before was **2026-09-29** at 48 open (#182, #228, #229, #231, #232, #235 and #236
 closed, #228, #229, #231, #232, #235 and #236 filed the same day). That pass found **#181** and **#182** (filed 2026-09-13/14) in
 no rank at all, fifteen days after they were filed — #182 is now rank 1 and
 #181 rank 39. The pass before was 2026-09-13 at 41 open, all 41 ranked. #149 was fixed and released the same day (PR #180, **v1.0.6**)
@@ -687,6 +687,11 @@ struct field would have linked and run, with the library and every consumer
 disagreeing about a layout. Exactly #17's shape, one tier's worth cheaper to
 fix: delete the copy and let `-I include` resolve it.
 
+**2.0 (#245) makes `clibthdi.h` internal in phase 2**, which ends the duplicate
+for good. Do not wait for it: the trap is live today, and the fix is a delete.
+Phase 2 also has to settle what ftpd and httpd, which include the header, get
+instead.
+
 ### 7 · #17 — consolidate the two `try()` wrappers
 
 The trap is **active, not dormant**: since it first bit (#9 hardened the
@@ -1215,9 +1220,28 @@ Measured per revision: both build and pass at `fbca56b~1`, fail to build from
 No running system affected, but the #147/#168 contracts those tests pin are
 unguarded until it is fixed.
 
+### 42 · #244 — SHA-256, Blowfish and base64 move to crypto370
+
+Phase 0 of #245, so it gates the 2.0 cut: the new project has to be released
+and adopted by httpd (all three) and mvsMF (base64) before libc370 drops the
+files. No defect, and no effect on running systems until then.
+
+### 42 · #243 — miniz headers: no implementation, no user
+
+Eight files in `include/`, and not one `@@MZ…`/`@@TD…` symbol is in `libc.a`.
+Check zlib370 and picozip370-app, then remove them in the 2.0 cut. The PDF,
+`emfile` and `ipc` families are dead in the same way (`doc/design-2.0.md`) and
+have no issue of their own yet.
+
+### 43 · #246 — function naming (after 2.0)
+
+Three naming styles, reserved `__` names used as public API, and 23 symbols
+with several C names. It changes symbols, so every consumer's code changes too:
+3.0 material, or additive in 2.x. Not before 2.0.0 has shipped.
+
 ---
 
-## Five campaigns instead of forty-one tickets
+## Six campaigns instead of forty-one tickets
 
 - **Unchecked allocation** — #61, #80 defect 3, #157 and #158. The convention is
   settled (NULL + guaranteed `errno`, 2026-08-30, recorded in #61) and covers all
@@ -1230,6 +1254,12 @@ unguarded until it is fixed.
   `-Wall` in the SDK build. #125 is the one with a measured failure and is
   independent of the rest; #68 goes last and in its own three-step order, or it
   reddens consumer CI.
+- **2.0 restructure** — #245 (umbrella), with #244 and #243 feeding it and #140
+  absorbed by it. The plan is `doc/design-2.0.md`: a hard cut to a
+  standard-shaped header layout (`libc370/`, `mvs/`, `s370/`, `ibm/mvs/`,
+  `ibm/jes2/`), with internals out of the sysroot. Phase 0 comes first:
+  crypto370, and consumers' build CI pinned to 1.x, so the cut does not redden
+  them on `main`. Open decisions D1, D2, D6 (release concept) and D7.
 - **Relink round** — #79, #50, #51, #71, #172 and #80 defect 1's `max` parameter.
   Land struct and signature growth in one batch, with a CHANGELOG entry and a
   coordinated rebuild of httpd, mvsMF and ftpd.
@@ -1252,6 +1282,10 @@ unguarded until it is fixed.
 ## Recently landed
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
+
+- **2.0 plan** (PR #247, merged 2026-09-30) - `doc/design-2.0.md`: target
+  layout, the phases with their gates, the release-concept proposal and a
+  mapping for all 153 headers. Umbrella #245; filed with it: #243, #244, #246.
 
 - **#39 step 1** (PR #242, merged 2026-09-30) - prototypes for `__tzget`,
   `vwtorf`, `vvprintf`, `vvscanf`, `__fptmp`, `__fpfree`, `rdjfcb`, `initssob`;
