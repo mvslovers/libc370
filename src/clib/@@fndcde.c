@@ -1,4 +1,6 @@
-#include <clib.h>
+#include <mvs/crt.h>
+#include <mvs/wto.h>
+#include <clibos.h>
 
 __asm__("\n&FUNC    SETC 'clib_find_cde'");
 CDE *

@@ -6,7 +6,9 @@
 #include <mvssupa.h>
 #include "mvs/dynalloc.h"
 #include "libc370/array.h"
-#include "clib.h"
+#include "mvs/crt.h"
+#include "mvs/wto.h"
+#include "clibos.h"
 
 int
 __fpstar(FILE *fp)

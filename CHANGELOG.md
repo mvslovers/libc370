@@ -20,6 +20,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   path, and two checkouts build the same library.
 
 ### Removed
+- **SHA-256, Blowfish and base64 (#244, #256).** `sha256.h`, `blowfish.h`,
+  `clibb64.h` and their ten TUs moved to
+  [crypto370](https://github.com/mvslovers/crypto370) 1.0.0. Declare
+  `mvslovers/crypto370` as a dependency and include `base64.h` instead of
+  `clibb64.h`; the C names are unchanged, the base64 symbols are now
+  `B64ENC`/`B64DEC`.
+- **`clib.h` (#256).** It included `mvs/crt.h`, `mvs/wto.h` and `clibos.h`
+  and defined eight `__getcrt()`-style aliases nothing used. Include what you
+  need directly.
 - **miniz headers (#243).** `clibmz.h`, `clibmzi.h`, `miniz.h`,
   `miniz_common.h`, `miniz_tdef.h`, `miniz_tinfl.h` and `miniz_zip.h`, plus a
   Windows download marker committed beside them. libc370 never shipped the

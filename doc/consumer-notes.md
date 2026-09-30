@@ -367,9 +367,12 @@ is a decision, and what comes back out is a breaking change.
 
 ## Crypto
 
-Blowfish (`bfishkey`, `bfishenc`, `bfishdec`) and SHA-256 (`sha256i`, `sha256u`,
-`sha256t`, `sha256f`) are in `src/crypto` and in `libc.a`, one function per TU
-for the reason above — a program that hashes does not drag in the cipher.
+Blowfish, SHA-256 and base64 left libc370 in 2.0 for
+[crypto370](https://github.com/mvslovers/crypto370) (#244), still one function
+per TU for the reason above — a program that hashes does not drag in the
+cipher. `clibb64.h` is `base64.h` there, and the base64 symbols are `B64ENC`/
+`B64DEC` instead of `@@B64ENC`/`@@B64DEC`; the C names did not change. Up to
+libc370 1.x they are in `libc.a`.
 
 ## Linking a server module for httpd
 

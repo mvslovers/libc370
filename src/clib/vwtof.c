@@ -7,7 +7,9 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <time.h>
-#include "clib.h"
+#include "mvs/crt.h"
+#include "mvs/wto.h"
+#include "clibos.h"
 
 void
 vwtof(const char *text, va_list tList)

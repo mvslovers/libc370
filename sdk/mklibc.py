@@ -33,7 +33,7 @@ VERSION = open(f"{ROOT}/VERSION").read().strip() if os.path.exists(f"{ROOT}/VERS
 
 # library sources (the c_dirs -- NOT src/wip) + hand-written asm
 C_DIRS = [f"{ROOT}/src/{d}" for d in
-          ("clib", "cmtt", "crypto", "dyn75", "jes", "os", "racf", "smf", "thdmgr", "time64")]
+          ("clib", "cmtt", "dyn75", "jes", "os", "racf", "smf", "thdmgr", "time64")]
 ASM_DIR = f"{ROOT}/asm"
 # -Wuninitialized is not implied by -Wall in this gcc 3.4.6 and needs -O to run
 # at all, so it has to be named here (#102).  It finds #99 -- __loadhi() calling

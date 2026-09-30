@@ -1,4 +1,4 @@
-#include <clib.h>
+#include <mvs/crt.h>
 #include <clibos.h>
 #include <mvs/wto.h>
 #include <clibstr.h>

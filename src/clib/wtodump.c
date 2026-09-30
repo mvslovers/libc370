@@ -3,7 +3,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include "clib.h"
+#include "mvs/crt.h"
+#include "mvs/wto.h"
+#include "clibos.h"
 
 void
 wtodump(const char *title, void *varea, int size, int chunk)

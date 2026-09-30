@@ -1,7 +1,8 @@
 #define CLIB_C
 #include <stdlib.h>
 #include <string.h>
-#include "clib.h"
+#include "mvs/wto.h"
+#include "clibos.h"
 #include "mvs/crt.h"
 
 int
