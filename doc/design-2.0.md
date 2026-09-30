@@ -66,7 +66,9 @@ which is not built (#248). No consumer includes any of them.
   so the IBM manual leads straight to the header.
 - **2.0 is a hard cut.** No compatibility headers and no deprecation period:
   the old names are gone in 2.0.0. Consumers migrate once, driven by a script
-  generated from the mapping table below.
+  that reads the maps: `sdk/headermap.tsv` (headers, the table below),
+  `sdk/names.tsv` and `sdk/removed.tsv` (names); `doc/migration-2.0.md`
+  says how.
 - **Function names do not change in 2.0.** Moving a header is mechanical and
   provably changes no code. Renaming a function changes symbols in every
   consumer. That is a separate project (#246).
