@@ -10,9 +10,9 @@ libc370 is the base library of the whole ecosystem, so a defect here is a defect
 in httpd, mvsMF, ftpd, ufsd and every other consumer at once; that is what puts
 some cheap items high and some expensive ones low.
 
-*Last reconciled against the tracker: **2026-09-30**, 54 issues open (none
-closed; #240 and #241 filed out of #39, #243–#246 out of the 2.0 plan), all 54
-accounted for below.* The pass before was **2026-09-29** at 48 open (#182, #228, #229, #231, #232, #235 and #236
+*Last reconciled against the tracker: **2026-09-30**, 56 issues open (none
+closed; #240 and #241 filed out of #39, #243–#246, #248 and #249 out of the 2.0
+plan), all 56 accounted for below.* The pass before was **2026-09-29** at 48 open (#182, #228, #229, #231, #232, #235 and #236
 closed, #228, #229, #231, #232, #235 and #236 filed the same day). That pass found **#181** and **#182** (filed 2026-09-13/14) in
 no rank at all, fifteen days after they were filed — #182 is now rank 1 and
 #181 rank 39. The pass before was 2026-09-13 at 41 open, all 41 ranked. #149 was fixed and released the same day (PR #180, **v1.0.6**)
@@ -594,6 +594,15 @@ PR #139 is what made this the campaign's remaining content: it bounded
 ---
 
 ## Tier 3 — campaign: make the compiler see it (order matters)
+
+### 3 · #249 — CI and release automation (decided 2026-09-30: now)
+
+libc370 has no `.github/`. `build.yml` on PRs (build, `as370` rc, warning
+count, the host tests that #241 showed nobody runs) and `release.yml` on tags
+(notes from `CHANGELOG.md`, the minimum cc370 named). It is the D6 decision of
+`doc/design-2.0.md`, it does not wait for 2.0, and it is where #39 step 3's
+warning gate will run. Sysroot tarballs as assets wait for cc370 releases
+(mvslovers/cc370#523).
 
 ### 3 · #125 — inline-asm SVC macros with partial clobber lists
 
@@ -1233,6 +1242,14 @@ Check zlib370 and picozip370-app, then remove them in the 2.0 cut. The PDF,
 `emfile` and `ipc` families are dead in the same way (`doc/design-2.0.md`) and
 have no issue of their own yet.
 
+### 42 · #248 — dead PDF, emfile and ipc header families
+
+The same case as #243, found while mapping the headers: declarations with no
+symbol in `libc.a` and no user. `emfile` (45 files) and `ipc` (5 files) have
+sources in `src/wip/orig/`, never built since the mbt move. Assess them first:
+extract anything of real value, delete the rest. PDF is headers only and can
+go directly.
+
 ### 43 · #246 — function naming (after 2.0)
 
 Three naming styles, reserved `__` names used as public API, and 23 symbols
@@ -1259,7 +1276,10 @@ with several C names. It changes symbols, so every consumer's code changes too:
   standard-shaped header layout (`libc370/`, `mvs/`, `s370/`, `ibm/mvs/`,
   `ibm/jes2/`), with internals out of the sysroot. Phase 0 comes first:
   crypto370, and consumers' build CI pinned to 1.x, so the cut does not redden
-  them on `main`. Open decisions D1, D2, D6 (release concept) and D7.
+  them on `main`. The release concept (D6) is decided: #249 now, **1.0.8 is
+  the last 1.x release**, cc370 gets releases first (mvslovers/cc370#523), and
+  consumers hold their build CI on `v1.0.8` via mvslovers/mbt#121. Still open:
+  D1, D2 and D7.
 - **Relink round** — #79, #50, #51, #71, #172 and #80 defect 1's `max` parameter.
   Land struct and signature growth in one batch, with a CHANGELOG entry and a
   coordinated rebuild of httpd, mvsMF and ftpd.
@@ -1284,8 +1304,9 @@ with several C names. It changes symbols, so every consumer's code changes too:
 Pointers only. The reasoning lives in the closing comments and the PRs.
 
 - **2.0 plan** (PR #247, merged 2026-09-30) - `doc/design-2.0.md`: target
-  layout, the phases with their gates, the release-concept proposal and a
-  mapping for all 153 headers. Umbrella #245; filed with it: #243, #244, #246.
+  layout, the phases with their gates, the release concept and a mapping for
+  all 153 headers. Umbrella #245; filed with it: #243, #244, #246, #248, #249,
+  mvslovers/cc370#523, mvslovers/mbt#121. D6 decided the same day.
 
 - **#39 step 1** (PR #242, merged 2026-09-30) - prototypes for `__tzget`,
   `vwtorf`, `vvprintf`, `vvscanf`, `__fptmp`, `__fpfree`, `rdjfcb`, `initssob`;

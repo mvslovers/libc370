@@ -25,9 +25,10 @@ from `main` at `a3e2e67`):
    A second target such as VM/CMS would have to untangle this first.
 
 A fourth finding came out of the inventory. **Four header families declare code
-that does not exist:** miniz (#243), a PDF generator (`clibpdf.h`, 28 symbols),
-`emfile.h` (22) and `ipc.h` (17). None of their `asm()` symbols is in
-`libc.a`, and no consumer includes them.
+that is not in `libc.a`:** miniz (#243), a PDF generator (`clibpdf.h`, 28
+symbols), `emfile.h` (22) and `ipc.h` (17). miniz and PDF have no
+implementation anywhere. `emfile` and `ipc` have sources in `src/wip/orig/`,
+which is not built (#248). No consumer includes any of them.
 
 ## Principles
 
@@ -84,7 +85,7 @@ visible and can land in 2.x without breaking anyone.
 
 | # | what | gate |
 |---|---|---|
-| 0 | crypto370 released and adopted by httpd and mvsMF (#244); consumers' **build** CI pinned to libc370 1.x (release CI already is) | every consumer green against 1.x |
+| 0 | libc370 CI (#249); crypto370 released and adopted by httpd and mvsMF (#244); **1.0.8 released**, the last 1.x; consumers' **build** CI held on `v1.0.8`, which needs a `libc370_ref` input in mbt's `build.yml` (mvslovers/mbt#121; release CI already pins) | every consumer green against 1.0.8 |
 | 1 | move and rename headers per the table; split the five mixed headers; drop dead ones | **byte-identical assembler for every TU** against the commit before the move, the method PR #242 used |
 | 2 | internals to `src/internal/`; install copies subdirectories (`mklibc.py:226` globs `include/*.h` today) | the migration script resolves every consumer include |
 | — | **release 2.0.0**; one migration PR per consumer | each consumer green against 2.0.0 |
@@ -95,34 +96,39 @@ Order within phase 0 matters. Consumers' build CI floats on libc370 `main`
 (`doc/ci-and-pinning.md`), so the cut must not land on `main` before they are
 pinned. Otherwise httpd, mvsMF and ftpd go red the same day.
 
-## Release concept (proposal, to discuss)
+## Release concept (decided 2026-09-30, D6)
 
-Today a release is a tag and a GitHub release with notes. v1.0.0 to v1.0.7
-exist, with no assets. The notes point at `CHANGELOG.md` (Keep a Changelog).
-There is no CI (`doc/ci-and-pinning.md`, parked 2026-08-05), and consumers'
-release CI checks out the tag and builds libc370 from source. The sysroot
-carries no version, so which libc370 is installed has to be inferred.
+**Today:** a release is a tag and a GitHub release with notes, made by hand.
+v1.0.0 to v1.0.7 exist, with no assets, and the notes point at `CHANGELOG.md`
+(Keep a Changelog). libc370 has no CI. Consumers' release CI checks out the
+pinned tag (`[toolchain] libc370`) and builds libc370 from source. Their build
+CI always takes libc370 `main`. The installed version is readable: the build
+stamp in `libc.a` (`LIBC370 <version> (<rev>)`), which
+`mbttoolchain.py --check` compares with the pin.
 
-Proposal for 2.0:
+**Decided:**
 
-- **SemVer defined for a C runtime.**
+- **SemVer for a C runtime.**
   - MAJOR: a header, symbol or signature removed or changed, or a struct layout
     a consumer can see changes.
-  - MINOR: additions, and behaviour changes a consumer can observe.
+  - MINOR: additions and behaviour changes a consumer can observe.
   - PATCH: fixes with no change a caller can see.
 
-  v1.0.7's notes warn "This is not a drop-in relink". Under this rule that release
-  would have been a minor.
-- **Release artifacts:** a sysroot tarball (`include/`, `lib/libc.a`,
-  `crt0/1/m.o`, `macros/`) plus SHA-256, attached to the GitHub release. That
-  is the shape `make deps` already uses for every other dependency, so
-  consumers download instead of building libc370 themselves.
-- **CI in libc370** (`build.yml` on PR and `main`, `release.yml` on tags): step 1
-  of `doc/ci-and-pinning.md`. Once #39 step 3 lands, the build also fails on new
-  warnings.
-- **An installed version stamp:** the install writes the version into the
-  sysroot, so `mbttoolchain.py --check` reads it instead of inferring it.
-- **`edge`** keeps its meaning: `main` at a measured point, between releases.
+  v1.0.7's notes warn "This is not a drop-in relink"; under this rule it would
+  have been a minor.
+- **CI now, before 2.0** (#249): `build.yml` on PRs and `main`, `release.yml`
+  on tags. The release notes come from the tag's `CHANGELOG.md` section.
+- **cc370 gets releases first** (mvslovers/cc370#523). A `libc.a` fits only
+  certain compilers: v1.0.7 needs cc370 at `f3f7e21` or later. Until cc370 has
+  versions, every libc370 release names the minimum cc370 commit and the one it
+  was built with. The **sysroot tarball** as a release asset follows once cc370
+  releases exist, because before that it would be reproducible only as far as
+  an unnamed compiler.
+- **1.0.8 is the last 1.x release.** No maintenance branch after 2.0: the
+  consumers migrate directly.
+- **Cadence:** a release whenever something consumer-relevant lands; `edge` in
+  between, as now.
+- **No version file in the sysroot.** The build stamp already answers it.
 
 ## Documentation
 
@@ -139,10 +145,10 @@ moment to set it, since every public header is touched then anyway.
 |---|---|---|
 | D1 | namespace for portable extensions: `libc370/` | proposed here; `mvs/` and `ibm/mvs/` are decided |
 | D2 | POSIX scope: only headers for functions that exist | agreed in principle, review after the plan |
-| D3 | third-party code | miniz: remove (#243). SHA-256/Blowfish/base64: crypto370 (#244). PDF, emfile, ipc: remove (dead, see above) |
+| D3 | third-party code | decided: miniz remove (#243); SHA-256/Blowfish/base64 to crypto370 (#244); PDF, emfile, ipc remove, after assessing the emfile/ipc code in `src/wip/orig/` (#248) |
 | D4 | compatibility | decided: hard cut, 2.0, no shims |
 | D5 | where the plan lives | decided: this document plus the umbrella issue |
-| D6 | release concept | proposal above, to discuss |
+| D6 | release concept | decided, see above (#249, cc370#523, mbt#121) |
 | D7 | API reference: hand-written or generated | open |
 
 ## Appendix — every header
