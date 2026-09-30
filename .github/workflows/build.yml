@@ -1,0 +1,83 @@
+# Build libc370 on every PR and every push to main (#249).
+#
+# The runner has no toolchain, so the job builds cc370 from its main and caches
+# the install, keyed on the cc370 commit alone: a libc370 change must not
+# invalidate a compiler that did not change.  mbt's reusable build.yml puts
+# both SHAs in its key because it installs libc370 into the same prefix; this
+# job builds libc370 from the checkout and never installs it.
+#
+# What fails the job:
+#   - a compile error, or an as370 return code other than 0.  sdk/mklibc.py
+#     already stops on both, since #32 showed that an object as370 flagged
+#     is a wrong object, not a warning
+#   - a host test (test/host/run.sh; the tests it leaves out, and why, are
+#     listed there)
+# What is only reported: the compiler warning count, in the job summary.  It
+# becomes a gate once #39 step 3 has made -Wall usable.
+#
+# Also called by release.yml, so a release is built the same way.
+
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call:
+    outputs:
+      cc370_sha:
+        description: "cc370 commit the library was built with"
+        value: ${{ jobs.build.outputs.cc370_sha }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      cc370_sha: ${{ steps.cc370.outputs.sha }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Clone cc370
+        id: cc370
+        run: |
+          git clone --depth 1 --branch main \
+            https://github.com/mvslovers/cc370.git /tmp/cc370
+          echo "sha=$(git -C /tmp/cc370 rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache cc370
+        id: cc370-cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.local
+          key: cc370-only-${{ runner.os }}-${{ steps.cc370.outputs.sha }}
+
+      - name: Build and install cc370
+        if: steps.cc370-cache.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential bison flex
+          make -C /tmp/cc370 install PREFIX="$HOME/.local"
+
+      - name: Add cc370 to PATH
+        run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Build libc370
+        run: |
+          set -o pipefail
+          make build 2>&1 | tee build.log
+
+      - name: Report
+        if: always()
+        run: |
+          warn=$(sed -n 's/^\[libc\] \([0-9]*\) compiler warning(s):$/\1/p' build.log 2>/dev/null)
+          {
+            echo "### libc370 build"
+            echo "- cc370: \`${{ steps.cc370.outputs.sha }}\`"
+            echo "- compiler warnings: ${warn:-0}"
+            grep -E '^\[libc\] (OK|no duplicate)' build.log 2>/dev/null | sed 's/^/- /'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Host tests
+        run: make test-host

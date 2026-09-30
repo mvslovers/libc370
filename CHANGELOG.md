@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- **CI (#249).** `.github/workflows/build.yml` builds the library on every PR
+  and push to `main`, with cc370 built from its `main` and cached per cc370
+  commit. It runs the host tests and reports the compiler warning count.
+  `release.yml` publishes a `v*` tag: it checks that `VERSION` matches the tag
+  and takes the notes from this file's section for the version (a tag without
+  one fails). A release that already exists keeps its notes.
+- **`make test-host` / `test/host/run.sh`**: every host test's recipe from its
+  header comment, in one runner. 21 of the 26 run by default. The other five
+  do not build on `main` and are listed in the script with their issues:
+  `tstfabnd`, `tstfcls`, `tstfpapp` and `tstplus` since #182 (#241), and
+  `tstjesop` since #126 (#251).
+- `sdk/changelog-section.py`: prints one version's section of this file.
+
 ### Fixed
 - **`freopen()`, the `+`-stream turn and `rclose()` report a lost last block
   (#228).** #182 made `fclose()` report an out-of-space on the final, short

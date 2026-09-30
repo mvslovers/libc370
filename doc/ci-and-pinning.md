@@ -1,7 +1,11 @@
 # CI for libc370, and pinning it in consumer builds
 
-**Status: parked 2026-08-05.** Nothing implemented. This records the analysis so the
-discussion does not have to be reconstructed.
+**Status: step 1 landed with #249 (2026-09-30).** libc370 has
+`.github/workflows/build.yml` (PRs and `main`) and `release.yml` (tags). Step 4
+became mvslovers/mbt#121. Steps 2 and 3 are still open. The analysis below is
+from 2026-08-05, when this was parked, and is kept so the discussion does not
+have to be reconstructed. Parts of it are outdated: for example, consumers'
+release CI now pins libc370 through `[toolchain]`.
 
 Trigger: the `jesprint()` signature change (#21/#22, PR #31) turned into a breaking
 change for httpd, mvsmf and ftpd with **no signal in libc370 at all** — it has no CI.
