@@ -22,7 +22,7 @@ This builds the base and the working tree and compares three things:
 A change that is meant to alter code -- #39 step 2, #68 step 1 -- lists what
 it alters in sdk/gate-allow.txt, one entry per line with the reason:
 
-    asm     src/clib/@@b64dec.s   memset() now declared: inline MVCL
+    asm     @@b64dec.s            memset() now declared: inline MVCL (by basename)
     symbol  B64ENC                renamed in crypto370
     member  sha256i.o             moved to crypto370
 
@@ -37,7 +37,7 @@ import os, re, sys, shutil, subprocess, tempfile, concurrent.futures as cf
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ALLOW = os.path.join(ROOT, "sdk", "gate-allow.txt")
-STAMP = "src/clib/@@ver.s"
+STAMP = "@@ver.s"                   # the build stamp, by basename like asm_files()
 
 
 def run(cmd, cwd=None):
@@ -65,18 +65,25 @@ def renumbered(a, b):
 
 
 def asm_files(tree):
+    """{basename: bytes} of every generated .s and hand-written .asm.
+
+    Keyed by basename, not path: phase 3 (#278) moves sources between
+    directories, and a moved TU must still be compared with itself.  The
+    build refuses two sources with one stem (mklibc.py sources()), so the
+    basename is unique."""
     out = {}
-    src = os.path.join(tree, "src")
-    for d, _, files in os.walk(src):
-        if os.path.relpath(d, src).split(os.sep)[0] == "wip":
-            continue                        # never built
-        for f in files:
-            # only what mklibc.py generates: a .s beside its .c.  A .s whose
-            # .c is gone is a leftover the build never touches (@@cs.s
-            # outlived @@cs.c by months) and says nothing about this change.
-            if f.endswith(".s") and os.path.exists(os.path.join(d, f[:-2] + ".c")):
-                p = os.path.join(d, f)
-                out[os.path.relpath(p, tree)] = open(p, "rb").read()
+    for top in ("src", "asm"):
+        base = os.path.join(tree, top)
+        for d, _, files in os.walk(base):
+            if top == "src" and os.path.relpath(d, base).split(os.sep)[0] == "wip":
+                continue                    # never built
+            for f in files:
+                # a generated .s only beside its .c: a .s whose .c is gone is a
+                # leftover the build never touches (@@cs.s outlived @@cs.c by
+                # months) and says nothing about this change
+                gen = f.endswith(".s") and os.path.exists(os.path.join(d, f[:-2] + ".c"))
+                if gen or f.endswith(".asm"):
+                    out[f] = open(os.path.join(d, f), "rb").read()
     return out
 
 
