@@ -1,7 +1,7 @@
 #ifndef CLIBTIOT_H
 #define CLIBTIOT_H
 
-#include "ieftiot.h"
+#include "ibm/mvs/ieftiot1.h"
 
 /* __tiot() - retieve TIOT address */
 TIOT *__tiot(void)										asm("@@TIOT");

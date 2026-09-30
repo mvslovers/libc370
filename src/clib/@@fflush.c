@@ -3,8 +3,8 @@
 #include <string.h>
 #include <errno.h>
 #include <mvssupa.h>
-#include <osdcb.h>
-#include <osdecb.h>
+#include <ibm/mvs/dcbd.h>
+#include <ibm/mvs/ihadecb.h>
 
 #define begwrite(fp, len)   (lenwrite = (len), dptr = (fp)->asmbuf)
 #define finwrite(fp)        (__awrite((fp)->dcb, &dptr, &lenwrite))

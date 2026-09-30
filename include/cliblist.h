@@ -27,7 +27,7 @@ struct vollist {
 #define VOLLIST_STATUS_PUB	0x04/* ... UCBSTAB = PUBLIC					*/
 #define VOLLIST_STATUS_STG 	0x02/* ... UCBSTAB = STORAGE				*/
 #define VOLLIST_STATUS_X01	0x01/* ... unused							*/	
-	void			*ucbdasd;	/* 08 UCB address (UCBDASD iecvucb.h)	*/
+	void			*ucbdasd;	/* 08 UCB address (UCBDASD ibm/mvs/iefucbob.h)	*/
 	unsigned short  cuu;		/* 0C channel unit (0x0cuu)				*/
 	unsigned short  dasdtype;	/* 0E DASD type (0x3350,0x3380,0x3390)	*/
 	/* The following values are returned for LSPACE when requested */

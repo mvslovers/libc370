@@ -1,7 +1,7 @@
 #ifndef CLIBSSIB_H
 #define CLIBSSIB_H
 
-#include <iefjssib.h>		/* SSIB struct */
+#include <ibm/mvs/iefjssib.h>		/* SSIB struct */
 
 /* __ssib() - returns pointer to job SSID */
 SSIB * __ssib(void)										asm("@@SSIB");

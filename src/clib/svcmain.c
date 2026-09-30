@@ -1,5 +1,5 @@
 #include <clibsvc.h>
-#include <iharb.h>
+#include <ibm/mvs/iharb.h>
 #include <clibwto.h>
 #include <clibos.h>
 

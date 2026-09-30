@@ -1,6 +1,6 @@
-#include <iharb.h>
-#include <cvt.h>
-#include <ihascvt.h>
+#include <ibm/mvs/iharb.h>
+#include <ibm/mvs/cvt.h>
+#include <ibm/mvs/ihascvt.h>
 #include <clibwto.h>
 
 int main(int argc, char **argv)

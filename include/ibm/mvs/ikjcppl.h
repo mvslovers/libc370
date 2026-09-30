@@ -1,8 +1,8 @@
 #ifndef IKJCPPL_H
 #define IKJCPPL_H
 
-#include "ikjpscb.h"
-#include "ikjupt.h"
+#include "ibm/mvs/ikjpscb.h"
+#include "ibm/mvs/ikjupt.h"
 /**********************************************************************
 *    THE COMMAND PROCESSOR PARAMETER LIST (CPPL) IS A LIST OF         *
 *    ADDRESSES PASSED FROM THE TMP TO THE CP VIA REGISTER 1           *

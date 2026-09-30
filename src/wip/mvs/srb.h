@@ -16,7 +16,7 @@
 ** and srb_freemain() had no implementation and were dropped.
 */
 #include <string.h>
-#include <ihasrb.h>
+#include <ibm/mvs/ihasrb.h>
 
 static __inline void *inline_srb_getmain(unsigned size, int subpool)
 {

@@ -2,8 +2,8 @@
 
 #include <clib.h>
 #include <cliblink.h>		/* __link()						*/
-#include <ikjcppl.h>		/* CPPL typedef 				*/
-#include <ikject.h>			/* ECT typedef					*/
+#include <ibm/mvs/ikjcppl.h>		/* CPPL typedef 				*/
+#include <ibm/mvs/ikject.h>			/* ECT typedef					*/
 
 /* tsocmd() - link to pgm as TSO command processor */
 int tsocmd(const char *pgm, const char *buf)

@@ -1,7 +1,7 @@
 #ifndef OSJFCB_H
 #define OSJFCB_H
 
-#include "osdcb.h"
+#include "ibm/mvs/dcbd.h"
 
 typedef struct jfcb     JFCB;       /* Job File Control Block               */
 

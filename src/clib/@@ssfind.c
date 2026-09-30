@@ -1,6 +1,6 @@
 #include <clibssct.h>
 #include <clibos.h>
-#include <iefjesct.h>
+#include <ibm/mvs/iefjesct.h>
 
 __asm__("\n&FUNC    SETC 'ssct_find'");
 SSCT *ssct_find(const char *name)

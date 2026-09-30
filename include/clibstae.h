@@ -1,7 +1,7 @@
 #ifndef CLIBSTAE_H
 #define CLIBSTAE_H
 
-#include <clibsdwa.h>
+#include <ibm/mvs/ihasdwa.h>
 
 typedef enum {
     ESTAE_CREATE,

@@ -6,8 +6,8 @@
 #include "ibm/jes2/jct.h"    /* JES Job Control Table                            */
 #include "ibm/jes2/pddb.h"   /* JES PDDB Print Datasets                          */
 #include "ibm/jes2/iot.h"    /* JES IOT                                          */
-#include "ieftxtft.h"   /* text string types                                */
-#include "iefvkeys.h"   /* text key values                                  */
+#include "ibm/mvs/ieftxtft.h"   /* text string types                                */
+#include "ibm/mvs/iefvkeys.h"   /* text key values                                  */
 #include "clibjes2.h"   /* JES prototypes */
 #include "clibary.h"    /* dynamic array                                    */
 #include "jesprb.h"     /* hardened spool record walk (#25)                 */

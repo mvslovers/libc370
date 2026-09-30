@@ -1,6 +1,6 @@
 #ifndef CDE_H
 #define CDE_H
-#include <ihaxtlst.h>
+#include <ibm/mvs/ihaxtlst.h>
 
 typedef struct cde      CDE;
 

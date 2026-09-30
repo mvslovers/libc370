@@ -1,7 +1,7 @@
 #ifndef CLIBJS_H
 #define CLIBJS_H
 
-#include "osdcb.h"
+#include "ibm/mvs/dcbd.h"
 
 typedef struct haspjs       HASPJS;     /* JES Spool Dataset                */
 

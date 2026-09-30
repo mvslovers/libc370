@@ -1,5 +1,5 @@
 #include <clibos.h>
-#include <ihaasvt.h>
+#include <ibm/mvs/ihaasvt.h>
 
 /* __ascb() get ASCB for ASID, or current ASCB if 0 */
 void *__ascb(unsigned asid)

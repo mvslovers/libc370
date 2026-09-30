@@ -1,4 +1,4 @@
-#include <iefssso.h>
+#include <ibm/mvs/iefssso.h>
 #include <clibstr.h>
 #include <clibjes2.h>
 

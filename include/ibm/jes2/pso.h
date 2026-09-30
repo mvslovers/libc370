@@ -1,7 +1,7 @@
 #ifndef HASPPSO_H
 #define HASPPSO_H
 #include "ibm/jes2/pddb.h"
-#include "iefssso.h"
+#include "ibm/mvs/iefssso.h"
 /**********************************************************************
 *                                                                     *
 *    THE PROCESS SYSOUT WORK AREA (PSO) DSECT DESCRIBES A CONTROL     *

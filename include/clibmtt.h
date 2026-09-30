@@ -1,7 +1,7 @@
 #ifndef CLIBMTT_H
 #define CLIBMTT_H
 
-#include <ieezb806.h>   /* MTTABLE, MTENTRY */
+#include <ibm/mvs/ieezb806.h>   /* MTTABLE, MTENTRY */
 #include <clibary.h>    /* dynamic array functions */
 
 /* Master Trace Table data extraction routines */

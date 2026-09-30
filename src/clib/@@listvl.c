@@ -8,8 +8,8 @@
 #include "clibdscb.h"       /* DSCB structs and prototypes  */
 #include "cliblist.h"       /* __listc()                    */
 #include "clibstr.h"        /* __patmat()                   */
-#include "iecvucb.h"		/* UCBDASD						*/
-#include "cvt.h"			/* CVT							*/
+#include "ibm/mvs/iefucbob.h"		/* UCBDASD						*/
+#include "ibm/mvs/cvt.h"			/* CVT							*/
 #include "clibwto.h"       /* wtof()                       */
 
 static int in_vollist(VOLLIST **vollist, const char *vol);

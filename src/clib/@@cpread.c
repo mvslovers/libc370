@@ -3,8 +3,8 @@
 #include <string.h>
 #include <ctype.h>
 #include "clibwto.h"
-#include "osdcb.h"
-#include "osjfcb.h"
+#include "ibm/mvs/dcbd.h"
+#include "ibm/mvs/iefjfcbn.h"
 #include "clibcp.h"     /* JES Checkpoint prototypes and functions            */
 
 int __cpread(HASPCP *cp, void *buf4k)

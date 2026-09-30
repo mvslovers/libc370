@@ -25,12 +25,12 @@
 #include "cliblink.h"               /* link to external program     */
 #include "clibary.h"                /* dynamic arrays               */
 #include "svc99.h"                  /* dynamic allocation           */
-#include "osiob.h"                  /* input/output block           */
+#include "ibm/mvs/ieziob.h"                  /* input/output block           */
 #include "clibccw.h"                /* CCW struct                   */
 #include "clibecb.h"                /* ECB prototypes               */
 #include "clibtmr.h"                /* timer                        */
-#include "cvt.h"                    /* MVS CVT                      */
-#include "ikjtcb.h"                 /* MVS TCB                      */
+#include "ibm/mvs/cvt.h"                    /* MVS CVT                      */
+#include "ibm/mvs/ikjtcb.h"                 /* MVS TCB                      */
 
 int main(int argc, char **argv)
 {

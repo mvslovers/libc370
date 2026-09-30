@@ -1,7 +1,7 @@
 #ifndef CLIBOS_H
 #define CLIBOS_H
 #include <stddef.h>
-#include <cde.h>
+#include <ibm/mvs/ihacde.h>
 #include <clibwto.h>
 
 typedef struct bldl         BLDL;       /* BLDL list                    */

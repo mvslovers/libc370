@@ -1,11 +1,11 @@
 #ifndef OSIO_H
 #define OSIO_H
 
-#include "osdcb.h"
-#include "osdeb.h"
-#include "osdecb.h"
-#include "osiob.h"
-#include "osjfcb.h"
+#include "ibm/mvs/dcbd.h"
+#include "ibm/mvs/iezdeb.h"
+#include "ibm/mvs/ihadecb.h"
+#include "ibm/mvs/ieziob.h"
+#include "ibm/mvs/iefjfcbn.h"
 
 /* - - - - B S A M - - - - */
 /* allocate and initialize DCB for BSAM access */

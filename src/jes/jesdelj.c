@@ -1,5 +1,5 @@
-#include <iefsscs.h>
-#include <iefssso.h>
+#include <ibm/mvs/iefsscs.h>
+#include <ibm/mvs/iefssso.h>
 #include <clibstr.h>
 #include <clibjes2.h>
 

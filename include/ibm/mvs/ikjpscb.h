@@ -1,7 +1,7 @@
 #ifndef IKJPSCB_H
 #define IKJPSCB_H
 
-#include "ikjupt.h"
+#include "ibm/mvs/ikjupt.h"
 /**********************************************************************
 *    THE PROTECTED STEP CONTROL BLOCK IS CONSTRUCTED BY LOGON AND      
 *    FILLED IN FROM THE UADS .  A FIXED LENGTH TABLE WITH ATTRIBUTE    

@@ -1,7 +1,7 @@
 #ifndef IEECUCM_H
 #define IEECUCM_H
 
-#include <iezbits.h>
+#include <ibm/mvs/iezbits.h>
 
 typedef struct ucm      UCM;        /* CVT->CVTCUCB                 */
 typedef struct ucm2ext  UCM2EXT;

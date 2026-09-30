@@ -7,8 +7,8 @@
 #include <clibispf.h>		/* ISPF prototypes				*/
 #include <cliblink.h>		/* __link()						*/
 #include <clibtso.h>		/* tsocmd()						*/
-#include <ikjcppl.h>		/* CPPL typedef 				*/
-#include <ikject.h>			/* ECT typedef					*/
+#include <ibm/mvs/ikjcppl.h>		/* CPPL typedef 				*/
+#include <ibm/mvs/ikject.h>			/* ECT typedef					*/
 
 int isp_select(const char *fmt, ...)
 {

@@ -1,8 +1,8 @@
 #ifndef SVC99_H
 #define SVC99_H
 
-#include "rb99.h"
-#include "txt99.h"
+#include "ibm/mvs/iefzb4d0.h"
+#include "ibm/mvs/iefzb4d2.h"
 
 extern TXT99 *__nwtx99(int dal, int count, int size, const char *text);
 #define NewTXT99(dal,count,size,text)   __nwtx99((dal),(count),(size),(text))

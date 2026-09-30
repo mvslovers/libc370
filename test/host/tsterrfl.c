@@ -79,7 +79,7 @@ void   *memchr(const void *s, int c, size_t n);
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <osdcb.h>
+#include <ibm/mvs/dcbd.h>
 
 /* libc370 reaches errno through __errno(); on MVS it is per-task storage
    off the GRT.  One int is all this test needs. */

@@ -1,7 +1,7 @@
 #ifndef CLIBDSAB_H
 #define CLIBDSAB_H
 
-#include <ihadsab.h>
+#include <ibm/mvs/ihadsab.h>
 
 /* get_dsab(tcbptr, ddname) - Get DSAB pointer, NULL if not found.
  * tcbptr is TCB address or NULL to use this task TCB.

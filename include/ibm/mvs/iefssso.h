@@ -1,7 +1,7 @@
 #ifndef IEFSSSO_H
 #define IEFSSSO_H
 
-#include <iefssobh.h>               /* SSOB Header                          */
+#include <ibm/mvs/iefssobh.h>               /* SSOB Header                          */
 
 #define SSOBSOUT    1               /* SYSOUT FUNCTION ID (SSOBFUNC)        */
 /*

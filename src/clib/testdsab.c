@@ -3,9 +3,9 @@
 #include <clib.h>
 #include <clibdsab.h>
 #include <clibtiot.h>
-#include <iezjscb.h>
-#include <ieftiot.h>
-#include <osjfcb.h>
+#include <ibm/mvs/iezjscb.h>
+#include <ibm/mvs/ieftiot1.h>
+#include <ibm/mvs/iefjfcbn.h>
 
 int main(int argc, char **argv)
 {

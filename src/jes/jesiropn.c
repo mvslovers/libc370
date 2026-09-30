@@ -7,7 +7,7 @@
 #include <errno.h>
 #include "svc99.h"
 #include "clibary.h"
-#include "txt99.h"
+#include "ibm/mvs/iefzb4d2.h"
 #include "clibwto.h"
 #include "clibvsam.h"
 #include "clibio.h"

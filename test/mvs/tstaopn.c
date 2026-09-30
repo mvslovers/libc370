@@ -41,7 +41,7 @@
 #include <errno.h>
 #include <string.h>
 #include <mvssupa.h>
-#include <rb99.h>
+#include <ibm/mvs/iefzb4d0.h>
 
 #define P1CHUNK (256 * 1024)
 #define P2CHUNK 4096
