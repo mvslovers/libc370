@@ -68,7 +68,7 @@
  *   -D'__asm__(...)='  erases the file-scope S/370 statements
  *                      (__asm__("\n&FUNC SETC 'process_job'")).  Variadic
  *                      because extended asm carries commas.
- *   -D__volatile__=    turns clibstr.h's inline memset(), written
+ *   -D__volatile__=    turns string.h's inline memset(), written
  *                      "__asm__ __volatile__(", into something the erase
  *                      above can reach.  NOTE this leaves memset() a no-op
  *                      stub, so this file uses calloc() and explicit stores
@@ -107,6 +107,7 @@
  *
  * RC: 0 = every check passed, 1 = at least one did not.
  */
+#include <libc370/strutil.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -30,8 +30,8 @@
  *
  * RC: 0 = every check passed, 1 = at least one did not.
  */
-/* clibstr.h suppressed for the host, as in tsterrfl.c */
-#define CLIBSTR_H
+/* string.h suppressed for the host, as in tsterrfl.c */
+#define STRING_H
 #include <stddef.h>
 void   *memset(void *s, int c, size_t n);
 void   *memcpy(void *t, const void *s, size_t n);

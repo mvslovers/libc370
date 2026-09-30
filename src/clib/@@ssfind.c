@@ -1,3 +1,4 @@
+#include <libc370/strutil.h>
 #include <mvs/subsys.h>
 #include <stddef.h>
 #include <ibm/mvs/ihacde.h>

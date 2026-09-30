@@ -200,7 +200,7 @@ static int mbt_test_summary(const char *name)
 /* run one vvprintf() and collect the lock ledger */
 static void reset(void)
 {
-    /* no memset here: clibstr.h's memset is inline S/370 asm and does
+    /* no memset here: string.h's memset is inline S/370 asm and does
        not survive the host compile (see tstvsnp.c) - run() NUL-
        terminates out[] after every call, which is all strcmp needs */
     outn = 0;

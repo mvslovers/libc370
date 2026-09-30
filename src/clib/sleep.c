@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include <time.h>	/* our own prototype, so the definition is checked */
 #include <mvs/ecb.h>
 

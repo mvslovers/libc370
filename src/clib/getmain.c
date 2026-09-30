@@ -1,3 +1,4 @@
+#include <libc370/strutil.h>
 #include <mvs/crt.h>
 #include <stddef.h>
 #include <ibm/mvs/ihacde.h>
@@ -5,7 +6,7 @@
 #include <mvs/apf.h>
 #include <mvs/storage.h>
 #include <mvs/wto.h>
-#include <clibstr.h>
+#include <string.h>
 
 #if 0
 /* This is a map of the prefix area for the storage we obtain and free.

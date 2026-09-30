@@ -1,3 +1,14 @@
 # Differences sdk/gate.py accepts for THIS change only: '<asm|symbol|member>
 # <name> <reason>'.  An entry that matches no difference fails the gate, so
 # the next change finds these stale and empties the file.  See sdk/gate.py.
+asm src/clib/@@finden.s calls strcasecmp instead of stricmp, the same code under the POSIX name (#250)
+asm src/clib/@@listds.s calls strcasecmp instead of stricmp, the same code under the POSIX name (#250)
+asm src/clib/stricmp.s removed: stricmp() duplicated strcasecmp() (#250)
+asm src/clib/strncmpi.s removed: strncmpi() duplicated strncasecmp() (#250)
+asm src/clib/bcopy.s removed: bcopy() had no caller (#250)
+member stricmp.o removed (#250)
+member strncmpi.o removed (#250)
+member bcopy.o removed (#250)
+symbol STRICMP removed (#250)
+symbol STRNCMPI removed (#250)
+symbol BCOPY removed (#250)

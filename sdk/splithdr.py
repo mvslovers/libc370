@@ -77,6 +77,8 @@ def main():
     if len(sys.argv) != 2:
         sys.exit(__doc__)
     spec = json.load(open(sys.argv[1]))
+    if "segments" not in spec:
+        sys.exit(f"[splithdr] {sys.argv[1]} has no segments: {spec.get('applied_by', 'not a splithdr spec')}")
     src = spec["source"]
     text, crlf = read(os.path.join(INC, src))
     lines = text.split("\n")

@@ -1,5 +1,6 @@
 /* STRCPYP.C */
-#include "clibstr.h"
+#include <libc370/strutil.h>
+#include "string.h"
 
 char *
 strcpyp(char *target, int tlen, const void *source, int pad )

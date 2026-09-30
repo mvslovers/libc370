@@ -35,7 +35,6 @@ C_FILES := abort.c \
 	@@b64dec.c \
 	@@b64enc.c \
 	@@b64tbl.c \
-	bcopy.c \
 	@@bldl.c \
 	bsearch.c \
 	@@call.c \
@@ -339,12 +338,10 @@ C_FILES := abort.c \
 	strdup.c \
 	strerror.c \
 	strftime.c \
-	stricmp.c \
 	strlen.c \
 	strncasecmp.c \
 	strncat.c \
 	strncmp.c \
-	strncmpi.c \
 	strncpy.c \
 	strpbrk.c \
 	strrchr.c \

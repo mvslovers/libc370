@@ -1,4 +1,5 @@
 /* JESJOB.C - Get JES Job information */
+#include <libc370/strutil.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

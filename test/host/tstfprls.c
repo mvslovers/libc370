@@ -117,7 +117,7 @@
  *
  * FOUR HOST-PORT DETAILS, none of them guessable:
  *
- *   a) clibstr.h is SUPPRESSED (#define CLIBSTR_H below) and the handful of
+ *   a) string.h is SUPPRESSED (#define STRING_H below) and the handful of
  *      string functions declared here instead.  Its memset() and memclr() are
  *      static __inline S/370 assembler; -D'__asm__(...)=' does not reach them
  *      (they are written __asm__ __volatile__(...), and a function-like macro
@@ -151,8 +151,8 @@
  *      before the assertions run.
  * ==================================================================== */
 
-/* (a) suppress clibstr.h - see the note above */
-#define CLIBSTR_H
+/* (a) suppress string.h - see the note above */
+#define STRING_H
 #ifndef __SIZE_T_DEFINED
 #define __SIZE_T_DEFINED
 typedef unsigned long size_t;

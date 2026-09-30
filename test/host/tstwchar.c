@@ -51,10 +51,10 @@
  *
  * RC: 0 = every check passed, 1 = at least one did not.
  */
-/* clibstr.h is suppressed and the three string functions used here are
+/* string.h is suppressed and the three string functions used here are
 ** declared instead: its memset() is inline S/370 assembler that the host
 ** cannot build (see test/host/tstfprls.c, note a). */
-#define CLIBSTR_H
+#define STRING_H
 #ifndef __SIZE_T_DEFINED
 #define __SIZE_T_DEFINED
 typedef unsigned long size_t;

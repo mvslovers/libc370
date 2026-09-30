@@ -1,10 +1,11 @@
+#include <libc370/strutil.h>
 #include <mvs/subsys.h>
 #include <stddef.h>
 #include <ibm/mvs/ihacde.h>
 #include <mvs/wto.h>
 #include <mvs/apf.h>
 #include <mvs/storage.h>
-#include <clibstr.h>
+#include <string.h>
 
 __asm__("\n&FUNC    SETC 'ssct_new'");
 SSCT *ssct_new(const char *name, SSVT *ssvt, void *suse)

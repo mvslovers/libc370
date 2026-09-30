@@ -1,0 +1,10 @@
+{
+  "source": "clibstr.h",
+  "applied_by": "sdk/splits/clibstr.py (string.h is itself a target, so sdk/splithdr.py does not fit)",
+  "targets": {
+    "string.h": {},
+    "strings.h": {},
+    "libc370/strutil.h": {},
+    "unistd.h": {}
+  }
+}

@@ -84,12 +84,13 @@ long int labs(long int j);
 ldiv_t ldiv(long int numer, long int denom);
 int atexit(void (*func)(void));
 char *getenv(const char *name);
+extern int      setenv(const char *name, const char *value, int rewrite);
+extern int      putenv(const char *str);
+extern int      unsetenv(const char *name);
 int system(const char *string);
 void *bsearch(const void *key, const void *base,
               size_t nmemb, size_t size,
               int (*compar)(const void *, const void *));
-
-void bcopy (const void *src, void *dest, size_t len);
 
 #ifdef __WATCOMC__
 #pragma intrinsic (abs,labs,div,ldiv)

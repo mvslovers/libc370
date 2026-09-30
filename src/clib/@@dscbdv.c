@@ -2,9 +2,10 @@
 /*
 /* Data Set Control Block access routines
 */
+#include <libc370/strutil.h>
 #include <ctype.h>
 #include "mvs/dscb.h"
-#include "clibstr.h"
+#include "string.h"
 
 #define SEARCH 0xC1000000
 

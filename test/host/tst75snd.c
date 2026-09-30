@@ -115,7 +115,7 @@
  *
  * Four warnings are expected and are all host artefacts: two libc370 stdio
  * prototypes that disagree with the host's builtins, one inline-asm operand
- * width in clibstr.h, and the `unused parameter 'flags'` send() has always
+ * width in string.h, and the `unused parameter 'flags'` send() has always
  * had.  The target build (cc370, -Wall) is clean.
  *
  * RED, against the pre-fix source - same driver, same script.  The pre-fix

@@ -106,7 +106,7 @@
  * BUILD / RUN (host, from test/host):
  *
  *   -D'__asm__(...)='  erases the file-scope S/370 statement in @@listpd.c and
- *                      the inline MVCL in clibstr.h's static memset().
+ *                      the inline MVCL in string.h's static memset().
  *                      Variadic because extended asm carries commas.
  *   -D__volatile__=    that memset() is written "__asm__ __volatile__(", and
  *                      the token stops the erase above from matching at all.

@@ -62,11 +62,11 @@
    S/370 MVCL, and -D'__asm__(...)=' does not neutralise the __volatile__
    form of it - the host assembler sees the MVCL and stops.  Earlier host
    tests worked around that by shimming whichever TU called memset();
-   claiming clibstr.h's include guard here and declaring the handful of
+   claiming string.h's include guard here and declaring the handful of
    functions the TUs under test actually use lets them all be compiled for
    real instead.  The declarations match the host libc, which supplies
    them at link time. */
-#define CLIBSTR_H
+#define STRING_H
 #include <stddef.h>
 void   *memset(void *s, int c, size_t n);
 void   *memcpy(void *t, const void *s, size_t n);

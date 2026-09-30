@@ -79,7 +79,7 @@
  *                     assembler rejects.  It does not touch the asm("@@ARADD")
  *                     labels in libc370/array.h - different spelling - so the host
  *                     symbols keep the library's names.  It does NOT reach
- *                     clibstr.h's inline memset() either, which is spelled
+ *                     string.h's inline memset() either, which is spelled
  *                     "__asm__ __volatile__(" - a function-like macro only
  *                     expands when the next token is an open paren.  Hence no
  *                     memset() anywhere in this file.
@@ -189,7 +189,7 @@ static int wtos          = 0;   /* wtof() call count                        */
 /* Storage for the two fakes.  Static, so a leaked handle is a counter that
  * does not come back to zero rather than a free() of something ASAN owns.
  * Static also means already zeroed - deliberately not memset(), because
- * libc370's clibstr.h inlines memset() as S/370 assembler written
+ * libc370's string.h inlines memset() as S/370 assembler written
  * "__asm__ __volatile__", which the -D'__asm__(x)=' erase does not reach
  * (the macro only expands when followed by an open paren). */
 static HASPCP  fake_cp;

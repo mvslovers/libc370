@@ -1,4 +1,6 @@
 /* @@LISTDS.C - create DSLIST array */
+#include <strings.h>
+#include <libc370/strutil.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,7 +10,7 @@
 #include "libc370/array.h"        /* dynamic array prototypes     */
 #include "mvs/dscb.h"       /* DSCB structs and prototypes  */
 #include "mvs/dslist.h"       /* __listc()                    */
-#include "clibstr.h"        /* __patmat()                   */
+#include "string.h"        /* __patmat()                   */
 
 static int  parse(void *vdata, const char *fmt, ...);
 
@@ -70,10 +72,10 @@ parse(void *vdata, const char *fmt, ...)
 
     if (udata->dsn[0]) goto check_vol;  /* we already have a dataset */
 
-    if (stricmp(p, "NONVSAM")==0    ||
-        stricmp(p, "PAGESPACE")==0  ||
-        stricmp(p, "CLUSTER")==0    ||
-        stricmp(p, "USERCATALOG")==0) {
+    if (strcasecmp(p, "NONVSAM")==0    ||
+        strcasecmp(p, "PAGESPACE")==0  ||
+        strcasecmp(p, "CLUSTER")==0    ||
+        strcasecmp(p, "USERCATALOG")==0) {
         /* get next parm */
         p = strtok(NULL, " -\n");
         if (!p) goto quit;
@@ -95,7 +97,7 @@ parse(void *vdata, const char *fmt, ...)
 check_vol:
     if (!udata->dsn[0]) goto quit;   /* no dataset, we're finished */
 
-    if (stricmp(p, "VOLSER")==0) {
+    if (strcasecmp(p, "VOLSER")==0) {
         /* get next parm */
         p = strtok(NULL, " -\n");
         if (!p) {

@@ -1,3 +1,4 @@
+#include <libc370/strutil.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,7 +8,7 @@
 #include "libc370/array.h"        /* dynamic array prototypes     */
 #include "mvs/dscb.h"       /* DSCB structs and prototypes  */
 #include "mvs/dslist.h"       /* __listc()                    */
-#include "clibstr.h"        /* __patmat()                   */
+#include "string.h"        /* __patmat()                   */
 #include "ibm/mvs/iefucbob.h"		/* UCBDASD						*/
 #include "ibm/mvs/cvt.h"			/* CVT							*/
 #include "mvs/wto.h"       /* wtof()                       */
