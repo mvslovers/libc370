@@ -131,9 +131,24 @@ def cmd_snapshot():
     return 0
 
 
+# Known answers for the scan, checked first: a scan that misses whole
+# branches still "passes" everything below, since it misses them on both
+# sides.  It did: ext/time64.h's API sits in the #else of an #if the scan
+# took for dead, and gmtime64 was in neither list.
+KNOWN = [("gmtime64", "ext/time64.h", True),     # #else of "#if defined(__LP64__)"
+         ("memset",   "string.h",     True),     # #else of "#if 0"
+         ("printf",   "stdio.h",      True),
+         ("ENOMEM",   "errno.h",      True),
+         ("ENOSYS",   "errno.h",      False)]    # only inside "#if 0"
+
+
 def cmd_check():
     bad = 0
     now = public()
+    for name, hdr, want in KNOWN:
+        if (hdr in now.get(name, ())) != want:
+            print(f"[names] scan: {name} {'missing from' if want else 'wrongly found in'} {hdr}")
+            bad += 1
     if open(NAMES, encoding="utf-8").read() != dump(now, GENERATED):
         print("[names] sdk/names.tsv is out of date: run 'python3 sdk/names.py render'")
         bad += 1

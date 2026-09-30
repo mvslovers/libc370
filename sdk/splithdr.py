@@ -63,29 +63,29 @@ def names(text):
     code = re.sub(r"//[^\n]*", " ", code)
     # a dead "#if 0" branch declares nothing (socket.h had one defining
     # socket(), select() ... as macros over the DYN75 vector), but its
-    # "#else" branch is live (string.h's memset is in one).  A stack of
-    # conditionals: each entry says whether that level is dead.
+    # "#else" branch is live (string.h's memset is in one).  Every other
+    # conditional cannot be evaluated here, so both of its branches count:
+    # ext/time64.h declares its whole API in the #else of
+    # "#if defined(__LP64__)", which cc370 never defines.  Each stack entry
+    # is [this level is an "#if 0", this branch is dead].
     kept, stack = [], []
     for l in code.split("\n"):
         s = l.strip()
-        dead = any(stack)
         if re.match(r"#[ \t]*if", s):
-            stack.append(bool(re.match(r"#[ \t]*if[ \t]+0\b", s)))
-            if not dead and not stack[-1]:
-                kept.append(l)
+            if0 = bool(re.match(r"#[ \t]*if[ \t]+0\b", s))
+            stack.append([if0, if0])
             continue
-        if re.match(r"#[ \t]*(else|elif)\b", s) and stack:
-            was = stack[-1]
-            stack[-1] = not was if re.match(r"#[ \t]*else\b", s) else stack[-1]
-            if not any(stack[:-1]) and not was:
-                kept.append(l)
+        if re.match(r"#[ \t]*else\b", s) and stack:
+            if stack[-1][0]:
+                stack[-1][1] = not stack[-1][1]
+            continue
+        if re.match(r"#[ \t]*elif\b", s) and stack:
+            stack[-1][1] = False            # "#if 0 ... #elif X": X's branch may be live
             continue
         if re.match(r"#[ \t]*endif", s) and stack:
-            was = stack.pop()
-            if not any(stack) and not was:
-                kept.append(l)
+            stack.pop()
             continue
-        if not dead:
+        if not any(dead for _, dead in stack):
             kept.append(l)
     code = "\n".join(kept)
     out |= set(re.findall(r"#[ \t]*define[ \t]+([A-Za-z_]\w*)", code))

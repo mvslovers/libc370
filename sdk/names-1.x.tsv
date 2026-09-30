@@ -4338,6 +4338,8 @@ arrayget	clibary.h
 arraynew	clibary.h
 arraysize	clibary.h
 asctime	time.h
+asctime64	time64.h
+asctime64_r	time64.h
 asin	math.h
 assert	assert.h
 asvt	ihaasvt.h
@@ -4388,6 +4390,8 @@ clibsock	clibsock.h
 clibwsa	clibwsa.h
 clientid	socket.h
 clock	time.h
+clock64	time64.h
+clock64_t	time64.h
 clock_t	time.h
 closesocket	socket.h
 cmtt_free	clibmtt.h
@@ -4433,6 +4437,8 @@ cthread_worker_shutdown	clibthdi.h
 cthread_worker_wait	clibthdi.h
 cthread_yield	clibthrd.h
 ctime	time.h
+ctime64	time64.h
+ctime64_r	time64.h
 cvt	cvt.h
 cvtfix	cvt.h
 cvtxtnt1	cvt.h
@@ -4473,6 +4479,7 @@ deflateInit2	clibmz.h miniz.h
 deflateReset	clibmz.h miniz.h
 devtype	trkcalc.h
 difftime	time.h
+difftime64	time64.h
 div	stdlib.h
 dsab	ihadsab.h
 dsabanmi	ihadsab.h
@@ -4603,6 +4610,8 @@ getpeername	socket.h
 gets	clibio.h
 getsockname	socket.h
 gmtime	time.h
+gmtime64	time64.h
+gmtime64_r	time64.h
 gmtime_r	time.h
 haspcmb	haspcmb.h
 haspcp	clibcp.h
@@ -4761,6 +4770,8 @@ loads04	cliblist.h
 loadstat	cliblist.h
 localeconv	locale.h
 localtime	time.h
+localtime64	time64.h
+localtime64_r	time64.h
 localtime_r	time.h
 lock	cliblock.h
 lock_res	cliblock.h
@@ -4781,6 +4792,9 @@ malloc	stdlib.h
 mblen	stdlib.h
 mbstowcs	stdlib.h
 mbtowc	stdlib.h
+mclock64	time64.h
+mclock64_t	time64.h
+mctime64	time64.h
 memchr	clibstr.h
 memclr	clibstr.h
 memcmp	clibstr.h
@@ -4802,10 +4816,13 @@ memmgrTotSize	@@memmgr.h
 memmgrn	@@memmgr.h
 memmove	clibstr.h
 memset	clibstr.h
+mgmtime64	time64.h
 miniz_def_alloc_func	clibmz.h miniz_common.h
 miniz_def_free_func	clibmz.h miniz_common.h
 miniz_def_realloc_func	clibmz.h miniz_common.h
 mktime	time.h
+mktime64	time64.h
+mlocaltime64	time64.h
 mmapdump	modmap.h
 mmapflr	modmap.h
 mmapfree	modmap.h
@@ -4852,6 +4869,8 @@ modmap_reset_ld	modmap.h
 modmap_sort	modmap.h
 modmap_zap	modmap.h
 mtentry	ieezb806.h
+mtime64	time64.h
+mtime64_t	time64.h
 mttable	ieezb806.h
 mtxavail	clibmutx.h
 mtxclup	clibmutx.h
@@ -5299,7 +5318,10 @@ testlock_res	cliblock.h
 testlock_resf	cliblock.h
 text	clibpdfi.h
 time	time.h
+time64	time64.h
+time64_t	time64.h
 time_t	time.h
+timegm64	time64.h
 timeval	socket.h
 tinfl_bit_buf_t	clibmz.h miniz_tinfl.h
 tinfl_decompress	clibmz.h miniz_tinfl.h
@@ -5361,6 +5383,8 @@ uLong	clibmz.h miniz.h
 uLongf	clibmz.h miniz.h
 ucbdasd	iecvucb.h
 ucblist	iecvucb.h
+uclock64	time64.h
+uclock64_t	time64.h
 ucm	ieecucm.h
 ucm2ext	ieecucm.h
 ucmefext	ieecucm.h
@@ -5370,6 +5394,8 @@ ucmfexta	ieecucm.h
 ucmlist	ieecucm.h
 ucmpexta	ieecucm.h
 ucmprfx	ieecucm.h
+uctime64	time64.h
+ugmtime64	time64.h
 uint16_t	stdint.h
 uint32_t	stdint.h
 uint64_t	stdint.h
@@ -5384,12 +5410,15 @@ uint_least64_t	stdint.h
 uint_least8_t	stdint.h
 uintmax_t	stdint.h
 uintptr_t	stdint.h
+ulocaltime64	time64.h
 uncompress	clibmz.h miniz.h
 ungetc	clibio.h
 unlock	cliblock.h
 unlock_res	cliblock.h
 unlock_resf	cliblock.h
 unsetenv	clibenv.h
+utime64	time64.h
+utime64_t	time64.h
 va_arg	stdarg.h
 va_copy	stdarg.h
 va_end	stdarg.h
