@@ -154,11 +154,15 @@ int __fflush(FILE *fp)
     return 0;
 }
 
-void __aclose(void *handle)
+/* The rc never reaches __fabandon(): ___try() clears R15 after a call
+   that returns (SR 15,15 in @@@try.c), so try() answers 0 or an abend
+   code.  After __adisc() there is no last block to lose anyway (#182) */
+int __aclose(void *handle)
 {
     aclose_calls++;
     aclose_handle = handle;
     if (in_try) aclose_via_try = 1;
+    return 0;
 }
 
 void __adisc(void *handle)
@@ -191,7 +195,7 @@ int ___try(void *func, ...)
     if (try_estae_fails) return -8;
 
     in_try = 1;
-    ((void (*)(void *))func)(handle);
+    ((int (*)(void *))func)(handle);
     in_try = 0;
 
     return try_abend;

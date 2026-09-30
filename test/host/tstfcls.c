@@ -30,6 +30,15 @@
  *   6. the FILE leaves grtfile, the grtfile lock is taken exactly
  *      once, and at the end no lock is left held.
  *
+ * And #182: the last, short block is written by __aclose(), not by the
+ * flush, so its rc is the only place an out-of-space on it can show up.
+ * The FILE is freed either way, so fclose()'s return value is all that
+ * can carry it:
+ *
+ *   7. __aclose() rc 0  -> fclose() 0
+ *   8. __aclose() rc 12 -> fclose() EOF, errno ENOSPC, teardown complete
+ *   9. __aclose() rc 8  -> fclose() EOF, errno EIO, teardown complete
+ *
  * BUILD / RUN (host, from test/host; same flag recipe as tstvsnp.c):
  *
  *     R=../..
@@ -126,16 +135,21 @@ int __fflush(FILE *fp)
 
 static int      aclose_done = 0;
 static int      aclose_before_fpfree = -1;
+static int      aclose_rc = 0;      /* what the next __aclose() answers   */
 
-void __aclose(void *handle)
+int __aclose(void *handle)
 {
     (void)handle;
     held_at_aclose = lk_held(watchfp);
     aclose_done = 1;
+    return aclose_rc;
 }
+
+static int      fpfree_seen = 0;
 
 int __fpfree(FILE *fp)
 {
+    fpfree_seen = 1;
     held_at_fpfree = lk_held(fp);
     aclose_before_fpfree = aclose_done;
     return 0;
@@ -186,17 +200,14 @@ static int mbt_test_summary(const char *name)
     return mbt_failed > 0 ? 1 : 0;
 }
 
-int main(void)
+/* a FILE the way fopen() leaves it: open, writable, dynamic,
+   registered in grt->grtfile */
+static FILE *mkfile(void)
 {
-    FILE        *fp;
     static char dummydcb[8];
+    FILE        *fp;
     int         i;
 
-    printf("=== tstfcls: fclose() teardown under the FILE lock "
-           "(#147 item 1) ===\n\n");
-
-    /* a FILE the way fopen() leaves it: open, writable, dynamic,
-       registered in grt->grtfile */
     fp = calloc(1, sizeof(_FILE));
     for (i = 0; _FILE_EYE[i]; i++) fp->eye[i] = _FILE_EYE[i];
     fp->flags  = _FILE_FLAG_OPEN | _FILE_FLAG_WRITE | _FILE_FLAG_DYNAMIC;
@@ -207,6 +218,44 @@ int main(void)
     fp->endbuf = fp->buf + 64;
     arrayadd(&fakegrt.grtfile, fp);
     watchfp = fp;
+    return fp;
+}
+
+/* #182: fclose() on a FILE whose __aclose() answers acrc */
+static void lastblock(int acrc, int wantrc, int wanterr, const char *what)
+{
+    char    msg[80];
+    int     rc;
+
+    mkfile();
+    aclose_rc = acrc;
+    aclose_done = 0;
+    fpfree_seen = 0;
+    errno = 0;
+    rc = fclose(watchfp);
+    watchfp = 0;
+    aclose_rc = 0;
+
+    snprintf(msg, sizeof msg, "%s: fclose() rc", what);
+    CHECK_EQ(rc, wantrc, msg);
+    snprintf(msg, sizeof msg, "%s: errno", what);
+    CHECK_EQ(errno, wanterr, msg);
+    snprintf(msg, sizeof msg, "%s: DD released all the same", what);
+    CHECK_EQ(fpfree_seen, 1, msg);
+    snprintf(msg, sizeof msg, "%s: FILE left grtfile", what);
+    CHECK_EQ((int)arraycount(&fakegrt.grtfile), 0, msg);
+    snprintf(msg, sizeof msg, "%s: no lock left held", what);
+    CHECK_EQ(hold_n, 0, msg);
+}
+
+int main(void)
+{
+    FILE        *fp;
+
+    printf("=== tstfcls: fclose() teardown under the FILE lock "
+           "(#147 item 1) ===\n\n");
+
+    fp = mkfile();
 
     CHECK_EQ((int)arraycount(&fakegrt.grtfile), 1, "FILE registered");
 
@@ -223,6 +272,11 @@ int main(void)
     CHECK_EQ((int)arraycount(&fakegrt.grtfile), 0, "(6) FILE left grtfile");
     CHECK_EQ(lk_acquires(&fakegrt.grtfile), 1, "(6) grtfile lock taken once");
     CHECK_EQ(hold_n, 0, "(6) no lock left held at the end");
+
+    printf("\n#182: the last block is written by __aclose()\n");
+    lastblock(0,  0,   0,      "(7) rc 0");
+    lastblock(12, EOF, ENOSPC, "(8) rc 12");
+    lastblock(8,  EOF, EIO,    "(9) rc 8");
 
     return mbt_test_summary("tstfcls");
 }

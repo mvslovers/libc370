@@ -32,10 +32,11 @@
  * #80 - the allocation is not the problem, the unchecked result is.
  *
  * THIS TEST LINKS AND EXECUTES THE REAL jesopen.c, together with the real
- * jesclose.c and the real array code.  Nothing is mirrored, so there is no
- * copy to keep in sync.  What it does NOT link is MVS: __cpopen/__jsopen and
- * their close halves are host shims below, which is what makes jesopen()
- * testable at all - it is otherwise four MVS services in a trench coat.
+ * jesclose.c, jesjobfr.c, jesjobf1.c and the real array code.  Nothing is
+ * mirrored, so there is no copy to keep in sync.  What it does NOT link is
+ * MVS: __cpopen/__jsopen and their close halves are host shims below, which
+ * is what makes jesopen() testable at all - it is otherwise four MVS
+ * services in a trench coat.
  *
  * ====================================================================
  * WHAT THIS PINS - AND WHAT IT DOES NOT
@@ -91,6 +92,9 @@
  *   -Dcalloc=...      the injection point.  It must reach jesopen.c and
  *                     @@arnew.c and NOTHING else, which is why those two are
  *                     compiled on their own lines.
+ *   -Dfree=...        the counter for case (7), on jesjobf1.c alone: the
+ *                     frees it makes are the job list jesclose() releases
+ *                     through jesjobfr() since #126.
  *
  *     R=../..
  *     cc -std=gnu99 -U__LP64__ -D'__asm__(x)=' -D__32BIT__ \
@@ -99,13 +103,16 @@
  *     cc -std=gnu99 -U__LP64__ -D'__asm__(x)=' -D__32BIT__ \
  *        -Dcalloc=tst_calloc -I $R/include \
  *        -c "$R/src/clib/@@arnew.c" -o arnew.o
+ *     cc -std=gnu99 -U__LP64__ -D'__asm__(x)=' -D__32BIT__ \
+ *        -Dfree=tst_free -I $R/include \
+ *        -c "$R/src/jes/jesjobf1.c" -o jesjobf1.o
  *     cc -std=gnu99 -U__LP64__ -Wall -Wextra -fsanitize=address \
  *        -D'__asm__(x)=' -D__32BIT__ -I $R/include \
- *        -o t tstjesop.c jesopen.o arnew.o \
- *        "$R/src/jes/jesclose.c" "$R/src/clib/@@aradd.c" \
- *        "$R/src/clib/@@arcou.c" "$R/src/clib/@@arget.c" \
- *        "$R/src/clib/@@arfre.c"
- *     ./t                                             # 18/18, rc 0
+ *        -o t tstjesop.c jesopen.o arnew.o jesjobf1.o \
+ *        "$R/src/jes/jesclose.c" "$R/src/jes/jesjobfr.c" \
+ *        "$R/src/clib/@@aradd.c" "$R/src/clib/@@arcou.c" \
+ *        "$R/src/clib/@@arget.c" "$R/src/clib/@@arfre.c"
+ *     ./t                                             # 20/20, rc 0
  *
  * ASAN here buys memory-error checking, not leak checking: LeakSanitizer is
  * not supported on macOS arm64 (detect_leaks=1 aborts).  Run it on Linux if
@@ -116,7 +123,7 @@
  *     git show <pre-fix-rev>:src/jes/jesopen.c > /tmp/oldjesopen.c
  *     ... same lines with /tmp/oldjesopen.c in place of $R/src/jes/jesopen.c,
  *         plus -Wno-error=implicit-function-declaration ...
- *     ./t                                             # 13/18, 5 failures
+ *     ./t                                             # 15/20, 5 failures
  *
  * The five that fail are cases (5) and (6): the pre-fix jesopen() returns a
  * non-NULL handle whose js array is NULL, leaves both data sets open, and
@@ -249,6 +256,16 @@ int ___try(void *func, ...)
  * on.  Call 1 of jesopen() is the JES handle, call 2 is arraynew(20). */
 static int fail_at = 0;
 
+/* free as seen by jesjobf1.c (-Dfree=tst_free): counts what the job-list
+ * teardown releases, case (7). */
+static int job_frees = 0;
+
+void tst_free(void *p)
+{
+    job_frees++;
+    free(p);
+}
+
 void *tst_calloc(size_t nmemb, size_t size)
 {
     if (fail_at > 0 && --fail_at == 0) return NULL;
@@ -264,6 +281,7 @@ static void reset(void)
     cp_open_fails = js_open_fails = 0;
     cp_closes = js_closes = wtos = 0;
     fail_at = 0;
+    job_frees = 0;
 }
 
 int main(void)
@@ -349,6 +367,25 @@ int main(void)
     jes = jesopen();
     CHECK(wtos > 0,             "(6) wtof() was called on the #108 path");
     CHECK_EQ(jes, 0,            "(6) and the handle is still NULL");
+
+    /* ------------------------------------------------------------------
+     * (7) #126.  A jesjob() walk that ended in an abend leaves its job
+     * list anchored in the handle, and recovery has nothing but the
+     * handle.  jesclose() must release it through jesjobfr().
+     * ---------------------------------------------------------------- */
+    printf("\n(7) jesclose() frees a job list left in the handle (#126):\n");
+    reset();
+    jes = jesopen();
+    CHECK(jes != NULL,          "(7) handle returned");
+    if (jes) {
+        JESJOB *job = calloc(1, sizeof(JESJOB));
+        JESDD  *dd  = calloc(1, sizeof(JESDD));
+
+        arrayadd(&job->jesdd, dd);
+        arrayadd(&jes->injobs, job);
+        jesclose(&jes);
+        CHECK_EQ(job_frees, 2,  "(7) the job and its one DD freed");
+    }
 
     return mbt_test_summary("tstjesop");
 }

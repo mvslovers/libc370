@@ -109,12 +109,15 @@ tstjesop() {
     "$CC" -std=gnu99 -U__LP64__ -D'__asm__(x)=' -D__32BIT__ \
        -Dcalloc=tst_calloc -I $R/include \
        -c "$R/src/clib/@@arnew.c" -o "$B/arnew.o" &&
+    "$CC" -std=gnu99 -U__LP64__ -D'__asm__(x)=' -D__32BIT__ \
+       -Dfree=tst_free -I $R/include \
+       -c "$R/src/jes/jesjobf1.c" -o "$B/jesjobf1.o" &&
     "$CC" -std=gnu99 -U__LP64__ -Wall -Wextra -fsanitize=address \
        -D'__asm__(x)=' -D__32BIT__ -I $R/include \
-       -o "$B/t" tstjesop.c "$B/jesopen.o" "$B/arnew.o" \
-       "$R/src/jes/jesclose.c" "$R/src/clib/@@aradd.c" \
-       "$R/src/clib/@@arcou.c" "$R/src/clib/@@arget.c" \
-       "$R/src/clib/@@arfre.c" && "$B/t"
+       -o "$B/t" tstjesop.c "$B/jesopen.o" "$B/arnew.o" "$B/jesjobf1.o" \
+       "$R/src/jes/jesclose.c" "$R/src/jes/jesjobfr.c" \
+       "$R/src/clib/@@aradd.c" "$R/src/clib/@@arcou.c" \
+       "$R/src/clib/@@arget.c" "$R/src/clib/@@arfre.c" && "$B/t"
 }
 tstjesprb() {
     "$CC" -std=gnu99 -Wall -Wextra -I $R/src/jes \
@@ -174,16 +177,12 @@ tstwpos() {
        -I $R/include -o "$B/t" tstwpos.c && "$B/t"
 }
 
-# The tests a plain run covers.  Five are left out because they do not build
-# on main.  Their recipes stay above, so that `run.sh tstfabnd` checks a fix:
-#   tstfabnd tstfcls tstfpapp tstplus   stub __aclose() as void; #182 made it
-#                                       return int (#241)
-#   tstjesop                            jesclose() calls jesjobfr() since #126,
-#                                       and the recipe does not link it (#251)
-# Put a test back into this list in the PR that fixes it.
+# The tests a plain run covers: all of them.  A test that stops building is
+# not dropped from here - fix it, or say which issue it waits on.
 ALL="tst75snd tstcmtt tstcnvdi tstdblcv tstdblrb tstdi3 tstdirck tstemptl
-     tstenqdq tsterrfl tstfprls tstiolk tstjesprb tstjestx tstlspd tstrldwk
-     tsttm64vec tsttxdsn tstvsnp tstwchar tstwpos"
+     tstenqdq tsterrfl tstfabnd tstfcls tstfpapp tstfprls tstiolk tstjesop
+     tstjesprb tstjestx tstlspd tstplus tstrldwk tsttm64vec tsttxdsn tstvsnp
+     tstwchar tstwpos"
 
 [ $# -gt 0 ] && ALL="$*"
 
