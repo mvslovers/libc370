@@ -10,9 +10,9 @@ libc370 is the base library of the whole ecosystem, so a defect here is a defect
 in httpd, mvsMF, ftpd, ufsd and every other consumer at once; that is what puts
 some cheap items high and some expensive ones low.
 
-*Last reconciled against the tracker: **2026-09-30**, 56 issues open (none
-closed; #240 and #241 filed out of #39, #243–#246, #248 and #249 out of the 2.0
-plan), all 56 accounted for below.* The pass before was **2026-09-29** at 48 open (#182, #228, #229, #231, #232, #235 and #236
+*Last reconciled against the tracker: **2026-09-30**, 57 issues open (none
+closed; #240 and #241 filed out of #39, #243–#246 and #248–#250 out of the 2.0
+plan), all 57 accounted for below.* The pass before was **2026-09-29** at 48 open (#182, #228, #229, #231, #232, #235 and #236
 closed, #228, #229, #231, #232, #235 and #236 filed the same day). That pass found **#181** and **#182** (filed 2026-09-13/14) in
 no rank at all, fifteen days after they were filed — #182 is now rank 1 and
 #181 rank 39. The pass before was 2026-09-13 at 41 open, all 41 ranked. #149 was fixed and released the same day (PR #180, **v1.0.6**)
@@ -1250,6 +1250,14 @@ sources in `src/wip/orig/`, never built since the mbt move. Assess them first:
 extract anything of real value, delete the rest. PDF is headers only and can
 go directly.
 
+### 42 · #250 — POSIX surface for 2.0
+
+D2's findings: `usleep()` is in `libc.a` with no prototype; POSIX functions
+sit in the wrong headers (`sleep` in `<time.h>`, `setenv` in `clibenv.h`, the
+sockets in `socket.h`); `stricmp`/`strncmpi` are copies of
+`strcasecmp`/`strncasecmp`. Items 1–3 are resolved in phase 1. The missing
+functions (`strtok_r`, `getopt`, #51's `inet_addr`) wait for a caller.
+
 ### 43 · #246 — function naming (after 2.0)
 
 Three naming styles, reserved `__` names used as public API, and 23 symbols
@@ -1278,8 +1286,8 @@ with several C names. It changes symbols, so every consumer's code changes too:
   crypto370, and consumers' build CI pinned to 1.x, so the cut does not redden
   them on `main`. The release concept (D6) is decided: #249 now, **1.0.8 is
   the last 1.x release**, cc370 gets releases first (mvslovers/cc370#523), and
-  consumers hold their build CI on `v1.0.8` via mvslovers/mbt#121. Still open:
-  D1, D2 and D7.
+  consumers hold their build CI on `v1.0.8` via mvslovers/mbt#121. D1, D2 and
+  D7 were decided the same day, so no decision is left open.
 - **Relink round** — #79, #50, #51, #71, #172 and #80 defect 1's `max` parameter.
   Land struct and signature growth in one batch, with a CHANGELOG entry and a
   coordinated rebuild of httpd, mvsMF and ftpd.

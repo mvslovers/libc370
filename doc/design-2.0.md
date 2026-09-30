@@ -32,8 +32,13 @@ which is not built (#248). No consumer includes any of them.
 
 ## Principles
 
-- **A standard header contains exactly its standard.** ISO C99 names in ISO
-  headers, POSIX names in POSIX headers, nothing else.
+- **A standard header contains exactly its standard.** An ISO C99 header
+  carries ISO names plus the POSIX additions POSIX assigns to that same header
+  (`strdup` in `<string.h>`, `localtime_r` in `<time.h>`). A POSIX header
+  carries POSIX names. Nothing else, and no feature-test macros (D2).
+- **No header under `libc370/` or `mvs/` has the name of an ISO or POSIX
+  header.** A quoted `#include "string.h"` inside `include/libc370/` would find
+  the neighbour before the standard one (D1).
 - **The top directory says who owns the content:**
   - `libc370/` — our API, portable (it would work on CMS too)
   - `mvs/` — our API, MVS-bound
@@ -58,7 +63,7 @@ include/                        installed into the sysroot
   assert.h ... wchar.h          ISO C99; to add: stdbool.h, inttypes.h, iso646.h
   strings.h unistd.h            POSIX subset, only for functions that exist (D2)
   sys/socket.h netinet/in.h arpa/inet.h
-  libc370/                      portable extensions: array.h, time64.h, version.h, string.h, int64.h
+  libc370/                      portable extensions: array.h, time64.h, version.h, strutil.h, int64.h
   mvs/                          MVS API: wto.h, dynalloc.h, jes2.h, racf.h, smf.h, vsam.h, thread.h, recovery.h, ...
   s370/                         savearea.h, ccw.h
   ibm/mvs/                      IBM data areas: cvt.h, ihaacee.h, ikjtcb.h, iefjfcbn.h, dcbd.h, ...
@@ -130,26 +135,37 @@ stamp in `libc.a` (`LIBC370 <version> (<rev>)`), which
   between, as now.
 - **No version file in the sysroot.** The build stamp already answers it.
 
-## Documentation
+## Documentation (decided 2026-09-30, D7)
 
-2.x gets generated documentation on Read the Docs, set up the way brexx370
-does it (`.readthedocs.yaml` → Sphinx, `docs/source/conf.py`,
-`docs/requirements.txt`). Open question: is the API reference written by hand
-per header, or generated from header comments (Doxygen + Breathe)? Generating
-it needs one comment convention across all public headers, and phase 1 is the
-moment to set it, since every public header is touched then anyway.
+2.x gets public documentation on Read the Docs, set up the way brexx370 does it
+(`.readthedocs.yaml` → Sphinx, `sphinx_rtd_theme`). It has two parts:
+
+- **Guides, written by hand**, for what no header can explain: program
+  start-up, stdio on data sets (record mode, `+` streams), recovery, the MVS
+  layer, and the **migration guide 1.x → 2.0**.
+- **The API reference, generated from header comments.** Candidates are
+  Doxygen + Breathe, or Hawkmoth (a Sphinx extension that reads C comments
+  through libclang, without Doxygen). The choice follows a **spike on three
+  real headers**, because it is untested whether libclang copes with `asm("@@X")`
+  labels and `#pragma pack`. The comment convention is fixed in phase 1, since
+  every public header is touched then anyway. The newer comments already
+  follow `name() - summary`, which is how a kernel-doc comment starts.
+
+**Two directories, two audiences:** `docs/` is the public documentation that
+Read the Docs builds. `doc/` stays for internal development notes (this
+design, measurements, the CI analysis), and is never published.
 
 ## Decisions
 
 | | question | state |
 |---|---|---|
-| D1 | namespace for portable extensions: `libc370/` | proposed here; `mvs/` and `ibm/mvs/` are decided |
-| D2 | POSIX scope: only headers for functions that exist | agreed in principle, review after the plan |
+| D1 | namespace for portable extensions | decided: `libc370/`, and no basename of an ISO/POSIX header under `libc370/` or `mvs/` |
+| D2 | POSIX scope | decided: declare only what exists, with POSIX semantics; no feature-test macros; findings in #250 |
 | D3 | third-party code | decided: miniz remove (#243); SHA-256/Blowfish/base64 to crypto370 (#244); PDF, emfile, ipc remove, after assessing the emfile/ipc code in `src/wip/orig/` (#248) |
 | D4 | compatibility | decided: hard cut, 2.0, no shims |
 | D5 | where the plan lives | decided: this document plus the umbrella issue |
 | D6 | release concept | decided, see above (#249, cc370#523, mbt#121) |
-| D7 | API reference: hand-written or generated | open |
+| D7 | documentation | decided: hand-written guides + generated reference, tool after a spike; `docs/` public, `doc/` internal |
 
 ## Appendix — every header
 
@@ -302,7 +318,7 @@ Summary:
 | `signal.h` | `signal.h` | 2 | ISO C, name unchanged; non-standard names move out |
 | `clibio.h` | split | 6 | standard part -> stdio.h; record-mode API -> mvs/rfile.h or mvs/stdio.h; __fp* -> internal |
 | `clibos.h` | split | 9 | 34 functions of mixed purpose (BLDL, LOAD, ...); split by topic into mvs/ |
-| `clibstr.h` | split | 2 | ISO part -> string.h; strcasecmp/strncasecmp -> strings.h; stricmp/memclr/strcpyp/... -> libc370/string.h |
+| `clibstr.h` | split | 2 | ISO part -> string.h; strcasecmp/strncasecmp -> strings.h; stricmp/strcpyp/... -> libc370/strutil.h (#250) |
 | `mvssupa.h` | split | 4 | public API -> mvs/bsam.h; __aopen & co. internal. 4 consumers include it today |
 | `socket.h` | split | 3 | POSIX: sys/socket.h, netinet/in.h, arpa/inet.h (POSIX review, D2) |
 | `stdarg.h` | `stdarg.h` | 7 | ISO C, name unchanged; non-standard names move out |
