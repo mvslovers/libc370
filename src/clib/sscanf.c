@@ -1,5 +1,5 @@
 /* SSCANF.C */
-#include <fileio.h>
+#include "src/internal/fileio.h"
 #include <stdio.h>
 #include <stdarg.h>
 

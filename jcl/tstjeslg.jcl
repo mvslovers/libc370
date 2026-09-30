@@ -6,9 +6,9 @@
 //* reports every decision instead of breaking silently.  See
 //* test/mvs/tstjeslg.c and doc/jes-syslog-issue4.md.
 //*
-//* Build:   cc370 -O1 -Iinclude -Isrc/jes test/mvs/tstjeslg.c \
+//* Build:   cc370 -O1 -Iinclude -I. test/mvs/tstjeslg.c \
 //*                -o TSTJESLG -flinker-output=xmit
-//*          (-Isrc/jes: the probe drives the real record walk, jesprb.h)
+//*          (-I.: the probe drives the real record walk, jesprb.h)
 //* Install: RECEIVE the XMIT into the STEPLIB below.  If the library does
 //*          not hold TSTJESLG the step ends S806 - the module is not
 //*          installed by anything else.

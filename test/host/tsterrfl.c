@@ -67,7 +67,7 @@
    real instead.  The declarations match the host libc, which supplies
    them at link time. */
 #define STRING_H
-#include <fileio.h>
+#include "src/internal/fileio.h"
 #include <stddef.h>
 void   *memset(void *s, int c, size_t n);
 void   *memcpy(void *t, const void *s, size_t n);

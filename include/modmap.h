@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
-#include <bsam.h>
+#include "src/internal/bsam.h"
 #include <mvs/clock.h>
 #include <mvs/storage.h>
 #include <mvs/dynalloc.h>

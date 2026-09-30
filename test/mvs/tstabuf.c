@@ -39,7 +39,7 @@
  * tells them apart.
  *
  * BUILD (host):
- *     cc370 -Iinclude -Isrc/internal test/mvs/tstabuf.c -flinker-output=iebcopy -o TSTABUF
+ *     cc370 -Iinclude -I. test/mvs/tstabuf.c -flinker-output=iebcopy -o TSTABUF
  *     ld370 --pack TSTABUF.iebcopy -o probe -xmit --dsn <LOADLIB>
  *
  * RUN: see jcl/tstabuf.jcl.  Built by hand - libc370 is the cc370
@@ -51,7 +51,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stddef.h>
-#include <bsam.h>
+#include "src/internal/bsam.h"
 #include <mvs/wto.h>
 
 #define P1CHUNK (256 * 1024)

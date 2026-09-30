@@ -1,12 +1,12 @@
 /* @@FGETC.C - caller should already have lock on file handle */
 #include <ctype.h>
-#include <fileio.h>
+#include "src/internal/fileio.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <stddef.h>
-#include <bsam.h>
+#include "src/internal/bsam.h"
 #include <ibm/mvs/dcbd.h>
 #include <ibm/mvs/ihadecb.h>
 

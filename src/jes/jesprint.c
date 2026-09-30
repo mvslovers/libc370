@@ -11,7 +11,7 @@
 #include "ibm/mvs/iefvkeys.h"   /* text key values                                  */
 #include "mvs/jes2.h"   /* JES prototypes */
 #include "libc370/array.h"    /* dynamic array */
-#include "jesprb.h"     /* the record walk, asm-free so it can be host-tested */
+#include "src/jes/jesprb.h"     /* the record walk, asm-free so it can be host-tested */
 
 /* what esc_print() needs to reach the caller's print callback, since the
    record walk hands it a single void *arg                                  */

@@ -28,7 +28,7 @@
  *             same __aopen then succeeds against DD:SYSUT1 (green)
  *
  * BUILD (host):
- *     cc370 -Iinclude -Isrc/internal test/mvs/tstaopn.c -flinker-output=iebcopy -o TSTAOPN
+ *     cc370 -Iinclude -I. test/mvs/tstaopn.c -flinker-output=iebcopy -o TSTAOPN
  *     ld370 --pack TSTAOPN.iebcopy -o probe -xmit --dsn <LOADLIB>
  *
  * RUN: see jcl/tstaopn.jcl.  Built by hand - libc370 is the cc370
@@ -41,7 +41,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stddef.h>
-#include <bsam.h>
+#include "src/internal/bsam.h"
 #include <mvs/dynalloc.h>
 #include <ibm/mvs/iefzb4d0.h>
 

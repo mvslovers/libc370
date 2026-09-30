@@ -13,7 +13,7 @@
 #include "ibm/mvs/iefvkeys.h"   /* text key values                                  */
 #include "mvs/jes2.h"   /* JES prototypes */
 #include "libc370/array.h"    /* dynamic array                                    */
-#include "jesprb.h"     /* hardened spool record walk (#25)                 */
+#include "src/jes/jesprb.h"     /* hardened spool record walk (#25)                 */
 
 #ifndef MIN
 #define MIN(a,b) ((a) < (b) ? (a) : (b))

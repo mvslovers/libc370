@@ -3,7 +3,7 @@
 #include <string.h>
 #include <time.h>
 #include <libc370/time64.h>
-#include "__time64.h"
+#include "src/time64/__time64.h"
 
 __asm__("\n&FUNC    SETC 'ctime64'");
 char *ctime64( const time64_t* time ) {

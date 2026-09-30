@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <ctype.h>
 #include <string.h>
-#include <bsam.h>
+#include "src/internal/bsam.h"
 #include "mvs/crt.h"
 
 /* The following code was taken from Paul Markham's "EXEC" program,

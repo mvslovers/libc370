@@ -1,5 +1,5 @@
 /* @@FPUTS.C - caller should hold lock on file handle */
-#include <fileio.h>
+#include "src/internal/fileio.h"
 #include <stdio.h>
 
 int

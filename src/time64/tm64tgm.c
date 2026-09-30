@@ -31,7 +31,7 @@ THE SOFTWARE.
 #include <time.h>
 #include <errno.h>
 #include "libc370/time64.h"
-#include "__time64.h"
+#include "src/time64/__time64.h"
 
 static const int length_of_year[2] = { 365, 366 };
 

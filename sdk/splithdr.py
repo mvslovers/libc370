@@ -228,7 +228,7 @@ def main():
                 if name not in present:
                     new.append(name); present.add(name)
             for tgt in spec["targets"]:
-                inc_name = tgt[len("src/internal/"):] if tgt.startswith("src/internal/") else tgt
+                inc_name = tgt      # an internal target by its path from the root (D10)
                 # a public header never passes on an internal one: that would
                 # name a file the sysroot does not have
                 if f.startswith("include/") and tgt.startswith("src/") and not idents[tgt] & words:

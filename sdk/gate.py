@@ -113,7 +113,8 @@ def implicit(tree):
         if os.path.relpath(d, src).split(os.sep)[0] == "wip":
             continue
         tus += [os.path.relpath(os.path.join(d, f), tree) for f in files if f.endswith(".c")]
-    incs = ["-I", "include", "-I", "src/thdmgr", "-I", "src/time64"]
+    # the root for "src/internal/x.h" (D10); the rest for a base from before it
+    incs = ["-I", "include", "-I", ".", "-I", "src/thdmgr", "-I", "src/time64"]
     if os.path.isdir(os.path.join(tree, "src", "internal")):
         incs += ["-I", "src/internal"]
 

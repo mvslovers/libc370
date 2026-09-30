@@ -39,7 +39,7 @@ gmtime64_r() is a 64-bit equivalent of gmtime_r().
 #include <time.h>
 #include <errno.h>
 #include <libc370/time64.h>
-#include "__time64.h"
+#include "src/time64/__time64.h"
 
 static const int length_of_year[2] = { 365, 366 };
 

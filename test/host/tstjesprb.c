@@ -59,7 +59,7 @@
 #include <string.h>
 #include <stddef.h>
 
-#include "jesprb.h"
+#include "src/jes/jesprb.h"
 
 /* --------------------------------------------------------------------------
  * Minimal mbtcheck.h-compatible harness, same contract as tstcmtt.c.

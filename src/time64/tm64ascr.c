@@ -3,7 +3,7 @@
 #include <string.h>
 #include <time.h>
 #include <libc370/time64.h>
-#include "__time64.h"
+#include "src/time64/__time64.h"
 
 static char const wday_name[7][3] = {
     "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"

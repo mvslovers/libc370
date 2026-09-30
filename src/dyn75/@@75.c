@@ -1,8 +1,8 @@
 /* @@75.C
 ** Interface to X'75xxxxxx' TCPIP in Hercules
 */
-#include <fileio.h>
-#include "__75.h"
+#include "src/internal/fileio.h"
+#include "src/internal/__75.h"
 #include "sys/socket.h"
 
 /* __75() - call TCPIP interface via X'75xxxxxx' instruction. */

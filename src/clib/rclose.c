@@ -5,7 +5,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stddef.h>
-#include <bsam.h>
+#include "src/internal/bsam.h"
 #include "mvs/rfile.h"
 
 extern int      __fdclr(char *fdddname);

@@ -14,7 +14,7 @@
 //*   - the struct layouts the walk assumes: sizeof(PRLINE)==3, sizeof(SPLINE)
 //*     ==4 on S/370, which no host run can prove
 //*
-//* Build:   cc370 -O1 -Iinclude -Isrc/jes test/host/tstjesprb.c \
+//* Build:   cc370 -O1 -Iinclude -I. test/host/tstjesprb.c \
 //*                -o TSTJESPR -flinker-output=xmit
 //* Install: RECEIVE TSTJESPR.xmit into the STEPLIB below.
 //*

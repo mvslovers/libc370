@@ -12,11 +12,11 @@
 **  7 = get select exception fd_set
 **  8 = terminate select, deallocate buffers
 */
-#include "__75.h"
+#include "src/internal/__75.h"
 #include "sys/socket.h"
 #include "sys/select.h"
 #include "libc370/socket.h"
-#include "dyn75.h"
+#include "src/internal/dyn75.h"
 #include "errno.h"
 #include "libc370/array.h"
 
