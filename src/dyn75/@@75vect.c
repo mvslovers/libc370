@@ -2,7 +2,12 @@
 ** TCPIP Vector
 */
 #include "__75.h"
-#include "socket.h"
+#include "netinet/in.h"
+#include "sys/socket.h"
+#include "sys/select.h"
+#include "netdb.h"
+#include "libc370/socket.h"
+#include "dyn75.h"
 
 #if 0
 extern unsigned __75gabn(const char *name);

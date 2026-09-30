@@ -2,9 +2,10 @@
 ** request socket allocation
 */
 #include "__75.h"
-#include "socket.h"
+#include "sys/socket.h"
+#include "dyn75.h"
 #include "errno.h"
-#include "clibsock.h"
+#include "libc370/socket.h"
 #include "mvs/crt.h"
 
 /* socket() */

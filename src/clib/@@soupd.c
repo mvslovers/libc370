@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include "libc370/array.h"
-#include "clibsock.h"
+#include "libc370/socket.h"
 #include "mvs/lock.h"
 
 int

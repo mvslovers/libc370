@@ -2,7 +2,9 @@
 ** Get address by name
 */
 #include "__75.h"
-#include "socket.h"
+#include "sys/socket.h"
+#include "netdb.h"
+#include "libc370/socket.h"
 #include "stdlib.h"
 #include "string.h"
 

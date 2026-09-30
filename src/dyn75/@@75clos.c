@@ -2,8 +2,8 @@
 ** Close socket
 */
 #include "__75.h"
-#include "socket.h"
-#include "clibsock.h"
+#include "sys/socket.h"
+#include "libc370/socket.h"
 
 /* closesocket() */
 __asm__("\n&FUNC    SETC 'closesocket'");

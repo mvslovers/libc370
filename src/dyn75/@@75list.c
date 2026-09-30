@@ -2,7 +2,8 @@
 ** listen()
 */
 #include "__75.h"
-#include "socket.h"
+#include "sys/socket.h"
+#include "dyn75.h"
 #include "errno.h"
 
 /* listen() */

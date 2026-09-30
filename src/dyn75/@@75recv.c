@@ -2,7 +2,7 @@
 ** Receive data from a socket
 */
 #include "__75.h"
-#include "socket.h"
+#include "sys/socket.h"
 #include "errno.h"
 
 /* recv() */

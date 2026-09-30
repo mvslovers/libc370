@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include "mvs/crt.h"
 #include "libc370/array.h"
-#include "clibsock.h"
+#include "libc370/socket.h"
 #include "mvs/lock.h"
 
 int

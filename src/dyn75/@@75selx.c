@@ -13,7 +13,10 @@
 **  8 = terminate select, deallocate buffers
 */
 #include "__75.h"
-#include "socket.h"
+#include "sys/socket.h"
+#include "sys/select.h"
+#include "libc370/socket.h"
+#include "dyn75.h"
 #include "errno.h"
 #include "libc370/array.h"
 
