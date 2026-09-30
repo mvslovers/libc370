@@ -364,10 +364,17 @@ checklist is #245.
      moved to `src/internal/` (the last two stay for a later review;
      `clibspl.h` is a Metal C candidate)
    - #276: `@@memmgr.h` and the never-built `USE_MEMMGR` branches removed
-   - next: the plain moves (`clibprti.h`, `clibprtf.h`, `clibsvc.h`,
-     `clibjpa.h`, `enqpl.h`, `modmap.h`), then `clibwsa.h` (included by
-     the public `mvs/crt.h`, `mvs/timer.h`) and `clibjs.h` (by `mvs/jes2.h`)
-     after a written proposal
+   - #279: layout decisions recorded in `doc/design-2.0.md` — D1 `ext/`
+     instead of `libc370/`, D10 internal includes by path from the root,
+     D11 `libc370/socket.h` → `mvs/socket.h`; `clibwsa.h` becomes public
+     (`mvs/wsa.h`: httpd and lua370 call `__wsaget()`), `clibjs.h` too
+     (`mvs/jes2spool.h`)
+   - next: rooted internal includes, `libc370/` → `ext/`, the remaining
+     rows of #274 (names still open: `__75.h`, `enqpl.h`, `modmap.h`)
+5a. **Phase 3 in 2.0 (#278, D9):** sources by area, `src/` mirrors
+   `include/`, assembler beside its C, `src/wip/` → `attic/`. Tooling
+   first: gate path map, unique basenames, `mklibc.py` finds `.asm` under
+   `src/`. Phase 4 (the OS seam) stays in 2.x.
 6. **The relink round** (Tier 5): #79, #50, #51, #71, #172 and #80 defect 1.
    It is struct and signature growth that needs a coordinated consumer rebuild,
    so it ships in the major version.
@@ -378,8 +385,8 @@ checklist is #245.
    three), saying why the dependency is added.
 
 Not blocking: cc370 releases (mvslovers/cc370#523). Without them, 2.0.0 names
-its minimum cc370 by commit, as 1.0.7 and 1.0.8 did. After 2.0.0: phases 3
-and 4, #39 step 3 (`-Wall` with the three `-Wno-` flags), #68 steps 2–3, and
+its minimum cc370 by commit, as 1.0.7 and 1.0.8 did. After 2.0.0: phase 4
+(phase 3 moved into 2.0, D9), #39 step 3 (`-Wall` with the three `-Wno-` flags), #68 steps 2–3, and
 #246 (function naming, 3.0).
 
 ---
