@@ -9,7 +9,12 @@
 #include <string.h>
 #include <time.h>
 #include <float.h>
-#include <socket.h> /* has struct timeval */
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/select.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <libc370/socket.h>
 
 #include <libc370/array.h>
 #include <mvs/crt.h>

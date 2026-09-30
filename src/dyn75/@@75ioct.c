@@ -2,7 +2,9 @@
 ** ioctl for socket
 */
 #include "__75.h"
-#include "socket.h"
+#include "sys/socket.h"
+#include "libc370/socket.h"
+#include "dyn75.h"
 #include "errno.h"
 
 /* ioctlsocket() */

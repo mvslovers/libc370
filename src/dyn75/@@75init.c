@@ -2,8 +2,10 @@
 ** Initialize API
 */
 #include "__75.h"
-#include "socket.h"
-#include "clibsock.h"
+#include "sys/socket.h"
+#include "sys/select.h"
+#include "dyn75.h"
+#include "libc370/socket.h"
 #include "mvs/lock.h"
 #include "libc370/array.h"
 #include "mvs/crt.h"

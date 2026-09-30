@@ -207,12 +207,12 @@ Summary:
 | target | headers |
 |---|---|
 | ISO C (name unchanged) | 17 |
-| `mvs/` | 35 |
+| `mvs/` | 36 |
 | `ibm/mvs/` | 43 |
 | `ibm/jes2/` | 13 |
-| `libc370/` | 4 |
+| `libc370/` | 5 |
 | `s370/` | 2 |
-| internal | 16 |
+| internal | 14 |
 | split across several | 5 |
 | removed or moved out | 18 |
 | **total** | **153** |
@@ -287,10 +287,10 @@ Summary:
 | `clibprtf.h` | internal |  | printf engine |
 | `clibprti.h` | internal |  | printf engine |
 | `clibres.h` | internal |  | resident structs; no user, review |
-| `clibsock.h` | internal | 1 | socket bookkeeping; httpd includes it, review |
+| `clibsock.h` | `libc370/socket.h` | 1 | socket bookkeeping; httpd walks grt->grtsock as CLIBSOCK, so it stays public (#264 A); internal once libc370 closes sockets itself |
 | `clibspl.h` | internal |  | inline helpers; no user, review |
 | `clibsvc.h` | internal |  | @@SVC work area |
-| `clibthdi.h` | internal | 2 | thread manager internals; absorbs #140. ftpd and httpd include it: review what they use first |
+| `clibthdi.h` | `mvs/thread.h` | 2 | thread manager; httpd and ftpd use its API, so public, merged into mvs/thread.h (#264 B); absorbs #140 |
 | `clibwsa.h` | internal |  | work-save-area internals |
 | `enqpl.h` | internal |  | ENQ parameter list |
 | `get3.h` | internal |  | GET3/SET3 macros; no user, review |

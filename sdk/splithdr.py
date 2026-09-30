@@ -61,16 +61,37 @@ def names(text):
     out = set()
     code = re.sub(r"/\*.*?\*/", " ", text, flags=re.S)
     code = re.sub(r"//[^\n]*", " ", code)
+    # a dead "#if 0" block declares nothing (socket.h had one defining
+    # socket(), select() ... as macros over the DYN75 vector); nested
+    # conditionals inside it are counted so its own #endif ends it
+    kept, depth = [], 0
+    for l in code.split("\n"):
+        s = l.strip()
+        if depth:
+            if re.match(r"#[ \t]*if", s):
+                depth += 1
+            elif re.match(r"#[ \t]*endif", s):
+                depth -= 1
+            continue
+        if re.match(r"#[ \t]*if[ \t]+0\b", s):
+            depth = 1
+            continue
+        kept.append(l)
+    code = "\n".join(kept)
     out |= set(re.findall(r"#[ \t]*define[ \t]+([A-Za-z_]\w*)", code))
     # the rest of the preprocessor must not reach the function pattern: a
     # "#pragma linkage(f, OS)" line would otherwise swallow the declaration
     # after it, as one long "linkage(...) ... f(...);" match
     code = re.sub(r"^[ \t]*#[^\n]*", " ", code, flags=re.M)
-    out |= set(re.findall(r"\b(?:struct|union|enum)[ \t]+([A-Za-z_]\w*)", code))
+    # a tag is declared where it gets a body, "struct x {", not where it is used
+    out |= set(re.findall(r"\b(?:struct|union|enum)[ \t]+([A-Za-z_]\w*)[ \t\n]*\{", code))
     out |= set(re.findall(r"\btypedef\b[^;]*?\b([A-Za-z_]\w*)[ \t]*;", code))
     out |= set(re.findall(r"\b([A-Za-z_]\w*)[ \t]*\([^;{]*\)[^;{]*;", code))
     return out - {"if", "while", "for", "switch", "return", "sizeof", "asm",
-                  "__attribute__", "defined", "pragma", "linkage"}
+                  "__attribute__", "defined", "pragma", "linkage",
+                  # a function-pointer member, "int (*f)(...);", matches as "int"
+                  "int", "unsigned", "signed", "char", "short", "long", "void",
+                  "float", "double", "const", "volatile", "struct", "union", "enum"}
 
 
 def main():
@@ -106,7 +127,15 @@ def main():
     # segments
     per_target = {t: [] for t in spec["targets"]}
     for seg in spec["segments"]:
-        a = next((i for i, l in enumerate(lines) if l.lstrip().startswith(seg["from"])), None)
+        # "after": start looking below the first line starting with it, for a
+        # "from" that occurs more than once (socket.h has two "#if 0" blocks)
+        lo = 0
+        if "after" in seg:
+            lo = next((i for i, l in enumerate(lines) if l.lstrip().startswith(seg["after"])), None)
+            if lo is None:
+                sys.exit(f"[splithdr] no line starts with {seg['after']!r}")
+            lo += 1
+        a = next((i for i in range(lo, len(lines)) if lines[i].lstrip().startswith(seg["from"])), None)
         if a is None:
             sys.exit(f"[splithdr] no line starts with {seg['from']!r}")
         b = next((i for i in range(a, len(lines)) if lines[i].lstrip().startswith(seg["to"])), None)
@@ -187,6 +216,10 @@ def main():
                     new.append(name); present.add(name)
             for tgt in spec["targets"]:
                 inc_name = tgt[len("src/internal/"):] if tgt.startswith("src/internal/") else tgt
+                # a public header never passes on an internal one: that would
+                # name a file the sysroot does not have
+                if f.startswith("include/") and tgt.startswith("src/") and not idents[tgt] & words:
+                    continue
                 if (is_header or idents[tgt] & words) and inc_name not in present:
                     new.append(inc_name); present.add(inc_name)
             o, c = m.group(2), m.group(3)

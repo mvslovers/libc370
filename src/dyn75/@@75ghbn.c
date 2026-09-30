@@ -5,7 +5,9 @@
 ** address for any given name.  As such, the hostent we return
 ** is very limited and does not contain any additional information.
 */
-#include "socket.h"
+#include "sys/socket.h"
+#include "netdb.h"
+#include "libc370/socket.h"
 #include "stdlib.h"
 #include "string.h"
 #include "mvs/crt.h"

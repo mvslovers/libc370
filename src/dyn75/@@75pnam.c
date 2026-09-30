@@ -2,9 +2,9 @@
 ** getpeername()
 */
 #include "__75.h"
-#include "socket.h"
+#include "sys/socket.h"
 #include "errno.h"
-#include "clibsock.h"
+#include "libc370/socket.h"
 
 /* getpeername() */
 __asm__("\n&FUNC    SETC 'getpeername'");

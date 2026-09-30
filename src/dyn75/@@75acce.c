@@ -2,9 +2,11 @@
 ** Accept socket connection
 */
 #include "__75.h"
-#include "socket.h"
+#include "netinet/in.h"
+#include "sys/socket.h"
+#include "dyn75.h"
 #include "errno.h"
-#include "clibsock.h"
+#include "libc370/socket.h"
 
 /* accept() */
 __asm__("\n&FUNC    SETC 'accept'");

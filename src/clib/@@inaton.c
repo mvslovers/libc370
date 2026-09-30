@@ -1,4 +1,6 @@
-#include <socket.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 
 /* inet_aton() - converts IPV4 string to in_addr_t struct */
 /* returns 0 for success, otherwise invalid parms or IPV4 string */

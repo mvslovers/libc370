@@ -145,6 +145,9 @@ def cmd_check():
             state["ISO C, unchanged"] += 1
         else:
             new = t in present
+            if old and new and len(targets[t]) > 1:
+                state["merge, pending"] += 1    # target made from another row
+                continue
             if old and new:
                 print(f"[headermap] {r['today']} and {t} both exist")
                 bad += 1

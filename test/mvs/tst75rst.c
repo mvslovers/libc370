@@ -90,7 +90,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <mvs/wto.h>
-#include <socket.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <libc370/socket.h>
+#include <dyn75.h>
 #include <__75.h>
 
 #define PAGE        4096            /* MVS page size                        */

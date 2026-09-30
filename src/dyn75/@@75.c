@@ -3,7 +3,7 @@
 */
 #include <fileio.h>
 #include "__75.h"
-#include "socket.h"
+#include "sys/socket.h"
 
 /* __75() - call TCPIP interface via X'75xxxxxx' instruction. */
 __asm__("\n&FUNC    SETC '@@75'");
