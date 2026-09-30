@@ -2,13 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "clibwto.h"
+#include "mvs/wto.h"
 #include <mvssupa.h>
-#include "svc99.h"
+#include "mvs/dynalloc.h"
 #include "libc370/array.h"
 #include "ibm/mvs/dcbd.h"
 #include "ibm/mvs/iefjfcbn.h"
-#include "clibcp.h"     /* JES Checkpoint prototypes and functions          */
+#include "mvs/jes2ckpt.h"     /* JES Checkpoint prototypes and functions          */
 #include "ibm/jes2/jqe.h"    /* JES Job Queue Element                            */
 #include "ibm/jes2/joe.h"    /* JES Job Output Element                           */
 

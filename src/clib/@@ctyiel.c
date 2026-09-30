@@ -1,4 +1,4 @@
-#include <clibthrd.h>
+#include <mvs/thread.h>
 
 __asm__("\n&FUNC    SETC 'cthread_yield'");
 int cthread_yield(void)

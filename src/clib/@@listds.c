@@ -6,8 +6,8 @@
 #include <errno.h>
 #include <time.h>
 #include "libc370/array.h"        /* dynamic array prototypes     */
-#include "clibdscb.h"       /* DSCB structs and prototypes  */
-#include "cliblist.h"       /* __listc()                    */
+#include "mvs/dscb.h"       /* DSCB structs and prototypes  */
+#include "mvs/dslist.h"       /* __listc()                    */
 #include "clibstr.h"        /* __patmat()                   */
 
 static int  parse(void *vdata, const char *fmt, ...);

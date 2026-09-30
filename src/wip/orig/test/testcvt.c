@@ -1,7 +1,7 @@
 #include <ibm/mvs/iharb.h>
 #include <ibm/mvs/cvt.h>
 #include <ibm/mvs/ihascvt.h>
-#include <clibwto.h>
+#include <mvs/wto.h>
 
 int main(int argc, char **argv)
 {

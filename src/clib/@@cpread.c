@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "clibwto.h"
+#include "mvs/wto.h"
 #include "ibm/mvs/dcbd.h"
 #include "ibm/mvs/iefjfcbn.h"
-#include "clibcp.h"     /* JES Checkpoint prototypes and functions            */
+#include "mvs/jes2ckpt.h"     /* JES Checkpoint prototypes and functions            */
 
 int __cpread(HASPCP *cp, void *buf4k)
 {

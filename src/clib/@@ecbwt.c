@@ -1,6 +1,6 @@
 /* @@ECBWT.C - ecb_wait()
 */
-#include <clibecb.h>
+#include <mvs/ecb.h>
 
 __asm__("\n&FUNC    SETC 'ecb_wait'");
 int

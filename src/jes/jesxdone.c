@@ -1,5 +1,5 @@
 #include <clibstr.h>
-#include <clibjes2.h>
+#include <mvs/jes2.h>
 
 int jesxdone(SSSO *ssso)
 {

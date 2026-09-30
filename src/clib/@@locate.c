@@ -4,7 +4,7 @@
 /* If dataset is found (rc==0) volser is returned in the &workarea[6]
 */
 #include <ctype.h>
-#include "clibdscb.h"
+#include "mvs/dscb.h"
 #include "clibstr.h"
 
 #define LOCATE 0x44000000

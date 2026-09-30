@@ -6,8 +6,8 @@
 #include <errno.h>
 #include <libc370/time64.h>
 #include "libc370/array.h"        /* dynamic array prototypes     */
-#include "clibdscb.h"       /* DSCB structs and prototypes  */
-#include "cliblist.h"       /* __listc()                    */
+#include "mvs/dscb.h"       /* DSCB structs and prototypes  */
+#include "mvs/dslist.h"       /* __listc()                    */
 #include "clibstr.h"        /* __patmat()                   */
 #include "clibdsab.h"       /* DSAB structs and prototypes  */
 #include "ibm/mvs/ieftiot1.h"

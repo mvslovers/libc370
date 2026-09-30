@@ -1,4 +1,4 @@
-#include <clibtmr.h>
+#include <mvs/timer.h>
 
 __asm__("\n&FUNC    SETC 'tqe_purge'");
 int tqe_purge(TQEID id)

@@ -93,8 +93,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <clibwto.h>
-#include <rfile.h>
+#include <mvs/wto.h>
+#include <mvs/rfile.h>
 #include "clibio.h"     /* __dsalcf(), __dsfree() */
 
 #define CREATE  "DSN=%s;DISP=(NEW,CATLG,DELETE);DSORG=PS;RECFM=FB;"          \

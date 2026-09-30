@@ -7,10 +7,10 @@
 #include <mvssupa.h>
 #include "ibm/mvs/dcbd.h"
 #include "ibm/mvs/iefjfcbn.h"
-#include "svc99.h"
+#include "mvs/dynalloc.h"
 #include "libc370/array.h"
-#include "clibdscb.h"
-#include "cliblist.h"
+#include "mvs/dscb.h"
+#include "mvs/dslist.h"
 #include "clibcrt.h"
 
 static int

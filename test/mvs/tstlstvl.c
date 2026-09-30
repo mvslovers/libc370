@@ -58,8 +58,8 @@
 #include <stdio.h>
 #include <string.h>
 #include "libc370/array.h"    /* array_count() over the returned VOLLIST array */
-#include "cliblist.h"   /* __listvl(), __freevl(), VOLLIST */
-#include "clibwto.h"    /* wtof() - the markers */
+#include "mvs/dslist.h"   /* __listvl(), __freevl(), VOLLIST */
+#include "mvs/wto.h"    /* wtof() - the markers */
 
 static int bad = 0;
 

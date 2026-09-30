@@ -1,9 +1,9 @@
 #include <ibm/mvs/cvt.h>
 #include <ibm/mvs/ieebasea.h>   /* Master Scheduler Base, BASE */
 #include <ibm/mvs/ieezb806.h>   /* MTTABLE, MTENTRY */
-#include <clibmtt.h>
+#include <mvs/mtt.h>
 #include <clibos.h>
-#include <clibauth.h>
+#include <mvs/apf.h>
 
 CMTT *cmtt_new(void)
 {

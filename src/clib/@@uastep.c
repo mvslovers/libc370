@@ -1,6 +1,6 @@
 /* @@UASTEP.C */
 #include "clibcrt.h"
-#include "clibauth.h"
+#include "mvs/apf.h"
 
 int
 __uastep(void)

@@ -1,6 +1,6 @@
 /* MTXAVAIL.C */
-#include "clibmutx.h"
-#include "cliblock.h"
+#include "mvs/mutex.h"
+#include "mvs/lock.h"
 
 int
 mtxavail(CLIBMUTX *mutex)

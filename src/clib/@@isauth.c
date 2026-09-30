@@ -1,5 +1,5 @@
 /* @@ISAUTH.C */
-#include "clibauth.h"
+#include "mvs/apf.h"
 
 int
 __isauth(void)

@@ -9,7 +9,7 @@
 */
 #include <string.h>
 #include <time.h>
-#include "clibsmf.h"
+#include "mvs/smf.h"
 
 __asm__("\n&FUNC    SETC 'smf_init'");
 void

@@ -50,9 +50,9 @@
  */
 #include <stdio.h>
 #include <string.h>
-#include <clibwto.h>
-#include <clibthrd.h>
-#include <clibecb.h>
+#include <mvs/wto.h>
+#include <mvs/thread.h>
+#include <mvs/ecb.h>
 #include <clibtry.h>
 
 #define LV      256             /* raw block size, no rounding surprises */

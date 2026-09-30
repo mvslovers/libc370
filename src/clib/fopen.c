@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <errno.h>
-#include "cliblock.h"
+#include "mvs/lock.h"
 #include "libc370/array.h"
 #include "clibcrt.h"
 #include "clibtry.h"

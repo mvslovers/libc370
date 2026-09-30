@@ -8,7 +8,7 @@
 #include "ibm/jes2/iot.h"    /* JES IOT                                          */
 #include "ibm/mvs/ieftxtft.h"   /* text string types                                */
 #include "ibm/mvs/iefvkeys.h"   /* text key values                                  */
-#include "clibjes2.h"   /* JES prototypes */
+#include "mvs/jes2.h"   /* JES prototypes */
 #include "libc370/array.h"    /* dynamic array */
 #include "jesprb.h"     /* the record walk, asm-free so it can be host-tested */
 

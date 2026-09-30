@@ -4,9 +4,9 @@
 #include <clib.h>
 #include <clibssib.h>
 #include <libc370/array.h>        /* dynamic array prototypes     */
-#include <clibispf.h>		/* ISPF prototypes				*/
-#include <cliblink.h>		/* __link()						*/
-#include <clibtso.h>		/* tsocmd()						*/
+#include <mvs/ispf.h>		/* ISPF prototypes				*/
+#include <mvs/link.h>		/* __link()						*/
+#include <mvs/tso.h>		/* tsocmd()						*/
 #include <ibm/mvs/ikjcppl.h>		/* CPPL typedef 				*/
 #include <ibm/mvs/ikject.h>			/* ECT typedef					*/
 

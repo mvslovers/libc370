@@ -13,15 +13,15 @@
 
 #include <libc370/array.h>
 #include <clibcrt.h>
-#include <clibecb.h>
+#include <mvs/ecb.h>
 #include <clibgrt.h>
-#include <cliblock.h>
+#include <mvs/lock.h>
 #include <clibppa.h>
 #include <s370/savearea.h>
 #include <clibstae.h>
-#include <clibthrd.h>
+#include <mvs/thread.h>
 #include <clibwsa.h>
-#include <clibwto.h>
+#include <mvs/wto.h>
 
 typedef struct tmr          TMR;            /* timer instance                       */
 typedef struct tqe          TQE;            /* timer queue element                  */

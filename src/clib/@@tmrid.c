@@ -1,4 +1,4 @@
-#include <clibtmr.h>
+#include <mvs/timer.h>
 
 static int unique_id(TMR *tmr, unsigned id);
 

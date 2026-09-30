@@ -1,7 +1,7 @@
 /* RACSACEE.C - racf_set_acee()
 ** set ASXBSENV with new ACEE value, returns previous ACEE value.
 */
-#include "racf.h"
+#include "mvs/racf.h"
 
 __asm__("\n&FUNC    SETC 'racf_set_acee'");
 ACEE *

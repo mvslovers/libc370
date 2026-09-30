@@ -31,7 +31,7 @@ __asm__("IHAASVT ,");
 #endif
 
 #if 0
-#include <clibwto.h>
+#include <mvs/wto.h>
 int main(int argc, char **argv)
 {
     unsigned    n;

@@ -5,7 +5,7 @@
 #include <errno.h>
 #include <string.h>
 #include <mvssupa.h>
-#include "rfile.h"
+#include "mvs/rfile.h"
 
 int
 rread(RFILE *fp, void *ptr, size_t *read)

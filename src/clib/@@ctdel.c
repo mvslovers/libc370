@@ -1,8 +1,8 @@
 /* @@CTDEL.C - cthread_delete()
 ** delete a CTHDTASK handle
 */
-#include "clibthrd.h"
-#include "clibwto.h"     /* wtof(): a prototype decides linkage here (#39) */
+#include "mvs/thread.h"
+#include "mvs/wto.h"     /* wtof(): a prototype decides linkage here (#39) */
 
 __asm__("\n&FUNC    SETC 'cthread_delete'");
 void

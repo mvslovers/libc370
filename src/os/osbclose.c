@@ -4,7 +4,7 @@
 */
 #include <stdlib.h>
 #include <string.h>
-#include "osio.h"
+#include "mvs/osio.h"
 
 void
 osbclose(DCB *dcb, const char *option, int freedcb, int type_t)

@@ -1,6 +1,6 @@
 /* FREOPEN.C */
 #include "clibio.h"
-#include "cliblock.h"
+#include "mvs/lock.h"
 
 FILE *
 freopen(const char *fn, const char *mode, FILE *fp)

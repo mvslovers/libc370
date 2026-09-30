@@ -1,7 +1,7 @@
 #include <ibm/mvs/iefsscs.h>
 #include <ibm/mvs/iefssso.h>
 #include <clibstr.h>
-#include <clibjes2.h>
+#include <mvs/jes2.h>
 
 int jesreque(const char *jobname, const char *jobid, const char *oclass)
 {

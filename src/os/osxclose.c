@@ -2,7 +2,7 @@
 */
 #include <stdlib.h>
 #include <string.h>
-#include "osio.h"
+#include "mvs/osio.h"
 
 void
 osxclose(DCB *dcb, int freedcb)

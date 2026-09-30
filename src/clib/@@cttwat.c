@@ -1,7 +1,7 @@
 /* @@CTTWAT.C - cthread_timed_wait()
 **
 */
-#include "clibthrd.h"
+#include "mvs/thread.h"
 #include "clibcrt.h"
 
 __asm__("\n&FUNC    SETC 'cthread_timed_wait'");

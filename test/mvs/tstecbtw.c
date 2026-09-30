@@ -52,8 +52,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <clibecb.h>
-#include <clibwto.h>
+#include <mvs/ecb.h>
+#include <mvs/wto.h>
 
 static int check(const char *what, int ok);
 

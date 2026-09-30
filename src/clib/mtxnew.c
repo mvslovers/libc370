@@ -1,6 +1,6 @@
 /* MTXNEW.C */
 #include <stdlib.h>
-#include "clibmutx.h"
+#include "mvs/mutex.h"
 
 CLIBMUTX *
 mtxnew(void)

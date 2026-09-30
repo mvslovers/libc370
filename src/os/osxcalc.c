@@ -1,5 +1,5 @@
 /* OSXCALC.C - given a DCB and block number, calculate MBBCCHHR */
-#include "osio.h"
+#include "mvs/osio.h"
 
 /* our lookup table for the number of tracks per cylinder on a device */
 static char trkscyl[16];

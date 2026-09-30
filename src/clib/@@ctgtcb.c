@@ -2,7 +2,7 @@
 ** get TCB address for thread
 ** returns TCB address as unsigned value
 */
-#include "clibthrd.h"
+#include "mvs/thread.h"
 
 __asm__("\n&FUNC    SETC 'cthread_get_tcb'");
 unsigned

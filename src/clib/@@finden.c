@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stddef.h>
-#include "clibenv.h"
+#include "mvs/env.h"
 #include "clibcrt.h"
-#include "cliblock.h"
+#include "mvs/lock.h"
 
 char *
 __findenv(const char *name, int *index, int nocase)

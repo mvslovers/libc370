@@ -85,7 +85,7 @@
  *                     memset() anywhere in this file.
  *   -D__32BIT__       is what libc370's own stddef.h/stdlib.h key size_t off.
  *   -U__LP64__        libc370's libc370/time64.h is "#error Your time_t is already
- *                     64-bit" under __LP64__, and clibjes2.h pulls it in for
+ *                     64-bit" under __LP64__, and mvs/jes2.h pulls it in for
  *                     JESJOB.start_time64.  Undefining it selects the LP32
  *                     branch, which is the one the target compiles.  Nothing
  *                     in jesopen() touches a time value.
@@ -130,7 +130,7 @@
  * says nothing on the console.
  *
  * That extra flag is part of the story too.  The pre-fix file called wtof()
- * with no prototype in scope - it included neither clib.h nor clibwto.h - so
+ * with no prototype in scope - it included neither clib.h nor mvs/wto.h - so
  * the compiler invented the signature, which on this target decides linkage
  * (#39).  The fix adds the include, so the fixed file needs no such flag:
  * one more of #39's translation units off the list for free.
@@ -141,7 +141,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-#include "clibjes2.h"
+#include "mvs/jes2.h"
 #include "libc370/array.h"
 
 /* --------------------------------------------------------------------------

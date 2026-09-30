@@ -6,7 +6,7 @@
 #include <errno.h>
 #include <time.h>
 #include "libc370/array.h"        /* dynamic array prototypes     */
-#include "cliblist.h"       /* __listc()                    */
+#include "mvs/dslist.h"       /* __listc()                    */
 
 void
 __freeds(DSLIST ***dslist)

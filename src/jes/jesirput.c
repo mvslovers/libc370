@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <mvssupa.h>
-#include "clibvsam.h"
+#include "mvs/vsam.h"
 
 int jesirput(VSFILE *vsfile, const char *rec)
 {

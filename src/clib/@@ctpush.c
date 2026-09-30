@@ -1,8 +1,8 @@
 /* @@CTPUSH.C */
 #include <stdlib.h>
 #include <stddef.h>
-#include "clibthrd.h"
-#include "cliblock.h"
+#include "mvs/thread.h"
+#include "mvs/lock.h"
 #include "clibcrt.h"
 #include "libc370/array.h"
 

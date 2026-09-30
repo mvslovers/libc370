@@ -1,4 +1,4 @@
-#include <clibtmr.h>
+#include <mvs/timer.h>
 
 __asm__("\n&FUNC    SETC 'tqe_reset'");
 int tqe_reset(TQEID id, unsigned bintvl)

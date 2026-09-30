@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <mvssupa.h>
-#include "cliblist.h"
-#include "cliblock.h"
+#include "mvs/dslist.h"
+#include "mvs/lock.h"
 
 int
 __listc(const char *level, const char *option,

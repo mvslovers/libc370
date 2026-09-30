@@ -124,7 +124,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <clibwto.h>
+#include <mvs/wto.h>
 #include <mvssupa.h>    /* __getclk() */
 #include "clibio.h"     /* __dsalcf(), __dsfree() */
 

@@ -55,7 +55,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "clibcrt.h"
-#include "cliblock.h"
+#include "mvs/lock.h"
 
 /* ---- two-resource lock model (ENQ/DEQ RET=HAVE, per address) --------- */
 

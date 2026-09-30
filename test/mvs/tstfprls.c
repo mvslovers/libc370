@@ -88,7 +88,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "clibio.h"     /* __dsalcf(), __dsfree() */
-#include "clibdscb.h"   /* __locate(), __dscbdv(), __dscbv() */
+#include "mvs/dscb.h"   /* __locate(), __dscbdv(), __dscbv() */
 
 #define CREATE  "DSN=%s;DISP=(NEW,CATLG,DELETE);DSORG=PS;RECFM=FB;"          \
                 "LRECL=80;BLKSIZE=800;UNIT=SYSDA;SPACE=TRK(30,5)"
@@ -107,7 +107,7 @@ static char dd[9];
  *
  * OBTAIN (SVC 27, CAMLST SEARCH - what __dscbv()/__dscbdv() issue) returns the
  * 96-byte DATA portion of the DSCB: the 44-byte key is the search argument,
- * not part of the answer.  clibdscb.h models that for `struct dscb1`, which
+ * not part of the answer.  mvs/dscb.h models that for `struct dscb1`, which
  * starts at fmtid, and NOT for `struct dscb4`, which starts with `key[44]` -
  * so d4.dscb4.dstrk reads 44 bytes past the field and comes back 0.  (Measured
  * 2026-09-13, JOB00223: "dstrk is 0".)

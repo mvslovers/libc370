@@ -5,7 +5,7 @@
 #include <errno.h>
 #include <string.h>
 #include <mvssupa.h>
-#include "rfile.h"
+#include "mvs/rfile.h"
 
 extern int      __fdclr(char *fdddname);
 

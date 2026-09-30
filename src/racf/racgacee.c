@@ -1,7 +1,7 @@
 /* RACGACEE.C - racf_get_acee()
 ** get ACEE from ASXBSENV
 */
-#include "racf.h"
+#include "mvs/racf.h"
 
 __asm__("\n&FUNC    SETC 'racf_get_acee'");
 ACEE *

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
-#include "svc99.h"
+#include "mvs/dynalloc.h"
 #include "libc370/array.h"
 
 void

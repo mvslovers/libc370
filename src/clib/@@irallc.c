@@ -4,7 +4,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <mvssupa.h>
-#include "svc99.h"
+#include "mvs/dynalloc.h"
 #include "libc370/array.h"
 #include "ibm/mvs/iefzb4d2.h"
 

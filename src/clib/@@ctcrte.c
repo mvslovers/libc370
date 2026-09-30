@@ -2,7 +2,7 @@
 ** create a thread (subtask) instance
 ** returns CTHDTASK handle or NULL on error.
 */
-#include "clibthrd.h"
+#include "mvs/thread.h"
 
 __asm__("\n&FUNC    SETC 'cthread_create'");
 CTHDTASK *

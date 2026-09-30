@@ -3,7 +3,7 @@
 #include <string.h>
 #include <clib.h>
 #include <libc370/array.h>
-#include "cliblock.h"
+#include "mvs/lock.h"
 #include <clibdsab.h>
 #include <clibcrt.h>
 #include <ibm/mvs/ieftiot1.h>

@@ -1,5 +1,5 @@
 #include <clibos.h>
-#include <clibwto.h>
+#include <mvs/wto.h>
 
 /* __xmpost() POST ECB with postcode in address space for ascb */
 void __xmpost(void *ascb, void *ecb, unsigned postcode)

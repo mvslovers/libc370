@@ -1,5 +1,5 @@
 /* OSWRITE.C - write to dataset */
-#include "osio.h"
+#include "mvs/osio.h"
 
 int
 oswrite(DECB *decb, DCB *dcb, void *buf, int length)

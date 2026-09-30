@@ -1,5 +1,5 @@
 /* OSBOPEN.C - open DCB for "read", "write" or "update" access mode */
-#include "osio.h"
+#include "mvs/osio.h"
 #include "clibstae.h"
 
 static void opendcb(DCB *dcb, int typej, int *rc);

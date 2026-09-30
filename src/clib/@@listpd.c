@@ -6,7 +6,7 @@
 #include <errno.h>
 #include <time.h>
 #include "libc370/array.h"        /* dynamic array prototypes     */
-#include "cliblist.h"       /* __listpd()                   */
+#include "mvs/dslist.h"       /* __listpd()                   */
 #include "clibstr.h"        /* __patmat()                   */
 
 PDSLIST **

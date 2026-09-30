@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stddef.h>
-#include "clibenv.h"
-#include "cliblock.h"
+#include "mvs/env.h"
+#include "mvs/lock.h"
 #include "clibcrt.h"
 
 char *

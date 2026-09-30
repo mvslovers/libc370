@@ -1,5 +1,5 @@
 /* @@TXVOLS.C */
-#include "svc99.h"
+#include "mvs/dynalloc.h"
 #include "libc370/array.h"
 
 int

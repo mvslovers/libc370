@@ -53,8 +53,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <clibos.h>
-#include <clibwto.h>
-#include <clibthrd.h>
+#include <mvs/wto.h>
+#include <mvs/thread.h>
 #include <mvssupa.h>
 
 #define TESTSP  5

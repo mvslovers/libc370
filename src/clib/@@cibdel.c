@@ -1,5 +1,5 @@
 /* @@CIBDEL.C */
-#include "clibcib.h"
+#include "mvs/console.h"
 
 int
 __cibdel(CIB *cib)

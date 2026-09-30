@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <mvssupa.h>
-#include "clibvsam.h"
+#include "mvs/vsam.h"
 
 /* Close the internal reader and hand the caller the jobid JES2 assigned.
  *

@@ -5,8 +5,8 @@
 #include <string.h>
 #include <ctype.h>
 
-#include <clibenq.h>
-#include <cliblock.h>
+#include <mvs/enq.h>
+#include <mvs/lock.h>
 #include <clibsvc.h>
 
 /*

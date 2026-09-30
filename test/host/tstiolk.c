@@ -50,7 +50,7 @@
  *        -I $R/include -o t tstiolk.c && ./t
  *
  * The lock()/unlock()/testlock() definitions below MUST stay above the
- * #includes of the library TUs: cliblock.h declares them with
+ * #includes of the library TUs: mvs/lock.h declares them with
  * asm("@@LK") labels, and only a definition that precedes the
  * declaration makes the host compiler drop the label (it warns
  * "attribute declaration must precede definition" - that warning is

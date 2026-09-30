@@ -1,6 +1,6 @@
 /* FGETC.C */
 #include "clibio.h"
-#include "cliblock.h"
+#include "mvs/lock.h"
 
 int
 fgetc(FILE *fp)

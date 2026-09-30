@@ -1,5 +1,5 @@
-#include "clibenq.h"
-#include "cliblock.h"
+#include "mvs/enq.h"
+#include "mvs/lock.h"
 #include "clibio.h"
 
 int

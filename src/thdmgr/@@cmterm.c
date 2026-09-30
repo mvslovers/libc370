@@ -1,7 +1,7 @@
 /* @@CMTERM.C - cthread_manager_term()
 */
 #include "clibthdi.h"
-#include "clibwto.h"     /* wtof(): a prototype decides linkage here (#39) */
+#include "mvs/wto.h"     /* wtof(): a prototype decides linkage here (#39) */
 
 #if 0
 #define WTODEBUG    /* define for wtof() debug messages */

@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "osio.h"
+#include "mvs/osio.h"
 
 DCB *
 osxdcb(const char *ddname, EXITLIST *exitlist)

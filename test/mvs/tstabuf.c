@@ -51,7 +51,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <mvssupa.h>
-#include <clibwto.h>
+#include <mvs/wto.h>
 
 #define P1CHUNK (256 * 1024)
 #define P2CHUNK 4096

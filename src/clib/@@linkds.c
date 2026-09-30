@@ -1,5 +1,5 @@
 /* __linkds() - Link to an external program with estae recovery, dump suppressed */
-#include "cliblink.h"
+#include "mvs/link.h"
 #include "clibstae.h"
 
 /* returns 0 otherwise abend code, linked pgm rc returned in prc */

@@ -3,8 +3,8 @@
 #include <stddef.h>
 #include <string.h>
 #include <errno.h>
-#include "clibvsam.h"
-#include "clibwto.h"
+#include "mvs/vsam.h"
+#include "mvs/wto.h"
 
 int
 main(int argc, char **argv)

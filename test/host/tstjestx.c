@@ -75,7 +75,7 @@
  *                      rather than memset().
  *   -D__32BIT__        is what libc370's stddef.h/stdlib.h key size_t off.
  *   -U__LP64__         libc370/time64.h is "#error Your time_t is already 64-bit"
- *                      under __LP64__, and clibjes2.h pulls it in for
+ *                      under __LP64__, and mvs/jes2.h pulls it in for
  *                      JESJOB.start_time64.
  *
  *     R=../..
@@ -116,7 +116,7 @@
  * the headers in ahead of it keeps that out of this test's build line; it is
  * not a workaround for anything under test here. */
 #include <ctype.h>
-#include "clibwto.h"
+#include "mvs/wto.h"
 
 #include "../../src/jes/jesjob.c"
 

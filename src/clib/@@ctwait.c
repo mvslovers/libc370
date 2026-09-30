@@ -1,6 +1,6 @@
 /* @@CTWAIT.C - cthread_wait()
 */
-#include "clibthrd.h"
+#include "mvs/thread.h"
 
 #if 0
 #define WTODEBUG    /* define for wtof() debug messages */

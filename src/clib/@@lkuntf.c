@@ -1,7 +1,7 @@
 #include <stdarg.h>
 #include <stdio.h>
-#include "clibenq.h"
-#include "cliblock.h"
+#include "mvs/enq.h"
+#include "mvs/lock.h"
 
 int
 __lkuntf(const char *fmt, int read, ...)

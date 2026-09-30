@@ -3,7 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <mvssupa.h>
-#include "cliblock.h"
+#include "mvs/lock.h"
 #include "clibio.h"
 
 /* Split a name of exactly the form dsn(member) into its upper-cased parts.

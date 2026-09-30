@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "cliblist.h"
-#include "clibwto.h"
+#include "mvs/dslist.h"
+#include "mvs/wto.h"
 
 int
 __fmtloa(PDSLIST *pdslist, LOADSTAT *loadstat)

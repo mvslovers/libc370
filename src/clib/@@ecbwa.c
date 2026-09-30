@@ -1,6 +1,6 @@
 /* @@ECBWA.C - ecb_waitarray()
 */
-#include <clibecb.h>
+#include <mvs/ecb.h>
 
 #define ECB_MAX     256
 

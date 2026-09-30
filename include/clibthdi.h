@@ -2,7 +2,7 @@
 #define CLIBTHDI_H
 #include <time.h>
 #include <libc370/time64.h>
-#include "clibthrd.h"
+#include "mvs/thread.h"
 
 typedef struct cthdmgr      CTHDMGR;    /* thread manager instance          */
 typedef struct cthdque      CTHDQUE;    /* thread manager queue             */

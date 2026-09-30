@@ -63,7 +63,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <clibwto.h>
+#include <mvs/wto.h>
 
 #define TEXT    "TSTFWREC #236 RECORD"
 

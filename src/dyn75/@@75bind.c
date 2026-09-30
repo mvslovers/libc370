@@ -6,7 +6,7 @@
 #include "errno.h"
 #include "time.h"
 #include "clibsock.h"
-#include "clibwto.h"
+#include "mvs/wto.h"
 
 /* bind() */
 __asm__("\n&FUNC    SETC 'bind'");

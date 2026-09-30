@@ -3,9 +3,9 @@
 
 #include <time.h>
 #include <libc370/time64.h>
-#include "clibcp.h"                 /* JES Checkpoint prototypes            */
+#include "mvs/jes2ckpt.h"                 /* JES Checkpoint prototypes            */
 #include "clibjs.h"                 /* JES Spool prototypes                 */
-#include "clibvsam.h"               /* needed for jesir*()                  */
+#include "mvs/vsam.h"               /* needed for jesir*()                  */
 #include <ibm/mvs/iefssso.h>                /* needed for jesxwrtr()                */
 
 typedef struct jes      JES;        /* JES handle                           */

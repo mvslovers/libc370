@@ -17,7 +17,7 @@
  * the old code got the right answer too, by swapping ASXBSENV.
  *
  * What IS deterministic, single-task, and needs no RACF profiles is the ENQ.
- * cliblock.h: lock() returns 8 when you already hold the lock.  The old code
+ * mvs/lock.h: lock() returns 8 when you already hold the lock.  The old code
  * ignored that return code and unlocked unconditionally, so a caller holding
  * the ASXB lock across racf_auth() got it DEQd out from under them - and the
  * next unlock() in that caller then failed.  Case (3) is that, and it is the
@@ -58,8 +58,8 @@
  * RC: 0 = every check passed, 8 = at least one did not (it is the COND CODE).
  */
 #include <stdio.h>
-#include "racf.h"
-#include "cliblock.h"
+#include "mvs/racf.h"
+#include "mvs/lock.h"
 
 #define CLASSNAME   "FACILITY"
 #define RESOURCE    "LIBC370.TSTRACAU.NOSUCHRES"

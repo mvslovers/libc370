@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stddef.h>
-#include "clibenv.h"
+#include "mvs/env.h"
 
 int
 setenvi(const char *name, int value, int rewrite)

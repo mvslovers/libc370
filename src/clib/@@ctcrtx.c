@@ -4,11 +4,11 @@
 */
 #include <stdlib.h>
 #include <stddef.h>
-#include "clibthrd.h"
-#include "cliblock.h"
+#include "mvs/thread.h"
+#include "mvs/lock.h"
 #include "clibcrt.h"
 #include "libc370/array.h"
-#include "clibmutx.h"
+#include "mvs/mutex.h"
 
 static CTHDTASK *newthread(unsigned tcb, unsigned owntcb, unsigned stacksize);
 static int attach(CTHDTASK *task);

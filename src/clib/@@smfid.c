@@ -1,7 +1,7 @@
 /* @@smfid.c
 ** return pointer to SMFID or NULL if SMF does not exist.
 */
-#include "clibsmf.h"
+#include "mvs/smf.h"
 
 extern const unsigned char *
 __smfid(void)

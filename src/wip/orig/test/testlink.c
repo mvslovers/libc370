@@ -1,6 +1,6 @@
 /* TESTLINK.C test __link() and __linkt() functions */
-#include "clibwto.h"
-#include "cliblink.h"
+#include "mvs/wto.h"
+#include "mvs/link.h"
 #include "clibgrt.h"
 #include "libc370/array.h"
 
