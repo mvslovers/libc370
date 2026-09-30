@@ -1,8 +1,8 @@
 //TSTSTRCI JOB (SYS),'LIBC370 183',CLASS=A,MSGCLASS=H,
 //             MSGLEVEL=(1,1)
 //*
-//* libc370 #183 - strcasecmp/strncasecmp, and the stricmp/strncmpi
-//* aliases they join.  All four fold through the __tolow table, which
+//* libc370 #183 - strcasecmp/strncasecmp (1.x also had stricmp and
+//* strncmpi; 2.0 dropped them).  Both fold through the __tolow table, which
 //* is what makes them EBCDIC-correct; an ASCII-style fold would not be.
 //*
 //* MVS only, and that is the point: on a host the fold runs through the
@@ -26,6 +26,8 @@
 //*
 //* Run:     mvsdev JOB00422, CC 0000, 37/37, 2026-09-22.  Proven red at
 //*          11 of the 37 against a deliberately broken build, JOB00423.
+//*          2.0 dropped stricmp/strncmpi and their checks (#250):
+//*          mvsdev JOB01031, CC 0000, 30/30, 2026-09-30.
 //*
 //* RC 0 = every check passed, 1 = a check failed (it is the COND CODE).
 //*
