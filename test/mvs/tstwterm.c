@@ -107,8 +107,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <clibwto.h>
-#include <clibthrd.h>
+#include <mvs/wto.h>
+#include <mvs/thread.h>
 #include <clibthdi.h>
 
 #define WORKERS         4       /* -> mintask 1, maxtask 4 (see above)      */

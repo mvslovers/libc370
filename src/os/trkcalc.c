@@ -1,7 +1,7 @@
 /* TRKCALC.C - calculate number of records that fit on a track
 */
-#include "osio.h"
-#include "trkcalc.h"
+#include "mvs/osio.h"
+#include "mvs/dasd.h"
 
 int
 trkcalc(DEVTYPE devtype, int keylen, int blksize)

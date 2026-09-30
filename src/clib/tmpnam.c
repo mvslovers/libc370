@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
-#include "cliblock.h"
+#include "mvs/lock.h"
 #include "clibcrt.h"
 
 __PDPCLIB_API__ char *tmpnam(char *s)

@@ -1,7 +1,7 @@
 /* @@smca.c
 ** return pointer to SMF control table or NULL if it doesn't exist.
 */
-#include "clibsmf.h"
+#include "mvs/smf.h"
 #include "ibm/mvs/cvt.h"
 
 SMCA *

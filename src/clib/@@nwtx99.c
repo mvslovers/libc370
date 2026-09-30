@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
-#include "svc99.h"
+#include "mvs/dynalloc.h"
 
 TXT99 *
 __nwtx99(int dal, int count, int size, const char *text)

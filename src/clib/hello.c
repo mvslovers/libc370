@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <time.h>
 #include "clibcrt.h"
-#include "cliblock.h"
+#include "mvs/lock.h"
 
 int
 main(int argc, char **argv)

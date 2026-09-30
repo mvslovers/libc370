@@ -1,7 +1,7 @@
 /* @@CMWDEL.C - cthread_worker_del()
 */
 #include "clibthdi.h"
-#include "clibwto.h"     /* wtof(): a prototype decides linkage here (#39) */
+#include "mvs/wto.h"     /* wtof(): a prototype decides linkage here (#39) */
 
 #if 0
 static void

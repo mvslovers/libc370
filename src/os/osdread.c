@@ -1,5 +1,5 @@
 /* OSDREAD.C - read one block from BDAM dataset by relative block number */
-#include "osio.h"
+#include "mvs/osio.h"
 
 int
 osdread(DECB *decb, DCB *dcb, void *buf, int length, unsigned block)

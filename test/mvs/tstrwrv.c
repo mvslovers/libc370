@@ -65,8 +65,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <clibwto.h>
-#include <rfile.h>
+#include <mvs/wto.h>
+#include <mvs/rfile.h>
 
 #define TEXT    "TSTRWRV #232 RECORD"
 

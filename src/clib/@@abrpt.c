@@ -3,7 +3,7 @@
 #include <ctype.h>
 #include "clibstae.h"
 #include "clibcrt.h"
-#include "clibwto.h"
+#include "mvs/wto.h"
 
 typedef struct {
     unsigned u[2];

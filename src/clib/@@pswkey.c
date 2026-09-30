@@ -1,5 +1,5 @@
 #include <clibos.h>
-#include <clibauth.h>
+#include <mvs/apf.h>
 #include <errno.h>
 
 __asm__("\n&FUNC    SETC '__pswkey'");

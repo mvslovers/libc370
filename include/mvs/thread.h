@@ -59,11 +59,11 @@
                             inside a try() wrapper.
 
 */
-#include "cliblock.h"
+#include "mvs/lock.h"
 #include "clibstae.h"
 #include "clibcrt.h"
 #include "libc370/array.h"
-#include "clibecb.h"
+#include "mvs/ecb.h"
 
 typedef struct cthdtask     CTHDTASK;   /* a subtask instance               */
 typedef enum   cthdpop      CTHDPOP;    /* cthread_pop() pop type           */

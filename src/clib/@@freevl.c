@@ -1,5 +1,5 @@
 #include "libc370/array.h"
-#include "cliblist.h"
+#include "mvs/dslist.h"
 
 void __freevl(VOLLIST ***pppvollist)
 {

@@ -21,7 +21,7 @@
  * one ld370 --pack.  RUN: jcl/tstppafr.jcl.
  */
 #include <clibos.h>
-#include <clibwto.h>
+#include <mvs/wto.h>
 
 int main(void)
 {

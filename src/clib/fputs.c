@@ -1,6 +1,6 @@
 /* FPUTS.C */
 #include "clibio.h"
-#include "cliblock.h"
+#include "mvs/lock.h"
 
 int
 fputs(const char *s, FILE *fp)

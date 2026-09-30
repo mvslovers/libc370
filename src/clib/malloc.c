@@ -8,7 +8,7 @@
 #include "errno.h"
 #include "mvssupa.h"
 #include "stdio.h"
-#include "clibwto.h"
+#include "mvs/wto.h"
 
 #if USE_MEMMGR
 #include "__memmgr.h"

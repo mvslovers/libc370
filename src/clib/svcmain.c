@@ -1,6 +1,6 @@
 #include <clibsvc.h>
 #include <ibm/mvs/iharb.h>
-#include <clibwto.h>
+#include <mvs/wto.h>
 #include <clibos.h>
 
 /* SVCMAIN() on entry svcregs->r1 has the request code, r15, r0 and r1 parm values are 0 */

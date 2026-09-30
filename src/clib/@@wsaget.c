@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include "clib.h"
 #include "libc370/array.h"
-#include "cliblock.h"
+#include "mvs/lock.h"
 
 void *
 __wsaget(void *key, unsigned len)

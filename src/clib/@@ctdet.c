@@ -1,7 +1,7 @@
 /* @@CTDET.C - cthread_detach()
 ** detach a thread (subtask)
 */
-#include "clibthrd.h"
+#include "mvs/thread.h"
 
 static int detach(CTHDTASK *task);
 

@@ -71,7 +71,7 @@
 #include "ibm/jes2/hct.h"    /* JES Checkpoint Control Table                     */
 #include "ibm/jes2/pddb.h"   /* JES PDDB                                         */
 #include "ibm/jes2/iot.h"    /* JES IOT (+ track group map)                      */
-#include "clibjes2.h"   /* jesopen/jesjob/jesprint                          */
+#include "mvs/jes2.h"   /* jesopen/jesjob/jesprint                          */
 #include "jesprb.h"     /* __jesprb() - the REAL record walk (#45)          */
 #include "libc370/array.h"    /* arraycount                                       */
 

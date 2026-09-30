@@ -5,7 +5,7 @@
 #include "clibcrt.h"
 #include "libc370/array.h"
 #include "clibsock.h"
-#include "cliblock.h"
+#include "mvs/lock.h"
 
 int
 __soadd(int ss, void *name, void *peer)

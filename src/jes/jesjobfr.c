@@ -5,7 +5,7 @@
 #include "ibm/jes2/jct.h"    /* JES Job Control Table                            */
 #include "ibm/jes2/pddb.h"   /* JES PDDB Print Datasets                          */
 #include "ibm/jes2/iot.h"    /* JES IOT                                          */
-#include "clibjes2.h"   /* JES prototypes */
+#include "mvs/jes2.h"   /* JES prototypes */
 #include "libc370/array.h"
 
 int jesjobfr(JESJOB ***pppjesjob)

@@ -11,7 +11,7 @@
  * ld370 --pack.  RUN: jcl/tstcrtlk.jcl.
  */
 #include <clibos.h>
-#include <clibwto.h>
+#include <mvs/wto.h>
 
 /* initialized so it lands in the load module as data, not in BSS */
 static char pad[131072] = { 0xEE };

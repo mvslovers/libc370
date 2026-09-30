@@ -85,7 +85,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <clibwto.h>
+#include <mvs/wto.h>
 #include <socket.h>
 #include <__75.h>
 

@@ -1,5 +1,5 @@
 #include "enqpl.h"
-#include "clibenq.h"
+#include "mvs/enq.h"
 
 int
 __enqdeq(const char *qn, const char *rn, unsigned options, int deq)

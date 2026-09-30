@@ -1,5 +1,5 @@
 /* @@CIBGET.C */
-#include "clibcib.h"
+#include "mvs/console.h"
 
 CIB *
 __cibget(void)

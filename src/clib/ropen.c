@@ -5,7 +5,7 @@
 #include <errno.h>
 #include <string.h>
 #include <mvssupa.h>
-#include "rfile.h"
+#include "mvs/rfile.h"
 #include "clibcrt.h"
 
 extern int      __fildef(char *fdddname, char *fnm, int mymode, int type);

@@ -2,7 +2,7 @@
 ** smf_active() - check if SMF recording is active.
 ** Returns: 1=active, 0=inactive or SMCA not found
 */
-#include "clibsmf.h"
+#include "mvs/smf.h"
 
 __asm__("\n&FUNC    SETC 'smf_active'");
 int

@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stddef.h>
-#include "clibwto.h"
-#include "clibmutx.h"
+#include "mvs/wto.h"
+#include "mvs/mutex.h"
 
 int
 main(int argc, char**argv)

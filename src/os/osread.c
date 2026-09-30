@@ -1,5 +1,5 @@
 /* OSREAD.C - read from dataset */
-#include "osio.h"
+#include "mvs/osio.h"
 
 void
 osread(DECB *decb, DCB *dcb, void *buf, int length)

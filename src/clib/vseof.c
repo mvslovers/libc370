@@ -3,8 +3,8 @@
 #include <stddef.h>
 #include <string.h>
 #include <errno.h>
-#include "clibvsam.h"
-#include "cliblock.h"
+#include "mvs/vsam.h"
+#include "mvs/lock.h"
 
 int
 vseof(VSFILE *vs)

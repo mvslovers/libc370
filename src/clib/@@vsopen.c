@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <errno.h>
-#include "clibvsam.h"
+#include "mvs/vsam.h"
 
 #if 0
 __asm__("\n"

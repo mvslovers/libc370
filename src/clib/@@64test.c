@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <libc370/int64.h>
-#include <clibwto.h>
+#include <mvs/wto.h>
 
 __asm__("\n&FUNC    SETC 'test_return_from_ptr'");
 static __64 test_return_from_ptr(__64 *value)

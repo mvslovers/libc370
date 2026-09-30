@@ -1,6 +1,6 @@
 /* FREAD.C */
 #include "clibio.h"
-#include "cliblock.h"
+#include "mvs/lock.h"
 
 size_t
 fread(void *ptr, size_t size, size_t nmemb, FILE *fp)

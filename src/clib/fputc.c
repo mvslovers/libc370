@@ -1,6 +1,6 @@
 /* FPUTC.C */
 #include "clibio.h"
-#include "cliblock.h"
+#include "mvs/lock.h"
 
 int
 fputc(int c, FILE *fp)

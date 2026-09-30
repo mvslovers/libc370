@@ -1,7 +1,7 @@
 #include "libc370/array.h"
-#include "cliblist.h"
+#include "mvs/dslist.h"
 #include "stdio.h"
-#include "clibwto.h"
+#include "mvs/wto.h"
 
 int main(int argc, char **argv)
 {

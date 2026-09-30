@@ -1,6 +1,6 @@
 /* FFLUSH.C */
 #include "clibio.h"
-#include "cliblock.h"
+#include "mvs/lock.h"
 
 int
 fflush(FILE *fp)

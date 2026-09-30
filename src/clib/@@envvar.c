@@ -1,5 +1,5 @@
 /* @@ENVVAR.C */
-#include "clibenv.h"
+#include "mvs/env.h"
 
 __ENVVAR    **__envvar  = (__ENVVAR**)0;
 int         __envsiz    = 0;

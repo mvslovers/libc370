@@ -2,7 +2,7 @@
 #define CLIB_H
 
 #include <clibcrt.h>
-#include <clibwto.h>
+#include <mvs/wto.h>
 #include <clibgrt.h>
 #include <clibppa.h>
 #include <clibos.h>

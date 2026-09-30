@@ -1,7 +1,7 @@
 /* OSDOPEN.C - open DD for BDAM access (read+write) */
 #include <ctype.h>
 #include <stdlib.h>
-#include "osio.h"
+#include "mvs/osio.h"
 #include "clibstae.h"
 
 static void opendcb(DCB *dcb, int typej, int *rc);

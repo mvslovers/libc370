@@ -1,6 +1,6 @@
 #include <clib.h>
 #include <clibos.h>
-#include <clibwto.h>
+#include <mvs/wto.h>
 #include <clibstr.h>
 
 #if 0

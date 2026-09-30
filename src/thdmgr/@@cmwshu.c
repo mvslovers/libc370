@@ -1,7 +1,7 @@
 /* @@CMWSHU.C - cthread_worker_shutdown()
 */
 #include "clibthdi.h"
-#include "clibwto.h"     /* wtof(): a prototype decides linkage here (#39) */
+#include "mvs/wto.h"     /* wtof(): a prototype decides linkage here (#39) */
 
 __asm__("\n&FUNC    SETC 'cthread_worker_shutdown'");
 int

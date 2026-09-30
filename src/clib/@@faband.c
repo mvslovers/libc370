@@ -53,7 +53,7 @@
 #include <string.h>
 #include <mvssupa.h>
 #include <clibtry.h>
-#include "cliblock.h"
+#include "mvs/lock.h"
 
 int
 __fabandon(FILE *fp)

@@ -3,7 +3,7 @@
 /* Data Set Control Block access routines
 */
 #include <ctype.h>
-#include "clibdscb.h"
+#include "mvs/dscb.h"
 #include "clibstr.h"
 
 #define SEARCH 0xC1000000

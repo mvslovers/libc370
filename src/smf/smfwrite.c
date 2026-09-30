@@ -3,7 +3,7 @@
 ** Handles TESTAUTH + MODESET internally (same pattern as racf_login).
 ** Returns: 0=success, non-zero=error (SVC 83 R15 or -1 if SMF inactive)
 */
-#include "clibsmf.h"
+#include "mvs/smf.h"
 
 __asm__("\n&FUNC    SETC 'smf_write'");
 int

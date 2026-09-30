@@ -172,7 +172,7 @@ int     strcmp(const char *, const char *);
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "svc99.h"
+#include "mvs/dynalloc.h"
 #include "libc370/array.h"
 
 /* Pre-fix fallback, so this file COMPILES and RUNS red against the library as

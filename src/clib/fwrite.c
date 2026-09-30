@@ -1,6 +1,6 @@
 /* FWRITE.C */
 #include "clibio.h"
-#include "cliblock.h"
+#include "mvs/lock.h"
 
 size_t
 fwrite(const void *vptr, size_t size, size_t nmemb, FILE *fp)

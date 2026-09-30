@@ -106,8 +106,8 @@
 #include "libc370/array.h"
 #include "clibgrt.h"
 #include "clibppa.h"
-#include "clibtso.h"
-#include "clibwto.h"
+#include "mvs/tso.h"
+#include "mvs/wto.h"
 #include "ibm/mvs/ikjcppl.h"
 
 static void

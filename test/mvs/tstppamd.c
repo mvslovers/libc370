@@ -19,8 +19,8 @@
  * BUILD (host): see test/mvs/tstppafr.c - all three members travel in
  * one ld370 --pack.  RUN: jcl/tstppafr.jcl.
  */
-#include <cliblink.h>
-#include <clibwto.h>
+#include <mvs/link.h>
+#include <mvs/wto.h>
 
 int main(void)
 {

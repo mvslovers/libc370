@@ -1,6 +1,6 @@
 /* @@AUSTEP.C - APF authorized the STEPLIB dataset */
 #include "clibcrt.h"
-#include "clibauth.h"
+#include "mvs/apf.h"
 
 __asm__("\n&FUNC    SETC '__austep'");
 int

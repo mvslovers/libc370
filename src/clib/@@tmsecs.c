@@ -1,4 +1,4 @@
-#include <clibtmr.h>
+#include <mvs/timer.h>
 
 __asm__("\n&FUNC    SETC 'tmr_secs'");
 TMRSEC tmr_secs(TMRSEC *secs)

@@ -4,7 +4,7 @@
 #include "clib.h"
 #include "clibppa.h"
 #include "libc370/array.h"
-#include "cliblock.h"
+#include "mvs/lock.h"
 
 int
 __grtset(void)

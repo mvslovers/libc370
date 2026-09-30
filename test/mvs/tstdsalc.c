@@ -46,7 +46,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "clibio.h"     /* __dsalcf(), __dsfree() */
-#include "clibwto.h"    /* wtof() - the markers of case (6) */
+#include "mvs/wto.h"    /* wtof() - the markers of case (6) */
 
 #define CREATE  "DSN=%s;DISP=(NEW,CATLG,DELETE);DSORG=PS;RECFM=FB;"          \
                 "LRECL=80;BLKSIZE=3120;UNIT=SYSDA;SPACE=TRK(1,1)"

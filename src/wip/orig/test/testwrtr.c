@@ -1,7 +1,7 @@
 #include <ibm/mvs/iefsscs.h>
 #include <ibm/mvs/iefssso.h>
 #include <clibstr.h>
-#include <clibjes2.h>
+#include <mvs/jes2.h>
 #include "clibstae.h"               /* C runtime recovery routines  */
 #include <ibm/jes2/pso.h>                /* Process sysout control block */
 

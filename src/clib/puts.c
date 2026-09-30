@@ -1,6 +1,6 @@
 /* PUTS.C */
 #include <stdio.h>
-#include "cliblock.h"
+#include "mvs/lock.h"
 
 int
 puts(const char *s)

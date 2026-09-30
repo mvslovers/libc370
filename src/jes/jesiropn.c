@@ -5,11 +5,11 @@
 #include <string.h>
 #include <mvssupa.h>
 #include <errno.h>
-#include "svc99.h"
+#include "mvs/dynalloc.h"
 #include "libc370/array.h"
 #include "ibm/mvs/iefzb4d2.h"
-#include "clibwto.h"
-#include "clibvsam.h"
+#include "mvs/wto.h"
+#include "mvs/vsam.h"
 #include "clibio.h"
 
 static int __alloc_intrdr(char *ddname);    /* buffer of at least 9 bytes   */

@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <errno.h>
-#include "clibvsam.h"
+#include "mvs/vsam.h"
 
 /* This is the VSAM common error handler for LERAD and SYNAD errors */
 int

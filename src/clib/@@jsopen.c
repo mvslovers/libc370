@@ -2,13 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "clibwto.h"
+#include "mvs/wto.h"
 #include <mvssupa.h>
-#include "svc99.h"
+#include "mvs/dynalloc.h"
 #include "libc370/array.h"
 #include "ibm/mvs/dcbd.h"
 #include "ibm/mvs/iefjfcbn.h"
-#include "clibjes2.h"   /* JES Spool prototypes and functions               */
+#include "mvs/jes2.h"   /* JES Spool prototypes and functions               */
 
 __asm("\n"
 "HASPACE  DCB   DDNAME=HASPACE1,DSORG=DA,MACRF=(RIC),OPTCD=A,           X\n"

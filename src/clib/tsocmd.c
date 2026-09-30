@@ -1,7 +1,7 @@
-#include <clibtso.h>
+#include <mvs/tso.h>
 
 #include <clib.h>
-#include <cliblink.h>		/* __link()						*/
+#include <mvs/link.h>		/* __link()						*/
 #include <ibm/mvs/ikjcppl.h>		/* CPPL typedef 				*/
 #include <ibm/mvs/ikject.h>			/* ECT typedef					*/
 

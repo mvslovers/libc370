@@ -1,5 +1,5 @@
 /* OSXREAD.C - read one block from dataset by block number */
-#include "osio.h"
+#include "mvs/osio.h"
 
 int
 osxread(DCB *dcb, unsigned blkstrk, unsigned block, void *buf, char *sense)

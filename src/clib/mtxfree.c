@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stddef.h>
-#include "clibmutx.h"
-#include "cliblock.h"
+#include "mvs/mutex.h"
+#include "mvs/lock.h"
 
 void
 mtxfree(CLIBMUTX *mutex)

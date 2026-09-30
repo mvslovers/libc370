@@ -2,7 +2,7 @@
 #define CLIBOS_H
 #include <stddef.h>
 #include <ibm/mvs/ihacde.h>
-#include <clibwto.h>
+#include <mvs/wto.h>
 
 typedef struct bldl         BLDL;       /* BLDL list                    */
 typedef struct de12         DE12;       /* minimum dir entry            */

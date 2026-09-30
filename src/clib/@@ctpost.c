@@ -1,6 +1,6 @@
 /* @@CTPOST.C - cthread_post()
 */
-#include "clibthrd.h"
+#include "mvs/thread.h"
 
 __asm__("\n&FUNC    SETC 'cthread_post'");
 int

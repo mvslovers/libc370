@@ -1,6 +1,6 @@
 /* FSEEK.C */
 #include "clibio.h"
-#include "cliblock.h"
+#include "mvs/lock.h"
 
 int
 fseek(FILE *fp, long int offset, int whence)

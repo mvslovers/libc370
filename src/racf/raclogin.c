@@ -29,7 +29,7 @@
 **                  macro; however, the list form of the macro does not have
 **                  the proper RELEASE parameter. Macro processing terminates.
 */
-#include "racf.h"
+#include "mvs/racf.h"
 
 __asm__("\n&FUNC    SETC 'racf_login'");
 ACEE *

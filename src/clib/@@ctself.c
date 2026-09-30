@@ -2,7 +2,7 @@
 ** find thread (subtask) instance for this thread
 ** returns CTHDTASK handle or NULL if not found.
 */
-#include "clibthrd.h"
+#include "mvs/thread.h"
 
 __asm__("\n&FUNC    SETC 'cthread_self'");
 CTHDTASK *

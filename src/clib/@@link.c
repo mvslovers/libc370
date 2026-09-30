@@ -1,5 +1,5 @@
 /* __link() - Link to an external program */
-#include "cliblink.h"
+#include "mvs/link.h"
 #include "ctype.h"
 
 int __link(const char *pgm, void *dcb, void *r1, int *prc)

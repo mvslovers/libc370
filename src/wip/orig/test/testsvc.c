@@ -16,19 +16,19 @@
 #include "clibgrt.h"                /* global runtime               */
 #include "clibcrt.h"                /* C runtime area for each task */
 #include "clibppa.h"                /* C runtime program properties */
-#include "clibenv.h"                /* C runtime environment vars   */
+#include "mvs/env.h"                /* C runtime environment vars   */
 #include "clibstae.h"               /* C runtime recovery routines  */
-#include "clibwto.h"                /* write to operator            */
-#include "clibcib.h"                /* console information block    */
-#include "clibthrd.h"               /* basic threads                */
+#include "mvs/wto.h"                /* write to operator            */
+#include "mvs/console.h"                /* console information block    */
+#include "mvs/thread.h"               /* basic threads                */
 #include "clibthdi.h"               /* thread management            */
-#include "cliblink.h"               /* link to external program     */
+#include "mvs/link.h"               /* link to external program     */
 #include "libc370/array.h"                /* dynamic arrays               */
-#include "svc99.h"                  /* dynamic allocation           */
+#include "mvs/dynalloc.h"                  /* dynamic allocation           */
 #include "ibm/mvs/ieziob.h"                  /* input/output block           */
 #include "s370/ccw.h"                /* CCW struct                   */
-#include "clibecb.h"                /* ECB prototypes               */
-#include "clibtmr.h"                /* timer                        */
+#include "mvs/ecb.h"                /* ECB prototypes               */
+#include "mvs/timer.h"                /* timer                        */
 #include "ibm/mvs/cvt.h"                    /* MVS CVT                      */
 #include "ibm/mvs/ikjtcb.h"                 /* MVS TCB                      */
 

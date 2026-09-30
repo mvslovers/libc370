@@ -1,5 +1,5 @@
 /* OSXWRITE.C - write one block to dataset by block number */
-#include "osio.h"
+#include "mvs/osio.h"
 
 int
 osxwrite(DCB *dcb, unsigned blkstrk, unsigned block, void *buf, char *sense)

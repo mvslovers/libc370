@@ -1,4 +1,4 @@
-#include <clibmtt.h>
+#include <mvs/mtt.h>
 
 #define INBOUNDS(t,e) ((unsigned)(e) >= (t)->mttentpt && (unsigned)(e) < (t)->mttendpt)
 

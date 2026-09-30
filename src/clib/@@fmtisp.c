@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "cliblist.h"
+#include "mvs/dslist.h"
 
 static int cvtdate(int century, unsigned char *date, struct tm *tm);
 

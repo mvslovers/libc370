@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stddef.h>
-#include "clibmutx.h"
+#include "mvs/mutex.h"
 
 void
 mtxinit(CLIBMUTX *mutex)

@@ -57,10 +57,10 @@
  * RC: 0 = every check passed, 8 = at least one did not (it is the COND CODE).
  */
 #include <stdlib.h>
-#include <clibwto.h>
-#include <clibthrd.h>
-#include "racf.h"
-#include "cliblock.h"
+#include <mvs/wto.h>
+#include <mvs/thread.h>
+#include "mvs/racf.h"
+#include "mvs/lock.h"
 
 #define ROUNDS  200             /* login/logout pairs on the main TCB.
                                 ** 60 was not enough: the pre-fix run hit the

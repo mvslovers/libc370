@@ -66,10 +66,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <clibos.h>
-#include <cliblink.h>
+#include <mvs/link.h>
 #include <clibtry.h>
 #include <clibcrt.h>
-#include <clibwto.h>
+#include <mvs/wto.h>
 
 #define N1      6               /* T1: single-level caught abends     */
 #define N3      3               /* T3: nested caught abends           */

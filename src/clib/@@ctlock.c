@@ -1,7 +1,7 @@
 /* @@CTLOCK.C - cthread_lock(), cthread_unlock()
 */
-#include "clibthrd.h"
-#include "clibenq.h"
+#include "mvs/thread.h"
+#include "mvs/enq.h"
 
 #define QNAME   "LCTHREAD"
 

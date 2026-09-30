@@ -7,7 +7,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <stddef.h>
-#include <cliblock.h>
+#include <mvs/lock.h>
 
 #define unused(x) ((void)(x))
 #define outch(ch) ((fq == NULL) ? *s++ = (char)ch : __fputc(ch,fq))

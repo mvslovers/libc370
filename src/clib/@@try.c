@@ -1,7 +1,7 @@
 #include <clibstae.h>
 #include <clibcrt.h>
 #include <clibppa.h>
-#include <clibwto.h>
+#include <mvs/wto.h>
 
 typedef struct {
     unsigned    r[16];

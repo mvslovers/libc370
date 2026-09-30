@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "osio.h"
+#include "mvs/osio.h"
 #include "clibio.h"
 #include "clibos.h"
 

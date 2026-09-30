@@ -1,5 +1,5 @@
-#include <clibecb.h>
-#include <clibwto.h>
+#include <mvs/ecb.h>
+#include <mvs/wto.h>
 
 __asm__("\n&FUNC    SETC 'ecb_post'");
 int

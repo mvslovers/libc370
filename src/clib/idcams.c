@@ -1,4 +1,4 @@
-#include <clibwto.h>
+#include <mvs/wto.h>
 #include <s370/savearea.h>
 #include <stdlib.h>
 #include <string.h>

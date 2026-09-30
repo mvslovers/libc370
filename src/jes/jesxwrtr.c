@@ -1,6 +1,6 @@
 #include <ibm/mvs/iefssso.h>
 #include <clibstr.h>
-#include <clibjes2.h>
+#include <mvs/jes2.h>
 
 int jesxwrtr(SSSO *ssso, const char *class_list, const char *dest, const char *form)
 {

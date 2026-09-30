@@ -1,4 +1,4 @@
-#include <clibtmr.h>
+#include <mvs/timer.h>
 
 __asm__("\n&FUNC    SETC 'tmr_ecb'");
 TQEID tmr_ecb(ECB *ecb, unsigned bintvl)

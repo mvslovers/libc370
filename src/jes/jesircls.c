@@ -1,8 +1,8 @@
 
 #include <stdio.h>
 #include <mvssupa.h>
-#include "clibvsam.h"
-#include "clibjes2.h"
+#include "mvs/vsam.h"
+#include "mvs/jes2.h"
 
 /* Close the internal reader, jobid feedback discarded.  Callers that need
  * the jobid must use jesircl2() -- reading rpl.rplrbar through the handle

@@ -1,6 +1,6 @@
 /* MTXHELD.C */
-#include "clibmutx.h"
-#include "cliblock.h"
+#include "mvs/mutex.h"
+#include "mvs/lock.h"
 
 int
 mtxheld(CLIBMUTX *mutex)

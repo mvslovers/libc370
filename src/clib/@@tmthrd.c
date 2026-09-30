@@ -1,4 +1,4 @@
-#include <clibtmr.h>
+#include <mvs/timer.h>
 
 static int timed_waitlist(ECB **waitlist, ECB *timeout_ecb, unsigned bintvl, unsigned postcode);
 

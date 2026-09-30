@@ -73,7 +73,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <clibwto.h>
+#include <mvs/wto.h>
 
 static int bad = 0;
 

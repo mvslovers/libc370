@@ -92,7 +92,7 @@
  *
  * That extra flag is itself part of the story: the pre-fix file called
  * wtodumpf() with no prototype in scope - it includes neither clib.h nor
- * clibwto.h - so the compiler invented the signature, which on this target
+ * mvs/wto.h - so the compiler invented the signature, which on this target
  * decides linkage (#39).  cc370 -Wall -Werror -Wno-comment rejects the
  * pre-fix file for that implicit declaration and accepts the fixed one:
  * one of the 129 translation units in #39, off the list for free.
@@ -104,7 +104,7 @@
  * RC: 0 = every check passed, 1 = at least one did not.
  */
 #include <stdio.h>
-#include "svc99.h"
+#include "mvs/dynalloc.h"
 #include "libc370/array.h"
 
 /* --------------------------------------------------------------------------

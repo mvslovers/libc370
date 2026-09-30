@@ -1,5 +1,5 @@
 #include <time.h>	/* our own prototype, so the definition is checked */
-#include <clibecb.h>
+#include <mvs/ecb.h>
 
 int
 sleep(unsigned seconds)

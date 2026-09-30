@@ -115,8 +115,8 @@
  */
 #include <stdio.h>
 #include <string.h>
-#include "racf.h"
-#include "clibwto.h"
+#include "mvs/racf.h"
+#include "mvs/wto.h"
 
 #define FIXLEN  45          /* longest fixture value: a 44-byte DSN + NUL   */
 #define NFLAGS  5

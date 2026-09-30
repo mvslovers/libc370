@@ -1,5 +1,5 @@
 /* @@CIBSET.C */
-#include "clibcib.h"
+#include "mvs/console.h"
 
 int
 __cibset(unsigned count)

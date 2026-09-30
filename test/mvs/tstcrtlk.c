@@ -52,9 +52,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <clibos.h>
-#include <cliblink.h>
+#include <mvs/link.h>
 #include <clibtry.h>
-#include <clibwto.h>
+#include <mvs/wto.h>
 
 #define ROUNDS  4
 #define UNIT    (64 * 1024)

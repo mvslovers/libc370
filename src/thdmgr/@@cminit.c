@@ -511,7 +511,7 @@ dispatch_thread_term(CTHDMGR *mgr)
     ** CTHDWORK_POST_SHUTDOWN, and it OPENS with cthread_queue_del(&work->queue),
     ** which takes this very lock whenever the worker still holds a dispatched
     ** item -- i.e. whenever it was executing a request when shutdown began.
-    ** lock() is an exclusive ENQ with RET=HAVE (@@lk.c, clibenq.h: ENQ_HAVE,
+    ** lock() is an exclusive ENQ with RET=HAVE (@@lk.c, mvs/enq.h: ENQ_HAVE,
     ** ENQ_EXC and ENQ_STEP are all 0), so rc 8 is returned only to the task
     ** that already owns it; any other TCB waits.
     **

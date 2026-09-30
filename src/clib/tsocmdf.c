@@ -1,4 +1,4 @@
-#include <clibtso.h>
+#include <mvs/tso.h>
 #include <clib.h>
 
 int tsocmdf(const char *pgm, const char *format, ...)

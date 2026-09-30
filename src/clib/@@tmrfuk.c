@@ -1,4 +1,4 @@
-#include <clibtmr.h>
+#include <mvs/timer.h>
 
 __asm__("\n&FUNC    SETC 'tmr_func_keep'");
 TQEID tmr_func_keep(int (*func)(void *, TQE*), void *udata, unsigned bintvl)

@@ -2,7 +2,7 @@
  *
  * Self-contained on purpose (#25).  It includes no libc370 header, so a host
  * `cc` can compile and link jesprb.c and exercise the REAL record walk
- * (test/host/tstjesprb.c) instead of a hand-written mirror.  clibjes2.h is not
+ * (test/host/tstjesprb.c) instead of a hand-written mirror.  mvs/jes2.h is not
  * usable here: it pulls libc370's time.h/time64.h, which collide with the host
  * ones.
  *
@@ -71,7 +71,7 @@ typedef struct jesprb {
 } JESPRB;
 
 /* Why the record walk of ONE block ended.  jesprint() maps these onto the
- * public JESPR_* reasons in clibjes2.h; they are deliberately separate so
+ * public JESPR_* reasons in mvs/jes2.h; they are deliberately separate so
  * this translation unit stays free of libc370 headers.                      */
 #define JESPRB_OK       0       /* end of block, keep following the chain    */
 #define JESPRB_STOPPED  1       /* emit() asked to stop (its rc is in prtrc) */

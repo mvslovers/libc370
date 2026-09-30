@@ -1,6 +1,6 @@
 /* FGETS.C */
 #include "clibio.h"
-#include "cliblock.h"
+#include "mvs/lock.h"
 
 char *
 fgets(char *s, int n, FILE *fp)
