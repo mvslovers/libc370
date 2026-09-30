@@ -369,8 +369,12 @@ checklist is #245.
      D11 `libc370/socket.h` → `mvs/socket.h`; `clibwsa.h` becomes public
      (`mvs/wsa.h`: httpd and lua370 call `__wsaget()`), `clibjs.h` too
      (`mvs/jes2spool.h`)
-   - next: rooted internal includes, `libc370/` → `ext/`, the remaining
-     rows of #274 (names still open: `__75.h`, `enqpl.h`, `modmap.h`)
+   - #280: private headers included by their path from the root (D10);
+     #281: `libc370/` → `ext/`, `libc370/socket.h` → `mvs/socket.h`
+   - next: the remaining rows of #274 — decided: `printf.h`,
+     `crtanchor.h`, `clibsvc.h` (internal), `mvs/wsa.h`, `mvs/jes2spool.h`
+     (public); names still open: `__75.h`, `enqpl.h`, `modmap.h`,
+     `__time64.h`
 5a. **Phase 3 in 2.0 (#278, D9):** sources by area, `src/` mirrors
    `include/`, assembler beside its C, `src/wip/` → `attic/`. Tooling
    first: gate path map, unique basenames, `mklibc.py` finds `.asm` under
