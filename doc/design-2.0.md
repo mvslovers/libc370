@@ -81,21 +81,38 @@ already shared.
 
 ## What 2.0 is, and what it is not
 
-Only phases 1 and 2 change what a consumer sees. **2.0.0 is the interface cut:**
-new header paths, internals out of the sysroot, dead headers gone, crypto out.
-Phases 3 and 4 reorganise sources and draw the OS seam. They change nothing
-visible and can land in 2.x without breaking anyone.
+**2.0.0 is the interface cut.** It carries phases 1 and 2 (new header paths,
+internals out of the sysroot, dead headers gone, crypto out) and the **relink
+round**: the struct and signature growth that was already waiting for a
+coordinated rebuild of the consumers (#79, #50, #51, #71, #172, and #80 defect
+1's `max` parameter). A major version is the one moment consumers expect to
+change code, so they migrate once instead of twice. Phases 3 and 4 reorganise
+sources and draw the OS seam. They change nothing visible and can land in 2.x
+without breaking anyone.
+
+**2.0 comes first (decided 2026-09-30, D8).** 1.0.8 is the last 1.x release and
+the consumers are pinned to it, so no fix that lands on `main` reaches a
+running system before 2.0.0 ships. By the ranking rule of `TODO.md`, measured
+impact on running systems, that puts the 2.0 critical path ahead of every
+other item. Header moves and parallel fix PRs would also collide on the same
+`#include` lines. Fixes resume on 2.x afterwards, with normal releases.
 
 ## Phases
 
 | # | what | gate |
 |---|---|---|
 | 0 | libc370 CI (#249); crypto370 released and adopted by httpd and mvsMF (#244); **1.0.8 released**, the last 1.x; consumers' **build** CI held on `v1.0.8`, which needs a `libc370_ref` input in mbt's `build.yml` (mvslovers/mbt#121; release CI already pins) | every consumer green against 1.0.8 |
-| 1 | move and rename headers per the table; split the five mixed headers; drop dead ones | **byte-identical assembler for every TU** against the commit before the move, the method PR #242 used |
+| 1 | move and rename headers per the table; split the five mixed headers; drop dead ones. Absorbs #39 step 2 (missing `#include`s) and #68 step 1 (the `clibsa.h` inline), since every `#include` line is touched anyway, and #250 items 1–3 | **byte-identical assembler for every TU** against the commit before the move, the method PR #242 used |
 | 2 | internals to `src/internal/`; install copies subdirectories (`mklibc.py:226` globs `include/*.h` today) | the migration script resolves every consumer include |
+| — | **the relink round**: #79, #50, #51, #71, #172, #80 defect 1 | per change, tests; CHANGELOG entry for each layout or signature change |
 | — | **release 2.0.0**; one migration PR per consumer | each consumer green against 2.0.0 |
 | 3 | sources by area; basenames stay unique (all objects share one directory, `mklibc.py:161`) | byte-identical assembler |
 | 4 | the OS seam: core calls a narrow internal interface, not MVS services | per change, tests |
+
+Before phase 1, cheap preparation that makes the move safer: restore the five
+host tests CI cannot run (#241, #251), remove the live duplicate header (#140),
+and drop the dead headers now (#243, #248). Nothing uses them, so they need not
+wait for the cut.
 
 Order within phase 0 matters. Consumers' build CI floats on libc370 `main`
 (`doc/ci-and-pinning.md`), so the cut must not land on `main` before they are
@@ -123,14 +140,17 @@ stamp in `libc.a` (`LIBC370 <version> (<rev>)`), which
   have been a minor.
 - **CI now, before 2.0** (#249): `build.yml` on PRs and `main`, `release.yml`
   on tags. The release notes come from the tag's `CHANGELOG.md` section.
-- **cc370 gets releases first** (mvslovers/cc370#523). A `libc.a` fits only
-  certain compilers: v1.0.7 needs cc370 at `f3f7e21` or later. Until cc370 has
-  versions, every libc370 release names the minimum cc370 commit and the one it
-  was built with. The **sysroot tarball** as a release asset follows once cc370
-  releases exist, because before that it would be reproducible only as far as
-  an unnamed compiler.
+- **cc370 gets releases** (mvslovers/cc370#523). Desirable before 2.0.0, **not
+  blocking** (D8): without them, 2.0.0 names its minimum cc370 by commit, as
+  1.0.7 and 1.0.8 did. A `libc.a` fits only certain compilers: v1.0.7 needs
+  cc370 at `f3f7e21` or later. Until cc370 has versions, every libc370 release
+  names the minimum cc370 commit and the one it was built with. The **sysroot
+  tarball** as a release asset follows once cc370 releases exist, because
+  before that it would be reproducible only as far as an unnamed compiler.
 - **1.0.8 is the last 1.x release.** No maintenance branch after 2.0: the
-  consumers migrate directly.
+  consumers migrate directly. **Emergency exit (D8):** a serious defect found
+  before 2.0.0 ships gets a **1.0.9**, built from the tag `v1.0.8` with only
+  that fix. It is a single release, not a branch that lives on.
 - **Cadence:** a release whenever something consumer-relevant lands; `edge` in
   between, as now.
 - **No version file in the sysroot.** The build stamp already answers it.
@@ -166,6 +186,7 @@ design, measurements, the CI analysis), and is never published.
 | D5 | where the plan lives | decided: this document plus the umbrella issue |
 | D6 | release concept | decided, see above (#249, cc370#523, mbt#121) |
 | D7 | documentation | decided: hand-written guides + generated reference, tool after a spike; `docs/` public, `doc/` internal |
+| D8 | scheduling | decided: the 2.0 critical path comes first; the relink round ships in 2.0; emergency 1.0.9 from `v1.0.8`; cc370 releases desirable, not blocking |
 
 ## Appendix — every header
 

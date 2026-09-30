@@ -10,6 +10,13 @@ libc370 is the base library of the whole ecosystem, so a defect here is a defect
 in httpd, mvsMF, ftpd, ufsd and every other consumer at once; that is what puts
 some cheap items high and some expensive ones low.
 
+**Since 2026-09-30 that rule puts the 2.0 critical path first (Tier 0).**
+1.0.8 is the last 1.x release and the consumers are pinned to it, so a fix that
+lands on `main` now reaches no running system until 2.0.0 ships. Everything
+from Tier 1 on keeps its order and resumes on 2.x. A serious defect found
+before 2.0.0 gets an emergency 1.0.9 from the tag `v1.0.8` (D8 in
+`doc/design-2.0.md`).
+
 *Last reconciled against the tracker: **2026-09-30**, 57 issues open (#249
 closed; #240 and #241 filed out of #39, #243–#246 and #248–#250 out of the 2.0
 plan, #251 out of #249), all 57 accounted for below.* The pass before was **2026-09-29** at 48 open (#182, #228, #229, #231, #232, #235 and #236
@@ -299,6 +306,44 @@ that never checks `ferror()` now gets a short file quietly where it used to die
 loudly. That asymmetry is the whole of **#149**, which stays open as a
 deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 1**, and its probe branch is unmerged.
+
+---
+
+## Tier 0 — the 2.0 critical path (decided 2026-09-30, D8)
+
+In this order. The plan and the gates are in `doc/design-2.0.md`; the
+checklist is #245.
+
+1. **Prep, cheap, before anything moves.**
+   - #241 and #251: the five host tests CI cannot run. Four of them (#241)
+     pin stdio contracts in the code #182 and #228 changed most: `fclose()`
+     under the FILE lock (#147), `__fabandon()` (#168), append mode (#198) and
+     `+` streams (#189). `tstjesop` (#251) pins that `jesopen()` never returns a
+     handle without a spool array (#108). Put them back into
+     `test/host/run.sh`.
+   - #140: the duplicate `clibthdi.h`, a live trap. Delete it.
+   - #243 and #248: the dead headers (miniz, PDF, `emfile`, `ipc`). No user, so
+     they go now; #248 asks for a look at the `emfile`/`ipc` code first.
+2. **#244: crypto370.** New project, release 1.0.0, adopted by httpd and mvsMF.
+   It is the one external prerequisite of the cut.
+3. **Hold the consumers' build CI:** `libc370_ref: v1.0.8` in each consumer's
+   `build.yml`. The cut lands on `main` with phase 1, not with the release, so
+   this goes in right before phase 1 merges, and not earlier, or it silences
+   the early warning for longer than necessary.
+4. **Phase 1: header moves.** It absorbs #39 step 2, #68 step 1 and #250
+   items 1–3, because it touches every `#include` line anyway. Gate:
+   byte-identical assembler for every TU.
+5. **Phase 2: internals out of the sysroot.**
+6. **The relink round** (Tier 5): #79, #50, #51, #71, #172 and #80 defect 1.
+   It is struct and signature growth that needs a coordinated consumer rebuild,
+   so it ships in the major version.
+7. **Release 2.0.0**, then one migration PR per consumer. Each removes its
+   `libc370_ref` line again.
+
+Not blocking: cc370 releases (mvslovers/cc370#523). Without them, 2.0.0 names
+its minimum cc370 by commit, as 1.0.7 and 1.0.8 did. After 2.0.0: phases 3
+and 4, #39 step 3 (`-Wall` with the three `-Wno-` flags), #68 steps 2–3, and
+#246 (function naming, 3.0).
 
 ---
 
@@ -636,6 +681,8 @@ File-scope `__asm__` blocks that define standalone routines (`EXITDRVR`,
 
 ### 4 · #39 — implicit declarations: step 1 landed (PR #242), 133 in 108 TUs left
 
+*Step 2 is now part of Tier 0, step 4 (phase 1); step 3 follows 2.0.*
+
 **Step 1 is done** (PR #242, 2026-09-30): the 8 routines with no prototype are
 declared, and the 3 calls that reached `@@ARCOU`/`@@ARFRE`/`@@WTOTB` only through
 the `__` → `@@` mapping call the declared names. Byte-identical assembler in all
@@ -667,6 +714,8 @@ it did. The pattern is worth naming for step 2: the TUs that keep a missing
 
 ### 5 · #68 — `format(printf)` for `wtof()`/`wtodumpf()`/`wtorf()`
 
+*Step 1 is now part of Tier 0, step 4 (phase 1). Steps 2–3 follow 2.0.*
+
 Cheap here, **expensive across the ecosystem**: consumers clone libc370 `main`
 unpinned, so the attribute turns httpd, mvsMF and ftpd CI red — with the breakage
 in *their* code. Keep the order the issue prescribes:
@@ -680,6 +729,8 @@ in *their* code. Keep the order the issue prescribes:
 ## Tier 4 — structural traps
 
 ### 6 · #140 — `src/thdmgr/clibthdi.h` duplicates `include/clibthdi.h`
+
+*Now Tier 0, step 1.*
 
 Filed while fixing #11, and it bit during that work. The quoted include in
 `src/thdmgr/*.c` finds the local copy, so **the library compiles against a
@@ -833,6 +884,9 @@ not about correctness.
 ---
 
 ## Tier 5 — consumers waiting (one coordinated relink, best done in a single round)
+
+*The whole tier ships in 2.0 (Tier 0, step 6): a major version is the
+coordinated relink this tier was waiting for.*
 
 ### 10 · #80 defect 1 — `__listpd()` has no way to ask for less
 
@@ -1219,6 +1273,8 @@ Latent: the only consumer, ufsd, ignores the result at every call. Small fix
 
 ### 40 · #241 — four host tests do not build since #182
 
+*Now Tier 0, step 1.*
+
 #182 (`fbca56b`) made `__aclose()` return `int`, and `tstfabnd`, `tstfcls`,
 `tstfpapp` and `tstplus` still stub it `void`. The last two were found when
 #249's runner ran all 26 tests. Measured per revision: all four build and pass
@@ -1228,17 +1284,23 @@ affected, but the #147/#168 contracts those tests pin are unguarded until then.
 
 ### 40 · #251 — host test tstjesop does not link since #126
 
+*Now Tier 0, step 1.*
+
 `jesclose()` calls `jesjobfr()` since `791ffc0` (#126), and the recipe does not
 link `jesjobfr.c`. It builds and passes at `791ffc0~1`, and has been broken
 since 2026-08-22 unnoticed. It is left out of `run.sh` until fixed.
 
 ### 42 · #244 — SHA-256, Blowfish and base64 move to crypto370
 
+*Now Tier 0, step 2.*
+
 Phase 0 of #245, so it gates the 2.0 cut: the new project has to be released
 and adopted by httpd (all three) and mvsMF (base64) before libc370 drops the
 files. No defect, and no effect on running systems until then.
 
 ### 42 · #243 — miniz headers: no implementation, no user
+
+*Now Tier 0, step 1.*
 
 Eight files in `include/`, and not one `@@MZ…`/`@@TD…` symbol is in `libc.a`.
 Check zlib370 and picozip370-app, then remove them in the 2.0 cut. The PDF,
@@ -1247,6 +1309,8 @@ have no issue of their own yet.
 
 ### 42 · #248 — dead PDF, emfile and ipc header families
 
+*Now Tier 0, step 1.*
+
 The same case as #243, found while mapping the headers: declarations with no
 symbol in `libc.a` and no user. `emfile` (45 files) and `ipc` (5 files) have
 sources in `src/wip/orig/`, never built since the mbt move. Assess them first:
@@ -1254,6 +1318,8 @@ extract anything of real value, delete the rest. PDF is headers only and can
 go directly.
 
 ### 42 · #250 — POSIX surface for 2.0
+
+*Items 1–3: Tier 0, step 4 (phase 1).*
 
 D2's findings: `usleep()` is in `libc.a` with no prototype; POSIX functions
 sit in the wrong headers (`sleep` in `<time.h>`, `setenv` in `clibenv.h`, the
@@ -1303,7 +1369,8 @@ with several C names. It changes symbols, so every consumer's code changes too:
     **right before the cut**, not earlier, or it silences the early warning.
 - **Relink round** — #79, #50, #51, #71, #172 and #80 defect 1's `max` parameter.
   Land struct and signature growth in one batch, with a CHANGELOG entry and a
-  coordinated rebuild of httpd, mvsMF and ftpd.
+  coordinated rebuild of httpd, mvsMF and ftpd. **Folded into 2.0** (Tier 0,
+  step 6).
 - **stdio after an abend** — ~~#176 and #149~~ landed together in **v1.0.6**,
   which was always the point: they were one design, not two patches. #168 had
   shipped the caller's escape hatch first (`__fabandon()`, PR #175). What is
