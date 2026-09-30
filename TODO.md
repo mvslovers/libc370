@@ -1287,8 +1287,9 @@ with several C names. It changes symbols, so every consumer's code changes too:
   standard-shaped header layout (`libc370/`, `mvs/`, `s370/`, `ibm/mvs/`,
   `ibm/jes2/`), with internals out of the sysroot. Phase 0 comes first:
   crypto370, and consumers' build CI pinned to 1.x, so the cut does not redden
-  them on `main`. The release concept (D6) is decided: #249 now, **1.0.8 is
-  the last 1.x release**, cc370 gets releases first (mvslovers/cc370#523), and
+  them on `main`. The release concept (D6) is decided and #249 has landed.
+  **1.0.8 was released on 2026-09-30 as the last 1.x**, and `main` is at
+  `2.0.0-dev`; cc370 gets releases first (mvslovers/cc370#523), and
   consumers hold their build CI on `v1.0.8` via mvslovers/mbt#121. D1, D2 and
   D7 were decided the same day, so no decision is left open.
 - **Relink round** — #79, #50, #51, #71, #172 and #80 defect 1's `max` parameter.
@@ -1313,6 +1314,13 @@ with several C names. It changes symbols, so every consumer's code changes too:
 ## Recently landed
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
+
+- **v1.0.8** (released 2026-09-30, `c3f4141`): the last 1.x release, and the
+  first one `release.yml` published. The notes are the CHANGELOG section plus
+  the cc370 commit it was built with (`4c60aa2`). It needs cc370 `f3f7e21` or
+  later, unchanged. Contents: #228, #229, #231, #232, #235, #236, #242, #249.
+  The sysroot is installed from the tag; `main` is at `2.0.0-dev`. Consumers
+  still pin 1.0.6.
 
 - **#249** (PR #252, merged 2026-09-30) - CI. `build.yml`: the library on
   Linux, with cc370 cached per commit and saved right after install; the host
