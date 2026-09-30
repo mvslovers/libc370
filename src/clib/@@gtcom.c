@@ -1,5 +1,5 @@
 #include "mvs/console.h"
-#include "clibcrt.h"
+#include "mvs/crt.h"
 
 COM *
 __gtcom(void)

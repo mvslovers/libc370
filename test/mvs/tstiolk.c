@@ -71,7 +71,7 @@
 #include <mvs/thread.h>
 #include <mvs/ecb.h>
 #include <mvs/wto.h>
-#include <clibtry.h>
+#include <mvs/recovery.h>
 
 #define NLINES  400             /* lines per writer task in round (3)   */
 #define JOINMAX 6000            /* join bound: 6000 x 10ms yield = 60s  */

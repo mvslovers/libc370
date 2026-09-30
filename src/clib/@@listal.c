@@ -9,7 +9,7 @@
 #include "mvs/dscb.h"       /* DSCB structs and prototypes  */
 #include "mvs/dslist.h"       /* __listc()                    */
 #include "clibstr.h"        /* __patmat()                   */
-#include "clibdsab.h"       /* DSAB structs and prototypes  */
+#include "mvs/dd.h"       /* DSAB structs and prototypes  */
 #include "ibm/mvs/ieftiot1.h"
 #include "ibm/mvs/iefjfcbn.h"
 

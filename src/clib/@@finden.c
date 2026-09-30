@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stddef.h>
 #include "mvs/env.h"
-#include "clibcrt.h"
+#include "mvs/crt.h"
 #include "mvs/lock.h"
 
 char *

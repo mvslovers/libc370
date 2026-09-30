@@ -8,7 +8,7 @@
 #include "socket.h"
 #include "stdlib.h"
 #include "string.h"
-#include "clibcrt.h"
+#include "mvs/crt.h"
 
 /* gethostbyname() */
 __asm__("\n&FUNC    SETC 'gethostbyname'");

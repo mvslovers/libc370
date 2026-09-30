@@ -53,7 +53,7 @@
 #include <string.h>
 #include <clibos.h>
 #include <mvs/link.h>
-#include <clibtry.h>
+#include <mvs/recovery.h>
 #include <mvs/wto.h>
 
 #define ROUNDS  4

@@ -66,7 +66,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "clibssct.h"   /* ssct_find(), SSCT                                */
+#include "mvs/subsys.h"   /* ssct_find(), SSCT                                */
 #include "ibm/jes2/svt.h"    /* HASPSVT, svhct                                   */
 #include "ibm/jes2/hct.h"    /* __HCT - the checkpoint master record             */
 #include "mvs/jes2ckpt.h"     /* checkpoint_open(), HASPCP                        */
@@ -74,7 +74,7 @@
 #include "mvs/dscb.h"   /* __locate(), __dscbdv(), LOCWORK, DSCB            */
 #include "libc370/array.h"    /* arraycount()                                     */
 #include "clibio.h"     /* __dsalcf(), __dsfree()                           */
-#include "clibtry.h"    /* try(), tryrc()                                   */
+#include "mvs/recovery.h"    /* try(), tryrc()                                   */
 #include "mvs/wto.h"    /* wtof()                                           */
 
 #define CKPTDSN     "SYS1.HASPCKPT"

@@ -60,8 +60,8 @@
 
 */
 #include "mvs/lock.h"
-#include "clibstae.h"
-#include "clibcrt.h"
+#include "mvs/recovery.h"
+#include "mvs/crt.h"
 #include "libc370/array.h"
 #include "mvs/ecb.h"
 

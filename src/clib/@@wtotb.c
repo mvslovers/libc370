@@ -1,6 +1,6 @@
 #include <mvs/wto.h>
-#include <clibcrt.h>
-#include <clibstae.h>
+#include <mvs/crt.h>
+#include <mvs/recovery.h>
 
 static void try_traceback(SAVEAREA *sa);
 

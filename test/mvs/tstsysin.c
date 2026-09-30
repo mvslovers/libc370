@@ -59,7 +59,7 @@
 #include <string.h>
 #include <errno.h>
 #include <mvs/wto.h>
-#include <clibdsab.h>
+#include <mvs/dd.h>
 #include <ibm/mvs/ieftiot1.h>
 
 static int mbt_run = 0, mbt_passed = 0, mbt_failed = 0;

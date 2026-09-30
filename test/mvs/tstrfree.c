@@ -69,7 +69,7 @@
 #include <string.h>
 #include <errno.h>
 #include <mvs/wto.h>
-#include <clibdsab.h>
+#include <mvs/dd.h>
 #include <mvs/rfile.h>
 
 extern int      __fildef(char *fdddname, char *fnm, int mymode, int type);

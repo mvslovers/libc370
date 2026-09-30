@@ -11,7 +11,7 @@
 #include "libc370/array.h"
 #include "mvs/dscb.h"
 #include "mvs/dslist.h"
-#include "clibcrt.h"
+#include "mvs/crt.h"
 
 static int
 myprt(void *udata, const char *fmt, ...)

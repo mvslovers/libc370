@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <clib.h>
-#include <clibssib.h>
+#include <mvs/subsys.h>
 #include <libc370/array.h>        /* dynamic array prototypes     */
 #include <mvs/ispf.h>		/* ISPF prototypes				*/
 #include <mvs/link.h>		/* __link()						*/

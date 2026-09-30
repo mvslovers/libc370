@@ -38,7 +38,7 @@
 #include <stdio.h>
 #include <mvs/lock.h>
 #include <mvs/wto.h>
-#include <clibtry.h>
+#include <mvs/recovery.h>
 
 static int  bad = 0;
 

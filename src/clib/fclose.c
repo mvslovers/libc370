@@ -8,7 +8,7 @@
 #include <limits.h>
 #include <stddef.h>
 #include <mvssupa.h>
-#include "clibcrt.h"
+#include "mvs/crt.h"
 #include "mvs/lock.h"
 #include "libc370/array.h"
 

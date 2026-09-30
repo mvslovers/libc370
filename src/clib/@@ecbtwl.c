@@ -1,5 +1,5 @@
 #include <mvs/ecb.h>
-#include <clibcrt.h>
+#include <mvs/crt.h>
 #include <mvs/wto.h>
 
 __asm__("\n&FUNC    SETC 'ecb_timed_waitlist'");

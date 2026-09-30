@@ -1,5 +1,5 @@
 #define __JPAGET__
-#include "clibcrt.h"
+#include "mvs/crt.h"
 #include "clibjpa.h"
 
 CLIBJPA *

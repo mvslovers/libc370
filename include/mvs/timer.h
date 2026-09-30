@@ -12,13 +12,11 @@
 #include <socket.h> /* has struct timeval */
 
 #include <libc370/array.h>
-#include <clibcrt.h>
+#include <mvs/crt.h>
 #include <mvs/ecb.h>
-#include <clibgrt.h>
 #include <mvs/lock.h>
-#include <clibppa.h>
 #include <s370/savearea.h>
-#include <clibstae.h>
+#include <mvs/recovery.h>
 #include <mvs/thread.h>
 #include <clibwsa.h>
 #include <mvs/wto.h>

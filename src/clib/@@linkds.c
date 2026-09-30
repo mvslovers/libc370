@@ -1,6 +1,6 @@
 /* __linkds() - Link to an external program with estae recovery, dump suppressed */
 #include "mvs/link.h"
-#include "clibstae.h"
+#include "mvs/recovery.h"
 
 /* returns 0 otherwise abend code, linked pgm rc returned in prc */
 __asm__("\n&FUNC    SETC 'trylink'");

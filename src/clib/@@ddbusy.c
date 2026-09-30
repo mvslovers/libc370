@@ -4,8 +4,8 @@
 #include <clib.h>
 #include <libc370/array.h>
 #include "mvs/lock.h"
-#include <clibdsab.h>
-#include <clibcrt.h>
+#include <mvs/dd.h>
+#include <mvs/crt.h>
 #include <ibm/mvs/ieftiot1.h>
 
 /*

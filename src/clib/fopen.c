@@ -5,8 +5,8 @@
 #include <errno.h>
 #include "mvs/lock.h"
 #include "libc370/array.h"
-#include "clibcrt.h"
-#include "clibtry.h"
+#include "mvs/crt.h"
+#include "mvs/recovery.h"
 
 extern char *__getpfx(void);
 

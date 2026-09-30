@@ -6,7 +6,7 @@
 #include <string.h>
 #include <mvssupa.h>
 #include "mvs/rfile.h"
-#include "clibcrt.h"
+#include "mvs/crt.h"
 
 extern int      __fildef(char *fdddname, char *fnm, int mymode, int type);
 extern int      __fdclr(char *fdddname);

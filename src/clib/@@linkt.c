@@ -1,6 +1,6 @@
 /* __linkt() - Link to an external program with estae recovery via try() */
 #include "mvs/link.h"
-#include "clibstae.h"
+#include "mvs/recovery.h"
 
 /* returns 0 otherwise abend code, linked pgm rc returned in prc */
 int __linkt(const char *pgm, void *dcb, void *r1, int *prc)

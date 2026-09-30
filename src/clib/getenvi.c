@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include "mvs/env.h"
 #include "mvs/lock.h"
-#include "clibcrt.h"
+#include "mvs/crt.h"
 
 char *
 getenvi(const char *name)

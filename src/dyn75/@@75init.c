@@ -6,7 +6,7 @@
 #include "clibsock.h"
 #include "mvs/lock.h"
 #include "libc370/array.h"
-#include "clibgrt.h"
+#include "mvs/crt.h"
 
 __asm__("\n&FUNC    SETC '@@75init'");
 extern int

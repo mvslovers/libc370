@@ -1,4 +1,4 @@
-#include <clibssvt.h>
+#include <mvs/subsys.h>
 #include <clibos.h>
 #include <errno.h>
 

@@ -1,7 +1,7 @@
 /* @@AUTASK.C - set APF authorization for task */
-#include "clibcrt.h"
+#include "mvs/crt.h"
 #include "mvs/apf.h"
-#include "clibstae.h"
+#include "mvs/recovery.h"
 
 static void authorize(void);
 
