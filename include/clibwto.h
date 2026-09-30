@@ -17,6 +17,7 @@ extern void wto_traceback(SAVEAREA *sa) asm("@@WTOTB");
 
 /* write to operator with reply */
 extern void wtorf(char *reply, unsigned replymax, const char *text, ...);
+extern void vwtorf(char *reply, unsigned replymax, const char *text, va_list tList);
 extern void wtor(char *reply, unsigned replymax, const char *text);
 
 #endif

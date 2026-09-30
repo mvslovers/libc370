@@ -201,6 +201,13 @@ extern size_t   __fwrite(const void *vptr, size_t size, size_t nmemb, FILE *fp);
  * grt->grtfile, free it, and - when unlk is nonzero - release the FILE lock.
  * Returns __fpfree()'s rc, 0 when there was no DD to free. */
 extern int      __fpterm(FILE *fp, int unlk);
+extern int      __fpfree(FILE *fp);
+extern int      __fptmp(FILE *fp);
+
+/* the formatting engines behind the printf and scanf families: output goes
+ * to fq, or to s when fq is NULL; input comes from fp, or from s when fp is NULL */
+extern int      vvprintf(const char *format, va_list arg, FILE *fq, char *s);
+extern int      vvscanf(const char *format, va_list arg, FILE *fp, const char *s);
 
 /* __dsalc() allocate dataset - returns ddname if successful */
 extern int __dsalc(char *ddname, const char *opts);

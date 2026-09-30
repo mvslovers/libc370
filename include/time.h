@@ -63,6 +63,10 @@ void tzset(void);
 **            CVTTZ, and calls this.  Returns 0, or 1 when there is no CRT. */
 int __tzset(int tzoffset);
 
+/* __tzget() - the CRT timezone offset in seconds from UTC, as __tzset() set it.
+**            Returns 0 when there is no CRT. */
+int __tzget(void);
+
 /* sleep() - wait the given number of seconds on a timed ECB.
 **           Always returns 0: nothing on this target cuts the wait short. */
 int sleep(unsigned seconds);

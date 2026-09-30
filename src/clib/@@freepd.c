@@ -12,7 +12,7 @@ void
 __freepd(PDSLIST ***pdslist)
 {
     if (pdslist && *pdslist) {
-        unsigned    count = __arcou(pdslist);
+        unsigned    count = arraycount(pdslist);
         unsigned    n;
 
         if (count) {
@@ -23,7 +23,7 @@ __freepd(PDSLIST ***pdslist)
                 list[n] = 0;
             }
         }
-        __arfre(pdslist);
+        arrayfree(pdslist);
         *pdslist = 0;
     }
 }

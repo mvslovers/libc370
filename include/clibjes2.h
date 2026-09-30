@@ -260,6 +260,10 @@ int jesxwrtr(SSSO *ssso, const char *class_list, const char *dest, const char *f
 /* jesxdone() - tell jes we're done with sysout processing */
 int jesxdone(SSSO *ssso);
 
+/* initssob() - clear the SSOB header, set its eyecatcher and length, and point
+**              it at ssobindv.  Always returns 0. */
+int initssob(SSOB *ssob, void *ssobindv);
+
 int jesiropn(VSFILE **vsfile);
 int jesirput(VSFILE  *vsfile, char card[80]);
 int jesircls(VSFILE  *vsfile);
