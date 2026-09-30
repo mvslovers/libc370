@@ -6,7 +6,11 @@ change a single instruction, and none of it may change what libc.a exports.
 This builds the base and the working tree and compares three things:
 
   1. every generated .s, byte for byte  (src/clib/@@ver.s, the build stamp,
-     is expected to differ and is skipped)
+     is expected to differ and is skipped).  A .s that differs only in how
+     cc370 numbered its static functions (@@F7 -> @@F8 ...) is reported but
+     passes: the number is a local label, and an unused static __inline in a
+     header takes one without emitting code, so a header that stops
+     declaring one renumbers every TU that saw it and changes nothing else
   2. the archive: its members and its symbol table (ar370 t)
   3. the compiler warnings, by message; a warning inside a header that moved
      counts as the same warning
@@ -44,6 +48,20 @@ def build(tree):
     """mklibc.py build in tree -> (stdout, ok)."""
     r = run([sys.executable, os.path.join(tree, "sdk", "mklibc.py"), "build"], cwd=tree)
     return r.stdout + r.stderr, r.returncode == 0
+
+
+def renumbered(a, b):
+    """True when two .s differ only in static function numbering: every
+    "@@Fn" and ",Fn" is renamed in order of first appearance, and runs of
+    blanks are folded, since the label column pads to the number's width."""
+    def canon(text):
+        seen = {}
+
+        def sub(m):
+            k = seen.setdefault(m.group(2), len(seen))
+            return m.group(1) + b"F#" + str(k).encode()
+        return re.sub(rb"[ \t]+", b" ", re.sub(rb"(@@|,)F(\d+)", sub, text))
+    return canon(a) == canon(b)
 
 
 def asm_files(tree):
@@ -154,10 +172,13 @@ def main():
         # 1. assembler
         ba, ha = asm_files(wt), asm_files(ROOT)
         same = 0
+        renum = []
         for p in sorted(set(ba) | set(ha)):
             if p == STAMP:
                 continue
-            if p not in ba or p not in ha or ba[p] != ha[p]:
+            if p in ba and p in ha and ba[p] != ha[p] and renumbered(ba[p], ha[p]):
+                renum.append(p)
+            elif p not in ba or p not in ha or ba[p] != ha[p]:
                 found["asm"].add(p)
             else:
                 same += 1
@@ -166,7 +187,8 @@ def main():
             ok = p in allow["asm"]
             print(f"[gate] asm     {p}: {how}" + (f"  (allowed: {allow['asm'][p]})" if ok else ""))
             problems += not ok
-        print(f"[gate] asm     {same} identical, {len(found['asm'])} not "
+        print(f"[gate] asm     {same} identical, {len(renum)} identical but for "
+              f"static function numbering, {len(found['asm'])} not "
               f"({len(ba)} in base, {len(ha)} in tree)")
 
         # 2. archive

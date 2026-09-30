@@ -1,5 +1,6 @@
 /* MEMCPYP.C */
-#include "clibstr.h"
+#include <libc370/strutil.h>
+#include "string.h"
 
 void *
 memcpyp(void *target, int tlen, void *source, int slen, int pad)

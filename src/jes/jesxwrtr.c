@@ -1,5 +1,6 @@
+#include <libc370/strutil.h>
 #include <ibm/mvs/iefssso.h>
-#include <clibstr.h>
+#include <string.h>
 #include <mvs/jes2.h>
 
 int jesxwrtr(SSSO *ssso, const char *class_list, const char *dest, const char *form)

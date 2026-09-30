@@ -103,6 +103,7 @@
  *
  * RC: 0 = all expectations met, 8 = at least one did not.
  */
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

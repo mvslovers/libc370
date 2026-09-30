@@ -1,4 +1,5 @@
 /* @@FINDEN.C */
+#include <strings.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -26,7 +27,7 @@ __findenv(const char *name, int *index, int nocase)
             if (!envvar->name) continue;
 
             if (nocase) {
-                if (stricmp(envvar->name, name)==0) {
+                if (strcasecmp(envvar->name, name)==0) {
                     if (index) *index = i;
                     return envvar->value;
                 }

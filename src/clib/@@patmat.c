@@ -1,5 +1,6 @@
 /* @@PATMAT.C - pattern match */
-#include "clibstr.h"
+#include <libc370/strutil.h>
+#include "string.h"
 
 int
 __patmat( const char *str, const char *pat )

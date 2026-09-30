@@ -1,6 +1,7 @@
+#include <libc370/strutil.h>
 #include <ibm/mvs/iefsscs.h>
 #include <ibm/mvs/iefssso.h>
-#include <clibstr.h>
+#include <string.h>
 #include <mvs/jes2.h>
 
 int jesdelj(const char *jobname, const char *jobid)

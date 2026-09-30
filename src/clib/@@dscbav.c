@@ -2,8 +2,9 @@
 /*
 /* Data Set Control Block access routines
  */
+#include <libc370/strutil.h>
 #include "mvs/dscb.h"
-#include "clibstr.h"
+#include "string.h"
 
 #define SEEK   0xC0800000
 

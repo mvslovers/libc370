@@ -3,9 +3,10 @@
 /* Locate Data Set By Name
 /* If dataset is found (rc==0) volser is returned in the &workarea[6]
 */
+#include <libc370/strutil.h>
 #include <ctype.h>
 #include "mvs/dscb.h"
-#include "clibstr.h"
+#include "string.h"
 
 #define LOCATE 0x44000000
 

@@ -2,8 +2,9 @@
 /*
 /* Data Set Control Block access routines
 */
+#include <libc370/strutil.h>
 #include "mvs/dscb.h"
-#include "clibstr.h"
+#include "string.h"
 
 #define SEARCH 0xC1000000
 #define VTOCDSN "\x04\x04\x04\x04\x04\x04\x04\x04\x04\x04" \

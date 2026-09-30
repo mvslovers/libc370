@@ -1,4 +1,5 @@
 /* @@LISTPD.C - create PDSLIST array */
+#include <libc370/strutil.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,7 +8,7 @@
 #include <time.h>
 #include "libc370/array.h"        /* dynamic array prototypes     */
 #include "mvs/dslist.h"       /* __listpd()                   */
-#include "clibstr.h"        /* __patmat()                   */
+#include "string.h"        /* __patmat()                   */
 
 PDSLIST **
 __listpd(const char *dataset, const char *filter)

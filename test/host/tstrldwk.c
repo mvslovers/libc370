@@ -87,14 +87,14 @@
  *   -D'__asm__(...)=' erases the S/370 assembler the host assembler rejects:
  *                     the file-scope statements in @@loadhi.c
  *                     (__asm__("\n&FUNC SETC 'process_rldr'")) and the inline
- *                     MVCL in clibstr.h's static memset().  It is variadic
+ *                     MVCL in string.h's static memset().  It is variadic
  *                     because that second one is an extended asm with operand
  *                     lists, so a one-parameter macro does not match it.
  *   -D__volatile__=   for the same reason - the token sits between __asm__ and
  *                     the '(', which stops the macro matching at all.
  *   NOTE that this leaves libc370's memset() a no-op stub, so this file uses
  *                     plain loops rather than memset().  memcpy() is only a
- *                     declaration in clibstr.h and resolves to the host's.
+ *                     declaration in string.h and resolves to the host's.
  *   -D__32BIT__       is what libc370's own stddef.h keys size_t off.
  *   ASAN              is load-bearing here, not decoration: case 1 puts the
  *                     record in an allocation of exactly its own length, so a

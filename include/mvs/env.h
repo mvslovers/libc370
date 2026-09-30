@@ -1,6 +1,8 @@
 #ifndef CLIBENV_H
 #define CLIBENV_H
 
+#include <stdlib.h>
+
 typedef struct __envvar __ENVVAR;
 struct __envvar {
     char    *name;
@@ -17,13 +19,7 @@ extern char *   getenv(const char *name);
 
 extern char *   getenvi(const char *name);
 
-extern int      setenv(const char *name, const char *value, int rewrite);
-
 extern int      setenvi(const char *name, int value, int rewrite);
-
-extern int      putenv(const char *str);
-
-extern int      unsetenv(const char *name);
 
 /* load "name=value" lines from a data set into the environment; fn is a
    name fopen() understands, e.g. "dd:SYSENV".  MVS sequence numbers in the
