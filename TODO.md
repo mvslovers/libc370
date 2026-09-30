@@ -371,10 +371,10 @@ checklist is #245.
      (`mvs/jes2spool.h`)
    - #280: private headers included by their path from the root (D10);
      #281: `libc370/` → `ext/`, `libc370/socket.h` → `mvs/socket.h`
-   - next: the remaining rows of #274 — decided: `printf.h`,
-     `crtanchor.h`, `clibsvc.h` (internal), `mvs/wsa.h`, `mvs/jes2spool.h`
-     (public); names still open: `__75.h`, `enqpl.h`, `modmap.h`,
-     `__time64.h`
+   - #282: the remaining rows — `printf.h`, `crtanchor.h`, `clibsvc.h`,
+     `enqpl.h`, `x75.h`, `calendar.h` internal; `mvs/wsa.h`,
+     `mvs/jes2spool.h` public; `modmap.h` trimmed to `loadmod.h`
+   - **phase 2 done** (summary on #274); the migration script is still owed
 5a. **Phase 3 in 2.0 (#278, D9):** sources by area, `src/` mirrors
    `include/`, assembler beside its C, `src/wip/` → `attic/`. Tooling
    first: gate path map, unique basenames, `mklibc.py` finds `.asm` under
