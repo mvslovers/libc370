@@ -359,6 +359,15 @@ checklist is #245.
      left for phase 2. Leftover: `modmap.h` includes the internal `bsam.h`
      until phase 2 moves it
 5. **Phase 2: internals out of the sysroot.**
+   On the branch `2.0` (#274), 14 rows reviewed 2026-09-30:
+   - #275: `@@75.h` and `get3.h` removed; `__75.h`, `clibres.h`, `clibspl.h`
+     moved to `src/internal/` (the last two stay for a later review;
+     `clibspl.h` is a Metal C candidate)
+   - #276: `@@memmgr.h` and the never-built `USE_MEMMGR` branches removed
+   - next: the plain moves (`clibprti.h`, `clibprtf.h`, `clibsvc.h`,
+     `clibjpa.h`, `enqpl.h`, `modmap.h`), then `clibwsa.h` (included by
+     the public `mvs/crt.h`, `mvs/timer.h`) and `clibjs.h` (by `mvs/jes2.h`)
+     after a written proposal
 6. **The relink round** (Tier 5): #79, #50, #51, #71, #172 and #80 defect 1.
    It is struct and signature growth that needs a coordinated consumer rebuild,
    so it ships in the major version.
