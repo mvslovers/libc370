@@ -1,4 +1,4 @@
-#include <hasppso.h>
+#include <ibm/jes2/pso.h>
 
 /* returns the address of the Process SYSOUT control block */
 __PSO *__getpso(void)

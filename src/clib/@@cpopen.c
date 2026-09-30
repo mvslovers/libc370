@@ -9,8 +9,8 @@
 #include "osdcb.h"
 #include "osjfcb.h"
 #include "clibcp.h"     /* JES Checkpoint prototypes and functions          */
-#include "haspjqe.h"    /* JES Job Queue Element                            */
-#include "haspjoe.h"    /* JES Job Output Element                           */
+#include "ibm/jes2/jqe.h"    /* JES Job Queue Element                            */
+#include "ibm/jes2/joe.h"    /* JES Job Output Element                           */
 
 __asm("\n"
 "HASPCKPT DCB   DDNAME=HASPCKPT,DSORG=PS,MACRF=(RCP),                   X\n"

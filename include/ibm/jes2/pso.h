@@ -1,6 +1,6 @@
 #ifndef HASPPSO_H
 #define HASPPSO_H
-#include "hasppddb.h"
+#include "ibm/jes2/pddb.h"
 #include "iefssso.h"
 /**********************************************************************
 *                                                                     *

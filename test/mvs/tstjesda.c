@@ -67,8 +67,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "clibssct.h"   /* ssct_find(), SSCT                                */
-#include "haspsvt.h"    /* HASPSVT, svhct                                   */
-#include "hasphct.h"    /* __HCT - the checkpoint master record             */
+#include "ibm/jes2/svt.h"    /* HASPSVT, svhct                                   */
+#include "ibm/jes2/hct.h"    /* __HCT - the checkpoint master record             */
 #include "clibcp.h"     /* checkpoint_open(), HASPCP                        */
 #include "cliblist.h"   /* __listvl(), VOLLIST                              */
 #include "clibdscb.h"   /* __locate(), __dscbdv(), LOCWORK, DSCB            */

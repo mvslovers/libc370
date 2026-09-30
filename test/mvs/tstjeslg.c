@@ -68,9 +68,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "hasphct.h"    /* JES Checkpoint Control Table                     */
-#include "hasppddb.h"   /* JES PDDB                                         */
-#include "haspiot.h"    /* JES IOT (+ track group map)                      */
+#include "ibm/jes2/hct.h"    /* JES Checkpoint Control Table                     */
+#include "ibm/jes2/pddb.h"   /* JES PDDB                                         */
+#include "ibm/jes2/iot.h"    /* JES IOT (+ track group map)                      */
 #include "clibjes2.h"   /* jesopen/jesjob/jesprint                          */
 #include "jesprb.h"     /* __jesprb() - the REAL record walk (#45)          */
 #include "clibary.h"    /* arraycount                                       */
