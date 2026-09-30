@@ -28,6 +28,9 @@
  *   seek to the current position, and forward, do not reopen (brexx370)
  *   '+' on a non-DASD device is refused with EINVAL
  *   the byte view: ftell() after "L1\n" on FB 80 is 81, matching a reader
+ *   a turn to reading whose CLOSE loses the last block (#228): the turn
+ *   completes and the stream reads from the target, but the seek answers
+ *   -1 ENOSPC/EIO and the error indicator is set; reads after clearerr()
  *
  * BUILD / RUN (host, from test/host):
  *
@@ -129,7 +132,15 @@ int __awrite(void *handle, unsigned char **buf, size_t *sz)
     return 0;
 }
 
-void __aclose(void *handle)             { (void)handle; n_close++; }
+static int              aclose_rc;      /* what the next __aclose() answers */
+int __aclose(void *handle)
+{
+    int rc = aclose_rc;
+    (void)handle;
+    n_close++;
+    aclose_rc = 0;
+    return rc;
+}
 int  __ddbusy(FILE *fp)                 { (void)fp; return 0; }
 int  __rdjfcb(DCB *dcb, JFCB *jfcb)     { (void)dcb; (void)jfcb; return 0; }
 FILE *__reopen(const char *fn, const char *mode, FILE *fp)
@@ -173,6 +184,7 @@ static void init_tolow(void)
 #undef ftell
 #include "../../src/clib/fseek.c"
 #include "../../src/clib/ftell.c"
+#include "../../src/clib/clearerr.c"
 
 /* ---- helpers ------------------------------------------------------------ */
 
@@ -235,6 +247,40 @@ static void shut(void)
     __fflush(&f);
     __aclose(f.dcb);
     free(f.buf);
+}
+
+/* #228: w+ writes L1 L2, then fseek(0) turns the DCB to reading and its
+   CLOSE answers acrc - the last block is lost.  The turn completes (the DD
+   is open again, reading, at the target), but the seek answers -1 with
+   errno err and ferror() set, so the lost tail cannot pass for the end.
+   The flags are read before anything else: the next seek clears them.
+   A stream in error does not read (#149); after clearerr() it reads L1 */
+static void lostblock(int acrc, int err, int nospc, const char *what)
+{
+    char    *s, *s0;
+    long    t;
+    int     rc, e, before, flags;
+
+    nrec = 0;
+    op("w+");
+    put("L1\nL2\n");
+    aclose_rc = acrc;
+    before = n_open;
+    errno = 0;
+    rc = __fseek(&f, 0, SEEK_SET);
+    e = errno;
+    flags = f.flags;
+    t = ftell(&f);
+    s0 = line();
+    clearerr(&f);
+    s = line();
+    check(rc == -1 && e == err && n_open == before + 1
+          && !(flags & _FILE_FLAG_DCBOUT)
+          && (flags & _FILE_FLAG_ERROR)
+          && !!(flags & _FILE_FLAG_ENOSPC) == nospc
+          && t == 0 && !s0 && s && !strcmp(s, "L1"),
+          what);
+    shut();
 }
 
 int main(void)
@@ -493,6 +539,12 @@ int main(void)
     check(rc == 0 && n_open == before + 1 && s1 && !strcmp(s1, "L1"),
           "fseek backward past the record: one reopen, reads L1");
     shut();
+
+    printf("a lost last block on the turn (#228)\n");
+    lostblock(12, ENOSPC, 1,
+              "CLOSE rc 12: -1 ENOSPC, ferror + ENOSPC flag, reopened at 0, reads L1 after clearerr()");
+    lostblock(8,  EIO,    0,
+              "CLOSE rc 8: -1 EIO, ferror, no ENOSPC flag, reopened at 0, reads L1 after clearerr()");
 
     printf("devices\n");
     devt = DCBDVTRM;

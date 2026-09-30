@@ -75,7 +75,7 @@ void *__aopen(const char *ddname, int *mode, int *recfm, int *lrecl,
 }
 
 int __ddbusy(FILE *fp)                  { (void)fp; return 0; }
-void __aclose(void *handle)             { (void)handle; }
+int __aclose(void *handle)              { (void)handle; return 0; }
 int __rdjfcb(DCB *dcb, JFCB *jfcb)      { (void)dcb; (void)jfcb; return 0; }
 
 /* libc370's tolower() is a table macro over __tolow.  The library's table
