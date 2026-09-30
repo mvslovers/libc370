@@ -10,9 +10,9 @@ libc370 is the base library of the whole ecosystem, so a defect here is a defect
 in httpd, mvsMF, ftpd, ufsd and every other consumer at once; that is what puts
 some cheap items high and some expensive ones low.
 
-*Last reconciled against the tracker: **2026-09-30**, 57 issues open (none
+*Last reconciled against the tracker: **2026-09-30**, 57 issues open (#249
 closed; #240 and #241 filed out of #39, #243–#246 and #248–#250 out of the 2.0
-plan), all 57 accounted for below.* The pass before was **2026-09-29** at 48 open (#182, #228, #229, #231, #232, #235 and #236
+plan, #251 out of #249), all 57 accounted for below.* The pass before was **2026-09-29** at 48 open (#182, #228, #229, #231, #232, #235 and #236
 closed, #228, #229, #231, #232, #235 and #236 filed the same day). That pass found **#181** and **#182** (filed 2026-09-13/14) in
 no rank at all, fifteen days after they were filed — #182 is now rank 1 and
 #181 rank 39. The pass before was 2026-09-13 at 41 open, all 41 ranked. #149 was fixed and released the same day (PR #180, **v1.0.6**)
@@ -595,14 +595,10 @@ PR #139 is what made this the campaign's remaining content: it bounded
 
 ## Tier 3 — campaign: make the compiler see it (order matters)
 
-### 3 · #249 — CI and release automation (decided 2026-09-30: now)
+### ~~3 · #249~~ — fixed, PR #252, 2026-09-30
 
-libc370 has no `.github/`. `build.yml` on PRs (build, `as370` rc, warning
-count, the host tests that #241 showed nobody runs) and `release.yml` on tags
-(notes from `CHANGELOG.md`, the minimum cc370 named). It is the D6 decision of
-`doc/design-2.0.md`, it does not wait for 2.0, and it is where #39 step 3's
-warning gate will run. Sysroot tarballs as assets wait for cc370 releases
-(mvslovers/cc370#523).
+See "Recently landed". The warning count is reported, not gated: #39 step 3
+turns it into a gate. `release.yml` has not run yet; its first run is v1.0.8.
 
 ### 3 · #125 — inline-asm SVC macros with partial clobber lists
 
@@ -1221,13 +1217,20 @@ generated code leaves `0x100 | key<<4` in R15 (384 for a key-8 caller), never 0.
 Latent: the only consumer, ufsd, ignores the result at every call. Small fix
 (`return 0;`), but the test needs the `IPK`/`SPKA` asm stubbed or an MVS run.
 
-### 40 · #241 — host tests `tstfabnd`/`tstfcls` do not build since #182
+### 40 · #241 — four host tests do not build since #182
 
-#182 (`fbca56b`) made `__aclose()` return `int`; both tests still stub it `void`.
-Measured per revision: both build and pass at `fbca56b~1`, fail to build from
-`fbca56b` on. Nothing noticed because nothing builds `test/host` automatically.
-No running system affected, but the #147/#168 contracts those tests pin are
-unguarded until it is fixed.
+#182 (`fbca56b`) made `__aclose()` return `int`, and `tstfabnd`, `tstfcls`,
+`tstfpapp` and `tstplus` still stub it `void`. The last two were found when
+#249's runner ran all 26 tests. Measured per revision: all four build and pass
+at `fbca56b~1`, and fail to build from `fbca56b` on. `test/host/run.sh` leaves
+them out; put them back in the PR that fixes them. No running system is
+affected, but the #147/#168 contracts those tests pin are unguarded until then.
+
+### 40 · #251 — host test tstjesop does not link since #126
+
+`jesclose()` calls `jesjobfr()` since `791ffc0` (#126), and the recipe does not
+link `jesjobfr.c`. It builds and passes at `791ffc0~1`, and has been broken
+since 2026-08-22 unnoticed. It is left out of `run.sh` until fixed.
 
 ### 42 · #244 — SHA-256, Blowfish and base64 move to crypto370
 
@@ -1310,6 +1313,14 @@ with several C names. It changes symbols, so every consumer's code changes too:
 ## Recently landed
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
+
+- **#249** (PR #252, merged 2026-09-30) - CI. `build.yml`: the library on
+  Linux, with cc370 cached per commit and saved right after install; the host
+  tests in a second job on **macOS**, because on Linux ELF reads the `@@` of
+  the `asm("@@…")` labels as a version separator (measured: 8/21 fail under
+  gcc, 7/21 under clang, 0 on macOS). `release.yml`: `VERSION` must match the
+  tag, and the notes come from `CHANGELOG.md`. `make test-host` /
+  `test/host/run.sh`: 21 of 26 tests; the five broken ones are #241 and #251.
 
 - **2.0 plan** (PR #247, merged 2026-09-30) - `doc/design-2.0.md`: target
   layout, the phases with their gates, the release concept and a mapping for
