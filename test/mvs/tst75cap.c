@@ -88,7 +88,7 @@
 #include <mvs/wto.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
-#include <libc370/socket.h>
+#include <mvs/socket.h>
 #include "src/internal/__75.h"
 
 #define PAGE        4096            /* MVS page size                        */

@@ -1,4 +1,4 @@
-#include <libc370/strutil.h>
+#include <ext/strutil.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>

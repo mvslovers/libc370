@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stddef.h>
 #include "mvs/dynalloc.h"
-#include "libc370/array.h"
+#include "ext/array.h"
 #include "mvs/crt.h"
 #include "stdio.h"
 

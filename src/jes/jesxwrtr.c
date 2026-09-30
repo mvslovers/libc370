@@ -1,4 +1,4 @@
-#include <libc370/strutil.h>
+#include <ext/strutil.h>
 #include <ibm/mvs/iefssso.h>
 #include <string.h>
 #include <mvs/jes2.h>

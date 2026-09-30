@@ -7,7 +7,7 @@
 #include "src/internal/bsam.h"
 #include <mvs/dynalloc.h>
 #include "mvs/dynalloc.h"
-#include "libc370/array.h"
+#include "ext/array.h"
 
 int
 __fpold(FILE *fp)

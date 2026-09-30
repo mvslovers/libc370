@@ -2,7 +2,7 @@
 /*
 /* Data Set Control Block access routines
 */
-#include <libc370/strutil.h>
+#include <ext/strutil.h>
 #include <ctype.h>
 #include "mvs/dscb.h"
 #include "string.h"

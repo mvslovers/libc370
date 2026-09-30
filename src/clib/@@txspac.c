@@ -1,6 +1,6 @@
 /* @@TXSPAC.C */
 #include "mvs/dynalloc.h"
-#include "libc370/array.h"
+#include "ext/array.h"
 
 int
 __txspac(TXT99 ***txt99, const char *space)

@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include <libc370/int64.h>
+#include <ext/int64.h>
 
 __asm__("\n&FUNC    SETC '__64_dec'");
 void __64_dec(__64* n)

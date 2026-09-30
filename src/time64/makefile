@@ -33,7 +33,7 @@ C_FILES := tm64asc.c \
 
 A_FILES :=
 
-# Rebuild .s files when libc370/int64.h changes
+# Rebuild .s files when ext/int64.h changes
 %.s: %.c $(INC_DIR)/clib64.h
 	@echo "Compile $(notdir $<)"
 	$(CC) $(CFLAGS) -c $< -o $@

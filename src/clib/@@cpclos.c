@@ -6,7 +6,7 @@
 #include <stddef.h>
 #include <mvs/dynalloc.h>
 #include "mvs/dynalloc.h"
-#include "libc370/array.h"
+#include "ext/array.h"
 #include "ibm/mvs/dcbd.h"
 #include "ibm/mvs/iefjfcbn.h"
 #include "mvs/jes2ckpt.h"     /* JES Checkpoint prototypes and functions            */

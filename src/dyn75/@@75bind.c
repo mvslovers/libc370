@@ -8,7 +8,7 @@
 #include "src/internal/dyn75.h"
 #include "errno.h"
 #include "time.h"
-#include "libc370/socket.h"
+#include "mvs/socket.h"
 #include "mvs/wto.h"
 
 /* bind() */

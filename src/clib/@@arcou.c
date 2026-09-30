@@ -1,7 +1,7 @@
 /* @@ARCOU.C
 ** Dynamic array
 */
-#include "libc370/array.h"
+#include "ext/array.h"
 
 __asm__("\n&FUNC    SETC 'arraycount'");
 unsigned

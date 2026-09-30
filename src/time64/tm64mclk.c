@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
-#include <libc370/time64.h>
+#include <ext/time64.h>
 
 __asm__("\n&FUNC    SETC 'mclock64'");
 mclock64_t mclock64(void)

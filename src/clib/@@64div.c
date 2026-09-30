@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include <libc370/int64.h>
+#include <ext/int64.h>
 
 __asm__("\n&FUNC    SETC '__64_div'");
 void __64_div(__64* a, __64* b, __64* c)

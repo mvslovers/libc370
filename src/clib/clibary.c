@@ -1,6 +1,6 @@
 #define LIB_CLIBARY
 #define CLIBARY_C
-#include "libc370/array.h"
+#include "ext/array.h"
 
 #if 1
 void *clibary = 0;

@@ -3,7 +3,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include "mvs/dynalloc.h"
-#include "libc370/array.h"
+#include "ext/array.h"
 
 void
 __frtx9a(TXT99 ***txt99)

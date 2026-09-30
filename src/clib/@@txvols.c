@@ -1,6 +1,6 @@
 /* @@TXVOLS.C */
 #include "mvs/dynalloc.h"
-#include "libc370/array.h"
+#include "ext/array.h"
 
 int
 __txvols(TXT99 ***txt99, const char *vols)

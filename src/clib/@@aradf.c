@@ -2,7 +2,7 @@
 ** Dynamic array
 */
 #include <stdio.h>
-#include "libc370/array.h"
+#include "ext/array.h"
 
 __asm__("\n&FUNC    SETC 'arrayaddf'");
 int

@@ -71,7 +71,7 @@ extern int      __grtset(void);
 /* ---- 1.x clibcrt.h --------------------------------------------------- */
 typedef struct clibcrt  CLIBCRT;    /* per thread runtime work area         */
 
-#include "libc370/array.h"                /* dynamic array                        */
+#include "ext/array.h"                /* dynamic array                        */
 
 /* This structure holds data unique to each task/thread (TCB)
 **

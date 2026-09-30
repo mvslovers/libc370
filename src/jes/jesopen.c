@@ -7,7 +7,7 @@
 #include "ibm/jes2/iot.h"    /* JES IOT                                          */
 #include "mvs/jes2.h"   /* JES prototypes */
 #include "mvs/recovery.h"   /* ESTAE functions */
-#include "libc370/array.h"    /* dynamic array */
+#include "ext/array.h"    /* dynamic array */
 #include "mvs/wto.h"    /* wtof                                             */
 
 static void try_jesopen(JES **jespp);

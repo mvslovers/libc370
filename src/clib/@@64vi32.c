@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include <libc370/int64.h>
+#include <ext/int64.h>
 
 __asm__("\n&FUNC    SETC '__64_divmod_i32'");
 void __64_divmod_i32(__64* a, int32_t b, __64* c, __64* d)

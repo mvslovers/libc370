@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include <libc370/int64.h>
+#include <ext/int64.h>
 #include <mvs/wto.h>
 
 __asm__("\n&FUNC    SETC 'test_return_from_ptr'");

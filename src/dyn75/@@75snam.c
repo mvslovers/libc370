@@ -6,7 +6,7 @@
 #include "sys/socket.h"
 #include "src/internal/dyn75.h"
 #include "errno.h"
-#include "libc370/socket.h"
+#include "mvs/socket.h"
 
 /* getsockname() */
 __asm__("\n&FUNC    SETC 'getsockname'");

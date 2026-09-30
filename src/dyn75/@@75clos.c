@@ -3,7 +3,7 @@
 */
 #include "src/internal/__75.h"
 #include "sys/socket.h"
-#include "libc370/socket.h"
+#include "mvs/socket.h"
 
 /* closesocket() */
 __asm__("\n&FUNC    SETC 'closesocket'");

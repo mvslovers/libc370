@@ -1,7 +1,7 @@
 #include <mvs/wto.h>
 #include <stdio.h>
 #include <string.h>
-#include <libc370/int64.h>
+#include <ext/int64.h>
 
 __asm__("\n&FUNC    SETC '__64_rshift_word'");
 void __64_rshift_word(__64* a, int nwords)

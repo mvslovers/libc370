@@ -64,7 +64,7 @@ def category(target):
 
 def render(rows):
     order = ["ISO C (name unchanged)", "`mvs/`", "`ibm/mvs/`", "`ibm/jes2/`",
-             "`libc370/`", "`s370/`", "internal", "split across several",
+             "`ext/`", "`s370/`", "internal", "split across several",
              "removed or moved out"]
     count = collections.Counter(category(r["target"]) for r in rows)
     unknown = set(count) - set(order)

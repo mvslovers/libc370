@@ -1,7 +1,7 @@
 /* JESJOB.C - Get JES Job information */
 #include <ctype.h>
 #include <mvs/wto.h>
-#include <libc370/strutil.h>
+#include <ext/strutil.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,7 +12,7 @@
 #include "ibm/mvs/ieftxtft.h"   /* text string types                                */
 #include "ibm/mvs/iefvkeys.h"   /* text key values                                  */
 #include "mvs/jes2.h"   /* JES prototypes */
-#include "libc370/array.h"    /* dynamic array                                    */
+#include "ext/array.h"    /* dynamic array                                    */
 #include "src/jes/jesprb.h"     /* hardened spool record walk (#25)                 */
 
 #ifndef MIN

@@ -89,7 +89,7 @@
  *   sentinel is the same byte value in either codepage.  Not a codepage test.
  *
  * - arrayadd() is SHIMMED rather than linked, unlike tstjestx.c.  ARRAY_SIZE
- *   is `sizeof(ARRAY) / sizeof(void *)` (libc370/array.h:18), which is exactly 3 on
+ *   is `sizeof(ARRAY) / sizeof(void *)` (ext/array.h:18), which is exactly 3 on
  *   the 4-byte-pointer target and truncates to 1 on a 64-bit host - so the real
  *   @@aradd.c under-provides its slots by 4 bytes per generation and corrupts
  *   itself the moment an array grows past ARRAY_DEFAULT (20).  Case (2) needs

@@ -5,7 +5,7 @@
 #include "src/internal/__75.h"
 #include "sys/socket.h"
 #include "errno.h"
-#include "libc370/socket.h"
+#include "mvs/socket.h"
 
 /* getpeername() */
 __asm__("\n&FUNC    SETC 'getpeername'");

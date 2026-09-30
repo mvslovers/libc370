@@ -4,7 +4,7 @@
 #include "src/internal/__75.h"
 #include "sys/socket.h"
 #include "netdb.h"
-#include "libc370/socket.h"
+#include "mvs/socket.h"
 #include "stdlib.h"
 #include "string.h"
 

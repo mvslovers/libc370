@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include "mvs/lock.h"
 #include "mvs/crt.h"
-#include "libc370/array.h"
+#include "ext/array.h"
 
 int
 on_exit(void (*func)(int,void*), void *arg)

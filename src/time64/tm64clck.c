@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
-#include <libc370/time64.h>
+#include <ext/time64.h>
 
 /* clock64() returns SECONDS since the unix epoch, matching clock64_t and the
- * prototype in libc370/time64.h.  It divided by 1000 and returned milliseconds until
+ * prototype in ext/time64.h.  It divided by 1000 and returned milliseconds until
  * #49 - which made it a duplicate of mclock64() and left the library with no
  * function returning seconds at all.  The millisecond and microsecond tiers
  * are mclock64() and uclock64(); nothing here scales for them.

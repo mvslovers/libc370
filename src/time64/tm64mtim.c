@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
-#include <libc370/time64.h>
+#include <ext/time64.h>
 
 __asm__("\n&FUNC    SETC 'mtime64'");
 mtime64_t mtime64(mtime64_t *mtimer)

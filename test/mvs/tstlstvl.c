@@ -57,7 +57,7 @@
  */
 #include <stdio.h>
 #include <string.h>
-#include "libc370/array.h"    /* array_count() over the returned VOLLIST array */
+#include "ext/array.h"    /* array_count() over the returned VOLLIST array */
 #include "mvs/dslist.h"   /* __listvl(), __freevl(), VOLLIST */
 #include "mvs/wto.h"    /* wtof() - the markers */
 

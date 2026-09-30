@@ -1,4 +1,4 @@
-#include <libc370/strutil.h>
+#include <ext/strutil.h>
 #include <mvs/crt.h>
 #include <stddef.h>
 #include <ibm/mvs/ihacde.h>

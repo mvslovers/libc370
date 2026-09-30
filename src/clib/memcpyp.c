@@ -1,5 +1,5 @@
 /* MEMCPYP.C */
-#include <libc370/strutil.h>
+#include <ext/strutil.h>
 #include "string.h"
 
 void *

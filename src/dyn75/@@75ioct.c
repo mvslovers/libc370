@@ -3,7 +3,7 @@
 */
 #include "src/internal/__75.h"
 #include "sys/socket.h"
-#include "libc370/socket.h"
+#include "mvs/socket.h"
 #include "src/internal/dyn75.h"
 #include "errno.h"
 

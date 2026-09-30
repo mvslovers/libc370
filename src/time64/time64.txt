@@ -36,10 +36,10 @@ gmtime64_r() is a 64-bit equivalent of gmtime_r().
 #include <string.h>
 #include <time.h>
 #include <errno.h>
-#include "libc370/time64.h"
+#include "ext/time64.h"
 /* BIONIC_BEGIN */
 /* the following are here to avoid exposing time64_config.h and
- * other types in our public libc370/time64.h header
+ * other types in our public ext/time64.h header
  */
 #include "time64_config.h"
 /* Not everyone has gm/localtime_r(), provide a replacement */

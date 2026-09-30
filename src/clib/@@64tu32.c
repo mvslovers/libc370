@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <assert.h>
-#include "libc370/int64.h"
+#include "ext/int64.h"
 
 __asm__("\n&FUNC    SETC '__64_to_u32'");
 uint32_t __64_to_u32(__64* n)

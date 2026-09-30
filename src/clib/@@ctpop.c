@@ -4,7 +4,7 @@
 #include "mvs/thread.h"
 #include "mvs/lock.h"
 #include "mvs/crt.h"
-#include "libc370/array.h"
+#include "ext/array.h"
 #include "mvs/recovery.h"
 
 __asm__("\n&FUNC    SETC 'cthread_pop'");

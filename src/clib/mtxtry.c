@@ -2,7 +2,7 @@
 #include "mvs/mutex.h"
 #include "mvs/lock.h"
 #include "mvs/crt.h"
-#include "libc370/array.h"
+#include "ext/array.h"
 
 int
 mtxtry(CLIBMUTX *mutex)

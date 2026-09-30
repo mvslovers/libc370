@@ -73,7 +73,7 @@
 #include "mvs/jes2ckpt.h"     /* checkpoint_open(), HASPCP                        */
 #include "mvs/dslist.h"   /* __listvl(), VOLLIST                              */
 #include "mvs/dscb.h"   /* __locate(), __dscbdv(), LOCWORK, DSCB            */
-#include "libc370/array.h"    /* arraycount()                                     */
+#include "ext/array.h"    /* arraycount()                                     */
 #include "stdio.h"     /* __dsalcf(), __dsfree()                           */
 #include "mvs/recovery.h"    /* try(), tryrc()                                   */
 #include "mvs/wto.h"    /* wtof()                                           */
