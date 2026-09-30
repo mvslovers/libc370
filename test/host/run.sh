@@ -16,11 +16,13 @@
 #         test/host/run.sh tstvsnp ...  run only those
 # RC:     0 when every test that ran passed, 1 otherwise.
 #
-# The compiler is $CC, default cc.  It has to be clang: the libc370 headers
-# name symbols with asm("@@ARCOU") labels, and GNU as rejects '@' in an ELF
-# symbol name ("junk at end of line, first unrecognized character is `@'").
-# gcc passes the label through unquoted, and clang quotes it.  macOS's cc is
-# clang already; on Linux run  CC=clang test/host/run.sh  (CI does).
+# The compiler is $CC, default cc.  Run on macOS: the libc370 headers name
+# symbols with asm("@@ARCOU") labels, and on Linux those cannot link.  GNU as
+# rejects the '@' under gcc; clang quotes it, but ELF then reads "@@" as the
+# default-version separator, every such name becomes an empty symbol, and
+# they collide ("multiple definition of `no symbol'").  Mach-O has no symbol
+# versioning.  Measured in CI on 2026-09-30: 8 of 21 tests fail on Linux gcc,
+# 7 on Linux clang, none on macOS.  CI runs this on a macOS runner.
 # AddressSanitizer is load-bearing for the tests that ask for it.
 
 CC=${CC:-cc}

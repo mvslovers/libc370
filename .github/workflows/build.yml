@@ -1,19 +1,26 @@
 # Build libc370 on every PR and every push to main (#249).
 #
-# The runner has no toolchain, so the job builds cc370 from its main and caches
-# the install, keyed on the cc370 commit alone: a libc370 change must not
-# invalidate a compiler that did not change.  mbt's reusable build.yml puts
-# both SHAs in its key because it installs libc370 into the same prefix; this
-# job builds libc370 from the checkout and never installs it.
+# Two jobs:
 #
-# What fails the job:
-#   - a compile error, or an as370 return code other than 0.  sdk/mklibc.py
-#     already stops on both, since #32 showed that an object as370 flagged
-#     is a wrong object, not a warning
-#   - a host test (test/host/run.sh; the tests it leaves out, and why, are
-#     listed there)
-# What is only reported: the compiler warning count, in the job summary.  It
-# becomes a gate once #39 step 3 has made -Wall usable.
+# build (Linux)  builds cc370 from its main and caches the install, keyed on
+#   the cc370 commit alone: a libc370 change must not invalidate a compiler
+#   that did not change.  mbt's reusable build.yml puts both SHAs in its key
+#   because it installs libc370 into the same prefix; this job builds libc370
+#   from the checkout and never installs it.  The cache is saved right after
+#   the install, not at the end of the job, so a later failure does not
+#   rebuild GCC on the next run.
+#   Fails on a compile error, or an as370 return code other than 0:
+#   sdk/mklibc.py stops on both, since #32 showed that an object as370
+#   flagged is a wrong object, not a warning.  Reports the compiler warning
+#   count in the job summary; that becomes a gate once #39 step 3 has made
+#   -Wall usable.
+#
+# host-tests (macOS)  test/host/run.sh, which needs no cc370 at all.  It runs
+#   on macOS because the host tests cannot link on Linux: the libc370 headers
+#   name symbols with asm("@@ARCOU") labels, and in ELF "@@" is the
+#   default-version separator, so every such name becomes an empty symbol and
+#   they all collide ("multiple definition of `no symbol'").  Mach-O has no
+#   symbol versioning, and macOS is where the tests are written.
 #
 # Also called by release.yml, so a release is built the same way.
 
@@ -46,9 +53,9 @@ jobs:
             https://github.com/mvslovers/cc370.git /tmp/cc370
           echo "sha=$(git -C /tmp/cc370 rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: Cache cc370
+      - name: Restore cc370
         id: cc370-cache
-        uses: actions/cache@v5
+        uses: actions/cache/restore@v5
         with:
           path: ~/.local
           key: cc370-only-${{ runner.os }}-${{ steps.cc370.outputs.sha }}
@@ -59,6 +66,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential bison flex
           make -C /tmp/cc370 install PREFIX="$HOME/.local"
+
+      - name: Save cc370
+        if: steps.cc370-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: ~/.local
+          key: cc370-only-${{ runner.os }}-${{ steps.cc370.outputs.sha }}
 
       - name: Add cc370 to PATH
         run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
@@ -79,9 +93,11 @@ jobs:
             grep -E '^\[libc\] (OK|no duplicate)' build.log 2>/dev/null | sed 's/^/- /'
           } >> "$GITHUB_STEP_SUMMARY"
 
-      # clang, not the runner's default gcc: see the note in test/host/run.sh
-      # about asm("@@...") labels and GNU as.
+  host-tests:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
       - name: Host tests
-        env:
-          CC: clang
         run: make test-host

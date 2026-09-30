@@ -9,7 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ### Added
 - **CI (#249).** `.github/workflows/build.yml` builds the library on every PR
   and push to `main`, with cc370 built from its `main` and cached per cc370
-  commit. It runs the host tests and reports the compiler warning count.
+  commit. It reports the compiler warning count, and runs the host tests in
+  a second job on macOS: on Linux they cannot link, because ELF reads the
+  `@@` in libc370's `asm("@@…")` symbol labels as a version separator.
   `release.yml` publishes a `v*` tag: it checks that `VERSION` matches the tag
   and takes the notes from this file's section for the version (a tag without
   one fails). A release that already exists keeps its notes.
