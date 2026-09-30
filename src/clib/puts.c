@@ -1,4 +1,5 @@
 /* PUTS.C */
+#include <fileio.h>
 #include <stdio.h>
 #include "mvs/lock.h"
 

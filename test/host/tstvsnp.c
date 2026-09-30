@@ -52,6 +52,7 @@
  *
  * RC: 0 = every check passed, 1 = at least one did not.
  */
+#include <fileio.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

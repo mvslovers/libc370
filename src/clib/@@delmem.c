@@ -1,9 +1,10 @@
 /* @@DELMEM.C - delete a PDS member via STOW (delete) */
+#include <mvs/dynalloc.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include "mvs/osio.h"
-#include "clibio.h"
+#include "stdio.h"
 #include "stddef.h"
 #include "ibm/mvs/ihacde.h"
 #include "mvs/wto.h"

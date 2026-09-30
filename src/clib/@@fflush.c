@@ -1,4 +1,5 @@
 /* @@FFLUSH.C - caller should already hold lock on file handle */
+#include <fileio.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>

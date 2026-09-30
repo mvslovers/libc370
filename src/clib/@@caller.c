@@ -1,3 +1,4 @@
+#include <fileio.h>
 /* @@CALLER.C */
 
 char *

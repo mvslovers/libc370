@@ -58,4 +58,19 @@ int __bldl(BLDL *bldl, void *dcb);
  * Returns the STOW return code (0 on success) or -1 for an unknown function. */
 int __stow(void *dcb, void *area, int func);
 
+/* ---- from 1.x clibio.h -------------------------------------------------- */
+/* __renmem() rename PDS member oldmem to newmem in dsn via STOW change.
+ * Returns 0 on success, a positive STOW return code (8=old not found,
+ * 4=new already exists, ...), or a negative value for allocation/open
+ * failures.  Unlike rename(), which uses IDCAMS ALTER on a cataloged data
+ * set, this renames a member of a partitioned data set. */
+extern int __renmem(const char *dsn, const char *oldmem, const char *newmem);
+
+/* __delmem() delete PDS member mem from dsn via STOW delete, under a
+ * DISP=SHR allocation - never exclusive, see #127 / mvslovers/mvsmf#342.
+ * Returns 0 on success, a positive STOW return code (8=member not found,
+ * ...), or a negative value for allocation/open failures.  remove() routes
+ * dsn(member) names here; IDCAMS DELETE stays for whole data sets. */
+extern int __delmem(const char *dsn, const char *mem);
+
 #endif /* MVS_PDS_H */

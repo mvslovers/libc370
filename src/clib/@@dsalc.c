@@ -8,7 +8,7 @@
 #include "mvs/dynalloc.h"
 #include "libc370/array.h"
 #include "mvs/crt.h"
-#include "clibio.h"
+#include "stdio.h"
 
 typedef struct __dsalc    __DSALC;
 struct __dsalc {

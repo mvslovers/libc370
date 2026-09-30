@@ -1,0 +1,11 @@
+{
+  "source": "clibio.h",
+  "applied_by": "sdk/splits/clibio.py (stdio.h is itself a target, so sdk/splithdr.py does not fit)",
+  "targets": {
+    "stdio.h": {},
+    "src/internal/fileio.h": {},
+    "mvs/dynalloc.h": {},
+    "mvs/pds.h": {},
+    "mvs/file.h": {}
+  }
+}

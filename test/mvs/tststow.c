@@ -42,9 +42,10 @@
  *
  * RC: 0 = all three expectations met, 8 = at least one did not.
  */
+#include <mvs/pds.h>
 #include <stdio.h>
 #include <string.h>
-#include "clibio.h"     /* __renmem */
+#include "stdio.h"     /* __renmem */
 
 static int check(const char *what, int got, int want);
 

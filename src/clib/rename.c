@@ -1,11 +1,12 @@
 /* RENAME.C */
+#include <mvs/pds.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <stddef.h>
 #include <mvs/idcams.h>
 #include "mvs/lock.h"
-#include "clibio.h"
+#include "stdio.h"
 
 /* Split a name of exactly the form dsn(member) into its upper-cased parts.
    Returns 1 and fills dsn[45]/mem[9] on a match; 0 for anything else,

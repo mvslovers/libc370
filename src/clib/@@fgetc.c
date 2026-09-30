@@ -1,4 +1,5 @@
 /* @@FGETC.C - caller should already have lock on file handle */
+#include <fileio.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

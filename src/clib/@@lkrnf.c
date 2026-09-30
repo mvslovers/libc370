@@ -1,7 +1,7 @@
 #include <stdarg.h>
 #include "mvs/enq.h"
 #include "mvs/lock.h"
-#include "clibio.h"
+#include "stdio.h"
 
 int
 __lkrnf(const char *fmt, int read, ...)

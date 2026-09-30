@@ -7,7 +7,7 @@
 #include "mvs/dynalloc.h"
 #include "libc370/array.h"
 #include "mvs/crt.h"
-#include "clibio.h"
+#include "stdio.h"
 
 int __dsalcf(char *ddname, const char *opts, ...)
 {

@@ -1,6 +1,6 @@
 #include "mvs/enq.h"
 #include "mvs/lock.h"
-#include "clibio.h"
+#include "stdio.h"
 
 int
 __lkrn(const char *rname, int read)

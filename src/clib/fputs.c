@@ -1,5 +1,6 @@
 /* FPUTS.C */
-#include "clibio.h"
+#include <fileio.h>
+#include "stdio.h"
 #include "mvs/lock.h"
 
 int
