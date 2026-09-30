@@ -324,18 +324,22 @@ checklist is #245.
    - ~~#243 and #248~~ — done, PR #255, 2026-09-30. miniz, PDF, `emfile` and
      `ipc` removed; `clibsrb.h` fixed and parked in `src/wip/mvs/srb.h`.
 
-   **Step 1 is complete.** Next is #244.
-2. **#244: crypto370.** New project, release 1.0.0, adopted by httpd and mvsMF.
-   It is the one external prerequisite of the cut.
-   - ~~project + release 1.0.0~~ — done 2026-09-30:
-     [mvslovers/crypto370](https://github.com/mvslovers/crypto370) v1.0.0,
-     built against libc370 v1.0.8, known-answer tests 72/72 on mvsdev
-     (JOB00956). `clibb64.h` became `base64.h` and the base64 symbols lost
-     their `@@`; SHA-256 no longer needs `<clib64.h>`, so it builds
-     against 1.x and 2.0.
-   - httpd adopts it (all three; `clibb64.h` → `base64.h` in one file).
-   - mvsMF adopts it (base64; three files).
-   - then libc370 drops the files (the cut).
+   **Step 1 is complete.**
+2. ~~**#244: crypto370 released.**~~ — done 2026-09-30:
+   [mvslovers/crypto370](https://github.com/mvslovers/crypto370) v1.0.0,
+   built against libc370 v1.0.8, known-answer tests 72/72 on mvsdev
+   (JOB00956). `clibb64.h` became `base64.h` and the base64 symbols lost
+   their `@@`; SHA-256 no longer needs `<clib64.h>`, so it builds against
+   1.x and 2.0.
+
+   **Adoption is not a prerequisite of the cut** (decided 2026-09-30). The
+   consumers' release builds pin 1.x and step 3 holds their build CI, so the
+   cut cannot redden them; they switch to crypto370 in their 2.0 migration
+   PR (step 7), which touches their includes anyway. What the cut needed was
+   only a released crypto370 for that PR to depend on. The files leave
+   libc370 in phase 1.
+
+   **Step 2 is complete.** Next is step 3, right before phase 1 merges.
 3. **Hold the consumers' build CI:** `libc370_ref: v1.0.8` in each consumer's
    `build.yml`. The cut lands on `main` with phase 1, not with the release, so
    this goes in right before phase 1 merges, and not earlier, or it silences
@@ -348,7 +352,10 @@ checklist is #245.
    It is struct and signature growth that needs a coordinated consumer rebuild,
    so it ships in the major version.
 7. **Release 2.0.0**, then one migration PR per consumer. Each removes its
-   `libc370_ref` line again.
+   `libc370_ref` line again. httpd's and mvsMF's also add
+   `mvslovers/crypto370` to `[dependencies]` (httpd: all three; mvsMF:
+   base64) and change `clibb64.h` to `base64.h` (httpd: one file; mvsMF:
+   three), saying why the dependency is added.
 
 Not blocking: cc370 releases (mvslovers/cc370#523). Without them, 2.0.0 names
 its minimum cc370 by commit, as 1.0.7 and 1.0.8 did. After 2.0.0: phases 3
@@ -1281,12 +1288,13 @@ See *Recently landed*.
 
 ### 42 · #244 — SHA-256, Blowfish and base64 move to crypto370
 
-*Now Tier 0, step 2.* crypto370 1.0.0 is released (2026-09-30); what is left
-is adoption by httpd and mvsMF.
+*Tier 0, steps 2 and 7.* crypto370 1.0.0 is released (2026-09-30), which is
+all the cut needs. httpd and mvsMF adopt it in their 2.0 migration PRs, and
+the files leave libc370 in phase 1. The issue stays open until they are gone.
 
-Phase 0 of #245, so it gates the 2.0 cut: the new project has to be released
-and adopted by httpd (all three) and mvsMF (base64) before libc370 drops the
-files. No defect, and no effect on running systems until then.
+The original order here - released *and adopted* before libc370 drops the
+files - predates the 1.0.8 hold (D8). With release builds pinned and build
+CI held, a consumer does not see the cut until it migrates.
 
 ### ~~42 · #243, #248~~ — fixed, PR #255, 2026-09-30
 
@@ -1339,7 +1347,9 @@ with several C names. It changes symbols, so every consumer's code changes too:
     lua370 and nsf370; ufsd, ftpd, httpd and mvsMF are still on 1.0.6 and
     raise it at their next release; rexx370 (1.0.2) has been asked to move;
     brexx370 pins `edge`.
-  - open: crypto370 (#244); cc370 releases (mvslovers/cc370#523); and
+  - crypto370 v1.0.0 released (#244); httpd and mvsMF adopt it when they
+    migrate to 2.0, not before.
+  - open: cc370 releases (mvslovers/cc370#523); and
     `libc370_ref: v1.0.8` in each consumer's `build.yml`. That hold goes in
     **right before the cut**, not earlier, or it silences the early warning.
 - **Relink round** — #79, #50, #51, #71, #172 and #80 defect 1's `max` parameter.

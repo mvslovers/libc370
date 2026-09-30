@@ -101,7 +101,7 @@ other item. Header moves and parallel fix PRs would also collide on the same
 
 | # | what | gate |
 |---|---|---|
-| 0 | libc370 CI (#249); crypto370 released and adopted by httpd and mvsMF (#244); **1.0.8 released**, the last 1.x; consumers' **build** CI held on `v1.0.8`, which needs a `libc370_ref` input in mbt's `build.yml` (mvslovers/mbt#121; release CI already pins) | every consumer green against 1.0.8 |
+| 0 | libc370 CI (#249); crypto370 released (#244; httpd and mvsMF adopt it in their 2.0 migration); **1.0.8 released**, the last 1.x; consumers' **build** CI held on `v1.0.8`, which needs a `libc370_ref` input in mbt's `build.yml` (mvslovers/mbt#121; release CI already pins) | every consumer green against 1.0.8 |
 | 1 | move and rename headers per the table; split the five mixed headers; drop dead ones. Absorbs #39 step 2 (missing `#include`s) and #68 step 1 (the `clibsa.h` inline), since every `#include` line is touched anyway, and #250 items 1–3 | **byte-identical assembler for every TU** against the commit before the move, the method PR #242 used |
 | 2 | internals to `src/internal/`; install copies subdirectories (`mklibc.py:226` globs `include/*.h` today) | the migration script resolves every consumer include |
 | — | **the relink round**: #79, #50, #51, #71, #172, #80 defect 1 | per change, tests; CHANGELOG entry for each layout or signature change |
