@@ -1,6 +1,7 @@
 /* @@75GHBA.C
 ** Get host by address
 */
+#include <stdio.h>
 #include "__75.h"
 #include "sys/socket.h"
 #include "netdb.h"

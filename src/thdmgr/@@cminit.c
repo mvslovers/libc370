@@ -1,5 +1,7 @@
 /* @@CMINIT.C - cthread_init()
 */
+#include <mvs/wto.h>
+#include <stdio.h>
 #include "time.h"
 #include "libc370/time64.h"
 #include "mvs/thread.h"

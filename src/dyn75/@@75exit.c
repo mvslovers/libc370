@@ -1,6 +1,7 @@
 /* @@75EXIT.C
 ** Close any sockets we allocated but haven't closed yet.
 */
+#include <stdio.h>
 #include "__75.h"
 #include "sys/socket.h"
 #include "sys/select.h"

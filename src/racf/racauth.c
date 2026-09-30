@@ -47,6 +47,7 @@
 **          list form of the macro does not have the proper RELEASE parameter.
 **          Macro processing terminates.
 */
+#include <string.h>
 #include "mvs/racf.h"
 
 __asm__("\n&FUNC    SETC 'racf_auth'");

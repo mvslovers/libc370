@@ -31,6 +31,8 @@
 */
 
 /*#define LIB_STDIO*/
+#include <mvs/env.h>
+#include <time.h>
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"

@@ -1,6 +1,7 @@
 /* @@75BIND.C
 ** request socket bind
 */
+#include <stdlib.h>
 #include "__75.h"
 #include "netinet/in.h"
 #include "sys/socket.h"

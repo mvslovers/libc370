@@ -1,3 +1,4 @@
+#include <string.h>
 /* TSO Clist variable access z/OS (not for MVS 3.8) */
 typedef struct ikjct441_plist IKJCT441;
 

@@ -1,5 +1,6 @@
 /* @@CTLOCK.C - cthread_lock(), cthread_unlock()
 */
+#include <stdio.h>
 #include "mvs/thread.h"
 #include "mvs/enq.h"
 

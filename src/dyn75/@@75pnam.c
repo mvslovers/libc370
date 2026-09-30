@@ -1,6 +1,7 @@
 /* @@75PNAM.C
 ** getpeername()
 */
+#include <string.h>
 #include "__75.h"
 #include "sys/socket.h"
 #include "errno.h"

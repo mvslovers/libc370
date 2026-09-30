@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "mvs/enq.h"
 #include "mvs/lock.h"
 

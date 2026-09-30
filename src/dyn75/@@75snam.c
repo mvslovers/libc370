@@ -1,6 +1,7 @@
 /* @@75SNAM.C
 ** getsockname()
 */
+#include <string.h>
 #include "__75.h"
 #include "sys/socket.h"
 #include "dyn75.h"

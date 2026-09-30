@@ -1,4 +1,6 @@
 /* TZSET.C */
+#include <ctype.h>
+#include <mvs/wto.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <time.h>       /* our own prototype, so the definition is checked */

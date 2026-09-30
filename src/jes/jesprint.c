@@ -1,4 +1,5 @@
 /* JESPRINT.C - Print JES Job by DSID */
+#include <mvs/wto.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
