@@ -32,11 +32,11 @@ BUILD = f"{ROOT}/build/sdk"
 VERSION = open(f"{ROOT}/VERSION").read().strip() if os.path.exists(f"{ROOT}/VERSION") else "1.0.11-dev"
 
 # library sources: every .c and .asm under src/, wherever it sits (#278), and
-# the hand-written .asm still in asm/ until it moves beside its C.  src/wip is
-# kept but never built.  All objects share one directory and the archive
+# the hand-written .asm still in asm/ until it moves beside its C.  Code kept
+# but never built lives in attic/, outside src/.  All objects share one directory and the archive
 # member is <stem>.o, so a stem may exist only once -- sources() enforces it.
 SRC_DIR = f"{ROOT}/src"
-NOT_BUILT = ("wip",)
+NOT_BUILT = ()     # directories under src/ the build skips; none since attic/
 ASM_DIR = f"{ROOT}/asm"
 # -Wuninitialized is not implied by -Wall in this gcc 3.4.6 and needs -O to run
 # at all, so it has to be named here (#102).  It finds #99 -- __loadhi() calling

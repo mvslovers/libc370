@@ -76,7 +76,7 @@ def asm_files(tree):
         base = os.path.join(tree, top)
         for d, _, files in os.walk(base):
             if top == "src" and os.path.relpath(d, base).split(os.sep)[0] == "wip":
-                continue                    # never built
+                continue                    # never built; a base from before attic/ (#278)
             for f in files:
                 # a generated .s only beside its .c: a .s whose .c is gone is a
                 # leftover the build never touches (@@cs.s outlived @@cs.c by
