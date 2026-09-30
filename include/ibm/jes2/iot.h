@@ -1,9 +1,9 @@
 #ifndef HASPIOT_H
 #define HASPIOT_H
 
-#include "hasptgm.h"
-#include "hasppddb.h"
-#include "hasptab.h"
+#include "ibm/jes2/tgm.h"
+#include "ibm/jes2/pddb.h"
+#include "ibm/jes2/tab.h"
 
 typedef struct __iot        __IOT;      /* JES Input Output Table               */
 

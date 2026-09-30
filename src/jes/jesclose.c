@@ -1,10 +1,10 @@
 /* JESCLOSE.C - Close JES spool datasets */
 #include <stdio.h>
 #include <stdlib.h>
-#include "hasphct.h"    /* JES Checkpoint Control Table, record 3 in HASPCKPT */
-#include "haspjct.h"    /* JES Job Control Table                            */
-#include "hasppddb.h"   /* JES PDDB Print Datasets                          */
-#include "haspiot.h"    /* JES IOT                                          */
+#include "ibm/jes2/hct.h"    /* JES Checkpoint Control Table, record 3 in HASPCKPT */
+#include "ibm/jes2/jct.h"    /* JES Job Control Table                            */
+#include "ibm/jes2/pddb.h"   /* JES PDDB Print Datasets                          */
+#include "ibm/jes2/iot.h"    /* JES IOT                                          */
 #include "clibjes2.h"   /* JES prototypes */
 #include "clibary.h"    /* dynamic array                                    */
 

@@ -3,7 +3,7 @@
 #include <clibstr.h>
 #include <clibjes2.h>
 #include "clibstae.h"               /* C runtime recovery routines  */
-#include <hasppso.h>                /* Process sysout control block */
+#include <ibm/jes2/pso.h>                /* Process sysout control block */
 
 static void authorize(void);
 static int makeauth(const char *id);

@@ -43,9 +43,9 @@ struct jesjob {
     unsigned char   owner[9];       /* 1A owner name                        */
     unsigned char   eclass;         /* 23 execution class                   */
     unsigned char   priority;       /* 24 priority                          */
-    unsigned char   q_type;         /* 25 see haspjqe.h => JQETYPE          */
-    unsigned char   q_flag1;        /* 26 see haspjqe.h => JQEFLAGS         */
-    unsigned char   q_flag2;        /* 27 see haspjqe.h => JQEFLAG2         */
+    unsigned char   q_type;         /* 25 see ibm/jes2/jqe.h => JQETYPE      */
+    unsigned char   q_flag1;        /* 26 see ibm/jes2/jqe.h => JQEFLAGS     */
+    unsigned char   q_flag2;        /* 27 see ibm/jes2/jqe.h => JQEFLAG2     */
     unsigned int    iotmttr;        /* 28 MTTR of IOT                       */
     unsigned int    spinmttr;       /* 2C MTTR of SPIN IOT                  */
     JESDD           **jesdd;        /* 30 array of output dd's              */

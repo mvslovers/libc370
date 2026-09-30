@@ -2,9 +2,9 @@
 #define CLIBCP_H
 
 #include "osdcb.h"
-#include "hasphct.h"    /* JES Checkpoint Control Table, record 3 in HASPCKPT */
-#include "haspjqe.h"    /* JES Job Queue Elements                             */
-#include "haspjot.h"    /* JES Job Output Table                               */
+#include "ibm/jes2/hct.h"    /* JES Checkpoint Control Table, record 3 in HASPCKPT */
+#include "ibm/jes2/jqe.h"    /* JES Job Queue Elements                             */
+#include "ibm/jes2/jot.h"    /* JES Job Output Table                               */
 
 typedef struct haspcp   HASPCP;     /* JES Checkpoint Dataset   */
 

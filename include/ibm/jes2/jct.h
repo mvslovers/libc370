@@ -1,7 +1,7 @@
 #ifndef HASPJCT_H
 #define HASPJCT_H
 
-#include "hasptgm.h"
+#include "ibm/jes2/tgm.h"
 
 typedef struct __jct        __JCT;      /* JES Job Control Table            */
 

@@ -1,7 +1,7 @@
 #ifndef HASPJOT_H
 #define HASPJOT_H
 
-#include "haspjoe.h"
+#include "ibm/jes2/joe.h"
 
 typedef struct __jot    __JOT;  /* JES Job Output Table */
 
