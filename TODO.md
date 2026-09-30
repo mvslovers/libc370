@@ -17,10 +17,11 @@ from Tier 1 on keeps its order and resumes on 2.x. A serious defect found
 before 2.0.0 gets an emergency 1.0.9 from the tag `v1.0.8` (D8 in
 `doc/design-2.0.md`).
 
-*Last reconciled against the tracker: **2026-09-30**, 55 issues open (#241 and
-#251 closed by PR #253 the same day; before that 57 — #249 closed; #240 and
-#241 filed out of #39, #243–#246 and #248–#250 out of the 2.0 plan, #251 out of
-#249), all 55 accounted for below.* The pass before was **2026-09-29** at 48 open (#182, #228, #229, #231, #232, #235 and #236
+*Last reconciled against the tracker: **2026-09-30**, 53 issues open (#140,
+#243 and #248 closed by PR #255 and #241/#251 by PR #253, all the same day;
+#254 filed out of rexx370's measurements; before that 57 — #249 closed; #240
+and #241 filed out of #39, #243–#246 and #248–#250 out of the 2.0 plan, #251
+out of #249), all 53 accounted for below.* The pass before was **2026-09-29** at 48 open (#182, #228, #229, #231, #232, #235 and #236
 closed, #228, #229, #231, #232, #235 and #236 filed the same day). That pass found **#181** and **#182** (filed 2026-09-13/14) in
 no rank at all, fifteen days after they were filed — #182 is now rank 1 and
 #181 rank 39. The pass before was 2026-09-13 at 41 open, all 41 ranked. #149 was fixed and released the same day (PR #180, **v1.0.6**)
@@ -319,9 +320,11 @@ checklist is #245.
    - ~~#241 and #251~~ — done, PR #253, 2026-09-30. `run.sh` runs all 26
      host tests, and the #182/#228 last-block paths and #126's job-list
      teardown are now covered too.
-   - #140: the duplicate `clibthdi.h`, a live trap. Delete it.
-   - #243 and #248: the dead headers (miniz, PDF, `emfile`, `ipc`). No user, so
-     they go now; #248 asks for a look at the `emfile`/`ipc` code first.
+   - ~~#140~~ — done, PR #255, 2026-09-30. All 729 `.s` byte-identical.
+   - ~~#243 and #248~~ — done, PR #255, 2026-09-30. miniz, PDF, `emfile` and
+     `ipc` removed; `clibsrb.h` fixed and parked in `src/wip/mvs/srb.h`.
+
+   **Step 1 is complete.** Next is #244.
 2. **#244: crypto370.** New project, release 1.0.0, adopted by httpd and mvsMF.
    It is the one external prerequisite of the cut.
 3. **Hold the consumers' build CI:** `libc370_ref: v1.0.8` in each consumer's
@@ -726,25 +729,9 @@ in *their* code. Keep the order the issue prescribes:
 
 ## Tier 4 — structural traps
 
-### 6 · #140 — `src/thdmgr/clibthdi.h` duplicates `include/clibthdi.h`
+### ~~6 · #140~~ — fixed, PR #255, 2026-09-30
 
-*Now Tier 0, step 1.*
-
-Filed while fixing #11, and it bit during that work. The quoted include in
-`src/thdmgr/*.c` finds the local copy, so **the library compiles against a
-different file from the one consumers get** — for a header that declares
-`CTHDMGR`/`CTHDWORK`/`CTHDQUE`, control blocks httpd decodes by offset
-(`httpcons.c`). The two agree only by nobody having edited one of them.
-
-It surfaced as a hard build error only because the edit was a `#define`; a
-struct field would have linked and run, with the library and every consumer
-disagreeing about a layout. Exactly #17's shape, one tier's worth cheaper to
-fix: delete the copy and let `-I include` resolve it.
-
-**2.0 (#245) makes `clibthdi.h` internal in phase 2**, which ends the duplicate
-for good. Do not wait for it: the trap is live today, and the fix is a delete.
-Phase 2 also has to settle what ftpd and httpd, which include the header, get
-instead.
+See *Recently landed*.
 
 ### 7 · #17 — consolidate the two `try()` wrappers
 
@@ -1269,6 +1256,16 @@ generated code leaves `0x100 | key<<4` in R15 (384 for a key-8 caller), never 0.
 Latent: the only consumer, ufsd, ignores the result at every call. Small fix
 (`return 0;`), but the test needs the `IPK`/`SPKA` asm stubbed or an MVS run.
 
+### 40 · #254 — `@@start` blames a missing SYSIN for a failed stdin open
+
+Found by rexx370 on MVSCE-LAB (JOB01424, libc370 1.0.8): at a REGION just
+large enough for the C stack, the `'NULLFILE'` fallback open fails and the
+step ends CC 12 with `SYSIN DD not defined` in a dynamic SYSOUT, while the
+JCL is fine. The cause is inferred (storage), not measured. The step does
+fail, so nothing runs wrong; only the message misleads and lands where nobody
+looks. Small: name the failed open, add errno, and consider the U0801-style
+WTO + abend of the stack guard. Resumes on 2.x.
+
 ### ~~40 · #241, #251~~ — fixed, PR #253, 2026-09-30
 
 See *Recently landed*.
@@ -1281,24 +1278,9 @@ Phase 0 of #245, so it gates the 2.0 cut: the new project has to be released
 and adopted by httpd (all three) and mvsMF (base64) before libc370 drops the
 files. No defect, and no effect on running systems until then.
 
-### 42 · #243 — miniz headers: no implementation, no user
+### ~~42 · #243, #248~~ — fixed, PR #255, 2026-09-30
 
-*Now Tier 0, step 1.*
-
-Eight files in `include/`, and not one `@@MZ…`/`@@TD…` symbol is in `libc.a`.
-Check zlib370 and picozip370-app, then remove them in the 2.0 cut. The PDF,
-`emfile` and `ipc` families are dead in the same way (`doc/design-2.0.md`) and
-have no issue of their own yet.
-
-### 42 · #248 — dead PDF, emfile and ipc header families
-
-*Now Tier 0, step 1.*
-
-The same case as #243, found while mapping the headers: declarations with no
-symbol in `libc.a` and no user. `emfile` (45 files) and `ipc` (5 files) have
-sources in `src/wip/orig/`, never built since the mbt move. Assess them first:
-extract anything of real value, delete the rest. PDF is headers only and can
-go directly.
+See *Recently landed*.
 
 ### 42 · #250 — POSIX surface for 2.0
 
@@ -1331,8 +1313,8 @@ with several C names. It changes symbols, so every consumer's code changes too:
   `-Wall` in the SDK build. #125 is the one with a measured failure and is
   independent of the rest; #68 goes last and in its own three-step order, or it
   reddens consumer CI.
-- **2.0 restructure** — #245 (umbrella), with #244 and #243 feeding it and #140
-  absorbed by it. The plan is `doc/design-2.0.md`: a hard cut to a
+- **2.0 restructure** — #245 (umbrella), with #244 feeding it (#243, #248 and
+  #140 landed, PR #255). The plan is `doc/design-2.0.md`: a hard cut to a
   standard-shaped header layout (`libc370/`, `mvs/`, `s370/`, `ibm/mvs/`,
   `ibm/jes2/`), with internals out of the sysroot. Phase 0 comes first:
   crypto370, and consumers' build CI pinned to 1.x, so the cut does not redden
@@ -1373,6 +1355,15 @@ with several C names. It changes symbols, so every consumer's code changes too:
 ## Recently landed
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
+
+- **#140, #243, #248** (PR #255, merged 2026-09-30) - the duplicate
+  `src/thdmgr/clibthdi.h` is gone; all 729 generated `.s` byte-identical but
+  the version stamp. miniz, PDF, `emfile` and `ipc` removed, headers and the
+  `src/wip/orig/` sources: none of their symbols was in `libc.a`, no consumer
+  used them. `clibsrb.h` kept for a later SRB user, moved to
+  `src/wip/mvs/srb.h` (not installed): its FREEMAIN freed from subpool 0
+  (`SP+` for `SP=`, silently accepted by the macro), and its two out-of-line
+  declarations had no code. The fix is proven by listing, not on MVS.
 
 - **#241, #251** (PR #253, merged 2026-09-30) - `test/host/run.sh` runs all
   26 host tests again; the exclusion list is gone. The `__aclose()` stubs
