@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Removed
+- **miniz headers (#243).** `clibmz.h`, `clibmzi.h`, `miniz.h`,
+  `miniz_common.h`, `miniz_tdef.h`, `miniz_tinfl.h` and `miniz_zip.h`, plus a
+  Windows download marker committed beside them. libc370 never shipped the
+  code: a call compiled and then failed to link. No consumer included them.
+  Compression belongs in zlib370.
+
 ## [1.0.8] - 2026-09-30
 
 **The last 1.x release.** The next is 2.0.0, a hard cut to a new header
