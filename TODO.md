@@ -327,6 +327,15 @@ checklist is #245.
    **Step 1 is complete.** Next is #244.
 2. **#244: crypto370.** New project, release 1.0.0, adopted by httpd and mvsMF.
    It is the one external prerequisite of the cut.
+   - ~~project + release 1.0.0~~ — done 2026-09-30:
+     [mvslovers/crypto370](https://github.com/mvslovers/crypto370) v1.0.0,
+     built against libc370 v1.0.8, known-answer tests 72/72 on mvsdev
+     (JOB00956). `clibb64.h` became `base64.h` and the base64 symbols lost
+     their `@@`; SHA-256 no longer needs `<clib64.h>`, so it builds
+     against 1.x and 2.0.
+   - httpd adopts it (all three; `clibb64.h` → `base64.h` in one file).
+   - mvsMF adopts it (base64; three files).
+   - then libc370 drops the files (the cut).
 3. **Hold the consumers' build CI:** `libc370_ref: v1.0.8` in each consumer's
    `build.yml`. The cut lands on `main` with phase 1, not with the release, so
    this goes in right before phase 1 merges, and not earlier, or it silences
@@ -1272,7 +1281,8 @@ See *Recently landed*.
 
 ### 42 · #244 — SHA-256, Blowfish and base64 move to crypto370
 
-*Now Tier 0, step 2.*
+*Now Tier 0, step 2.* crypto370 1.0.0 is released (2026-09-30); what is left
+is adoption by httpd and mvsMF.
 
 Phase 0 of #245, so it gates the 2.0 cut: the new project has to be released
 and adopted by httpd (all three) and mvsMF (base64) before libc370 drops the
