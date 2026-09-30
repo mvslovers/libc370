@@ -85,8 +85,8 @@ a row whose replacement does not exist, or a stale `sdk/names.tsv`.
 
 ## Measured
 
-Against `v1.0.8`, on 2026-09-30, after phase 2: 5442 public names in 1.x,
-4572 in 2.0, 871 gone — 595 with nothing in their place (miniz, PDF, emfile,
+Against `v1.0.8`, on 2026-09-30, after phase 2: 5471 public names in 1.x,
+4601 in 2.0, 871 gone — 595 with nothing in their place (miniz, PDF, emfile,
 ipc, memmgr, the module-map API: declared, never built), 255 now internal,
 11 to crypto370, 10 replaced by another name. A sweep of the consumers'
 default branches (httpd, mvsmf, ftpd, ufsd, ufsd-utils, httplua, httprexx,

@@ -3931,6 +3931,8 @@ arrayget	ext/array.h
 arraynew	ext/array.h
 arraysize	ext/array.h
 asctime	time.h
+asctime64	ext/time64.h
+asctime64_r	ext/time64.h
 asin	math.h
 assert	assert.h
 asvt	ibm/mvs/ihaasvt.h
@@ -3970,6 +3972,8 @@ clibsock	mvs/socket.h
 clibwsa	mvs/wsa.h
 clientid	mvs/socket.h
 clock	time.h
+clock64	ext/time64.h
+clock64_t	ext/time64.h
 clock_t	time.h
 closesocket	mvs/socket.h
 cmtt_free	mvs/mtt.h
@@ -4011,6 +4015,8 @@ cthread_worker_shutdown	mvs/thread.h
 cthread_worker_wait	mvs/thread.h
 cthread_yield	mvs/thread.h
 ctime	time.h
+ctime64	ext/time64.h
+ctime64_r	ext/time64.h
 cvt	ibm/mvs/cvt.h
 cvtfix	ibm/mvs/cvt.h
 cvtxtnt1	ibm/mvs/cvt.h
@@ -4045,6 +4051,7 @@ debxtn	ibm/mvs/iezdeb.h
 decb	ibm/mvs/ihadecb.h
 devtype	mvs/dasd.h
 difftime	time.h
+difftime64	ext/time64.h
 div	stdlib.h
 dsab	ibm/mvs/ihadsab.h
 dsabanmi	ibm/mvs/ihadsab.h
@@ -4111,6 +4118,8 @@ getpeername	sys/socket.h
 gets	stdio.h
 getsockname	sys/socket.h
 gmtime	time.h
+gmtime64	ext/time64.h
+gmtime64_r	ext/time64.h
 gmtime_r	time.h
 haspcmb	ibm/jes2/cmb.h
 haspcp	mvs/jes2ckpt.h
@@ -4240,6 +4249,8 @@ loads04	mvs/dslist.h
 loadstat	mvs/dslist.h
 localeconv	locale.h
 localtime	time.h
+localtime64	ext/time64.h
+localtime64_r	ext/time64.h
 localtime_r	time.h
 lock	mvs/lock.h
 lock_res	mvs/lock.h
@@ -4253,6 +4264,9 @@ malloc	stdlib.h
 mblen	stdlib.h
 mbstowcs	stdlib.h
 mbtowc	stdlib.h
+mclock64	ext/time64.h
+mclock64_t	ext/time64.h
+mctime64	ext/time64.h
 memchr	string.h
 memclr	ext/strutil.h
 memcmp	string.h
@@ -4260,9 +4274,14 @@ memcpy	string.h
 memcpyp	ext/strutil.h
 memmove	string.h
 memset	string.h
+mgmtime64	ext/time64.h
 mktime	time.h
+mktime64	ext/time64.h
+mlocaltime64	ext/time64.h
 modf	math.h
 mtentry	ibm/mvs/ieezb806.h
+mtime64	ext/time64.h
+mtime64_t	ext/time64.h
 mttable	ibm/mvs/ieezb806.h
 mtxavail	mvs/mutex.h
 mtxclup	mvs/mutex.h
@@ -4457,7 +4476,10 @@ testlock	mvs/lock.h
 testlock_res	mvs/lock.h
 testlock_resf	mvs/lock.h
 time	time.h
+time64	ext/time64.h
+time64_t	ext/time64.h
 time_t	time.h
+timegm64	ext/time64.h
 timeval	sys/select.h
 tiot	ibm/mvs/ieftiot1.h
 tiotdd	ibm/mvs/ieftiot1.h
@@ -4502,6 +4524,8 @@ tzset	time.h
 u64	ext/int64.h
 ucbdasd	ibm/mvs/iefucbob.h
 ucblist	ibm/mvs/iefucbob.h
+uclock64	ext/time64.h
+uclock64_t	ext/time64.h
 ucm	ibm/mvs/ieecucm.h
 ucm2ext	ibm/mvs/ieecucm.h
 ucmefext	ibm/mvs/ieecucm.h
@@ -4511,6 +4535,8 @@ ucmfexta	ibm/mvs/ieecucm.h
 ucmlist	ibm/mvs/ieecucm.h
 ucmpexta	ibm/mvs/ieecucm.h
 ucmprfx	ibm/mvs/ieecucm.h
+uctime64	ext/time64.h
+ugmtime64	ext/time64.h
 uint16_t	stdint.h
 uint32_t	stdint.h
 uint64_t	stdint.h
@@ -4525,12 +4551,15 @@ uint_least64_t	stdint.h
 uint_least8_t	stdint.h
 uintmax_t	stdint.h
 uintptr_t	stdint.h
+ulocaltime64	ext/time64.h
 ungetc	stdio.h
 unlock	mvs/lock.h
 unlock_res	mvs/lock.h
 unlock_resf	mvs/lock.h
 unsetenv	stdlib.h
 usleep	unistd.h
+utime64	ext/time64.h
+utime64_t	ext/time64.h
 va_arg	stdarg.h
 va_copy	stdarg.h
 va_end	stdarg.h
