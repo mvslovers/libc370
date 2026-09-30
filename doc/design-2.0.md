@@ -212,9 +212,9 @@ Summary:
 | `ibm/jes2/` | 13 |
 | `libc370/` | 5 |
 | `s370/` | 2 |
-| internal | 12 |
+| internal | 11 |
 | split across several | 5 |
-| removed or moved out | 20 |
+| removed or moved out | 21 |
 | **total** | **153** |
 
 | today | 2.0 | users | note |
@@ -280,7 +280,7 @@ Summary:
 | `ikjtcb.h` | `ibm/mvs/ikjtcb.h` |  | IBM data area |
 | `ikjupt.h` | `ibm/mvs/ikjupt.h` |  | IBM data area |
 | `@@75.h` | — |  | byte-identical copy of __75.h, no includer |
-| `@@memmgr.h` | internal |  | allocator internals |
+| `@@memmgr.h` | — |  | PDPCLIB memmgr, never built: USE_MEMMGR undefined, no implementation; its branches in malloc/free/realloc dropped |
 | `__75.h` | internal |  | dyn75 parameter list (PL75, __75()); the copy in use, @@75.h dropped |
 | `clibjpa.h` | internal |  | @@JPA anchor mapping |
 | `clibjs.h` | internal |  | JES spool internals, included by clibjes2.h |

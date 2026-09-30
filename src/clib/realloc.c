@@ -16,12 +16,6 @@ __PDPCLIB_API__ void *realloc(void *ptr, size_t size)
         return (NULL);
     }
 
-#if USE_MEMMGR
-    if (memmgrRealloc(&__memmgr, ptr, size) == 0) {
-        return (ptr);
-    }
-#endif
-
     newptr = malloc(size);
     if (newptr == NULL) {
         return (NULL);

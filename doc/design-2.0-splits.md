@@ -26,7 +26,7 @@ comment about `__fflush()` read as a use). "—" means no consumer calls it.
   (#250), and the gate lists the dropped symbols.
 - **Internals leave the installed tree in phase 1 already, but only the parts
   a split cuts off**, into a new `src/internal/`. Whole internal headers
-  (`clibwsa.h`, `@@memmgr.h`, ...) still move in phase 2, as planned. No
+  (`clibwsa.h`, `clibprti.h`, ...) still move in phase 2, as planned. No
   internal header takes an ISO name (D1's reason applies: a quoted
   `#include "stdio.h"` would find it first).
 
