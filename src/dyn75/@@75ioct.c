@@ -1,7 +1,7 @@
 /* @@75IOCT.C
 ** ioctl for socket
 */
-#include "src/internal/__75.h"
+#include "src/internal/x75.h"
 #include "sys/socket.h"
 #include "mvs/socket.h"
 #include "src/internal/dyn75.h"

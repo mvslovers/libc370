@@ -7,7 +7,7 @@
 
 #include <mvs/enq.h>
 #include <mvs/lock.h>
-#include <clibsvc.h>
+#include "src/internal/clibsvc.h"
 
 /*
 ** C library resident structs and prototypes

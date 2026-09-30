@@ -39,7 +39,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "../../include/enqpl.h"
+#include "src/internal/enqpl.h"
 
 /* ---- capture: the SVC parameter list at the moment of the call ------- */
 

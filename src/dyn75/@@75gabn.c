@@ -1,7 +1,7 @@
 /* @@75GABN.C
 ** Get address by name
 */
-#include "src/internal/__75.h"
+#include "src/internal/x75.h"
 #include "sys/socket.h"
 #include "netdb.h"
 #include "mvs/socket.h"

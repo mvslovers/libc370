@@ -33,7 +33,7 @@
 */
 
 #include <string.h>
-#include "clibprti.h"       /* CLIB private printf() internal functions */
+#include "src/internal/printf.h"       /* CLIB private printf() internal functions */
 #include "stdio.h"         /* CLIB IO routines                         */
 
 /* internal buffer output */

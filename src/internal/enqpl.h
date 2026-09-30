@@ -1,5 +1,5 @@
-#ifndef ENQPL_H
-#define ENQPL_H
+#ifndef SRC_INTERNAL_ENQPL_H
+#define SRC_INTERNAL_ENQPL_H
 
 typedef struct enqpl    ENQPL;
 

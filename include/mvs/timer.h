@@ -23,7 +23,7 @@
 #include <s370/savearea.h>
 #include <mvs/recovery.h>
 #include <mvs/thread.h>
-#include <clibwsa.h>
+#include <mvs/wsa.h>
 #include <mvs/wto.h>
 
 typedef struct tmr          TMR;            /* timer instance                       */

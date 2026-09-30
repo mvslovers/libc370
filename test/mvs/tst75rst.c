@@ -94,7 +94,7 @@
 #include <sys/socket.h>
 #include <mvs/socket.h>
 #include "src/internal/dyn75.h"
-#include "src/internal/__75.h"
+#include "src/internal/x75.h"
 
 #define PAGE        4096            /* MVS page size                        */
 #define SEG          256            /* the X'75' copy segment               */

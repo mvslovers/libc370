@@ -4,7 +4,7 @@
 #include <time.h>
 #include <ext/time64.h>
 #include "mvs/jes2ckpt.h"                 /* JES Checkpoint prototypes            */
-#include "clibjs.h"                 /* JES Spool prototypes                 */
+#include "mvs/jes2spool.h"                 /* JES Spool prototypes                 */
 #include "mvs/vsam.h"               /* needed for jesir*()                  */
 #include <ibm/mvs/iefssso.h>                /* needed for jesxwrtr()                */
 

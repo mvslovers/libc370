@@ -1,4 +1,4 @@
-#include <clibsvc.h>
+#include "src/internal/clibsvc.h"
 #include <ibm/mvs/iharb.h>
 #include <mvs/wto.h>
 #include <stddef.h>

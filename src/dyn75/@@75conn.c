@@ -1,7 +1,7 @@
 /* @@75CONN.C
 ** Connect socket to destination
 */
-#include "src/internal/__75.h"
+#include "src/internal/x75.h"
 #include "netinet/in.h"
 #include "sys/socket.h"
 #include "src/internal/dyn75.h"
