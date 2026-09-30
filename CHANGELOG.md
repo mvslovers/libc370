@@ -12,6 +12,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   Windows download marker committed beside them. libc370 never shipped the
   code: a call compiled and then failed to link. No consumer included them.
   Compression belongs in zlib370.
+- **PDF, `emfile` and `ipc` headers, and the `emfile`/`ipc` sources (#248).**
+  `clibpdf.h`/`clibpdfi.h` (a PDF generator with no code in the tree),
+  `emfile.h`/`emfilei.h` (a byte-addressed file over FB 4096 blocks) and
+  `ipc.h`/`ipci.h` (message passing over loopback TCP), with the sources of
+  the latter two under `src/wip/orig/`, which was never built. None of the
+  90 symbols they declared was in `libc.a`, and no consumer included them.
+  `emfile.h` also `#undef`'d `errno.h`'s `EMFILE` for whoever included it.
 
 ## [1.0.8] - 2026-09-30
 

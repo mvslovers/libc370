@@ -54,8 +54,10 @@ actually resolve against:
 ar370 t build/sdk/libc.a        # members + every exported symbol
 ```
 
-Today it exports 740 symbols, and none of them back these headers: `clibmz.h` /
-`clibmzi.h` (miniz) and `clibpdf.h` / `clibpdfi.h` compile and then fail at link.
+Four header families had no member behind them at all — miniz, PDF,
+`emfile` and `ipc` — and were removed for 2.0 (#243, #248). `make install`
+copies and never deletes, so a sysroot installed before that still carries
+them; they compile there and fail at link, as they always did.
 `clibsrb.h` is a half case — its two out-of-line entries (`SRBGMAIN`, `SRBFMAIN`)
 are not in the archive, but the `inline_srb_*` variants beside them are
 `static __inline` and work. `clibres.h` is `static __inline` throughout, so it
