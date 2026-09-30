@@ -1,6 +1,8 @@
 /* @@CMQDEL.C - cthread_queue_del()
 */
-#include "clibthdi.h"
+#include "time.h"
+#include "libc370/time64.h"
+#include "mvs/thread.h"
 
 __asm__("\n&FUNC    SETC 'cthread_queue_del'");
 int

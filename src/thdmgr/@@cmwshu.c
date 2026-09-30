@@ -1,6 +1,8 @@
 /* @@CMWSHU.C - cthread_worker_shutdown()
 */
-#include "clibthdi.h"
+#include "time.h"
+#include "libc370/time64.h"
+#include "mvs/thread.h"
 #include "mvs/wto.h"     /* wtof(): a prototype decides linkage here (#39) */
 
 __asm__("\n&FUNC    SETC 'cthread_worker_shutdown'");

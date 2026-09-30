@@ -21,7 +21,7 @@
 #include "mvs/wto.h"                /* write to operator            */
 #include "mvs/console.h"                /* console information block    */
 #include "mvs/thread.h"               /* basic threads                */
-#include "clibthdi.h"               /* thread management            */
+#include "libc370/time64.h"
 #include "mvs/link.h"               /* link to external program     */
 #include "libc370/array.h"                /* dynamic arrays               */
 #include "mvs/dynalloc.h"                  /* dynamic allocation           */

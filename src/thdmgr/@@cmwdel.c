@@ -1,6 +1,8 @@
 /* @@CMWDEL.C - cthread_worker_del()
 */
-#include "clibthdi.h"
+#include "time.h"
+#include "libc370/time64.h"
+#include "mvs/thread.h"
 #include "mvs/wto.h"     /* wtof(): a prototype decides linkage here (#39) */
 
 #if 0
