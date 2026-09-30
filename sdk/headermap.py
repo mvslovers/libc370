@@ -14,7 +14,8 @@ migration script will read it, so a mapping is written down exactly once.
 
 Usage:  python3 sdk/headermap.py render   # rewrite the tables in the design doc
         python3 sdk/headermap.py check    # doc in sync, every include/*.h mapped,
-                                          # and where each moved header stands
+                                          # where each moved header stands, and
+                                          # sdk/names.py check (names.tsv, removed.tsv)
 """
 import os, sys, json, glob, collections
 
@@ -160,7 +161,9 @@ def cmd_check():
         print(f"[headermap] {k:22} {state[k]:4}")
     print(f"[headermap] {len(rows)} rows, {len(present)} headers in include/"
           + (f", {bad} problem(s)" if bad else ", consistent"))
-    return 1 if bad else 0
+    # the same question by name: sdk/names.tsv, sdk/removed.tsv
+    import names
+    return 1 if bad or names.cmd_check() else 0
 
 
 if __name__ == "__main__":
