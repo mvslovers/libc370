@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
-#include <clib.h>
+#include <mvs/crt.h>
+#include <mvs/wto.h>
+#include <clibos.h>
 #include <mvs/dd.h>
 #include <ibm/mvs/iezjscb.h>
 #include <ibm/mvs/ieftiot1.h>

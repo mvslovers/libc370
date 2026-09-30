@@ -1,5 +1,7 @@
 #include <mvs/tso.h>
-#include <clib.h>
+#include <mvs/crt.h>
+#include <mvs/wto.h>
+#include <clibos.h>
 
 int tsocmdf(const char *pgm, const char *format, ...)
 {

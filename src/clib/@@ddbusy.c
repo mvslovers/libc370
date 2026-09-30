@@ -1,7 +1,8 @@
 /* @@DDBUSY.C */
 #include <stdio.h>
 #include <string.h>
-#include <clib.h>
+#include <mvs/wto.h>
+#include <clibos.h>
 #include <libc370/array.h>
 #include "mvs/lock.h"
 #include <mvs/dd.h>

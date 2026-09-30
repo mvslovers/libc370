@@ -1,4 +1,6 @@
-#include <clib.h>
+#include <mvs/crt.h>
+#include <mvs/wto.h>
+#include <clibos.h>
 
 static int unauth_setup(const char *name);
 static int auth_pgm(const char *name);

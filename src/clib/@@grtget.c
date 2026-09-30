@@ -1,6 +1,8 @@
 /* @@GRTGET.C */
 #define CLIB_C
-#include "clib.h"
+#include "mvs/crt.h"
+#include "mvs/wto.h"
+#include "clibos.h"
 
 CLIBGRT *
 __grtget(void)

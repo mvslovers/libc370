@@ -1,7 +1,9 @@
 #define CLIB_C
 #include <stdio.h>
 #include <stdlib.h>
-#include "clib.h"
+#include "mvs/crt.h"
+#include "mvs/wto.h"
+#include "clibos.h"
 #include "libc370/array.h"
 #include "mvs/lock.h"
 

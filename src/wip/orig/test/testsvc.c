@@ -10,7 +10,6 @@
 #include <errno.h>
 
 /* custom C library headers / MVS operating system specific */
-#include "clib.h"                   /* C library internals          */
 #include "clibos.h"                 /* OS specific routines         */
 #include "clibwsa.h"                /* writable static area         */
 #include "mvs/crt.h"                /* global runtime               */
