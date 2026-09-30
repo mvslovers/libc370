@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+- **`make install` replaces the sysroot's `include/` instead of adding to it
+  (#256).** It clears the directory, then copies the header tree with its
+  subdirectories, which 2.0 introduces (`mvs/`, `ibm/mvs/`, ...). Before, it
+  copied `include/*.h` and never deleted, so a header that left libc370 stayed
+  in every sysroot it had once been installed into. libc370 owns that
+  directory: cc370 searches no other, and every file found there came from
+  libc370.
+- **`libc.a` no longer carries the path it was built in (#256).** `mklibc.py`
+  names each source relative to the repository, so `assert()` in
+  `tm64syr.c` records `src/time64/tm64syr.c` instead of the builder's absolute
+  path, and two checkouts build the same library.
+
 ### Removed
 - **miniz headers (#243).** `clibmz.h`, `clibmzi.h`, `miniz.h`,
   `miniz_common.h`, `miniz_tdef.h`, `miniz_tinfl.h` and `miniz_zip.h`, plus a

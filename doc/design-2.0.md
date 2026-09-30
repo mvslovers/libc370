@@ -102,8 +102,8 @@ other item. Header moves and parallel fix PRs would also collide on the same
 | # | what | gate |
 |---|---|---|
 | 0 | libc370 CI (#249); crypto370 released (#244; httpd and mvsMF adopt it in their 2.0 migration); **1.0.8 released**, the last 1.x; consumers' **build** CI held on `v1.0.8`, which needs a `libc370_ref` input in mbt's `build.yml` (mvslovers/mbt#121; release CI already pins) | every consumer green against 1.0.8 |
-| 1 | move and rename headers per the table; split the five mixed headers; drop dead ones. Absorbs #39 step 2 (missing `#include`s) and #68 step 1 (the `clibsa.h` inline), since every `#include` line is touched anyway, and #250 items 1–3 | **byte-identical assembler for every TU** against the commit before the move, the method PR #242 used |
-| 2 | internals to `src/internal/`; install copies subdirectories (`mklibc.py:226` globs `include/*.h` today) | the migration script resolves every consumer include |
+| 1 | on the integration branch `2.0` (#256): move and rename headers per the table; split the five mixed headers; drop dead ones. `install` copies subdirectories and clears the sysroot's `include/` first, since the first moved header needs it. Absorbs #39 step 2 (missing `#include`s) and #68 step 1 (the `clibsa.h` inline), since every `#include` line is touched anyway, and #250 items 1–3 | **byte-identical assembler for every TU** against the commit before the move, the method PR #242 used; `sdk/gate.py` checks it in CI, with the archive's symbols and the warnings |
+| 2 | internals to `src/internal/` | the migration script resolves every consumer include |
 | — | **the relink round**: #79, #50, #51, #71, #172, #80 defect 1 | per change, tests; CHANGELOG entry for each layout or signature change |
 | — | **release 2.0.0**; one migration PR per consumer | each consumer green against 2.0.0 |
 | 3 | sources by area; basenames stay unique (all objects share one directory, `mklibc.py:161`) | byte-identical assembler |
@@ -190,7 +190,10 @@ design, measurements, the CI analysis), and is never published.
 
 ## Appendix — every header
 
-Generated from the inventory. Every row is re-checked in phase 1, and the
+Rendered from `sdk/headermap.tsv` by `python3 sdk/headermap.py render`; edit
+the TSV, not this table. `headermap.py check` (run in CI) fails when the two
+drift, or when `include/` holds a header no row accounts for. Generated from
+the inventory. Every row is re-checked in phase 1, and the
 `ibm/` names in particular against the macro libraries: `sysmac/` vendors
 `SYS1.MACLIB` only, so macros from `SYS1.AMODGEN` (`IHAACEE`, `IHAASVT`, …)
 cannot be confirmed from the tree. **users** = how many of the 11 consumer
@@ -198,6 +201,7 @@ repos include the header (httpd, mvsmf, ftpd, ufsd, httplua, httprexx, lua370,
 rexx370, lstring370 and nsf370 at `origin/main`, brexx370 at `origin/master`,
 fetched 2026-09-30).
 
+<!-- headermap:begin -->
 Summary:
 
 | target | headers |
@@ -368,3 +372,4 @@ Summary:
 | `miniz_tinfl.h` | — |  | removed: miniz, no implementation in libc.a, no user (#243) |
 | `miniz_zip.h` | — |  | removed: miniz, no implementation in libc.a, no user (#243) |
 | `sha256.h` | — | 1 | moves to crypto370 (#244) |
+<!-- headermap:end -->

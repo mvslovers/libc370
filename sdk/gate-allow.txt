@@ -1,0 +1,4 @@
+# Differences sdk/gate.py accepts for THIS change only: '<asm|symbol|member>
+# <name> <reason>'.  An entry that matches no difference fails the gate, so
+# the next change finds these stale and empties the file.  See sdk/gate.py.
+asm src/time64/tm64syr.s assert() embeds __FILE__, now repo-relative: mklibc.py compiles from the root (#256)
