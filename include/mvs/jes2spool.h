@@ -1,5 +1,5 @@
-#ifndef CLIBJS_H
-#define CLIBJS_H
+#ifndef MVS_JES2SPOOL_H
+#define MVS_JES2SPOOL_H
 
 #include "ibm/mvs/dcbd.h"
 

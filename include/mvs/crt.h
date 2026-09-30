@@ -7,7 +7,7 @@
 */
 
 /* ---- 1.x clibgrt.h --------------------------------------------------- */
-#include "clibwsa.h"                /* process level writable static areas  */
+#include "mvs/wsa.h"                /* process level writable static areas  */
 
 typedef struct clibgrt  CLIBGRT;    /* per process runtime work area        */
 

@@ -1,7 +1,7 @@
 /* @@75VECT.C
 ** TCPIP Vector
 */
-#include "src/internal/__75.h"
+#include "src/internal/x75.h"
 #include "netinet/in.h"
 #include "sys/socket.h"
 #include "sys/select.h"

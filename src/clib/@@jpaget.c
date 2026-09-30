@@ -1,6 +1,6 @@
 #define __JPAGET__
 #include "mvs/crt.h"
-#include "clibjpa.h"
+#include "src/internal/crtanchor.h"
 
 CLIBJPA *
 __JPAGET(void)

@@ -6,7 +6,8 @@
 #include <mvs/link.h>
 #include <mvs/storage.h>
 #include <ctype.h>
-#include <modmap.h>
+#include "src/internal/bsam.h"
+#include "src/internal/loadmod.h"
 
 static int      relocate_load(FILE *fp, unsigned lowlp, unsigned highlp, unsigned size);
 static int      process_rldr(unsigned char *buf, size_t reclen,

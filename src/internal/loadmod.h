@@ -1,128 +1,11 @@
-#ifndef MODMAP_H
-#define MODMAP_H
-#include <stdio.h>
-#include <stdlib.h>
-#include <stddef.h>
-#include "src/internal/bsam.h"
-#include <mvs/clock.h>
-#include <mvs/storage.h>
-#include <mvs/dynalloc.h>
-#include <mvs/idcams.h>
-#include "ext/array.h"
-#include "mvs/recovery.h"
-
-/* Module Map */
-typedef struct modmap       MODMAP; /* Module Map                       */
-typedef struct mmsd         MMSD;   /* Module Map Section               */
-typedef struct mmlr         MMLR;   /* Module Map Label Reference       */
-typedef struct mmrl         MMRL;   /* Module Map Relocation Label      */
-typedef struct mmld         MMLD;   /* Module Map Load Data             */
-
-struct modmap {
-    unsigned char   eye[8];         /* 00 eye catcher                   */
-#define MODMAP_EYE  "*MODMAP*"      /* ...                              */
-    FILE            *fp;            /* 08 file handle                   */
-    MMSD            **mmsd;         /* 0C array of sections             */
-    unsigned char   fn[56];         /* 10 dataset(member)               */
-    MMLD            **mmld;         /* 48 array of load data            */
-};                                  /* 4C (76 bytes)                    */
-
-struct mmld {
-    unsigned        esdid;          /* 00 section identifier            */
-    unsigned        size;           /* 04 section text size             */
-};
-
-struct mmsd {
-    unsigned char   name[8];        /* 00 section name                  */
-    unsigned        esdid;          /* 08 identifier                    */
-    unsigned        address;        /* 0C address of this section       */
-    unsigned        size;           /* 10 size of this section          */
-    MMLR            **mmlr;         /* 14 array of labels               */
-    MMRL            **mmrl;         /* 18 array of relocation           */
-    unsigned char   type;           /* 1C type (see ESD_TYPE_ below)    */
-    unsigned char   unused[3];      /* 1D unused                        */
-    unsigned char   *text;          /* 20 text for this section         */
-};                                  /* 24 (36 bytes)                    */
-
-struct mmlr {
-    unsigned char   name[8];        /* 00 label name                    */
-    unsigned        esdid;          /* 08 identifier                    */
-    unsigned        address;        /* 0C address of this label         */
-    unsigned char   type;           /* 10 type (see ESD_TYPE_ below)    */
-    unsigned char   unused[3];      /* 11 unused                        */
-};                                  /* 15 (20 bytes)                    */
-
-struct mmrl {
-    unsigned        esdid;          /* 00 esdid of target section       */
-    unsigned        address;        /* 04 address of target section     */
-    unsigned char   unres;          /* 08 unresolved                    */
-    unsigned char   type;           /* 09 (see RLD_FLAG_TYPExxx)        */
-    unsigned char   size;           /* 0A size of address target        */
-    unsigned char   neg;            /* 0B negative relocation           */
-    unsigned        value;          /* 0C value before relocation       */
-};                                  /* 10 (16 bytes)                    */
-
-/* find MMSD record by ESD ID */
-extern MMSD *   mmapfsd(MODMAP *mm, unsigned esdid)             asm("MMAPFSD");
-extern MMSD *   modmap_find_sd(MODMAP *mm, unsigned esdid)      asm("MMAPFSD");
-
-/* find MMLR record by ESD ID */
-extern MMLR *   mmapflr(MODMAP *mm, unsigned esdid)             asm("MMAPFLR");
-extern MMLR *   modmap_find_lr(MODMAP *mm, unsigned esdid)      asm("MMAPFLR");
-
-/* free MMLD record */
-extern void     mmapfrld(MMLD **mmld)                           asm("MMAPFRLD");
-extern void     modmap_free_ld(MMLD **mmld)                     asm("MMAPFRLD");
-
-/* free MMRL record */
-extern void     mmapfrrl(MMRL **mmrl)                           asm("MMAPFRRL");
-extern void     modmap_free_rl(MMRL **mmrl)                     asm("MMAPFRRL");
-
-/* free MMLR record */
-extern void     mmapfrlr(MMLR **mmlr)                           asm("MMAPFRLR");
-extern void     modmap_free_lr(MMLR **mmlr)                     asm("MMAPFRLR");
-
-/* free MMSD record */
-extern void     mmapfrsd(MMSD **mmsd)                           asm("MMAPFRSD");
-extern void     modmap_free_sd(MMSD **mmsd)                     asm("MMAPFRSD");
-
-/* reset MODMAP record */
-extern MODMAP * mmaprset(MODMAP *mm)                            asm("MMAPRSET");
-extern MODMAP * modmap_reset(MODMAP *mm)                        asm("MMAPRSET");
-
-/* reset MODMAP MMLD array */
-extern MODMAP * mmaprsld(MODMAP *mm)                            asm("MMAPRSLD");
-extern MODMAP * modmap_reset_ld(MODMAP *mm)                     asm("MMAPRSLD");
-
-/* free MODMAP record */
-extern void     mmapfree(MODMAP **mm)                           asm("MMAPFREE");
-extern void     modmap_free(MODMAP **mm)                        asm("MMAPFREE");
-
-/* allocate a new MODMAP record */
-extern MODMAP * mmapnew(void)                                   asm("MMAPNEW");
-extern MODMAP * modmap_new(void)                                asm("MMAPNEW");
-
-/* open file (dataset) containing load module to be mapped */
-extern int      mmapopen(MODMAP *mm, const char *fn)            asm("MMAPOPEN");
-extern int      modmap_open(MODMAP *mm, const char *fn)         asm("MMAPOPEN");
-
-/* process load module into MMSD and MMLR records */
-extern int      mmapproc(MODMAP *mm)                            asm("MMAPPROC");
-extern int      modmap_process(MODMAP *mm)                      asm("MMAPPROC");
-
-/* dump MODMAP via wtof() */
-extern int      mmapdump(MODMAP *mm)                            asm("MMAPDUMP");
-extern int      modmap_dump(MODMAP *mm)                         asm("MMAPDUMP");
-
-/* sort MMSD and MMLR records in the MODMAP record */
-extern int      mmapsort(MODMAP *mm)                            asm("MMAPSORT");
-extern int      modmap_sort(MODMAP *mm)                         asm("MMAPSORT");
-
-/* add base to address for all records */
-extern int      modmap_base(MODMAP *mm, unsigned base)          asm("MMAPBASE");
-
-/* zap memory using modmap addresses between base and base + size */
-extern int      modmap_zap(MODMAP *mm, unsigned base, unsigned size) asm("MMAPZAP");
+#ifndef SRC_INTERNAL_LOADMOD_H
+#define SRC_INTERNAL_LOADMOD_H
+/* loadmod.h - internal: the record layouts of a load module on disk
+** (CESD, RLD, CTL, IDR), as __loadhi() reads them.
+**
+** libc370 2.0 keeps this half of 1.x modmap.h; the module-map API it also
+** declared (modmap_new(), modmap_open(), ...) was never implemented (#274).
+*/
 
 /* Load module mapping records */
 typedef struct mmcesdr      MMCESDR;/* Module Map CESD record           */
@@ -283,4 +166,4 @@ struct mmidr {
 };
 
 
-#endif  /* MODMAP_H */
+#endif  /* SRC_INTERNAL_LOADMOD_H */

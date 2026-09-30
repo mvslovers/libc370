@@ -10,7 +10,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-#include <clibwsa.h>
+#include <mvs/wsa.h>
 #include "signal.h"
 #include "stdlib.h"
 #include "stddef.h"

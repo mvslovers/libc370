@@ -5,7 +5,7 @@
 #include <time.h>
 #include <errno.h>
 #include "ext/time64.h"
-#include "src/time64/__time64.h"
+#include "src/time64/calendar.h"
 
 extern long     __ymdts(unsigned yr, unsigned mo, unsigned day);
 #define ymd_to_scalar(y,m,d) __ymdts((y),(m),(d))

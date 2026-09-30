@@ -1,5 +1,5 @@
-#ifndef CLIBPRTI_H
-#define CLIBPRTI_H
+#ifndef SRC_INTERNAL_PRINTF_H
+#define SRC_INTERNAL_PRINTF_H
 /*
 ///////////////////////////////////////////////////////////////////////////////
 // \author (c) Marco Paland (info@paland.com)
@@ -36,7 +36,18 @@
 
 #include <stdarg.h>
 #include <stddef.h>
-#include "clibprtf.h"       /* CLIB public printf() functions */
+/* the engine's entry points (1.x clibprtf.h) */
+extern int printf_(const char* format, ...);
+
+extern int sprintf_(char* buffer, const char* format, ...);
+
+extern int snprintf_(char* buffer, size_t count, const char* format, ...)       asm("SNPRTF@");
+
+extern int vsprintf_(char* buffer, const char* format, va_list va)              asm("VSPRTF@");
+
+extern int vsnprintf_(char* buffer, size_t count, const char* format, va_list va) asm("VSNPRTF@");
+
+extern int fctprintf_(void (*out)(char character, void* arg), void* arg, const char* format, ...) asm("FCTPRTF@");
 
 /* 'ntoa' conversion buffer size, this must be big enough to hold one converted
 // numeric number including padded zeros (dynamically created on stack)

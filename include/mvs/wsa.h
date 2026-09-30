@@ -1,5 +1,5 @@
-#ifndef CLIBWSA_H
-#define CLIBWSA_H
+#ifndef MVS_WSA_H
+#define MVS_WSA_H
 
 typedef struct clibwsa  CLIBWSA;    /* per process writable static area     */
 

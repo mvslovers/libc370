@@ -1,5 +1,5 @@
-#ifndef __TIME64_H
-#define __TIME64_H
+#ifndef SRC_TIME64_CALENDAR_H
+#define SRC_TIME64_CALENDAR_H
 
 #define years_in_gregorian_cycle	400
 #define days_in_gregorian_cycle     ((365 * 400) + 100 - 4 + 1)

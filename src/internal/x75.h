@@ -1,5 +1,5 @@
-#ifndef __75_H
-#define __75_H
+#ifndef SRC_INTERNAL_X75_H
+#define SRC_INTERNAL_X75_H
 
 /* Parameter list for DYN75 calls */
 typedef struct pl75 {

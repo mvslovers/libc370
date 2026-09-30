@@ -1,5 +1,5 @@
 #define PRINTF_PRIVATE
-#include <clibprti.h>
+#include "src/internal/printf.h"
 
 __asm__("\n&FUNC    SETC 'snprintf_'");
 int snprintf_(char* buffer, size_t count, const char* format, ...)

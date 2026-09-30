@@ -1,5 +1,5 @@
-#ifndef CLIBJPA_H
-#define CLIBJPA_H
+#ifndef SRC_INTERNAL_CRTANCHOR_H
+#define SRC_INTERNAL_CRTANCHOR_H
 /*
 ** Maps load module @@JPA (Job Pack Area Anchor) KEY=8 SP=251.
 **
@@ -42,4 +42,4 @@ __JPAGET(void)
 }
 #endif
 
-#endif  /* CLIBJPA_H    */
+#endif  /* SRC_INTERNAL_CRTANCHOR_H    */

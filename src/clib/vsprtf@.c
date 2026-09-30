@@ -1,5 +1,5 @@
 #define PRINTF_PRIVATE
-#include <clibprti.h>
+#include "src/internal/printf.h"
 
 __asm__("\n&FUNC    SETC 'vsprintf_'");
 int vsprintf_(char* buffer, const char* format, va_list va)

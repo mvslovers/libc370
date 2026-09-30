@@ -40,7 +40,7 @@ gmtime64_r() is a 64-bit equivalent of gmtime_r().
 #include <time.h>
 #include <errno.h>
 #include <ext/time64.h>
-#include "src/time64/__time64.h"
+#include "src/time64/calendar.h"
 
 struct tm *localtime64_r (const time64_t *time, struct tm *local_tm)
 {

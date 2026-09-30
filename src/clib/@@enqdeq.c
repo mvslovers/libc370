@@ -1,5 +1,5 @@
 #include <string.h>
-#include "enqpl.h"
+#include "src/internal/enqpl.h"
 #include "mvs/enq.h"
 
 int
