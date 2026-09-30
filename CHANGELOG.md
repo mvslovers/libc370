@@ -19,6 +19,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   the latter two under `src/wip/orig/`, which was never built. None of the
   90 symbols they declared was in `libc.a`, and no consumer included them.
   `emfile.h` also `#undef`'d `errno.h`'s `EMFILE` for whoever included it.
+- **`clibsrb.h` is no longer installed (#248).** It moved to
+  `src/wip/mvs/srb.h` for later. It had no user; its out-of-line
+  `srb_getmain()`/`srb_freemain()` had no code behind them and are gone.
+
+### Fixed
+- **`inline_srb_freemain()` freed from subpool 0 (#248).** Its FREEMAIN read
+  `SP+(%2)`, which the macro accepts and then ignores, so storage got from
+  `SRB_SUBPOOL` went back to subpool 0. Now `SP=(%2)`; the expansion loads
+  the subpool into R0 as GETMAIN's does. It is in `src/wip/mvs/srb.h`, no
+  longer installed.
 
 ## [1.0.8] - 2026-09-30
 
