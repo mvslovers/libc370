@@ -21,7 +21,10 @@
  */
 #include <stdio.h>
 #include <string.h>
-#include "clibos.h"
+#include "stddef.h"
+#include "ibm/mvs/ihacde.h"
+#include "mvs/wto.h"
+#include "s370/atomic.h"
 
 static int mbt_run = 0, mbt_passed = 0, mbt_failed = 0;
 

@@ -2,7 +2,10 @@
 #include <ibm/mvs/ieebasea.h>   /* Master Scheduler Base, BASE */
 #include <ibm/mvs/ieezb806.h>   /* MTTABLE, MTENTRY */
 #include <mvs/mtt.h>
-#include <clibos.h>
+#include <stddef.h>
+#include <ibm/mvs/ihacde.h>
+#include <mvs/wto.h>
+#include <mvs/apf.h>
 #include <mvs/apf.h>
 
 CMTT *cmtt_new(void)

@@ -1,6 +1,9 @@
 /* @@CAS.C - compare and swap, the way the instruction does it
 */
-#include "clibos.h"
+#include "stddef.h"
+#include "ibm/mvs/ihacde.h"
+#include "mvs/wto.h"
+#include "s370/atomic.h"
 
 /*
  * S/370 CS in one call: compare *mem against *expect and store new_value only

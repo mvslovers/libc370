@@ -5,7 +5,6 @@
 #include "string.h"
 #include "ctype.h"
 #include "stddef.h"
-#include "mvssupa.h"
 
 __PDPCLIB_API__ void *realloc(void *ptr, size_t size)
 {

@@ -1,5 +1,7 @@
 #include <mvs/subsys.h>
-#include <clibos.h>
+#include <stddef.h>
+#include <ibm/mvs/ihacde.h>
+#include <mvs/wto.h>
 #include <ibm/mvs/iefjesct.h>
 
 __asm__("\n&FUNC    SETC 'ssct_find'");

@@ -4,7 +4,7 @@
 #include <time.h>
 #include <libc370/time64.h>
 #include "__time64.h"
-#include "mvssupa.h"
+#include "stddef.h"
 #include "mvs/crt.h"
 
 struct tm *ugmtime64(const utime64_t *utimer)

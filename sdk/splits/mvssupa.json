@@ -1,0 +1,20 @@
+{
+  "source": "mvssupa.h",
+  "targets": {
+    "src/internal/bsam.h": {"doc": "internal: libc370's BSAM layer under stdio, and system().",
+                            "includes": ["<stddef.h>"]},
+    "mvs/clock.h":         {"doc": "the TOD clock and the system time zone offset."},
+    "mvs/storage.h":       {"includes": ["<stddef.h>"]},
+    "mvs/dynalloc.h":      {"includes": ["<stddef.h>"]},
+    "mvs/idcams.h":        {"doc": "run IDCAMS commands.", "includes": ["<stddef.h>"]}
+  },
+  "segments": [
+    {"from": "#pragma linkage(__aopen, OS)",  "to": "void __adisc(",           "target": "src/internal/bsam.h"},
+    {"from": "#pragma linkage(__getclk, OS)", "to": "int __gettz(",            "target": "mvs/clock.h"},
+    {"from": "#pragma linkage(__getm, OS)",   "to": "void __freem(",           "target": "mvs/storage.h"},
+    {"from": "#pragma linkage(__dynal, OS)",  "to": "int __dynal(",            "target": "mvs/dynalloc.h"},
+    {"from": "#pragma linkage(__idcams, OS)", "to": "int idcams(",             "target": "mvs/idcams.h"},
+    {"from": "#pragma linkage(__system, OS)", "to": "#endif",                  "target": "src/internal/bsam.h"},
+    {"from": "/* SVC 99 (dynamic allocation)","to": "int __svc99(",            "target": "mvs/dynalloc.h"}
+  ]
+}

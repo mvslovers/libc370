@@ -2,7 +2,10 @@
 ** releases ACEE.
 */
 #include "mvs/racf.h"
-#include "clibos.h"                 /* __cas() */
+#include "stddef.h"
+#include "ibm/mvs/ihacde.h"
+#include "mvs/wto.h"
+#include "s370/atomic.h"
 
 __asm__("\n&FUNC    SETC 'racf_logout'");
 int

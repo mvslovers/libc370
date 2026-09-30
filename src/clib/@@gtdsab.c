@@ -2,7 +2,8 @@
 #include <string.h>
 #include <mvs/crt.h>
 #include <mvs/wto.h>
-#include <clibos.h>
+#include <stddef.h>
+#include <ibm/mvs/ihacde.h>
 #include <mvs/dd.h>
 #include <ibm/mvs/iezjscb.h>
 #include <ibm/mvs/ieftiot1.h>

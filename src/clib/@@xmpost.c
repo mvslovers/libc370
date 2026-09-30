@@ -1,4 +1,7 @@
-#include <clibos.h>
+#include <stddef.h>
+#include <ibm/mvs/ihacde.h>
+#include <mvs/wto.h>
+#include <mvs/xmem.h>
 #include <mvs/wto.h>
 
 /* __xmpost() POST ECB with postcode in address space for ascb */

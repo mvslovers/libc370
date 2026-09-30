@@ -4,7 +4,8 @@
 #include <ctype.h>
 #include <errno.h>
 #include <string.h>
-#include <mvssupa.h>
+#include <stddef.h>
+#include <bsam.h>
 #include "mvs/rfile.h"
 #include "mvs/crt.h"
 

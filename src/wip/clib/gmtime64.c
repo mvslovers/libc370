@@ -3,7 +3,7 @@
 #include "stdarg.h"
 #include "stdio.h"
 #include "stddef.h"
-#include "mvssupa.h"
+
 #include "mvs/crt.h"
 
 /* scalar date routines    --    public domain by Ray Gardner

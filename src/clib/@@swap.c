@@ -1,6 +1,9 @@
 /* @@SWAP.C - atomic exchange
 */
-#include "clibos.h"
+#include "stddef.h"
+#include "ibm/mvs/ihacde.h"
+#include "mvs/wto.h"
+#include "s370/atomic.h"
 
 /*
  * Store new_value and return what was there, atomically.  This is what the

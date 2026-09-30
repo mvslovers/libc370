@@ -37,7 +37,7 @@
  *     R=../..
  *     cc -std=gnu99 -Wall \
  *        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
- *        -I $R/include -o t tstplus.c && ./t
+ *        -I $R/include -I $R/src/internal -o t tstplus.c && ./t
  *
  * RC: 0 = every check passed, 1 = at least one did not.
  */

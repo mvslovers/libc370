@@ -71,9 +71,9 @@
  *
  *     R=../..
  *     cc -std=gnu99 -D'__asm__(x)=' -D__32BIT__ -Dcalloc=tst_calloc \
- *        -I $R/include -c "$R/src/clib/@@nwtx99.c" -o nwtx99.o
+ *        -I $R/include -I $R/src/internal -c "$R/src/clib/@@nwtx99.c" -o nwtx99.o
  *     cc -std=gnu99 -Wall -Wextra -fsanitize=address \
- *        -D'__asm__(x)=' -D__32BIT__ -I $R/include -o t tsttxdsn.c nwtx99.o \
+ *        -D'__asm__(x)=' -D__32BIT__ -I $R/include -I $R/src/internal -o t tsttxdsn.c nwtx99.o \
  *        "$R/src/clib/@@txdsn.c" "$R/src/clib/@@aradd.c" \
  *        "$R/src/clib/@@arnew.c" "$R/src/clib/@@arcou.c" \
  *        "$R/src/clib/@@arget.c" "$R/src/clib/@@arfre.c"

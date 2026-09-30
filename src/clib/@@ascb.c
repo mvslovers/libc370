@@ -1,4 +1,7 @@
-#include <clibos.h>
+#include <stddef.h>
+#include <ibm/mvs/ihacde.h>
+#include <mvs/wto.h>
+#include <mvs/xmem.h>
 #include <ibm/mvs/ihaasvt.h>
 
 /* __ascb() get ASCB for ASID, or current ASCB if 0 */

@@ -2,8 +2,6 @@
 #include "stdarg.h"
 #include "stdio.h"
 #include "stddef.h"
-#include "mvssupa.h"
-
 
 extern int      __isleap(unsigned yr);
 extern unsigned __mtd(unsigned month);

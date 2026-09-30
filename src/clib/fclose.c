@@ -7,7 +7,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <stddef.h>
-#include <mvssupa.h>
+#include <bsam.h>
 #include "mvs/crt.h"
 #include "mvs/lock.h"
 #include "libc370/array.h"

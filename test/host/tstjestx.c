@@ -81,7 +81,7 @@
  *     R=../..
  *     cc -std=gnu99 -Wall -Wextra -fsanitize=address \
  *        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
- *        -I $R/include -I $R/src/jes -o t tstjestx.c \
+ *        -I $R/include -I $R/src/internal -I $R/src/jes -o t tstjestx.c \
  *        "$R/src/jes/jesprb.c" \
  *        "$R/src/clib/@@aradd.c" "$R/src/clib/@@arnew.c" \
  *        "$R/src/clib/@@arcou.c" "$R/src/clib/@@arget.c" \

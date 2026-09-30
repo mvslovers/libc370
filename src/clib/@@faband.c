@@ -51,7 +51,8 @@
 */
 #include <stdio.h>
 #include <string.h>
-#include <mvssupa.h>
+#include <stddef.h>
+#include <bsam.h>
 #include <mvs/recovery.h>
 #include "mvs/lock.h"
 

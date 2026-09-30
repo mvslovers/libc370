@@ -3,12 +3,14 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
-#include <mvssupa.h>
+#include <stddef.h>
+#include <mvs/dynalloc.h>
 #include "mvs/dynalloc.h"
 #include "libc370/array.h"
 #include "mvs/crt.h"
 #include "mvs/wto.h"
-#include "clibos.h"
+#include "stddef.h"
+#include "ibm/mvs/ihacde.h"
 
 int
 __fpstar(FILE *fp)

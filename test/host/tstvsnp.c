@@ -44,7 +44,7 @@
  *     R=../..
  *     cc -std=gnu99 -Wall -Wextra -fsanitize=address \
  *        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
- *        -I $R/include -o t tstvsnp.c && ./t
+ *        -I $R/include -I $R/src/internal -o t tstvsnp.c && ./t
  *
  * RED against the pre-fix source (plus the __examin() declaration, which
  * is part of the fix): case (2) dies under ASAN with a heap-buffer-overflow

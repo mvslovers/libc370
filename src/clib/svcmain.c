@@ -1,7 +1,9 @@
 #include <clibsvc.h>
 #include <ibm/mvs/iharb.h>
 #include <mvs/wto.h>
-#include <clibos.h>
+#include <stddef.h>
+#include <ibm/mvs/ihacde.h>
+#include <mvs/apf.h>
 
 /* SVCMAIN() on entry svcregs->r1 has the request code, r15, r0 and r1 parm values are 0 */
 /* After return to @@SVC, r15, r0, and r1 values are returned to caller */

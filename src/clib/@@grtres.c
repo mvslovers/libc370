@@ -2,7 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "mvs/wto.h"
-#include "clibos.h"
+#include "stddef.h"
+#include "ibm/mvs/ihacde.h"
 #include "mvs/crt.h"
 
 int

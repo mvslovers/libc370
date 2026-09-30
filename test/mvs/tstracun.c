@@ -66,7 +66,10 @@
 #include <stdio.h>
 #include <string.h>
 #include "mvs/racf.h"
-#include "clibos.h"
+#include "stddef.h"
+#include "ibm/mvs/ihacde.h"
+#include "mvs/wto.h"
+#include "mvs/apf.h"
 #include "mvs/apf.h"
 #include "mvs/recovery.h"
 #include "mvs/wto.h"

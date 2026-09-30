@@ -2,7 +2,12 @@
 #define MODMAP_H
 #include <stdio.h>
 #include <stdlib.h>
-#include <mvssupa.h>
+#include <stddef.h>
+#include <bsam.h>
+#include <mvs/clock.h>
+#include <mvs/storage.h>
+#include <mvs/dynalloc.h>
+#include <mvs/idcams.h>
 #include "libc370/array.h"
 #include "mvs/recovery.h"
 

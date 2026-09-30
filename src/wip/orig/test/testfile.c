@@ -4,7 +4,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
-#include <mvssupa.h>
+#include <stddef.h>
 #include "ibm/mvs/dcbd.h"
 #include "ibm/mvs/iefjfcbn.h"
 #include "mvs/dynalloc.h"

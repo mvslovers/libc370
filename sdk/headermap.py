@@ -16,7 +16,7 @@ Usage:  python3 sdk/headermap.py render   # rewrite the tables in the design doc
         python3 sdk/headermap.py check    # doc in sync, every include/*.h mapped,
                                           # and where each moved header stands
 """
-import os, sys, collections
+import os, sys, json, glob, collections
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TSV = os.path.join(ROOT, "sdk", "headermap.tsv")
@@ -120,6 +120,12 @@ def cmd_check():
     for r in rows:
         if r["target"] not in KEYWORDS:
             targets[r["target"]].append(r["today"])
+    # a split row's destinations are in its spec, sdk/splits/<header>.json
+    for spec in glob.glob(os.path.join(ROOT, "sdk", "splits", "*.json")):
+        sp = json.load(open(spec))
+        for t in sp["targets"]:
+            if not t.startswith("src/"):
+                targets[t].append(sp["source"])
     stray = sorted(p for p in present if p not in today and p not in targets)
     if stray:
         print(f"[headermap] in include/, but in no row: {', '.join(stray)}")

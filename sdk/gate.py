@@ -10,6 +10,10 @@ This builds the base and the working tree and compares three things:
   2. the archive: its members and its symbol table (ar370 t)
   3. the compiler warnings, by message; a warning inside a header that moved
      counts as the same warning
+  4. implicit declarations, from a second pass with -Wimplicit-function-
+     declaration: a split that loses a prototype can leave the assembler as
+     it was (an int function called through an invented int declaration),
+     so the first three would not see it
 
 A change that is meant to alter code -- #39 step 2, #68 step 1 -- lists what
 it alters in sdk/gate-allow.txt, one entry per line with the reason:
@@ -25,7 +29,7 @@ empties it.
 Usage:  python3 sdk/gate.py [BASE]      BASE defaults to origin/2.0
 Exit:   0 identical (or every difference allowed), 1 not, 2 could not build
 """
-import os, re, sys, shutil, subprocess, tempfile
+import os, re, sys, shutil, subprocess, tempfile, concurrent.futures as cf
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ALLOW = os.path.join(ROOT, "sdk", "gate-allow.txt")
@@ -80,6 +84,30 @@ def warnings(log):
         m = re.match(r"\s*(\S+?):\d+(?::\d+)?: warning: (.*)", line)
         if m:
             out.append(f"{os.path.basename(m.group(1))}: {m.group(2)}")
+    return sorted(out)
+
+
+def implicit(tree):
+    """'file: implicit declaration of function X' for every library TU."""
+    tus = []
+    src = os.path.join(tree, "src")
+    for d, _, files in os.walk(src):
+        if os.path.relpath(d, src).split(os.sep)[0] == "wip":
+            continue
+        tus += [os.path.relpath(os.path.join(d, f), tree) for f in files if f.endswith(".c")]
+    incs = ["-I", "include", "-I", "src/thdmgr", "-I", "src/time64"]
+    if os.path.isdir(os.path.join(tree, "src", "internal")):
+        incs += ["-I", "src/internal"]
+
+    def one(tu):
+        r = run(["cc370", "-O1", "-fsyntax-only", "-Wimplicit-function-declaration"]
+                + incs + [tu], cwd=tree)
+        return [f"{tu}: {m.group(1)}" for m in
+                re.finditer(r"warning: (implicit declaration of function \S+)", r.stderr)]
+    out = []
+    with cf.ThreadPoolExecutor(max_workers=8) as ex:
+        for found in ex.map(one, sorted(tus)):
+            out += found
     return sorted(out)
 
 
@@ -163,6 +191,17 @@ def main():
             print(f"[gate] warning new: {w}")
         problems += len(extra)
         print(f"[gate] warning {len(bw)} in base, {len(hw)} in tree, {len(extra)} new")
+
+        # 4. implicit declarations
+        bi, hi = implicit(wt), implicit(ROOT)
+        extra = list(hi)
+        for w in bi:
+            if w in extra:
+                extra.remove(w)
+        for w in extra:
+            print(f"[gate] implicit new: {w}")
+        problems += len(extra)
+        print(f"[gate] implicit {len(bi)} in base, {len(hi)} in tree, {len(extra)} new")
 
         # an allowance that matched nothing has outlived its change
         for kind in allow:

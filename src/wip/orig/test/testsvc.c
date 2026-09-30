@@ -10,7 +10,10 @@
 #include <errno.h>
 
 /* custom C library headers / MVS operating system specific */
-#include "clibos.h"                 /* OS specific routines         */
+#include "ibm/mvs/ihacde.h"
+#include "mvs/wto.h"
+#include "mvs/apf.h"
+#include "mvs/storage.h"
 #include "clibwsa.h"                /* writable static area         */
 #include "mvs/crt.h"                /* global runtime               */
 #include "mvs/env.h"                /* C runtime environment vars   */

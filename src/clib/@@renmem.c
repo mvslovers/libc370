@@ -4,7 +4,10 @@
 #include <ctype.h>
 #include "mvs/osio.h"
 #include "clibio.h"
-#include "clibos.h"
+#include "stddef.h"
+#include "ibm/mvs/ihacde.h"
+#include "mvs/wto.h"
+#include "mvs/pds.h"
 
 /*
  * __renmem() - rename member 'oldmem' to 'newmem' in PDS 'dsn'.

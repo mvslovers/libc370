@@ -104,7 +104,7 @@
  *     R=../..
  *     cc -std=gnu99 -Wall -Wextra -fsanitize=address \
  *        -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
- *        -I $R/include -o t tstrldwk.c
+ *        -I $R/include -I $R/src/internal -o t tstrldwk.c
  *     ./t                                             # 8/8, rc 0
  *
  * RED, against the pre-fix source.  Same fixture, same allocation, the real

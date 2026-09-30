@@ -47,7 +47,7 @@
  *     R=../..
  *     cc -std=gnu99 -Wall -Wextra \
  *        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
- *        -I $R/include -o t tstiolk.c && ./t
+ *        -I $R/include -I $R/src/internal -o t tstiolk.c && ./t
  *
  * The lock()/unlock()/testlock() definitions below MUST stay above the
  * #includes of the library TUs: mvs/lock.h declares them with

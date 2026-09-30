@@ -6,7 +6,7 @@
 #include "ctype.h"
 #include "stddef.h"
 #include "errno.h"
-#include "mvssupa.h"
+#include "mvs/storage.h"
 #include "stdio.h"
 #include "mvs/wto.h"
 

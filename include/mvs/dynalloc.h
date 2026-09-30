@@ -1,5 +1,6 @@
 #ifndef SVC99_H
 #define SVC99_H
+#include <stddef.h>
 
 #include "ibm/mvs/iefzb4d0.h"
 #include "ibm/mvs/iefzb4d2.h"
@@ -224,5 +225,16 @@ extern int __txauca(TXT99 ***txt99, const char *unused);
 
 /* __txclos() - unallocate on close */
 extern int  __txclos(TXT99 ***txt99, const char *unused);
+
+/* ---- from 1.x mvssupa.h ------------------------------------------------- */
+#pragma linkage(__dynal, OS)
+int __dynal(size_t ddn_len, char *ddn, size_t dsn_len, char *dsn);
+
+/* SVC 99 (dynamic allocation) is an MVS service, so it belongs outside the
+   MUSIC guard it used to sit in; the caller builds the request block.  No
+   linkage pragma: @@SVC99 takes the standard OS parameter list that cc370
+   already builds for any call, which is what the callers in this library have
+   been getting all along from the implicit declaration. */
+int __svc99(void *rb);
 
 #endif

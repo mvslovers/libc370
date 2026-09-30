@@ -2,7 +2,8 @@
 
 #include <mvs/crt.h>
 #include <mvs/wto.h>
-#include <clibos.h>
+#include <stddef.h>
+#include <ibm/mvs/ihacde.h>
 #include <mvs/link.h>		/* __link()						*/
 #include <ibm/mvs/ikjcppl.h>		/* CPPL typedef 				*/
 #include <ibm/mvs/ikject.h>			/* ECT typedef					*/

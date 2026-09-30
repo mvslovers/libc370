@@ -39,7 +39,8 @@ ASM_DIR = f"{ROOT}/asm"
 # at all, so it has to be named here (#102).  It finds #99 -- __loadhi() calling
 # fclose() on stack residue -- at the -O1 the build already uses.
 CFLAGS = ["-O1", "-Wuninitialized", f'-DVERSION="{VERSION}"',
-          f"-I{ROOT}/include", f"-I{ROOT}/src/thdmgr", f"-I{ROOT}/src/time64"]
+          f"-I{ROOT}/include", f"-I{ROOT}/src/internal",
+          f"-I{ROOT}/src/thdmgr", f"-I{ROOT}/src/time64"]
 ASMINC = ["-I", f"{ROOT}/maclib", "-I", f"{ROOT}/sysmac"]   # sysmac vendors SYS1.MACLIB
 STARTUPS = ("@@crt0", "@@crt1", "@@crtm")                      # -> separate startfiles
 

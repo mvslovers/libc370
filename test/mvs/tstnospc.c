@@ -125,7 +125,8 @@
 #include <string.h>
 #include <errno.h>
 #include <mvs/wto.h>
-#include <mvssupa.h>    /* __getclk() */
+#include <stddef.h>
+#include <mvs/clock.h>
 #include "clibio.h"     /* __dsalcf(), __dsfree() */
 
 #define CREATE  "DSN=%s;DISP=(NEW,CATLG,DELETE);DSORG=PS;RECFM=FB;"          \
