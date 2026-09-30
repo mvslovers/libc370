@@ -44,8 +44,8 @@ ASMINC = ["-I", f"{ROOT}/maclib", "-I", f"{ROOT}/sysmac"]   # sysmac vendors SYS
 STARTUPS = ("@@crt0", "@@crt1", "@@crtm")                      # -> separate startfiles
 
 
-def run(cmd):
-    return subprocess.run(cmd, capture_output=True, text=True)
+def run(cmd, cwd=None):
+    return subprocess.run(cmd, capture_output=True, text=True, cwd=cwd)
 
 
 VER_C = os.path.join(ROOT, "src", "clib", "@@ver.c")   # build-stamp TU (see compile_ver)
@@ -90,8 +90,16 @@ def compile_c(cfile, sfile, extra=(), warnings=None):
     into libc.a, with nothing in the build output to show a skip (#8).
 
     Regenerating all 712 costs ~7s, which is the whole of what the skip saved.
+
+    The source is named relative to the repository root, from the root: it is
+    what __FILE__ expands to, and assert() puts __FILE__ into the object.  An
+    absolute path wrote the builder's directory into libc.a (tm64syr.c), so two
+    checkouts never built the same library and sdk/gate.py could not compare
+    them (#256).
     """
-    r = run([CC370] + CFLAGS + list(extra) + ["-S", cfile, "-o", sfile])
+    r = run([CC370] + CFLAGS + list(extra) +
+            ["-S", os.path.relpath(cfile, ROOT), "-o", os.path.relpath(sfile, ROOT)],
+            cwd=ROOT)
     if not os.path.exists(sfile) or os.path.getsize(sfile) == 0:
         return "cc370 FAIL %s: %s" % (os.path.basename(cfile),
                "\n".join(l for l in r.stderr.splitlines() if "re-asserted" not in l)[:300])
@@ -219,12 +227,33 @@ def cmd_install():
     libc = f"{BUILD}/libc.a"
     if not os.path.exists(libc):
         print("[install] build first (no", libc + ")"); return 1
+    # headers.  2.0 puts them in subdirectories (mvs/, ibm/mvs/, ...), so the
+    # whole tree is copied, not include/*.h (#256).  The sysroot's include/ is
+    # cleared first: install used to copy and never delete, so a sysroot that
+    # had 1.x installed would keep every flat 1.x header beside the new tree,
+    # and <clibwto.h> would still resolve -- from a stale copy, silently.
+    # libc370 owns that directory outright: cc370 searches no other include
+    # directory, and every file a 1.x install left there came from libc370.
+    # The path check keeps a mis-derived sysroot from costing anything else.
+    if os.path.basename(inc) != "include" or \
+            os.path.basename(os.path.dirname(inc)) != triple:
+        print(f"[install] refusing to clear {inc}: not <prefix>/{triple}/include")
+        return 1
+    stale = 0
+    if os.path.isdir(inc):
+        stale = sum(len(f) for _, _, f in os.walk(inc))
+        shutil.rmtree(inc)
     for d in (inc, lib, mac):
         os.makedirs(d, exist_ok=True)
-    # headers
     n = 0
-    for h in glob.glob(f"{ROOT}/include/*.h"):
-        shutil.copy(h, inc); n += 1
+    src_inc = f"{ROOT}/include"
+    for d, _, files in os.walk(src_inc):
+        for f in sorted(files):
+            if not f.endswith(".h"):
+                continue
+            rel = os.path.relpath(os.path.join(d, f), src_inc)
+            os.makedirs(os.path.join(inc, os.path.dirname(rel)), exist_ok=True)
+            shutil.copy(os.path.join(d, f), os.path.join(inc, rel)); n += 1
     # libc.a + startfiles
     shutil.copy(libc, f"{lib}/libc.a")
     for crt in ("crt0.o", "crt1.o", "crtm.o"):
@@ -238,7 +267,7 @@ def cmd_install():
             if os.path.isfile(f):
                 shutil.copy(f, mac); m += 1
     print(f"[install] target {triple}")
-    print(f"[install] {n} headers -> {inc}")
+    print(f"[install] {n} headers -> {inc} ({stale} files there before, cleared)")
     print(f"[install] libc.a + crt0/1/m.o -> {lib}")
     print(f"[install] {m} macro files -> {mac}")
     print(f"[install] => an as370 installed in {os.path.dirname(mac)}/bin finds these by default;")
