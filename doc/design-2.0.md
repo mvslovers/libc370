@@ -1,7 +1,8 @@
 # libc370 2.0 — header and source layout
 
-**Status: draft, 2026-09-30.** Umbrella issue: #245. Nothing is implemented.
-This document is the plan; each phase gets its own issue when it starts.
+**Status: in progress, 2026-09-30.** Umbrella issue: #245. Phase 1 is done on
+the integration branch `2.0` (#256), phase 2 is under way (#274). This document
+is the plan; each phase gets its own issue when it starts.
 
 ## Why
 
@@ -36,17 +37,31 @@ which is not built (#248). No consumer includes any of them.
   carries ISO names plus the POSIX additions POSIX assigns to that same header
   (`strdup` in `<string.h>`, `localtime_r` in `<time.h>`). A POSIX header
   carries POSIX names. Nothing else, and no feature-test macros (D2).
-- **No header under `libc370/` or `mvs/` has the name of an ISO or POSIX
-  header.** A quoted `#include "string.h"` inside `include/libc370/` would find
-  the neighbour before the standard one (D1).
+- **No header under `ext/` or `mvs/` has the name of an ISO or POSIX
+  header.** A quoted `#include "string.h"` inside `include/ext/` would find
+  the neighbour before the standard one (D1). One exception, and a temporary
+  one: `mvs/socket.h` (D11). No top-level `socket.h` exists in 2.0, so the
+  hazard cannot occur, and the header is to be dissolved.
 - **The top directory says who owns the content:**
-  - `libc370/` — our API, portable (it would work on CMS too)
+  - `ext/` — our API, portable (it would work on CMS too)
   - `mvs/` — our API, MVS-bound
   - `ibm/<component>/` — IBM's data layout, transcribed as C structs, no functions
   - `s370/` — the architecture and linkage shared by every S/370 target
-- **Internals are not installed.** They live in `src/internal/`.
+- **Internals are not installed.** They live under `src/`: shared ones flat
+  in `src/internal/`, those only one area uses beside its sources
+  (`src/jes/jesprb.h`). A source names them by their path from the repository
+  root, `#include "src/internal/fileio.h"`, and the build passes `-I` for the
+  root, not for `src/internal/`. So every include line says whether it is
+  public (`<…>`) or private (`"src/…"`), and no private header can be found
+  under a public name (D10).
+- **`src/` mirrors `include/`.** The implementation of `include/mvs/jes2.h` is
+  under `src/mvs/jes/`, that of `<stdio.h>` under `src/stdio/`. Assembler
+  sits beside the C it belongs to; there is no separate `asm/` (D9).
 - **Names are plain words.** No `clib` prefix and no abbreviations a reader has
-  to decode (`svc99.h` → `mvs/dynalloc.h`). Under `ibm/`, a header is named
+  to decode (`svc99.h` → `mvs/dynalloc.h`), no prefix or suffix marking an
+  internal header either: its directory says so. Three internal headers keep
+  their `clib` name on purpose, as a marker that they are not integrated yet:
+  `clibres.h`, `clibspl.h`, `clibsvc.h` (#274). Under `ibm/`, a header is named
   after its IBM mapping macro in lower case (`IHAACEE` → `ibm/mvs/ihaacee.h`),
   so the IBM manual leads straight to the header.
 - **2.0 is a hard cut.** No compatibility headers and no deprecation period:
@@ -63,16 +78,22 @@ include/                        installed into the sysroot
   assert.h ... wchar.h          ISO C99; to add: stdbool.h, inttypes.h, iso646.h
   strings.h unistd.h            POSIX subset, only for functions that exist (D2)
   sys/socket.h netinet/in.h arpa/inet.h
-  libc370/                      portable extensions: array.h, time64.h, version.h, strutil.h, int64.h
-  mvs/                          MVS API: wto.h, dynalloc.h, jes2.h, racf.h, smf.h, vsam.h, thread.h, recovery.h, ...
+  ext/                          portable extensions: array.h, time64.h, version.h, strutil.h, int64.h
+  mvs/                          MVS API: wto.h, dynalloc.h, jes2.h, racf.h, smf.h, vsam.h, thread.h, recovery.h,
+                                wsa.h, jes2spool.h, socket.h (to be dissolved, D11), ...
   s370/                         savearea.h, ccw.h
   ibm/mvs/                      IBM data areas: cvt.h, ihaacee.h, ikjtcb.h, iefjfcbn.h, dcbd.h, ...
   ibm/jes2/                     JES2 data areas: jct.h, jqe.h, hct.h, ...
-src/
-  internal/                     private headers, never installed
-  stdio/ string/ stdlib/ time/ ctype/ math/ ...    portable core      (phase 3)
+src/                            never installed; mirrors include/ (phase 3, D9)
+  internal/                     shared private headers, flat: fileio.h, bsam.h, dyn75.h, printf.h, ...
+  stdio/ string/ stdlib/ time/ ctype/ math/ ...    one directory per ISO header
+  ext/                          implementation of include/ext/
+  mvs/                          implementation of include/mvs/, one directory per area:
+    crt/                          runtime start-up, the @@JPA and WSA anchors
+    jes/ racf/ smf/               as today
+    socket/ thread/ mtt/          today dyn75/, thdmgr/, cmtt/
   s370/                         architecture
-  mvs/                          the operating-system layer              (phase 4)
+attic/                          code that is kept but not built (today src/wip/)
 ```
 
 VM/CMS is **not** designed here. The deliverable is the seam. A later `cms/`,
@@ -86,9 +107,10 @@ internals out of the sysroot, dead headers gone, crypto out) and the **relink
 round**: the struct and signature growth that was already waiting for a
 coordinated rebuild of the consumers (#79, #50, #51, #71, #172, and #80 defect
 1's `max` parameter). A major version is the one moment consumers expect to
-change code, so they migrate once instead of twice. Phases 3 and 4 reorganise
-sources and draw the OS seam. They change nothing visible and can land in 2.x
-without breaking anyone.
+change code, so they migrate once instead of twice. **Phase 3, the source
+layout, ships in 2.0 as well** (D9): it changes nothing visible, but 2.0 is
+meant to be a clean, readable tree. Phase 4 draws the OS seam; it changes code,
+not layout, and lands in 2.x.
 
 **2.0 comes first (decided 2026-09-30, D8).** 1.0.8 is the last 1.x release and
 the consumers are pinned to it, so no fix that lands on `main` reaches a
@@ -103,10 +125,10 @@ other item. Header moves and parallel fix PRs would also collide on the same
 |---|---|---|
 | 0 | libc370 CI (#249); crypto370 released (#244; httpd and mvsMF adopt it in their 2.0 migration); **1.0.8 released**, the last 1.x; consumers' **build** CI held on `v1.0.8`, which needs a `libc370_ref` input in mbt's `build.yml` (mvslovers/mbt#121; release CI already pins) | every consumer green against 1.0.8 |
 | 1 | on the integration branch `2.0` (#256): move and rename headers per the table; split the five mixed headers; drop dead ones. `install` copies subdirectories and clears the sysroot's `include/` first, since the first moved header needs it. Absorbs #39 step 2 (missing `#include`s) and #68 step 1 (the `clibsa.h` inline), since every `#include` line is touched anyway, and #250 items 1–3 | **byte-identical assembler for every TU** against the commit before the move, the method PR #242 used; `sdk/gate.py` checks it in CI, with the archive's symbols and the warnings |
-| 2 | internals to `src/internal/` | the migration script resolves every consumer include |
+| 2 | internals to `src/internal/` (#274), included by their path from the root (D10); `libc370/` becomes `ext/` (D1) | byte-identical assembler; the migration script resolves every consumer include |
+| 3 | sources by area (#278), `src/` mirrors `include/`; assembler beside its C; `src/wip/` → `attic/` (D9). Basenames stay unique (all objects share one directory, `mklibc.py:161`), and the gate needs a map from old to new source paths | byte-identical assembler |
 | — | **the relink round**: #79, #50, #51, #71, #172, #80 defect 1 | per change, tests; CHANGELOG entry for each layout or signature change |
 | — | **release 2.0.0**; one migration PR per consumer | each consumer green against 2.0.0 |
-| 3 | sources by area; basenames stay unique (all objects share one directory, `mklibc.py:161`) | byte-identical assembler |
 | 4 | the OS seam: core calls a narrow internal interface, not MVS services | per change, tests |
 
 Before phase 1, cheap preparation that makes the move safer: restore the five
@@ -179,7 +201,7 @@ design, measurements, the CI analysis), and is never published.
 
 | | question | state |
 |---|---|---|
-| D1 | namespace for portable extensions | decided: `libc370/`, and no basename of an ISO/POSIX header under `libc370/` or `mvs/` |
+| D1 | namespace for portable extensions | decided: `ext/` (was `libc370/` until phase 2, #274), and no basename of an ISO/POSIX header under `ext/` or `mvs/`, `mvs/socket.h` excepted (D11) |
 | D2 | POSIX scope | decided: declare only what exists, with POSIX semantics; no feature-test macros; findings in #250 |
 | D3 | third-party code | decided: miniz remove (#243); SHA-256/Blowfish/base64 to crypto370 (#244); PDF, emfile, ipc remove, after assessing the emfile/ipc code in `src/wip/orig/` (#248) |
 | D4 | compatibility | decided: hard cut, 2.0, no shims |
@@ -187,6 +209,9 @@ design, measurements, the CI analysis), and is never published.
 | D6 | release concept | decided, see above (#249, cc370#523, mbt#121) |
 | D7 | documentation | decided: hand-written guides + generated reference, tool after a spike; `docs/` public, `doc/` internal |
 | D8 | scheduling | decided: the 2.0 critical path comes first; the relink round ships in 2.0; emergency 1.0.9 from `v1.0.8`; cc370 releases desirable, not blocking |
+| D9 | source layout | decided 2026-09-30: part of 2.0 (phase 3 before the release); `src/` mirrors `include/`; assembler beside its C, since libc370 is built by `sdk/mklibc.py`, not mbt; `src/wip/` → `attic/`. Phase 4 (the OS seam) stays in 2.x |
+| D10 | internal headers | decided 2026-09-30: shared ones flat in `src/internal/`, area-local ones beside their sources; included by their path from the repository root; plain names without prefix or suffix; `clibres.h`, `clibspl.h`, `clibsvc.h` keep their names as a not-yet-integrated marker |
+| D11 | `libc370/socket.h` | decided 2026-09-30: moves to `mvs/socket.h` for now, because its calls are bound to the socket provider (`@@75…`), which is the OS layer, not portable. To be dissolved later, parts of it into `src/internal/` |
 
 ## Appendix — every header
 
