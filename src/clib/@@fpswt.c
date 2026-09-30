@@ -1,4 +1,5 @@
 /* @@FPSWT.C - caller should hold lock on file handle */
+#include <fileio.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

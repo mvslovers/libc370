@@ -1,4 +1,5 @@
 /* TESTFILE.C - test bed for stdio rewrite */
+#include <fileio.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

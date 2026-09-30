@@ -1,5 +1,6 @@
 /* FGETS.C */
-#include "clibio.h"
+#include <fileio.h>
+#include "stdio.h"
 #include "mvs/lock.h"
 
 char *

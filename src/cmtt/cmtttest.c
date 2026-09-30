@@ -1,4 +1,4 @@
-#include <clibio.h>
+#include <stdio.h>
 #include <mvs/mtt.h>
 
 unsigned __stklen   = 1024 * 32;

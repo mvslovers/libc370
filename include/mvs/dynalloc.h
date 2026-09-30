@@ -237,4 +237,14 @@ int __dynal(size_t ddn_len, char *ddn, size_t dsn_len, char *dsn);
    been getting all along from the implicit declaration. */
 int __svc99(void *rb);
 
+/* ---- from 1.x clibio.h -------------------------------------------------- */
+/* __dsalc() allocate dataset - returns ddname if successful */
+extern int __dsalc(char *ddname, const char *opts);
+
+/* __dsalcf() allocate dataset (printf style) - returns ddname if successful */
+extern int __dsalcf(char *ddname, const char *opts, ...);
+
+/* __dsfree() deallocate ddname */
+extern int __dsfree(const char *ddname);   /* input dd name                    */
+
 #endif

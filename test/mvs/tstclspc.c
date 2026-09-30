@@ -90,12 +90,13 @@
  *
  * RC: 0 = every check passed, 8 = at least one did not (it is the COND CODE).
  */
+#include <mvs/dynalloc.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include <mvs/wto.h>
 #include <mvs/rfile.h>
-#include "clibio.h"     /* __dsalcf(), __dsfree() */
+#include "stdio.h"     /* __dsalcf(), __dsfree() */
 
 #define CREATE  "DSN=%s;DISP=(NEW,CATLG,DELETE);DSORG=PS;RECFM=FB;"          \
                 "LRECL=80;BLKSIZE=800;UNIT=SYSDA;SPACE=TRK(1,0)"

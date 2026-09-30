@@ -1,6 +1,7 @@
+#include <fileio.h>
 #include "mvs/enq.h"
 #include "mvs/lock.h"
-#include "clibio.h"
+#include "stdio.h"
 
 __asm__("\n&FUNC    SETC 'lock'");
 int

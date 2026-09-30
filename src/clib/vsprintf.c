@@ -1,5 +1,6 @@
 /* VSPRINTF.C */
 #define STDIO_C
+#include <fileio.h>
 #include <stdio.h>
 
 int

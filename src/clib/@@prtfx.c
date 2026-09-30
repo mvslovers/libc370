@@ -33,7 +33,7 @@
 */
 
 #include "clibprti.h"       /* CLIB private printf() internal functions */
-#include "clibio.h"         /* CLIB IO routines                         */
+#include "stdio.h"         /* CLIB IO routines                         */
 
 /* internal buffer output */
 __asm__("\n&FUNC    SETC '_out_buffer'");

@@ -63,6 +63,7 @@
  * a regression test: the interesting output is the case text, not the COND
  * CODE.  8 means a case could not run at all (no JES2 SSCT, no storage).
  */
+#include <mvs/dynalloc.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -73,7 +74,7 @@
 #include "mvs/dslist.h"   /* __listvl(), VOLLIST                              */
 #include "mvs/dscb.h"   /* __locate(), __dscbdv(), LOCWORK, DSCB            */
 #include "libc370/array.h"    /* arraycount()                                     */
-#include "clibio.h"     /* __dsalcf(), __dsfree()                           */
+#include "stdio.h"     /* __dsalcf(), __dsfree()                           */
 #include "mvs/recovery.h"    /* try(), tryrc()                                   */
 #include "mvs/wto.h"    /* wtof()                                           */
 

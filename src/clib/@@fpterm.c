@@ -12,6 +12,7 @@
 ** owns it and fclose() must not DEQ), __fabandon() always passes 1, for the
 ** reason spelled out in @@faband.c.
 */
+#include <fileio.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "mvs/crt.h"

@@ -1,5 +1,5 @@
 /* UNGETC.C */
-#include "clibio.h"
+#include "stdio.h"
 #include "mvs/lock.h"
 
 int

@@ -1,6 +1,7 @@
 /* @@75.C
 ** Interface to X'75xxxxxx' TCPIP in Hercules
 */
+#include <fileio.h>
 #include "__75.h"
 #include "socket.h"
 

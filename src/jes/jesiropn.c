@@ -12,7 +12,7 @@
 #include "ibm/mvs/iefzb4d2.h"
 #include "mvs/wto.h"
 #include "mvs/vsam.h"
-#include "clibio.h"
+#include "stdio.h"
 
 static int __alloc_intrdr(char *ddname);    /* buffer of at least 9 bytes   */
 static int __vsam_open_intrdr(char *ddname, VSFILE **vsfile);

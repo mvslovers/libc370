@@ -46,6 +46,7 @@
  */
 /* string.h suppressed for the host, as in tsterrfl.c */
 #define STRING_H
+#include <fileio.h>
 #include <stddef.h>
 void   *memset(void *s, int c, size_t n);
 void   *memcpy(void *t, const void *s, size_t n);

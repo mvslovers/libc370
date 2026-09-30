@@ -1,4 +1,5 @@
 /* VVSCANF.C */
+#include <fileio.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <ctype.h>

@@ -1,4 +1,5 @@
 /* @@FSEEK.C - caller should hold lock on file handle */
+#include <fileio.h>
 #include <stdio.h>
 #include <errno.h>
 

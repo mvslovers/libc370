@@ -1,11 +1,12 @@
 /* REMOVE.C */
+#include <mvs/pds.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <stddef.h>
 #include <mvs/idcams.h>
 #include "mvs/lock.h"
-#include "clibio.h"
+#include "stdio.h"
 
 int
 remove(const char *filename)
