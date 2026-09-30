@@ -79,5 +79,9 @@ jobs:
             grep -E '^\[libc\] (OK|no duplicate)' build.log 2>/dev/null | sed 's/^/- /'
           } >> "$GITHUB_STEP_SUMMARY"
 
+      # clang, not the runner's default gcc: see the note in test/host/run.sh
+      # about asm("@@...") labels and GNU as.
       - name: Host tests
+        env:
+          CC: clang
         run: make test-host
