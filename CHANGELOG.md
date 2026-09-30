@@ -6,7 +6,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [1.0.8] - 2026-09-30
+
+**The last 1.x release.** The next is 2.0.0, a hard cut to a new header
+layout with no compatibility headers (#245, `doc/design-2.0.md`). Consumers
+hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
+
+**Requires cc370 at `f3f7e21` or later**, unchanged from 1.0.7.
+
+**Behaviour a consumer can see**, all under "Fixed" below:
+- a lost last block is reported: `rclose()` returns -1, and a `+` stream
+  turning from write to read answers `EOF`/-1 with `ferror()` set, both with
+  `errno` `ENOSPC`/`EIO`. `freopen()` still succeeds, as C99 requires, and
+  only leaves `errno` set (#228)
+- `rclose()` frees the DD that `ropen()` allocated (#229)
+- `rwrite()` and record-mode `fwrite()` refuse a record they cannot write,
+  with `EINVAL`, instead of abending or overrunning (#232, #236)
+
 ### Added
+- **Prototypes for eight routines that had none (#39 step 1, PR #242).**
+  `__tzget()` in `<time.h>`; `vwtorf()` in `clibwto.h`; `vvprintf()`,
+  `vvscanf()`, `__fptmp()` and `__fpfree()` in `clibio.h`; `rdjfcb()` in
+  `osjfcb.h`; `initssob()` in `clibjes2.h`. A consumer that carries its own
+  `extern int __tzget(void);` (httpd, mvsMF) still compiles: the signature is
+  identical (httpd#270, mvsmf#375). `@@freepd.c` and `malloc.c` now call
+  `arraycount()`/`arrayfree()`/`wto_traceback()` instead of undeclared
+  aliases. All 23 touched TUs assemble byte-identical, so no code changes.
 - **CI (#249).** `.github/workflows/build.yml` builds the library on every PR
   and push to `main`, with cc370 built from its `main` and cached per cc370
   commit. It reports the compiler warning count, and runs the host tests in
