@@ -344,9 +344,23 @@ checklist is #245.
    `build.yml`. The cut lands on `main` with phase 1, not with the release, so
    this goes in right before phase 1 merges, and not earlier, or it silences
    the early warning for longer than necessary.
-4. **Phase 1: header moves.** It absorbs #39 step 2, #68 step 1 and #250
-   items 1–3, because it touches every `#include` line anyway. Gate:
+4. **Phase 1: header moves** (#256). It absorbs #39 step 2, #68 step 1 and
+   #250 items 1–3, because it touches every `#include` line anyway. Gate:
    byte-identical assembler for every TU.
+   **It runs on the integration branch `2.0`** (decided 2026-09-30), so no
+   consumer sees it until `2.0` merges into `main`; step 3's hold goes in
+   right before that merge. PRs into `2.0` are gated in CI by `sdk/gate.py`.
+   State on 2026-09-30:
+   - ~~tooling~~ (#257): `sdk/headermap.tsv` + `headermap.py`, `sdk/gate.py`,
+     install with subdirectories; `libc.a` no longer embeds the build path
+   - ~~all 97 moves~~ (#258 `ibm/jes2/`, #259 `ibm/mvs/` with four names
+     corrected against the IBM sources, #260 `libc370/`+`s370/`, #261 and
+     #262 `mvs/` incl. the four merges); every library TU byte-identical
+   - ~~all 18 removals~~ (#263: crypto, `clib.h`; #243, #248 earlier)
+   - **open: the five splits** and the non-standard names in the ISO
+     headers. Proposal for review in #264 (`doc/design-2.0-splits.md`),
+     with four questions; nothing is split before it is agreed
+   - then #39 step 2 and #68 step 1, in their own PRs
 5. **Phase 2: internals out of the sysroot.**
 6. **The relink round** (Tier 5): #79, #50, #51, #71, #172 and #80 defect 1.
    It is struct and signature growth that needs a coordinated consumer rebuild,
