@@ -2,7 +2,7 @@
 #define CLIBMTT_H
 
 #include <ibm/mvs/ieezb806.h>   /* MTTABLE, MTENTRY */
-#include <libc370/array.h>    /* dynamic array functions */
+#include <ext/array.h>    /* dynamic array functions */
 
 /* Master Trace Table data extraction routines */
 typedef struct clibmtt  CMTT;       /* Clib Master Trace Table handle */

@@ -1,12 +1,12 @@
 /* @@LISTPD.C - create PDSLIST array */
-#include <libc370/strutil.h>
+#include <ext/strutil.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
 #include <time.h>
-#include "libc370/array.h"        /* dynamic array prototypes     */
+#include "ext/array.h"        /* dynamic array prototypes     */
 #include "mvs/dslist.h"       /* __listpd()                   */
 #include "string.h"        /* __patmat()                   */
 

@@ -5,7 +5,7 @@
 #include "mvs/wto.h"
 #include <stddef.h>
 #include "mvs/dynalloc.h"
-#include "libc370/array.h"
+#include "ext/array.h"
 #include "ibm/mvs/dcbd.h"
 #include "ibm/mvs/iefjfcbn.h"
 #include "mvs/jes2.h"   /* JES Spool prototypes and functions               */

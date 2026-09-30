@@ -1,5 +1,5 @@
 
-#include <libc370/strutil.h>
+#include <ext/strutil.h>
 #include <stdio.h>
 #include <stdlib.h>
 /* #include <ctype.h> */
@@ -8,7 +8,7 @@
 #include <mvs/dynalloc.h>
 #include <errno.h>
 #include "mvs/dynalloc.h"
-#include "libc370/array.h"
+#include "ext/array.h"
 #include "ibm/mvs/iefzb4d2.h"
 #include "mvs/wto.h"
 #include "mvs/vsam.h"

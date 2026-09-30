@@ -6,7 +6,7 @@
 #include <stddef.h>
 #include <ibm/mvs/ihacde.h>
 #include <mvs/subsys.h>
-#include <libc370/array.h>        /* dynamic array prototypes     */
+#include <ext/array.h>        /* dynamic array prototypes     */
 #include <mvs/ispf.h>		/* ISPF prototypes				*/
 #include <mvs/link.h>		/* __link()						*/
 #include <mvs/tso.h>		/* tsocmd()						*/

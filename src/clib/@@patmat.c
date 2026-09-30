@@ -1,5 +1,5 @@
 /* @@PATMAT.C - pattern match */
-#include <libc370/strutil.h>
+#include <ext/strutil.h>
 #include "string.h"
 
 int

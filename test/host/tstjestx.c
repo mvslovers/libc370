@@ -74,7 +74,7 @@
  *                      stub, so this file uses calloc() and explicit stores
  *                      rather than memset().
  *   -D__32BIT__        is what libc370's stddef.h/stdlib.h key size_t off.
- *   -U__LP64__         libc370/time64.h is "#error Your time_t is already 64-bit"
+ *   -U__LP64__         ext/time64.h is "#error Your time_t is already 64-bit"
  *                      under __LP64__, and mvs/jes2.h pulls it in for
  *                      JESJOB.start_time64.
  *
@@ -107,7 +107,7 @@
  *
  * RC: 0 = every check passed, 1 = at least one did not.
  */
-#include <libc370/strutil.h>
+#include <ext/strutil.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

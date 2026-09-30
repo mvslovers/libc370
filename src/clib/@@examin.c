@@ -9,7 +9,7 @@
 #include <limits.h>
 #include <stddef.h>
 
-#include <libc370/int64.h>
+#include <ext/int64.h>
 
 #define unused(x) ((void)(x))
 /* Emit one character.  For the string sink (fq == NULL) the write is

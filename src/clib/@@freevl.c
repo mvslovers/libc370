@@ -1,4 +1,4 @@
-#include "libc370/array.h"
+#include "ext/array.h"
 #include "mvs/dslist.h"
 
 void __freevl(VOLLIST ***pppvollist)

@@ -5,7 +5,7 @@
 #include <mvs/wto.h>
 #include <stddef.h>
 #include <ibm/mvs/ihacde.h>
-#include <libc370/array.h>
+#include <ext/array.h>
 #include "mvs/lock.h"
 #include <mvs/dd.h>
 #include <mvs/crt.h>

@@ -1,6 +1,6 @@
 /* @@TXADEL.C */
 #include "mvs/dynalloc.h"
-#include "libc370/array.h"
+#include "ext/array.h"
 
 int
 __txadel(TXT99 ***txt99, const char *unused)

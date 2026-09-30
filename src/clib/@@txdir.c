@@ -1,6 +1,6 @@
 /* @@TXDIR.C */
 #include "mvs/dynalloc.h"
-#include "libc370/array.h"
+#include "ext/array.h"
 
 int
 __txdir(TXT99 ***txt99, const char *pds_dir)

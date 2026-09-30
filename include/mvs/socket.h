@@ -1,6 +1,6 @@
-#ifndef LIBC370_SOCKET_H
-#define LIBC370_SOCKET_H
-/* libc370/socket.h - libc370's non-POSIX socket calls and socket table,
+#ifndef MVS_SOCKET_H
+#define MVS_SOCKET_H
+/* mvs/socket.h - libc370's non-POSIX socket calls and socket table,
 ** plus every POSIX socket header, for code written against 1.x socket.h.
 **
 ** libc370 2.0 splits this out of socket.h (#256).
@@ -65,4 +65,4 @@ extern int  __sosnam(int ss, void *name);
 /* __sopnam() - get peer name (remote side of socket) */
 extern int  __sopnam(int ss, void *peer);
 
-#endif /* LIBC370_SOCKET_H */
+#endif /* MVS_SOCKET_H */

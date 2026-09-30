@@ -4,8 +4,8 @@
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
-#include <libc370/time64.h>
-#include "libc370/array.h"        /* dynamic array prototypes     */
+#include <ext/time64.h>
+#include "ext/array.h"        /* dynamic array prototypes     */
 #include "mvs/dscb.h"       /* DSCB structs and prototypes  */
 #include "mvs/dslist.h"       /* __listc()                    */
 #include "string.h"        /* __patmat()                   */

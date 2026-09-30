@@ -1,6 +1,6 @@
 /* @@TXBFTE.C */
 #include "mvs/dynalloc.h"
-#include "libc370/array.h"
+#include "ext/array.h"
 
 static struct {
     const char      technique[9];

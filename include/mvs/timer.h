@@ -14,9 +14,9 @@
 #include <sys/select.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#include <libc370/socket.h>
+#include <mvs/socket.h>
 
-#include <libc370/array.h>
+#include <ext/array.h>
 #include <mvs/crt.h>
 #include <mvs/ecb.h>
 #include <mvs/lock.h>

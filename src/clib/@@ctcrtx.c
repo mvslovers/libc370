@@ -8,7 +8,7 @@
 #include "mvs/thread.h"
 #include "mvs/lock.h"
 #include "mvs/crt.h"
-#include "libc370/array.h"
+#include "ext/array.h"
 #include "mvs/mutex.h"
 
 static CTHDTASK *newthread(unsigned tcb, unsigned owntcb, unsigned stacksize);

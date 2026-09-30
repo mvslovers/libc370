@@ -1,7 +1,7 @@
 /* @@ARADD.C
 ** Dynamic array
 */
-#include "libc370/array.h"
+#include "ext/array.h"
 #include "errno.h"
 
 __asm__("\n&FUNC    SETC 'arrayadd'");

@@ -7,7 +7,7 @@ ISO names only.  So:
 
   string.h            <- the ISO part of clibstr.h, and strdup
   strings.h (new)     <- strcasecmp, strncasecmp
-  libc370/strutil.h   <- strcpyp, memcpyp, __patmat, memclr
+  ext/strutil.h   <- strcpyp, memcpyp, __patmat, memclr
   unistd.h (new)      <- sleep (from time.h) and usleep (declared nowhere)
   stdlib.h            <- setenv, unsetenv, putenv (from mvs/env.h, which
                          now includes stdlib.h, so its includers keep them)
@@ -15,7 +15,7 @@ ISO names only.  So:
                          libc370's own two callers switch to strcasecmp),
                          bcopy (no caller)
 
-Every file that uses a name from strings.h, libc370/strutil.h or unistd.h
+Every file that uses a name from strings.h, ext/strutil.h or unistd.h
 gets that include at its first #include line, above any code.
 """
 import os, re, subprocess, sys
@@ -74,8 +74,8 @@ cmp = "\n".join(cmp).replace(
 assert "stricmp" not in cmp.split("*/")[-1]
 wr(I("strings.h"), header("STRINGS_H", "strings.h - POSIX <strings.h>: case-insensitive comparison.",
                           cmp, "#include <stddef.h>\n\n"))
-wr(I("libc370/strutil.h"), header("LIBC370_STRUTIL_H",
-                                  "libc370/strutil.h - libc370's own string helpers: padded copies,\n"
+wr(I("ext/strutil.h"), header("EXT_STRUTIL_H",
+                                  "ext/strutil.h - libc370's own string helpers: padded copies,\n"
                                   "** pattern match, a clearing memset.",
                                   strutil + "\n\n" + memclr, "#include <stddef.h>\n\n"))
 
@@ -121,7 +121,7 @@ for f in ("src/clib/@@finden.c", "src/clib/@@listds.c"):
 # includes: clibstr.h -> string.h, and the new headers where their names are used
 needs = {
     "strings.h": {"strcasecmp", "strncasecmp"},
-    "libc370/strutil.h": {"strcpyp", "memcpyp", "__patmat", "memclr"},
+    "ext/strutil.h": {"strcpyp", "memcpyp", "__patmat", "memclr"},
     "unistd.h": {"sleep", "usleep"},
 }
 INC = re.compile(r'^[ \t]*#[ \t]*include[ \t]*([<"])([^>"]+)[>"]', re.M)
@@ -131,7 +131,7 @@ for f in git("ls-files").splitlines():
             or not f.endswith((".c", ".h")):
         continue
     p = os.path.join(ROOT, f)
-    if not os.path.isfile(p) or f in ("include/strings.h", "include/libc370/strutil.h",
+    if not os.path.isfile(p) or f in ("include/strings.h", "include/ext/strutil.h",
                                       "include/unistd.h", "include/string.h"):
         continue
     raw = open(p, "rb").read()

@@ -4,7 +4,7 @@
   "targets": {
     "string.h": {},
     "strings.h": {},
-    "libc370/strutil.h": {},
+    "ext/strutil.h": {},
     "unistd.h": {}
   }
 }

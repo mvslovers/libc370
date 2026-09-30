@@ -6,7 +6,7 @@
 #include "sys/socket.h"
 #include "sys/select.h"
 #include "netdb.h"
-#include "libc370/socket.h"
+#include "mvs/socket.h"
 #include "src/internal/dyn75.h"
 
 #if 0

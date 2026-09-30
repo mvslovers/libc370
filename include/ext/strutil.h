@@ -1,6 +1,6 @@
-#ifndef LIBC370_STRUTIL_H
-#define LIBC370_STRUTIL_H
-/* libc370/strutil.h - libc370's own string helpers: padded copies,
+#ifndef EXT_STRUTIL_H
+#define EXT_STRUTIL_H
+/* ext/strutil.h - libc370's own string helpers: padded copies,
 ** pattern match, a clearing memset.
 **
 ** libc370 2.0 (#256, #250).
@@ -29,4 +29,4 @@ static __inline void *memclr(void *s, size_t n)
     return s;
 }
 
-#endif /* LIBC370_STRUTIL_H */
+#endif /* EXT_STRUTIL_H */

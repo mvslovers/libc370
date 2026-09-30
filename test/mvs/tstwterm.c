@@ -110,7 +110,7 @@
 #include <time.h>
 #include <mvs/wto.h>
 #include <mvs/thread.h>
-#include <libc370/time64.h>
+#include <ext/time64.h>
 
 #define WORKERS         4       /* -> mintask 1, maxtask 4 (see above)      */
 #define HANDLER_SECS    8       /* outlasts the 6 s quiesce window          */

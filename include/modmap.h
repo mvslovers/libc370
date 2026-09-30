@@ -8,7 +8,7 @@
 #include <mvs/storage.h>
 #include <mvs/dynalloc.h>
 #include <mvs/idcams.h>
-#include "libc370/array.h"
+#include "ext/array.h"
 #include "mvs/recovery.h"
 
 /* Module Map */

@@ -6,7 +6,7 @@
 #include "stddef.h"
 #include "ibm/mvs/ihacde.h"
 #include "mvs/crt.h"
-#include "libc370/array.h"
+#include "ext/array.h"
 #include "mvs/lock.h"
 
 int

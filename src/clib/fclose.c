@@ -11,7 +11,7 @@
 #include "src/internal/bsam.h"
 #include "mvs/crt.h"
 #include "mvs/lock.h"
-#include "libc370/array.h"
+#include "ext/array.h"
 
 int
 fclose(FILE *fp)

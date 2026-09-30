@@ -103,7 +103,7 @@
  */
 #include <stdio.h>
 #include <string.h>
-#include "libc370/array.h"
+#include "ext/array.h"
 #include "mvs/crt.h"
 #include "mvs/tso.h"
 #include "mvs/wto.h"

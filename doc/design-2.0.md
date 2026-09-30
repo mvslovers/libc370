@@ -232,10 +232,10 @@ Summary:
 | target | headers |
 |---|---|
 | ISO C (name unchanged) | 17 |
-| `mvs/` | 36 |
+| `mvs/` | 37 |
 | `ibm/mvs/` | 43 |
 | `ibm/jes2/` | 13 |
-| `libc370/` | 5 |
+| `ext/` | 4 |
 | `s370/` | 2 |
 | internal | 11 |
 | split across several | 5 |
@@ -312,7 +312,7 @@ Summary:
 | `clibprtf.h` | internal |  | printf engine |
 | `clibprti.h` | internal |  | printf engine |
 | `clibres.h` | internal |  | resident-function dispatch (RES/RESFUNC); no includer, kept for a later review |
-| `clibsock.h` | `libc370/socket.h` | 1 | socket bookkeeping; httpd walks grt->grtsock as CLIBSOCK, so it stays public (#264 A); internal once libc370 closes sockets itself |
+| `clibsock.h` | `mvs/socket.h` | 1 | socket bookkeeping; httpd walks grt->grtsock as CLIBSOCK, so it stays public (#264 A); internal once libc370 closes sockets itself |
 | `clibspl.h` | internal |  | MVCL inline helpers (spl_*); no includer, kept as a Metal C candidate; guard lacks its #define |
 | `clibsvc.h` | internal |  | @@SVC work area |
 | `clibthdi.h` | `mvs/thread.h` | 2 | thread manager; httpd and ftpd use its API, so public, merged into mvs/thread.h (#264 B); absorbs #140 |
@@ -320,10 +320,10 @@ Summary:
 | `enqpl.h` | internal |  | ENQ parameter list |
 | `get3.h` | — |  | GET3/SET3, no includer; modmap.h carries its own GET3 |
 | `modmap.h` | internal |  | load module map, used by __loadhi() |
-| `clibary.h` | `libc370/array.h` | 7 | dynamic arrays; portable |
-| `clib64.h` | `libc370/int64.h` | 2 | 64-bit helpers; review against cc370 long long |
-| `time64.h` | `libc370/time64.h` | 6 | y2038 time; portable |
-| `clibver.h` | `libc370/version.h` | 3 | libc370_version() |
+| `clibary.h` | `ext/array.h` | 7 | dynamic arrays; portable |
+| `clib64.h` | `ext/int64.h` | 2 | 64-bit helpers; review against cc370 long long |
+| `time64.h` | `ext/time64.h` | 6 | y2038 time; portable |
+| `clibver.h` | `ext/version.h` | 3 | libc370_version() |
 | `limits.h` | `limits.h` | 6 | ISO C, name unchanged; non-standard names move out |
 | `locale.h` | `locale.h` | 2 | ISO C, name unchanged; non-standard names move out |
 | `math.h` | `math.h` | 2 | ISO C, name unchanged; non-standard names move out |
@@ -368,7 +368,7 @@ Summary:
 | `signal.h` | `signal.h` | 2 | ISO C, name unchanged; non-standard names move out |
 | `clibio.h` | split | 6 | standard part -> stdio.h; record-mode API -> mvs/rfile.h or mvs/stdio.h; __fp* -> internal |
 | `clibos.h` | split | 9 | 34 functions of mixed purpose (BLDL, LOAD, ...); split by topic into mvs/ |
-| `clibstr.h` | split | 2 | ISO part -> string.h; strcasecmp/strncasecmp -> strings.h; stricmp/strcpyp/... -> libc370/strutil.h (#250) |
+| `clibstr.h` | split | 2 | ISO part -> string.h; strcasecmp/strncasecmp -> strings.h; stricmp/strcpyp/... -> ext/strutil.h (#250) |
 | `mvssupa.h` | split | 4 | public API -> mvs/bsam.h; __aopen & co. internal. 4 consumers include it today |
 | `socket.h` | split | 3 | POSIX: sys/socket.h, netinet/in.h, arpa/inet.h (POSIX review, D2) |
 | `stdarg.h` | `stdarg.h` | 7 | ISO C, name unchanged; non-standard names move out |

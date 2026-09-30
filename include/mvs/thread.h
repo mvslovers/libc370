@@ -1,6 +1,6 @@
 #ifndef CLIBTHRD_H
 #define CLIBTHRD_H
-#include <libc370/time64.h>
+#include <ext/time64.h>
 #include <time.h>
 
 /*  CLIBTHRD - A thread implementation for the CLIB environment.
@@ -64,7 +64,7 @@
 #include "mvs/lock.h"
 #include "mvs/recovery.h"
 #include "mvs/crt.h"
-#include "libc370/array.h"
+#include "ext/array.h"
 #include "mvs/ecb.h"
 
 typedef struct cthdtask     CTHDTASK;   /* a subtask instance               */

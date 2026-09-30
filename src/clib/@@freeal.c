@@ -5,7 +5,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <time.h>
-#include "libc370/array.h"        /* dynamic array prototypes     */
+#include "ext/array.h"        /* dynamic array prototypes     */
 #include "mvs/dslist.h"
 
 void

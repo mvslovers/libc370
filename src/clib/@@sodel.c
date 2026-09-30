@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include "mvs/crt.h"
-#include "libc370/array.h"
-#include "libc370/socket.h"
+#include "ext/array.h"
+#include "mvs/socket.h"
 #include "mvs/lock.h"
 
 int

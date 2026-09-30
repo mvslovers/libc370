@@ -8,7 +8,7 @@
 #include "src/internal/bsam.h"
 #include "mvs/crt.h"
 #include "mvs/lock.h"
-#include "libc370/array.h"
+#include "ext/array.h"
 
 FILE *
 __reopen(const char *fn, const char *mode, FILE *fp)
