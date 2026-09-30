@@ -8,7 +8,7 @@
 #include "ibm/mvs/dcbd.h"
 #include "ibm/mvs/iefjfcbn.h"
 #include "svc99.h"
-#include "clibary.h"
+#include "libc370/array.h"
 #include "clibdscb.h"
 #include "cliblist.h"
 #include "clibcrt.h"

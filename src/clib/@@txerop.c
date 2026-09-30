@@ -1,6 +1,6 @@
 /* @@TXEROP.C */
 #include "svc99.h"
-#include "clibary.h"
+#include "libc370/array.h"
 
 static struct {
     const char      option[7];

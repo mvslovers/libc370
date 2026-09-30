@@ -103,7 +103,7 @@
  */
 #include <stdio.h>
 #include <string.h>
-#include "clibary.h"
+#include "libc370/array.h"
 #include "clibgrt.h"
 #include "clibppa.h"
 #include "clibtso.h"

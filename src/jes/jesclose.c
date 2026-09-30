@@ -6,7 +6,7 @@
 #include "ibm/jes2/pddb.h"   /* JES PDDB Print Datasets                          */
 #include "ibm/jes2/iot.h"    /* JES IOT                                          */
 #include "clibjes2.h"   /* JES prototypes */
-#include "clibary.h"    /* dynamic array                                    */
+#include "libc370/array.h"    /* dynamic array                                    */
 
 int jesclose(JES **ppjes)
 {

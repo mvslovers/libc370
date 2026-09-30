@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include <clib64.h>
+#include <libc370/int64.h>
 
 __asm__("\n&FUNC    SETC '__64_cmp_i32'");
 int __64_cmp_i32(__64* a, int32_t b)

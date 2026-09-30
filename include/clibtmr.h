@@ -11,13 +11,13 @@
 #include <float.h>
 #include <socket.h> /* has struct timeval */
 
-#include <clibary.h>
+#include <libc370/array.h>
 #include <clibcrt.h>
 #include <clibecb.h>
 #include <clibgrt.h>
 #include <cliblock.h>
 #include <clibppa.h>
-#include <clibsa.h>
+#include <s370/savearea.h>
 #include <clibstae.h>
 #include <clibthrd.h>
 #include <clibwsa.h>

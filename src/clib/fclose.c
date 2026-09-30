@@ -10,7 +10,7 @@
 #include <mvssupa.h>
 #include "clibcrt.h"
 #include "cliblock.h"
-#include "clibary.h"
+#include "libc370/array.h"
 
 int
 fclose(FILE *fp)

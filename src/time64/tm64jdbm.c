@@ -1,4 +1,4 @@
-#include <time64.h>
+#include <libc370/time64.h>
 #include <__time64.h>
 
 static const int jdbm[2][12] = {

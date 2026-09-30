@@ -23,10 +23,10 @@
 #include "clibthrd.h"               /* basic threads                */
 #include "clibthdi.h"               /* thread management            */
 #include "cliblink.h"               /* link to external program     */
-#include "clibary.h"                /* dynamic arrays               */
+#include "libc370/array.h"                /* dynamic arrays               */
 #include "svc99.h"                  /* dynamic allocation           */
 #include "ibm/mvs/ieziob.h"                  /* input/output block           */
-#include "clibccw.h"                /* CCW struct                   */
+#include "s370/ccw.h"                /* CCW struct                   */
 #include "clibecb.h"                /* ECB prototypes               */
 #include "clibtmr.h"                /* timer                        */
 #include "ibm/mvs/cvt.h"                    /* MVS CVT                      */

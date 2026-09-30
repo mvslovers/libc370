@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
-#include <time64.h>
+#include <libc370/time64.h>
 
 __asm__("\n&FUNC    SETC '__getclk64'");
 uint64_t __getclk64(void)

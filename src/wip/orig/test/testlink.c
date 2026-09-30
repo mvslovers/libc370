@@ -2,7 +2,7 @@
 #include "clibwto.h"
 #include "cliblink.h"
 #include "clibgrt.h"
-#include "clibary.h"
+#include "libc370/array.h"
 
 int main(int argc, char **argv)
 {

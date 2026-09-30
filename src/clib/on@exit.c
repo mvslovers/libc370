@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include "cliblock.h"
 #include "clibcrt.h"
-#include "clibary.h"
+#include "libc370/array.h"
 
 int
 on_exit(void (*func)(int,void*), void *arg)

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
-#include <time64.h>
+#include <libc370/time64.h>
 
 __asm__("\n&FUNC    SETC 'uclock64'");
 uclock64_t uclock64(void)

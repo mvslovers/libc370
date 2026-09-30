@@ -5,7 +5,7 @@
 #include "clibwto.h"
 #include <mvssupa.h>
 #include "svc99.h"
-#include "clibary.h"
+#include "libc370/array.h"
 #include "ibm/mvs/dcbd.h"
 #include "ibm/mvs/iefjfcbn.h"
 #include "clibjes2.h"     /* JES Spool prototypes and functions            */

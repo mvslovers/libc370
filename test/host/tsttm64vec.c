@@ -19,7 +19,7 @@
  *
  * On the big-endian target all three coincide and the code is correct.  On
  * a little-endian host they do not.  The failure mode is the bad kind: the
- * sources compile once -U__LP64__ gets past time64.h's LP64 #error, they
+ * sources compile once -U__LP64__ gets past libc370/time64.h's LP64 #error, they
  * link, they run - and they answer wrong.  A host build of the src/time64
  * scaling returns 0 for both /1000 and /1000000.  Nothing announces that
  * the harness is measuring nothing, so the obvious next move is to "fix"

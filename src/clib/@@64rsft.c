@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include <clib64.h>
+#include <libc370/int64.h>
 
 __asm__("\n&FUNC    SETC '__64_rshift'");
 void __64_rshift(__64* a, __64* b, int nbits)

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <clib.h>
 #include <clibssib.h>
-#include <clibary.h>        /* dynamic array prototypes     */
+#include <libc370/array.h>        /* dynamic array prototypes     */
 #include <clibispf.h>		/* ISPF prototypes				*/
 #include <cliblink.h>		/* __link()						*/
 #include <clibtso.h>		/* tsocmd()						*/

@@ -1,7 +1,7 @@
 #ifndef CLIBECB_H
 #define CLIBECB_H
 
-#include <clibary.h>
+#include <libc370/array.h>
 
 typedef unsigned int        ECB;
 

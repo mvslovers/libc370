@@ -5,7 +5,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <time.h>
-#include "clibary.h"        /* dynamic array prototypes     */
+#include "libc370/array.h"        /* dynamic array prototypes     */
 #include "cliblist.h"       /* __listpd()                   */
 
 void

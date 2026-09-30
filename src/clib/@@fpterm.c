@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include "clibcrt.h"
 #include "cliblock.h"
-#include "clibary.h"
+#include "libc370/array.h"
 
 extern int  __fpfree(FILE *fp);
 

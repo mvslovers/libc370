@@ -1,5 +1,5 @@
 /* mktime64.c */
-#include "time64.h"
+#include "libc370/time64.h"
 #include "stdarg.h"
 #include "stdio.h"
 #include "stddef.h"

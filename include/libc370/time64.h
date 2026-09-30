@@ -26,7 +26,7 @@ THE SOFTWARE.
 /* Legacy cruft for LP32 where time_t was 32-bit. */
 #include <time.h>	/* legacy time_t and function prototypes */
 #include <stdint.h>	/* standard types int32_t, uint32_t, uint64_t, ... */
-#include <clib64.h>	/* __64 union typedef and related function prototypes */
+#include <libc370/int64.h>	/* __64 union typedef and related function prototypes */
 
 /* Notes about time:
  * In general time values have been represented as the number of seconds
@@ -37,7 +37,7 @@ THE SOFTWARE.
  * or 64 bit (unsigned lonh long) values while keeping the same epoch.
  * 
  * To that extent we have the prototypes listed below in this header 
- * file in support of 64 bit values using the __64 type (see clib64.h).
+ * file in support of 64 bit values using the __64 type (see libc370/int64.h).
  * 
  * Extensions are also provided for mtime64_t and utime64_t values.
  */

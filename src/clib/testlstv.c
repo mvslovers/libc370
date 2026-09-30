@@ -1,4 +1,4 @@
-#include "clibary.h"
+#include "libc370/array.h"
 #include "cliblist.h"
 #include "stdio.h"
 #include "clibwto.h"

@@ -8,7 +8,7 @@
 * Details:    Defines the API for the corresponding SHA1 implementation.
 *********************************************************************/
 #include <stddef.h>
-#include <clib64.h>
+#include <libc370/int64.h>
 
 #define SHA256_BLOCK_SIZE 32            /* SHA256 outputs a 32 byte digest */
 

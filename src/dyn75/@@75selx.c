@@ -15,7 +15,7 @@
 #include "__75.h"
 #include "socket.h"
 #include "errno.h"
-#include "clibary.h"
+#include "libc370/array.h"
 
 /* selectex() */
 __asm__("\n&FUNC    SETC 'selectex'");

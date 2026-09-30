@@ -73,7 +73,7 @@
 #include "ibm/jes2/iot.h"    /* JES IOT (+ track group map)                      */
 #include "clibjes2.h"   /* jesopen/jesjob/jesprint                          */
 #include "jesprb.h"     /* __jesprb() - the REAL record walk (#45)          */
-#include "clibary.h"    /* arraycount                                       */
+#include "libc370/array.h"    /* arraycount                                       */
 
 #define MAXBLK      500 /* chain-follow cap: a stale block can chain wildly */
 #define DUMPBLKS    2   /* hex dump this many blocks per DD                 */

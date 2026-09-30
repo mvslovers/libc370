@@ -4,7 +4,7 @@
 #include <string.h>
 #include <time.h>
 #include <errno.h>
-#include "time64.h"
+#include "libc370/time64.h"
 #include "__time64.h"
 
 extern long     __ymdts(unsigned yr, unsigned mo, unsigned day);

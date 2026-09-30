@@ -32,7 +32,7 @@
 #include "stdlib.h"
 #include "string.h"
 #include "clibppa.h"
-#include "clibary.h"
+#include "libc370/array.h"
 
 void
 __ppahrv(CLIBPPA *ppa)

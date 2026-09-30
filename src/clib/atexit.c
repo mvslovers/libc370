@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include "cliblock.h"
 #include "clibcrt.h"
-#include "clibary.h"
+#include "libc370/array.h"
 
 __PDPCLIB_API__ int atexit(void (*func)(void))
 {

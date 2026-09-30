@@ -5,7 +5,7 @@
 #include "socket.h"
 #include "clibsock.h"
 #include "cliblock.h"
-#include "clibary.h"
+#include "libc370/array.h"
 #include "clibgrt.h"
 
 __asm__("\n&FUNC    SETC '@@75init'");

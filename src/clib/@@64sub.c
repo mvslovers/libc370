@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include <clib64.h>
+#include <libc370/int64.h>
 
 __asm__("\n&FUNC    SETC '__64_sub'");
 void __64_sub(__64* a, __64* b, __64* c)

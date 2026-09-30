@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <mvssupa.h>
-#include "clibary.h"
+#include "libc370/array.h"
 #include "clibstae.h"
 
 /* Module Map */

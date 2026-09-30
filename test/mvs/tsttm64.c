@@ -101,7 +101,7 @@
  * not an expectation to adjust - read the SYSPRINT first.
  */
 #include <stdio.h>
-#include <time64.h>
+#include <libc370/time64.h>
 
 static int bad = 0;
 

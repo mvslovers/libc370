@@ -5,7 +5,7 @@
 
 typedef struct clibcrt  CLIBCRT;    /* per thread runtime work area         */
 
-#include "clibary.h"                /* dynamic array                        */
+#include "libc370/array.h"                /* dynamic array                        */
 
 /* This structure holds data unique to each task/thread (TCB)
 **

@@ -7,7 +7,7 @@
 ** compiled fresh on every build so the commit tracks HEAD -- do not rely on
 ** the .s mtime cache here.
 */
-#include "clibver.h"
+#include "libc370/version.h"
 
 #ifndef VERSION
 #define VERSION "0.0.0-dev"
