@@ -10,9 +10,10 @@ libc370 is the base library of the whole ecosystem, so a defect here is a defect
 in httpd, mvsMF, ftpd, ufsd and every other consumer at once; that is what puts
 some cheap items high and some expensive ones low.
 
-*Last reconciled against the tracker: **2026-09-29**, 48 issues open (#182,
-#228, #229, #231, #232, #235 and #236 closed, #228, #229, #231, #232, #235 and
-#236 filed the same day), all 48 accounted for below.* That pass found **#181** and **#182** (filed 2026-09-13/14) in
+*Last reconciled against the tracker: **2026-09-30**, 50 issues open (none
+closed, #240 and #241 filed out of #39), all 50 accounted for below.* The pass
+before was **2026-09-29** at 48 open (#182, #228, #229, #231, #232, #235 and #236
+closed, #228, #229, #231, #232, #235 and #236 filed the same day). That pass found **#181** and **#182** (filed 2026-09-13/14) in
 no rank at all, fifteen days after they were filed — #182 is now rank 1 and
 #181 rank 39. The pass before was 2026-09-13 at 41 open, all 41 ranked. #149 was fixed and released the same day (PR #180, **v1.0.6**)
 and #178/#179 were filed out of that work; both are ranked at the end. The previous pass was 2026-08-30 at 29 open, and the gap it left
@@ -628,40 +629,36 @@ File-scope `__asm__` blocks that define standalone routines (`EXITDRVR`,
 `RETRY`/`RECOVERY`) are deliberately out of scope: they do their own
 `SAVE (14,12)` and do not share the compiler's register allocation.
 
-### 4 · #39 — 129 of 712 TUs with implicit declarations
+### 4 · #39 — implicit declarations: step 1 landed (PR #242), 133 in 108 TUs left
 
-The parent case. Steps 1 (declare the 14 routines with no prototype) and 2 (the
-missing `#include`s) are mechanical and independent of each other. **The payoff is
-step 3**: `-Wall` in `sdk/mklibc.py` — only that stops this class from coming back.
+**Step 1 is done** (PR #242, 2026-09-30): the 8 routines with no prototype are
+declared, and the 3 calls that reached `@@ARCOU`/`@@ARFRE`/`@@WTOTB` only through
+the `__` → `@@` mapping call the declared names. Byte-identical assembler in all
+23 touched TUs. Re-measured numbers and the full lists are in the
+[2026-09-30 comment on #39](https://github.com/mvslovers/libc370/issues/39#issuecomment-5904862790);
+the issue text's 161/129/712 are stale.
 
-Two more found while building the #80 host test, not in the issue's list:
-`@@freepd.c` calls `__arcou()` and `__arfre()` with no prototype in scope. They
-link on the target only because the `__` → `@@` symbol mapping happens to produce
-the right CSECT — the same invisible-call shape the issue records for httpd's
-`__arcou()`. Worth folding into step 1 when it runs.
+**What is left is step 2, 133 hits in 108 TUs — and half of it is one line.**
+`include/clibsa.h:65` (the `sprintf` in `sa_get_epname()`) accounts for 66 of
+them, because `clibwto.h` pulls it into every TU that reports to the console.
+That line is **#68 step 1** — the libc370-only part, which reddens no consumer
+(the attributes are step 3 there) — so doing it first takes half of #39 step 2
+with it. The other 67 are TU-local missing `#include`s.
 
-**Correction to the paragraph above, found while fixing #183:** `__arcou` and
-`__arfre` are *not* outside the issue's list — they are in its 14-routine table
-at 1 each, and the sweep's hits are `@@freepd.c:15` and `:26`. The list that
-omits things is the **missing-`#include`** table, which prints the top 8 of 27
-distinct functions, 109 of 135 instances; everything else is in an unshown tail.
-**Read the counts, not the tables** — #39 says 161 and 135 in its own text, and
-both tables are abridged without saying so.
+**Step 3 is bigger than the issue says.** `-Wall` prints ~6690 lines today, and
+~4660 of them are three header classes: `"/*" within comment` (`txt99.h` alone
+2136), `ignoring #pragma pack`, and the `??!` trigraph in `socket.h`. Unless the
+headers are cleaned first, step 3 needs `-Wno-comment -Wno-unknown-pragmas
+-Wno-trigraphs` (cc370 honours all three), or any new warning is lost among them.
+Header cleanup is a natural part of the 1.1.x restructure.
 
-`strncmpi.c` is in that tail: it called `tolower()` with no `<ctype.h>` in
+`strncmpi.c` was one of the missing-`#include` cases: it called `tolower()` with no `<ctype.h>` in
 scope, so it resolved to the out-of-line function in `tolower.c` instead of the
 `__tolow[c]` macro — two `L 15,=V(TOLOWER)` call sequences per character where
 there should be one table load. It computed the right answer throughout, and it
 had **no in-tree caller and no test**, which is how it kept that for as long as
 it did. The pattern is worth naming for step 2: the TUs that keep a missing
 `#include` longest are the ones nothing calls.
-
-PR #185 does move step 1 forward by one: `stricmp` is now declared, which is
-2 of the 26 recorded instances (`@@finden.c` and `@@listds.c`, six calls between
-them — the issue's count of 2 is warnings, one per TU). Measured against the
-pre-change header, `-Wall` gives 1 + 1 before and 0 + 0 after. The three TUs
-that PR touches also compile clean under `-Wall -Werror`, which is step 3 on a
-three-file scale.
 
 ### 5 · #68 — `format(printf)` for `wtof()`/`wtodumpf()`/`wtorf()`
 
@@ -1203,6 +1200,21 @@ only on a path that names a `VOLSER=` explicitly — hence below the
 campaigns and not in Tier 1. Small: one flag plus a probe against an
 unmounted volser.
 
+### 40 · #240 — `ssvt_set()`/`ssvt_funcmap()` return no value on success
+
+Filed out of #39's `-Wall` run. Both fall off the end after the key switch; the
+generated code leaves `0x100 | key<<4` in R15 (384 for a key-8 caller), never 0.
+Latent: the only consumer, ufsd, ignores the result at every call. Small fix
+(`return 0;`), but the test needs the `IPK`/`SPKA` asm stubbed or an MVS run.
+
+### 40 · #241 — host tests `tstfabnd`/`tstfcls` do not build since #182
+
+#182 (`fbca56b`) made `__aclose()` return `int`; both tests still stub it `void`.
+Measured per revision: both build and pass at `fbca56b~1`, fail to build from
+`fbca56b` on. Nothing noticed because nothing builds `test/host` automatically.
+No running system affected, but the #147/#168 contracts those tests pin are
+unguarded until it is fixed.
+
 ---
 
 ## Five campaigns instead of forty-one tickets
@@ -1214,7 +1226,7 @@ unmounted volser.
   and blocked on it. PR #139 made this the
   campaign's remaining libc370-side content: it bounded the walk but deliberately
   did not signal the shortfall.
-- **Compiler visibility** — #125, #39, #68 (#104 and #70 landed). The goal is
+- **Compiler visibility** — #125, #39, #68 (#104, #70 and #39 step 1 landed). The goal is
   `-Wall` in the SDK build. #125 is the one with a measured failure and is
   independent of the rest; #68 goes last and in its own three-step order, or it
   reddens consumer CI.
@@ -1240,6 +1252,13 @@ unmounted volser.
 ## Recently landed
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
+
+- **#39 step 1** (PR #242, merged 2026-09-30) - prototypes for `__tzget`,
+  `vwtorf`, `vvprintf`, `vvscanf`, `__fptmp`, `__fpfree`, `rdjfcb`, `initssob`;
+  `@@freepd.c`/`malloc.c` call `arraycount`/`arrayfree`/`wto_traceback`. `-Wall`
+  implicit declarations 155 in 127 TUs -> 133 in 108, none new; the 23 touched
+  TUs assemble byte-identical. #39 stays open for steps 2 and 3. Filed out of
+  it: #240, #241.
 
 - **#236** (PR #239, merged 2026-09-29) - `fwrite()` in record mode refuses
   with `EINVAL`, error flag clear, what exceeds LRECL (LRECL-4 spanned, a
