@@ -28,7 +28,7 @@ from `main` at `a3e2e67`):
 A fourth finding came out of the inventory. **Four header families declare code
 that is not in `libc.a`:** miniz (#243), a PDF generator (`clibpdf.h`, 28
 symbols), `emfile.h` (22) and `ipc.h` (17). miniz and PDF have no
-implementation anywhere. `emfile` and `ipc` have sources in `src/wip/orig/`,
+implementation anywhere. `emfile` and `ipc` have sources in `attic/orig/` (then `src/wip/orig/`),
 which is not built (#248). No consumer includes any of them.
 
 ## Principles
@@ -388,7 +388,7 @@ Summary:
 | `clibmzi.h` | — |  | removed: miniz, no implementation in libc.a, no user (#243) |
 | `clibpdf.h` | — |  | removed: 28 declared symbols, none in libc.a, no user (PDFGEN) |
 | `clibpdfi.h` | — |  | removed: 28 declared symbols, none in libc.a, no user (PDFGEN) |
-| `clibsrb.h` | — |  | moved out to `src/wip/mvs/srb.h`, not installed: no user; its FREEMAIN fixed and the 2 declared symbols without code dropped (#248). Becomes `mvs/srb.h` once something schedules an SRB, including `ibm/mvs/ihasrb.h` |
+| `clibsrb.h` | — |  | moved out to `attic/mvs/srb.h`, not installed: no user; its FREEMAIN fixed and the 2 declared symbols without code dropped (#248). Becomes `mvs/srb.h` once something schedules an SRB, including `ibm/mvs/ihasrb.h` |
 | `emfile.h` | — |  | removed: 22 declared symbols, none in libc.a, no user |
 | `emfilei.h` | — |  | removed: 22 declared symbols, none in libc.a, no user |
 | `ipc.h` | — |  | removed: 17 declared symbols, none in libc.a, no user |

@@ -70,9 +70,8 @@ def public():
 
 
 def private():
-    """names declared by headers under src/ that the build sees (not src/wip)"""
-    paths = [p for p in glob.glob(os.path.join(ROOT, "src", "**", "*.h"), recursive=True)
-             if not os.path.relpath(p, ROOT).startswith(os.path.join("src", "wip"))]
+    """names declared by headers under src/ (attic/ is outside it)"""
+    paths = glob.glob(os.path.join(ROOT, "src", "**", "*.h"), recursive=True)
     return scan(paths, ROOT)
 
 

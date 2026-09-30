@@ -44,7 +44,7 @@ libc370 is 712 mostly one-function TUs. Apply the same rule to your own `.a`.
 ## What is actually in `libc.a`
 
 `sdk/mklibc.py` compiles `src/{clib,cmtt,crypto,dyn75,jes,os,racf,smf,thdmgr,time64}`
-plus `asm/*.asm`. **`src/wip/` is never built.**
+plus `asm/*.asm`. **`attic/` is never built.**
 
 `make install` copies *every* `include/*.h` into the sysroot, whether or not
 something implements it. The archive is the authority on what a call will
@@ -60,7 +60,7 @@ copies and never deletes, so a sysroot installed before that still carries
 them; they compile there and fail at link, as they always did.
 `clibsrb.h` left `include/` with them: it had no user, and its
 `inline_srb_freemain()` freed from subpool 0. Fixed, it waits in
-`src/wip/mvs/srb.h`, which is not installed. `clibres.h` is
+`attic/mvs/srb.h`, which is not installed. `clibres.h` is
 `static __inline` throughout, so it needs no member at all.
 
 Two build-side guards are worth knowing because they change what ships:

@@ -141,7 +141,7 @@ clibmz.h	removed		removed: miniz, no implementation in libc.a, no user (#243)
 clibmzi.h	removed		removed: miniz, no implementation in libc.a, no user (#243)
 clibpdf.h	removed		removed: 28 declared symbols, none in libc.a, no user (PDFGEN)
 clibpdfi.h	removed		removed: 28 declared symbols, none in libc.a, no user (PDFGEN)
-clibsrb.h	removed		moved out to `src/wip/mvs/srb.h`, not installed: no user; its FREEMAIN fixed and the 2 declared symbols without code dropped (#248). Becomes `mvs/srb.h` once something schedules an SRB, including `ibm/mvs/ihasrb.h`
+clibsrb.h	removed		moved out to `attic/mvs/srb.h`, not installed: no user; its FREEMAIN fixed and the 2 declared symbols without code dropped (#248). Becomes `mvs/srb.h` once something schedules an SRB, including `ibm/mvs/ihasrb.h`
 emfile.h	removed		removed: 22 declared symbols, none in libc.a, no user
 emfilei.h	removed		removed: 22 declared symbols, none in libc.a, no user
 ipc.h	removed		removed: 17 declared symbols, none in libc.a, no user
