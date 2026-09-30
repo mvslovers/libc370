@@ -1,6 +1,6 @@
 # libc370 2.0 phase 1 — the splits (proposal)
 
-**Status: proposal, 2026-09-30, for review in its PR.** Part of #256. Once
+**Status: agreed 2026-09-30 (questions A–D below: all four as proposed).** Part of #256. Once
 agreed, the destinations go into `sdk/headermap.tsv` (the `split` rows get
 their per-declaration targets there) and each split lands as its own PR,
 gated like the moves.
@@ -116,18 +116,26 @@ header defines get the same check in the PR that splits it.
 
 ## Questions for review
 
-- **A. `CLIBSOCK`.** httpd reads libc370's socket table directly. Proposal:
+- **A. `CLIBSOCK`.** httpd reads libc370's socket table directly. **Agreed**,
+  with the way out for 2.x written down: httpd's only use is
+  `close_fd_set()`, which walks `grt->grtsock` backwards at termination and
+  `closesocket()`s every open socket. That is one job, and libc370 should do
+  it: either a function that closes every socket the runtime has open
+  (`closeall()`-style, one call from httpd), or the runtime's own exit path
+  closing them, as it already closes open `FILE`s. With either in place
+  httpd stops touching `CLIBSOCK`, and the struct and `__so*` can move to
+  `src/internal/` in a 2.x minor. Proposal was:
   `libc370/socket.h` declares it, as it is part of what the DYN75 socket
   layer exposes; an accessor instead would be an API change for 2.x.
-- **B. `clibthdi.h` is not internal.** The table marks it internal, but httpd
+- **B. `clibthdi.h` is not internal. Agreed.** The table marks it internal, but httpd
   and ftpd use the thread-manager API itself (`cthread_manager_init`,
   `cthread_queue_add`, the `CTHDMGR`/`CTHDWORK` structs and states).
   Proposal: merge it into `mvs/thread.h`, which it already includes, rather
   than `src/internal/`.
-- **C. `clib64.h`** moved to `libc370/int64.h` as planned. Retiring it for
+- **C. `clib64.h`, agreed:** it moved to `libc370/int64.h` as planned. Retiring it for
   `long long` changes code and symbols, so it is not phase-1 material; it
   stays a 2.x question (cc370#467/#468 still affect 64-bit shifts).
-- **D. `src/internal/` in phase 1.** Only for the parts a split cuts off;
+- **D. `src/internal/` in phase 1. Agreed:** only for the parts a split cuts off;
   `mklibc.py` and the host-test recipes get `-I src/internal`. Phase 2 then
   moves the whole internal headers into the directory that already exists.
 
