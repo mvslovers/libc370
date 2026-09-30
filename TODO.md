@@ -17,9 +17,10 @@ from Tier 1 on keeps its order and resumes on 2.x. A serious defect found
 before 2.0.0 gets an emergency 1.0.9 from the tag `v1.0.8` (D8 in
 `doc/design-2.0.md`).
 
-*Last reconciled against the tracker: **2026-09-30**, 57 issues open (#249
-closed; #240 and #241 filed out of #39, #243–#246 and #248–#250 out of the 2.0
-plan, #251 out of #249), all 57 accounted for below.* The pass before was **2026-09-29** at 48 open (#182, #228, #229, #231, #232, #235 and #236
+*Last reconciled against the tracker: **2026-09-30**, 55 issues open (#241 and
+#251 closed by PR #253 the same day; before that 57 — #249 closed; #240 and
+#241 filed out of #39, #243–#246 and #248–#250 out of the 2.0 plan, #251 out of
+#249), all 55 accounted for below.* The pass before was **2026-09-29** at 48 open (#182, #228, #229, #231, #232, #235 and #236
 closed, #228, #229, #231, #232, #235 and #236 filed the same day). That pass found **#181** and **#182** (filed 2026-09-13/14) in
 no rank at all, fifteen days after they were filed — #182 is now rank 1 and
 #181 rank 39. The pass before was 2026-09-13 at 41 open, all 41 ranked. #149 was fixed and released the same day (PR #180, **v1.0.6**)
@@ -315,12 +316,9 @@ In this order. The plan and the gates are in `doc/design-2.0.md`; the
 checklist is #245.
 
 1. **Prep, cheap, before anything moves.**
-   - #241 and #251: the five host tests CI cannot run. Four of them (#241)
-     pin stdio contracts in the code #182 and #228 changed most: `fclose()`
-     under the FILE lock (#147), `__fabandon()` (#168), append mode (#198) and
-     `+` streams (#189). `tstjesop` (#251) pins that `jesopen()` never returns a
-     handle without a spool array (#108). Put them back into
-     `test/host/run.sh`.
+   - ~~#241 and #251~~ — done, PR #253, 2026-09-30. `run.sh` runs all 26
+     host tests, and the #182/#228 last-block paths and #126's job-list
+     teardown are now covered too.
    - #140: the duplicate `clibthdi.h`, a live trap. Delete it.
    - #243 and #248: the dead headers (miniz, PDF, `emfile`, `ipc`). No user, so
      they go now; #248 asks for a look at the `emfile`/`ipc` code first.
@@ -1271,24 +1269,9 @@ generated code leaves `0x100 | key<<4` in R15 (384 for a key-8 caller), never 0.
 Latent: the only consumer, ufsd, ignores the result at every call. Small fix
 (`return 0;`), but the test needs the `IPK`/`SPKA` asm stubbed or an MVS run.
 
-### 40 · #241 — four host tests do not build since #182
+### ~~40 · #241, #251~~ — fixed, PR #253, 2026-09-30
 
-*Now Tier 0, step 1.*
-
-#182 (`fbca56b`) made `__aclose()` return `int`, and `tstfabnd`, `tstfcls`,
-`tstfpapp` and `tstplus` still stub it `void`. The last two were found when
-#249's runner ran all 26 tests. Measured per revision: all four build and pass
-at `fbca56b~1`, and fail to build from `fbca56b` on. `test/host/run.sh` leaves
-them out; put them back in the PR that fixes them. No running system is
-affected, but the #147/#168 contracts those tests pin are unguarded until then.
-
-### 40 · #251 — host test tstjesop does not link since #126
-
-*Now Tier 0, step 1.*
-
-`jesclose()` calls `jesjobfr()` since `791ffc0` (#126), and the recipe does not
-link `jesjobfr.c`. It builds and passes at `791ffc0~1`, and has been broken
-since 2026-08-22 unnoticed. It is left out of `run.sh` until fixed.
+See *Recently landed*.
 
 ### 42 · #244 — SHA-256, Blowfish and base64 move to crypto370
 
@@ -1391,6 +1374,14 @@ with several C names. It changes symbols, so every consumer's code changes too:
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
 
+- **#241, #251** (PR #253, merged 2026-09-30) - `test/host/run.sh` runs all
+  26 host tests again; the exclusion list is gone. The `__aclose()` stubs
+  return `int`, and new cases pin #182 (`tstfcls`: `fclose()` answers
+  `EOF`+`ENOSPC`/`EIO` and still tears down) and #228 (`tstplus`: a turn that
+  loses the last block reopens but answers -1 with `ferror()` set).
+  `tstjesop` links the real `jesjobfr.c`/`jesjobf1.c`; case (7) pins #126's
+  job-list teardown. Each new check goes red against the pre-fix source.
+
 - **v1.0.8** (released 2026-09-30, `c3f4141`): the last 1.x release, and the
   first one `release.yml` published. The notes are the CHANGELOG section plus
   the cc370 commit it was built with (`4c60aa2`). It needs cc370 `f3f7e21` or
@@ -1406,7 +1397,8 @@ Pointers only. The reasoning lives in the closing comments and the PRs.
   the `asm("@@…")` labels as a version separator (measured: 8/21 fail under
   gcc, 7/21 under clang, 0 on macOS). `release.yml`: `VERSION` must match the
   tag, and the notes come from `CHANGELOG.md`. `make test-host` /
-  `test/host/run.sh`: 21 of 26 tests; the five broken ones are #241 and #251.
+  `test/host/run.sh`: 21 of 26 tests at the time; the five broken ones were
+  #241 and #251 (all 26 since PR #253).
 
 - **2.0 plan** (PR #247, merged 2026-09-30) - `doc/design-2.0.md`: target
   layout, the phases with their gates, the release concept and a mapping for
