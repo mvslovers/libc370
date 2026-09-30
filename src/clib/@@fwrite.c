@@ -1,11 +1,11 @@
 /* @@FWRITE.C - caller should hold lock on file handle */
-#include <fileio.h>
+#include "src/internal/fileio.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <stddef.h>
-#include <bsam.h>
+#include "src/internal/bsam.h"
 
 #define begwrite(fp, len)   (lenwrite = (len), dptr = (fp)->asmbuf)
 #define finwrite(fp)        (__awrite((fp)->dcb, &dptr, &lenwrite))

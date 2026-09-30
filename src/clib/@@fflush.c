@@ -1,10 +1,10 @@
 /* @@FFLUSH.C - caller should already hold lock on file handle */
-#include <fileio.h>
+#include "src/internal/fileio.h"
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include <stddef.h>
-#include <bsam.h>
+#include "src/internal/bsam.h"
 #include <ibm/mvs/dcbd.h>
 #include <ibm/mvs/ihadecb.h>
 

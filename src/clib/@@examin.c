@@ -1,5 +1,5 @@
 /* @@EXAMIN.C */
-#include <fileio.h>
+#include "src/internal/fileio.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

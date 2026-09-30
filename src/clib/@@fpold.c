@@ -4,7 +4,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <stddef.h>
-#include <bsam.h>
+#include "src/internal/bsam.h"
 #include <mvs/dynalloc.h>
 #include "mvs/dynalloc.h"
 #include "libc370/array.h"

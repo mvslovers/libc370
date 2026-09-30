@@ -1,10 +1,10 @@
 /* @@75INIT.C
 ** Initialize API
 */
-#include "__75.h"
+#include "src/internal/__75.h"
 #include "sys/socket.h"
 #include "sys/select.h"
-#include "dyn75.h"
+#include "src/internal/dyn75.h"
 #include "libc370/socket.h"
 #include "mvs/lock.h"
 #include "libc370/array.h"

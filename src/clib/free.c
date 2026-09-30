@@ -1,6 +1,6 @@
 /* FREE.C */
 #define STDLIB_C
-#include <fileio.h>
+#include "src/internal/fileio.h"
 #include "stdlib.h"
 #include "signal.h"
 #include "string.h"

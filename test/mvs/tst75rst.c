@@ -78,7 +78,7 @@
  * job's RC together with that log, never alone.
  *
  * BUILD (host):
- *     cc370 -Iinclude -Isrc/internal test/mvs/tst75rst.c -flinker-output=iebcopy -o TST75RST
+ *     cc370 -Iinclude -I. test/mvs/tst75rst.c -flinker-output=iebcopy -o TST75RST
  *     ld370 --pack TST75RST.iebcopy -o probe -xmit --dsn <LOADLIB>
  *
  * RUN: see jcl/tst75rst.jcl.  Built by hand - libc370 is the cc370 sysroot,
@@ -93,8 +93,8 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <libc370/socket.h>
-#include <dyn75.h>
-#include <__75.h>
+#include "src/internal/dyn75.h"
+#include "src/internal/__75.h"
 
 #define PAGE        4096            /* MVS page size                        */
 #define SEG          256            /* the X'75' copy segment               */

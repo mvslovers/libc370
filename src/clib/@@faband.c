@@ -49,12 +49,12 @@
 **   -3   ESTAE CREATE failed, so CLOSE was NOT attempted.  Nothing was torn
 **        down and the FILE is untouched - the caller may retry
 */
-#include <fileio.h>
+#include "src/internal/fileio.h"
 #include <mvs/file.h>
 #include <stdio.h>
 #include <string.h>
 #include <stddef.h>
-#include <bsam.h>
+#include "src/internal/bsam.h"
 #include <mvs/recovery.h>
 #include "mvs/lock.h"
 

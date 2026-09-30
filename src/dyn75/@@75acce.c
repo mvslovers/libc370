@@ -1,10 +1,10 @@
 /* @@75ACCE.C
 ** Accept socket connection
 */
-#include "__75.h"
+#include "src/internal/__75.h"
 #include "netinet/in.h"
 #include "sys/socket.h"
-#include "dyn75.h"
+#include "src/internal/dyn75.h"
 #include "errno.h"
 #include "libc370/socket.h"
 

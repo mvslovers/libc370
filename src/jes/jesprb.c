@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "jesprb.h"
+#include "src/jes/jesprb.h"
 
 static int giveup(JESPRB *pb, int reason,
                   int (*emit)(char *line, unsigned linelen, void *arg),

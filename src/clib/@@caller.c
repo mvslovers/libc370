@@ -1,5 +1,5 @@
 #include <string.h>
-#include <fileio.h>
+#include "src/internal/fileio.h"
 /* @@CALLER.C */
 
 char *

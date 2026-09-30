@@ -1,7 +1,7 @@
 /* @@75CLOS.C
 ** Close socket
 */
-#include "__75.h"
+#include "src/internal/__75.h"
 #include "sys/socket.h"
 #include "libc370/socket.h"
 

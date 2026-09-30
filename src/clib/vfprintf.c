@@ -1,5 +1,5 @@
 /* VFPRINTF.C */
-#include <fileio.h>
+#include "src/internal/fileio.h"
 #include <stdio.h>
 
 int

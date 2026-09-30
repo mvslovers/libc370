@@ -1,5 +1,5 @@
 #include <libc370/time64.h>
-#include <__time64.h>
+#include "src/time64/__time64.h"
 
 static const int jdbm[2][12] = {
     {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334},

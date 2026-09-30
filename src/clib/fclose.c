@@ -1,5 +1,5 @@
 /* FCLOSE.C */
-#include <fileio.h>
+#include "src/internal/fileio.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -8,7 +8,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <stddef.h>
-#include <bsam.h>
+#include "src/internal/bsam.h"
 #include "mvs/crt.h"
 #include "mvs/lock.h"
 #include "libc370/array.h"

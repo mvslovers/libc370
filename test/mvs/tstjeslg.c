@@ -55,7 +55,7 @@
  * what makes a finding conclusive - see doc/jes-syslog-issue4.md.
  *
  * BUILD (host):
- *     cc370 -Iinclude test/mvs/tstjeslg.c -flinker-output=iebcopy -o TSTJESLG
+ *     cc370 -Iinclude -I. test/mvs/tstjeslg.c -flinker-output=iebcopy -o TSTJESLG
  *     ld370 --pack TSTJESLG.iebcopy -o probe -xmit --dsn <LOADLIB>
  *
  * RUN (MVS batch) - see jcl/tstjeslg.jcl.  Needs the two JES2 data sets on DDs
@@ -72,7 +72,7 @@
 #include "ibm/jes2/pddb.h"   /* JES PDDB                                         */
 #include "ibm/jes2/iot.h"    /* JES IOT (+ track group map)                      */
 #include "mvs/jes2.h"   /* jesopen/jesjob/jesprint                          */
-#include "jesprb.h"     /* __jesprb() - the REAL record walk (#45)          */
+#include "src/jes/jesprb.h"     /* __jesprb() - the REAL record walk (#45)          */
 #include "libc370/array.h"    /* arraycount                                       */
 
 #define MAXBLK      500 /* chain-follow cap: a stale block can chain wildly */

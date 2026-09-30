@@ -1,11 +1,11 @@
 /* @@FREAD.C - caller should hold lock on file handle */
-#include <fileio.h>
+#include "src/internal/fileio.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <stddef.h>
-#include <bsam.h>
+#include "src/internal/bsam.h"
 
 size_t
 __fread(void *ptr, size_t size, size_t nmemb, FILE *fp)

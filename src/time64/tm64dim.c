@@ -1,5 +1,5 @@
 #include <libc370/time64.h>
-#include <__time64.h>
+#include "src/time64/__time64.h"
 
 /* days in month */
 static const int dim[2][12] = {
