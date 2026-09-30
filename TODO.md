@@ -375,6 +375,9 @@ checklist is #245.
      `enqpl.h`, `x75.h`, `calendar.h` internal; `mvs/wsa.h`,
      `mvs/jes2spool.h` public; `modmap.h` trimmed to `loadmod.h`
    - **phase 2 done** (summary on #274); the migration script is still owed
+   - #284: name maps for it — `sdk/names.tsv` (generated), `sdk/removed.tsv`
+     (871 names, each with its replacement; CI-enforced), procedure in
+     `doc/migration-2.0.md`. Every later move updates them in the same PR
 5a. **Phase 3 in 2.0 (#278, D9):** sources by area, `src/` mirrors
    `include/`, assembler beside its C, `src/wip/` → `attic/`. Tooling
    first: gate path map, unique basenames, `mklibc.py` finds `.asm` under
