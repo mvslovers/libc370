@@ -6,7 +6,7 @@
 #include "cliblock.h"
 #include <clibdsab.h>
 #include <clibcrt.h>
-#include <ieftiot.h>
+#include <ibm/mvs/ieftiot1.h>
 
 /*
  * __ddbusy() - would this OPEN be the second concurrent DCB on a spool
@@ -58,7 +58,7 @@
  *
  *  - SPOOL ONLY.  A real data set tolerates two concurrent DCBs
  *    (JOB00424 step SI3).  The discriminator is the TIOT entry's flag
- *    byte.  ieftiot.h's comment points at TIOESYIN (X'04', "spooled
+ *    byte.  ibm/mvs/ieftiot1.h's comment points at TIOESYIN (X'04', "spooled
  *    SYSIN"), and that is not what marks one here: across the DDs
  *    measured X'04' is never set and X'02' (TIOESSDS, the VS2
  *    "subsystem data set") always is (JOB00426).  A check written from

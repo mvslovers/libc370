@@ -238,30 +238,30 @@ Summary:
 | `hasptgm.h` | `ibm/jes2/tgm.h` |  | JES2 data area ($TGM) |
 | `cvt.h` | `ibm/mvs/cvt.h` | 2 | IBM data area |
 | `osdcb.h` | `ibm/mvs/dcbd.h` | 4 | IBM data area |
-| `osdecb.h` | `ibm/mvs/decb.h` |  | IBM data area; macro name to verify |
-| `racheck.h` | `ibm/mvs/ichrchk.h` |  | IBM data area; macro name to verify |
-| `racinit.h` | `ibm/mvs/ichrinit.h` |  | IBM data area; macro name to verify |
+| `osdecb.h` | `ibm/mvs/ihadecb.h` |  | IBM data area; IHADECB (checked: its 4 fields are all in IHADECB) |
+| `racheck.h` | `ibm/mvs/racheck.h` |  | RACHECK parameter list; no mapping macro, the RACHECK macro builds it |
+| `racinit.h` | `ibm/mvs/racinit.h` |  | RACINIT parameter list; no mapping macro, the RACINIT macro builds it |
 | `safp.h` | `ibm/mvs/ichsafp.h` |  | IBM data area |
 | `safv.h` | `ibm/mvs/ichsafv.h` |  | IBM data area |
 | `ieebasea.h` | `ibm/mvs/ieebasea.h` |  | IBM data area |
-| `ieecdcm.h` | `ibm/mvs/ieecdcm.h` |  | IBM data area; macro name to verify |
+| `ieecdcm.h` | `ibm/mvs/ieecdcm.h` |  | IBM data area; IEECDCM (checked: 66 of 68 fields) |
 | `ieecucm.h` | `ibm/mvs/ieecucm.h` |  | IBM data area |
 | `ieezb806.h` | `ibm/mvs/ieezb806.h` |  | IBM data area |
 | `iefjesct.h` | `ibm/mvs/iefjesct.h` |  | IBM data area |
 | `osjfcb.h` | `ibm/mvs/iefjfcbn.h` | 2 | IBM data area |
 | `iefjssib.h` | `ibm/mvs/iefjssib.h` | 1 | IBM data area |
-| `iefsscs.h` | `ibm/mvs/iefsscs.h` |  | IBM data area; macro name to verify |
+| `iefsscs.h` | `ibm/mvs/iefsscs.h` |  | IBM data area; IEFSSCS (checked: 21 of 21 constants) |
 | `iefssobh.h` | `ibm/mvs/iefssobh.h` | 1 | IBM data area |
-| `iefssso.h` | `ibm/mvs/iefssso.h` |  | IBM data area; macro name to verify |
+| `iefssso.h` | `ibm/mvs/iefssso.h` |  | IBM data area; IEFSSSO (checked: 25 of 25 constants) |
 | `ieftiot.h` | `ibm/mvs/ieftiot1.h` | 1 | IBM data area |
-| `ieftxtft.h` | `ibm/mvs/ieftxtft.h` |  | IBM data area; macro name to verify |
-| `iecvucb.h` | `ibm/mvs/iefucbob.h` |  | IBM data area; macro name to verify |
-| `iefvkeys.h` | `ibm/mvs/iefvkeys.h` |  | IBM data area; macro name to verify |
+| `ieftxtft.h` | `ibm/mvs/ieftxtft.h` |  | IBM data area; IEFTXTFT (checked: 31 of 31 constants) |
+| `iecvucb.h` | `ibm/mvs/iefucbob.h` |  | IBM data area; IEFUCBOB (checked: 17 of 24 fields) |
+| `iefvkeys.h` | `ibm/mvs/iefvkeys.h` |  | IBM data area; IEFVKEYS (checked: 142 of 142 constants) |
 | `rb99.h` | `ibm/mvs/iefzb4d0.h` |  | IBM data area |
 | `txt99.h` | `ibm/mvs/iefzb4d2.h` |  | IBM data area |
 | `iezbits.h` | `ibm/mvs/iezbits.h` |  | IBM data area |
 | `osdeb.h` | `ibm/mvs/iezdeb.h` |  | IBM data area |
-| `osiob.h` | `ibm/mvs/iezdeb/iob.h` |  | IBM data area; macro name to verify |
+| `osiob.h` | `ibm/mvs/ieziob.h` |  | IBM data area; IEZIOB (checked: its 35 fields are all in IEZIOB) |
 | `iezjscb.h` | `ibm/mvs/iezjscb.h` |  | IBM data area |
 | `acee.h` | `ibm/mvs/ihaacee.h` | 3 | IBM data area |
 | `ihaasvt.h` | `ibm/mvs/ihaasvt.h` | 2 | IBM data area |

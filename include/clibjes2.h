@@ -6,7 +6,7 @@
 #include "clibcp.h"                 /* JES Checkpoint prototypes            */
 #include "clibjs.h"                 /* JES Spool prototypes                 */
 #include "clibvsam.h"               /* needed for jesir*()                  */
-#include <iefssso.h>                /* needed for jesxwrtr()                */
+#include <ibm/mvs/iefssso.h>                /* needed for jesxwrtr()                */
 
 typedef struct jes      JES;        /* JES handle                           */
 typedef struct jesjob   JESJOB;     /* JES Job info                         */

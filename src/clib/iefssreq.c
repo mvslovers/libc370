@@ -1,4 +1,4 @@
-#include <iefssobh.h>
+#include <ibm/mvs/iefssobh.h>
 
 int iefssreq(SSOB *ssob)
 {

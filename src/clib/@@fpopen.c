@@ -5,8 +5,8 @@
 #include <string.h>
 #include <errno.h>
 #include <mvssupa.h>
-#include "osdcb.h"
-#include "osjfcb.h"
+#include "ibm/mvs/dcbd.h"
+#include "ibm/mvs/iefjfcbn.h"
 
 __asm__("\n&FUNC    SETC '__fpopen'");
 int

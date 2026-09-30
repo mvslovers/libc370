@@ -45,8 +45,8 @@ char   *strstr(const char *h, const char *n);
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <osdcb.h>
-#include <osjfcb.h>
+#include <ibm/mvs/dcbd.h>
+#include <ibm/mvs/iefjfcbn.h>
 
 static int  errno_cell;
 int *__errno(void) { return &errno_cell; }

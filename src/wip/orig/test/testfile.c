@@ -5,8 +5,8 @@
 #include <ctype.h>
 #include <errno.h>
 #include <mvssupa.h>
-#include "osdcb.h"
-#include "osjfcb.h"
+#include "ibm/mvs/dcbd.h"
+#include "ibm/mvs/iefjfcbn.h"
 #include "svc99.h"
 #include "clibary.h"
 #include "clibdscb.h"

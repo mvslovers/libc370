@@ -6,8 +6,8 @@
 #include <mvssupa.h>
 #include "svc99.h"
 #include "clibary.h"
-#include "osdcb.h"
-#include "osjfcb.h"
+#include "ibm/mvs/dcbd.h"
+#include "ibm/mvs/iefjfcbn.h"
 #include "clibjes2.h"     /* JES Spool prototypes and functions            */
 
 static int deallocate_spool(HASPJS *fp);

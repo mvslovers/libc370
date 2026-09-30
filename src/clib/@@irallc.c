@@ -6,7 +6,7 @@
 #include <mvssupa.h>
 #include "svc99.h"
 #include "clibary.h"
-#include "txt99.h"
+#include "ibm/mvs/iefzb4d2.h"
 
 int
 __irallc(FILE *fp)

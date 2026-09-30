@@ -1,7 +1,7 @@
 #ifndef CLIBCP_H
 #define CLIBCP_H
 
-#include "osdcb.h"
+#include "ibm/mvs/dcbd.h"
 #include "ibm/jes2/hct.h"    /* JES Checkpoint Control Table, record 3 in HASPCKPT */
 #include "ibm/jes2/jqe.h"    /* JES Job Queue Elements                             */
 #include "ibm/jes2/jot.h"    /* JES Job Output Table                               */

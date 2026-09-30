@@ -1,4 +1,4 @@
-#include <iefssobh.h>
+#include <ibm/mvs/iefssobh.h>
 #include <clibjes2.h>
 #include <stdlib.h>
 #include <string.h>

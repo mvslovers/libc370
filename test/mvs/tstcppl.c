@@ -108,7 +108,7 @@
 #include "clibppa.h"
 #include "clibtso.h"
 #include "clibwto.h"
-#include "ikjcppl.h"
+#include "ibm/mvs/ikjcppl.h"
 
 static void
 cell(int *fails, const char *mode, const char *id, int ok, const char *what)

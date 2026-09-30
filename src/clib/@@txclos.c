@@ -1,7 +1,7 @@
 /* @@TXSYSO.C */
 #include "svc99.h"
 #include "clibary.h"
-#include "txt99.h"
+#include "ibm/mvs/iefzb4d2.h"
 
 int
 __txclos(TXT99 ***txt99, const char *unused)

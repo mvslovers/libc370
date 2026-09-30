@@ -45,7 +45,7 @@ int     memcmp(const void *a, const void *b, size_t n);
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <osdcb.h>
+#include <ibm/mvs/dcbd.h>
 
 static int  errno_cell;
 int *__errno(void) { return &errno_cell; }

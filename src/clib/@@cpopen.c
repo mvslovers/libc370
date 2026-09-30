@@ -6,8 +6,8 @@
 #include <mvssupa.h>
 #include "svc99.h"
 #include "clibary.h"
-#include "osdcb.h"
-#include "osjfcb.h"
+#include "ibm/mvs/dcbd.h"
+#include "ibm/mvs/iefjfcbn.h"
 #include "clibcp.h"     /* JES Checkpoint prototypes and functions          */
 #include "ibm/jes2/jqe.h"    /* JES Job Queue Element                            */
 #include "ibm/jes2/joe.h"    /* JES Job Output Element                           */

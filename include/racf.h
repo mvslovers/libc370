@@ -1,11 +1,11 @@
 #ifndef RACF_H
 #define RACF_H
 
-#include "acee.h"                   /* ACCESSOR ENVIRONMENT ELEMENT */
-#include "safp.h"                   /* SAF ROUTER PARAMETER LIST    */
-#include "safv.h"                   /* SAF VECTOR TABLE             */
-#include "racinit.h"                /* RACINIT parameter list       */
-#include "racheck.h"                /* RACHECK parameter list       */
+#include "ibm/mvs/ihaacee.h"                   /* ACCESSOR ENVIRONMENT ELEMENT */
+#include "ibm/mvs/ichsafp.h"                   /* SAF ROUTER PARAMETER LIST    */
+#include "ibm/mvs/ichsafv.h"                   /* SAF VECTOR TABLE             */
+#include "ibm/mvs/racinit.h"                /* RACINIT parameter list       */
+#include "ibm/mvs/racheck.h"                /* RACHECK parameter list       */
 
 /* racf_auth() attribute values */
 #define RACF_ATTR_READ      RACHECK_ATTR_READ

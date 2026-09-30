@@ -1,6 +1,6 @@
-#include <cvt.h>
-#include <ieebasea.h>   /* Master Scheduler Base, BASE */
-#include <ieezb806.h>   /* MTTABLE, MTENTRY */
+#include <ibm/mvs/cvt.h>
+#include <ibm/mvs/ieebasea.h>   /* Master Scheduler Base, BASE */
+#include <ibm/mvs/ieezb806.h>   /* MTTABLE, MTENTRY */
 #include <clibmtt.h>
 #include <clibos.h>
 #include <clibauth.h>

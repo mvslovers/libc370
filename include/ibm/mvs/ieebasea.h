@@ -17,7 +17,7 @@ typedef struct ieebasea IEEBASEA;
 typedef struct ieebasea BASE;
 
 #ifndef BIT0
-#include <iezbits.h>
+#include <ibm/mvs/iezbits.h>
 #endif
 
 #ifndef BA0

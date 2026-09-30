@@ -1,5 +1,5 @@
 /* @@RDJFCB.C - read job file control block for DCB */
-#include "osjfcb.h"
+#include "ibm/mvs/iefjfcbn.h"
 
 int
 __rdjfcb(DCB *dcb, JFCB *jfcb)

@@ -8,7 +8,7 @@
 */
 typedef struct clibjpa  CLIBJPA;    /* Job Pack Area Anchor                 */
 
-#include "cde.h"
+#include "ibm/mvs/ihacde.h"
 
 struct clibjpa {
     char        jpaeye[8];          /* 00 Eye catcher for dumps "@@CLIB  "  */

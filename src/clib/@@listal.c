@@ -10,8 +10,8 @@
 #include "cliblist.h"       /* __listc()                    */
 #include "clibstr.h"        /* __patmat()                   */
 #include "clibdsab.h"       /* DSAB structs and prototypes  */
-#include "ieftiot.h"
-#include "osjfcb.h"
+#include "ibm/mvs/ieftiot1.h"
+#include "ibm/mvs/iefjfcbn.h"
 
 static int get_dscb_values(DSLIST *dslist);
 static int get_jfcb_values(DSLIST *dslist, JFCB *jfcb);

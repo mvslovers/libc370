@@ -6,7 +6,7 @@
 #include <string.h>
 #include <mvssupa.h>
 #include "rfile.h"
-#include "osdcb.h"
+#include "ibm/mvs/dcbd.h"
 
 int
 rwrite(RFILE *fp, const void *ptr, size_t size)

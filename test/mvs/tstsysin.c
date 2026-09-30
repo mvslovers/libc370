@@ -60,7 +60,7 @@
 #include <errno.h>
 #include <clibwto.h>
 #include <clibdsab.h>
-#include <ieftiot.h>
+#include <ibm/mvs/ieftiot1.h>
 
 static int mbt_run = 0, mbt_passed = 0, mbt_failed = 0;
 
@@ -106,7 +106,7 @@ int main(void)
     CHECK(sysin >= 0, "(1) the SYSIN DD has a TIOT entry");
     CHECK(sysprt >= 0, "(1) the SYSPRINT DD has a TIOT entry");
 
-    /* The discriminator the fix is built on.  ieftiot.h's comment points
+    /* The discriminator the fix is built on.  ibm/mvs/ieftiot1.h's comment points
        at TIOESYIN (X'04') for "spooled SYSIN" and that bit is never set
        on 3.8j; the bit that marks a spool DD is TIOESSDS (X'02'), the VS2
        meaning of the same byte.  A check written from the comment would
