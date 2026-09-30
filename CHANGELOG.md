@@ -46,6 +46,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `srb_getmain()`/`srb_freemain()` had no code behind them and are gone.
 
 ### Fixed
+- **Abend reports show a user abend code again (#68).** `__abrpt()`
+  formatted it with `"U%04D"`; libc370's printf has no `%D` and printed the
+  letter, so a U0123 abend was reported as `UD`. Now `"U%04d"`. The same
+  kind of slip in `localtime64_r()`'s failure message (`"%016LLX"`) printed
+  `LLX` where the time value belonged.
 - **`inline_srb_freemain()` freed from subpool 0 (#248).** Its FREEMAIN read
   `SP+(%2)`, which the macro accepts and then ignores, so storage got from
   `SRB_SUBPOOL` went back to subpool 0. Now `SP=(%2)`; the expansion loads

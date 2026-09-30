@@ -333,7 +333,7 @@ recovery(SDWA *sdwa, void *udata)
     }
     else {
         abcode = (abcode & 0x00000FFF);
-        sprintf(abend, "U%04D", abcode);
+        sprintf(abend, "U%04d", abcode);
     }
 
     __asm__("MVC\t0(8,%0),0(%1)" : : "r" (psw), "r" (&sdwa->SDWAEMK1));

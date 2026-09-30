@@ -1,3 +1,5 @@
 # Differences sdk/gate.py accepts for THIS change only: '<asm|symbol|member>
 # <name> <reason>'.  An entry that matches no difference fails the gate, so
 # the next change finds these stale and empties the file.  See sdk/gate.py.
+asm src/clib/@@abrpt.s format string only: "U%04D" -> "U%04d", a user abend printed as "UD" (#68)
+asm src/time64/tm64ltmr.s format string only: "%016LLX" -> "%016llX", printed "LLX" instead of the value (#68)
