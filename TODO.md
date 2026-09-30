@@ -1258,7 +1258,8 @@ Pointers only. The reasoning lives in the closing comments and the PRs.
   `@@freepd.c`/`malloc.c` call `arraycount`/`arrayfree`/`wto_traceback`. `-Wall`
   implicit declarations 155 in 127 TUs -> 133 in 108, none new; the 23 touched
   TUs assemble byte-identical. #39 stays open for steps 2 and 3. Filed out of
-  it: #240, #241.
+  it: #240, #241. Not released; `edge` moved to the merge (`6b95432`), sysroot
+  installed from main.
 
 - **#236** (PR #239, merged 2026-09-29) - `fwrite()` in record mode refuses
   with `EINVAL`, error flag clear, what exceeds LRECL (LRECL-4 spanned, a
