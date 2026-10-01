@@ -150,20 +150,20 @@ int __fpupc(FILE *fp, int c)
 
 /* ---- the real thing ---------------------------------------------------- */
 
-#include "../../src/clib/@@fflush.c"
+#include "../../src/stdio/@@fflush.c"
 #undef begwrite
 #undef finwrite
-#include "../../src/clib/@@fwrite.c"
-#include "../../src/clib/@@fputc.c"
+#include "../../src/stdio/@@fwrite.c"
+#include "../../src/stdio/@@fputc.c"
 /* @@fgetc.c calls isspace() without including <ctype.h>; cc370 tolerates
    the implicit declaration, a modern host compiler does not. */
 #include <ctype.h>
-#include "../../src/clib/@@isbuf.c"   /* isspace() is a table macro */
-#include "../../src/clib/@@fgetc.c"
-#include "../../src/clib/@@fread.c"
-#include "../../src/clib/clearerr.c"
-#include "../../src/clib/feof.c"
-#include "../../src/clib/ferror.c"
+#include "../../src/stdio/@@isbuf.c"   /* isspace() is a table macro */
+#include "../../src/stdio/@@fgetc.c"
+#include "../../src/stdio/@@fread.c"
+#include "../../src/stdio/clearerr.c"
+#include "../../src/stdio/feof.c"
+#include "../../src/stdio/ferror.c"
 
 /* ---- a FILE the shims can serve --------------------------------------- */
 

@@ -145,7 +145,7 @@ for f in git("ls-files").splitlines():
     have = {m.group(2) for m in INC.finditer(t)}
     add = [h for h, n in needs.items() if n & words and h not in have]
     # sleep/usleep defined here, or the word used as something else: skip
-    if f in ("src/clib/sleep.c", "src/clib/usleep.c"):
+    if f in ("src/unistd/sleep.c", "src/unistd/usleep.c"):
         add = [h for h in add if h != "unistd.h"] + (["unistd.h"] if "unistd.h" not in have else [])
     if add:
         m = INC.search(t)

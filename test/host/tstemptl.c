@@ -101,8 +101,8 @@ int __fpupc(FILE *fp, int c)
 
 /* ---- the real thing ---------------------------------------------------- */
 
-#include "../../src/clib/@@fflush.c"
-#include "../../src/clib/@@fputc.c"
+#include "../../src/stdio/@@fflush.c"
+#include "../../src/stdio/@@fputc.c"
 
 /* ---- a FILE the shim can serve ----------------------------------------- */
 

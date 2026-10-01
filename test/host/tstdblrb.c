@@ -42,7 +42,7 @@
 #undef  DBL_MANT_DIG
 #define DBL_MANT_DIG 14
 
-#include "../../src/clib/@@dblcvt.c"
+#include "../../src/stdio/@@dblcvt.c"
 
 #ifdef DBLCVT_NO_RSIZE
 #define CVT(v, t, w, p, buf, size) __dblcvt(v, t, w, p, buf)

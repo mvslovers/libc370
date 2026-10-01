@@ -71,11 +71,11 @@ int     strcmp(const char *, const char *);
 #include <stdint.h>
 #include <wchar.h>
 
-#include "../../src/clib/mblen.c"
-#include "../../src/clib/mbtowc.c"
-#include "../../src/clib/wctomb.c"
-#include "../../src/clib/mbstowcs.c"
-#include "../../src/clib/wcstombs.c"
+#include "../../src/stdlib/mblen.c"
+#include "../../src/stdlib/mbtowc.c"
+#include "../../src/stdlib/wctomb.c"
+#include "../../src/stdlib/mbstowcs.c"
+#include "../../src/stdlib/wcstombs.c"
 
 /* ---- harness ---------------------------------------------------------- */
 static int mbt_run = 0, mbt_passed = 0, mbt_failed = 0;

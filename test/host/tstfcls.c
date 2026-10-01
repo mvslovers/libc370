@@ -174,11 +174,11 @@ static void tst_free(void *p)
 }
 
 #define free tst_free
-#include "../../src/clib/fclose.c"
-#include "../../src/clib/@@fpterm.c"
+#include "../../src/stdio/fclose.c"
+#include "../../src/stdio/@@fpterm.c"
 #undef free
 
-#include "../../src/clib/fflush.c"
+#include "../../src/stdio/fflush.c"
 
 /* ---- harness ---------------------------------------------------------- */
 

@@ -13,7 +13,7 @@
  *
  *   RLSE is a JFCB attribute honoured at CLOSE of the DCB opened against the
  *   DD that carried it.  fclose() runs __aclose(fp->dcb) BEFORE __fpfree()
- *   drops the DD (src/clib/fclose.c) - so the DD that fopen() allocated is
+ *   drops the DD (src/stdio/fclose.c) - so the DD that fopen() allocated is
  *   still there when CLOSE looks, and an attribute set on it takes effect.
  *   ftpd, by contrast, allocates with __dsalcf(), __dsfree()s that DD, and
  *   then fopen()s the data set by name: whatever __dsalc() put on the first
@@ -364,9 +364,9 @@ int __txrecf(TXT99 ***txt99, const char *recfm)
 /* --------------------------------------------------------------------------
  * The code under test.
  * ------------------------------------------------------------------------ */
-#include "../../src/clib/@@fpmode.c"
-#include "../../src/clib/@@fpold.c"
-#include "../../src/clib/@@fpnew.c"
+#include "../../src/stdio/@@fpmode.c"
+#include "../../src/stdio/@@fpold.c"
+#include "../../src/stdio/@@fpnew.c"
 
 #include "../../src/mvs/dynalloc/@@txrddn.c"
 #include "../../src/mvs/dynalloc/@@txdsn.c"

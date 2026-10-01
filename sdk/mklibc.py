@@ -31,13 +31,11 @@ AR370 = "ar370"
 BUILD = f"{ROOT}/build/sdk"
 VERSION = open(f"{ROOT}/VERSION").read().strip() if os.path.exists(f"{ROOT}/VERSION") else "1.0.11-dev"
 
-# library sources: every .c and .asm under src/, wherever it sits (#278), and
-# the hand-written .asm still in asm/ until it moves beside its C.  Code kept
-# but never built lives in attic/, outside src/.  All objects share one directory and the archive
+# library sources: every .c and .asm under src/, where src/ mirrors include/
+# (#278) and assembler sits beside its C.  Code kept but never built lives in
+# attic/, outside src/.  All objects share one directory and the archive
 # member is <stem>.o, so a stem may exist only once -- sources() enforces it.
 SRC_DIR = f"{ROOT}/src"
-NOT_BUILT = ()     # directories under src/ the build skips; none since attic/
-ASM_DIR = f"{ROOT}/asm"
 # -Wuninitialized is not implied by -Wall in this gcc 3.4.6 and needs -O to run
 # at all, so it has to be named here (#102).  It finds #99 -- __loadhi() calling
 # fclose() on stack residue -- at the -O1 the build already uses.
@@ -56,11 +54,7 @@ VER_C = "@@ver.c"       # build-stamp TU, found by name wherever it sits (see gi
 
 def sources(ext):
     """every library source with this extension, sorted by path"""
-    out = [p for p in glob.glob(f"{SRC_DIR}/**/*{ext}", recursive=True)
-           if os.path.relpath(p, SRC_DIR).split(os.sep)[0] not in NOT_BUILT]
-    if ext == ".asm":
-        out += glob.glob(f"{ASM_DIR}/*.asm")
-    return sorted(out)
+    return sorted(glob.glob(f"{SRC_DIR}/**/*{ext}", recursive=True))
 
 
 def stem_clashes():

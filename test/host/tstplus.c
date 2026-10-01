@@ -170,22 +170,22 @@ static void init_tolow(void)
 
 /* ---- the real thing ---------------------------------------------------- */
 
-#include "../../src/clib/@@isbuf.c"   /* isspace() is a table macro */
-#include "../../src/clib/@@fpmode.c"
-#include "../../src/clib/@@fpopen.c"
-#include "../../src/clib/@@fflush.c"
+#include "../../src/stdio/@@isbuf.c"   /* isspace() is a table macro */
+#include "../../src/stdio/@@fpmode.c"
+#include "../../src/stdio/@@fpopen.c"
+#include "../../src/stdio/@@fflush.c"
 #undef begwrite
 #undef finwrite
-#include "../../src/clib/@@fputc.c"
-#include "../../src/clib/@@fgetc.c"
-#include "../../src/clib/@@fread.c"
-#include "../../src/clib/@@fseek.c"
-#include "../../src/clib/@@fpswt.c"
+#include "../../src/stdio/@@fputc.c"
+#include "../../src/stdio/@@fgetc.c"
+#include "../../src/stdio/@@fread.c"
+#include "../../src/stdio/@@fseek.c"
+#include "../../src/stdio/@@fpswt.c"
 #undef fseek
 #undef ftell
-#include "../../src/clib/fseek.c"
-#include "../../src/clib/ftell.c"
-#include "../../src/clib/clearerr.c"
+#include "../../src/stdio/fseek.c"
+#include "../../src/stdio/ftell.c"
+#include "../../src/stdio/clearerr.c"
 
 /* ---- helpers ------------------------------------------------------------ */
 

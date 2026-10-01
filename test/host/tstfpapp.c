@@ -96,8 +96,8 @@ static void init_tolow(void)
 
 /* ---- the real thing ---------------------------------------------------- */
 
-#include "../../src/clib/@@fpmode.c"
-#include "../../src/clib/@@fpopen.c"
+#include "../../src/stdio/@@fpmode.c"
+#include "../../src/stdio/@@fpopen.c"
 
 static int modeof(const char *m)
 {
