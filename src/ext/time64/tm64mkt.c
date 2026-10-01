@@ -31,7 +31,7 @@ THE SOFTWARE.
 #include <time.h>
 #include <errno.h>
 #include <ext/time64.h>
-#include "src/time64/calendar.h"
+#include "src/ext/time64/calendar.h"
 
 __asm__("\n&FUNC    SETC 'mktime64'");
 time64_t mktime64(struct tm *input_date) 

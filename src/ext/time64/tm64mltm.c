@@ -3,16 +3,17 @@
 #include <string.h>
 #include <time.h>
 #include <ext/time64.h>
-#include "src/time64/calendar.h"
+#include "src/ext/time64/calendar.h"
 #include "stddef.h"
 #include "mvs/crt.h"
 
-__asm__("\n&FUNC    SETC 'gmtime64'");
-struct tm *localtime64(const time64_t *timer)
+struct tm *mlocaltime64(const mtime64_t *mtimer)
 {
     CLIBCRT     *crt    = __crtget();
     struct tm   *tms    = (struct tm*)crt->crttms;
+	time64_t	timer;
+	
+	__64_div_u32((mtime64_t *)mtimer, 1000, &timer);
 
-	return localtime64_r(timer, tms);
+	return localtime64_r(&timer, tms);
 }
-

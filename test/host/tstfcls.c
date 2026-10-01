@@ -45,9 +45,9 @@
  *     cc -std=gnu99 -Wall -Wextra \
  *        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
  *        -I $R/include -I $R/src/internal -o t tstfcls.c \
- *        "$R/src/clib/@@aradd.c" "$R/src/clib/@@arnew.c" \
- *        "$R/src/clib/@@arcou.c" "$R/src/clib/@@ardel.c" \
- *        "$R/src/clib/@@arfre.c" "$R/src/clib/@@arget.c" && ./t
+ *        "$R/src/ext/array/@@aradd.c" "$R/src/ext/array/@@arnew.c" \
+ *        "$R/src/ext/array/@@arcou.c" "$R/src/ext/array/@@ardel.c" \
+ *        "$R/src/ext/array/@@arfre.c" "$R/src/ext/array/@@arget.c" && ./t
  *
  * RC: 0 = every check passed, 1 = at least one did not.
  */

@@ -39,7 +39,7 @@ gmtime64_r() is a 64-bit equivalent of gmtime_r().
 #include <time.h>
 #include <errno.h>
 #include <ext/time64.h>
-#include "src/time64/calendar.h"
+#include "src/ext/time64/calendar.h"
 
 /* Year cycle from MAX_SAFE_YEAR down. */
 __asm__("\n* safe_years_high");

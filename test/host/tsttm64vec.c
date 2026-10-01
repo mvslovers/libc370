@@ -40,7 +40,7 @@
  * the SAME literals, so the table is checked without an MVS and without
  * pretending to have exercised __64.
  *
- * It also checks the TOD epoch constant that src/time64/tm64clck.c,
+ * It also checks the TOD epoch constant that src/ext/time64/tm64clck.c,
  * tm64mclk.c and tm64uclk.c each subtract, against the calendar rather
  * than against itself.
  *
