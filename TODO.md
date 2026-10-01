@@ -411,7 +411,13 @@ checklist is #245.
      23018 members walked, JOB01076); `__listpd()` NULL/ENOMEM instead of a
      short list. #61 (`__listvl()`, same silent truncation) to follow the
      same convention
-   - **open:** #172, #50 (method first) -- each needs an MVS run
+   - #172 (#304, migration row #306): `fopen()` takes `unit=`/`volser=`
+     and `DATASET_UNIT`/`DATASET_VOLSER`; `S99NOMNT` when either is named
+     -- without it an unmounted volser waited on IEF238D for the operator
+     (JOB01082), with it NULL at once (JOB01084). Found on the way: the
+     mode string never upper-cased a parenthesised list. Same wait still in
+     `__dsalc()` `VOLSER=` (#305, ftpd's STOR path)
+   - **open:** #50 (method first) -- needs an MVS run
    Each with a test and a CHANGELOG entry; the gate shows the intended code
    changes (`gate-allow.txt`); anything touching MVS behaviour is tested on
    MVS (Mike's OK per run).
