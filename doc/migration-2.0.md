@@ -1,9 +1,9 @@
 # Migrating a consumer from libc370 1.x to 2.0
 
-**Status: the maps are complete for phases 1 and 2 on the branch `2.0`; the
-migration script that reads them is still to be written (#245).** This
-document says what the maps mean and how to apply them, so that a script, an
-agent or a person migrates every consumer the same way.
+**Status: the maps are complete on the branch `2.0`.** This document says
+what the maps mean and how to apply them, so that an agent or a person
+migrates every consumer the same way. There is no migration script: an agent
+does it, briefed by `doc/migration-2.0-agent.md` (decided 2026-10-01).
 
 2.0 is a hard cut (D4 in `doc/design-2.0.md`): no compatibility headers, no
 deprecated names. Function names do not change — only where they are
