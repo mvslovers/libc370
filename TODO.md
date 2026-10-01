@@ -427,11 +427,17 @@ checklist is #245.
    Each with a test and a CHANGELOG entry; the gate shows the intended code
    changes (`gate-allow.txt`); anything touching MVS behaviour is tested on
    MVS (Mike's OK per run).
-7. **Consumer migration script**, reading `sdk/headermap.tsv`,
-   `sdk/names.tsv`, `sdk/removed.tsv` and `sdk/splits/*`
-   (`doc/migration-2.0.md`). Tried locally on httpd, mvsMF and ftpd before
-   any PR -- it is the real test of the maps.
-8. **Prerelease `v2.0.0-rc.1`**, tagged on the branch `2.0`, not on `main`.
+7. **Consumer migration -- by an agent, not a script** (decided
+   2026-10-01, #309): `doc/migration-2.0-agent.md` is the brief, with
+   `doc/migration-2.0.md` as the specification. Consumers port against the
+   rolling tag **`v2.0.0-dev`** on `2.0` (moved after each merge into `2.0`;
+   `edge` stays 1.x, brexx370 pins it) -- `[toolchain] libc370 = "2.0.0-dev"`
+   plus `libc370_ref: v2.0.0-dev` in build.yml. Local 2.0 builds use the
+   second toolchain `~/.local/opt/cc370-libc2` (refresh after moving the tag);
+   `~/.local` keeps 1.0.8. **ufsd first**; no ufsd release from the ported
+   tree until ftpd, httpd and mvsMF follow (`libufs.h` is public).
+8. **Prerelease `v2.0.0-rc1`** (mbt takes `-rcN`, not `-rc.1`), tagged on
+   the branch `2.0`, not on `main`.
    Before it, run the stdio MVS probes once on the `2.0` build: #300's
    gnu99 switch changed the code of `@@fpswt`/`@@fseek` (registers only by
    analysis, but the host tests cannot show it).
