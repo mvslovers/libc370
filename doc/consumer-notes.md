@@ -337,8 +337,8 @@ This is a property of the design, not a defect.
 members, drawn from SYS1.MACLIB, SYS1.AMODGEN and (for `$pso`, `$pddb`, `$sjb`,
 `$cmb`, `$tqe`) HASPSRC. It is deliberately **not** a general SYS1.MACLIB
 mirror; the criterion, the three exceptions and what a project does when it
-needs something else are below. `maclib/` holds the crent/PDP macros; the crent
-macros win on a name collision. `as370` gets both via `-I`, and `make install`
+needs something else are below. `maclib/` holds libc370's own PDP macros; they
+win on a name collision. `as370` gets both via `-I`, and `make install`
 copies them to `<sysroot>/macros`, which an installed as370 finds by default
 (otherwise `AS370_MACLIB=`).
 

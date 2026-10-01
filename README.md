@@ -57,7 +57,7 @@ src/          the implementation, mirroring include/ -- src/stdio/, src/ext/time
               DYN75 provider; src/s370/ the 64-bit arithmetic the compiler calls;
               src/internal/ shared private headers, never installed
 attic/        code kept but never built
-maclib/       PDP / crent assembler macros
+maclib/       PDP / libc370 assembler macros
 sysmac/       vendored SYS1.MACLIB members
 sdk/          mklibc.py — the build-and-install engine (driven by the Makefile)
 ```
