@@ -417,7 +417,12 @@ checklist is #245.
      (JOB01082), with it NULL at once (JOB01084). Found on the way: the
      mode string never upper-cased a parenthesised list. Same wait still in
      `__dsalc()` `VOLSER=` (#305, ftpd's STOR path)
-   - **open:** #50 (method first) -- needs an MVS run
+   - #50 (#307): `DSLIST.catnm`, a shared `const char *` from LISTCAT's
+     per-entry `IN-CAT` line (JOB01086) -- 104 bytes, still 128 of GETMAIN
+     where a `char[45]` would cost 192; measured through `__listds()`
+     (JOB01088). Found #308 (an entry without VOLSER swallows the next)
+   - **Tier 5 done.** Left over from it: #305 (`__dsalc()` `VOLSER=` waits
+     on IEF238D), #308, #61 (`__listvl()` truncation)
    Each with a test and a CHANGELOG entry; the gate shows the intended code
    changes (`gate-allow.txt`); anything touching MVS behaviour is tested on
    MVS (Mike's OK per run).
