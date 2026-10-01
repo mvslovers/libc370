@@ -1,9 +1,9 @@
 /* @@75SOCK.C
 ** request socket allocation
 */
-#include "src/internal/x75.h"
+#include "src/net/dyn75/x75.h"
 #include "sys/socket.h"
-#include "src/internal/dyn75.h"
+#include "src/net/dyn75/dyn75.h"
 #include "errno.h"
 #include "mvs/socket.h"
 #include "mvs/crt.h"

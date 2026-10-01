@@ -2,10 +2,10 @@
 ** Get host by address
 */
 #include <stdio.h>
-#include "src/internal/x75.h"
+#include "src/net/dyn75/x75.h"
 #include "sys/socket.h"
 #include "netdb.h"
-#include "src/internal/dyn75.h"
+#include "src/net/dyn75/dyn75.h"
 #include "stdlib.h"
 #include "string.h"
 #include "mvs/crt.h"

@@ -5,7 +5,7 @@
  * __muldi3, __divdi3, __moddi3, __udivdi3, __umoddi3 and __negdi2
  * (@@MULDI3, @@DIVDI3, @@MODDI3, @@UDIVDI, @@UMODDI, @@NEGDI2), and libc370
  * - which is cc370's libgcc - defined none of them, so such a program did
- * not link.  src/clib/@@muldi3.c, @@divdi3.c and @@negdi2.c add them.
+ * not link.  src/s370/@@muldi3.c, @@divdi3.c and @@negdi2.c add them.
  *
  * This test #includes those three TUs and checks every entry point against
  * the host's native 64-bit arithmetic: a table of edge operands crossed
@@ -48,12 +48,12 @@
 #include <limits.h>
 
 /* each TU carries its own dw_t; rename two of them so the three coexist */
-#include "../../src/clib/@@muldi3.c"
+#include "../../src/s370/@@muldi3.c"
 #define dw_t dw_div_t
-#include "../../src/clib/@@divdi3.c"
+#include "../../src/s370/@@divdi3.c"
 #undef dw_t
 #define dw_t dw_neg_t
-#include "../../src/clib/@@negdi2.c"
+#include "../../src/s370/@@negdi2.c"
 #undef dw_t
 
 typedef long long ll;

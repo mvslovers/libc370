@@ -93,6 +93,10 @@ def cmd_move():
         if t != raw:
             open(p, "wb").write(t)
     print(f"[srcmap] {len(todo)} moved under {prefix}, {n} mention(s) rewritten")
+    # a note in sdk/headermap.tsv may have named a moved file: the design's
+    # table is rendered from it
+    import headermap
+    headermap.cmd_render()
     return cmd_check()
 
 

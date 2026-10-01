@@ -2,10 +2,10 @@
 ** Close any sockets we allocated but haven't closed yet.
 */
 #include <stdio.h>
-#include "src/internal/x75.h"
+#include "src/net/dyn75/x75.h"
 #include "sys/socket.h"
 #include "sys/select.h"
-#include "src/internal/dyn75.h"
+#include "src/net/dyn75/dyn75.h"
 
 extern void
 __75exit(void) 

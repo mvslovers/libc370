@@ -1,10 +1,10 @@
 /* @@75SEND.C
 ** Send data to a socket
 */
-#include "src/internal/x75.h"
+#include "src/net/dyn75/x75.h"
 #include "sys/socket.h"
 #include "mvs/socket.h"
-#include "src/internal/dyn75.h"
+#include "src/net/dyn75/dyn75.h"
 #include "errno.h"
 
 /* A blocking socket (FIONBIO never set) whose host send buffer is full gets
