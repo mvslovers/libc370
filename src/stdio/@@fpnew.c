@@ -17,6 +17,8 @@ __fpnew(FILE *fp)
     char        *lrecl  = getenv("DATASET_LRECL");
     char		*blksize= getenv("DATASET_BLKSIZE");
     char        *space  = getenv("DATASET_SPACE");
+    char        *unit   = getenv("DATASET_UNIT");
+    char        *volser = getenv("DATASET_VOLSER");
     char        *p      = 0;
     char 		*t;
     TXT99       **txt99 = NULL;
@@ -42,12 +44,17 @@ __fpnew(FILE *fp)
 			else {
 				/* convert "name=(val1,val2)..." to "name=val1,val2..." */
 				strcpy(p, p+1);
+				*p = toupper(*p);
 			}
+			/* the list keeps its commas, and is folded to upper case like
+			   the rest: "volser=(pub001,pub002)" has to reach SVC 99 as
+			   PUB001,PUB002 (#172) */
 			for(p++;*p; p++) {
 				if (*p==')') {
 					strcpy(p,p+1);
 					break;
 				}
+				*p = toupper(*p);
 			}
 		}
 		
@@ -61,6 +68,8 @@ __fpnew(FILE *fp)
 		else if (strstr(p, "LRECL=")) lrecl = p+6;
 		else if (strstr(p, "BLKSIZE=")) blksize = p+8;
 		else if (strstr(p, "SPACE=")) space = p+6;
+		else if (strstr(p, "UNIT=")) unit = p+5;
+		else if (strstr(p, "VOLSER=")) volser = p+7;
 	}
 
 #if 0 /* debugging */
@@ -148,6 +157,19 @@ __fpnew(FILE *fp)
         if (err) goto quit;
     }
 
+    /* UNIT= and VOL=SER=, on request (#172).  Only when set and not empty:
+       __txunit() and __txvols() fail on an empty value, and without either
+       the request has to stay what it always was. */
+    if (unit && *unit) {
+        err = __txunit(&txt99, unit);
+        if (err) goto quit;
+    }
+
+    if (volser && *volser) {
+        err = __txvols(&txt99, volser);   /* "vol1[,vol2...]" */
+        if (err) goto quit;
+    }
+
     count = arraycount(&txt99);
     if (!count) goto quit;
 
@@ -159,6 +181,12 @@ __fpnew(FILE *fp)
     rb99.len        = sizeof(RB99);
     rb99.request    = S99VRBAL;
     rb99.flag1      = S99NOCNV;
+    /* A caller that names a unit or a volume gets an answer, not a wait:
+       without S99NOMNT a volume that is not mounted sends SVC 99 into
+       allocation recovery (IEF238D), and the task stops until an operator
+       replies (#172).  Only then - without either, the request stays the
+       one it always was. */
+    if ((unit && *unit) || (volser && *volser)) rb99.flag1 |= S99NOMNT;
     rb99.txtptr     = txt99;
 
     /* SVC 99 */
