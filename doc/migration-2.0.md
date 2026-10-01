@@ -65,6 +65,17 @@ A consumer's own header that shares a basename with a libc370 header (httpd
 has its own `RES`, brexx370 its own `printf.h`) is not libc370's: resolve
 includes against the consumer's own tree first.
 
+## Changed meaning — a person decides
+
+The maps place names; they cannot say that a name kept its place and changed
+what it means. Those cases are listed here. A script finds the uses and hands
+them over; it does not rewrite them.
+
+| name | 1.x | 2.0 | known uses (2026-10-01) |
+|---|---|---|---|
+| `in_addr_t` | `struct in_addr` | `unsigned long`, the address itself | httpd `credentials/src/credtest.c:47` casts to `in_addr_t *` for `inet_aton()`: becomes `struct in_addr *`; brexx370 `compat/jccompat.c:368`, whose `inet_addr()` libc370 now provides |
+| `inet_aton()` | 0 = address, -1 = none; second argument `in_addr_t *` | 1 = address, 0 = none (BSD); `struct in_addr *` | httpd `credtest.c` ignores the result; brexx370 already expects BSD's |
+
 ## Verifying a migrated consumer
 
 - It builds against the 2.0 sysroot with `-Wall -Werror`. An implicit

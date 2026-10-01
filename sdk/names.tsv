@@ -1343,6 +1343,7 @@ IND10	mvs/dscb.h
 IND20	mvs/dscb.h
 IND40	mvs/dscb.h
 IND80	mvs/dscb.h
+INET_ADDRSTRLEN	netinet/in.h
 INT16_C	stdint.h
 INT16_MAX	stdint.h
 INT16_MIN	stdint.h
@@ -4140,7 +4141,11 @@ ikjpscb	ibm/mvs/ikjpscb.h
 ikjupt	ibm/mvs/ikjupt.h
 in_addr	netinet/in.h
 in_addr_t	netinet/in.h
+inet_addr	arpa/inet.h
 inet_aton	arpa/inet.h
+inet_ntoa	arpa/inet.h
+inet_ntop	arpa/inet.h
+inet_pton	arpa/inet.h
 initssob	mvs/jes2.h
 int16_t	stdint.h
 int32_t	stdint.h
@@ -4398,6 +4403,7 @@ snprintf	stdio.h
 sockaddr	sys/socket.h
 sockaddr_in	netinet/in.h
 socket	sys/socket.h
+socklen_t	sys/socket.h
 spool_close	mvs/jes2spool.h
 spool_open	mvs/jes2spool.h
 spool_read	mvs/jes2spool.h
