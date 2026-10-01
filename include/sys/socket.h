@@ -7,6 +7,9 @@
 
 #include <netinet/in.h>
 
+/* socklen_t - a length of socket data (POSIX: at least 32 bits) */
+typedef unsigned int    socklen_t;
+
 struct sockaddr {
     unsigned short    sa_family;    /* address family, AF_xxx */
     char              sa_data[14];  /* 14 bytes of protocol address */

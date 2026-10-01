@@ -5,20 +5,16 @@
 ** libc370 2.0 splits this out of socket.h (#256).
 */
 
-#if 0
+/* in_addr_t - an IPv4 address in network byte order (POSIX: an unsigned
+** integer of 32 bits).  unsigned long is 32 bits here and is the type s_addr
+** has always had; 1.x made in_addr_t the struct itself (#51). */
+typedef unsigned long   in_addr_t;
+
 struct in_addr {
-    union {
-        struct { unsigned char s_b1,s_b2,s_b3,s_b4; } S_un_b;
-        struct { unsigned short s_w1,s_w2; } S_un_w;
-        unsigned long S_addr;
-    } S_un_a;
+    in_addr_t s_addr;
 };
-#else
-struct in_addr {
-    unsigned long s_addr;
-};
-#endif
-typedef struct in_addr	in_addr_t;
+
+#define INET_ADDRSTRLEN 16  /* "255.255.255.255" and its NUL            */
 
 struct sockaddr_in {
     short   sin_family;

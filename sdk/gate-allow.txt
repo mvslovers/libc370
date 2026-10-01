@@ -1,3 +1,16 @@
 # Differences sdk/gate.py accepts for THIS change only: '<asm|symbol|member>
 # <name> <reason>'.  An entry that matches no difference fails the gate, so
 # the next change finds these stale and empties the file.  See sdk/gate.py.
+asm     @@inaton.s    inet_aton() rewritten: BSD return (1/0), refuses trailing junk (#51)
+asm     @@inaddr.s    new: inet_addr() (#51)
+member  @@inaddr.o    new: inet_addr() (#51)
+symbol  @@INADDR    new: inet_addr() (#51)
+asm     @@inntoa.s    new: inet_ntoa() (#51)
+member  @@inntoa.o    new: inet_ntoa() (#51)
+symbol  @@INNTOA    new: inet_ntoa() (#51)
+asm     @@inntop.s    new: inet_ntop() (#51)
+member  @@inntop.o    new: inet_ntop() (#51)
+symbol  @@INNTOP    new: inet_ntop() (#51)
+asm     @@inpton.s    new: inet_pton() (#51)
+member  @@inpton.o    new: inet_pton() (#51)
+symbol  @@INPTON    new: inet_pton() (#51)

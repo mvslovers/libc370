@@ -6,7 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- **`inet_addr()`, `inet_ntoa()`, `inet_pton()`, `inet_ntop()` in
+  `<arpa/inet.h>` (#51).** `AF_INET` only. None of them uses `scanf` or
+  `printf`, so converting an address no longer pulls either into a load
+  module (ftpd's `sscanf("%u.%u.%u.%u")` was the case in point).
+  `inet_ntoa()` keeps BSD's semantics -- one buffer, overwritten by the next
+  call -- but takes it per process from `__wsaget()`, since a reentrant load
+  module cannot write a static; between threads use `inet_ntop()`.
+  `INET_ADDRSTRLEN` (`<netinet/in.h>`) and `socklen_t` (`<sys/socket.h>`)
+  come with them.
+
 ### Changed
+- **`in_addr_t` is an integer and `inet_aton()` returns 1 for an address
+  (#51).** 1.x defined `in_addr_t` as `struct in_addr` and had `inet_aton()`
+  return 0 for an address and -1 for none -- the opposite of BSD, z/OS and
+  Linux, so code written for them read every valid address as an error.
+  2.0 follows POSIX: `in_addr_t` is `unsigned long` (32 bits, the type
+  `s_addr` always had), `struct in_addr` holds it as `s_addr`, and
+  `inet_aton(const char *, struct in_addr *)` returns 1 or 0. It also refuses
+  what 1.x took: anything after the last part but a blank (`"1.2.3.4x"`), and
+  a first part above 255 in the four-part form. Code that used `in_addr_t`
+  as the struct says `struct in_addr` instead; code that tested
+  `inet_aton() == 0` for success inverts the test. `struct in_addr` and
+  `sin_addr` keep their layout.
 - **`make install` replaces the sysroot's `include/` instead of adding to it
   (#256).** It clears the directory, then copies the header tree with its
   subdirectories, which 2.0 introduces (`mvs/`, `ibm/mvs/`, ...). Before, it
