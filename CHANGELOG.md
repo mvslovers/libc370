@@ -43,6 +43,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   request is the one 1.x sent. They apply where the other DCB keywords do:
   only when `fopen()` creates the data set (DISP=NEW). Environment values are
   passed as given, not folded to upper case, as `DATASET_RECFM` always was.
+  A request that names a unit or a volume carries `S99NOMNT`: without it a
+  volume that is not mounted does not fail -- SVC 99 goes into allocation
+  recovery (`IEF238D REPLY DEVICE NAME OR 'CANCEL'`) and the task waits for
+  the operator (JOB01082). With it, `fopen()` returns NULL at once
+  (JOB01084). Measured on MVS 3.8j (mvsdev, JOB01084): with `unit=sysda,
+  volser=pub001`, with `volser=pub001` alone, and through the environment,
+  the data set is in the catalog and in the VTOC on PUB001, where the same
+  `fopen()` without them put it on WORK01.
   Also fixed on the way: the mode string folded everything to upper case
   except what stood in parentheses, so a volume list would have reached
   SVC 99 in lower case. No earlier keyword changes its result: `lrecl=`,

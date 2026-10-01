@@ -181,6 +181,12 @@ __fpnew(FILE *fp)
     rb99.len        = sizeof(RB99);
     rb99.request    = S99VRBAL;
     rb99.flag1      = S99NOCNV;
+    /* A caller that names a unit or a volume gets an answer, not a wait:
+       without S99NOMNT a volume that is not mounted sends SVC 99 into
+       allocation recovery (IEF238D), and the task stops until an operator
+       replies (#172).  Only then - without either, the request stays the
+       one it always was. */
+    if ((unit && *unit) || (volser && *volser)) rb99.flag1 |= S99NOMNT;
     rb99.txtptr     = txt99;
 
     /* SVC 99 */

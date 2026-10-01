@@ -15,6 +15,13 @@
  * the mode string, and DATASET_UNIT / DATASET_VOLSER in the environment.  The
  * mode string wins over the environment, as it does for the other four.
  *
+ * S99NOMNT, WHEN A UNIT OR VOLUME IS NAMED: measured on mvsdev (JOB01082), a
+ * volser that is not mounted does not fail the request - SVC 99 goes into
+ * allocation recovery, IEF238D REPLY DEVICE NAME OR 'CANCEL', and the task
+ * waits for the operator.  So a request that names either carries S99NOMNT
+ * ("do not mount volumes or consider offline units"), and one that names
+ * neither keeps the flag byte it always had.  Cases (1)-(6) check that byte.
+ *
  * THE TRAP THE FIX HAS TO STEP AROUND: __txunit() and __txvols() return 1 -
  * failure - for a NULL or empty argument.  Calling them unconditionally makes
  * EVERY DISP=NEW fopen() fail.  Case (1) is the guard against exactly that,
@@ -232,6 +239,7 @@ static int svc99_calls;
 static int svc99_ntu;
 static int svc99_endmark;
 static int svc99_identity;
+static int svc99_flag1;             /* the request block's first flag byte */
 
 static struct {
     unsigned      dal;
@@ -250,6 +258,7 @@ int __svc99(void *rb)
     svc99_ntu      = tu_count;
     svc99_endmark  = 0;
     svc99_identity = 1;
+    svc99_flag1    = rb99->flag1;
 
     for (n = 0; n < tu_count; n++) {
         int bytes = tu_bytes[n] < MAX_TEXT ? tu_bytes[n] : MAX_TEXT;
@@ -382,6 +391,7 @@ static int setup(const char *mode)
     svc99_ntu      = 0;
     svc99_endmark  = 0;
     svc99_identity = 0;
+    svc99_flag1    = 0;
     return rc;
 }
 
@@ -417,6 +427,7 @@ int main(void)
     CHECK(has_dal(DALTRK), "DALTRK present");
     CHECK(!has_dal(DALUNIT), "no DALUNIT");
     CHECK(!has_dal(DALVLSER), "no DALVLSER");
+    CHECK_EQ(svc99_flag1, S99NOCNV, "flag1 is S99NOCNV alone, as before");
 
     CHECK_EQ(setup("w"), 0, "__fpmode(\"w\") ok");
     rc = __fpnew(&fh);
@@ -424,6 +435,7 @@ int main(void)
     CHECK_EQ(rc, 0, "__fpnew() with a bare \"w\" succeeded");
     CHECK(!has_dal(DALUNIT), "no DALUNIT");
     CHECK(!has_dal(DALVLSER), "no DALVLSER");
+    CHECK_EQ(svc99_flag1, S99NOCNV, "flag1 is S99NOCNV alone, as before");
 
     /* ---------------------------------------------------------------- */
     printf("\n(2) \"unit=sysda\" -> DALUNIT SYSDA\n");
@@ -438,6 +450,7 @@ int main(void)
         CHECK(entry_is(n, 0, "SYSDA"), "DALUNIT text SYSDA");
     }
     CHECK(!has_dal(DALVLSER), "no DALVLSER");
+    CHECK_EQ(svc99_flag1, S99NOCNV | S99NOMNT, "unit alone: S99NOMNT set");
 
     /* ---------------------------------------------------------------- */
     printf("\n(3) \"volser=pub001\" -> DALVLSER PUB001\n");
@@ -452,6 +465,7 @@ int main(void)
         CHECK(entry_is(n, 0, "PUB001"), "DALVLSER entry 1 PUB001");
     }
     CHECK(!has_dal(DALUNIT), "no DALUNIT");
+    CHECK_EQ(svc99_flag1, S99NOCNV | S99NOMNT, "volser alone: S99NOMNT set");
 
     /* ---------------------------------------------------------------- */
     printf("\n(4) \"volser=(pub001,pub002)\" -> DALVLSER, two entries\n");
@@ -481,6 +495,7 @@ int main(void)
     n = find_dal(DALVLSER);
     CHECK(n >= 0 && entry_is(n, 0, "WORK00"),
           "DALVLSER WORK00 from the environment");
+    CHECK_EQ(svc99_flag1, S99NOCNV | S99NOMNT, "S99NOMNT set");
     env_clear();
 
     /* ---------------------------------------------------------------- */
@@ -493,6 +508,7 @@ int main(void)
     CHECK_EQ(rc, 0, "__fpnew() succeeded");
     CHECK(!has_dal(DALUNIT), "no DALUNIT");
     CHECK(!has_dal(DALVLSER), "no DALVLSER");
+    CHECK_EQ(svc99_flag1, S99NOCNV, "empty values: no S99NOMNT");
     env_clear();
 
     /* ---------------------------------------------------------------- */
