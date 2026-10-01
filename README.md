@@ -44,15 +44,14 @@ cc370 hello.c -o hello.xmit      # compile + assemble + link + package; runs on 
 ## Layout
 
 ```
-src/clib/     C standard library + the C runtime control blocks
-src/cmtt/     console message translation
-src/dyn75/    SVC 75 dynamic allocation / TCP-IP socket layer
-src/jes/      JES2 spool interface
-src/racf/     RACF security interface
-src/thdmgr/   thread manager
-src/time64/   64-bit time functions
-asm/          hand-written assembler (incl. @@crt0/@@crt1/@@crtm startups)
-include/      C headers
+include/      C headers, installed: ISO C at the top, ext/ (portable extensions),
+              mvs/ (MVS API), s370/, ibm/ (IBM data areas), POSIX sys/ netinet/ arpa/
+src/          the implementation, mirroring include/ -- src/stdio/, src/ext/time64/,
+              src/mvs/jes2/, ...; assembler beside its C (the crt startups in
+              src/mvs/crt/); src/net/ is the network family, src/net/dyn75/ its
+              DYN75 provider; src/s370/ the 64-bit arithmetic the compiler calls;
+              src/internal/ shared private headers, never installed
+attic/        code kept but never built
 maclib/       PDP / crent assembler macros
 sysmac/       vendored SYS1.MACLIB members
 sdk/          mklibc.py — the build-and-install engine (driven by the Makefile)

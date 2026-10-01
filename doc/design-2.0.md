@@ -49,7 +49,7 @@ which is not built (#248). No consumer includes any of them.
   - `s370/` — the architecture and linkage shared by every S/370 target
 - **Internals are not installed.** They live under `src/`: shared ones flat
   in `src/internal/`, those only one area uses beside its sources
-  (`src/jes/jesprb.h`). A source names them by their path from the repository
+  (`src/mvs/jes2/jesprb.h`). A source names them by their path from the repository
   root, `#include "src/internal/fileio.h"`, and the build passes `-I` for the
   root, not for `src/internal/`. So every include line says whether it is
   public (`<…>`) or private (`"src/…"`), and no private header can be found
@@ -86,16 +86,17 @@ include/                        installed into the sysroot
   s370/                         savearea.h, ccw.h
   ibm/mvs/                      IBM data areas: cvt.h, ihaacee.h, ikjtcb.h, iefjfcbn.h, dcbd.h, ...
   ibm/jes2/                     JES2 data areas: jct.h, jqe.h, hct.h, ...
-src/                            never installed; mirrors include/ (phase 3, D9)
-  internal/                     shared private headers, flat: fileio.h, bsam.h, dyn75.h, printf.h, ...
-  stdio/ string/ stdlib/ time/ ctype/ math/ ...    one directory per ISO header
-  ext/                          implementation of include/ext/
-  mvs/                          implementation of include/mvs/, one directory per area:
-    crt/                          runtime start-up, the @@JPA and WSA anchors
-    jes/ racf/ smf/               as today
-    socket/ thread/ mtt/          today dyn75/, thdmgr/, cmtt/
-  s370/                         architecture
-attic/                          code that is kept but not built (today src/wip/)
+src/                            never installed; mirrors include/ (phase 3, D9; sdk/srcmap.tsv)
+  internal/                     shared private headers, flat: fileio.h, bsam.h, printf.h, ...
+  stdio/ string/ stdlib/ time/ ctype/ math/ ...    one directory per ISO or POSIX header
+  ext/<header>/                 implementation of include/ext/: int64/, time64/, array/, ...
+  mvs/<header>/                 implementation of include/mvs/, one directory per header:
+                                crt/ (start-up, @@JPA, WSA), jes2/, dynalloc/, thread/, ...;
+                                svc/ (the SVC-in-C scaffold, no public header yet)
+  net/                          the network family: sys/socket.h, sys/select.h, netdb.h, arpa/inet.h
+    dyn75/                        its DYN75 provider, with the private x75.h and dyn75.h
+  s370/                         architecture; the 64-bit arithmetic the compiler calls
+attic/                          code that is kept but not built (was src/wip/)
 ```
 
 VM/CMS is **not** designed here. The deliverable is the seam. A later `cms/`,
@@ -128,7 +129,7 @@ other item. Header moves and parallel fix PRs would also collide on the same
 | 0 | libc370 CI (#249); crypto370 released (#244; httpd and mvsMF adopt it in their 2.0 migration); **1.0.8 released**, the last 1.x; consumers' **build** CI held on `v1.0.8`, which needs a `libc370_ref` input in mbt's `build.yml` (mvslovers/mbt#121; release CI already pins) | every consumer green against 1.0.8 |
 | 1 | on the integration branch `2.0` (#256): move and rename headers per the table; split the five mixed headers; drop dead ones. `install` copies subdirectories and clears the sysroot's `include/` first, since the first moved header needs it. Absorbs #39 step 2 (missing `#include`s) and #68 step 1 (the `clibsa.h` inline), since every `#include` line is touched anyway, and #250 items 1–3 | **byte-identical assembler for every TU** against the commit before the move, the method PR #242 used; `sdk/gate.py` checks it in CI, with the archive's symbols and the warnings |
 | 2 | internals to `src/internal/` (#274), included by their path from the root (D10); `libc370/` becomes `ext/` (D1) | byte-identical assembler; the migration script resolves every consumer include |
-| 3 | sources by area (#278), `src/` mirrors `include/`; assembler beside its C; `src/wip/` → `attic/` (D9). Basenames stay unique (all objects share one directory, `mklibc.py:161`), and the gate needs a map from old to new source paths | byte-identical assembler |
+| 3 | **done on `2.0`** (#285–#292): sources by area (#278), `src/` mirrors `include/`; assembler beside its C; `src/wip/` → `attic/` (D9). Basenames stay unique (all objects share one directory, `mklibc.py:161`), and the gate needs a map from old to new source paths | byte-identical assembler |
 | — | **the relink round**: #79, #50, #51, #71, #172, #80 defect 1 | per change, tests; CHANGELOG entry for each layout or signature change |
 | — | **release 2.0.0**; one migration PR per consumer | each consumer green against 2.0.0 |
 | 4 | the OS seam: core calls a narrow internal interface, not MVS services | per change, tests |
