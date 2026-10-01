@@ -106,10 +106,10 @@ a row whose replacement does not exist, or a stale `sdk/names.tsv`.
 
 ## Measured
 
-Against `v1.0.8`, on 2026-09-30, after phase 2: 5471 public names in 1.x,
-4601 in 2.0, 871 gone — 595 with nothing in their place (miniz, PDF, emfile,
-ipc, memmgr, the module-map API: declared, never built), 255 now internal,
-11 to crypto370, 10 replaced by another name. A sweep of the consumers'
+Against `v1.0.8`, on 2026-10-01 (after phases 2 and 3, #51 and #71): 5481
+public names in 1.x, 4610 in 2.0, 880 gone — 603 with nothing in their place
+(miniz, PDF, emfile, ipc, memmgr, the module-map API: declared, never built),
+256 now internal, 11 to crypto370, 10 replaced by another name. A sweep of the consumers'
 default branches (httpd, mvsmf, ftpd, ufsd, ufsd-utils, httplua, httprexx,
 lua370, lstring370, nsf370, brexx370, rexx370, crypto370) found no call of a
 gone name outside the crypto functions: the other hits were comments, the

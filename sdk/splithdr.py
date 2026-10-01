@@ -99,6 +99,9 @@ def names(text):
     # a tag is declared where it gets a body, "struct x {", not where it is used
     out |= set(re.findall(r"\b(?:struct|union|enum)[ \t]+([A-Za-z_]\w*)[ \t\n]*\{", code))
     out |= set(re.findall(r"\btypedef\b[^;]*?\b([A-Za-z_]\w*)[ \t]*;", code))
+    # a function-pointer type, "typedef void (*NAME)(...);", ends in its
+    # parameter list, so the pattern above never reaches its name
+    out |= set(re.findall(r"\btypedef\b[^;{]*?\([ \t]*\*[ \t]*([A-Za-z_]\w*)[ \t]*\)[ \t\n]*\(", code))
     out |= set(re.findall(r"\b([A-Za-z_]\w*)[ \t]*\([^;{]*\)[^;{]*;", code))
     return out - {"if", "while", "for", "switch", "return", "sizeof", "asm",
                   "__attribute__", "defined", "pragma", "linkage",
