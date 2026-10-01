@@ -20,6 +20,9 @@ mixed headers were split, internal ones left the sysroot; there are no
 compatibility headers. Crypto moved to
 [crypto370](https://github.com/mvslovers/crypto370).
 
+**Requires the current cc370** (`main`, cc370@latest). 2.0.0 was built and
+tested with cc370 `47b3545`; an older compiler is not supported.
+
 ### Added
 - **`inet_addr()`, `inet_ntoa()`, `inet_pton()`, `inet_ntop()` in
   `<arpa/inet.h>` (#51).** `AF_INET` only. None of them uses `scanf` or
