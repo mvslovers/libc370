@@ -382,14 +382,44 @@ checklist is #245.
    summary on #278): `src/` mirrors `include/`, `sdk/srcmap.tsv` records
    every move, `attic/` holds what is not built. Open: three `ibm/` headers
    declare functions (#278). Phase 4 (the OS seam) stays in 2.x.
-6. **The relink round** (Tier 5): #79, #50, #51, #71, #172 and #80 defect 1.
-   It is struct and signature growth that needs a coordinated consumer rebuild,
-   so it ships in the major version.
-7. **Release 2.0.0**, then one migration PR per consumer. Each removes its
-   `libc370_ref` line again. httpd's and mvsMF's also add
-   `mvslovers/crypto370` to `[dependencies]` (httpd: all three; mvsMF:
-   base64) and change `clibb64.h` to `base64.h` (httpd: one file; mvsMF:
-   three), saying why the dependency is added.
+6. **Interface changes and consumer wishes (Tier 5), now** (decided
+   2026-10-01). Formerly called "the relink round" -- the name was
+   misleading. What these share is that consumers wait for them; three of
+   them also change an interface (a struct grows, a function gains a
+   parameter), which needs every consumer *recompiled* against the new
+   headers, and 2.0 forces exactly that rebuild anyway. Done after 2.0.0, they
+   would be the next major break.
+   - interface changes: **#80 defect 1** (`__listpd()` `max`), **#79**
+     (`JESJOB` submit time), **#50** (catalog name in `DSLIST`; decide the
+     method first)
+   - consumer wishes, no interface break, taken along: **#51**
+     (`inet_addr`/`inet_ntoa`), **#71** (`idcams()` keeps IDCnnnn),
+     **#172** (`__fpnew()` UNIT)
+   - **investigate the three `ibm/` headers that declare functions**
+     (`iefjfcbn.h`, `pso.h`, `iefssobh.h`, #278): the declarations belong in
+     an `mvs/` header
+   Each with a test and a CHANGELOG entry; the gate shows the intended code
+   changes (`gate-allow.txt`); anything touching MVS behaviour is tested on
+   MVS (Mike's OK per run).
+7. **Consumer migration script**, reading `sdk/headermap.tsv`,
+   `sdk/names.tsv`, `sdk/removed.tsv` and `sdk/splits/*`
+   (`doc/migration-2.0.md`). Tried locally on httpd, mvsMF and ftpd before
+   any PR -- it is the real test of the maps.
+8. **Prerelease `v2.0.0-rc.1`**, tagged on the branch `2.0`, not on `main`:
+   `main` stays 1.x and the consumers' build CI stays green. Check first
+   that `release.yml` and the consumers' `make deps` / `[toolchain]` accept a
+   prerelease tag off `main`.
+9. **First consumer on 2.x against the rc** -- ftpd proposed (smaller than
+   httpd/mvsMF, gains from #80 and #71, no crypto370): migrated by the
+   script on a branch, rebuilt (that rebuild is the relink), tested on MVS.
+   Defects in libc370 or in the maps make `rc.2`, and so on.
+10. **Release 2.0.0:** step 3's hold PRs in the consumers (Mike's go), `2.0`
+    → `main` (Mike's go), tag 2.0.0 with the CHANGELOG migration section and
+    the minimum cc370 commit; then one migration PR per consumer, each
+    removing its `libc370_ref` line again. httpd's and mvsMF's also add
+    `mvslovers/crypto370` to `[dependencies]` (httpd: all three; mvsMF:
+    base64) and change `clibb64.h` to `base64.h` (httpd: one file; mvsMF:
+    three), saying why the dependency is added.
 
 Not blocking: cc370 releases (mvslovers/cc370#523). Without them, 2.0.0 names
 its minimum cc370 by commit, as 1.0.7 and 1.0.8 did. After 2.0.0: phase 4
@@ -918,10 +948,11 @@ not about correctness.
 
 ---
 
-## Tier 5 — consumers waiting (one coordinated relink, best done in a single round)
+## Tier 5 — consumers waiting (interface changes and wishes, now Tier 0 step 6)
 
-*The whole tier ships in 2.0 (Tier 0, step 6): a major version is the
-coordinated relink this tier was waiting for.*
+*The whole tier ships in 2.0 (Tier 0, step 6): #80 defect 1, #79 and #50
+change an interface and need every consumer recompiled, which 2.0 forces
+anyway; #51, #71 and #172 are taken along (decided 2026-10-01).*
 
 ### 10 · #80 defect 1 — `__listpd()` has no way to ask for less
 
