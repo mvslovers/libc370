@@ -1,6 +1,6 @@
 /*
  * tstcmtt.c - libc370 #14 regression: the Master Trace Table (MTT) walk in
- * cmtt_get_array() (src/cmtt/cmttget.c) must never emit a bogus MTENTRY -
+ * cmtt_get_array() (src/mvs/mtt/cmttget.c) must never emit a bogus MTENTRY -
  * neither one that runs past the end of the table (the over-read that feeds
  * mvsmf#176) nor one reached by a backward jump (a non-terminating walk that
  * re-adds the same region until storage is exhausted).

@@ -57,7 +57,7 @@ static void pl_capture(ENQPL *p)
    The erased SVC leaves pl.rc = 0, so __enqdeq() returns 0 - fine, the
    assertions here are on the list, not the return. */
 #define __asm__(...) pl_capture(&pl)
-#include "../../src/clib/@@enqdeq.c"
+#include "../../src/mvs/enq/@@enqdeq.c"
 #undef __asm__
 
 /* ---- harness ---------------------------------------------------------- */

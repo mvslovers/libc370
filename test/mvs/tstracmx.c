@@ -176,7 +176,7 @@ static const char *resource(const FIXTURE *f, int which)
 
 /* ---------------------------------------------------------------------------
  * The RACHECK, with flag1 under the caller's control.  This is racf_auth()
- * (src/racf/racauth.c) with two differences and no others: flag1 is a
+ * (src/mvs/racf/racauth.c) with two differences and no others: flag1 is a
  * parameter instead of a constant, and there is no attr defaulting - a probe
  * that quietly substituted READ for what it was asked to check would measure
  * the wrong cell.  Keep it in step with racauth.c by hand; a divergence here

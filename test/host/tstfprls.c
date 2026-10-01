@@ -2,7 +2,7 @@
  * tstfprls.c - libc370 #167: fopen() must be able to ask for RLSE, and must
  * only ask when the caller said so.
  *
- * ISSUE #167: __txrlse() (src/clib/@@txrlse.c) builds a DALRLSE (0x000D) text
+ * ISSUE #167: __txrlse() (src/mvs/dynalloc/@@txrlse.c) builds a DALRLSE (0x000D) text
  * unit and is declared in include/svc99.h - and nothing in the library ever
  * called it.  There was therefore no way to get unused space released for a
  * data set written through fopen(), which is what mvslovers/ftpd#100 and
@@ -265,7 +265,7 @@ static int    tu_overflow;
 static TXT99 *real_nwtx99(int dal, int count, int size, const char *text);
 
 #define __nwtx99 real_nwtx99
-#include "../../src/clib/@@nwtx99.c"
+#include "../../src/mvs/dynalloc/@@nwtx99.c"
 #undef __nwtx99
 
 TXT99 *__nwtx99(int dal, int count, int size, const char *text)
@@ -368,20 +368,20 @@ int __txrecf(TXT99 ***txt99, const char *recfm)
 #include "../../src/clib/@@fpold.c"
 #include "../../src/clib/@@fpnew.c"
 
-#include "../../src/clib/@@txrddn.c"
-#include "../../src/clib/@@txdsn.c"
-#include "../../src/clib/@@txold.c"
-#include "../../src/clib/@@txnew.c"
-#include "../../src/clib/@@txcat.c"
-#include "../../src/clib/@@txrlse.c"
-#include "../../src/clib/@@txlrec.c"
-#include "../../src/clib/@@txbksz.c"
-#include "../../src/clib/@@txcyl.c"
-#include "../../src/clib/@@txtrk.c"
-#include "../../src/clib/@@txblk.c"
-#include "../../src/clib/@@txspac.c"
+#include "../../src/mvs/dynalloc/@@txrddn.c"
+#include "../../src/mvs/dynalloc/@@txdsn.c"
+#include "../../src/mvs/dynalloc/@@txold.c"
+#include "../../src/mvs/dynalloc/@@txnew.c"
+#include "../../src/mvs/dynalloc/@@txcat.c"
+#include "../../src/mvs/dynalloc/@@txrlse.c"
+#include "../../src/mvs/dynalloc/@@txlrec.c"
+#include "../../src/mvs/dynalloc/@@txbksz.c"
+#include "../../src/mvs/dynalloc/@@txcyl.c"
+#include "../../src/mvs/dynalloc/@@txtrk.c"
+#include "../../src/mvs/dynalloc/@@txblk.c"
+#include "../../src/mvs/dynalloc/@@txspac.c"
 
-#include "../../src/clib/@@txorg.c"
+#include "../../src/mvs/dynalloc/@@txorg.c"
 
 #include "../../src/ext/array/@@aradd.c"
 #include "../../src/ext/array/@@arnew.c"

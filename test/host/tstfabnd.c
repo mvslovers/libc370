@@ -221,7 +221,7 @@ static void tst_free(void *p)
 
 #define free tst_free
 #include "../../src/clib/fclose.c"
-#include "../../src/clib/@@faband.c"
+#include "../../src/mvs/file/@@faband.c"
 #include "../../src/clib/@@fpterm.c"
 #undef free
 

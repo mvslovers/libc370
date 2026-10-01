@@ -61,7 +61,7 @@
  * THE ONE CASE THAT NEEDS A REAL WAIT
  * --------------------------------------------------------------------
  * Case (9) is the cheapest guard on the most expensive silent assumption
- * in the library.  dispatch_work() in src/thdmgr/@@cminit.c does
+ * in the library.  dispatch_work() in src/mvs/thread/@@cminit.c does
  *
  *     now = time64(NULL);
  *     __64_sub(&now, &work->wait_time, &tmp);

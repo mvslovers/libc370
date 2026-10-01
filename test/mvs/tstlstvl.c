@@ -1,6 +1,6 @@
 /*
  * tstlstvl.c - libc370 #59: the "unable to open" diagnostic in open_vatlst()
- * (src/clib/@@listvl.c) must name the data set it could not open (MVS target,
+ * (src/mvs/dslist/@@listvl.c) must name the data set it could not open (MVS target,
  * batch).
  *
  * ISSUE #59: the message had TWO %s conversions and ONE argument:

@@ -1,5 +1,5 @@
 /*
- * tsttxdsn.c - libc370 #60: __txdsn() (src/clib/@@txdsn.c) must build its
+ * tsttxdsn.c - libc370 #60: __txdsn() (src/mvs/dynalloc/@@txdsn.c) must build its
  * text units without writing anything to the operator console, and must not
  * hand a NULL text unit to arrayadd().
  *
@@ -43,7 +43,7 @@
  *
  * - Cases (6) and (7) inject a calloc failure into @@nwtx99.c (see the build
  *   line).  On the TARGET that path is much harder to reach than it looks:
- *   calloc() -> malloc() -> __getm() issues GETMAIN RU (asm/@@getm.asm:28),
+ *   calloc() -> malloc() -> __getm() issues GETMAIN RU (src/mvs/storage/@@getm.asm:28),
  *   which abends S80A rather than returning when storage is short.  So the
  *   two cases exercise a defensive path with host semantics; what they prove
  *   is that the function now REPORTS the failure instead of storing a NULL
@@ -71,10 +71,10 @@
  *
  *     R=../..
  *     cc -std=gnu99 -D'__asm__(x)=' -D__32BIT__ -Dcalloc=tst_calloc \
- *        -I $R/include -I $R/src/internal -c "$R/src/clib/@@nwtx99.c" -o nwtx99.o
+ *        -I $R/include -I $R/src/internal -c "$R/src/mvs/dynalloc/@@nwtx99.c" -o nwtx99.o
  *     cc -std=gnu99 -Wall -Wextra -fsanitize=address \
  *        -D'__asm__(x)=' -D__32BIT__ -I $R/include -I $R/src/internal -o t tsttxdsn.c nwtx99.o \
- *        "$R/src/clib/@@txdsn.c" "$R/src/ext/array/@@aradd.c" \
+ *        "$R/src/mvs/dynalloc/@@txdsn.c" "$R/src/ext/array/@@aradd.c" \
  *        "$R/src/ext/array/@@arnew.c" "$R/src/ext/array/@@arcou.c" \
  *        "$R/src/ext/array/@@arget.c" "$R/src/ext/array/@@arfre.c"
  *     ./t                                             # 22/22, rc 0
@@ -85,8 +85,8 @@
  *
  * RED, against the pre-fix source:
  *
- *     git show <pre-fix-rev>:src/clib/@@txdsn.c > /tmp/old.c
- *     ... same link line with /tmp/old.c in place of $R/src/clib/@@txdsn.c
+ *     git show <pre-fix-rev>:src/mvs/dynalloc/@@txdsn.c > /tmp/old.c
+ *     ... same link line with /tmp/old.c in place of $R/src/mvs/dynalloc/@@txdsn.c
  *         and -Wno-error=implicit-function-declaration added ...
  *     ./t                                             # 14/22, 8 failures
  *
