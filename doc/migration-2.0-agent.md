@@ -24,6 +24,11 @@ maintainer's OK.
   `in_addr_t`/`inet_aton()`, `__listpd()` NULL on ENOMEM, …): CHANGELOG
   `[Unreleased]` → *Changed*, and the *Changed meaning* table in
   `doc/migration-2.0.md`.
+- **New names may collide with the consumer's own** (`inet_addr()`,
+  `inet_ntoa()`, `socklen_t`, …): a private copy of a name libc370 now
+  provides has to go, in favour of libc370's. `inet_ntoa()` returns NULL when
+  the runtime has no process anchor — use `inet_ntop()` into a local buffer
+  (brexx370 #274).
 - **Crypto** (SHA-256, Blowfish, base64) moved to mvslovers/crypto370 1.0.0;
   `clibb64.h` is `base64.h` there.
 
@@ -76,9 +81,14 @@ libc370 is older than the tag, stop and say so — do not build it yourself
 - It builds with `-Wall -Werror` and no implicit declaration.
 - **Assembler:** generate the `.s` of every TU twice, against 1.0.8 (the
   shared toolchain, the consumer unmigrated) and against 2.0 (the second
-  toolchain, migrated), and compare. Identical, except TUs that use an
-  interface change above — explain each of those in one line. Any other
-  difference is a wrong include, not noise. (This is libc370's own
+  toolchain, migrated), and compare. Identical, except
+  - TUs that differ **only** in static-function label numbering (`@@Fn`, and
+    the column width that follows it): a 1.x header carried a `static`
+    function the 2.0 one does not (1.x `string.h` pulled in `clibstr.h`'s
+    `memclr()`). Not a code change; `sdk/gate.py` counts these separately.
+  - TUs that use an interface change above — explain each in one line.
+
+  Any other difference is a wrong include, not noise. (This is libc370's own
   `sdk/gate.py` method.)
 - `make test-host`, if the project has host tests.
 
@@ -100,13 +110,28 @@ stop and ask.
 
 ## Per-consumer notes
 
-**mvslovers/ufsd** (first, decided 2026-10-01). Its public `include/libufs.h`
-is shipped in ufsd's lib tarball and includes `"time64.h"` and `"clib64.h"`
-(2.0: `ext/time64.h`, `ext/int64.h`). ftpd, httpd and mvsMF take ufsd with open
-`>=` ranges and only `mbt.lock` holds them on today's ufsd. So **no ufsd
-release from the ported tree** until those three are ported too — the port
-lives on its branch (and may be merged on ufsd's own say-so), but `make
-release` waits.
+**mvslovers/ufsd** — **ported**: ufsd#82, merged into `main` 2026-10-01,
+published as the prerelease **`v1.4.0-dev`**. Its public `include/libufs.h`
+now includes `<ext/time64.h>` and `<ext/int64.h>`, so a consumer on 1.x cannot
+use it. That is safe as long as ufsd publishes **prereleases only**: mbt's
+resolver offers a prerelease only to a range that names one
+(`mbt/scripts/mbt/dependencies.py`, `_constraint_allows_prerelease`), and ftpd
+(`>=1.3.0`), httpd and mvsMF (`>=1.2.2`) name none. A **stable** ufsd release
+from `main` would reach them — none until those three are ported. A 1.x fix
+for them comes from a branch off `v1.3.0`.
+
+**mvslovers/brexx370** — **ported**: brexx370#274 (open at the time of
+writing). Moved its `[toolchain]` pin from `edge` to `2.0.0-dev`; once merged,
+nothing in the ecosystem pins libc370 `edge` any more. Dropped its own
+`socklen_t`, `inet_addr()` and `inet_ntoa()` for libc370's. 128 TUs: 107
+identical, 19 differing only in `@@Fn` numbering, 2 by the `inet_*` change;
+MVS/CE suite 113/113.
+
+**mvslovers/ftpd, httpd, mvsMF** — each depends on ufsd, and only ufsd
+`v1.4.0-dev` is built on 2.0: change the range to `"mvslovers/ufsd" =
+">=1.4.0-dev"` (a range that names a prerelease, so the resolver offers it)
+and run `make deps ARGS=--update` to re-pin `mbt.lock`. httpd and mvsMF also
+include the crypto headers (three files each): they take crypto370 here.
 
 ---
 

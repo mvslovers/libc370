@@ -13,7 +13,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   module (ftpd's `sscanf("%u.%u.%u.%u")` was the case in point).
   `inet_ntoa()` keeps BSD's semantics -- one buffer, overwritten by the next
   call -- but takes it per process from `__wsaget()`, since a reentrant load
-  module cannot write a static; between threads use `inet_ntop()`.
+  module cannot write a static; between threads use `inet_ntop()`. It
+  returns NULL when the runtime has no process anchor -- `inet_ntop()` into
+  a buffer of the caller's never does, which is why brexx370#274 uses it.
   `INET_ADDRSTRLEN` (`<netinet/in.h>`) and `socklen_t` (`<sys/socket.h>`)
   come with them.
 - **`__walkpd()` in `<mvs/dslist.h>` (#80).** A PDS directory member by
