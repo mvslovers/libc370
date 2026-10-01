@@ -162,8 +162,10 @@ def cmd_check():
     print(f"[headermap] {len(rows)} rows, {len(present)} headers in include/"
           + (f", {bad} problem(s)" if bad else ", consistent"))
     # the same question by name: sdk/names.tsv, sdk/removed.tsv
-    import names
-    return 1 if bad or names.cmd_check() else 0
+    import names, srcmap
+    bad_names = names.cmd_check()
+    # and where every source stands in phase 3: sdk/srcmap.tsv
+    return 1 if bad or bad_names or srcmap.cmd_check() else 0
 
 
 if __name__ == "__main__":
