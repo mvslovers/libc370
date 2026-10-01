@@ -29,7 +29,7 @@ int svcmain(SVCREGS *svcregs    /* input registers  */,
             unsigned *r0        /* output register  */,
             unsigned *r1        /* output register  */)     asm("SVCMAIN");
 
-/* If using the default SVCMAIN module from the CRENT370 library then these R1 values identify the request */
+/* If using the default SVCMAIN module from libc370 then these R1 values identify the request */
 #define SVCMAIN_SUP     0       /* request supervisor state     */
 #define SVCMAIN_PROB    1       /* request problem state        */
 #define SVCMAIN_KEY     2       /* request PSW KEY (R15 value), old value returned in R15 */

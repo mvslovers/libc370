@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-10-01
+
+**libc370 2.0 reorganises the public headers, and almost every program that
+includes one has to change its `#include` lines.** Read
+[doc/migration-2.0.md](https://github.com/mvslovers/libc370/blob/v2.0.0/doc/migration-2.0.md)
+before upgrading: what moved where, how to migrate a source file, the
+interfaces that changed meaning, and how to stay on 1.x. 1.0.8 is the last
+1.x release; its tag `v1.0.8` and the branch `1.x` stay.
+
+Headers moved into `mvs/`, `ext/`, `ibm/`, `s370/` and the POSIX headers;
+mixed headers were split, internal ones left the sysroot; there are no
+compatibility headers. Crypto moved to
+[crypto370](https://github.com/mvslovers/crypto370).
+
 ### Added
 - **`inet_addr()`, `inet_ntoa()`, `inet_pton()`, `inet_ntop()` in
   `<arpa/inet.h>` (#51).** `AF_INET` only. None of them uses `scanf` or

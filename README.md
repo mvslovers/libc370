@@ -5,12 +5,17 @@ of the [cc370](https://github.com/mvslovers/cc370) cross-toolchain.
 
 A reentrant C runtime: the standard C library (`stdio`, `stdlib`, `string`,
 `time`, …) plus the MVS runtime it is built on (the C startup, GETMAIN-based
-storage, dataset I/O) and MVS extras (JES2, ISPF, RACF, SMF, a thread manager,
-crypto). It is also cc370's *libgcc* — the compiler-support routines live here,
+storage, dataset I/O) and MVS extras (JES2, ISPF, RACF, SMF, a thread manager).
+It is also cc370's *libgcc* — the compiler-support routines live here,
 so there is no separate libgcc.
 
 Originally created as **crent370** by Michael Dean Rayborn; now the cc370 target
 libc, maintained by the [mvslovers](https://github.com/mvslovers) community.
+
+**2.0 reorganised the public headers.** Coming from 1.x, read
+[doc/migration-2.0.md](doc/migration-2.0.md); 1.0.8 (tag `v1.0.8`, branch `1.x`)
+is the last 1.x release. Crypto (SHA-256, Blowfish, base64) is
+[crypto370](https://github.com/mvslovers/crypto370) since 2.0.
 
 ## Build & install
 
@@ -30,7 +35,7 @@ the sysroot is `<prefix>/cc370/`, default `~/.local/cc370/`):
 
 | Artifact | Location | Effect |
 |----------|----------|--------|
-| headers (`stdio.h` … + `clib*.h`) | `<sysroot>/include` | `cc370 -c foo.c` finds them with no `-I` |
+| headers (`stdio.h` …, `mvs/`, `ext/`, `ibm/`, `s370/`) | `<sysroot>/include` | `cc370 -c foo.c` finds them with no `-I` |
 | `libc.a` (the runtime) | `<sysroot>/lib` | `-lc` pulls it |
 | `crt0.o` / `crt1.o` / `crtm.o` | `<sysroot>/lib` | the startup variants (separate startfiles) |
 | macros (SYS1.MACLIB + PDP) | `<sysroot>/macros` | `as370` (real binary in `<sysroot>/bin`) finds them via `<exedir>/../macros`, no `-I` |
@@ -52,7 +57,7 @@ src/          the implementation, mirroring include/ -- src/stdio/, src/ext/time
               DYN75 provider; src/s370/ the 64-bit arithmetic the compiler calls;
               src/internal/ shared private headers, never installed
 attic/        code kept but never built
-maclib/       PDP / crent assembler macros
+maclib/       PDP / libc370 assembler macros
 sysmac/       vendored SYS1.MACLIB members
 sdk/          mklibc.py — the build-and-install engine (driven by the Makefile)
 ```

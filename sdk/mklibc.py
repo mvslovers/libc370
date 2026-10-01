@@ -281,7 +281,7 @@ def cmd_install():
     shutil.copy(libc, f"{lib}/libc.a")
     for crt in ("crt0.o", "crt1.o", "crtm.o"):
         shutil.copy(f"{BUILD}/{crt}", f"{lib}/{crt}")
-    # assembler macros: sysmac (vendored SYS1.MACLIB) THEN maclib (crent's
+    # assembler macros: sysmac (vendored SYS1.MACLIB) THEN maclib (libc370's
     # PDPTOP/PDPPRLG/... override any collision) -> one dir as370 finds by
     # default (<exedir>/../macros); needed for hand-asm + the cc370 one-shot.
     m = 0
