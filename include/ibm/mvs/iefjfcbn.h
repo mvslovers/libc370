@@ -605,7 +605,7 @@ struct jfcb {
 extern int      __rdjfcb(DCB *dcb, JFCB *jfcb);
 
 /* rdjfcb() - the same code as __rdjfcb(), built a second time from
-**            src/os/rdjfcb.c as its own routine (RDJFCB) */
+**            src/mvs/dd/rdjfcb.c as its own routine (RDJFCB) */
 extern int      rdjfcb(DCB *dcb, JFCB *jfcb);
 
 #endif

@@ -76,7 +76,7 @@
  * Returns 1 when the OPEN must be refused, 0 otherwise.
  *
  * KNOWN BLIND SPOT.  It can only see DCBs that fopen() registered in
- * grt->grtfile.  A DD opened by ropen() (src/clib/ropen.c calls __aopen()
+ * grt->grtfile.  A DD opened by ropen() (src/mvs/rfile/ropen.c calls __aopen()
  * directly), by hand-written assembler, by another library, or by a
  * subtask with a different GRT is invisible here, and such a case still
  * abends exactly as before.  The DSAB carries dsabopct, an open-DCB count

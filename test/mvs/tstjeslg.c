@@ -72,7 +72,7 @@
 #include "ibm/jes2/pddb.h"   /* JES PDDB                                         */
 #include "ibm/jes2/iot.h"    /* JES IOT (+ track group map)                      */
 #include "mvs/jes2.h"   /* jesopen/jesjob/jesprint                          */
-#include "src/jes/jesprb.h"     /* __jesprb() - the REAL record walk (#45)          */
+#include "src/mvs/jes2/jesprb.h"     /* __jesprb() - the REAL record walk (#45)          */
 #include "ext/array.h"    /* arraycount                                       */
 
 #define MAXBLK      500 /* chain-follow cap: a stale block can chain wildly */
@@ -511,7 +511,7 @@ static void dumpiot(HASPCP *cp, HASPJS *js, unsigned char *buf, unsigned bufsize
     }
 }
 
-/* Run the REAL record walk (src/jes/jesprb.c) over one block and report what
+/* Run the REAL record walk (src/mvs/jes2/jesprb.c) over one block and report what
    it emitted.  This probe used to carry a hand-written copy of that walk, and
    the copy had drifted: it advanced a spanned part by 4 + len2, while the walk
    advances 4 + 2 + len2 past a FIRST part's length prefix.  On a data set of

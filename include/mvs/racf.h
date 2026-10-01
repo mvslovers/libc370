@@ -45,7 +45,7 @@ extern int      racf_logout(ACEE **acee)                                asm("RAC
 **       this is also an "allowed" answer, and a caller that tests rc == 0
 **       reads it as a denial.  Test rc <= 4 for "may proceed".
 **    8  not authorized
-**   12+ see the table at the top of src/racf/racauth.c
+**   12+ see the table at the top of src/mvs/racf/racauth.c
 **
 ** Which of 0 and 4 an unprotected resource answers depends on the LOG bit in
 ** the RACHECK parameter list.  Since #63 libc370 sets LOG=NONE and the answer

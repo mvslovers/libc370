@@ -1,5 +1,5 @@
 /*
- * tstlspd.c - libc370 #80 defect 2: __listpd() (src/clib/@@listpd.c) must bound
+ * tstlspd.c - libc370 #80 defect 2: __listpd() (src/mvs/dslist/@@listpd.c) must bound
  * its directory walk by the bytes fread() actually delivered, not by the
  * halfword it finds inside the block.
  *
@@ -126,7 +126,7 @@
  * RED, against the pre-fix source.  Same fixtures, same shims, the real
  * pre-fix file - the driver only swaps which @@listpd.c it includes:
  *
- *     git show <pre-fix-rev>:src/clib/@@listpd.c > /tmp/old.c
+ *     git show <pre-fix-rev>:src/mvs/dslist/@@listpd.c > /tmp/old.c
  *
  * Case (1) passes, then case (2) aborts.  The ASAN report is the only output
  * from there on: the abort does not flush stdout, so the PASS lines are lost
@@ -158,7 +158,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../../src/clib/@@listpd.c"
+#include "../../src/mvs/dslist/@@listpd.c"
 
 /* ---- shims -------------------------------------------------------------
  * Defined AFTER the translation unit so each one matches the prototype the

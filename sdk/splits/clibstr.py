@@ -114,7 +114,7 @@ wr(I("stdlib.h"), sl, slcrlf)
 # the removed functions
 for f in ("src/clib/stricmp.c", "src/clib/strncmpi.c", "src/clib/bcopy.c"):
     git("rm", "-q", f)
-for f in ("src/clib/@@finden.c", "src/clib/@@listds.c"):
+for f in ("src/mvs/env/@@finden.c", "src/mvs/dslist/@@listds.c"):
     t, c = rd(os.path.join(ROOT, f))
     wr(os.path.join(ROOT, f), re.sub(r"\bstricmp\(", "strcasecmp(", t), c)
 

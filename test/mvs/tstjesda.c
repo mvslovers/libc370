@@ -2,7 +2,7 @@
  * tstjesda.c - libc370 #142: where do the JES2 checkpoint and spool come
  * from, if not from a DD in the caller's JCL?
  *
- * ISSUE #142: jesopen() (src/jes/jesopen.c:37,46) reaches both data sets by
+ * ISSUE #142: jesopen() (src/mvs/jes2/jesopen.c:37,46) reaches both data sets by
  * ddname - checkpoint_open("DD:HASPCKPT"), spool_open("DD:HASPACE1") - so
  * every caller's JCL has to carry the site's UNIT and VOL=SER.  That is how
  * mvslovers/httpd#256 happened.  What the issue does NOT say is that

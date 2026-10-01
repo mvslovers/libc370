@@ -1,5 +1,5 @@
 /*
- * tstjesop.c - libc370 #108: jesopen() (src/jes/jesopen.c) must not hand back
+ * tstjesop.c - libc370 #108: jesopen() (src/mvs/jes2/jesopen.c) must not hand back
  * a JES handle whose spool array never got allocated.
  *
  * ISSUE #108: line 54 of the pre-fix file called
@@ -15,9 +15,9 @@
  * What the callers then do with it is the defect that reaches the operator.
  * Three of them index the array with no guard at all:
  *
- *     src/jes/jesjob.c:105    js = jes->js[0];
- *     src/jes/jesjob.c:497    HASPJS *js = jes->js[0];   (process_intxt)
- *     src/jes/jesprint.c:61   js = jes->js[0];
+ *     src/mvs/jes2/jesjob.c:105    js = jes->js[0];
+ *     src/mvs/jes2/jesjob.c:497    HASPJS *js = jes->js[0];   (process_intxt)
+ *     src/mvs/jes2/jesprint.c:61   js = jes->js[0];
  *
  * On MVS that load SUCCEEDS.  Low-address protection stops stores into page
  * zero, not fetches, so jes->js[0] reads the PSA and hands back a value that
@@ -54,7 +54,7 @@
  *
  * - This is HOST semantics for a storage shortage.  On the target the same
  *   path is reached differently: calloc() -> malloc() -> __getm() issues
- *   GETMAIN RC since #81 (asm/@@getm.asm:66) and returns NULL, so the route
+ *   GETMAIN RC since #81 (src/mvs/storage/@@getm.asm:66) and returns NULL, so the route
  *   exists - but a real shortage on MVS 3.8j is not reproducible from batch
  *   (LSQA is fenced), which is why the check lives here and not in
  *   test/mvs/.  What this proves is that jesopen() now REPORTS the failure
@@ -62,7 +62,7 @@
  *   route to get there.
  *
  * - try() is shimmed to a plain indirect call.  On the target it is an ESTAE
- *   wrapper (___try, src/clib/@@@try.c); here it only has to deliver the
+ *   wrapper (___try, src/mvs/recovery/@@@try.c); here it only has to deliver the
  *   arguments, because no case in this file abends.  The ESTAE behaviour is
  *   #89's territory and is pinned by test/mvs/tstcrtlk.c.
  *
@@ -99,17 +99,17 @@
  *     R=../..
  *     cc -std=gnu99 -U__LP64__ -D'__asm__(x)=' -D__32BIT__ \
  *        -Dcalloc=tst_calloc -I $R/include -I $R/src/internal \
- *        -c "$R/src/jes/jesopen.c" -o jesopen.o
+ *        -c "$R/src/mvs/jes2/jesopen.c" -o jesopen.o
  *     cc -std=gnu99 -U__LP64__ -D'__asm__(x)=' -D__32BIT__ \
  *        -Dcalloc=tst_calloc -I $R/include -I $R/src/internal \
  *        -c "$R/src/ext/array/@@arnew.c" -o arnew.o
  *     cc -std=gnu99 -U__LP64__ -D'__asm__(x)=' -D__32BIT__ \
  *        -Dfree=tst_free -I $R/include -I $R/src/internal \
- *        -c "$R/src/jes/jesjobf1.c" -o jesjobf1.o
+ *        -c "$R/src/mvs/jes2/jesjobf1.c" -o jesjobf1.o
  *     cc -std=gnu99 -U__LP64__ -Wall -Wextra -fsanitize=address \
  *        -D'__asm__(x)=' -D__32BIT__ -I $R/include -I $R/src/internal \
  *        -o t tstjesop.c jesopen.o arnew.o jesjobf1.o \
- *        "$R/src/jes/jesclose.c" "$R/src/jes/jesjobfr.c" \
+ *        "$R/src/mvs/jes2/jesclose.c" "$R/src/mvs/jes2/jesjobfr.c" \
  *        "$R/src/ext/array/@@aradd.c" "$R/src/ext/array/@@arcou.c" \
  *        "$R/src/ext/array/@@arget.c" "$R/src/ext/array/@@arfre.c"
  *     ./t                                             # 20/20, rc 0
@@ -120,8 +120,8 @@
  *
  * RED, against the pre-fix source:
  *
- *     git show <pre-fix-rev>:src/jes/jesopen.c > /tmp/oldjesopen.c
- *     ... same lines with /tmp/oldjesopen.c in place of $R/src/jes/jesopen.c,
+ *     git show <pre-fix-rev>:src/mvs/jes2/jesopen.c > /tmp/oldjesopen.c
+ *     ... same lines with /tmp/oldjesopen.c in place of $R/src/mvs/jes2/jesopen.c,
  *         plus -Wno-error=implicit-function-declaration ...
  *     ./t                                             # 15/20, 5 failures
  *

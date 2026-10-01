@@ -1,5 +1,5 @@
 /*
- * tstrldwk.c - libc370 #100: process_rldr() (src/clib/@@loadhi.c) must bound
+ * tstrldwk.c - libc370 #100: process_rldr() (src/mvs/link/@@loadhi.c) must bound
  * its RLD item walk by the record's own byte count, and must refuse an adcon
  * offset that is not inside the module.
  *
@@ -113,7 +113,7 @@
  * fetch()/store() at all: what ASAN then reports is the walk reading past the
  * record, and nothing else.
  *
- *     git show <pre-fix-rev>:src/clib/@@loadhi.c > /tmp/old.c
+ *     git show <pre-fix-rev>:src/mvs/link/@@loadhi.c > /tmp/old.c
  *     ... driver: same shims, #include /tmp/old.c, and
  *         process_rldr(exact, 0, 0)  on the same 252-byte allocation ...
  *
@@ -135,7 +135,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../../src/clib/@@loadhi.c"
+#include "../../src/mvs/link/@@loadhi.c"
 
 /* ---- shims -----------------------------------------------------------
  * Defined AFTER the translation unit so each one matches the prototype the

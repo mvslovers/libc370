@@ -105,29 +105,29 @@ tstiolk() {
 tstjesop() {
     "$CC" -std=gnu99 -U__LP64__ -D'__asm__(x)=' -D__32BIT__ \
        -Dcalloc=tst_calloc -I $R/include -I $R \
-       -c "$R/src/jes/jesopen.c" -o "$B/jesopen.o" &&
+       -c "$R/src/mvs/jes2/jesopen.c" -o "$B/jesopen.o" &&
     "$CC" -std=gnu99 -U__LP64__ -D'__asm__(x)=' -D__32BIT__ \
        -Dcalloc=tst_calloc -I $R/include -I $R \
        -c "$R/src/ext/array/@@arnew.c" -o "$B/arnew.o" &&
     "$CC" -std=gnu99 -U__LP64__ -D'__asm__(x)=' -D__32BIT__ \
        -Dfree=tst_free -I $R/include -I $R \
-       -c "$R/src/jes/jesjobf1.c" -o "$B/jesjobf1.o" &&
+       -c "$R/src/mvs/jes2/jesjobf1.c" -o "$B/jesjobf1.o" &&
     "$CC" -std=gnu99 -U__LP64__ -Wall -Wextra -fsanitize=address \
        -D'__asm__(x)=' -D__32BIT__ -I $R/include -I $R \
        -o "$B/t" tstjesop.c "$B/jesopen.o" "$B/arnew.o" "$B/jesjobf1.o" \
-       "$R/src/jes/jesclose.c" "$R/src/jes/jesjobfr.c" \
+       "$R/src/mvs/jes2/jesclose.c" "$R/src/mvs/jes2/jesjobfr.c" \
        "$R/src/ext/array/@@aradd.c" "$R/src/ext/array/@@arcou.c" \
        "$R/src/ext/array/@@arget.c" "$R/src/ext/array/@@arfre.c" && "$B/t"
 }
 tstjesprb() {
     "$CC" -std=gnu99 -Wall -Wextra -I $R \
-       -o "$B/t" tstjesprb.c $R/src/jes/jesprb.c && "$B/t"
+       -o "$B/t" tstjesprb.c $R/src/mvs/jes2/jesprb.c && "$B/t"
 }
 tstjestx() {
     "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address \
        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
        -I $R/include -I $R -o "$B/t" tstjestx.c \
-       "$R/src/jes/jesprb.c" \
+       "$R/src/mvs/jes2/jesprb.c" \
        "$R/src/ext/array/@@aradd.c" "$R/src/ext/array/@@arnew.c" \
        "$R/src/ext/array/@@arcou.c" "$R/src/ext/array/@@arget.c" \
        "$R/src/ext/array/@@arfre.c" && "$B/t"
@@ -152,11 +152,11 @@ tsttm64vec() {
 }
 tsttxdsn() {
     "$CC" -std=gnu99 -D'__asm__(x)=' -D__32BIT__ -Dcalloc=tst_calloc \
-       -I $R/include -I $R -c "$R/src/clib/@@nwtx99.c" -o "$B/nwtx99.o" &&
+       -I $R/include -I $R -c "$R/src/mvs/dynalloc/@@nwtx99.c" -o "$B/nwtx99.o" &&
     "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address \
        -D'__asm__(x)=' -D__32BIT__ -I $R/include -I $R -o "$B/t" tsttxdsn.c \
        "$B/nwtx99.o" \
-       "$R/src/clib/@@txdsn.c" "$R/src/ext/array/@@aradd.c" \
+       "$R/src/mvs/dynalloc/@@txdsn.c" "$R/src/ext/array/@@aradd.c" \
        "$R/src/ext/array/@@arnew.c" "$R/src/ext/array/@@arcou.c" \
        "$R/src/ext/array/@@arget.c" "$R/src/ext/array/@@arfre.c" && "$B/t"
 }

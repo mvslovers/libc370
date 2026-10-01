@@ -11,7 +11,7 @@ src/s370/, programs with a main() in attic/.
 move PREFIX   git mv every row whose target starts with PREFIX and that is
               still at its old place, then rewrite every mention of the old
               path in the tracked files that build or test the library --
-              rooted includes ("src/jes/jesprb.h"), test/host/run.sh, a test
+              rooted includes ("src/mvs/jes2/jesprb.h"), test/host/run.sh, a test
               that #includes a source, the build comments in test/ and jcl/ --
               byte for byte, so CRLF files stay CRLF.  History (CHANGELOG.md,
               TODO.md, doc/) and attic/ are left as written.

@@ -1,6 +1,6 @@
 /*
  * tstjestx.c - libc370 #111: the JES2 internal-text parsers in
- * src/jes/jesjob.c must bound every memcpy() by its destination, not by the
+ * src/mvs/jes2/jesjob.c must bound every memcpy() by its destination, not by the
  * one-byte length field in the text stream.
  *
  * ISSUE #111: process_job() (jesjob.c:608) and process_exec() (jesjob.c:646)
@@ -82,7 +82,7 @@
  *     cc -std=gnu99 -Wall -Wextra -fsanitize=address \
  *        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
  *        -I $R/include -I $R/src/internal -I $R/src/jes -o t tstjestx.c \
- *        "$R/src/jes/jesprb.c" \
+ *        "$R/src/mvs/jes2/jesprb.c" \
  *        "$R/src/ext/array/@@aradd.c" "$R/src/ext/array/@@arnew.c" \
  *        "$R/src/ext/array/@@arcou.c" "$R/src/ext/array/@@arget.c" \
  *        "$R/src/ext/array/@@arfre.c"
@@ -119,7 +119,7 @@
 #include <ctype.h>
 #include "mvs/wto.h"
 
-#include "../../src/jes/jesjob.c"
+#include "../../src/mvs/jes2/jesjob.c"
 
 /* ---- shims -------------------------------------------------------------
  * Defined AFTER the translation unit so each one matches the prototype the
