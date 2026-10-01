@@ -86,6 +86,13 @@ struct dslist {
 
     /* added for __listal() function */
     char            disp[4];    /* dataset disp: OLD,NEW,MOD,SHR        */
+
+    /* the catalog the entry was found in (#50): "UCPUB000",
+       "SYS1.VSAM.MASTER.CATALOG".  NULL when not known, and in every
+       record __listal() builds.  The string belongs to the list: records
+       from one catalog share it and __freeds() frees it, so copy it to
+       keep it longer. */
+    const char      *catnm;
 };
 
 /* allocation list */

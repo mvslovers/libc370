@@ -21,6 +21,9 @@ typedef struct {
     DSLIST      **array;    /* dynamic array of DSLIST records */
     char        dsn[45];    /* dataset name */
     char        volser[7];  /* dataset volser */
+    char        *catnm;     /* last catalog name read (#50) */
+    const char  *entcat;    /* catalog of the current entry, or NULL */
+    int         catused;    /* catnm is in a DSLIST record */
     char        buf[256];   /* work buffer for parsing */
     DSCB        dscb;       /* DSCB buffer */
 } UDATA;
@@ -36,6 +39,10 @@ __listds(const char *level, const char *option, const char *filter)
     udata.filter    = filter;
 
     rc = __listc(level, option, parse, &udata);
+
+    /* a catalog name no record took: its entry was filtered out, had no
+       volume, or could not be added */
+    if (udata.catnm && !udata.catused) free(udata.catnm);
 
     return udata.array;
 }
@@ -91,11 +98,37 @@ parse(void *vdata, const char *fmt, ...)
         /* save dataset name */
         strcpy(udata->dsn, p);
         udata->volser[0] = 0;
+        udata->entcat = NULL;
         goto quit;
     }
 
 check_vol:
     if (!udata->dsn[0]) goto quit;   /* no dataset, we're finished */
+
+    if (strcasecmp(p, "IN")==0) {
+        /* "IN-CAT --- name", one per entry, ahead of its VOLSER (#50).
+           strtok() splits it at the '-'. */
+        p = strtok(NULL, " -\n");
+        if (!p || strcasecmp(p, "CAT")) goto quit;
+        p = strtok(NULL, " -\n");
+        if (!p) goto quit;
+
+        if (udata->catnm && strcmp(udata->catnm, p)==0) {
+            /* the same catalog as the entry before: share the string */
+            udata->entcat = udata->catnm;
+            goto quit;
+        }
+
+        udata->entcat = NULL;   /* out of storage: no name, not a wrong one */
+        p = strdup(p);
+        if (!p) goto quit;
+
+        if (udata->catnm && !udata->catused) free(udata->catnm);
+        udata->catnm    = p;
+        udata->catused  = 0;
+        udata->entcat   = p;
+        goto quit;
+    }
 
     if (strcasecmp(p, "VOLSER")==0) {
         /* get next parm */
@@ -124,6 +157,8 @@ check_vol:
     udata->dsn[0] = 0;
     strcpy(dslist->volser, udata->volser);
     udata->volser[0] = 0;
+    dslist->catnm = udata->entcat;
+    udata->entcat = NULL;
 
 	/* if the dataset is cataloged on the SYSRES volume "******" */
 	if (strcmp(dslist->volser, "******")==0) {
@@ -256,6 +291,7 @@ done:
         free(dslist);
         goto quit;
     }
+    if (dslist->catnm) udata->catused = 1;
 
 quit:
     return 0;

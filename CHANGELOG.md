@@ -71,6 +71,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `jesjob()` allocates every `JESJOB`, so a consumer only rebuilds. Measured
   on MVS 3.8j: a job held 20 seconds shows its submit 21 seconds before its
   start (JOB01066).
+- **`DSLIST` grows from 98 to 104 bytes: `catnm`, the catalog an entry was
+  found in (#50).** mvsMF answers z/OSMF's `catnm` with `""` for want of it.
+  IDCAMS LISTCAT on MVS 3.8j names the catalog per entry (`IN-CAT ---
+  UCPUB000`, `IN-CAT --- SYS1.VSAM.MASTER.CATALOG`; JOB01086), and
+  `__listds()` already reads that output, so it costs no extra I/O. The field
+  is a `const char *`, not a `char[45]`: at 104 bytes a record still costs
+  128 bytes of GETMAIN, where an inline name would have made it 192. The string
+  belongs to the list -- consecutive entries from one catalog share it, and
+  `__freeds()` frees each name once, also after the caller has reordered the
+  array. Copy it to keep it past `__freeds()`. NULL when the listing names no
+  catalog, and in every record `__listal()` builds. Appended after `disp`, so
+  every 1.x offset is unchanged; `__listds()` and `__listal()` allocate every
+  `DSLIST`, so a consumer only rebuilds.
 - **`in_addr_t` is an integer and `inet_aton()` returns 1 for an address
   (#51).** 1.x defined `in_addr_t` as `struct in_addr` and had `inet_aton()`
   return 0 for an address and -1 for none -- the opposite of BSD, z/OS and
