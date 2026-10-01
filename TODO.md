@@ -378,10 +378,10 @@ checklist is #245.
    - #284: name maps for it — `sdk/names.tsv` (generated), `sdk/removed.tsv`
      (871 names, each with its replacement; CI-enforced), procedure in
      `doc/migration-2.0.md`. Every later move updates them in the same PR
-5a. **Phase 3 in 2.0 (#278, D9):** sources by area, `src/` mirrors
-   `include/`, assembler beside its C, `src/wip/` → `attic/`. Tooling
-   first: gate path map, unique basenames, `mklibc.py` finds `.asm` under
-   `src/`. Phase 4 (the OS seam) stays in 2.x.
+5a. ~~**Phase 3 in 2.0 (#278, D9):** sources by area~~ **done** (#285–#293,
+   summary on #278): `src/` mirrors `include/`, `sdk/srcmap.tsv` records
+   every move, `attic/` holds what is not built. Open: three `ibm/` headers
+   declare functions (#278). Phase 4 (the OS seam) stays in 2.x.
 6. **The relink round** (Tier 5): #79, #50, #51, #71, #172 and #80 defect 1.
    It is struct and signature growth that needs a coordinated consumer rebuild,
    so it ships in the major version.
