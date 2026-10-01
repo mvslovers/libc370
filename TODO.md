@@ -403,8 +403,12 @@ checklist is #245.
      `pton`/`ntop`); #71 (#298: `idcams_sysprint()`, measured on MVS --
      IDCAMS's own msgno is not the IDC number, JOB01058/JOB01060); name-scan
      fixes on the way (#287 `#else`, #299 function-pointer typedefs)
-   - **open:** #80 defect 1, #79, #50 (method first), #172 -- each needs
-     an MVS run
+   - #79 (#302): `JESJOB.submit_time64`/`sysid` at 0x50, measured with a
+     held job (JOB01065/01066); found #301 (`jesjob()` uses `strtok()`)
+   - #300: libc370 compiles as C99 (`-std=gnu99 -trigraphs`); eight TUs
+     differ in code generation only (analysed in the PR)
+   - **open:** #80 defect 1, #50 (method first), #172 -- each needs an MVS
+     run
    Each with a test and a CHANGELOG entry; the gate shows the intended code
    changes (`gate-allow.txt`); anything touching MVS behaviour is tested on
    MVS (Mike's OK per run).
@@ -412,7 +416,10 @@ checklist is #245.
    `sdk/names.tsv`, `sdk/removed.tsv` and `sdk/splits/*`
    (`doc/migration-2.0.md`). Tried locally on httpd, mvsMF and ftpd before
    any PR -- it is the real test of the maps.
-8. **Prerelease `v2.0.0-rc.1`**, tagged on the branch `2.0`, not on `main`:
+8. **Prerelease `v2.0.0-rc.1`**, tagged on the branch `2.0`, not on `main`.
+   Before it, run the stdio MVS probes once on the `2.0` build: #300's
+   gnu99 switch changed the code of `@@fpswt`/`@@fseek` (registers only by
+   analysis, but the host tests cannot show it).
    `main` stays 1.x and the consumers' build CI stays green. Check first
    that `release.yml` and the consumers' `make deps` / `[toolchain]` accept a
    prerelease tag off `main`.
