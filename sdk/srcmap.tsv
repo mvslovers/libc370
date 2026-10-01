@@ -692,6 +692,7 @@ src/jes/jesprint.c	src/mvs/jes2/jesprint.c	declared in <mvs/jes2.h>
 src/jes/jesreque.c	src/mvs/jes2/jesreque.c	declared in <mvs/jes2.h>
 src/jes/jesxdone.c	src/mvs/jes2/jesxdone.c	declared in <mvs/jes2.h>
 src/jes/jesxwrtr.c	src/mvs/jes2/jesxwrtr.c	declared in <mvs/jes2.h>
+src/mvs/dslist/@@walkpd.c	src/mvs/dslist/@@walkpd.c	new in 2.0 (#80)
 src/net/@@inaddr.c	src/net/@@inaddr.c	new in 2.0 (#51)
 src/net/@@inntoa.c	src/net/@@inntoa.c	new in 2.0 (#51)
 src/net/@@inntop.c	src/net/@@inntop.c	new in 2.0 (#51)

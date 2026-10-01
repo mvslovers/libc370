@@ -1,77 +1,47 @@
-/* @@LISTPD.C - create PDSLIST array */
-#include <ext/strutil.h>
-#include <stdio.h>
+/* @@LISTPD.C - create PDSLIST array
+**
+** __walkpd() walks the directory; this keeps a calloc()ed copy of every
+** entry it hands over.  When storage runs out the records collected so far
+** are freed and the call answers NULL with errno ENOMEM: 1.x returned them,
+** a short list indistinguishable from a complete one (#80, defect 3).
+*/
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
-#include <errno.h>
-#include <time.h>
 #include "ext/array.h"        /* dynamic array prototypes     */
-#include "mvs/dslist.h"       /* __listpd()                   */
-#include "string.h"        /* __patmat()                   */
+#include "mvs/dslist.h"       /* __listpd(), __walkpd()       */
+
+typedef struct {
+    PDSLIST     **array;
+    int         failed;     /* storage ran out                  */
+} COLLECT;
+
+static int collect(void *arg, const PDSLIST *entry)
+{
+    COLLECT     *c      = arg;
+    unsigned    size    = 12 + (entry->idc & PDSLIST_IDC_UDATA) * 2;
+    PDSLIST     *copy   = calloc(1, size);
+
+    if (!copy || arrayadd(&c->array, copy)) {
+        free(copy);
+        c->failed = 1;
+        return 1;           /* stop the walk */
+    }
+    memcpy(copy, entry, size);
+    return 0;
+}
 
 PDSLIST **
 __listpd(const char *dataset, const char *filter)
 {
-    int         rc      = 0;
-    FILE        *fp     = 0;
-    PDSLIST     **array = 0;
-    PDSLIST     *pdslist;
-    unsigned    nread;
-    unsigned    len;
-    unsigned    pos;
-    unsigned    size;
-    char        buf[256];
-    char        member[12];
+    COLLECT     c       = { 0, 0 };
+    int         rc      = __walkpd(dataset, filter, collect, &c);
 
-    fp = fopen(dataset, "r,record");
-    if (!fp) goto quit;
-
-    do {
-        nread = fread(buf, 1, sizeof(buf), fp);
-        if (nread < 2) goto quit;   /* no block length to be read     */
-
-        len = *(unsigned short *)buf;
-        if (len > nread) len = nread;   /* believe the read, not the block */
-
-        /* pos + 12 covers the 8 byte end-of-directory sentinel and the
-        ** user data length in buf[pos+11]; the size test below covers the
-        ** copy.  A block padded out behind its last entry stops here.
-        */
-        for(pos = 2; pos + 12 <= len; pos += size) {
-            if (memcmp(&buf[pos], "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF", 8)==0) {
-                /* logical end of directory */
-                goto quit;
-            }
-            size = 12;  /* member,ttr,c = 8+3+1 */
-            size += ((buf[pos+11] & 0x1F) * 2); /* + size of user data */
-
-            /* an entry whose user data runs past the block: stop trusting
-            ** this block, keep what it already yielded, read the next one.
-            ** Signalling the shortfall to the caller is defect 3 of #80.
-            */
-            if (pos + size > len) break;
-
-            if (filter) {
-                memcpy(member, &buf[pos], 8);
-                member[8] = 0;
-                strtok(member, " ");
-                if (!__patmat(member, filter)) continue;
-            }
-
-            pdslist = calloc(1, size);
-            if (!pdslist) goto quit;
-
-            memcpy(pdslist, &buf[pos], size);
-            rc = arrayadd(&array, pdslist);
-            if (rc) {
-                free(pdslist);
-                goto quit;
-            }
-        }
-    } while(!feof(fp));
-
-quit:
-    if (fp) fclose(fp);
-    return array;
+    if (rc < 0 || c.failed) {
+        int err = c.failed ? ENOMEM : errno;
+        if (c.array) __freepd(&c.array);
+        errno = err;
+        return 0;
+    }
+    return c.array;
 }

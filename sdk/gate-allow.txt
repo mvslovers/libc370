@@ -1,4 +1,8 @@
 # Differences sdk/gate.py accepts for THIS change only: '<asm|symbol|member>
 # <name> <reason>'.  An entry that matches no difference fails the gate, so
 # the next change finds these stale and empties the file.  See sdk/gate.py.
-asm     jesjob.s      JESJOB grows by submit_time64 and sysid at 0x50 (#79)
+
+asm     @@listpd.s    __listpd() collects on __walkpd(); NULL/ENOMEM instead of a short list (#80)
+asm     @@walkpd.s    new: __walkpd() (#80)
+member  @@walkpd.o    new: __walkpd() (#80)
+symbol  @@WALKPD      new: __walkpd() (#80)
