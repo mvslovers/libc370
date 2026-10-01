@@ -43,8 +43,9 @@ libc370 is 712 mostly one-function TUs. Apply the same rule to your own `.a`.
 
 ## What is actually in `libc.a`
 
-`sdk/mklibc.py` compiles `src/{clib,cmtt,crypto,dyn75,jes,os,racf,smf,thdmgr,time64}`
-plus `asm/*.asm`. **`attic/` is never built.**
+`sdk/mklibc.py` compiles every `.c` and assembles every `.asm` under `src/`
+(2.0 layout: `src/` mirrors `include/`, `sdk/srcmap.tsv` says where each file
+came from). **`attic/` is never built.**
 
 `make install` copies *every* `include/*.h` into the sysroot, whether or not
 something implements it. The archive is the authority on what a call will
@@ -85,15 +86,15 @@ MVS service expects a VL-style list, set it by hand:
 txt99[count] = (TXT99 *)((unsigned)txt99[count] | 0x80000000);   /* jesiropn.c:64 */
 ```
 
-In-tree examples: `src/jes/jesiropn.c:64`, `src/clib/@@fildef.c:75`,
-`src/clib/@@fpfree.c:35` (SVC 99 text-unit lists) and `src/clib/iefssreq.c:12`
+In-tree examples: `src/mvs/jes2/jesiropn.c:64`, `src/stdio/@@fildef.c:75`,
+`src/stdio/@@fpfree.c:35` (SVC 99 text-unit lists) and `src/mvs/subsys/iefssreq.c:12`
 (SSOB). The same bit marks the last entry of an ECBLIST for `WAIT`
-(`src/clib/@@ecbtw.c:9`) — different mechanism, same manual bookkeeping.
+(`src/mvs/ecb/@@ecbtw.c:9`) — different mechanism, same manual bookkeeping.
 
 ## Signals are reentrant, but shared per address space
 
 `signal()` / `raise()` keep no writable static in the load module: the handler
-table is a heap copy obtained from `__wsaget()` (`src/clib/@@sighdl.c`), keyed by
+table is a heap copy obtained from `__wsaget()` (`src/signal/@@sighdl.c`), keyed by
 the address of the static initializer and held in an array on the **GRT**.
 
 The GRT is per address space, so the handler table is too — it is *not*
@@ -140,7 +141,7 @@ it rather than delete it:
         wtodumpf(&rb99, sizeof(RB99), "%s RB99", __func__);
     }
 #endif
-    if (err) goto quit;                         /* src/clib/@@dsalc.c */
+    if (err) goto quit;                         /* src/mvs/dynalloc/@@dsalc.c */
 ```
 
 A parked block is a note, not working code: it is never compiled, so its format
@@ -257,7 +258,7 @@ log **without** the `+` prefix that marks a problem-program message.
 
 ## Dataset I/O is BSAM (and EXCP); VSAM is a separate API
 
-`fopen()` and friends go through the assembler dataset layer (`asm/@@aopen.asm`
+`fopen()` and friends go through the assembler dataset layer (`src/stdio/@@aopen.asm`
 and the `@@a*` routines). It carries three DCB templates, but only two are
 reachable: EXCP for tape, BSAM for everything else — the branch to the QSAM
 template is commented out (`*DEFUNCT` at `@@aopen.asm:209`). The open-mode table
@@ -275,17 +276,17 @@ close the old file. If the tail matters, set `errno = 0` before the
 file. Any other `errno` value there means nothing. Better still,
 `fclose()` + `fopen()`, which report it directly.
 
-VSAM has no stdio path. What exists is `src/clib/@@vs*.c`, ACB/MODCB/GENCB via
+VSAM has no stdio path. What exists is `src/mvs/vsam/@@vs*.c`, ACB/MODCB/GENCB via
 inline assembler. It is built into `libc.a`, but **no test covers it** — verify
 against your own data set before relying on it. The same caveat applies to
-`setjmp`/`longjmp` (`include/setjmp.h`, `src/clib/longjmp.c`,
-`asm/@@longj.asm`): shipped and built, untested.
+`setjmp`/`longjmp` (`include/setjmp.h`, `src/setjmp/longjmp.c`,
+`src/setjmp/@@longj.asm`): shipped and built, untested.
 
 ## 64-bit arithmetic is software
 
 The target has no native 64-bit integer (`clib64.h`: "our target machine has 32
 bit integers maximum"). libc370 ships a small bignum — `__64`, 16-bit limbs, in
-`include/clib64.h` and `src/clib/@@64*.c` — which is what `src/time64` is built
+`include/ext/int64.h` and `src/ext/int64/@@64*.c` — which is what `src/ext/time64` is built
 on. Use it where you would otherwise reach for `long long`.
 
 Note that a plain `unsigned long long` divide does not link: cc370 compiles it
@@ -306,7 +307,7 @@ operations read different views:
 
 On S/370 all three coincide and the code is correct. On a little-endian host
 they do not — and the failure is the dangerous kind: the sources **compile,
-link and run**, and simply answer wrong. A host build of the `src/time64`
+link and run**, and simply answer wrong. A host build of the `src/ext/time64`
 scaling returns 0 for both `/1000` and `/1000000`. Nothing announces that the
 harness is measuring nothing, so the obvious next move is to "fix" the expected
 values until the test is green.
@@ -320,7 +321,7 @@ all under `__LP64__`, and the `@@64*` entry points are S/370 assembler with no
 native equivalent.
 
 **The testing contract that follows:** `__64` behaviour — and anything built on
-it, which is all of `src/time64` — is verified on MVS (or a big-endian ILP32
+it, which is all of `src/ext/time64` — is verified on MVS (or a big-endian ILP32
 target) only. A host test may check expected-value *literals*, but must not
 exercise `__64` itself. `test/mvs/tsttm64.c` and `test/host/tsttm64vec.c` are
 the worked example: the arithmetic vectors run on the target, and the host
@@ -344,8 +345,8 @@ copies them to `<sysroot>/macros`, which an installed as370 finds by default
 So JES2 code assembles on the host with no `SYS1.HASPSRC` and no `MAC2=` anywhere.
 
 **What gets into `sysmac/` — and what does not.** The criterion is *libc370
-assembles it itself*: a member belongs here when one of the 27 hand-written
-`asm/*.asm`, one of the `.s` generated from `src/`, or one of the `maclib/`
+assembles it itself*: a member belongs here when one of the hand-written
+`.asm` under `src/`, one of the `.s` generated from `src/`, or one of the `maclib/`
 macros reaches it, directly or as an inner macro. Measured 2026-08-30, that is
 **120 of the 123** members. `sysmac/` is not a general SYS1.MACLIB mirror and
 must not grow into one — a project that needs a macro libc370 does not use
