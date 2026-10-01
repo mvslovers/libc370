@@ -1329,6 +1329,7 @@ HOLDK	ibm/mvs/iefvkeys.h
 HTONL	netinet/in.h
 HTONS	netinet/in.h
 HUGE_VAL	math.h
+IDCAMS_SYSPRINT	mvs/idcams.h
 IEEBASEA	ibm/mvs/ieebasea.h
 IEECDCM	ibm/mvs/ieecdcm.h
 IEFTXTFT_H	ibm/mvs/ieftxtft.h
@@ -3636,6 +3637,7 @@ __PDPCLIB_API__	stddef.h
 __PPAGET	mvs/crt.h
 __PSO	ibm/jes2/pso.h
 __SETJMP_INCLUDED	setjmp.h
+__SIGHDL	signal.h
 __SIGNAL_INCLUDED	signal.h
 __SIZE_T_DEFINED	mvs/crt.h stddef.h stdlib.h string.h time.h wchar.h
 __SJB	ibm/jes2/sjb.h

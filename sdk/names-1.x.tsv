@@ -3994,6 +3994,7 @@ __PDPCLIB_API__	stddef.h
 __PPAGET	clibppa.h
 __PSO	hasppso.h
 __SETJMP_INCLUDED	setjmp.h
+__SIGHDL	signal.h
 __SIGNAL_INCLUDED	signal.h
 __SIZE_T_DEFINED	clibgrt.h clibstr.h stddef.h stdlib.h time.h wchar.h
 __SJB	haspsjb.h
@@ -4883,6 +4884,7 @@ mtxnheld	clibmutx.h
 mtxtry	clibmutx.h
 mtxunlk	clibmutx.h
 mz_adler32	clibmz.h miniz.h
+mz_alloc_func	clibmz.h miniz.h
 mz_bitmasks	clibmzi.h
 mz_bool	clibmz.h clibmzi.h miniz_common.h miniz_tdef.h miniz_zip.h
 mz_compress	clibmz.h miniz.h
@@ -4897,7 +4899,11 @@ mz_deflateInit2	clibmz.h miniz.h
 mz_deflateReset	clibmz.h miniz.h
 mz_dummy_time_t_tag	clibmz.h miniz_common.h
 mz_error	clibmz.h miniz.h
+mz_file_needs_keepalive	miniz_zip.h
+mz_file_read_func	miniz_zip.h
+mz_file_write_func	miniz_zip.h
 mz_free	clibmz.h miniz.h
+mz_free_func	clibmz.h miniz.h
 mz_inflate	clibmz.h miniz.h
 mz_inflateEnd	clibmz.h miniz.h
 mz_inflateInit	clibmz.h miniz.h
@@ -4905,6 +4911,7 @@ mz_inflateInit2	clibmz.h miniz.h
 mz_int16	clibmz.h miniz_common.h
 mz_int64	clibmz.h miniz_common.h
 mz_private	clibmzi.h
+mz_realloc_func	clibmz.h miniz.h
 mz_stream_s	clibmz.h miniz.h
 mz_streamp	clibmz.h miniz.h
 mz_uint	clibmz.h miniz_common.h
@@ -5016,6 +5023,7 @@ osxdcb	osio.h
 osxopen	osio.h
 osxread	osio.h
 osxwrite	osio.h
+out_fct_type	clibprti.h
 pZip	miniz_zip.h
 page	clibpdfi.h
 pdf_add_barcode	clibpdf.h
@@ -5305,6 +5313,7 @@ tdefl_huffman_enforce_max_code_size	clibmzi.h
 tdefl_init	clibmz.h miniz_tdef.h
 tdefl_optimize_huffman_table	clibmzi.h
 tdefl_output_buffer_putter	clibmzi.h
+tdefl_put_buf_func_ptr	clibmz.h miniz_tdef.h
 tdefl_radix_sort_syms	clibmzi.h
 tdefl_record_literal	clibmzi.h
 tdefl_record_match	clibmzi.h
@@ -5334,6 +5343,7 @@ tinfl_decompressor_free	clibmz.h miniz_tinfl.h
 tinfl_decompressor_tag	clibmz.h miniz_tinfl.h
 tinfl_get_adler32	clibmz.h miniz_tinfl.h
 tinfl_init	clibmz.h miniz_tinfl.h
+tinfl_put_buf_func_ptr	clibmz.h miniz_tinfl.h
 tinfl_status	clibmz.h miniz_tinfl.h
 tiot	ieftiot.h
 tiotdd	ieftiot.h

@@ -139,7 +139,8 @@ KNOWN = [("gmtime64", "ext/time64.h", True),     # #else of "#if defined(__LP64_
          ("memset",   "string.h",     True),     # #else of "#if 0"
          ("printf",   "stdio.h",      True),
          ("ENOMEM",   "errno.h",      True),
-         ("ENOSYS",   "errno.h",      False)]    # only inside "#if 0"
+         ("ENOSYS",   "errno.h",      False),    # only inside "#if 0"
+         ("__SIGHDL", "signal.h",     True)]     # a function-pointer typedef
 
 
 def cmd_check():
