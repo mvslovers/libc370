@@ -76,6 +76,16 @@ them over; it does not rewrite them.
 | `in_addr_t` | `struct in_addr` | `unsigned long`, the address itself | httpd `credentials/src/credtest.c:47` casts to `in_addr_t *` for `inet_aton()`: becomes `struct in_addr *`; brexx370 `compat/jccompat.c:368`, whose `inet_addr()` libc370 now provides |
 | `inet_aton()` | 0 = address, -1 = none; second argument `in_addr_t *` | 1 = address, 0 = none (BSD); `struct in_addr *` | httpd `credtest.c` ignores the result; brexx370 already expects BSD's |
 
+## New in 2.0 that a consumer asked for — optional
+
+Nothing here has to change for a consumer to build against 2.0; each entry is
+something a consumer worked around, which it may now drop.
+
+| new | replaces | consumer |
+|---|---|---|
+| `idcams_sysprint()` in `<mvs/idcams.h>` (#71): every SYSPRINT line with its IDC message number, through a callback; `idcams()` is unchanged | mapping `idcams()`'s condition code to words, which cannot tell "not found" (IDC3012I) from "refused" (IDC3203I) | ftpd (ftpd#87); mvsMF calls `idcams()` too |
+| `inet_addr()`, `inet_pton()`, `inet_ntop()`, `inet_ntoa()` in `<arpa/inet.h>` (#51) | ftpd's `sscanf("%u.%u.%u.%u")`; brexx370's own `inet_addr()` and `inet_ntoa()` | ftpd, brexx370 |
+
 ## Verifying a migrated consumer
 
 - It builds against the 2.0 sysroot with `-Wall -Werror`. An implicit

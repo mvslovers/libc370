@@ -16,6 +16,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   module cannot write a static; between threads use `inet_ntop()`.
   `INET_ADDRSTRLEN` (`<netinet/in.h>`) and `socklen_t` (`<sys/socket.h>`)
   come with them.
+- **`idcams_sysprint()` in `<mvs/idcams.h>` (#71).** `idcams()` returns
+  IDCAMS's condition code and nothing else, so 8 meant "not found" and
+  "refused" alike (ftpd#87). `idcams_sysprint(fn, arg, fmt, ...)` runs the
+  same commands and calls `fn(arg, msgno, text, len)` for every SYSPRINT
+  line, with the IDCnnnnI number read from the line -- the number IDCAMS
+  hands its output exit drops the leading digit (IDC3012I arrives as 12) and
+  gives the two summaries -1 and -2, measured on MVS 3.8j (JOB01058). The
+  header documents the record format and which message explains a condition
+  code. `idcams()` is unchanged.
 
 ### Changed
 - **`in_addr_t` is an integer and `inet_aton()` returns 1 for an address

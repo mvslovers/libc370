@@ -1,3 +1,4 @@
+#include <mvs/idcams.h>
 #include <mvs/link.h>
 #include <mvs/wto.h>
 #include <s370/savearea.h>
@@ -5,7 +6,7 @@
 #include <string.h>
 #include <stdarg.h>
 
-static int link_idcams(const char *cmds);
+static int link_idcams(const char *cmds, IDCAMS_SYSPRINT fn, void *arg);
 
 __asm__("\n&FUNC    SETC 'idcams'");
 int idcams(const char *fmt, ...)
@@ -18,7 +19,22 @@ int idcams(const char *fmt, ...)
     va_end(args);
     cmds[sizeof(cmds)-1] = 0;
 
-    return link_idcams(cmds);
+    return link_idcams(cmds, 0, 0);
+}
+
+/* idcams_sysprint() - idcams(), with every SYSPRINT line handed to fn (#71) */
+__asm__("\n&FUNC    SETC 'idcams_sysprint'");
+int idcams_sysprint(IDCAMS_SYSPRINT fn, void *arg, const char *fmt, ...)
+{
+    va_list     args;
+    char        cmds[256];
+
+    va_start(args, fmt);
+    vsnprintf(cmds, sizeof(cmds), fmt, args);
+    va_end(args);
+    cmds[sizeof(cmds)-1] = 0;
+
+    return link_idcams(cmds, fn, arg);
 }
 
 typedef struct {
@@ -95,8 +111,10 @@ typedef struct {
 } PLIST;
 
 typedef struct {
-    void        *nab;
-    const char  *cmds;
+    void            *nab;
+    const char      *cmds;
+    IDCAMS_SYSPRINT fn;         /* idcams_sysprint(): each SYSPRINT line */
+    void            *arg;       /* ... passed to fn */
 } UDATA;
 
 static const short none = 0;
@@ -105,13 +123,13 @@ int __idcex(UDATA *udata, IOFLAGS *ioflags, IOINFO *ioinfo);
 int __idcexc(UDATA *udata, IOFLAGS *ioflags, IOINFO *ioinfo);
 
 __asm__("\n&FUNC    SETC 'link_idcams'");
-static int link_idcams(const char *cmds)
+static int link_idcams(const char *cmds, IDCAMS_SYSPRINT fn, void *arg)
 {
     char        ddname1[10] = "DDSYSIN   ";
     char        ddname2[10] = "DDSYSPRINT";
     void        *iofunc     = __idcex;
     unsigned    stack[2000] = {0};
-    UDATA       udata       = {(void*)stack, cmds};
+    UDATA       udata       = {(void*)stack, cmds, fn, arg};
     IODD        sysin       = {ddname1, iofunc, &udata};
     IODD        sysprint    = {ddname2, iofunc, &udata};
     IOLIST      iolist      = {2, sysin, sysprint};
@@ -169,6 +187,29 @@ __asm("ENTRY @@IDCEX\n"
 "         LTORG ,                   our literal pool\n"
 "         DROP  12                  drop base register");
 
+/* the IDCnnnn number of a SYSPRINT record, 0 when it carries none.
+**
+** IDCAMS hands the exit a message number of its own (ioflags->msgno), but
+** not the IDC one: measured on MVS 3.8j (#71, JOB01058), IDC3012I arrives
+** as 12, IDC3203I as 203, IDC0551I as 551, and the two summaries IDC0001I
+** and IDC0002I as -1 and -2 -- the leading digit is gone, so 0012 and 3012
+** would look alike.  The record itself says it plainly: a carriage-control
+** byte, then "IDCnnnnI".  So the number is read from there. */
+static int idc_number(const char *rec, int len)
+{
+    int     n   = 0;
+    int     i;
+
+    if (len < 9 || rec[1] != 'I' || rec[2] != 'D' || rec[3] != 'C')
+        return 0;
+    for (i = 4; i < 8; i++) {
+        if (rec[i] < '0' || rec[i] > '9')
+            return 0;
+        n = n * 10 + (rec[i] - '0');
+    }
+    return n;
+}
+
 __asm__("\n&FUNC    SETC '__idcexc'");
 int __idcexc(UDATA *udata, IOFLAGS *ioflags, IOINFO *ioinfo)
 {
@@ -201,6 +242,9 @@ int __idcexc(UDATA *udata, IOFLAGS *ioflags, IOINFO *ioinfo)
     case OP_PUT:
         /* wtof("OP_PUT %*.*s", ioinfo->put.reclen, ioinfo->put.reclen, ioinfo->put.rec); */
         /* wtodumpf(ioinfo->put.rec, ioinfo->put.reclen, "IDCAMS PUT"); */
+        if (udata->fn)          /* idcams_sysprint() (#71) */
+            udata->fn(udata->arg, idc_number(ioinfo->put.rec, ioinfo->put.reclen),
+                      ioinfo->put.rec, ioinfo->put.reclen);
         break;
     }
 
