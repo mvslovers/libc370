@@ -313,6 +313,11 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 
 ## Tier 0 — the 2.0 critical path (decided 2026-09-30, D8)
 
+**libc370 2.0.0 is released (2026-10-01):** `2.0` merged into `main` (#312,
+`460b379`), tagged `v2.0.0`, published as Latest with the migration guide
+linked in its notes. 1.x stays reachable as tag `v1.0.8` and branch `1.x`
+(`77712b9`). What remains is step 7, the consumer ports.
+
 In this order. The plan and the gates are in `doc/design-2.0.md`; the
 checklist is #245.
 
@@ -340,7 +345,10 @@ checklist is #245.
    libc370 in phase 1.
 
    **Step 2 is complete.** Next is step 3, right before phase 1 merges.
-3. **Hold the consumers' build CI:** `libc370_ref: v1.0.8` in each consumer's
+3. ~~**Hold the consumers' build CI**~~ -- **not done, on purpose** (Mike,
+   2026-10-01): an unported consumer is pushed only by its own port, so its
+   build CI meets 2.0 exactly when it is migrated. Release builds pin tags
+   and were never at risk. Original plan: `libc370_ref: v1.0.8` in each consumer's
    `build.yml`. The cut lands on `main` with phase 1, not with the release, so
    this goes in right before phase 1 merges, and not earlier, or it silences
    the early warning for longer than necessary.
@@ -430,11 +438,14 @@ checklist is #245.
 7. **Consumer migration -- by an agent, not a script** (decided
    2026-10-01, #309): `doc/migration-2.0-agent.md` is the brief, with
    `doc/migration-2.0.md` as the specification. Consumers port against the
-   rolling tag **`v2.0.0-dev`** on `2.0` (moved after each merge into `2.0`;
-   `edge` stays 1.x, brexx370 pins it) -- `[toolchain] libc370 = "2.0.0-dev"`
-   plus `libc370_ref: v2.0.0-dev` in build.yml. Local 2.0 builds use the
-   second toolchain `~/.local/opt/cc370-libc2` (refresh after moving the tag);
-   `~/.local` keeps 1.0.8.
+   rolling tag `v2.0.0-dev` until the release; **since 2.0.0 they pin
+   `[toolchain] libc370 = "2.0.0"` and drop any `libc370_ref`** (the build CI
+   follows `main`, which is 2.0). ufsd and brexx370 switch from `2.0.0-dev`
+   the same way. `edge` stays on its 1.x commit until brexx370#274 merges.
+   Local 2.0 builds use the second toolchain `~/.local/opt/cc370-libc2`;
+   `~/.local` keeps 1.0.8 for the unported (swap the roles once most are
+   ported). The brief `doc/migration-2.0-agent.md` left the tree with the
+   release and needs rework for this situation (kept locally).
    - **ported:** ufsd (ufsd#82, merged 2026-10-01, prerelease `v1.4.0-dev`),
      brexx370 (brexx370#274, open; moves its pin off `edge` -- after it,
      nothing pins `edge`). Findings folded into the brief (#310).
@@ -442,8 +453,9 @@ checklist is #245.
      httpd and mvsMF also crypto370. ufsd publishes **prereleases only**
      until all three are ported (a stable release would reach their `>=`
      ranges; a prerelease does not).
-8. **Prerelease `v2.0.0-rc1`** (mbt takes `-rcN`, not `-rc.1`), tagged on
-   the branch `2.0`, not on `main`.
+8. ~~**Prerelease `v2.0.0-rc1`**~~ -- skipped (2026-10-01): ufsd and brexx370
+   were ported and tested against `v2.0.0-dev` instead, and 2.0.0 was
+   released directly.
    ~~Before it, run the stdio MVS probes once on the `2.0` build~~ --
    **not needed** (2026-10-01, #300 comment): compiled gnu89 vs gnu99 and
    assembled, `@@fpswt` and `@@fseek` are byte-identical objects (label
@@ -454,11 +466,15 @@ checklist is #245.
    `main` stays 1.x and the consumers' build CI stays green. Check first
    that `release.yml` and the consumers' `make deps` / `[toolchain]` accept a
    prerelease tag off `main`.
-9. **First consumer on 2.x against the rc** -- ftpd proposed (smaller than
+9. ~~**First consumer on 2.x against the rc**~~ -- done as ufsd and brexx370
+   against `v2.0.0-dev` (step 7). -- ftpd proposed (smaller than
    httpd/mvsMF, gains from #80 and #71, no crypto370): migrated by the
    script on a branch, rebuilt (that rebuild is the relink), tested on MVS.
    Defects in libc370 or in the maps make `rc.2`, and so on.
-10. **Release 2.0.0:** step 3's hold PRs in the consumers (Mike's go), `2.0`
+10. ~~**Release 2.0.0**~~ -- **done 2026-10-01** (#311, #312, `v2.0.0`),
+    without the hold PRs (step 3) and without the rc (step 8). **Open:** the
+    CHANGELOG names no minimum cc370; the release notes carry only the
+    commit it was built with (`47b3545`). Original plan: step 3's hold PRs in the consumers (Mike's go), `2.0`
     → `main` (Mike's go), tag 2.0.0 with the CHANGELOG migration section and
     the minimum cc370 commit; then one migration PR per consumer, each
     removing its `libc370_ref` line again. httpd's and mvsMF's also add
