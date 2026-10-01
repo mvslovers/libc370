@@ -126,7 +126,7 @@ def implicit(tree):
         incs += ["-I", "src/internal"]
 
     def one(tu):
-        r = run(["cc370", "-O1", "-fsyntax-only", "-Wimplicit-function-declaration"]
+        r = run(["cc370", "-O1", "-std=gnu99", "-trigraphs", "-fsyntax-only", "-Wimplicit-function-declaration"]
                 + incs + [tu], cwd=tree)
         return [f"{tu}: {m.group(1)}" for m in
                 re.finditer(r"warning: (implicit declaration of function \S+)", r.stderr)]

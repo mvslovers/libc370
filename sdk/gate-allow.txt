@@ -1,3 +1,12 @@
 # Differences sdk/gate.py accepts for THIS change only: '<asm|symbol|member>
 # <name> <reason>'.  An entry that matches no difference fails the gate, so
 # the next change finds these stale and empties the file.  See sdk/gate.py.
+
+asm     @@fpswt.s    -std=gnu99: registers and labels only; calls and literals unchanged
+asm     @@fseek.s    -std=gnu99: registers and labels only; calls and literals unchanged
+asm     @@listds.s    -std=gnu99: one block's locals 152 bytes lower in a smaller frame, same instructions; calls and literals unchanged
+asm     @@loadhi.s    -std=gnu99: registers, one spill, and an & 0xFF dropped whose every use reads the low byte only; calls and literals unchanged
+asm     @@tmthrd.s    -std=gnu99: a double kept in a register instead of spilled; calls and literals unchanged
+asm     bsearch.s    -std=gnu99: registers only; calls and literals unchanged
+asm     strtoul.s    -std=gnu99: registers only; calls and literals unchanged
+asm     vvscanf.s    -std=gnu99: one move fewer; calls and literals unchanged
