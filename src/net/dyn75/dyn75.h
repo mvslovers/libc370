@@ -1,6 +1,6 @@
 #ifndef SRC_INTERNAL_DYN75_H
 #define SRC_INTERNAL_DYN75_H
-/* src/internal/dyn75.h - internal: the DYN75 (X'75') socket implementation.
+/* src/net/dyn75/dyn75.h - internal: the DYN75 (X'75') socket implementation.
 **
 ** libc370 2.0 splits this out of socket.h (#256).
 */

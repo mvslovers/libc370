@@ -1,16 +1,17 @@
-/* @@75PNAM.C
-** getpeername()
+/* @@75SNAM.C
+** getsockname()
 */
 #include <string.h>
-#include "src/internal/x75.h"
+#include "src/net/dyn75/x75.h"
 #include "sys/socket.h"
+#include "src/net/dyn75/dyn75.h"
 #include "errno.h"
 #include "mvs/socket.h"
 
-/* getpeername() */
-__asm__("\n&FUNC    SETC 'getpeername'");
+/* getsockname() */
+__asm__("\n&FUNC    SETC 'getsockname'");
 extern int
-getpeername(int ss, struct sockaddr *addr, int *addrlen)
+getsockname(int ss, struct sockaddr *addr, int *addrlen)
 {
     CLIBSOCK    *s  = 0;
     int         rc  = 0;
@@ -20,11 +21,11 @@ getpeername(int ss, struct sockaddr *addr, int *addrlen)
         /* do we have this socket in our cache? */
         if (__sofind(ss,&s)) {
             /* yes, do we have socket name? */
-            if (s && memcmp(s->peer, "\x00\x00\x00\x00", 4)!= 0) {
+            if (s && memcmp(s->name, "\x00\x00\x00\x00", 4)!= 0) {
                 /* yes, return cached name */
                 int len = addrlen ? *addrlen : sizeof(*addr);
-                if (len > sizeof(s->peer)) len = sizeof(s->peer);
-                memcpy(addr, s->peer, len);
+                if (len > sizeof(s->name)) len = sizeof(s->name);
+                memcpy(addr, s->name, len);
                 goto quit;
             }
         }
@@ -37,7 +38,7 @@ getpeername(int ss, struct sockaddr *addr, int *addrlen)
 #endif
 
     pl.r6   = (unsigned) addr;      /* sockaddr pointer */
-    pl.r7   = (unsigned) 19;        /* function code for getpeername() */
+    pl.r7   = (unsigned) 16;        /* function code for getsockname() */
     pl.r8   = (unsigned) ss;        /* socket */
 
     __75(&pl);
@@ -48,7 +49,12 @@ getpeername(int ss, struct sockaddr *addr, int *addrlen)
     pl.r1   = (unsigned) 0;
     pl.r7   = (unsigned) 2;         /* function code for get error */
     __75(&pl);
+#if 0
+    __75vect->error = (int) pl.r4;  /* save error code */
+    errno = __75vect->error;
+#else
     errno = (int)pl.r4;
+#endif
 
 quit:
     if (addrlen) *addrlen = sizeof(struct sockaddr);

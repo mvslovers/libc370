@@ -1,13 +1,13 @@
 /* @@75VECT.C
 ** TCPIP Vector
 */
-#include "src/internal/x75.h"
+#include "src/net/dyn75/x75.h"
 #include "netinet/in.h"
 #include "sys/socket.h"
 #include "sys/select.h"
 #include "netdb.h"
 #include "mvs/socket.h"
-#include "src/internal/dyn75.h"
+#include "src/net/dyn75/dyn75.h"
 
 #if 0
 extern unsigned __75gabn(const char *name);

@@ -1,7 +1,7 @@
 /* @@75RECV.C
 ** Receive data from a socket
 */
-#include "src/internal/x75.h"
+#include "src/net/dyn75/x75.h"
 #include "sys/socket.h"
 #include "errno.h"
 

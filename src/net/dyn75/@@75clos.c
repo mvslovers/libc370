@@ -1,7 +1,7 @@
 /* @@75CLOS.C
 ** Close socket
 */
-#include "src/internal/x75.h"
+#include "src/net/dyn75/x75.h"
 #include "sys/socket.h"
 #include "mvs/socket.h"
 

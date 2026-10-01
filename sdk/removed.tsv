@@ -5,7 +5,7 @@
 BKMK	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
 BLOWFISH_BLOCK_SIZE	blowfish.h	crypto370 <blowfish.h> BLOWFISH_BLOCK_SIZE	moved to crypto370 1.0.0 (#244)
 BLOWFISH_H	blowfish.h	-	moved to crypto370 (#244)
-BOR	socket.h	internal	now in src/internal/dyn75.h
+BOR	socket.h	internal	now in src/net/dyn75/dyn75.h
 Byte	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
 Bytef	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
 CLIBJPA	clibjpa.h	internal	now in src/internal/crtanchor.h
@@ -187,7 +187,7 @@ MZ_VER_MINOR	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
 MZ_VER_REVISION	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
 MZ_VER_SUBREVISION	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
 M_SQRT2	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
-OR	socket.h	internal	now in src/internal/dyn75.h
+OR	socket.h	internal	now in src/net/dyn75/dyn75.h
 PAGE	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
 PDF	clibpdf.h	-	PDF generator: declared, never implemented (#248)
 PDFI	clibpdf.h	-	PDF generator: declared, never implemented (#248)
@@ -340,26 +340,26 @@ Z_STREAM_END	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
 Z_STREAM_ERROR	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
 Z_SYNC_FLUSH	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
 Z_VERSION_ERROR	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
-__75	@@75.h __75.h	internal	now in src/internal/x75.h
-__75VECT	socket.h	internal	now in src/internal/dyn75.h
-__75acce	socket.h	internal	now in src/internal/dyn75.h
-__75bind	socket.h	internal	now in src/internal/dyn75.h
-__75clos	socket.h	internal	now in src/internal/dyn75.h
-__75conn	socket.h	internal	now in src/internal/dyn75.h
-__75gabn	socket.h	internal	now in src/internal/dyn75.h
-__75ghba	socket.h	internal	now in src/internal/dyn75.h
-__75ghbn	socket.h	internal	now in src/internal/dyn75.h
-__75init	socket.h	internal	now in src/internal/dyn75.h
-__75ioct	socket.h	internal	now in src/internal/dyn75.h
-__75list	socket.h	internal	now in src/internal/dyn75.h
-__75pnam	socket.h	internal	now in src/internal/dyn75.h
-__75recv	socket.h	internal	now in src/internal/dyn75.h
-__75sele	socket.h	internal	now in src/internal/dyn75.h
-__75selx	socket.h	internal	now in src/internal/dyn75.h
-__75send	socket.h	internal	now in src/internal/dyn75.h
-__75snam	socket.h	internal	now in src/internal/dyn75.h
-__75sock	socket.h	internal	now in src/internal/dyn75.h
-__75vect	socket.h	internal	now in src/internal/dyn75.h
+__75	@@75.h __75.h	internal	now in src/net/dyn75/x75.h
+__75VECT	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75acce	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75bind	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75clos	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75conn	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75gabn	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75ghba	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75ghbn	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75init	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75ioct	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75list	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75pnam	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75recv	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75sele	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75selx	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75send	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75snam	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75sock	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75vect	socket.h	internal	now in src/net/dyn75/dyn75.h
 __JPAGET	clibjpa.h	internal	now in src/internal/crtanchor.h
 __aclose	mvssupa.h	internal	now in src/internal/bsam.h
 __adisc	mvssupa.h	internal	now in src/internal/bsam.h
@@ -755,10 +755,10 @@ pdf_text_pixel_width	clibpdfi.h	-	PDF generator: declared, never implemented (#2
 pdf_width	clibpdf.h	-	PDF generator: declared, never implemented (#248)
 pdfatoe	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
 pdfetoa	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
-pl75	@@75.h __75.h	internal	now in src/internal/x75.h
+pl75	@@75.h __75.h	internal	now in src/net/dyn75/x75.h
 printf_	clibprtf.h	internal	now in src/internal/printf.h
 printf_private	clibprti.h	internal	now in src/internal/printf.h
-r0	@@75.h __75.h	internal	now in src/internal/x75.h
+r0	@@75.h __75.h	internal	now in src/net/dyn75/x75.h
 res	clibres.h	internal	now in src/internal/clibres.h
 res_request_authoff	clibres.h	internal	now in src/internal/clibres.h
 res_request_authon	clibres.h	internal	now in src/internal/clibres.h
