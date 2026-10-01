@@ -380,8 +380,9 @@ checklist is #245.
      `doc/migration-2.0.md`. Every later move updates them in the same PR
 5a. ~~**Phase 3 in 2.0 (#278, D9):** sources by area~~ **done** (#285–#293,
    summary on #278): `src/` mirrors `include/`, `sdk/srcmap.tsv` records
-   every move, `attic/` holds what is not built. Open: three `ibm/` headers
-   declare functions (#278). Phase 4 (the OS seam) stays in 2.x.
+   every move, `attic/` holds what is not built; the three `ibm/` headers
+   that declared functions followed in #296. #256, #274 and #278 closed
+   2026-10-01. Phase 4 (the OS seam) stays in 2.x.
 6. **Interface changes and consumer wishes (Tier 5), now** (decided
    2026-10-01). Formerly called "the relink round" -- the name was
    misleading. What these share is that consumers wait for them; three of
