@@ -75,17 +75,17 @@ tstfabnd() {
     "$CC" -std=gnu99 -Wall -Wextra \
        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
        -I $R/include -I $R -o "$B/t" tstfabnd.c \
-       "$R/src/clib/@@aradd.c" "$R/src/clib/@@arnew.c" \
-       "$R/src/clib/@@arcou.c" "$R/src/clib/@@ardel.c" \
-       "$R/src/clib/@@arfre.c" "$R/src/clib/@@arget.c" && "$B/t"
+       "$R/src/ext/array/@@aradd.c" "$R/src/ext/array/@@arnew.c" \
+       "$R/src/ext/array/@@arcou.c" "$R/src/ext/array/@@ardel.c" \
+       "$R/src/ext/array/@@arfre.c" "$R/src/ext/array/@@arget.c" && "$B/t"
 }
 tstfcls() {
     "$CC" -std=gnu99 -Wall -Wextra \
        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
        -I $R/include -I $R -o "$B/t" tstfcls.c \
-       "$R/src/clib/@@aradd.c" "$R/src/clib/@@arnew.c" \
-       "$R/src/clib/@@arcou.c" "$R/src/clib/@@ardel.c" \
-       "$R/src/clib/@@arfre.c" "$R/src/clib/@@arget.c" && "$B/t"
+       "$R/src/ext/array/@@aradd.c" "$R/src/ext/array/@@arnew.c" \
+       "$R/src/ext/array/@@arcou.c" "$R/src/ext/array/@@ardel.c" \
+       "$R/src/ext/array/@@arfre.c" "$R/src/ext/array/@@arget.c" && "$B/t"
 }
 tstfpapp() {
     "$CC" -std=gnu99 -Wall \
@@ -108,7 +108,7 @@ tstjesop() {
        -c "$R/src/jes/jesopen.c" -o "$B/jesopen.o" &&
     "$CC" -std=gnu99 -U__LP64__ -D'__asm__(x)=' -D__32BIT__ \
        -Dcalloc=tst_calloc -I $R/include -I $R \
-       -c "$R/src/clib/@@arnew.c" -o "$B/arnew.o" &&
+       -c "$R/src/ext/array/@@arnew.c" -o "$B/arnew.o" &&
     "$CC" -std=gnu99 -U__LP64__ -D'__asm__(x)=' -D__32BIT__ \
        -Dfree=tst_free -I $R/include -I $R \
        -c "$R/src/jes/jesjobf1.c" -o "$B/jesjobf1.o" &&
@@ -116,8 +116,8 @@ tstjesop() {
        -D'__asm__(x)=' -D__32BIT__ -I $R/include -I $R \
        -o "$B/t" tstjesop.c "$B/jesopen.o" "$B/arnew.o" "$B/jesjobf1.o" \
        "$R/src/jes/jesclose.c" "$R/src/jes/jesjobfr.c" \
-       "$R/src/clib/@@aradd.c" "$R/src/clib/@@arcou.c" \
-       "$R/src/clib/@@arget.c" "$R/src/clib/@@arfre.c" && "$B/t"
+       "$R/src/ext/array/@@aradd.c" "$R/src/ext/array/@@arcou.c" \
+       "$R/src/ext/array/@@arget.c" "$R/src/ext/array/@@arfre.c" && "$B/t"
 }
 tstjesprb() {
     "$CC" -std=gnu99 -Wall -Wextra -I $R \
@@ -128,14 +128,14 @@ tstjestx() {
        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
        -I $R/include -I $R -o "$B/t" tstjestx.c \
        "$R/src/jes/jesprb.c" \
-       "$R/src/clib/@@aradd.c" "$R/src/clib/@@arnew.c" \
-       "$R/src/clib/@@arcou.c" "$R/src/clib/@@arget.c" \
-       "$R/src/clib/@@arfre.c" && "$B/t"
+       "$R/src/ext/array/@@aradd.c" "$R/src/ext/array/@@arnew.c" \
+       "$R/src/ext/array/@@arcou.c" "$R/src/ext/array/@@arget.c" \
+       "$R/src/ext/array/@@arfre.c" && "$B/t"
 }
 tstlspd() {
     "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address \
        -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
-       -I $R/include -I $R -o "$B/t" tstlspd.c "$R/src/clib/@@patmat.c" && "$B/t"
+       -I $R/include -I $R -o "$B/t" tstlspd.c "$R/src/ext/strutil/@@patmat.c" && "$B/t"
 }
 tstplus() {
     "$CC" -std=gnu99 -Wall \
@@ -156,9 +156,9 @@ tsttxdsn() {
     "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address \
        -D'__asm__(x)=' -D__32BIT__ -I $R/include -I $R -o "$B/t" tsttxdsn.c \
        "$B/nwtx99.o" \
-       "$R/src/clib/@@txdsn.c" "$R/src/clib/@@aradd.c" \
-       "$R/src/clib/@@arnew.c" "$R/src/clib/@@arcou.c" \
-       "$R/src/clib/@@arget.c" "$R/src/clib/@@arfre.c" && "$B/t"
+       "$R/src/clib/@@txdsn.c" "$R/src/ext/array/@@aradd.c" \
+       "$R/src/ext/array/@@arnew.c" "$R/src/ext/array/@@arcou.c" \
+       "$R/src/ext/array/@@arget.c" "$R/src/ext/array/@@arfre.c" && "$B/t"
 }
 tstvsnp() {
     "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address \

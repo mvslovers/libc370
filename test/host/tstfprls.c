@@ -383,11 +383,11 @@ int __txrecf(TXT99 ***txt99, const char *recfm)
 
 #include "../../src/clib/@@txorg.c"
 
-#include "../../src/clib/@@aradd.c"
-#include "../../src/clib/@@arnew.c"
-#include "../../src/clib/@@arcou.c"
-#include "../../src/clib/@@arget.c"
-#include "../../src/clib/@@arfre.c"
+#include "../../src/ext/array/@@aradd.c"
+#include "../../src/ext/array/@@arnew.c"
+#include "../../src/ext/array/@@arcou.c"
+#include "../../src/ext/array/@@arget.c"
+#include "../../src/ext/array/@@arfre.c"
 
 /* --------------------------------------------------------------------------
  * Helpers

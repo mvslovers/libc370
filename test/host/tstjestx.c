@@ -83,9 +83,9 @@
  *        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
  *        -I $R/include -I $R/src/internal -I $R/src/jes -o t tstjestx.c \
  *        "$R/src/jes/jesprb.c" \
- *        "$R/src/clib/@@aradd.c" "$R/src/clib/@@arnew.c" \
- *        "$R/src/clib/@@arcou.c" "$R/src/clib/@@arget.c" \
- *        "$R/src/clib/@@arfre.c"
+ *        "$R/src/ext/array/@@aradd.c" "$R/src/ext/array/@@arnew.c" \
+ *        "$R/src/ext/array/@@arcou.c" "$R/src/ext/array/@@arget.c" \
+ *        "$R/src/ext/array/@@arfre.c"
  *     ./t                                             # 20/20, rc 0
  *
  * RED, against the pre-fix source.  Cases (1)-(4) execute and pass, then case

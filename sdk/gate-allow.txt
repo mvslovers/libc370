@@ -1,9 +1,4 @@
 # Differences sdk/gate.py accepts for THIS change only: '<asm|symbol|member>
 # <name> <reason>'.  An entry that matches no difference fails the gate, so
 # the next change finds these stale and empties the file.  See sdk/gate.py.
-asm     @@64test.s    a program with main(), never in libc.a: moves to attic/ (#278)
-asm     cmtttest.s    a program with main(), never in libc.a: moves to attic/ (#278)
-asm     hello.s       a program with main(), never in libc.a: moves to attic/ (#278)
-asm     testdsab.s    a program with main(), never in libc.a: moves to attic/ (#278)
-asm     testlstv.s    a program with main(), never in libc.a: moves to attic/ (#278)
-asm     tm64test.s    a program with main(), never in libc.a: moves to attic/ (#278)
+asm     tm64syr.s     assert() embeds __FILE__, the source path that moves to src/ext/time64/ (#278)

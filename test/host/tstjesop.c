@@ -102,7 +102,7 @@
  *        -c "$R/src/jes/jesopen.c" -o jesopen.o
  *     cc -std=gnu99 -U__LP64__ -D'__asm__(x)=' -D__32BIT__ \
  *        -Dcalloc=tst_calloc -I $R/include -I $R/src/internal \
- *        -c "$R/src/clib/@@arnew.c" -o arnew.o
+ *        -c "$R/src/ext/array/@@arnew.c" -o arnew.o
  *     cc -std=gnu99 -U__LP64__ -D'__asm__(x)=' -D__32BIT__ \
  *        -Dfree=tst_free -I $R/include -I $R/src/internal \
  *        -c "$R/src/jes/jesjobf1.c" -o jesjobf1.o
@@ -110,8 +110,8 @@
  *        -D'__asm__(x)=' -D__32BIT__ -I $R/include -I $R/src/internal \
  *        -o t tstjesop.c jesopen.o arnew.o jesjobf1.o \
  *        "$R/src/jes/jesclose.c" "$R/src/jes/jesjobfr.c" \
- *        "$R/src/clib/@@aradd.c" "$R/src/clib/@@arcou.c" \
- *        "$R/src/clib/@@arget.c" "$R/src/clib/@@arfre.c"
+ *        "$R/src/ext/array/@@aradd.c" "$R/src/ext/array/@@arcou.c" \
+ *        "$R/src/ext/array/@@arget.c" "$R/src/ext/array/@@arfre.c"
  *     ./t                                             # 20/20, rc 0
  *
  * ASAN here buys memory-error checking, not leak checking: LeakSanitizer is
