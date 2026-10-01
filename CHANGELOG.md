@@ -27,6 +27,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   code. `idcams()` is unchanged.
 
 ### Changed
+- **`JESJOB` grows from 80 to 96 bytes: `submit_time64` and `sysid` (#79).**
+  The submit time (JCTRDRON/JCTRDTON, time on the input processor) and the
+  input processor's system id (JCTRDSID) were in the JCT and surfaced
+  nowhere; mvsMF had to leave z/OSMF's `exec-submitted` empty (mvsmf#208).
+  Both are appended at 0x50, so offsets 0x00-0x4F keep their 1.x values.
+  `jesjob()` allocates every `JESJOB`, so a consumer only rebuilds. Measured
+  on MVS 3.8j: a job held 20 seconds shows its submit 21 seconds before its
+  start (JOB01066).
 - **`in_addr_t` is an integer and `inet_aton()` returns 1 for an address
   (#51).** 1.x defined `in_addr_t` as `struct in_addr` and had `inet_aton()`
   return 0 for an address and -1 for none -- the opposite of BSD, z/OS and

@@ -63,7 +63,13 @@ struct jesjob {
 #define JESJOB_CF   0x40            /* ... JOB FAILED DUE TO CC             */
 #define JESJOB_ABD  0x20            /* ... ABEND (system or user)           */
     unsigned char   __pad[3];       /* 4D alignment                         */
-};                                  /* 50 (80 bytes)                        */
+    /* 2.0 appends here, so 00-4F keep their 1.x offsets (#79)              */
+    time64_t        submit_time64;  /* 50 time on the input processor: the  */
+                                    /*    job was submitted (JCTRDRON/TON)  */
+    unsigned char   sysid[5];       /* 58 input processor system id         */
+                                    /*    (JCTRDSID), blanks stripped       */
+    unsigned char   __pad2[3];      /* 5D alignment                         */
+};                                  /* 60 (96 bytes)                        */
 
 struct jesdd {
     unsigned char   eye[8];         /* 00 eye catcher for dumps             */

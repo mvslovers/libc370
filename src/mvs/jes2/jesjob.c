@@ -215,6 +215,11 @@ JESJOB **jesjob(JES *jes, const char *filter, JESFILT type, int dd)
         job->jobkey     = jct->JCTJBKEY;
         job->completion  = (unsigned int)jct->JCTCNVRC;
         job->jtflg       = jct->JCTJTFLG;
+        job->submit_time64 = make_time(jct->JCTRDRON, jct->JCTRDTON);   /* #79 */
+        /* JCTRDSID is four characters, blank-padded and not terminated */
+        memcpy(job->sysid, jct->JCTRDSID, sizeof(jct->JCTRDSID));
+        for (unsigned n = sizeof(jct->JCTRDSID); n > 0 && job->sysid[n-1] == ' '; n--)
+            job->sysid[n-1] = 0;
 
         if (dd) {
             /* Process the IOT */

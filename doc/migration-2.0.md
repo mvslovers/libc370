@@ -84,6 +84,7 @@ something a consumer worked around, which it may now drop.
 | new | replaces | consumer |
 |---|---|---|
 | `idcams_sysprint()` in `<mvs/idcams.h>` (#71): every SYSPRINT line with its IDC message number, through a callback; `idcams()` is unchanged | mapping `idcams()`'s condition code to words, which cannot tell "not found" (IDC3012I) from "refused" (IDC3203I) | ftpd (ftpd#87); mvsMF calls `idcams()` too |
+| `JESJOB.submit_time64` and `JESJOB.sysid` in `<mvs/jes2.h>` (#79): when the job was submitted, and on which system | nothing -- z/OSMF's `exec-submitted` stayed empty, `exec-system` unanswered | mvsMF (mvsmf#208, mvsmf#209) |
 | `inet_addr()`, `inet_pton()`, `inet_ntop()`, `inet_ntoa()` in `<arpa/inet.h>` (#51) | ftpd's `sscanf("%u.%u.%u.%u")`; brexx370's own `inet_addr()` and `inet_ntoa()` | ftpd, brexx370 |
 
 ## Verifying a migrated consumer
