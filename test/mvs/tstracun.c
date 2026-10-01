@@ -65,11 +65,14 @@
  */
 #include <stdio.h>
 #include <string.h>
-#include "racf.h"
-#include "clibos.h"
-#include "clibauth.h"
-#include "clibtry.h"
-#include "clibwto.h"
+#include "mvs/racf.h"
+#include "stddef.h"
+#include "ibm/mvs/ihacde.h"
+#include "mvs/wto.h"
+#include "mvs/apf.h"
+#include "mvs/apf.h"
+#include "mvs/recovery.h"
+#include "mvs/wto.h"
 
 #define FIXUSER "MVSCE02"
 

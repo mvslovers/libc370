@@ -1,7 +1,8 @@
 # libc370 2.0 — header and source layout
 
-**Status: draft, 2026-09-30.** Umbrella issue: #245. Nothing is implemented.
-This document is the plan; each phase gets its own issue when it starts.
+**Status: in progress, 2026-09-30.** Umbrella issue: #245. Phase 1 is done on
+the integration branch `2.0` (#256), phase 2 is under way (#274). This document
+is the plan; each phase gets its own issue when it starts.
 
 ## Why
 
@@ -27,7 +28,7 @@ from `main` at `a3e2e67`):
 A fourth finding came out of the inventory. **Four header families declare code
 that is not in `libc.a`:** miniz (#243), a PDF generator (`clibpdf.h`, 28
 symbols), `emfile.h` (22) and `ipc.h` (17). miniz and PDF have no
-implementation anywhere. `emfile` and `ipc` have sources in `src/wip/orig/`,
+implementation anywhere. `emfile` and `ipc` have sources in `attic/orig/` (then `src/wip/orig/`),
 which is not built (#248). No consumer includes any of them.
 
 ## Principles
@@ -36,22 +37,38 @@ which is not built (#248). No consumer includes any of them.
   carries ISO names plus the POSIX additions POSIX assigns to that same header
   (`strdup` in `<string.h>`, `localtime_r` in `<time.h>`). A POSIX header
   carries POSIX names. Nothing else, and no feature-test macros (D2).
-- **No header under `libc370/` or `mvs/` has the name of an ISO or POSIX
-  header.** A quoted `#include "string.h"` inside `include/libc370/` would find
-  the neighbour before the standard one (D1).
+- **No header under `ext/` or `mvs/` has the name of an ISO or POSIX
+  header.** A quoted `#include "string.h"` inside `include/ext/` would find
+  the neighbour before the standard one (D1). One exception, and a temporary
+  one: `mvs/socket.h` (D11). No top-level `socket.h` exists in 2.0, so the
+  hazard cannot occur, and the header is to be dissolved.
 - **The top directory says who owns the content:**
-  - `libc370/` — our API, portable (it would work on CMS too)
+  - `ext/` — our API, portable (it would work on CMS too)
   - `mvs/` — our API, MVS-bound
   - `ibm/<component>/` — IBM's data layout, transcribed as C structs, no functions
   - `s370/` — the architecture and linkage shared by every S/370 target
-- **Internals are not installed.** They live in `src/internal/`.
+- **Internals are not installed.** They live under `src/`: shared ones flat
+  in `src/internal/`, those only one area uses beside its sources
+  (`src/mvs/jes2/jesprb.h`). A source names them by their path from the repository
+  root, `#include "src/internal/fileio.h"`, and the build passes `-I` for the
+  root, not for `src/internal/`. So every include line says whether it is
+  public (`<…>`) or private (`"src/…"`), and no private header can be found
+  under a public name (D10).
+- **`src/` mirrors `include/`.** The implementation of `include/mvs/jes2.h` is
+  under `src/mvs/jes/`, that of `<stdio.h>` under `src/stdio/`. Assembler
+  sits beside the C it belongs to; there is no separate `asm/` (D9).
 - **Names are plain words.** No `clib` prefix and no abbreviations a reader has
-  to decode (`svc99.h` → `mvs/dynalloc.h`). Under `ibm/`, a header is named
+  to decode (`svc99.h` → `mvs/dynalloc.h`), no prefix or suffix marking an
+  internal header either: its directory says so. Three internal headers keep
+  their `clib` name on purpose, as a marker that they are not integrated yet:
+  `clibres.h`, `clibspl.h`, `clibsvc.h` (#274). Under `ibm/`, a header is named
   after its IBM mapping macro in lower case (`IHAACEE` → `ibm/mvs/ihaacee.h`),
   so the IBM manual leads straight to the header.
 - **2.0 is a hard cut.** No compatibility headers and no deprecation period:
   the old names are gone in 2.0.0. Consumers migrate once, driven by a script
-  generated from the mapping table below.
+  that reads the maps: `sdk/headermap.tsv` (headers, the table below),
+  `sdk/names.tsv` and `sdk/removed.tsv` (names); `doc/migration-2.0.md`
+  says how.
 - **Function names do not change in 2.0.** Moving a header is mechanical and
   provably changes no code. Renaming a function changes symbols in every
   consumer. That is a separate project (#246).
@@ -63,16 +80,23 @@ include/                        installed into the sysroot
   assert.h ... wchar.h          ISO C99; to add: stdbool.h, inttypes.h, iso646.h
   strings.h unistd.h            POSIX subset, only for functions that exist (D2)
   sys/socket.h netinet/in.h arpa/inet.h
-  libc370/                      portable extensions: array.h, time64.h, version.h, strutil.h, int64.h
-  mvs/                          MVS API: wto.h, dynalloc.h, jes2.h, racf.h, smf.h, vsam.h, thread.h, recovery.h, ...
+  ext/                          portable extensions: array.h, time64.h, version.h, strutil.h, int64.h
+  mvs/                          MVS API: wto.h, dynalloc.h, jes2.h, racf.h, smf.h, vsam.h, thread.h, recovery.h,
+                                wsa.h, jes2spool.h, socket.h (to be dissolved, D11), ...
   s370/                         savearea.h, ccw.h
   ibm/mvs/                      IBM data areas: cvt.h, ihaacee.h, ikjtcb.h, iefjfcbn.h, dcbd.h, ...
   ibm/jes2/                     JES2 data areas: jct.h, jqe.h, hct.h, ...
-src/
-  internal/                     private headers, never installed
-  stdio/ string/ stdlib/ time/ ctype/ math/ ...    portable core      (phase 3)
-  s370/                         architecture
-  mvs/                          the operating-system layer              (phase 4)
+src/                            never installed; mirrors include/ (phase 3, D9; sdk/srcmap.tsv)
+  internal/                     shared private headers, flat: fileio.h, bsam.h, printf.h, ...
+  stdio/ string/ stdlib/ time/ ctype/ math/ ...    one directory per ISO or POSIX header
+  ext/<header>/                 implementation of include/ext/: int64/, time64/, array/, ...
+  mvs/<header>/                 implementation of include/mvs/, one directory per header:
+                                crt/ (start-up, @@JPA, WSA), jes2/, dynalloc/, thread/, ...;
+                                svc/ (the SVC-in-C scaffold, no public header yet)
+  net/                          the network family: sys/socket.h, sys/select.h, netdb.h, arpa/inet.h
+    dyn75/                        its DYN75 provider, with the private x75.h and dyn75.h
+  s370/                         architecture; the 64-bit arithmetic the compiler calls
+attic/                          code that is kept but not built (was src/wip/)
 ```
 
 VM/CMS is **not** designed here. The deliverable is the seam. A later `cms/`,
@@ -82,13 +106,16 @@ already shared.
 ## What 2.0 is, and what it is not
 
 **2.0.0 is the interface cut.** It carries phases 1 and 2 (new header paths,
-internals out of the sysroot, dead headers gone, crypto out) and the **relink
-round**: the struct and signature growth that was already waiting for a
-coordinated rebuild of the consumers (#79, #50, #51, #71, #172, and #80 defect
-1's `max` parameter). A major version is the one moment consumers expect to
-change code, so they migrate once instead of twice. Phases 3 and 4 reorganise
-sources and draw the OS seam. They change nothing visible and can land in 2.x
-without breaking anyone.
+internals out of the sysroot, dead headers gone, crypto out) and the
+**interface changes** that were waiting for every consumer to be recompiled
+at once: struct growth (#79, #50) and #80 defect 1's `max` parameter. Three
+consumer wishes without an interface break ride along (#51, #71, #172;
+decided 2026-10-01). Until then this was called "the relink round"; the
+point is recompiling against the new headers, not relinking. A major version is the one moment consumers expect to
+change code, so they migrate once instead of twice. **Phase 3, the source
+layout, ships in 2.0 as well** (D9): it changes nothing visible, but 2.0 is
+meant to be a clean, readable tree. Phase 4 draws the OS seam; it changes code,
+not layout, and lands in 2.x.
 
 **2.0 comes first (decided 2026-09-30, D8).** 1.0.8 is the last 1.x release and
 the consumers are pinned to it, so no fix that lands on `main` reaches a
@@ -102,11 +129,13 @@ other item. Header moves and parallel fix PRs would also collide on the same
 | # | what | gate |
 |---|---|---|
 | 0 | libc370 CI (#249); crypto370 released (#244; httpd and mvsMF adopt it in their 2.0 migration); **1.0.8 released**, the last 1.x; consumers' **build** CI held on `v1.0.8`, which needs a `libc370_ref` input in mbt's `build.yml` (mvslovers/mbt#121; release CI already pins) | every consumer green against 1.0.8 |
-| 1 | move and rename headers per the table; split the five mixed headers; drop dead ones. Absorbs #39 step 2 (missing `#include`s) and #68 step 1 (the `clibsa.h` inline), since every `#include` line is touched anyway, and #250 items 1–3 | **byte-identical assembler for every TU** against the commit before the move, the method PR #242 used |
-| 2 | internals to `src/internal/`; install copies subdirectories (`mklibc.py:226` globs `include/*.h` today) | the migration script resolves every consumer include |
-| — | **the relink round**: #79, #50, #51, #71, #172, #80 defect 1 | per change, tests; CHANGELOG entry for each layout or signature change |
+| 1 | on the integration branch `2.0` (#256): move and rename headers per the table; split the five mixed headers; drop dead ones. `install` copies subdirectories and clears the sysroot's `include/` first, since the first moved header needs it. Absorbs #39 step 2 (missing `#include`s) and #68 step 1 (the `clibsa.h` inline), since every `#include` line is touched anyway, and #250 items 1–3 | **byte-identical assembler for every TU** against the commit before the move, the method PR #242 used; `sdk/gate.py` checks it in CI, with the archive's symbols and the warnings |
+| 2 | internals to `src/internal/` (#274), included by their path from the root (D10); `libc370/` becomes `ext/` (D1) | byte-identical assembler; the migration script resolves every consumer include |
+| 3 | **done on `2.0`** (#285–#292): sources by area (#278), `src/` mirrors `include/`; assembler beside its C; `src/wip/` → `attic/` (D9). Basenames stay unique (all objects share one directory, `mklibc.py:161`), and the gate needs a map from old to new source paths | byte-identical assembler |
+| — | **interface changes**: #80 defect 1, #79, #50; taken along: #51, #71, #172; the three `ibm/` headers that declare functions | per change, tests; CHANGELOG entry for each layout or signature change |
+| — | **migration script** (`doc/migration-2.0.md`), tried on httpd, mvsMF, ftpd | it resolves every consumer include |
+| — | **prerelease `v2.0.0-rc.N`** on the branch `2.0`; a first consumer (ftpd) migrated and tested on MVS against it | the consumer green and working on MVS |
 | — | **release 2.0.0**; one migration PR per consumer | each consumer green against 2.0.0 |
-| 3 | sources by area; basenames stay unique (all objects share one directory, `mklibc.py:161`) | byte-identical assembler |
 | 4 | the OS seam: core calls a narrow internal interface, not MVS services | per change, tests |
 
 Before phase 1, cheap preparation that makes the move safer: restore the five
@@ -179,18 +208,24 @@ design, measurements, the CI analysis), and is never published.
 
 | | question | state |
 |---|---|---|
-| D1 | namespace for portable extensions | decided: `libc370/`, and no basename of an ISO/POSIX header under `libc370/` or `mvs/` |
+| D1 | namespace for portable extensions | decided: `ext/` (was `libc370/` until phase 2, #274), and no basename of an ISO/POSIX header under `ext/` or `mvs/`, `mvs/socket.h` excepted (D11) |
 | D2 | POSIX scope | decided: declare only what exists, with POSIX semantics; no feature-test macros; findings in #250 |
 | D3 | third-party code | decided: miniz remove (#243); SHA-256/Blowfish/base64 to crypto370 (#244); PDF, emfile, ipc remove, after assessing the emfile/ipc code in `src/wip/orig/` (#248) |
 | D4 | compatibility | decided: hard cut, 2.0, no shims |
 | D5 | where the plan lives | decided: this document plus the umbrella issue |
 | D6 | release concept | decided, see above (#249, cc370#523, mbt#121) |
 | D7 | documentation | decided: hand-written guides + generated reference, tool after a spike; `docs/` public, `doc/` internal |
-| D8 | scheduling | decided: the 2.0 critical path comes first; the relink round ships in 2.0; emergency 1.0.9 from `v1.0.8`; cc370 releases desirable, not blocking |
+| D8 | scheduling | decided: the 2.0 critical path comes first; the interface changes ship in 2.0; emergency 1.0.9 from `v1.0.8`; cc370 releases desirable, not blocking |
+| D9 | source layout | decided 2026-09-30: part of 2.0 (phase 3 before the release); `src/` mirrors `include/`; assembler beside its C, since libc370 is built by `sdk/mklibc.py`, not mbt; `src/wip/` → `attic/`. Phase 4 (the OS seam) stays in 2.x |
+| D10 | internal headers | decided 2026-09-30: shared ones flat in `src/internal/`, area-local ones beside their sources; included by their path from the repository root; plain names without prefix or suffix; `clibres.h`, `clibspl.h`, `clibsvc.h` keep their names as a not-yet-integrated marker |
+| D11 | `libc370/socket.h` | decided 2026-09-30: moves to `mvs/socket.h` for now, because its calls are bound to the socket provider (`@@75…`), which is the OS layer, not portable. To be dissolved later, parts of it into `src/internal/` |
 
 ## Appendix — every header
 
-Generated from the inventory. Every row is re-checked in phase 1, and the
+Rendered from `sdk/headermap.tsv` by `python3 sdk/headermap.py render`; edit
+the TSV, not this table. `headermap.py check` (run in CI) fails when the two
+drift, or when `include/` holds a header no row accounts for. Generated from
+the inventory. Every row is re-checked in phase 1, and the
 `ibm/` names in particular against the macro libraries: `sysmac/` vendors
 `SYS1.MACLIB` only, so macros from `SYS1.AMODGEN` (`IHAACEE`, `IHAASVT`, …)
 cannot be confirmed from the tree. **users** = how many of the 11 consumer
@@ -198,19 +233,20 @@ repos include the header (httpd, mvsmf, ftpd, ufsd, httplua, httprexx, lua370,
 rexx370, lstring370 and nsf370 at `origin/main`, brexx370 at `origin/master`,
 fetched 2026-09-30).
 
+<!-- headermap:begin -->
 Summary:
 
 | target | headers |
 |---|---|
 | ISO C (name unchanged) | 17 |
-| `mvs/` | 35 |
+| `mvs/` | 39 |
 | `ibm/mvs/` | 43 |
 | `ibm/jes2/` | 13 |
-| `libc370/` | 4 |
+| `ext/` | 4 |
 | `s370/` | 2 |
-| internal | 16 |
+| internal | 9 |
 | split across several | 5 |
-| removed or moved out | 18 |
+| removed or moved out | 21 |
 | **total** | **153** |
 
 | today | 2.0 | users | note |
@@ -234,30 +270,30 @@ Summary:
 | `hasptgm.h` | `ibm/jes2/tgm.h` |  | JES2 data area ($TGM) |
 | `cvt.h` | `ibm/mvs/cvt.h` | 2 | IBM data area |
 | `osdcb.h` | `ibm/mvs/dcbd.h` | 4 | IBM data area |
-| `osdecb.h` | `ibm/mvs/decb.h` |  | IBM data area; macro name to verify |
-| `racheck.h` | `ibm/mvs/ichrchk.h` |  | IBM data area; macro name to verify |
-| `racinit.h` | `ibm/mvs/ichrinit.h` |  | IBM data area; macro name to verify |
+| `osdecb.h` | `ibm/mvs/ihadecb.h` |  | IBM data area; IHADECB (checked: its 4 fields are all in IHADECB) |
+| `racheck.h` | `ibm/mvs/racheck.h` |  | RACHECK parameter list; no mapping macro, the RACHECK macro builds it |
+| `racinit.h` | `ibm/mvs/racinit.h` |  | RACINIT parameter list; no mapping macro, the RACINIT macro builds it |
 | `safp.h` | `ibm/mvs/ichsafp.h` |  | IBM data area |
 | `safv.h` | `ibm/mvs/ichsafv.h` |  | IBM data area |
 | `ieebasea.h` | `ibm/mvs/ieebasea.h` |  | IBM data area |
-| `ieecdcm.h` | `ibm/mvs/ieecdcm.h` |  | IBM data area; macro name to verify |
+| `ieecdcm.h` | `ibm/mvs/ieecdcm.h` |  | IBM data area; IEECDCM (checked: 66 of 68 fields) |
 | `ieecucm.h` | `ibm/mvs/ieecucm.h` |  | IBM data area |
 | `ieezb806.h` | `ibm/mvs/ieezb806.h` |  | IBM data area |
 | `iefjesct.h` | `ibm/mvs/iefjesct.h` |  | IBM data area |
 | `osjfcb.h` | `ibm/mvs/iefjfcbn.h` | 2 | IBM data area |
 | `iefjssib.h` | `ibm/mvs/iefjssib.h` | 1 | IBM data area |
-| `iefsscs.h` | `ibm/mvs/iefsscs.h` |  | IBM data area; macro name to verify |
+| `iefsscs.h` | `ibm/mvs/iefsscs.h` |  | IBM data area; IEFSSCS (checked: 21 of 21 constants) |
 | `iefssobh.h` | `ibm/mvs/iefssobh.h` | 1 | IBM data area |
-| `iefssso.h` | `ibm/mvs/iefssso.h` |  | IBM data area; macro name to verify |
+| `iefssso.h` | `ibm/mvs/iefssso.h` |  | IBM data area; IEFSSSO (checked: 25 of 25 constants) |
 | `ieftiot.h` | `ibm/mvs/ieftiot1.h` | 1 | IBM data area |
-| `ieftxtft.h` | `ibm/mvs/ieftxtft.h` |  | IBM data area; macro name to verify |
-| `iecvucb.h` | `ibm/mvs/iefucbob.h` |  | IBM data area; macro name to verify |
-| `iefvkeys.h` | `ibm/mvs/iefvkeys.h` |  | IBM data area; macro name to verify |
+| `ieftxtft.h` | `ibm/mvs/ieftxtft.h` |  | IBM data area; IEFTXTFT (checked: 31 of 31 constants) |
+| `iecvucb.h` | `ibm/mvs/iefucbob.h` |  | IBM data area; IEFUCBOB (checked: 17 of 24 fields) |
+| `iefvkeys.h` | `ibm/mvs/iefvkeys.h` |  | IBM data area; IEFVKEYS (checked: 142 of 142 constants) |
 | `rb99.h` | `ibm/mvs/iefzb4d0.h` |  | IBM data area |
 | `txt99.h` | `ibm/mvs/iefzb4d2.h` |  | IBM data area |
 | `iezbits.h` | `ibm/mvs/iezbits.h` |  | IBM data area |
 | `osdeb.h` | `ibm/mvs/iezdeb.h` |  | IBM data area |
-| `osiob.h` | `ibm/mvs/iezdeb/iob.h` |  | IBM data area; macro name to verify |
+| `osiob.h` | `ibm/mvs/ieziob.h` |  | IBM data area; IEZIOB (checked: its 35 fields are all in IEZIOB) |
 | `iezjscb.h` | `ibm/mvs/iezjscb.h` |  | IBM data area |
 | `acee.h` | `ibm/mvs/ihaacee.h` | 3 | IBM data area |
 | `ihaasvt.h` | `ibm/mvs/ihaasvt.h` | 2 | IBM data area |
@@ -275,26 +311,26 @@ Summary:
 | `ikjpscb.h` | `ibm/mvs/ikjpscb.h` |  | IBM data area |
 | `ikjtcb.h` | `ibm/mvs/ikjtcb.h` |  | IBM data area |
 | `ikjupt.h` | `ibm/mvs/ikjupt.h` |  | IBM data area |
-| `@@75.h` | internal |  | dyn75 parameter list |
-| `@@memmgr.h` | internal |  | allocator internals |
-| `__75.h` | internal |  | duplicate of @@75.h |
-| `clibjpa.h` | internal |  | @@JPA anchor mapping |
-| `clibjs.h` | internal |  | JES spool internals, included by clibjes2.h |
-| `clibprtf.h` | internal |  | printf engine |
-| `clibprti.h` | internal |  | printf engine |
-| `clibres.h` | internal |  | resident structs; no user, review |
-| `clibsock.h` | internal | 1 | socket bookkeeping; httpd includes it, review |
-| `clibspl.h` | internal |  | inline helpers; no user, review |
-| `clibsvc.h` | internal |  | @@SVC work area |
-| `clibthdi.h` | internal | 2 | thread manager internals; absorbs #140. ftpd and httpd include it: review what they use first |
-| `clibwsa.h` | internal |  | work-save-area internals |
-| `enqpl.h` | internal |  | ENQ parameter list |
-| `get3.h` | internal |  | GET3/SET3 macros; no user, review |
-| `modmap.h` | internal |  | load module map, used by __loadhi() |
-| `clibary.h` | `libc370/array.h` | 7 | dynamic arrays; portable |
-| `clib64.h` | `libc370/int64.h` | 2 | 64-bit helpers; review against cc370 long long |
-| `time64.h` | `libc370/time64.h` | 6 | y2038 time; portable |
-| `clibver.h` | `libc370/version.h` | 3 | libc370_version() |
+| `@@75.h` | — |  | byte-identical copy of __75.h, no includer |
+| `@@memmgr.h` | — |  | PDPCLIB memmgr, never built: USE_MEMMGR undefined, no implementation; its branches in malloc/free/realloc dropped |
+| `__75.h` | internal |  | src/net/dyn75/x75.h: the X'75' parameter list (PL75, __75()); @@75.h dropped |
+| `clibjpa.h` | internal |  | src/internal/crtanchor.h: the @@JPA anchor of the CLIBCRT areas |
+| `clibjs.h` | `mvs/jes2spool.h` |  | public: the JES spool calls mvs/jes2.h exposes; beside mvs/jes2ckpt.h |
+| `clibprtf.h` | internal |  | merged into src/internal/printf.h (the engine's entry points) |
+| `clibprti.h` | internal |  | src/internal/printf.h, the printf engine, merged with clibprtf.h |
+| `clibres.h` | internal |  | resident-function dispatch (RES/RESFUNC); no includer, kept for a later review |
+| `clibsock.h` | `mvs/socket.h` | 1 | socket bookkeeping; httpd walks grt->grtsock as CLIBSOCK, so it stays public (#264 A); internal once libc370 closes sockets itself |
+| `clibspl.h` | internal |  | MVCL inline helpers (spl_*); no includer, kept as a Metal C candidate; guard lacks its #define |
+| `clibsvc.h` | internal |  | src/internal/clibsvc.h, name kept: SVC-in-C scaffold, not integrated yet (with clibres.h) |
+| `clibthdi.h` | `mvs/thread.h` | 2 | thread manager; httpd and ftpd use its API, so public, merged into mvs/thread.h (#264 B); absorbs #140 |
+| `clibwsa.h` | `mvs/wsa.h` |  | public: consumers call __wsaget() through mvs/crt.h (httpd, lua370) |
+| `enqpl.h` | internal |  | src/internal/enqpl.h: the ENQ/DEQ SVC parameter list |
+| `get3.h` | — |  | GET3/SET3, no includer; modmap.h carries its own GET3 |
+| `modmap.h` | internal |  | src/internal/loadmod.h keeps its load module record layouts; the module-map API was never implemented, dropped |
+| `clibary.h` | `ext/array.h` | 7 | dynamic arrays; portable |
+| `clib64.h` | `ext/int64.h` | 2 | 64-bit helpers; review against cc370 long long |
+| `time64.h` | `ext/time64.h` | 6 | y2038 time; portable |
+| `clibver.h` | `ext/version.h` | 3 | libc370_version() |
 | `limits.h` | `limits.h` | 6 | ISO C, name unchanged; non-standard names move out |
 | `locale.h` | `locale.h` | 2 | ISO C, name unchanged; non-standard names move out |
 | `math.h` | `math.h` | 2 | ISO C, name unchanged; non-standard names move out |
@@ -339,7 +375,7 @@ Summary:
 | `signal.h` | `signal.h` | 2 | ISO C, name unchanged; non-standard names move out |
 | `clibio.h` | split | 6 | standard part -> stdio.h; record-mode API -> mvs/rfile.h or mvs/stdio.h; __fp* -> internal |
 | `clibos.h` | split | 9 | 34 functions of mixed purpose (BLDL, LOAD, ...); split by topic into mvs/ |
-| `clibstr.h` | split | 2 | ISO part -> string.h; strcasecmp/strncasecmp -> strings.h; stricmp/strcpyp/... -> libc370/strutil.h (#250) |
+| `clibstr.h` | split | 2 | ISO part -> string.h; strcasecmp/strncasecmp -> strings.h; stricmp/strcpyp/... -> ext/strutil.h (#250) |
 | `mvssupa.h` | split | 4 | public API -> mvs/bsam.h; __aopen & co. internal. 4 consumers include it today |
 | `socket.h` | split | 3 | POSIX: sys/socket.h, netinet/in.h, arpa/inet.h (POSIX review, D2) |
 | `stdarg.h` | `stdarg.h` | 7 | ISO C, name unchanged; non-standard names move out |
@@ -357,7 +393,7 @@ Summary:
 | `clibmzi.h` | — |  | removed: miniz, no implementation in libc.a, no user (#243) |
 | `clibpdf.h` | — |  | removed: 28 declared symbols, none in libc.a, no user (PDFGEN) |
 | `clibpdfi.h` | — |  | removed: 28 declared symbols, none in libc.a, no user (PDFGEN) |
-| `clibsrb.h` | — |  | moved out to `src/wip/mvs/srb.h`, not installed: no user; its FREEMAIN fixed and the 2 declared symbols without code dropped (#248). Becomes `mvs/srb.h` once something schedules an SRB, including `ibm/mvs/ihasrb.h` |
+| `clibsrb.h` | — |  | moved out to `attic/mvs/srb.h`, not installed: no user; its FREEMAIN fixed and the 2 declared symbols without code dropped (#248). Becomes `mvs/srb.h` once something schedules an SRB, including `ibm/mvs/ihasrb.h` |
 | `emfile.h` | — |  | removed: 22 declared symbols, none in libc.a, no user |
 | `emfilei.h` | — |  | removed: 22 declared symbols, none in libc.a, no user |
 | `ipc.h` | — |  | removed: 17 declared symbols, none in libc.a, no user |
@@ -368,3 +404,4 @@ Summary:
 | `miniz_tinfl.h` | — |  | removed: miniz, no implementation in libc.a, no user (#243) |
 | `miniz_zip.h` | — |  | removed: miniz, no implementation in libc.a, no user (#243) |
 | `sha256.h` | — | 1 | moves to crypto370 (#244) |
+<!-- headermap:end -->

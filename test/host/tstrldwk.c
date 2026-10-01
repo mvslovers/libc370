@@ -1,5 +1,5 @@
 /*
- * tstrldwk.c - libc370 #100: process_rldr() (src/clib/@@loadhi.c) must bound
+ * tstrldwk.c - libc370 #100: process_rldr() (src/mvs/link/@@loadhi.c) must bound
  * its RLD item walk by the record's own byte count, and must refuse an adcon
  * offset that is not inside the module.
  *
@@ -32,7 +32,7 @@
  * 29315-byte module, has two such records, and IRXJCL has 65.
  *
  * What the phantom item reads is the point.  __aread() on a RECFM=U member
- * does no deblocking (asm/@@aread.asm: "TM ZRECFM,DCBRECU  Also exit for U"):
+ * does no deblocking (src/stdio/@@aread.asm: "TM ZRECFM,DCBRECU  Also exit for U"):
  * it issues a READ for BLKSIZE bytes and hands back the buffer.  Behind a
  * short record sits the tail of the previous, longer one - residue that reads
  * as a perfectly plausible RLD item whose 3-byte offset can be anything.  The
@@ -87,14 +87,14 @@
  *   -D'__asm__(...)=' erases the S/370 assembler the host assembler rejects:
  *                     the file-scope statements in @@loadhi.c
  *                     (__asm__("\n&FUNC SETC 'process_rldr'")) and the inline
- *                     MVCL in clibstr.h's static memset().  It is variadic
+ *                     MVCL in string.h's static memset().  It is variadic
  *                     because that second one is an extended asm with operand
  *                     lists, so a one-parameter macro does not match it.
  *   -D__volatile__=   for the same reason - the token sits between __asm__ and
  *                     the '(', which stops the macro matching at all.
  *   NOTE that this leaves libc370's memset() a no-op stub, so this file uses
  *                     plain loops rather than memset().  memcpy() is only a
- *                     declaration in clibstr.h and resolves to the host's.
+ *                     declaration in string.h and resolves to the host's.
  *   -D__32BIT__       is what libc370's own stddef.h keys size_t off.
  *   ASAN              is load-bearing here, not decoration: case 1 puts the
  *                     record in an allocation of exactly its own length, so a
@@ -104,7 +104,7 @@
  *     R=../..
  *     cc -std=gnu99 -Wall -Wextra -fsanitize=address \
  *        -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
- *        -I $R/include -o t tstrldwk.c
+ *        -I $R/include -I $R/src/internal -o t tstrldwk.c
  *     ./t                                             # 8/8, rc 0
  *
  * RED, against the pre-fix source.  Same fixture, same allocation, the real
@@ -113,7 +113,7 @@
  * fetch()/store() at all: what ASAN then reports is the walk reading past the
  * record, and nothing else.
  *
- *     git show <pre-fix-rev>:src/clib/@@loadhi.c > /tmp/old.c
+ *     git show <pre-fix-rev>:src/mvs/link/@@loadhi.c > /tmp/old.c
  *     ... driver: same shims, #include /tmp/old.c, and
  *         process_rldr(exact, 0, 0)  on the same 252-byte allocation ...
  *
@@ -135,7 +135,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../../src/clib/@@loadhi.c"
+#include "../../src/mvs/link/@@loadhi.c"
 
 /* ---- shims -----------------------------------------------------------
  * Defined AFTER the translation unit so each one matches the prototype the

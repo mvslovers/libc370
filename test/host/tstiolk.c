@@ -47,10 +47,10 @@
  *     R=../..
  *     cc -std=gnu99 -Wall -Wextra \
  *        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
- *        -I $R/include -o t tstiolk.c && ./t
+ *        -I $R/include -I $R/src/internal -o t tstiolk.c && ./t
  *
  * The lock()/unlock()/testlock() definitions below MUST stay above the
- * #includes of the library TUs: cliblock.h declares them with
+ * #includes of the library TUs: mvs/lock.h declares them with
  * asm("@@LK") labels, and only a definition that precedes the
  * declaration makes the host compiler drop the label (it warns
  * "attribute declaration must precede definition" - that warning is
@@ -58,6 +58,7 @@
  *
  * RC: 0 = every check passed, 1 = at least one did not.
  */
+#include "src/internal/fileio.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -115,21 +116,21 @@ int __fputc(int c, FILE *fp)
 
 /* ---- the real TUs ---------------------------------------------------- */
 
-#include "../../src/clib/vvprintf.c"
+#include "../../src/stdio/vvprintf.c"
 #undef outch
 #undef inch
 #undef unused
-#include "../../src/clib/@@examin.c"
-#include "../../src/clib/@@fputs.c"
-#include "../../src/clib/fputs.c"
-#include "../../src/clib/fputc.c"
+#include "../../src/stdio/@@examin.c"
+#include "../../src/stdio/@@fputs.c"
+#include "../../src/stdio/fputs.c"
+#include "../../src/stdio/fputc.c"
 
 /* puts() is a public libc symbol on the host too, and the compiler
    likes to rewrite printf("...\n") into puts() calls - which would
    land the harness's own output in the probe sink.  Compile the
    library's puts under a test name and call it explicitly. */
 #define puts tst_puts
-#include "../../src/clib/puts.c"
+#include "../../src/stdio/puts.c"
 #undef puts
 
 /* puts() writes to stdout, which clibio.h resolves via __gtout() */
@@ -200,7 +201,7 @@ static int mbt_test_summary(const char *name)
 /* run one vvprintf() and collect the lock ledger */
 static void reset(void)
 {
-    /* no memset here: clibstr.h's memset is inline S/370 asm and does
+    /* no memset here: string.h's memset is inline S/370 asm and does
        not survive the host compile (see tstvsnp.c) - run() NUL-
        terminates out[] after every call, which is all strcmp needs */
     outn = 0;

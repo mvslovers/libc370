@@ -2,7 +2,7 @@
  * tstjesda.c - libc370 #142: where do the JES2 checkpoint and spool come
  * from, if not from a DD in the caller's JCL?
  *
- * ISSUE #142: jesopen() (src/jes/jesopen.c:37,46) reaches both data sets by
+ * ISSUE #142: jesopen() (src/mvs/jes2/jesopen.c:37,46) reaches both data sets by
  * ddname - checkpoint_open("DD:HASPCKPT"), spool_open("DD:HASPACE1") - so
  * every caller's JCL has to carry the site's UNIT and VOL=SER.  That is how
  * mvslovers/httpd#256 happened.  What the issue does NOT say is that
@@ -63,19 +63,20 @@
  * a regression test: the interesting output is the case text, not the COND
  * CODE.  8 means a case could not run at all (no JES2 SSCT, no storage).
  */
+#include <mvs/dynalloc.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "clibssct.h"   /* ssct_find(), SSCT                                */
-#include "haspsvt.h"    /* HASPSVT, svhct                                   */
-#include "hasphct.h"    /* __HCT - the checkpoint master record             */
-#include "clibcp.h"     /* checkpoint_open(), HASPCP                        */
-#include "cliblist.h"   /* __listvl(), VOLLIST                              */
-#include "clibdscb.h"   /* __locate(), __dscbdv(), LOCWORK, DSCB            */
-#include "clibary.h"    /* arraycount()                                     */
-#include "clibio.h"     /* __dsalcf(), __dsfree()                           */
-#include "clibtry.h"    /* try(), tryrc()                                   */
-#include "clibwto.h"    /* wtof()                                           */
+#include "mvs/subsys.h"   /* ssct_find(), SSCT                                */
+#include "ibm/jes2/svt.h"    /* HASPSVT, svhct                                   */
+#include "ibm/jes2/hct.h"    /* __HCT - the checkpoint master record             */
+#include "mvs/jes2ckpt.h"     /* checkpoint_open(), HASPCP                        */
+#include "mvs/dslist.h"   /* __listvl(), VOLLIST                              */
+#include "mvs/dscb.h"   /* __locate(), __dscbdv(), LOCWORK, DSCB            */
+#include "ext/array.h"    /* arraycount()                                     */
+#include "stdio.h"     /* __dsalcf(), __dsfree()                           */
+#include "mvs/recovery.h"    /* try(), tryrc()                                   */
+#include "mvs/wto.h"    /* wtof()                                           */
 
 #define CKPTDSN     "SYS1.HASPCKPT"
 #define SPOOLDSN    "SYS1.HASPACE"

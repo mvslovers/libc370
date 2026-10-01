@@ -54,7 +54,7 @@
  *     R=../..
  *     cc -std=gnu99 -Wall \
  *        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
- *        -I $R/include -o t tsterrfl.c && ./t
+ *        -I $R/include -I $R/src/internal -o t tsterrfl.c && ./t
  *
  * RC: 0 = every check passed, 1 = at least one did not.
  */
@@ -62,11 +62,12 @@
    S/370 MVCL, and -D'__asm__(...)=' does not neutralise the __volatile__
    form of it - the host assembler sees the MVCL and stops.  Earlier host
    tests worked around that by shimming whichever TU called memset();
-   claiming clibstr.h's include guard here and declaring the handful of
+   claiming string.h's include guard here and declaring the handful of
    functions the TUs under test actually use lets them all be compiled for
    real instead.  The declarations match the host libc, which supplies
    them at link time. */
-#define CLIBSTR_H
+#define STRING_H
+#include "src/internal/fileio.h"
 #include <stddef.h>
 void   *memset(void *s, int c, size_t n);
 void   *memcpy(void *t, const void *s, size_t n);
@@ -79,7 +80,7 @@ void   *memchr(const void *s, int c, size_t n);
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <osdcb.h>
+#include <ibm/mvs/dcbd.h>
 
 /* libc370 reaches errno through __errno(); on MVS it is per-task storage
    off the GRT.  One int is all this test needs. */
@@ -149,20 +150,20 @@ int __fpupc(FILE *fp, int c)
 
 /* ---- the real thing ---------------------------------------------------- */
 
-#include "../../src/clib/@@fflush.c"
+#include "../../src/stdio/@@fflush.c"
 #undef begwrite
 #undef finwrite
-#include "../../src/clib/@@fwrite.c"
-#include "../../src/clib/@@fputc.c"
+#include "../../src/stdio/@@fwrite.c"
+#include "../../src/stdio/@@fputc.c"
 /* @@fgetc.c calls isspace() without including <ctype.h>; cc370 tolerates
    the implicit declaration, a modern host compiler does not. */
 #include <ctype.h>
-#include "../../src/clib/@@isbuf.c"   /* isspace() is a table macro */
-#include "../../src/clib/@@fgetc.c"
-#include "../../src/clib/@@fread.c"
-#include "../../src/clib/clearerr.c"
-#include "../../src/clib/feof.c"
-#include "../../src/clib/ferror.c"
+#include "../../src/stdio/@@isbuf.c"   /* isspace() is a table macro */
+#include "../../src/stdio/@@fgetc.c"
+#include "../../src/stdio/@@fread.c"
+#include "../../src/stdio/clearerr.c"
+#include "../../src/stdio/feof.c"
+#include "../../src/stdio/ferror.c"
 
 /* ---- a FILE the shims can serve --------------------------------------- */
 

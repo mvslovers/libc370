@@ -1,6 +1,6 @@
 /*
  * tstjesprb.c - libc370 #25: host regression for the JES2 spool record walk
- * in __jesprb() (src/jes/jesprb.c).
+ * in __jesprb() (src/mvs/jes2/jesprb.c).
  *
  * Unlike test/host/tstcmtt.c, this test LINKS AND EXECUTES THE REAL CODE.
  * That is the whole point of #25: the walk was lifted out of jesprint.c,
@@ -38,11 +38,11 @@
  *
  * Build / run (host; no libc370 headers needed, the parser has none):
  *     cc -std=gnu99 -Wall -Wextra -I ../../src/jes \
- *        -o t tstjesprb.c ../../src/jes/jesprb.c && ./t
+ *        -o t tstjesprb.c ../../src/mvs/jes2/jesprb.c && ./t
  *
  * And the one that actually gates #23/#24:
  *     cc -std=gnu99 -Wall -Wextra -fsanitize=address -I ../../src/jes \
- *        -o t tstjesprb.c ../../src/jes/jesprb.c && ./t
+ *        -o t tstjesprb.c ../../src/mvs/jes2/jesprb.c && ./t
  *
  * THE SAME SOURCE RUNS ON THE TARGET.  Since #25 the walk needs no assembler
  * and no I/O, so cc370 compiles this file as it stands and a batch job drives
@@ -59,7 +59,7 @@
 #include <string.h>
 #include <stddef.h>
 
-#include "jesprb.h"
+#include "src/mvs/jes2/jesprb.h"
 
 /* --------------------------------------------------------------------------
  * Minimal mbtcheck.h-compatible harness, same contract as tstcmtt.c.

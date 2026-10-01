@@ -1,0 +1,24 @@
+/* STRCPYP.C */
+#include <ext/strutil.h>
+#include "string.h"
+
+char *
+strcpyp(char *target, int tlen, const void *source, int pad )
+{
+    char    *t      = target;
+    int     slen    = source ? strlen(source) : 0;
+
+    if (slen > tlen) slen = tlen;
+
+    if (slen > 0) {
+        memcpy(t, source, slen);
+        t      += slen;
+        tlen   -= slen;
+    }
+
+    if (tlen > 0) {
+        memset(t, pad, tlen);
+    }
+
+    return target;
+}

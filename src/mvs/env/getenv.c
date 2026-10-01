@@ -1,0 +1,23 @@
+/* GETENV.C */
+#include <stdio.h>
+#include <string.h>
+#include <stddef.h>
+#include "mvs/env.h"
+#include "mvs/lock.h"
+#include "mvs/crt.h"
+
+char *
+getenv(const char *name)
+{
+    CLIBGRT *grt    = __grtget();
+    int     index;
+	char    *result;
+
+    if (!grt) return NULL;      /* no GRT: no environment (#85) */
+
+    lock(&grt->grtenv,0);
+	result = __findenv(name, &index, 0);    /* same case */
+	unlock(&grt->grtenv,0);
+
+	return result;
+}

@@ -1,0 +1,43 @@
+/* @@75INIT.C
+** Initialize API
+*/
+#include "src/net/dyn75/x75.h"
+#include "sys/socket.h"
+#include "sys/select.h"
+#include "src/net/dyn75/dyn75.h"
+#include "mvs/socket.h"
+#include "mvs/lock.h"
+#include "ext/array.h"
+#include "mvs/crt.h"
+
+__asm__("\n&FUNC    SETC '@@75init'");
+extern int
+__75init(void)
+{
+    CLIBGRT *grt    = __grtget();
+    PL75    pl;
+
+    if (!grt) return -1;        /* no GRT: no socket table (#85) */
+
+    lock(&grt->grtsock, 0);
+    if (!grt->grtsock) {
+        grt->grtsock = arraynew(FD_SETSIZE);
+    }
+    unlock(&grt->grtsock, 0);
+
+#if 0
+    memset(&pl, 0, sizeof(pl));
+#else
+    __asm__("XC\t0(64,%0),0(%0)     clear __75 parameter list" : : "r" (&pl));
+#endif
+
+    pl.r7   = (unsigned) 1;
+
+    __75(&pl);
+
+    lock(&grt->grtsock, 0);
+    grt->grtflag1 |= GRTFLAG1_SOCKINIT;
+    unlock(&grt->grtsock, 0);
+
+    return pl.r15;
+}

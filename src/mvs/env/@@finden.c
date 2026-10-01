@@ -1,0 +1,46 @@
+/* @@FINDEN.C */
+#include <strings.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stddef.h>
+#include "mvs/env.h"
+#include "mvs/crt.h"
+#include "mvs/lock.h"
+
+char *
+__findenv(const char *name, int *index, int nocase)
+{
+    CLIBGRT     *grt    = __grtget();
+    int         empty   = -1;
+    __ENVVAR    *envvar;
+    int         i;
+
+    if (name && grt && grt->grtenv) {
+        unsigned count = arraycount(&grt->grtenv);
+        for(i=0; i < count; i++) {
+            envvar = grt->grtenv[i];
+            if (!envvar) {
+                if (empty < 0) empty = i;
+                continue;
+            }
+            if (!envvar->name) continue;
+
+            if (nocase) {
+                if (strcasecmp(envvar->name, name)==0) {
+                    if (index) *index = i;
+                    return envvar->value;
+                }
+            }
+            else {
+                if (strcmp(envvar->name, name)==0) {
+                    if (index) *index = i;
+                    return envvar->value;
+                }
+            }
+        }
+    }
+
+    if (index) *index = empty;
+    return NULL;
+}

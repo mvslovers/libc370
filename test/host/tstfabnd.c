@@ -55,10 +55,10 @@
  *     R=../..
  *     cc -std=gnu99 -Wall -Wextra \
  *        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
- *        -I $R/include -o t tstfabnd.c \
- *        "$R/src/clib/@@aradd.c" "$R/src/clib/@@arnew.c" \
- *        "$R/src/clib/@@arcou.c" "$R/src/clib/@@ardel.c" \
- *        "$R/src/clib/@@arfre.c" "$R/src/clib/@@arget.c" && ./t
+ *        -I $R/include -I $R/src/internal -o t tstfabnd.c \
+ *        "$R/src/ext/array/@@aradd.c" "$R/src/ext/array/@@arnew.c" \
+ *        "$R/src/ext/array/@@arcou.c" "$R/src/ext/array/@@ardel.c" \
+ *        "$R/src/ext/array/@@arfre.c" "$R/src/ext/array/@@arget.c" && ./t
  *
  * What the host CANNOT answer, and test/mvs/tstfabnd.c exists for:
  * whether CLOSE with nothing pending completes at all on a data set
@@ -66,12 +66,14 @@
  *
  * RC: 0 = every check passed, 1 = at least one did not.
  */
+#include "src/internal/fileio.h"
+#include <mvs/file.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-#include "clibcrt.h"
-#include "cliblock.h"
+#include "mvs/crt.h"
+#include "mvs/lock.h"
 
 /* ---- two-resource lock model (ENQ/DEQ RET=HAVE, per address) --------- */
 
@@ -218,9 +220,9 @@ static void tst_free(void *p)
 }
 
 #define free tst_free
-#include "../../src/clib/fclose.c"
-#include "../../src/clib/@@faband.c"
-#include "../../src/clib/@@fpterm.c"
+#include "../../src/stdio/fclose.c"
+#include "../../src/mvs/file/@@faband.c"
+#include "../../src/stdio/@@fpterm.c"
 #undef free
 
 /* ---- harness ---------------------------------------------------------- */

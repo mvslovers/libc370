@@ -1,5 +1,5 @@
 /*
- * tst75snd.c - libc370 #120: send() (src/dyn75/@@75send.c) must honour the
+ * tst75snd.c - libc370 #120: send() (src/net/dyn75/@@75send.c) must honour the
  * X'75' retry code -2, wait for it on a bounded budget, and change nothing
  * else about what it returns.
  *
@@ -110,19 +110,19 @@
  *     R=../..
  *     cc -std=gnu99 -Wall -Wextra -fsanitize=address -Wno-trigraphs \
  *        -D'__asm__(...)=' -D'asm(...)=' -D__volatile__= -D__32BIT__ \
- *        -I $R/include -o t tst75snd.c
+ *        -I $R/include -I $R/src/internal -o t tst75snd.c
  *     ./t                                             # 39/39, rc 0
  *
  * Four warnings are expected and are all host artefacts: two libc370 stdio
  * prototypes that disagree with the host's builtins, one inline-asm operand
- * width in clibstr.h, and the `unused parameter 'flags'` send() has always
+ * width in string.h, and the `unused parameter 'flags'` send() has always
  * had.  The target build (cc370, -Wall) is clean.
  *
  * RED, against the pre-fix source - same driver, same script.  The pre-fix
  * file has no SEND_STALL_MAX, so the driver gets the number on the command
  * line instead:
  *
- *     git show <pre-fix-rev>:src/dyn75/@@75send.c > /tmp/old75send.c
+ *     git show <pre-fix-rev>:src/net/dyn75/@@75send.c > /tmp/old75send.c
  *     ... and #include that instead, adding -DSEND_STALL_MAX=100
  *
  *     FAIL 1: -2 then success: rc                    got -2, want 11
@@ -151,7 +151,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../../src/dyn75/@@75send.c"
+#include "../../src/net/dyn75/@@75send.c"
 
 /* ---- the fake emulator ------------------------------------------------
  * Defined AFTER the translation unit so the prototype the library's own

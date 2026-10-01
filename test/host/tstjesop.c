@@ -1,5 +1,5 @@
 /*
- * tstjesop.c - libc370 #108: jesopen() (src/jes/jesopen.c) must not hand back
+ * tstjesop.c - libc370 #108: jesopen() (src/mvs/jes2/jesopen.c) must not hand back
  * a JES handle whose spool array never got allocated.
  *
  * ISSUE #108: line 54 of the pre-fix file called
@@ -15,9 +15,9 @@
  * What the callers then do with it is the defect that reaches the operator.
  * Three of them index the array with no guard at all:
  *
- *     src/jes/jesjob.c:105    js = jes->js[0];
- *     src/jes/jesjob.c:497    HASPJS *js = jes->js[0];   (process_intxt)
- *     src/jes/jesprint.c:61   js = jes->js[0];
+ *     src/mvs/jes2/jesjob.c:105    js = jes->js[0];
+ *     src/mvs/jes2/jesjob.c:497    HASPJS *js = jes->js[0];   (process_intxt)
+ *     src/mvs/jes2/jesprint.c:61   js = jes->js[0];
  *
  * On MVS that load SUCCEEDS.  Low-address protection stops stores into page
  * zero, not fetches, so jes->js[0] reads the PSA and hands back a value that
@@ -54,7 +54,7 @@
  *
  * - This is HOST semantics for a storage shortage.  On the target the same
  *   path is reached differently: calloc() -> malloc() -> __getm() issues
- *   GETMAIN RC since #81 (asm/@@getm.asm:66) and returns NULL, so the route
+ *   GETMAIN RC since #81 (src/mvs/storage/@@getm.asm:66) and returns NULL, so the route
  *   exists - but a real shortage on MVS 3.8j is not reproducible from batch
  *   (LSQA is fenced), which is why the check lives here and not in
  *   test/mvs/.  What this proves is that jesopen() now REPORTS the failure
@@ -62,7 +62,7 @@
  *   route to get there.
  *
  * - try() is shimmed to a plain indirect call.  On the target it is an ESTAE
- *   wrapper (___try, src/clib/@@@try.c); here it only has to deliver the
+ *   wrapper (___try, src/mvs/recovery/@@@try.c); here it only has to deliver the
  *   arguments, because no case in this file abends.  The ESTAE behaviour is
  *   #89's territory and is pinned by test/mvs/tstcrtlk.c.
  *
@@ -77,15 +77,15 @@
  *   -D'__asm__(x)='   erases the file-scope S/370 assembler statements
  *                     (__asm__("\n&FUNC SETC 'try_jesopen'")) that the host
  *                     assembler rejects.  It does not touch the asm("@@ARADD")
- *                     labels in clibary.h - different spelling - so the host
+ *                     labels in ext/array.h - different spelling - so the host
  *                     symbols keep the library's names.  It does NOT reach
- *                     clibstr.h's inline memset() either, which is spelled
+ *                     string.h's inline memset() either, which is spelled
  *                     "__asm__ __volatile__(" - a function-like macro only
  *                     expands when the next token is an open paren.  Hence no
  *                     memset() anywhere in this file.
  *   -D__32BIT__       is what libc370's own stddef.h/stdlib.h key size_t off.
- *   -U__LP64__        libc370's time64.h is "#error Your time_t is already
- *                     64-bit" under __LP64__, and clibjes2.h pulls it in for
+ *   -U__LP64__        libc370's ext/time64.h is "#error Your time_t is already
+ *                     64-bit" under __LP64__, and mvs/jes2.h pulls it in for
  *                     JESJOB.start_time64.  Undefining it selects the LP32
  *                     branch, which is the one the target compiles.  Nothing
  *                     in jesopen() touches a time value.
@@ -98,20 +98,20 @@
  *
  *     R=../..
  *     cc -std=gnu99 -U__LP64__ -D'__asm__(x)=' -D__32BIT__ \
- *        -Dcalloc=tst_calloc -I $R/include \
- *        -c "$R/src/jes/jesopen.c" -o jesopen.o
+ *        -Dcalloc=tst_calloc -I $R/include -I $R/src/internal \
+ *        -c "$R/src/mvs/jes2/jesopen.c" -o jesopen.o
  *     cc -std=gnu99 -U__LP64__ -D'__asm__(x)=' -D__32BIT__ \
- *        -Dcalloc=tst_calloc -I $R/include \
- *        -c "$R/src/clib/@@arnew.c" -o arnew.o
+ *        -Dcalloc=tst_calloc -I $R/include -I $R/src/internal \
+ *        -c "$R/src/ext/array/@@arnew.c" -o arnew.o
  *     cc -std=gnu99 -U__LP64__ -D'__asm__(x)=' -D__32BIT__ \
- *        -Dfree=tst_free -I $R/include \
- *        -c "$R/src/jes/jesjobf1.c" -o jesjobf1.o
+ *        -Dfree=tst_free -I $R/include -I $R/src/internal \
+ *        -c "$R/src/mvs/jes2/jesjobf1.c" -o jesjobf1.o
  *     cc -std=gnu99 -U__LP64__ -Wall -Wextra -fsanitize=address \
- *        -D'__asm__(x)=' -D__32BIT__ -I $R/include \
+ *        -D'__asm__(x)=' -D__32BIT__ -I $R/include -I $R/src/internal \
  *        -o t tstjesop.c jesopen.o arnew.o jesjobf1.o \
- *        "$R/src/jes/jesclose.c" "$R/src/jes/jesjobfr.c" \
- *        "$R/src/clib/@@aradd.c" "$R/src/clib/@@arcou.c" \
- *        "$R/src/clib/@@arget.c" "$R/src/clib/@@arfre.c"
+ *        "$R/src/mvs/jes2/jesclose.c" "$R/src/mvs/jes2/jesjobfr.c" \
+ *        "$R/src/ext/array/@@aradd.c" "$R/src/ext/array/@@arcou.c" \
+ *        "$R/src/ext/array/@@arget.c" "$R/src/ext/array/@@arfre.c"
  *     ./t                                             # 20/20, rc 0
  *
  * ASAN here buys memory-error checking, not leak checking: LeakSanitizer is
@@ -120,8 +120,8 @@
  *
  * RED, against the pre-fix source:
  *
- *     git show <pre-fix-rev>:src/jes/jesopen.c > /tmp/oldjesopen.c
- *     ... same lines with /tmp/oldjesopen.c in place of $R/src/jes/jesopen.c,
+ *     git show <pre-fix-rev>:src/mvs/jes2/jesopen.c > /tmp/oldjesopen.c
+ *     ... same lines with /tmp/oldjesopen.c in place of $R/src/mvs/jes2/jesopen.c,
  *         plus -Wno-error=implicit-function-declaration ...
  *     ./t                                             # 15/20, 5 failures
  *
@@ -130,7 +130,7 @@
  * says nothing on the console.
  *
  * That extra flag is part of the story too.  The pre-fix file called wtof()
- * with no prototype in scope - it included neither clib.h nor clibwto.h - so
+ * with no prototype in scope - it included neither clib.h nor mvs/wto.h - so
  * the compiler invented the signature, which on this target decides linkage
  * (#39).  The fix adds the include, so the fixed file needs no such flag:
  * one more of #39's translation units off the list for free.
@@ -141,8 +141,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-#include "clibjes2.h"
-#include "clibary.h"
+#include "mvs/jes2.h"
+#include "ext/array.h"
 
 /* --------------------------------------------------------------------------
  * Minimal mbtcheck.h-compatible harness, same inline copy as tsttxdsn.c.
@@ -189,7 +189,7 @@ static int wtos          = 0;   /* wtof() call count                        */
 /* Storage for the two fakes.  Static, so a leaked handle is a counter that
  * does not come back to zero rather than a free() of something ASAN owns.
  * Static also means already zeroed - deliberately not memset(), because
- * libc370's clibstr.h inlines memset() as S/370 assembler written
+ * libc370's string.h inlines memset() as S/370 assembler written
  * "__asm__ __volatile__", which the -D'__asm__(x)=' erase does not reach
  * (the macro only expands when followed by an open paren). */
 static HASPCP  fake_cp;

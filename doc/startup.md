@@ -1,6 +1,6 @@
 # C startup variants: `@@crt0`, `@@crt1`, `@@crtm`
 
-This note explains the three C startup ("crt") modules in `asm/`, what they
+This note explains the three C startup ("crt") modules in `src/mvs/crt/`, what they
 actually do (not just what their comments claim), and **when to use which**.
 
 ## TL;DR

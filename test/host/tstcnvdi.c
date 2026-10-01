@@ -48,16 +48,16 @@
 #include <stdio.h>
 
 /* each TU carries its own dw_t and shift helpers; rename so they coexist */
-#include "../../src/clib/@@cmpdi2.c"
+#include "../../src/s370/@@cmpdi2.c"
 #define dw_t dw_bit_t
-#include "../../src/clib/@@bitops.c"
+#include "../../src/s370/@@bitops.c"
 #undef dw_t
 #define dw_t dw_fix_t
 #define dbl_t dbl_fix_t
 #define flt_t flt_fix_t
 #define shl64 shl64_fix
 #define shr64 shr64_fix
-#include "../../src/clib/@@fixdi.c"
+#include "../../src/s370/@@fixdi.c"
 #undef dw_t
 #undef dbl_t
 #undef flt_t
@@ -66,7 +66,7 @@
 #define dw_t dw_flt_t
 #define dbl_t dbl_flt_t
 #define flt_t flt_flt_t
-#include "../../src/clib/@@fltdi.c"
+#include "../../src/s370/@@fltdi.c"
 #undef dw_t
 #undef dbl_t
 #undef flt_t

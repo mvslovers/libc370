@@ -1,7 +1,7 @@
 //TSTJESPR JOB (SYS),'LIBC370 23/24',CLASS=A,MSGCLASS=H,
 //             MSGLEVEL=(1,1)
 //*
-//* libc370 #23/#24 - the JES2 spool record walk (src/jes/jesprb.c) run on
+//* libc370 #23/#24 - the JES2 spool record walk (src/mvs/jes2/jesprb.c) run on
 //* the target.  Same source as the host test, test/host/tstjesprb.c: since
 //* #25 the walk is free of assembler and of I/O, so it can be driven with a
 //* synthetic block and needs no spool at all.
@@ -14,7 +14,7 @@
 //*   - the struct layouts the walk assumes: sizeof(PRLINE)==3, sizeof(SPLINE)
 //*     ==4 on S/370, which no host run can prove
 //*
-//* Build:   cc370 -O1 -Iinclude -Isrc/jes test/host/tstjesprb.c \
+//* Build:   cc370 -O1 -Iinclude -I. test/host/tstjesprb.c \
 //*                -o TSTJESPR -flinker-output=xmit
 //* Install: RECEIVE TSTJESPR.xmit into the STEPLIB below.
 //*

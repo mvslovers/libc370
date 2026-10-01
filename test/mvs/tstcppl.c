@@ -103,12 +103,11 @@
  */
 #include <stdio.h>
 #include <string.h>
-#include "clibary.h"
-#include "clibgrt.h"
-#include "clibppa.h"
-#include "clibtso.h"
-#include "clibwto.h"
-#include "ikjcppl.h"
+#include "ext/array.h"
+#include "mvs/crt.h"
+#include "mvs/tso.h"
+#include "mvs/wto.h"
+#include "ibm/mvs/ikjcppl.h"
 
 static void
 cell(int *fails, const char *mode, const char *id, int ok, const char *what)

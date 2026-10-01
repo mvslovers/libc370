@@ -1,0 +1,32 @@
+/* @@INC.C - increment signed value via compare and swap
+*/
+#include "stddef.h"
+#include "ibm/mvs/ihacde.h"
+#include "mvs/wto.h"
+#include "s370/atomic.h"
+
+int __inc(void *mem)
+{
+    int  old_value = 0;
+
+    if (!mem) goto quit;
+
+    __asm__("\n"
+"@@INCAGN DS    0H\n"
+"         L     0,0(,%1)    get current value\n"
+"         LR    1,0         copy for new value\n"
+"         C     1,=F'2147483647'  max value?\n"
+"         BNE   @@INCIT       no, bump it up\n"
+"         SR    1,1         reset to zero\n"
+"         B     @@INCSWP\n"
+"@@INCIT  DS    0H\n"
+"         A     1,=F'1'     increment new value\n"
+"@@INCSWP DS    0H\n"
+"         CS    0,1,0(%1)   save new value in memory\n"
+"         BNZ   @@INCAGN       changed, try again\n"
+"         ST    0,%0        return value"
+        : "=m"(old_value) : "r"(mem) : "0", "1");
+
+quit:
+    return old_value;
+}

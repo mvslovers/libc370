@@ -1,0 +1,884 @@
+# Every name a public header of libc370 1.x declared that no public header declares in 2.0,
+# and what a consumer does instead.  Maintained by hand; sdk/names.py check (CI) enforces it.
+# now: '-' gone | 'internal' private under src/ | '<hdr> name' | 'crypto370 <hdr> name'
+# name	was	now	note
+BKMK	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+BLOWFISH_BLOCK_SIZE	blowfish.h	crypto370 <blowfish.h> BLOWFISH_BLOCK_SIZE	moved to crypto370 1.0.0 (#244)
+BLOWFISH_H	blowfish.h	-	moved to crypto370 (#244)
+BOR	socket.h	internal	now in src/net/dyn75/dyn75.h
+Byte	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Bytef	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+CLIBJPA	clibjpa.h	internal	now in src/internal/crtanchor.h
+DSTR	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+EMFILE10	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+EMFILEEYE10	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+EMFILEMVS	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+EMFILEVER	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+EMFILEWSA	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+EMFILEWSA_EYE	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+EMFILE_EYE	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+EMFILE_FLAG_APPEND	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+EMFILE_FLAG_CREATE	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+EMFILE_FLAG_DIRTY	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+EMFILE_FLAG_DYNAMIC	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+EMFILE_FLAG_EOF	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+EMFILE_FLAG_FULL	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+EMFILE_FLAG_GROW	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+EMFILE_FLAG_MULTIV	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+EMFILE_FLAG_NEW	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+EMFILE_FLAG_READ	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+EMFILE_FLAG_UPDATE	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+EMFILE_FLAG_WRITE	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+EMFILE_SPACE	emfile.h	-	emfile: sources only in attic/, never built (#248)
+ENQPL	enqpl.h	internal	now in src/internal/enqpl.h
+ENQ_END_LAST	enqpl.h	internal	now in src/internal/enqpl.h
+ENQ_END_OLD	enqpl.h	internal	now in src/internal/enqpl.h
+ENQ_OPT_CHNG	enqpl.h	internal	now in src/internal/enqpl.h
+ENQ_OPT_HAVE	enqpl.h	internal	now in src/internal/enqpl.h
+ENQ_OPT_SHARED	enqpl.h	internal	now in src/internal/enqpl.h
+ENQ_OPT_STEP	enqpl.h	internal	now in src/internal/enqpl.h
+ENQ_OPT_SYSTEM	enqpl.h	internal	now in src/internal/enqpl.h
+ENQ_OPT_SYSTEMS	enqpl.h	internal	now in src/internal/enqpl.h
+ENQ_OPT_TEST	enqpl.h	internal	now in src/internal/enqpl.h
+ENQ_OPT_USE	enqpl.h	internal	now in src/internal/enqpl.h
+ERRNO_EMFILE	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+ESD_FLAG_AMODE	modmap.h	internal	now in src/internal/loadmod.h
+ESD_FLAG_AMODE64	modmap.h	internal	now in src/internal/loadmod.h
+ESD_FLAG_RMODE31	modmap.h	internal	now in src/internal/loadmod.h
+ESD_FLAG_RMODE64	modmap.h	internal	now in src/internal/loadmod.h
+ESD_FLAG_RSECT	modmap.h	internal	now in src/internal/loadmod.h
+ESD_TYPE_CM	modmap.h	internal	now in src/internal/loadmod.h
+ESD_TYPE_DPC	modmap.h	internal	now in src/internal/loadmod.h
+ESD_TYPE_ER	modmap.h	internal	now in src/internal/loadmod.h
+ESD_TYPE_LR	modmap.h	internal	now in src/internal/loadmod.h
+ESD_TYPE_NULL	modmap.h	internal	now in src/internal/loadmod.h
+ESD_TYPE_PC	modmap.h	internal	now in src/internal/loadmod.h
+ESD_TYPE_PR	modmap.h	internal	now in src/internal/loadmod.h
+ESD_TYPE_QCM	modmap.h	internal	now in src/internal/loadmod.h
+ESD_TYPE_QPC	modmap.h	internal	now in src/internal/loadmod.h
+ESD_TYPE_QSD	modmap.h	internal	now in src/internal/loadmod.h
+ESD_TYPE_SD	modmap.h	internal	now in src/internal/loadmod.h
+ESD_TYPE_WX	modmap.h	internal	now in src/internal/loadmod.h
+FLAGS_CHAR	clibprti.h	internal	now in src/internal/printf.h
+FLAGS_HASH	clibprti.h	internal	now in src/internal/printf.h
+FLAGS_LEFT	clibprti.h	internal	now in src/internal/printf.h
+FLAGS_LONG	clibprti.h	internal	now in src/internal/printf.h
+FLAGS_LONG_LONG	clibprti.h	internal	now in src/internal/printf.h
+FLAGS_PLUS	clibprti.h	internal	now in src/internal/printf.h
+FLAGS_PRECISION	clibprti.h	internal	now in src/internal/printf.h
+FLAGS_SHORT	clibprti.h	internal	now in src/internal/printf.h
+FLAGS_SPACE	clibprti.h	internal	now in src/internal/printf.h
+FLAGS_UPPERCASE	clibprti.h	internal	now in src/internal/printf.h
+FLAGS_ZEROFILL	clibprti.h	internal	now in src/internal/printf.h
+FLAGS_ZEROPAD	clibprti.h	internal	now in src/internal/printf.h
+FONT	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+GET3	get3.h modmap.h	internal	now in src/internal/loadmod.h
+IDR_LAST	modmap.h	internal	now in src/internal/loadmod.h
+IDR_TYPE	modmap.h	internal	now in src/internal/loadmod.h
+IDR_TYPE_LINK	modmap.h	internal	now in src/internal/loadmod.h
+IDR_TYPE_TRAN	modmap.h	internal	now in src/internal/loadmod.h
+IDR_TYPE_USER	modmap.h	internal	now in src/internal/loadmod.h
+IDR_TYPE_ZAP	modmap.h	internal	now in src/internal/loadmod.h
+INIT_DSTR	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+IPC	ipc.h	-	ipc: sources only in attic/, never built (#248)
+IPCC	ipc.h	-	ipc: sources only in attic/, never built (#248)
+IPCC_EYE	ipci.h	-	ipc: sources only in attic/, never built (#248)
+IPCC_FLAG_ACCEPT	ipci.h	-	ipc: sources only in attic/, never built (#248)
+IPCC_FLAG_CONNECT	ipci.h	-	ipc: sources only in attic/, never built (#248)
+IPCC_FLAG_ERROR	ipci.h	-	ipc: sources only in attic/, never built (#248)
+IPCC_FLAG_QUIESCE	ipci.h	-	ipc: sources only in attic/, never built (#248)
+IPCC_STATE_CLOSE	ipci.h	-	ipc: sources only in attic/, never built (#248)
+IPCC_STATE_IDLE	ipci.h	-	ipc: sources only in attic/, never built (#248)
+IPCC_STATE_PROC	ipci.h	-	ipc: sources only in attic/, never built (#248)
+IPCC_STATE_RECV	ipci.h	-	ipc: sources only in attic/, never built (#248)
+IPCC_STATE_SEND	ipci.h	-	ipc: sources only in attic/, never built (#248)
+IPCH	ipci.h	-	ipc: sources only in attic/, never built (#248)
+IPCH_FLAG_NOOP	ipci.h	-	ipc: sources only in attic/, never built (#248)
+IPCH_FLAG_REPLY	ipci.h	-	ipc: sources only in attic/, never built (#248)
+IPCH_FLAG_REQUEST	ipci.h	-	ipc: sources only in attic/, never built (#248)
+IPCH_FLAG_UNSOL	ipci.h	-	ipc: sources only in attic/, never built (#248)
+IPCH_MAJ_IPC	ipci.h	-	ipc: sources only in attic/, never built (#248)
+IPCH_MIN_IPC_PING	ipci.h	-	ipc: sources only in attic/, never built (#248)
+IPCH_SYNC	ipci.h	-	ipc: sources only in attic/, never built (#248)
+IPCM	ipc.h	-	ipc: sources only in attic/, never built (#248)
+IPCM_EYE	ipci.h	-	ipc: sources only in attic/, never built (#248)
+IPC_EYE	ipci.h	-	ipc: sources only in attic/, never built (#248)
+IPC_FLAG_ACTIVE	ipci.h	-	ipc: sources only in attic/, never built (#248)
+IPC_FLAG_QUIESCE	ipci.h	-	ipc: sources only in attic/, never built (#248)
+IPC_FLAG_SHUTDOWN	ipci.h	-	ipc: sources only in attic/, never built (#248)
+IPC_STATE_ACCEPT	ipci.h	-	ipc: sources only in attic/, never built (#248)
+IPC_STATE_ACTIVE	ipci.h	-	ipc: sources only in attic/, never built (#248)
+IPC_STATE_IDLE	ipci.h	-	ipc: sources only in attic/, never built (#248)
+IPC_STATE_READ	ipci.h	-	ipc: sources only in attic/, never built (#248)
+IPC_STATE_SEND	ipci.h	-	ipc: sources only in attic/, never built (#248)
+IPC_STATE_WAIT	ipci.h	-	ipc: sources only in attic/, never built (#248)
+MAXDDN	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+MAXDSN	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+MAXVOL	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+MAX_MEM_LEVEL	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+MAX_WBITS	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+MEMMGRN_SZ	@@memmgr.h	-	PDPCLIB memmgr: never built, no implementation (#276)
+MEMMGR_ALIGN	@@memmgr.h	-	PDPCLIB memmgr: never built, no implementation (#276)
+MEMMGR_CRASH	@@memmgr.h	-	PDPCLIB memmgr: never built, no implementation (#276)
+MEMMGR_INCLUDED	@@memmgr.h	-	PDPCLIB memmgr: never built, no implementation (#276)
+MEMMGR_MINFREE	@@memmgr.h	-	PDPCLIB memmgr: never built, no implementation (#276)
+MEMMGR_MINFRTOT	@@memmgr.h	-	PDPCLIB memmgr: never built, no implementation (#276)
+MINIZ_HAS_64BIT_REGISTERS	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+MINIZ_LITTLE_ENDIAN	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+MINIZ_NO_STDIO	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+MINIZ_NO_TIME	miniz.h	-	miniz: declared, never in libc.a (#243)
+MINIZ_UNALIGNED_USE_MEMCPY	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+MINIZ_USE_UNALIGNED_LOADS_AND_STORES	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+MINIZ_X86_OR_X64_CPU	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+MMCESDR	modmap.h	internal	now in src/internal/loadmod.h
+MMCTL	modmap.h	internal	now in src/internal/loadmod.h
+MMCTLD	modmap.h	internal	now in src/internal/loadmod.h
+MMESD	modmap.h	internal	now in src/internal/loadmod.h
+MMIDR	modmap.h	internal	now in src/internal/loadmod.h
+MMLD	modmap.h	-	module-map API: declared, never implemented (#282)
+MMLR	modmap.h	-	module-map API: declared, never implemented (#282)
+MMOD	modmap.h	internal	now in src/internal/loadmod.h
+MMOD_ID_CESD	modmap.h	internal	now in src/internal/loadmod.h
+MMOD_ID_CTL	modmap.h	internal	now in src/internal/loadmod.h
+MMOD_ID_CTLEOM	modmap.h	internal	now in src/internal/loadmod.h
+MMOD_ID_CTLEOS	modmap.h	internal	now in src/internal/loadmod.h
+MMOD_ID_CTLRLD	modmap.h	internal	now in src/internal/loadmod.h
+MMOD_ID_CTLRLDEOM	modmap.h	internal	now in src/internal/loadmod.h
+MMOD_ID_CTLRLDEOS	modmap.h	internal	now in src/internal/loadmod.h
+MMOD_ID_IDR	modmap.h	internal	now in src/internal/loadmod.h
+MMOD_ID_RLD	modmap.h	internal	now in src/internal/loadmod.h
+MMOD_ID_RLDEOM	modmap.h	internal	now in src/internal/loadmod.h
+MMOD_ID_RLDEOS	modmap.h	internal	now in src/internal/loadmod.h
+MMOD_ID_SCAT	modmap.h	internal	now in src/internal/loadmod.h
+MMOD_ID_SYM	modmap.h	internal	now in src/internal/loadmod.h
+MMRL	modmap.h	-	module-map API: declared, never implemented (#282)
+MMRLD	modmap.h	internal	now in src/internal/loadmod.h
+MMRLDF	modmap.h	internal	now in src/internal/loadmod.h
+MMRLDR	modmap.h	internal	now in src/internal/loadmod.h
+MMSD	modmap.h	-	module-map API: declared, never implemented (#282)
+MODMAP	modmap.h	-	module-map API: declared, never implemented (#282)
+MODMAP_EYE	modmap.h	-	module-map API: declared, never implemented (#282)
+MZ_ADLER32_INIT	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+MZ_ASSERT	clibmz.h clibmzi.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+MZ_CLEAR_OBJ	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+MZ_CRC32_INIT	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+MZ_DEFAULT_WINDOW_BITS	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+MZ_DEFLATED	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+MZ_FALSE	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+MZ_FILE	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+MZ_FORCEINLINE	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+MZ_FREE	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+MZ_MACRO_END	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+MZ_MALLOC	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+MZ_MAX	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+MZ_MIN	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+MZ_READ_LE16	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+MZ_READ_LE32	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+MZ_READ_LE64	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+MZ_REALLOC	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+MZ_TIME_T	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+MZ_TRUE	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+MZ_UINT16_MAX	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+MZ_UINT32_MAX	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+MZ_VERNUM	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+MZ_VERSION	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+MZ_VER_MAJOR	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+MZ_VER_MINOR	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+MZ_VER_REVISION	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+MZ_VER_SUBREVISION	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+M_SQRT2	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+OR	socket.h	internal	now in src/net/dyn75/dyn75.h
+PAGE	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+PDF	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+PDFI	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+PDFO	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+PDF_A3_HEIGHT	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+PDF_A3_WIDTH	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+PDF_A4_HEIGHT	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+PDF_A4_WIDTH	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+PDF_ARRAY_SIZE	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+PDF_BLACK	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+PDF_BLUE	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+PDF_COMPRESS	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+PDF_DEBUG	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+PDF_GREEN	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+PDF_INCH_TO_POINT	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+PDF_IS_TRANSPARENT	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+PDF_LETTER_HEIGHT	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+PDF_LETTER_WIDTH	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+PDF_MM_TO_POINT	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+PDF_OBJECT_EYE	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+PDF_RED	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+PDF_RGB	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+PDF_RGB_B	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+PDF_RGB_G	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+PDF_RGB_R	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+PDF_TRANSPARENT	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+PDF_WHITE	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+PRINTF_DISABLE_SUPPORT_LONG_LONG	clibprti.h	internal	now in src/internal/printf.h
+PRINTF_DISABLE_SUPPORT_PTRDIFF_T	clibprti.h	internal	now in src/internal/printf.h
+PRINTF_FTOA_BUFFER_SIZE	clibprti.h	internal	now in src/internal/printf.h
+PRINTF_NTOA_BUFFER_SIZE	clibprti.h	internal	now in src/internal/printf.h
+PRINTF_SUPPORT_FLOAT	clibprti.h	internal	now in src/internal/printf.h
+PRINTF_SUPPORT_LONG_LONG	clibprti.h	internal	now in src/internal/printf.h
+PRINTF_SUPPORT_PTRDIFF_T	clibprti.h	internal	now in src/internal/printf.h
+RES	clibres.h	internal	now in src/internal/clibres.h
+RESDISP	clibres.h	internal	now in src/internal/clibres.h
+RESDISP_EYE	clibres.h	internal	now in src/internal/clibres.h
+RESFUNC	clibres.h	internal	now in src/internal/clibres.h
+RESFUNC_FREEMAIN	clibres.h	internal	now in src/internal/clibres.h
+RESFUNC_FREESTACK	clibres.h	internal	now in src/internal/clibres.h
+RESFUNC_GETMAIN	clibres.h	internal	now in src/internal/clibres.h
+RESFUNC_GETSTACK	clibres.h	internal	now in src/internal/clibres.h
+RESFUNC_SNPRINTF	clibres.h	internal	now in src/internal/clibres.h
+RESFUNC_STEP_LOCK	clibres.h	internal	now in src/internal/clibres.h
+RESFUNC_STEP_UNLOCK	clibres.h	internal	now in src/internal/clibres.h
+RESFUNC_SYSTEM_LOCK	clibres.h	internal	now in src/internal/clibres.h
+RESFUNC_SYSTEM_UNLOCK	clibres.h	internal	now in src/internal/clibres.h
+RESFUNC_VSNPRINTF	clibres.h	internal	now in src/internal/clibres.h
+RESFUNC_VWTOF	clibres.h	internal	now in src/internal/clibres.h
+RESFUNC_WTO	clibres.h	internal	now in src/internal/clibres.h
+RESFUNC_WTODUMP	clibres.h	internal	now in src/internal/clibres.h
+RESFUNC_WTOF	clibres.h	internal	now in src/internal/clibres.h
+RESKEY0	clibres.h	internal	now in src/internal/clibres.h
+RESKEYU	clibres.h	internal	now in src/internal/clibres.h
+RESPROB	clibres.h	internal	now in src/internal/clibres.h
+RESSTACK	clibres.h	internal	now in src/internal/clibres.h
+RESSUP	clibres.h	internal	now in src/internal/clibres.h
+RES_EYE	clibres.h	internal	now in src/internal/clibres.h
+RES_FREEMAIN	clibres.h	internal	now in src/internal/clibres.h
+RES_FREESTACK	clibres.h	internal	now in src/internal/clibres.h
+RES_GETMAIN	clibres.h	internal	now in src/internal/clibres.h
+RES_GETSTACK	clibres.h	internal	now in src/internal/clibres.h
+RES_SNPRINTF	clibres.h	internal	now in src/internal/clibres.h
+RES_STEP_LOCK	clibres.h	internal	now in src/internal/clibres.h
+RES_STEP_UNLOCK	clibres.h	internal	now in src/internal/clibres.h
+RES_SVCSTUB	clibres.h	internal	now in src/internal/clibres.h
+RES_SYSTEM_LOCK	clibres.h	internal	now in src/internal/clibres.h
+RES_SYSTEM_UNLOCK	clibres.h	internal	now in src/internal/clibres.h
+RES_VSNPRINTF	clibres.h	internal	now in src/internal/clibres.h
+RES_VWTOF	clibres.h	internal	now in src/internal/clibres.h
+RES_WTO	clibres.h	internal	now in src/internal/clibres.h
+RES_WTODUMP	clibres.h	internal	now in src/internal/clibres.h
+RES_WTOF	clibres.h	internal	now in src/internal/clibres.h
+RLD_FLAG_ADD4	modmap.h	internal	now in src/internal/loadmod.h
+RLD_FLAG_LL	modmap.h	internal	now in src/internal/loadmod.h
+RLD_FLAG_LL2	modmap.h	internal	now in src/internal/loadmod.h
+RLD_FLAG_LL3	modmap.h	internal	now in src/internal/loadmod.h
+RLD_FLAG_LL4	modmap.h	internal	now in src/internal/loadmod.h
+RLD_FLAG_NEG	modmap.h	internal	now in src/internal/loadmod.h
+RLD_FLAG_SAME	modmap.h	internal	now in src/internal/loadmod.h
+RLD_FLAG_TYPE	modmap.h	internal	now in src/internal/loadmod.h
+RLD_FLAG_TYPEA	modmap.h	internal	now in src/internal/loadmod.h
+RLD_FLAG_TYPECP	modmap.h	internal	now in src/internal/loadmod.h
+RLD_FLAG_TYPEPR	modmap.h	internal	now in src/internal/loadmod.h
+RLD_FLAG_TYPEV	modmap.h	internal	now in src/internal/loadmod.h
+RLD_FLAG_UNRES	modmap.h	internal	now in src/internal/loadmod.h
+SET3	get3.h	-	get3.h removed, no user (#275)
+SHA256_BLOCK_SIZE	sha256.h	crypto370 <sha256.h> SHA256_BLOCK_SIZE	moved to crypto370 1.0.0 (#244)
+SVCMAIN_AUTHOFF	clibsvc.h	internal	now in src/internal/clibsvc.h
+SVCMAIN_AUTHON	clibsvc.h	internal	now in src/internal/clibsvc.h
+SVCMAIN_KEY	clibsvc.h	internal	now in src/internal/clibsvc.h
+SVCMAIN_PROB	clibsvc.h	internal	now in src/internal/clibsvc.h
+SVCMAIN_SUP	clibsvc.h	internal	now in src/internal/clibsvc.h
+SVCREGS	clibsvc.h	internal	now in src/internal/clibsvc.h
+TDEFL_LESS_MEMORY	clibmz.h miniz_tdef.h	-	miniz: declared, never in libc.a (#243)
+TDEFL_PUT_BITS	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+TDEFL_READ_UNALIGNED_WORD	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+TDEFL_READ_UNALIGNED_WORD2	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+TDEFL_READ_UNALIGNED_WORD32	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+TDEFL_RLE_PREV_CODE_SIZE	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+TDEFL_RLE_ZERO_CODE_SIZE	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+TEXT	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+TINFL_BITBUF_SIZE	clibmz.h miniz_tinfl.h	-	miniz: declared, never in libc.a (#243)
+TINFL_CR_BEGIN	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+TINFL_CR_FINISH	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+TINFL_CR_RETURN	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+TINFL_CR_RETURN_FOREVER	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+TINFL_DECOMPRESS_MEM_TO_MEM_FAILED	clibmz.h miniz_tinfl.h	-	miniz: declared, never in libc.a (#243)
+TINFL_GET_BITS	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+TINFL_GET_BYTE	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+TINFL_HUFF_BITBUF_FILL	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+TINFL_HUFF_DECODE	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+TINFL_LZ_DICT_SIZE	clibmz.h miniz_tinfl.h	-	miniz: declared, never in libc.a (#243)
+TINFL_MEMCPY	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+TINFL_MEMSET	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+TINFL_NEED_BITS	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+TINFL_SKIP_BITS	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+TINFL_USE_64BIT_BITBUF	clibmz.h miniz_tinfl.h	-	miniz: declared, never in libc.a (#243)
+ZLIB_VERNUM	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+ZLIB_VERSION	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+ZLIB_VER_MAJOR	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+ZLIB_VER_MINOR	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+ZLIB_VER_REVISION	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+ZLIB_VER_SUBREVISION	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Z_BEST_COMPRESSION	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Z_BEST_SPEED	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Z_BLOCK	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Z_BUF_ERROR	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Z_DATA_ERROR	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Z_DEFAULT_COMPRESSION	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Z_DEFAULT_STRATEGY	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Z_DEFAULT_WINDOW_BITS	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Z_DEFLATED	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Z_ERRNO	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Z_FILTERED	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Z_FINISH	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Z_FIXED	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Z_FULL_FLUSH	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Z_HUFFMAN_ONLY	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Z_MEM_ERROR	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Z_NEED_DICT	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Z_NO_COMPRESSION	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Z_NO_FLUSH	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Z_NULL	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Z_OK	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Z_PARAM_ERROR	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Z_PARTIAL_FLUSH	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Z_RLE	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Z_STREAM_END	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Z_STREAM_ERROR	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Z_SYNC_FLUSH	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+Z_VERSION_ERROR	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+__75	@@75.h __75.h	internal	now in src/net/dyn75/x75.h
+__75VECT	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75acce	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75bind	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75clos	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75conn	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75gabn	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75ghba	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75ghbn	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75init	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75ioct	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75list	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75pnam	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75recv	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75sele	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75selx	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75send	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75snam	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75sock	socket.h	internal	now in src/net/dyn75/dyn75.h
+__75vect	socket.h	internal	now in src/net/dyn75/dyn75.h
+__JPAGET	clibjpa.h	internal	now in src/internal/crtanchor.h
+__aclose	mvssupa.h	internal	now in src/internal/bsam.h
+__adisc	mvssupa.h	internal	now in src/internal/bsam.h
+__aopen	mvssupa.h	internal	now in src/internal/bsam.h
+__aread	mvssupa.h	internal	now in src/internal/bsam.h
+__awrite	mvssupa.h	internal	now in src/internal/bsam.h
+__caller	clibio.h	internal	now in src/internal/fileio.h
+__ddbusy	clibio.h	internal	now in src/internal/fileio.h
+__fflnl	clibio.h	internal	now in src/internal/fileio.h
+__fflush	clibio.h	internal	now in src/internal/fileio.h
+__fgetc	clibio.h	internal	now in src/internal/fileio.h
+__fgets	clibio.h	internal	now in src/internal/fileio.h
+__fpfree	clibio.h	internal	now in src/internal/fileio.h
+__fpswt	clibio.h	internal	now in src/internal/fileio.h
+__fpterm	clibio.h	internal	now in src/internal/fileio.h
+__fptmp	clibio.h	internal	now in src/internal/fileio.h
+__fpupc	clibio.h	internal	now in src/internal/fileio.h
+__fputc	clibio.h	internal	now in src/internal/fileio.h
+__fputs	clibio.h	internal	now in src/internal/fileio.h
+__fread	clibio.h	internal	now in src/internal/fileio.h
+__fseek	clibio.h	internal	now in src/internal/fileio.h
+__fwrite	clibio.h	internal	now in src/internal/fileio.h
+__getcrt	clib.h	<mvs/crt.h> __crtget	clib.h alias (#256)
+__getgrt	clib.h	<mvs/crt.h> __grtget	clib.h alias (#256)
+__getjpa	clib.h	-	clib.h alias of __jpaget(), which is internal (src/internal/crtanchor.h)
+__getwsa	clib.h	<mvs/wsa.h> __wsaget	clib.h alias (#256)
+__jpaget	clibjpa.h	internal	now in src/internal/crtanchor.h
+__reopen	clibio.h	internal	now in src/internal/fileio.h
+__rescrt	clib.h	<mvs/crt.h> __crtres	clib.h alias (#256)
+__resgrt	clib.h	<mvs/crt.h> __grtres	clib.h alias (#256)
+__setcrt	clib.h	<mvs/crt.h> __crtset	clib.h alias (#256)
+__setgrt	clib.h	<mvs/crt.h> __grtset	clib.h alias (#256)
+__svc	clibsvc.h	internal	now in src/internal/clibsvc.h
+__system	mvssupa.h	internal	now in src/internal/bsam.h
+__textlc	mvssupa.h	internal	now in src/internal/bsam.h
+_atoi	clibprti.h	internal	now in src/internal/printf.h
+_ftoa	clibprti.h	internal	now in src/internal/printf.h
+_is_digit	clibprti.h	internal	now in src/internal/printf.h
+_ntoa_format	clibprti.h	internal	now in src/internal/printf.h
+_ntoa_long	clibprti.h	internal	now in src/internal/printf.h
+_ntoa_long_long	clibprti.h	internal	now in src/internal/printf.h
+_out_buffer	clibprti.h	internal	now in src/internal/printf.h
+_out_char	clibprti.h	internal	now in src/internal/printf.h
+_out_fct	clibprti.h	internal	now in src/internal/printf.h
+_out_null	clibprti.h	internal	now in src/internal/printf.h
+_strlen	clibprti.h	internal	now in src/internal/printf.h
+_vsnprintf	clibprti.h	internal	now in src/internal/printf.h
+adler32	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+alloc_func	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+base64_decode	clibb64.h	crypto370 <base64.h> base64_decode	moved to crypto370 1.0.0 (#244); symbol now B64DEC
+base64_encode	clibb64.h	crypto370 <base64.h> base64_encode	moved to crypto370 1.0.0 (#244); symbol now B64ENC
+bcopy	stdlib.h	<string.h> memmove	argument order differs: bcopy(src, dst, n) is memmove(dst, src, n)
+bitlen	sha256.h	-	moved to crypto370 (#244)
+bkmk	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+blowfish_decrypt	blowfish.h	crypto370 <blowfish.h> blowfish_decrypt	moved to crypto370 1.0.0 (#244)
+blowfish_encrypt	blowfish.h	crypto370 <blowfish.h> blowfish_encrypt	moved to crypto370 1.0.0 (#244)
+blowfish_key_setup	blowfish.h	crypto370 <blowfish.h> blowfish_key_setup	moved to crypto370 1.0.0 (#244)
+bool	clibprti.h	internal	now in src/internal/printf.h
+charf	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+clibjpa	clibjpa.h	internal	now in src/internal/crtanchor.h
+compress	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+compress2	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+compressBound	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+crc32	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+deflate	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+deflateBound	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+deflateEnd	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+deflateInit	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+deflateInit2	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+deflateReset	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+dstr	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+dstr_append	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+dstr_append_data	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+dstr_data	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+dstr_ensure	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+dstr_free	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+dstr_len	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+dstr_printf	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+emfile	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+emfile10	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+emfile_allocate_mod	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+emfile_allocate_new	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+emfile_allocate_old	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+emfile_allocate_shr	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+emfile_calc_size	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+emfile_close	emfile.h	-	emfile: sources only in attic/, never built (#248)
+emfile_create	emfile.h	-	emfile: sources only in attic/, never built (#248)
+emfile_create_header	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+emfile_dump	emfile.h	-	emfile: sources only in attic/, never built (#248)
+emfile_flush	emfile.h	-	emfile: sources only in attic/, never built (#248)
+emfile_full_init	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+emfile_get_error	emfile.h	-	emfile: sources only in attic/, never built (#248)
+emfile_get_wsa	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+emfile_getc	emfile.h	-	emfile: sources only in attic/, never built (#248)
+emfile_getpos	emfile.h	-	emfile: sources only in attic/, never built (#248)
+emfile_gets	emfile.h	-	emfile: sources only in attic/, never built (#248)
+emfile_grow	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+emfile_init	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+emfile_offset_block_pos	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+emfile_open	emfile.h	-	emfile: sources only in attic/, never built (#248)
+emfile_printf	emfile.h	-	emfile: sources only in attic/, never built (#248)
+emfile_putc	emfile.h	-	emfile: sources only in attic/, never built (#248)
+emfile_puts	emfile.h	-	emfile: sources only in attic/, never built (#248)
+emfile_read	emfile.h	-	emfile: sources only in attic/, never built (#248)
+emfile_read_block	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+emfile_read_bytes	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+emfile_read_header	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+emfile_seek	emfile.h	-	emfile: sources only in attic/, never built (#248)
+emfile_set_config	emfile.h	-	emfile: sources only in attic/, never built (#248)
+emfile_set_ddn	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+emfile_set_dsn	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+emfile_set_volser	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+emfile_setpos	emfile.h	-	emfile: sources only in attic/, never built (#248)
+emfile_setup	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+emfile_space	emfile.h	-	emfile: sources only in attic/, never built (#248)
+emfile_sync	emfile.h	-	emfile: sources only in attic/, never built (#248)
+emfile_tell	emfile.h	-	emfile: sources only in attic/, never built (#248)
+emfile_tell64	emfile.h	-	emfile: sources only in attic/, never built (#248)
+emfile_truncate	emfile.h	-	emfile: sources only in attic/, never built (#248)
+emfile_unallocate	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+emfile_validate	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+emfile_vprintf	emfile.h	-	emfile: sources only in attic/, never built (#248)
+emfile_write	emfile.h	-	emfile: sources only in attic/, never built (#248)
+emfile_write_block	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+emfile_write_bytes	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+emfile_write_header	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+emfilewsa	emfilei.h	-	emfile: sources only in attic/, never built (#248)
+enqpl	enqpl.h	internal	now in src/internal/enqpl.h
+eyecheck1	@@memmgr.h	-	PDPCLIB memmgr: never built, no implementation (#276)
+false	clibprti.h	internal	now in src/internal/printf.h
+fctprintf_	clibprtf.h	internal	now in src/internal/printf.h
+find_font_widths	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+font	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+free_func	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+inflate	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+inflateEnd	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+inflateInit	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+inflateInit2	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+inline_srb_freemain	clibsrb.h	-	no user; a fixed copy waits in attic/mvs/srb.h, not built
+inline_srb_getmain	clibsrb.h	-	no user; a fixed copy waits in attic/mvs/srb.h, not built
+internal_state	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+intf	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+ipc	ipci.h	-	ipc: sources only in attic/, never built (#248)
+ipc_connect_addr_port	ipc.h	-	ipc: sources only in attic/, never built (#248)
+ipc_connect_host_port	ipc.h	-	ipc: sources only in attic/, never built (#248)
+ipc_free	ipc.h	-	ipc: sources only in attic/, never built (#248)
+ipc_free_channel	ipc.h	-	ipc: sources only in attic/, never built (#248)
+ipc_free_message	ipc.h	-	ipc: sources only in attic/, never built (#248)
+ipc_free_msg	ipc.h	-	ipc: sources only in attic/, never built (#248)
+ipc_get_addr_port	ipc.h	-	ipc: sources only in attic/, never built (#248)
+ipc_get_host_port	ipc.h	-	ipc: sources only in attic/, never built (#248)
+ipc_get_id	ipc.h	-	ipc: sources only in attic/, never built (#248)
+ipc_get_name	ipc.h	-	ipc: sources only in attic/, never built (#248)
+ipc_get_sock	ipc.h	-	ipc: sources only in attic/, never built (#248)
+ipc_new	ipc.h	-	ipc: sources only in attic/, never built (#248)
+ipc_new_msg	ipc.h	-	ipc: sources only in attic/, never built (#248)
+ipc_recv	ipc.h	-	ipc: sources only in attic/, never built (#248)
+ipc_send	ipc.h	-	ipc: sources only in attic/, never built (#248)
+ipc_send_recv	ipc.h	-	ipc: sources only in attic/, never built (#248)
+ipc_start	ipc.h	-	ipc: sources only in attic/, never built (#248)
+ipcc	ipci.h	-	ipc: sources only in attic/, never built (#248)
+ipch	ipci.h	-	ipc: sources only in attic/, never built (#248)
+ipcm	ipci.h	-	ipc: sources only in attic/, never built (#248)
+m_archive_size	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+m_capacity	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+m_decomp	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+m_dummy	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+m_file_index	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+m_pPut_buf_func	clibmz.h miniz_tdef.h	-	miniz: declared, never in libc.a (#243)
+m_sym_index	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+memmgrAllocate	@@memmgr.h	-	PDPCLIB memmgr: never built, no implementation (#276)
+memmgrDebug	@@memmgr.h	-	PDPCLIB memmgr: never built, no implementation (#276)
+memmgrDebug2	@@memmgr.h	-	PDPCLIB memmgr: never built, no implementation (#276)
+memmgrDefaults	@@memmgr.h	-	PDPCLIB memmgr: never built, no implementation (#276)
+memmgrFree	@@memmgr.h	-	PDPCLIB memmgr: never built, no implementation (#276)
+memmgrFreeId	@@memmgr.h	-	PDPCLIB memmgr: never built, no implementation (#276)
+memmgrInit	@@memmgr.h	-	PDPCLIB memmgr: never built, no implementation (#276)
+memmgrIntegrity	@@memmgr.h	-	PDPCLIB memmgr: never built, no implementation (#276)
+memmgrMaxSize	@@memmgr.h	-	PDPCLIB memmgr: never built, no implementation (#276)
+memmgrRealloc	@@memmgr.h	-	PDPCLIB memmgr: never built, no implementation (#276)
+memmgrSupply	@@memmgr.h	-	PDPCLIB memmgr: never built, no implementation (#276)
+memmgrTerm	@@memmgr.h	-	PDPCLIB memmgr: never built, no implementation (#276)
+memmgrTotSize	@@memmgr.h	-	PDPCLIB memmgr: never built, no implementation (#276)
+memmgrn	@@memmgr.h	-	PDPCLIB memmgr: never built, no implementation (#276)
+miniz_def_alloc_func	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+miniz_def_free_func	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+miniz_def_realloc_func	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+mmapdump	modmap.h	-	module-map API: declared, never implemented (#282)
+mmapflr	modmap.h	-	module-map API: declared, never implemented (#282)
+mmapfree	modmap.h	-	module-map API: declared, never implemented (#282)
+mmapfrld	modmap.h	-	module-map API: declared, never implemented (#282)
+mmapfrlr	modmap.h	-	module-map API: declared, never implemented (#282)
+mmapfrrl	modmap.h	-	module-map API: declared, never implemented (#282)
+mmapfrsd	modmap.h	-	module-map API: declared, never implemented (#282)
+mmapfsd	modmap.h	-	module-map API: declared, never implemented (#282)
+mmapnew	modmap.h	-	module-map API: declared, never implemented (#282)
+mmapopen	modmap.h	-	module-map API: declared, never implemented (#282)
+mmapproc	modmap.h	-	module-map API: declared, never implemented (#282)
+mmaprset	modmap.h	-	module-map API: declared, never implemented (#282)
+mmaprsld	modmap.h	-	module-map API: declared, never implemented (#282)
+mmapsort	modmap.h	-	module-map API: declared, never implemented (#282)
+mmcesdr	modmap.h	internal	now in src/internal/loadmod.h
+mmctl	modmap.h	internal	now in src/internal/loadmod.h
+mmctld	modmap.h	internal	now in src/internal/loadmod.h
+mmesd	modmap.h	internal	now in src/internal/loadmod.h
+mmidr	modmap.h	internal	now in src/internal/loadmod.h
+mmld	modmap.h	-	module-map API: declared, never implemented (#282)
+mmlr	modmap.h	-	module-map API: declared, never implemented (#282)
+mmod	modmap.h	internal	now in src/internal/loadmod.h
+mmrl	modmap.h	-	module-map API: declared, never implemented (#282)
+mmrld	modmap.h	internal	now in src/internal/loadmod.h
+mmrldf	modmap.h	internal	now in src/internal/loadmod.h
+mmrldr	modmap.h	internal	now in src/internal/loadmod.h
+mmsd	modmap.h	-	module-map API: declared, never implemented (#282)
+modmap	modmap.h	-	module-map API: declared, never implemented (#282)
+modmap_base	modmap.h	-	module-map API: declared, never implemented (#282)
+modmap_dump	modmap.h	-	module-map API: declared, never implemented (#282)
+modmap_find_lr	modmap.h	-	module-map API: declared, never implemented (#282)
+modmap_find_sd	modmap.h	-	module-map API: declared, never implemented (#282)
+modmap_free	modmap.h	-	module-map API: declared, never implemented (#282)
+modmap_free_ld	modmap.h	-	module-map API: declared, never implemented (#282)
+modmap_free_lr	modmap.h	-	module-map API: declared, never implemented (#282)
+modmap_free_rl	modmap.h	-	module-map API: declared, never implemented (#282)
+modmap_free_sd	modmap.h	-	module-map API: declared, never implemented (#282)
+modmap_new	modmap.h	-	module-map API: declared, never implemented (#282)
+modmap_open	modmap.h	-	module-map API: declared, never implemented (#282)
+modmap_process	modmap.h	-	module-map API: declared, never implemented (#282)
+modmap_reset	modmap.h	-	module-map API: declared, never implemented (#282)
+modmap_reset_ld	modmap.h	-	module-map API: declared, never implemented (#282)
+modmap_sort	modmap.h	-	module-map API: declared, never implemented (#282)
+modmap_zap	modmap.h	-	module-map API: declared, never implemented (#282)
+mz_adler32	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+mz_alloc_func	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+mz_bitmasks	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+mz_bool	clibmz.h clibmzi.h miniz_common.h miniz_tdef.h miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_compress	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+mz_compress2	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+mz_compressBound	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+mz_crc32	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+mz_deflate	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+mz_deflateBound	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+mz_deflateEnd	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+mz_deflateInit	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+mz_deflateInit2	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+mz_deflateReset	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+mz_dummy_time_t_tag	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+mz_error	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+mz_file_needs_keepalive	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_file_read_func	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_file_write_func	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_free	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+mz_free_func	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+mz_inflate	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+mz_inflateEnd	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+mz_inflateInit	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+mz_inflateInit2	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+mz_int16	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+mz_int64	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+mz_private	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+mz_realloc_func	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+mz_stream_s	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+mz_streamp	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+mz_uint	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+mz_uint16	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+mz_uint32	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+mz_uint64	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+mz_uint8	clibmz.h miniz_common.h	-	miniz: declared, never in libc.a (#243)
+mz_ulong	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+mz_uncompress	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+mz_version	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_add_mem_to_archive_file_in_place	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_add_mem_to_archive_file_in_place_v2	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_clear_last_error	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_end	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_error	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_extract_archive_file_to_heap	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_extract_archive_file_to_heap_v2	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_flags	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_get_archive_file_start_offset	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_get_archive_size	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_get_central_dir_size	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_get_cfile	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_get_error_string	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_get_last_error	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_get_mode	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_get_type	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_internal_state	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_is_zip64	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_mode	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_peek_last_error	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_read_archive_data	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_end	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_extract_file_iter_new	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_extract_file_to_callback	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_extract_file_to_cfile	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_extract_file_to_file	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_extract_file_to_heap	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_extract_file_to_mem	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_extract_file_to_mem_no_alloc	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_extract_iter_free	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_extract_iter_new	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_extract_iter_read	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_extract_to_callback	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_extract_to_cfile	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_extract_to_file	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_extract_to_heap	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_extract_to_mem	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_extract_to_mem_no_alloc	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_file_stat	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_get_filename	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_get_num_files	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_init	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_init_cfile	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_init_file	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_init_file_v2	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_init_mem	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_is_file_a_directory	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_is_file_encrypted	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_is_file_supported	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_locate_file	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_reader_locate_file_v2	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_set_last_error	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_type	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_validate_archive	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_validate_file	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_validate_file_archive	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_validate_mem_archive	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_writer_add_cfile	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_writer_add_file	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_writer_add_from_zip_reader	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_writer_add_mem	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_writer_add_mem_ex	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_writer_add_mem_ex_v2	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_writer_add_read_buf_callback	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_writer_end	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_writer_finalize_archive	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_writer_finalize_heap_archive	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_writer_init	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_writer_init_cfile	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_writer_init_file	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_writer_init_file_v2	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_writer_init_from_reader	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_writer_init_from_reader_v2	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_writer_init_heap	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_writer_init_heap_v2	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_writer_init_v2	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+mz_zip_zero_struct	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+next_in	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+out_fct_type	clibprti.h	internal	now in src/internal/printf.h
+pZip	miniz_zip.h	-	miniz: declared, never in libc.a (#243)
+page	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+pdf_add_barcode	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdf_add_bookmark	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdf_add_circle	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdf_add_ellipse	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdf_add_filled_polygon	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdf_add_filled_rectangle	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdf_add_image	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+pdf_add_jpeg	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdf_add_line	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdf_add_object	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+pdf_add_polygon	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdf_add_ppm	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdf_add_raw_rgb24	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+pdf_add_rectangle	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdf_add_stream	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+pdf_add_text	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdf_add_text_spacing	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+pdf_add_text_wrap	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdf_append_object	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+pdf_append_page	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdf_clear_err	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdf_create	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdf_destroy	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdf_doc	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+pdf_find_first_object	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+pdf_find_last_object	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+pdf_fprintf	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+pdf_get_err	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdf_get_font_text_width	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdf_get_object	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+pdf_height	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdf_info	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdf_object	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+pdf_object_destroy	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+pdf_page_set_size	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdf_private	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+pdf_put_text	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdf_put_text_first	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+pdf_put_text_spacing	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+pdf_save	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdf_save_file	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdf_secs	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+pdf_set_compression	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdf_set_debug	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdf_set_err	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+pdf_set_font	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdf_stck	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+pdf_text_pixel_width	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+pdf_width	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+pdfatoe	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+pdfetoa	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+pl75	@@75.h __75.h	internal	now in src/net/dyn75/x75.h
+printf_	clibprtf.h	internal	now in src/internal/printf.h
+printf_private	clibprti.h	internal	now in src/internal/printf.h
+r0	@@75.h __75.h	internal	now in src/net/dyn75/x75.h
+res	clibres.h	internal	now in src/internal/clibres.h
+res_request_authoff	clibres.h	internal	now in src/internal/clibres.h
+res_request_authon	clibres.h	internal	now in src/internal/clibres.h
+res_request_freemain	clibres.h	internal	now in src/internal/clibres.h
+res_request_freestack	clibres.h	internal	now in src/internal/clibres.h
+res_request_getmain	clibres.h	internal	now in src/internal/clibres.h
+res_request_getstack	clibres.h	internal	now in src/internal/clibres.h
+res_request_isprob	clibres.h	internal	now in src/internal/clibres.h
+res_request_issup	clibres.h	internal	now in src/internal/clibres.h
+res_request_key	clibres.h	internal	now in src/internal/clibres.h
+res_request_prob	clibres.h	internal	now in src/internal/clibres.h
+res_request_snprintf	clibres.h	internal	now in src/internal/clibres.h
+res_request_state	clibres.h	internal	now in src/internal/clibres.h
+res_request_step_lock	clibres.h	internal	now in src/internal/clibres.h
+res_request_step_unlock	clibres.h	internal	now in src/internal/clibres.h
+res_request_sup	clibres.h	internal	now in src/internal/clibres.h
+res_request_system_lock	clibres.h	internal	now in src/internal/clibres.h
+res_request_system_unlock	clibres.h	internal	now in src/internal/clibres.h
+res_request_vsnprintf	clibres.h	internal	now in src/internal/clibres.h
+res_request_wto	clibres.h	internal	now in src/internal/clibres.h
+res_request_wtodump	clibres.h	internal	now in src/internal/clibres.h
+res_request_wtodumpf	clibres.h	internal	now in src/internal/clibres.h
+res_request_wtof	clibres.h	internal	now in src/internal/clibres.h
+resdisp	clibres.h	internal	now in src/internal/clibres.h
+resfunc	clibres.h	internal	now in src/internal/clibres.h
+s_tdefl_large_dist_extra	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+s_tdefl_large_dist_sym	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+s_tdefl_len_extra	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+s_tdefl_len_sym	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+s_tdefl_num_probes	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+s_tdefl_packed_code_size_syms_swizzle	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+s_tdefl_small_dist_extra	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+s_tdefl_small_dist_sym	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+sha256_final	sha256.h	crypto370 <sha256.h> sha256_final	moved to crypto370 1.0.0 (#244)
+sha256_init	sha256.h	crypto370 <sha256.h> sha256_init	moved to crypto370 1.0.0 (#244)
+sha256_transform	sha256.h	crypto370 <sha256.h> sha256_transform	moved to crypto370 1.0.0 (#244)
+sha256_update	sha256.h	crypto370 <sha256.h> sha256_update	moved to crypto370 1.0.0 (#244)
+snprintf_	clibprtf.h	internal	now in src/internal/printf.h
+spl_memclr	clibspl.h	internal	now in src/internal/clibspl.h
+spl_memcpy	clibspl.h	internal	now in src/internal/clibspl.h
+spl_memcpyp	clibspl.h	internal	now in src/internal/clibspl.h
+spl_memset	clibspl.h	internal	now in src/internal/clibspl.h
+spl_strcpy	clibspl.h	internal	now in src/internal/clibspl.h
+spl_strcpyp	clibspl.h	internal	now in src/internal/clibspl.h
+spl_strlen	clibspl.h	internal	now in src/internal/clibspl.h
+sprintf_	clibprtf.h	internal	now in src/internal/printf.h
+srb_freemain	clibsrb.h	-	no user; a fixed copy waits in attic/mvs/srb.h, not built
+srb_getmain	clibsrb.h	-	no user; a fixed copy waits in attic/mvs/srb.h, not built
+start	@@memmgr.h	-	PDPCLIB memmgr: never built, no implementation (#276)
+stricmp	clibstr.h	<strings.h> strcasecmp	same code as the POSIX name (#250)
+strncmpi	clibstr.h	<strings.h> strncasecmp	same code as the POSIX name (#250)
+svcmain	clibsvc.h	internal	now in src/internal/clibsvc.h
+svcregs	clibsvc.h	internal	now in src/internal/clibsvc.h
+tdefl_calculate_minimum_redundancy	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+tdefl_compress	clibmz.h miniz_tdef.h	-	miniz: declared, never in libc.a (#243)
+tdefl_compress_block	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+tdefl_compress_buffer	clibmz.h miniz_tdef.h	-	miniz: declared, never in libc.a (#243)
+tdefl_compress_fast	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+tdefl_compress_lz_codes	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+tdefl_compress_mem_to_heap	clibmz.h miniz_tdef.h	-	miniz: declared, never in libc.a (#243)
+tdefl_compress_mem_to_mem	clibmz.h miniz_tdef.h	-	miniz: declared, never in libc.a (#243)
+tdefl_compress_mem_to_output	clibmz.h miniz_tdef.h	-	miniz: declared, never in libc.a (#243)
+tdefl_compress_normal	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+tdefl_compressor_alloc	clibmz.h miniz_tdef.h	-	miniz: declared, never in libc.a (#243)
+tdefl_compressor_free	clibmz.h miniz_tdef.h	-	miniz: declared, never in libc.a (#243)
+tdefl_create_comp_flags_from_zip_params	clibmz.h miniz_tdef.h	-	miniz: declared, never in libc.a (#243)
+tdefl_find_match	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+tdefl_flush	clibmz.h miniz_tdef.h	-	miniz: declared, never in libc.a (#243)
+tdefl_flush_block	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+tdefl_flush_output_buffer	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+tdefl_get_adler32	clibmz.h miniz_tdef.h	-	miniz: declared, never in libc.a (#243)
+tdefl_get_prev_return_status	clibmz.h miniz_tdef.h	-	miniz: declared, never in libc.a (#243)
+tdefl_huffman_enforce_max_code_size	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+tdefl_init	clibmz.h miniz_tdef.h	-	miniz: declared, never in libc.a (#243)
+tdefl_optimize_huffman_table	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+tdefl_output_buffer_putter	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+tdefl_put_buf_func_ptr	clibmz.h miniz_tdef.h	-	miniz: declared, never in libc.a (#243)
+tdefl_radix_sort_syms	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+tdefl_record_literal	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+tdefl_record_match	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+tdefl_start_dynamic_block	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+tdefl_start_static_block	clibmzi.h	-	miniz: declared, never in libc.a (#243)
+tdefl_status	clibmz.h clibmzi.h miniz_tdef.h	-	miniz: declared, never in libc.a (#243)
+tdefl_write_image_to_png_file_in_memory	clibmz.h miniz_tdef.h	-	miniz: declared, never in libc.a (#243)
+tdefl_write_image_to_png_file_in_memory_ex	clibmz.h miniz_tdef.h	-	miniz: declared, never in libc.a (#243)
+text	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
+tinfl_bit_buf_t	clibmz.h miniz_tinfl.h	-	miniz: declared, never in libc.a (#243)
+tinfl_decompress	clibmz.h miniz_tinfl.h	-	miniz: declared, never in libc.a (#243)
+tinfl_decompress_mem_to_callback	clibmz.h miniz_tinfl.h	-	miniz: declared, never in libc.a (#243)
+tinfl_decompress_mem_to_heap	clibmz.h miniz_tinfl.h	-	miniz: declared, never in libc.a (#243)
+tinfl_decompress_mem_to_mem	clibmz.h miniz_tinfl.h	-	miniz: declared, never in libc.a (#243)
+tinfl_decompressor	clibmz.h miniz_tinfl.h	-	miniz: declared, never in libc.a (#243)
+tinfl_decompressor_alloc	clibmz.h miniz_tinfl.h	-	miniz: declared, never in libc.a (#243)
+tinfl_decompressor_free	clibmz.h miniz_tinfl.h	-	miniz: declared, never in libc.a (#243)
+tinfl_decompressor_tag	clibmz.h miniz_tinfl.h	-	miniz: declared, never in libc.a (#243)
+tinfl_get_adler32	clibmz.h miniz_tinfl.h	-	miniz: declared, never in libc.a (#243)
+tinfl_init	clibmz.h miniz_tinfl.h	-	miniz: declared, never in libc.a (#243)
+tinfl_put_buf_func_ptr	clibmz.h miniz_tinfl.h	-	miniz: declared, never in libc.a (#243)
+tinfl_status	clibmz.h miniz_tinfl.h	-	miniz: declared, never in libc.a (#243)
+true	clibprti.h	internal	now in src/internal/printf.h
+uInt	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+uIntf	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+uLong	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+uLongf	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+uncompress	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+voidp	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+voidpc	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+voidpf	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+vsnprintf_	clibprtf.h	internal	now in src/internal/printf.h
+vsprintf_	clibprtf.h	internal	now in src/internal/printf.h
+vvprintf	clibio.h	internal	now in src/internal/fileio.h
+vvscanf	clibio.h	internal	now in src/internal/fileio.h
+zError	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+z_stream	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+zlibVersion	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
+zlib_version	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)

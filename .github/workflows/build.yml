@@ -23,12 +23,18 @@
 #   symbol versioning, and macOS is where the tests are written.
 #
 # Also called by release.yml, so a release is built the same way.
+#
+# 2.0 (#256): pushes to the integration branch 2.0 build too, and a PR into
+# 2.0 must pass sdk/gate.py against its base -- identical assembler for every
+# TU, identical archive, no new warning, unless sdk/gate-allow.txt names the
+# difference.  sdk/headermap.py check keeps the mapping, the design doc and
+# include/ in step on every build.
 
 name: Build
 
 on:
   push:
-    branches: [main]
+    branches: [main, "2.0"]
   pull_request:
   workflow_call:
     outputs:
@@ -45,6 +51,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0          # sdk/gate.py checks out the PR's base
+
+      - name: Header map
+        run: python3 sdk/headermap.py check
 
       - name: Clone cc370
         id: cc370
@@ -82,6 +93,12 @@ jobs:
           set -o pipefail
           make build 2>&1 | tee build.log
 
+      - name: Gate (PRs into 2.0)
+        if: github.event_name == 'pull_request' && github.base_ref == '2.0'
+        run: |
+          set -o pipefail
+          python3 sdk/gate.py ${{ github.event.pull_request.base.sha }} 2>&1 | tee gate.log
+
       - name: Report
         if: always()
         run: |
@@ -91,6 +108,12 @@ jobs:
             echo "- cc370: \`${{ steps.cc370.outputs.sha }}\`"
             echo "- compiler warnings: ${warn:-0}"
             grep -E '^\[libc\] (OK|no duplicate)' build.log 2>/dev/null | sed 's/^/- /'
+            if [ -f gate.log ]; then
+              echo "#### gate"
+              echo '```'
+              cat gate.log
+              echo '```'
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
 
   host-tests:

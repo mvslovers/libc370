@@ -1,6 +1,6 @@
 /*
  * tstjestx.c - libc370 #111: the JES2 internal-text parsers in
- * src/jes/jesjob.c must bound every memcpy() by its destination, not by the
+ * src/mvs/jes2/jesjob.c must bound every memcpy() by its destination, not by the
  * one-byte length field in the text stream.
  *
  * ISSUE #111: process_job() (jesjob.c:608) and process_exec() (jesjob.c:646)
@@ -68,24 +68,24 @@
  *   -D'__asm__(...)='  erases the file-scope S/370 statements
  *                      (__asm__("\n&FUNC SETC 'process_job'")).  Variadic
  *                      because extended asm carries commas.
- *   -D__volatile__=    turns clibstr.h's inline memset(), written
+ *   -D__volatile__=    turns string.h's inline memset(), written
  *                      "__asm__ __volatile__(", into something the erase
  *                      above can reach.  NOTE this leaves memset() a no-op
  *                      stub, so this file uses calloc() and explicit stores
  *                      rather than memset().
  *   -D__32BIT__        is what libc370's stddef.h/stdlib.h key size_t off.
- *   -U__LP64__         time64.h is "#error Your time_t is already 64-bit"
- *                      under __LP64__, and clibjes2.h pulls it in for
+ *   -U__LP64__         ext/time64.h is "#error Your time_t is already 64-bit"
+ *                      under __LP64__, and mvs/jes2.h pulls it in for
  *                      JESJOB.start_time64.
  *
  *     R=../..
  *     cc -std=gnu99 -Wall -Wextra -fsanitize=address \
  *        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
- *        -I $R/include -I $R/src/jes -o t tstjestx.c \
- *        "$R/src/jes/jesprb.c" \
- *        "$R/src/clib/@@aradd.c" "$R/src/clib/@@arnew.c" \
- *        "$R/src/clib/@@arcou.c" "$R/src/clib/@@arget.c" \
- *        "$R/src/clib/@@arfre.c"
+ *        -I $R/include -I $R/src/internal -I $R/src/jes -o t tstjestx.c \
+ *        "$R/src/mvs/jes2/jesprb.c" \
+ *        "$R/src/ext/array/@@aradd.c" "$R/src/ext/array/@@arnew.c" \
+ *        "$R/src/ext/array/@@arcou.c" "$R/src/ext/array/@@arget.c" \
+ *        "$R/src/ext/array/@@arfre.c"
  *     ./t                                             # 20/20, rc 0
  *
  * RED, against the pre-fix source.  Cases (1)-(4) execute and pass, then case
@@ -107,6 +107,7 @@
  *
  * RC: 0 = every check passed, 1 = at least one did not.
  */
+#include <ext/strutil.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -116,9 +117,9 @@
  * the headers in ahead of it keeps that out of this test's build line; it is
  * not a workaround for anything under test here. */
 #include <ctype.h>
-#include "clibwto.h"
+#include "mvs/wto.h"
 
-#include "../../src/jes/jesjob.c"
+#include "../../src/mvs/jes2/jesjob.c"
 
 /* ---- shims -------------------------------------------------------------
  * Defined AFTER the translation unit so each one matches the prototype the

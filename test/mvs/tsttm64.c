@@ -2,7 +2,7 @@
  * tsttm64.c - libc370 #49: the unit contract of the time64 clock family and
  * the divisor layer under it (MVS target, batch).
  *
- * ISSUE #49: clock64() (src/time64/tm64clck.c) divided the microseconds out
+ * ISSUE #49: clock64() (src/ext/time64/tm64clck.c) divided the microseconds out
  * by 1000, so it returned MILLISECONDS while clock64_t and the header said
  * seconds.  mclock64() is the same seven lines, so the two were the same
  * function.  time64() then divided by CLOCKS_PER_SEC (1000) and came out in
@@ -61,7 +61,7 @@
  * THE ONE CASE THAT NEEDS A REAL WAIT
  * --------------------------------------------------------------------
  * Case (9) is the cheapest guard on the most expensive silent assumption
- * in the library.  dispatch_work() in src/thdmgr/@@cminit.c does
+ * in the library.  dispatch_work() in src/mvs/thread/@@cminit.c does
  *
  *     now = time64(NULL);
  *     __64_sub(&now, &work->wait_time, &tmp);
@@ -101,7 +101,7 @@
  * not an expectation to adjust - read the SYSPRINT first.
  */
 #include <stdio.h>
-#include <time64.h>
+#include <ext/time64.h>
 
 static int bad = 0;
 
@@ -142,7 +142,7 @@ static int absdiff(const __64 *a, const __64 *b)
     else                                  __64_sub(&x, &y, &d);
 
     /* __64_to_i32() hands back the low 31 bits and DISCARDS the high word
-       (src/clib/@@64ti32.c), so a difference of 2^32 would read as 0 - a
+       (src/ext/int64/@@64ti32.c), so a difference of 2^32 would read as 0 - a
        PASS on a wildly wrong value, in the cases that exist to catch
        exactly that.  Anything that does not fit is reported as -1, and
        every caller tests for >= 0. */
@@ -315,7 +315,7 @@ int main(int argc, char **argv)
 
     /* (8) difftime64() over two reads of the same tier stays sane.  Its
            correctness presumes seconds too: it converts only the LOW 32
-           bits of the difference (src/time64/tm64dtim.c:26). */
+           bits of the difference (src/ext/time64/tm64dtim.c:26). */
     t0 = time64(NULL);
     t1 = time64(NULL);
     sprintf(note, "difftime64 = %d s", (int)difftime64(t1, t0));

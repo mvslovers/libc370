@@ -34,7 +34,7 @@ trap 'rm -rf "$B"' EXIT
 tst75snd() {
     "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address -Wno-trigraphs \
        -D'__asm__(...)=' -D'asm(...)=' -D__volatile__= -D__32BIT__ \
-       -I $R/include -o "$B/t" tst75snd.c && "$B/t"
+       -I $R/include -I $R -o "$B/t" tst75snd.c && "$B/t"
 }
 tstcmtt() {
     "$CC" -std=gnu99 -Wall -Wextra -o "$B/t" tstcmtt.c && "$B/t"
@@ -55,133 +55,155 @@ tstdi3() {
 tstdirck() {
     "$CC" -std=gnu99 -Wall \
        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
-       -I $R/include -o "$B/t" tstdirck.c && "$B/t"
+       -I $R/include -I $R -o "$B/t" tstdirck.c && "$B/t"
 }
 tstemptl() {
     "$CC" -std=gnu99 -Wall \
        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
-       -I $R/include -o "$B/t" tstemptl.c && "$B/t"
+       -I $R/include -I $R -o "$B/t" tstemptl.c && "$B/t"
 }
 tstenqdq() {
     "$CC" -std=gnu99 -Wall -Wextra -U__LP64__ -D__32BIT__ \
-       -I $R/include -o "$B/t" tstenqdq.c && "$B/t"
+       -I $R/include -I $R -o "$B/t" tstenqdq.c && "$B/t"
 }
 tsterrfl() {
     "$CC" -std=gnu99 -Wall \
        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
-       -I $R/include -o "$B/t" tsterrfl.c && "$B/t"
+       -I $R/include -I $R -o "$B/t" tsterrfl.c && "$B/t"
 }
 tstfabnd() {
     "$CC" -std=gnu99 -Wall -Wextra \
        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
-       -I $R/include -o "$B/t" tstfabnd.c \
-       "$R/src/clib/@@aradd.c" "$R/src/clib/@@arnew.c" \
-       "$R/src/clib/@@arcou.c" "$R/src/clib/@@ardel.c" \
-       "$R/src/clib/@@arfre.c" "$R/src/clib/@@arget.c" && "$B/t"
+       -I $R/include -I $R -o "$B/t" tstfabnd.c \
+       "$R/src/ext/array/@@aradd.c" "$R/src/ext/array/@@arnew.c" \
+       "$R/src/ext/array/@@arcou.c" "$R/src/ext/array/@@ardel.c" \
+       "$R/src/ext/array/@@arfre.c" "$R/src/ext/array/@@arget.c" && "$B/t"
 }
 tstfcls() {
     "$CC" -std=gnu99 -Wall -Wextra \
        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
-       -I $R/include -o "$B/t" tstfcls.c \
-       "$R/src/clib/@@aradd.c" "$R/src/clib/@@arnew.c" \
-       "$R/src/clib/@@arcou.c" "$R/src/clib/@@ardel.c" \
-       "$R/src/clib/@@arfre.c" "$R/src/clib/@@arget.c" && "$B/t"
+       -I $R/include -I $R -o "$B/t" tstfcls.c \
+       "$R/src/ext/array/@@aradd.c" "$R/src/ext/array/@@arnew.c" \
+       "$R/src/ext/array/@@arcou.c" "$R/src/ext/array/@@ardel.c" \
+       "$R/src/ext/array/@@arfre.c" "$R/src/ext/array/@@arget.c" && "$B/t"
 }
 tstfpapp() {
     "$CC" -std=gnu99 -Wall \
        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
-       -I $R/include -o "$B/t" tstfpapp.c && "$B/t"
+       -I $R/include -I $R -o "$B/t" tstfpapp.c && "$B/t"
 }
 tstfprls() {
     "$CC" -std=gnu99 -Wall -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast \
        -D'__asm__(...)=' -D'asm(x)=' -D__32BIT__ \
-       -I $R/include -o "$B/t" tstfprls.c && "$B/t"
+       -I $R/include -I $R -o "$B/t" tstfprls.c && "$B/t"
+}
+tstfpunit() {
+    "$CC" -std=gnu99 -Wall -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast \
+       -D'__asm__(...)=' -D'asm(x)=' -D__32BIT__ \
+       -I $R/include -I $R -o "$B/t" tstfpunit.c && "$B/t"
+}
+tstidcam() {
+    "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address -Wno-unknown-pragmas \
+       -D'__asm__(...)=' -D'__asm(...)=' -D'asm(...)=' -D__volatile__= -D__32BIT__ \
+       -I $R/include -I $R -o "$B/t" tstidcam.c && "$B/t"
+}
+tstinet() {
+    "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address -Wno-trigraphs \
+       -D'__asm__(...)=' -D'asm(...)=' -D__volatile__= -D__32BIT__ \
+       -I $R/include -I $R -o "$B/t" tstinet.c \
+       "$R/src/net/@@inaton.c" "$R/src/net/@@inaddr.c" "$R/src/net/@@inpton.c" \
+       "$R/src/net/@@inntop.c" "$R/src/net/@@inntoa.c" && "$B/t"
 }
 tstiolk() {
     "$CC" -std=gnu99 -Wall -Wextra \
        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
-       -I $R/include -o "$B/t" tstiolk.c && "$B/t"
+       -I $R/include -I $R -o "$B/t" tstiolk.c && "$B/t"
 }
 tstjesop() {
     "$CC" -std=gnu99 -U__LP64__ -D'__asm__(x)=' -D__32BIT__ \
-       -Dcalloc=tst_calloc -I $R/include \
-       -c "$R/src/jes/jesopen.c" -o "$B/jesopen.o" &&
+       -Dcalloc=tst_calloc -I $R/include -I $R \
+       -c "$R/src/mvs/jes2/jesopen.c" -o "$B/jesopen.o" &&
     "$CC" -std=gnu99 -U__LP64__ -D'__asm__(x)=' -D__32BIT__ \
-       -Dcalloc=tst_calloc -I $R/include \
-       -c "$R/src/clib/@@arnew.c" -o "$B/arnew.o" &&
+       -Dcalloc=tst_calloc -I $R/include -I $R \
+       -c "$R/src/ext/array/@@arnew.c" -o "$B/arnew.o" &&
     "$CC" -std=gnu99 -U__LP64__ -D'__asm__(x)=' -D__32BIT__ \
-       -Dfree=tst_free -I $R/include \
-       -c "$R/src/jes/jesjobf1.c" -o "$B/jesjobf1.o" &&
+       -Dfree=tst_free -I $R/include -I $R \
+       -c "$R/src/mvs/jes2/jesjobf1.c" -o "$B/jesjobf1.o" &&
     "$CC" -std=gnu99 -U__LP64__ -Wall -Wextra -fsanitize=address \
-       -D'__asm__(x)=' -D__32BIT__ -I $R/include \
+       -D'__asm__(x)=' -D__32BIT__ -I $R/include -I $R \
        -o "$B/t" tstjesop.c "$B/jesopen.o" "$B/arnew.o" "$B/jesjobf1.o" \
-       "$R/src/jes/jesclose.c" "$R/src/jes/jesjobfr.c" \
-       "$R/src/clib/@@aradd.c" "$R/src/clib/@@arcou.c" \
-       "$R/src/clib/@@arget.c" "$R/src/clib/@@arfre.c" && "$B/t"
+       "$R/src/mvs/jes2/jesclose.c" "$R/src/mvs/jes2/jesjobfr.c" \
+       "$R/src/ext/array/@@aradd.c" "$R/src/ext/array/@@arcou.c" \
+       "$R/src/ext/array/@@arget.c" "$R/src/ext/array/@@arfre.c" && "$B/t"
 }
 tstjesprb() {
-    "$CC" -std=gnu99 -Wall -Wextra -I $R/src/jes \
-       -o "$B/t" tstjesprb.c $R/src/jes/jesprb.c && "$B/t"
+    "$CC" -std=gnu99 -Wall -Wextra -I $R \
+       -o "$B/t" tstjesprb.c $R/src/mvs/jes2/jesprb.c && "$B/t"
 }
 tstjestx() {
     "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address \
        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
-       -I $R/include -I $R/src/jes -o "$B/t" tstjestx.c \
-       "$R/src/jes/jesprb.c" \
-       "$R/src/clib/@@aradd.c" "$R/src/clib/@@arnew.c" \
-       "$R/src/clib/@@arcou.c" "$R/src/clib/@@arget.c" \
-       "$R/src/clib/@@arfre.c" && "$B/t"
+       -I $R/include -I $R -o "$B/t" tstjestx.c \
+       "$R/src/mvs/jes2/jesprb.c" \
+       "$R/src/ext/array/@@aradd.c" "$R/src/ext/array/@@arnew.c" \
+       "$R/src/ext/array/@@arcou.c" "$R/src/ext/array/@@arget.c" \
+       "$R/src/ext/array/@@arfre.c" && "$B/t"
+}
+tstlstds() {
+    "$CC" -std=gnu99 -Wall -fsanitize=address \
+       -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
+       -I $R/include -I $R -o "$B/t" tstlstds.c "$R/src/ext/strutil/@@patmat.c" && "$B/t"
 }
 tstlspd() {
     "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address \
        -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
-       -I $R/include -o "$B/t" tstlspd.c "$R/src/clib/@@patmat.c" && "$B/t"
+       -I $R/include -I $R -o "$B/t" tstlspd.c "$R/src/ext/strutil/@@patmat.c" && "$B/t"
 }
 tstplus() {
     "$CC" -std=gnu99 -Wall \
        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
-       -I $R/include -o "$B/t" tstplus.c && "$B/t"
+       -I $R/include -I $R -o "$B/t" tstplus.c && "$B/t"
 }
 tstrldwk() {
     "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address \
        -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
-       -I $R/include -o "$B/t" tstrldwk.c && "$B/t"
+       -I $R/include -I $R -o "$B/t" tstrldwk.c && "$B/t"
 }
 tsttm64vec() {
     "$CC" -std=gnu99 -Wall -Wextra -o "$B/t" tsttm64vec.c && "$B/t"
 }
 tsttxdsn() {
     "$CC" -std=gnu99 -D'__asm__(x)=' -D__32BIT__ -Dcalloc=tst_calloc \
-       -I $R/include -c "$R/src/clib/@@nwtx99.c" -o "$B/nwtx99.o" &&
+       -I $R/include -I $R -c "$R/src/mvs/dynalloc/@@nwtx99.c" -o "$B/nwtx99.o" &&
     "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address \
-       -D'__asm__(x)=' -D__32BIT__ -I $R/include -o "$B/t" tsttxdsn.c \
+       -D'__asm__(x)=' -D__32BIT__ -I $R/include -I $R -o "$B/t" tsttxdsn.c \
        "$B/nwtx99.o" \
-       "$R/src/clib/@@txdsn.c" "$R/src/clib/@@aradd.c" \
-       "$R/src/clib/@@arnew.c" "$R/src/clib/@@arcou.c" \
-       "$R/src/clib/@@arget.c" "$R/src/clib/@@arfre.c" && "$B/t"
+       "$R/src/mvs/dynalloc/@@txdsn.c" "$R/src/ext/array/@@aradd.c" \
+       "$R/src/ext/array/@@arnew.c" "$R/src/ext/array/@@arcou.c" \
+       "$R/src/ext/array/@@arget.c" "$R/src/ext/array/@@arfre.c" && "$B/t"
 }
 tstvsnp() {
     "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address \
        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
-       -I $R/include -o "$B/t" tstvsnp.c && "$B/t"
+       -I $R/include -I $R -o "$B/t" tstvsnp.c && "$B/t"
 }
 tstwchar() {
     "$CC" -std=gnu99 -Wall -Wextra -Werror=incompatible-pointer-types \
        -fsanitize=address -U__LP64__ -D'__asm__(...)=' \
-       -D__volatile__= -D__32BIT__ -I $R/include -o "$B/t" tstwchar.c \
+       -D__volatile__= -D__32BIT__ -I $R/include -I $R -o "$B/t" tstwchar.c \
        && "$B/t"
 }
 tstwpos() {
     "$CC" -std=gnu99 -Wall \
        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
-       -I $R/include -o "$B/t" tstwpos.c && "$B/t"
+       -I $R/include -I $R -o "$B/t" tstwpos.c && "$B/t"
 }
 
 # The tests a plain run covers: all of them.  A test that stops building is
 # not dropped from here - fix it, or say which issue it waits on.
 ALL="tst75snd tstcmtt tstcnvdi tstdblcv tstdblrb tstdi3 tstdirck tstemptl
-     tstenqdq tsterrfl tstfabnd tstfcls tstfpapp tstfprls tstiolk tstjesop
-     tstjesprb tstjestx tstlspd tstplus tstrldwk tsttm64vec tsttxdsn tstvsnp
+     tstenqdq tsterrfl tstfabnd tstfcls tstfpapp tstfprls tstfpunit tstidcam tstinet tstiolk tstjesop
+     tstjesprb tstjestx tstlspd tstlstds tstplus tstrldwk tsttm64vec tsttxdsn tstvsnp
      tstwchar tstwpos"
 
 [ $# -gt 0 ] && ALL="$*"

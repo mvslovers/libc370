@@ -50,10 +50,10 @@
  */
 #include <stdio.h>
 #include <string.h>
-#include <clibwto.h>
-#include <clibthrd.h>
-#include <clibecb.h>
-#include <clibtry.h>
+#include <mvs/wto.h>
+#include <mvs/thread.h>
+#include <mvs/ecb.h>
+#include <mvs/recovery.h>
 
 #define LV      256             /* raw block size, no rounding surprises */
 #define TESTSP  5               /* the measured subpool */

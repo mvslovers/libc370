@@ -1,0 +1,21 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+#include <ext/time64.h>
+#include "src/ext/time64/calendar.h"
+
+__asm__("\n&FUNC    SETC 'ctime64_r'");
+char *ctime64_r( const time64_t* time, char* result ) 
+{
+    struct tm date;
+
+    if (result) {
+	    localtime64_r( time, &date );
+
+		result = asctime64_r( &date, result );
+	}
+
+	return result;
+}
+

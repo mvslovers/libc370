@@ -19,7 +19,7 @@ Usage:  python3 sdk/mklibc.py build      # compile/assemble/archive into build/s
         python3 sdk/mklibc.py clean      # remove build/sdk + the generated .s
         python3 sdk/mklibc.py all
 """
-import os, sys, glob, subprocess, shutil, concurrent.futures as cf
+import os, sys, glob, subprocess, shutil, collections, concurrent.futures as cf
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dupscan                    # duplicate-external gate, see #151
@@ -31,24 +31,43 @@ AR370 = "ar370"
 BUILD = f"{ROOT}/build/sdk"
 VERSION = open(f"{ROOT}/VERSION").read().strip() if os.path.exists(f"{ROOT}/VERSION") else "1.0.11-dev"
 
-# library sources (the c_dirs -- NOT src/wip) + hand-written asm
-C_DIRS = [f"{ROOT}/src/{d}" for d in
-          ("clib", "cmtt", "crypto", "dyn75", "jes", "os", "racf", "smf", "thdmgr", "time64")]
-ASM_DIR = f"{ROOT}/asm"
+# library sources: every .c and .asm under src/, where src/ mirrors include/
+# (#278) and assembler sits beside its C.  Code kept but never built lives in
+# attic/, outside src/.  All objects share one directory and the archive
+# member is <stem>.o, so a stem may exist only once -- sources() enforces it.
+SRC_DIR = f"{ROOT}/src"
 # -Wuninitialized is not implied by -Wall in this gcc 3.4.6 and needs -O to run
 # at all, so it has to be named here (#102).  It finds #99 -- __loadhi() calling
 # fclose() on stack residue -- at the -O1 the build already uses.
-CFLAGS = ["-O1", "-Wuninitialized", f'-DVERSION="{VERSION}"',
-          f"-I{ROOT}/include", f"-I{ROOT}/src/thdmgr", f"-I{ROOT}/src/time64"]
+# -std=gnu99: libc370 is C99 (gnu99), like every project in the ecosystem.
+# Without it GCC 3.4 defaults to gnu89, and a C99 construct such as a
+# declaration in a for loop's first clause does not compile.  -trigraphs
+# after it: the cc370 driver enables trigraphs by default and -std=gnu99
+# turns them off again, but @@estae.c spells || as ??!??! and headers do too.
+CFLAGS = ["-O1", "-std=gnu99", "-trigraphs", "-Wuninitialized", f'-DVERSION="{VERSION}"',
+          f"-I{ROOT}/include", f"-I{ROOT}"]   # private headers: "src/internal/x.h" (D10)
 ASMINC = ["-I", f"{ROOT}/maclib", "-I", f"{ROOT}/sysmac"]   # sysmac vendors SYS1.MACLIB
 STARTUPS = ("@@crt0", "@@crt1", "@@crtm")                      # -> separate startfiles
 
 
-def run(cmd):
-    return subprocess.run(cmd, capture_output=True, text=True)
+def run(cmd, cwd=None):
+    return subprocess.run(cmd, capture_output=True, text=True, cwd=cwd)
 
 
-VER_C = os.path.join(ROOT, "src", "clib", "@@ver.c")   # build-stamp TU (see compile_ver)
+VER_C = "@@ver.c"       # build-stamp TU, found by name wherever it sits (see gitrev)
+
+
+def sources(ext):
+    """every library source with this extension, sorted by path"""
+    return sorted(glob.glob(f"{SRC_DIR}/**/*{ext}", recursive=True))
+
+
+def stem_clashes():
+    """stems that more than one source uses: one object would overwrite the other"""
+    seen = collections.defaultdict(list)
+    for p in sources(".c") + sources(".asm"):
+        seen[os.path.basename(p).rsplit(".", 1)[0].lower()].append(os.path.relpath(p, ROOT))
+    return {k: v for k, v in seen.items() if len(v) > 1}
 
 
 def gitrev():
@@ -90,8 +109,16 @@ def compile_c(cfile, sfile, extra=(), warnings=None):
     into libc.a, with nothing in the build output to show a skip (#8).
 
     Regenerating all 712 costs ~7s, which is the whole of what the skip saved.
+
+    The source is named relative to the repository root, from the root: it is
+    what __FILE__ expands to, and assert() puts __FILE__ into the object.  An
+    absolute path wrote the builder's directory into libc.a (tm64syr.c), so two
+    checkouts never built the same library and sdk/gate.py could not compare
+    them (#256).
     """
-    r = run([CC370] + CFLAGS + list(extra) + ["-S", cfile, "-o", sfile])
+    r = run([CC370] + CFLAGS + list(extra) +
+            ["-S", os.path.relpath(cfile, ROOT), "-o", os.path.relpath(sfile, ROOT)],
+            cwd=ROOT)
     if not os.path.exists(sfile) or os.path.getsize(sfile) == 0:
         return "cc370 FAIL %s: %s" % (os.path.basename(cfile),
                "\n".join(l for l in r.stderr.splitlines() if "re-asserted" not in l)[:300])
@@ -139,17 +166,21 @@ def cmd_build():
     odir = f"{BUILD}/obj"; os.makedirs(odir, exist_ok=True)
     # 1. compile every .c -> .s, collect them + the hand-written .asm
     rev = gitrev()      # one git call per build; @@ver.c bakes it in as the stamp
+    clash = stem_clashes()
+    if clash:
+        for k, v in sorted(clash.items()):
+            print(f"[libc] stem {k} used by {', '.join(v)}: one object would replace the other")
+        return 1
     srcs = []
     warns = []
-    for d in C_DIRS:
-        for c in sorted(glob.glob(f"{d}/**/*.c", recursive=True)):
-            s = c[:-2] + ".s"
-            extra = [f'-DLIBC370_REV="{rev}"'] if os.path.abspath(c) == os.path.abspath(VER_C) else ()
-            err = compile_c(c, s, extra, warns)
-            if err:
-                print("  " + err); return 1
-            srcs.append(s)
-    asms = sorted(glob.glob(f"{ASM_DIR}/*.asm"))
+    for c in sources(".c"):
+        s = c[:-2] + ".s"
+        extra = [f'-DLIBC370_REV="{rev}"'] if os.path.basename(c) == VER_C else ()
+        err = compile_c(c, s, extra, warns)
+        if err:
+            print("  " + err); return 1
+        srcs.append(s)
+    asms = sources(".asm")
     print(f"[libc] {len(srcs)} .s + {len(asms)} .asm")
     if warns:
         print(f"[libc] {len(warns)} compiler warning(s):")
@@ -219,17 +250,38 @@ def cmd_install():
     libc = f"{BUILD}/libc.a"
     if not os.path.exists(libc):
         print("[install] build first (no", libc + ")"); return 1
+    # headers.  2.0 puts them in subdirectories (mvs/, ibm/mvs/, ...), so the
+    # whole tree is copied, not include/*.h (#256).  The sysroot's include/ is
+    # cleared first: install used to copy and never delete, so a sysroot that
+    # had 1.x installed would keep every flat 1.x header beside the new tree,
+    # and <clibwto.h> would still resolve -- from a stale copy, silently.
+    # libc370 owns that directory outright: cc370 searches no other include
+    # directory, and every file a 1.x install left there came from libc370.
+    # The path check keeps a mis-derived sysroot from costing anything else.
+    if os.path.basename(inc) != "include" or \
+            os.path.basename(os.path.dirname(inc)) != triple:
+        print(f"[install] refusing to clear {inc}: not <prefix>/{triple}/include")
+        return 1
+    stale = 0
+    if os.path.isdir(inc):
+        stale = sum(len(f) for _, _, f in os.walk(inc))
+        shutil.rmtree(inc)
     for d in (inc, lib, mac):
         os.makedirs(d, exist_ok=True)
-    # headers
     n = 0
-    for h in glob.glob(f"{ROOT}/include/*.h"):
-        shutil.copy(h, inc); n += 1
+    src_inc = f"{ROOT}/include"
+    for d, _, files in os.walk(src_inc):
+        for f in sorted(files):
+            if not f.endswith(".h"):
+                continue
+            rel = os.path.relpath(os.path.join(d, f), src_inc)
+            os.makedirs(os.path.join(inc, os.path.dirname(rel)), exist_ok=True)
+            shutil.copy(os.path.join(d, f), os.path.join(inc, rel)); n += 1
     # libc.a + startfiles
     shutil.copy(libc, f"{lib}/libc.a")
     for crt in ("crt0.o", "crt1.o", "crtm.o"):
         shutil.copy(f"{BUILD}/{crt}", f"{lib}/{crt}")
-    # assembler macros: sysmac (vendored SYS1.MACLIB) THEN maclib (crent's
+    # assembler macros: sysmac (vendored SYS1.MACLIB) THEN maclib (libc370's
     # PDPTOP/PDPPRLG/... override any collision) -> one dir as370 finds by
     # default (<exedir>/../macros); needed for hand-asm + the cc370 one-shot.
     m = 0
@@ -238,7 +290,7 @@ def cmd_install():
             if os.path.isfile(f):
                 shutil.copy(f, mac); m += 1
     print(f"[install] target {triple}")
-    print(f"[install] {n} headers -> {inc}")
+    print(f"[install] {n} headers -> {inc} ({stale} files there before, cleared)")
     print(f"[install] libc.a + crt0/1/m.o -> {lib}")
     print(f"[install] {m} macro files -> {mac}")
     print(f"[install] => an as370 installed in {os.path.dirname(mac)}/bin finds these by default;")
@@ -257,11 +309,10 @@ def cmd_clean():
     the build would ignore it anyway).
     """
     n = 0
-    for d in C_DIRS:
-        for c in glob.glob(f"{d}/**/*.c", recursive=True):
-            s = c[:-2] + ".s"
-            if os.path.exists(s):
-                os.remove(s); n += 1
+    for c in sources(".c"):
+        s = c[:-2] + ".s"
+        if os.path.exists(s):
+            os.remove(s); n += 1
     shutil.rmtree(BUILD, ignore_errors=True)
     print(f"[clean] {n} generated .s removed, {BUILD} gone")
     return 0

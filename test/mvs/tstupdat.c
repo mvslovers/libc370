@@ -30,7 +30,7 @@
  * BUILD (host):
  *
  *     make build
- *     cc370 -O1 -Iinclude -L build/sdk test/mvs/tstupdat.c \
+ *     cc370 -O1 -Iinclude -I. -L build/sdk test/mvs/tstupdat.c \
  *           -o TSTUPDAT -flinker-output=iebcopy
  *     ld370 --pack TSTUPDAT=TSTUPDAT.iebcopy -o probe -xmit \
  *           --dsn IBMUSER.LIBC370.T189SCR
@@ -78,8 +78,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <clibwto.h>
-#include <mvssupa.h>
+#include <mvs/wto.h>
+#include <stddef.h>
+#include "src/internal/bsam.h"
 
 static int bad = 0;
 

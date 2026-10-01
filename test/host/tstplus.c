@@ -37,12 +37,13 @@
  *     R=../..
  *     cc -std=gnu99 -Wall \
  *        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
- *        -I $R/include -o t tstplus.c && ./t
+ *        -I $R/include -I $R/src/internal -o t tstplus.c && ./t
  *
  * RC: 0 = every check passed, 1 = at least one did not.
  */
-/* clibstr.h suppressed for the host, as in tsterrfl.c */
-#define CLIBSTR_H
+/* string.h suppressed for the host, as in tsterrfl.c */
+#define STRING_H
+#include "src/internal/fileio.h"
 #include <stddef.h>
 void   *memset(void *s, int c, size_t n);
 void   *memcpy(void *t, const void *s, size_t n);
@@ -58,8 +59,8 @@ char   *strdup(const char *s);
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <osdcb.h>
-#include <osjfcb.h>
+#include <ibm/mvs/dcbd.h>
+#include <ibm/mvs/iefjfcbn.h>
 
 static int  errno_cell;
 int *__errno(void) { return &errno_cell; }
@@ -169,22 +170,22 @@ static void init_tolow(void)
 
 /* ---- the real thing ---------------------------------------------------- */
 
-#include "../../src/clib/@@isbuf.c"   /* isspace() is a table macro */
-#include "../../src/clib/@@fpmode.c"
-#include "../../src/clib/@@fpopen.c"
-#include "../../src/clib/@@fflush.c"
+#include "../../src/stdio/@@isbuf.c"   /* isspace() is a table macro */
+#include "../../src/stdio/@@fpmode.c"
+#include "../../src/stdio/@@fpopen.c"
+#include "../../src/stdio/@@fflush.c"
 #undef begwrite
 #undef finwrite
-#include "../../src/clib/@@fputc.c"
-#include "../../src/clib/@@fgetc.c"
-#include "../../src/clib/@@fread.c"
-#include "../../src/clib/@@fseek.c"
-#include "../../src/clib/@@fpswt.c"
+#include "../../src/stdio/@@fputc.c"
+#include "../../src/stdio/@@fgetc.c"
+#include "../../src/stdio/@@fread.c"
+#include "../../src/stdio/@@fseek.c"
+#include "../../src/stdio/@@fpswt.c"
 #undef fseek
 #undef ftell
-#include "../../src/clib/fseek.c"
-#include "../../src/clib/ftell.c"
-#include "../../src/clib/clearerr.c"
+#include "../../src/stdio/fseek.c"
+#include "../../src/stdio/ftell.c"
+#include "../../src/stdio/clearerr.c"
 
 /* ---- helpers ------------------------------------------------------------ */
 

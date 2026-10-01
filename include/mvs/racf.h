@@ -1,0 +1,64 @@
+#ifndef RACF_H
+#define RACF_H
+
+#include "ibm/mvs/ihaacee.h"                   /* ACCESSOR ENVIRONMENT ELEMENT */
+#include "ibm/mvs/ichsafp.h"                   /* SAF ROUTER PARAMETER LIST    */
+#include "ibm/mvs/ichsafv.h"                   /* SAF VECTOR TABLE             */
+#include "ibm/mvs/racinit.h"                /* RACINIT parameter list       */
+#include "ibm/mvs/racheck.h"                /* RACHECK parameter list       */
+
+/* racf_auth() attribute values */
+#define RACF_ATTR_READ      RACHECK_ATTR_READ
+#define RACF_ATTR_UPDATE    RACHECK_ATTR_UPDATE
+#define RACF_ATTR_CONTROL   RACHECK_ATTR_CONTROL
+#define RACF_ATTR_ALTER     RACHECK_ATTR_ALTER
+
+/* racf_set_acee() - set the ASXBSENV value, returns previous value */
+extern ACEE *   racsacee(ACEE *newacee);
+extern ACEE *   racf_set_acee(ACEE *newacee)                            asm("RACSACEE");
+
+/* racf_get_acee() - get the ASXBSENV value */
+extern ACEE *   racgacee(void);
+extern ACEE *   racf_get_acee(void)                                     asm("RACGACEE");
+
+/* racf_login() - create a new ACEE for user.
+** if pass is NULL then password checking is bypassed for this user.
+** if racf_rc is not NULL then the RACF return code is returned.
+*/
+extern ACEE *   raclogin(const char *user, const char *pass,
+                         const char *group, int *racf_rc);
+extern ACEE *   racf_login(const char *user, const char *pass,
+                           const char *group, int *racf_rc)             asm("RACLOGIN");
+
+/* racf_logout() - release a ACEE */
+extern int      raclgout(ACEE **acee);
+extern int      racf_logout(ACEE **acee)                                asm("RACLGOUT");
+
+/* racf_auth() - check access to resource in security class
+** where attr is one of RACF_ATTR_READ, RACF_ATTR_UPDATE, RACF_ATTR_CONTROL
+** or RACF_ATTR_ALTER.  If attr is 0 the RACF_ATTR_READ is assumed.
+** if attr is an invalid value the RACF_ATTR_ALTER is assumed.
+**
+** The return code is SAF's, unmodified:
+**    0  permitted
+**    4  the resource is not protected -- no profile covers it.  In SAF terms
+**       this is also an "allowed" answer, and a caller that tests rc == 0
+**       reads it as a denial.  Test rc <= 4 for "may proceed".
+**    8  not authorized
+**   12+ see the table at the top of src/mvs/racf/racauth.c
+**
+** Which of 0 and 4 an unprotected resource answers depends on the LOG bit in
+** the RACHECK parameter list.  Since #63 libc370 sets LOG=NONE and the answer
+** is 4.  Consumers should accept both.
+**
+** No APF needed (#197): an authorized caller is switched to supervisor state
+** for the RACHECK as before; any other caller issues it from problem state,
+** which SVC 130 answers the same way.
+*/
+extern int      racauth(ACEE *acee, const char *classname,
+                        const char *resource, int attr);
+extern int      racf_auth(ACEE *acee, const char *classname,
+                          const char *resource, int attr)               asm("RACAUTH");
+
+
+#endif

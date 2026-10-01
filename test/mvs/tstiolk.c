@@ -14,7 +14,7 @@
  * What this probe pins, in three rounds:
  *
  *   (1) the lock-primitive premise the hardening rests on: a nested
- *       lock() on a held resource answers rc=8 (cliblock.h documents it,
+ *       lock() on a held resource answers rc=8 (mvs/lock.h documents it,
  *       nothing in the tree ever measured it), unlock() of a resource
  *       not held answers nonzero rather than abending, and testlock()
  *       distinguishes held(8)/free(0) from the owning task.  These are
@@ -67,11 +67,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
-#include <cliblock.h>
-#include <clibthrd.h>
-#include <clibecb.h>
-#include <clibwto.h>
-#include <clibtry.h>
+#include <mvs/lock.h>
+#include <mvs/thread.h>
+#include <mvs/ecb.h>
+#include <mvs/wto.h>
+#include <mvs/recovery.h>
 
 #define NLINES  400             /* lines per writer task in round (3)   */
 #define JOINMAX 6000            /* join bound: 6000 x 10ms yield = 60s  */

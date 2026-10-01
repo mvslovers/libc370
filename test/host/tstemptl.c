@@ -26,12 +26,13 @@
  *     R=../..
  *     cc -std=gnu99 -Wall \
  *        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
- *        -I $R/include -o t tstemptl.c && ./t
+ *        -I $R/include -I $R/src/internal -o t tstemptl.c && ./t
  *
  * RC: 0 = every check passed, 1 = at least one did not.
  */
-/* clibstr.h suppressed for the host, as in tsterrfl.c */
-#define CLIBSTR_H
+/* string.h suppressed for the host, as in tsterrfl.c */
+#define STRING_H
+#include "src/internal/fileio.h"
 #include <stddef.h>
 void   *memset(void *s, int c, size_t n);
 void   *memcpy(void *t, const void *s, size_t n);
@@ -45,7 +46,7 @@ int     memcmp(const void *a, const void *b, size_t n);
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <osdcb.h>
+#include <ibm/mvs/dcbd.h>
 
 static int  errno_cell;
 int *__errno(void) { return &errno_cell; }
@@ -100,8 +101,8 @@ int __fpupc(FILE *fp, int c)
 
 /* ---- the real thing ---------------------------------------------------- */
 
-#include "../../src/clib/@@fflush.c"
-#include "../../src/clib/@@fputc.c"
+#include "../../src/stdio/@@fflush.c"
+#include "../../src/stdio/@@fputc.c"
 
 /* ---- a FILE the shim can serve ----------------------------------------- */
 

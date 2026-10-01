@@ -1,0 +1,27 @@
+{
+  "source": "clibos.h",
+  "targets": {
+    "mvs/pds.h":     {"doc": "PDS directory: BLDL and STOW."},
+    "s370/atomic.h": {"doc": "atomic updates of a word: compare and swap (CS)."},
+    "mvs/xmem.h":    {"doc": "across address spaces: ASCB lookup, cross-memory POST."},
+    "mvs/apf.h":     {"includes": ["<ibm/mvs/ihacde.h>"]},
+    "mvs/link.h":    {"includes": ["<ibm/mvs/ihacde.h>"]},
+    "mvs/storage.h": {"doc": "storage: GETMAIN/FREEMAIN and the runtime heap subpool.",
+                      "includes": ["<stddef.h>"]},
+    "mvs/thread.h":  {}
+  },
+  "segments": [
+    {"from": "typedef struct bldl",            "to": "int __stow(",          "target": "mvs/pds.h"},
+    {"from": "/* __cas() - S/370",             "to": "int __dec(",           "target": "s370/atomic.h"},
+    {"from": "/* __ascb() get ASCB",           "to": "void __xmpost(",       "target": "mvs/xmem.h"},
+    {"from": "/* __super() set supervisor",    "to": "int __issup(",         "target": "mvs/apf.h"},
+    {"from": "/* __call() call func",          "to": "int __call(",          "target": "mvs/link.h"},
+    {"from": "/* __sudo() - switch",           "to": "int super_key_do(",    "target": "mvs/apf.h"},
+    {"from": "/* getmain() returns",           "to": "void *__getmsp(",      "target": "mvs/storage.h"},
+    {"from": "/* __steplb() - returns",        "to": "int clib_apf_setup(",  "target": "mvs/apf.h"},
+    {"from": "/* clib_find_cde() - find",      "to": "CDE *clib_find_cde(",  "target": "mvs/link.h"},
+    {"from": "/* clib_auth_cde() - make",      "to": "int clib_auth_name(",  "target": "mvs/apf.h"},
+    {"from": "/* clib_identify_cthread()",     "to": "int clib_identify_cthread(", "target": "mvs/thread.h"},
+    {"from": "/* __load() - bring",            "to": "int __loadhi(",        "target": "mvs/link.h"}
+  ]
+}

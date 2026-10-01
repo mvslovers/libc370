@@ -45,7 +45,7 @@
 #undef  DBL_MANT_DIG
 #define DBL_MANT_DIG 14
 
-#include "../../src/clib/@@dblcvt.c"
+#include "../../src/stdio/@@dblcvt.c"
 
 /* ---- harness ---------------------------------------------------------- */
 static int mbt_run = 0, mbt_passed = 0, mbt_failed = 0;

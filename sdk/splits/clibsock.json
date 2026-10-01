@@ -1,0 +1,9 @@
+{
+  "source": "clibsock.h",
+  "targets": {
+    "mvs/socket.h": {}
+  },
+  "segments": [
+    {"from": "typedef struct clibsock", "to": "extern int  __sopnam(", "target": "mvs/socket.h"}
+  ]
+}

@@ -1,0 +1,298 @@
+/* @@LISTDS.C - create DSLIST array */
+#include <strings.h>
+#include <ext/strutil.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <errno.h>
+#include <time.h>
+#include "ext/array.h"        /* dynamic array prototypes     */
+#include "mvs/dscb.h"       /* DSCB structs and prototypes  */
+#include "mvs/dslist.h"       /* __listc()                    */
+#include "string.h"        /* __patmat()                   */
+
+static int  parse(void *vdata, const char *fmt, ...);
+
+typedef struct {
+    const char  *level;     /* "HLQ.TEST" */
+    const char  *option;    /* NULL or "NONVSAM VOLUME" */
+    const char  *filter;    /* dataset name pattern "HLQ.TEST.*DATA" */
+    DSLIST      **array;    /* dynamic array of DSLIST records */
+    char        dsn[45];    /* dataset name */
+    char        volser[7];  /* dataset volser */
+    char        *catnm;     /* last catalog name read (#50) */
+    const char  *entcat;    /* catalog of the current entry, or NULL */
+    int         catused;    /* catnm is in a DSLIST record */
+    char        buf[256];   /* work buffer for parsing */
+    DSCB        dscb;       /* DSCB buffer */
+} UDATA;
+
+DSLIST **
+__listds(const char *level, const char *option, const char *filter)
+{
+    int     rc      = 0;
+    UDATA   udata   = {0};
+
+    udata.level     = level;
+    udata.option    = option;
+    udata.filter    = filter;
+
+    rc = __listc(level, option, parse, &udata);
+
+    /* a catalog name no record took: its entry was filtered out, had no
+       volume, or could not be added */
+    if (udata.catnm && !udata.catused) free(udata.catnm);
+
+    return udata.array;
+}
+
+static int
+parse(void *vdata, const char *fmt, ...)
+{
+    int     rc      = 0;
+    UDATA   *udata  = vdata;
+    char    *buf    = udata->buf;
+    DSCB    *dscb   = &udata->dscb;
+    DSCB1   *dscb1  = &dscb->dscb1;
+    DSLIST  *dslist = 0;
+    struct tm tm    = {0};
+    char    *p;
+    va_list arg;
+
+    /* format the record passed to us by __listc() */
+    va_start(arg, fmt);
+    vsprintf(buf, fmt, arg);
+    va_end(arg);
+
+    if (buf[0]=='1') goto quit; /* skip page headers */
+
+    /* parse the formatted record looking for keywords */
+    p = strtok(buf, " -\n");
+    if (!p) goto quit;
+
+    /* skip carriage control characters */
+    if (isdigit(*p)) {
+        p++;
+        if (*p==0) p = strtok(NULL, " -\n");
+    }
+
+    if (udata->dsn[0]) goto check_vol;  /* we already have a dataset */
+
+    if (strcasecmp(p, "NONVSAM")==0    ||
+        strcasecmp(p, "PAGESPACE")==0  ||
+        strcasecmp(p, "CLUSTER")==0    ||
+        strcasecmp(p, "USERCATALOG")==0) {
+        /* get next parm */
+        p = strtok(NULL, " -\n");
+        if (!p) goto quit;
+
+        /* make sure name does not start with a number */
+        if (isdigit(*p)) goto quit;
+
+        if (udata->filter) {
+            /* match dataset name against filter pattern */
+            if (!__patmat(p, udata->filter)) goto quit;
+        }
+
+        /* save dataset name */
+        strcpy(udata->dsn, p);
+        udata->volser[0] = 0;
+        udata->entcat = NULL;
+        goto quit;
+    }
+
+check_vol:
+    if (!udata->dsn[0]) goto quit;   /* no dataset, we're finished */
+
+    if (strcasecmp(p, "IN")==0) {
+        /* "IN-CAT --- name", one per entry, ahead of its VOLSER (#50).
+           strtok() splits it at the '-'. */
+        p = strtok(NULL, " -\n");
+        if (!p || strcasecmp(p, "CAT")) goto quit;
+        p = strtok(NULL, " -\n");
+        if (!p) goto quit;
+
+        if (udata->catnm && strcmp(udata->catnm, p)==0) {
+            /* the same catalog as the entry before: share the string */
+            udata->entcat = udata->catnm;
+            goto quit;
+        }
+
+        udata->entcat = NULL;   /* out of storage: no name, not a wrong one */
+        p = strdup(p);
+        if (!p) goto quit;
+
+        if (udata->catnm && !udata->catused) free(udata->catnm);
+        udata->catnm    = p;
+        udata->catused  = 0;
+        udata->entcat   = p;
+        goto quit;
+    }
+
+    if (strcasecmp(p, "VOLSER")==0) {
+        /* get next parm */
+        p = strtok(NULL, " -\n");
+        if (!p) {
+            udata->dsn[0] = 0;
+            goto quit;
+        }
+
+        /* save volser for this dataset */
+        strcpy(udata->volser, p);
+    }
+
+    if (!udata->volser[0]) goto quit;   /* no volser, we're finished */
+
+    /* allocate DSLIST record for dataset */
+    dslist = calloc(1, sizeof(DSLIST));
+    if (!dslist) {
+        udata->dsn[0] = 0;
+        udata->volser[0] = 0;
+        goto quit;
+    }
+
+    /* build DSLIST record */
+    strcpy(dslist->dsn, udata->dsn);
+    udata->dsn[0] = 0;
+    strcpy(dslist->volser, udata->volser);
+    udata->volser[0] = 0;
+    dslist->catnm = udata->entcat;
+    udata->entcat = NULL;
+
+	/* if the dataset is cataloged on the SYSRES volume "******" */
+	if (strcmp(dslist->volser, "******")==0) {
+		/* get volser for dataset */
+		LOCWORK workarea = {0};
+
+		rc = __locate(dslist->dsn, &workarea);
+		if (rc==0) {
+			memcpy(dslist->volser, workarea.volser, sizeof(dslist->volser));
+		}
+	}
+    /* get DSCB info for dataset + volser */
+    rc = __dscbdv(dslist->dsn, dslist->volser, dscb);
+#if 0
+    wtof("%s __dscbdv(\"%s\",\"%s\",...) rc=%d", __func__, dslist->dsn, dslist->volser, rc);
+#endif
+    if (rc) goto done;  /* failed, but keep the DSLIST record */
+
+    /* wtof("%s dsn=\"%s\", dsind=%02X", __func__, dslist->dsn, dscb1->dsind); */
+
+    /* extract values from DSCB for this dataset */
+    p = 0;
+    switch(dscb1->dsorg1 & 0x7F) {
+    case DSGIS: p = "IS";   break;
+    case DSGPS: p = "PS";   break;
+    case DSGDA: p = "DA";   break;
+    case DSGPO: p = "PO";   break;
+    }
+    if (dscb1->dsorg2 == ORGAM) p = "VS";
+    if (p) strcpy(dslist->dsorg, p);
+
+    p = 0;
+    switch (dscb1->recfm & 0xC0) {
+    case RECFF: p = "F";    break;
+    case RECFV: p = "V";    break;
+    case RECFU: p = "U";    break;
+    }
+    if (p) strcat(dslist->recfm,p);
+    if (dscb1->recfm & RECFB) strcat(dslist->recfm, "B");
+    if (dscb1->recfm & RECFS) strcat(dslist->recfm, "S");
+    if (dscb1->recfm & RECFA) strcat(dslist->recfm, "A");
+    if (dscb1->recfm & RECMC) strcat(dslist->recfm, "M");
+
+    dslist->extents = dscb1->noepv;
+    dslist->lrecl   = dscb1->lrecl;
+    dslist->blksize = dscb1->blksz;
+
+    /* space allocation info */
+    dslist->scal1 = dscb1->scal1;
+    if ((dscb1->scal1 & 0xC0) == CYL)
+        dslist->spacu = 'C';
+    else
+        dslist->spacu = 'T';
+    dslist->secondary = ((unsigned)dscb1->scal3[0] << 16)
+                      | ((unsigned)dscb1->scal3[1] << 8)
+                      |  (unsigned)dscb1->scal3[2];
+    dslist->used_trks = (((unsigned)dscb1->lstar[0] << 8)
+                      |  (unsigned)dscb1->lstar[1]) + 1;
+    {
+        /* compute allocated tracks from DSCB1 extents (max 3).
+        ** datasets with >3 extents have additional extents in
+        ** DSCB3 which we do not read here — alloc_trks will
+        ** be an undercount in that case. */
+        int e;
+        unsigned short trks = 0;
+        DSCB dscb4buf = {0};
+        unsigned short trk_per_cyl = 0;
+
+        /* workaround: struct dscb4 includes key[44] but
+        ** __dscbv() returns data-only. dstrk is at data
+        ** offset 20, not struct offset 64. */
+        if (__dscbv(dslist->volser, &dscb4buf) == 0)
+            trk_per_cyl = ((unsigned char)dscb4buf.work[20] << 8)
+                        |  (unsigned char)dscb4buf.work[21];
+        if (trk_per_cyl == 0)
+            trk_per_cyl = 30; /* fallback: 3350 */
+
+        /* derive device type from tracks per cylinder */
+        switch (trk_per_cyl) {
+        case 30: strcpy(dslist->dev, "3350"); break;
+        case 12: strcpy(dslist->dev, "3375"); break;
+        case 19: strcpy(dslist->dev, "3380"); break;
+        case 15: strcpy(dslist->dev, "3390"); break;
+        default: strcpy(dslist->dev, "3390"); break;
+        }
+
+        for (e = 0; e < 3 && e < dscb1->noepv; e++) {
+            unsigned short lo_cc, lo_hh, hi_cc, hi_hh;
+            lo_cc = ((unsigned)dscb1->extent[e].lower[0] << 8)
+                  |  (unsigned)dscb1->extent[e].lower[1];
+            lo_hh = ((unsigned)dscb1->extent[e].lower[2] << 8)
+                  |  (unsigned)dscb1->extent[e].lower[3];
+            hi_cc = ((unsigned)dscb1->extent[e].upper[0] << 8)
+                  |  (unsigned)dscb1->extent[e].upper[1];
+            hi_hh = ((unsigned)dscb1->extent[e].upper[2] << 8)
+                  |  (unsigned)dscb1->extent[e].upper[3];
+            trks += (hi_cc - lo_cc) * trk_per_cyl
+                  + (hi_hh - lo_hh) + 1;
+        }
+        dslist->alloc_trks = trks;
+    }
+
+    dslist->cryear  = 1900 + dscb1->credt[0];
+    if (dslist->cryear < 1980) {
+        dslist->cryear += 100;
+    }
+    dslist->crjday  = *(unsigned short*)&dscb1->credt[1];
+    tm.tm_year      = dslist->cryear - 1900;
+    tm.tm_mday      = dslist->crjday;
+    mktime(&tm);
+    dslist->crmon   = tm.tm_mon + 1;
+    dslist->crday   = tm.tm_mday;
+
+    dslist->rfyear  = 1900 + dscb1->refd[0];
+    if (dslist->rfyear < 1980) {
+        dslist->rfyear += 100;
+    }
+    dslist->rfjday  = *(unsigned short *)&dscb1->refd[1];
+    memset(&tm, 0, sizeof(tm));
+    tm.tm_year      = dslist->rfyear - 1900;
+    tm.tm_mday      = dslist->rfjday;
+    mktime(&tm);
+    dslist->rfmon   = tm.tm_mon + 1;
+    dslist->rfday   = tm.tm_mday;
+
+done:
+    /* add DSLIST record to array */
+    rc = arrayadd(&udata->array, dslist);
+    if (rc) {
+        free(dslist);
+        goto quit;
+    }
+    if (dslist->catnm) udata->catused = 1;
+
+quit:
+    return 0;
+}

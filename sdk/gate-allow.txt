@@ -1,0 +1,3 @@
+# Differences sdk/gate.py accepts for THIS change only: '<asm|symbol|member>
+# <name> <reason>'.  An entry that matches no difference fails the gate, so
+# the next change finds these stale and empties the file.  See sdk/gate.py.

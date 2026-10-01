@@ -55,9 +55,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <clibos.h>
-#include <cliblink.h>
-#include <clibwto.h>
+#include <stddef.h>
+#include <ibm/mvs/ihacde.h>
+#include <mvs/wto.h>
+#include <mvs/storage.h>
+#include <mvs/link.h>
+#include <mvs/wto.h>
 
 #define GREENN  3               /* abend+release iterations           */
 #define REDN    6               /* abend-without-release iterations:

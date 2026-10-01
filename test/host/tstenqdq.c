@@ -32,14 +32,14 @@
  *
  *     R=../..
  *     cc -std=gnu99 -Wall -Wextra -U__LP64__ -D__32BIT__ \
- *        -I $R/include -o t tstenqdq.c && ./t
+ *        -I $R/include -I $R/src/internal -o t tstenqdq.c && ./t
  *
  * RC: 0 = every check passed, 1 = at least one did not.
  */
 #include <stdio.h>
 #include <string.h>
 
-#include "../../include/enqpl.h"
+#include "src/internal/enqpl.h"
 
 /* ---- capture: the SVC parameter list at the moment of the call ------- */
 
@@ -57,7 +57,7 @@ static void pl_capture(ENQPL *p)
    The erased SVC leaves pl.rc = 0, so __enqdeq() returns 0 - fine, the
    assertions here are on the list, not the return. */
 #define __asm__(...) pl_capture(&pl)
-#include "../../src/clib/@@enqdeq.c"
+#include "../../src/mvs/enq/@@enqdeq.c"
 #undef __asm__
 
 /* ---- harness ---------------------------------------------------------- */

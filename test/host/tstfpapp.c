@@ -27,12 +27,13 @@
  *     R=../..
  *     cc -std=gnu99 -Wall \
  *        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
- *        -I $R/include -o t tstfpapp.c && ./t
+ *        -I $R/include -I $R/src/internal -o t tstfpapp.c && ./t
  *
  * RC: 0 = every check passed, 1 = at least one did not.
  */
-/* clibstr.h suppressed for the host, as in tsterrfl.c */
-#define CLIBSTR_H
+/* string.h suppressed for the host, as in tsterrfl.c */
+#define STRING_H
+#include "src/internal/fileio.h"
 #include <stddef.h>
 void   *memset(void *s, int c, size_t n);
 void   *memcpy(void *t, const void *s, size_t n);
@@ -45,8 +46,8 @@ char   *strstr(const char *h, const char *n);
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <osdcb.h>
-#include <osjfcb.h>
+#include <ibm/mvs/dcbd.h>
+#include <ibm/mvs/iefjfcbn.h>
 
 static int  errno_cell;
 int *__errno(void) { return &errno_cell; }
@@ -95,8 +96,8 @@ static void init_tolow(void)
 
 /* ---- the real thing ---------------------------------------------------- */
 
-#include "../../src/clib/@@fpmode.c"
-#include "../../src/clib/@@fpopen.c"
+#include "../../src/stdio/@@fpmode.c"
+#include "../../src/stdio/@@fpopen.c"
 
 static int modeof(const char *m)
 {

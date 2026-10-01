@@ -1,5 +1,5 @@
 /*
- * tstlspd.c - libc370 #80 defect 2: __listpd() (src/clib/@@listpd.c) must bound
+ * tstlspd.c - libc370 #80 defect 2: __listpd() (src/mvs/dslist/@@listpd.c) must bound
  * its directory walk by the bytes fread() actually delivered, not by the
  * halfword it finds inside the block.
  *
@@ -69,12 +69,12 @@
  *   than a crash.  It is the quietest form of the defect, and it needs a count
  *   assertion rather than ASAN to catch.
  *
- * - NOT covered, deliberately: defect 1 (unbounded allocation - needs a `max`
- *   parameter, i.e. a signature change and a relink round) and defect 3 (a
- *   calloc() failure returns a silently truncated list - the convention has to
- *   be settled together with #61).  Case (5) stops the walk and keeps what the
- *   block already yielded; SIGNALLING that shortfall to the caller is defect 3
- *   and is not attempted here.  #80 stays open for both.
+ * - Defects 1 and 3 since 2.0 (cases 8-11): the walk moved into __walkpd(),
+ *   which hands each entry to a callback and allocates nothing -- a caller
+ *   bounds it by returning nonzero, so no `max` parameter and no signature
+ *   change were needed; __listpd() collects on top of it and answers NULL
+ *   with ENOMEM when storage runs out, instead of the records it had so far.
+ *   Case (5)'s damaged block is still skipped silently, as before.
  *
  * - The block length is stored in HOST order by fx_setlen(), because
  *   __listpd() reads it with a native `unsigned short` load.  On the target
@@ -89,7 +89,7 @@
  *   sentinel is the same byte value in either codepage.  Not a codepage test.
  *
  * - arrayadd() is SHIMMED rather than linked, unlike tstjestx.c.  ARRAY_SIZE
- *   is `sizeof(ARRAY) / sizeof(void *)` (clibary.h:18), which is exactly 3 on
+ *   is `sizeof(ARRAY) / sizeof(void *)` (ext/array.h:18), which is exactly 3 on
  *   the 4-byte-pointer target and truncates to 1 on a 64-bit host - so the real
  *   @@aradd.c under-provides its slots by 4 bytes per generation and corrupts
  *   itself the moment an array grows past ARRAY_DEFAULT (20).  Case (2) needs
@@ -106,7 +106,7 @@
  * BUILD / RUN (host, from test/host):
  *
  *   -D'__asm__(...)='  erases the file-scope S/370 statement in @@listpd.c and
- *                      the inline MVCL in clibstr.h's static memset().
+ *                      the inline MVCL in string.h's static memset().
  *                      Variadic because extended asm carries commas.
  *   -D__volatile__=    that memset() is written "__asm__ __volatile__(", and
  *                      the token stops the erase above from matching at all.
@@ -120,13 +120,13 @@
  *     R=../..
  *     cc -std=gnu99 -Wall -Wextra -fsanitize=address \
  *        -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
- *        -I $R/include -o t tstlspd.c "$R/src/clib/@@patmat.c"
+ *        -I $R/include -I $R/src/internal -o t tstlspd.c "$R/src/ext/strutil/@@patmat.c"
  *     ./t                                             # 15/15, rc 0
  *
  * RED, against the pre-fix source.  Same fixtures, same shims, the real
  * pre-fix file - the driver only swaps which @@listpd.c it includes:
  *
- *     git show <pre-fix-rev>:src/clib/@@listpd.c > /tmp/old.c
+ *     git show <pre-fix-rev>:src/mvs/dslist/@@listpd.c > /tmp/old.c
  *
  * Case (1) passes, then case (2) aborts.  The ASAN report is the only output
  * from there on: the abort does not flush stdout, so the PASS lines are lost
@@ -158,7 +158,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../../src/clib/@@listpd.c"
+#include "../../src/mvs/dslist/@@walkpd.c"
+#include "../../src/mvs/dslist/@@listpd.c"
 
 /* ---- shims -------------------------------------------------------------
  * Defined AFTER the translation unit so each one matches the prototype the
@@ -173,11 +174,13 @@
 static void     *fx_slots[FX_MAX];
 static unsigned  fx_count;
 
+static unsigned  fx_fail_at = FX_MAX;  /* arrayadd() fails at this count */
+
 int arrayadd(void *varray, void *vitem)
 {
     void ***carray = varray;
 
-    if (fx_count >= FX_MAX) return -1;
+    if (fx_count >= FX_MAX || fx_count >= fx_fail_at) return -1;
     fx_slots[fx_count++] = vitem;
     *carray = (void **)fx_slots;    /* non-NULL: __listpd() returns it */
     return 0;
@@ -190,6 +193,19 @@ static void fx_free_items(void)
     fx_count = 0;
 }
 
+/* errno, as <errno.h> reaches it */
+static int the_errno;
+int *__errno(void) { return &the_errno; }
+
+/* __freepd(), as __listpd() calls it when storage runs out (#80 defect 3) */
+static int fx_freed;
+void __freepd(PDSLIST ***pdslist)
+{
+    fx_freed++;
+    fx_free_items();
+    *pdslist = 0;
+}
+
 /* The FILE layer.  feof() is a macro over ->flags (clibio.h:138), so the shim
 ** FILE has to be a real struct _file and the flag has to be set for real. */
 static unsigned char fx_block[256];  /* what the "data set" holds        */
@@ -197,9 +213,12 @@ static size_t        fx_nread;       /* what fread() reports having read */
 static int           fx_served;      /* one block per case               */
 static FILE          fx_file;
 
+static int fx_open_fails;               /* fopen() fails, errno untouched */
+
 FILE *fopen(const char *filename, const char *mode)
 {
     (void)filename; (void)mode;
+    if (fx_open_fails) return NULL;
     fx_file.flags = 0;
     fx_served     = 0;
     return &fx_file;
@@ -480,6 +499,97 @@ static void case_filter(void)
     fx_free_items();
 }
 
+/* ---- __walkpd() (#80 defects 1 and 3) ----------------------------------- */
+
+typedef struct { int seen; int stop_at; char last[9]; } WALK;
+static int walker(void *arg, const PDSLIST *entry)
+{
+    WALK *w = arg;
+    int   i;
+    for (i = 0; i < 8 && entry->name[i] != ' '; i++) w->last[i] = entry->name[i];
+    w->last[i] = 0;
+    w->seen++;
+    return w->stop_at && w->seen >= w->stop_at;
+}
+
+static void fx_eight(void)
+{
+    unsigned pos = 2;
+    int      i;
+    fx_clear();
+    for (i = 0; i < 8; i++) pos += fx_entry(pos, ALPHABETA[i], 0);
+    fx_setlen(pos);
+    fx_nread = sizeof(fx_block);
+}
+
+/* (8) __walkpd() hands over every entry, allocating nothing */
+static void case_walk_all(void)
+{
+    WALK w = { 0, 0, "" };
+    int  rc;
+
+    printf("\n(8) __walkpd() over eight members, no filter\n");
+    fx_eight();
+    rc = __walkpd("IGNORED.DSN", NULL, walker, &w);
+    CHECK_EQ(rc, 8, "returns eight delivered");
+    CHECK_EQ(w.seen, 8, "the callback saw eight");
+    CHECK_STR(w.last, "BETA4", "in directory order, BETA4 last");
+    CHECK_EQ(fx_count, 0, "nothing was allocated");
+}
+
+/* (9) the callback stops the walk -- defect 1: a caller bounds it */
+static void case_walk_stop(void)
+{
+    WALK w = { 0, 3, "" };
+    int  rc;
+
+    printf("\n(9) __walkpd() stopped by the callback after three\n");
+    fx_eight();
+    rc = __walkpd("IGNORED.DSN", NULL, walker, &w);
+    CHECK_EQ(rc, 3, "returns three: the one that stopped it counts");
+    CHECK_EQ(w.seen, 3, "the callback saw no more than three");
+    CHECK_STR(w.last, "ALPHA3", "and the third was ALPHA3");
+}
+
+/* (10) the filter, and a walk that cannot open its data set */
+static void case_walk_filter_open(void)
+{
+    WALK w = { 0, 0, "" };
+    int  rc;
+
+    printf("\n(10) __walkpd() with filter \"BETA*\"; and arguments it refuses\n");
+    fx_eight();
+    rc = __walkpd("IGNORED.DSN", "BETA*", walker, &w);
+    CHECK_EQ(rc, 4, "four BETA members delivered");
+    CHECK_STR(w.last, "BETA4", "the last of them BETA4");
+    the_errno = 0;
+    CHECK_EQ(__walkpd("IGNORED.DSN", NULL, NULL, &w), -1, "no callback: -1");
+    CHECK_EQ(the_errno, EINVAL, "no callback: errno EINVAL");
+    fx_open_fails = 1;
+    the_errno = 0;
+    CHECK_EQ(__walkpd("IGNORED.DSN", NULL, walker, &w), -1, "fopen() fails: -1");
+    CHECK_EQ(the_errno, EIO, "and errno EIO where fopen() left none");
+    fx_open_fails = 0;
+}
+
+/* (11) storage runs out: NULL and ENOMEM, not a short list -- defect 3 */
+static void case_list_enomem(void)
+{
+    PDSLIST **array;
+
+    printf("\n(11) __listpd() runs out of storage after five records\n");
+    fx_eight();
+    fx_fail_at = 5;
+    fx_freed   = 0;
+    the_errno  = 0;
+    array = __listpd("IGNORED.DSN", NULL);
+    fx_fail_at = FX_MAX;
+    CHECK(array == NULL, "the answer is NULL, not the five it had");
+    CHECK_EQ(the_errno, ENOMEM, "errno ENOMEM");
+    CHECK_EQ(fx_freed, 1, "the records collected so far were freed");
+    CHECK_EQ(fx_count, 0, "and nothing is left allocated");
+}
+
 int main(void)
 {
     printf("=== tstlspd: __listpd() block bounds (#80 defect 2) ===\n");
@@ -491,6 +601,10 @@ int main(void)
     case_entry_past_end();
     case_sentinel();
     case_filter();
+    case_walk_all();
+    case_walk_stop();
+    case_walk_filter_open();
+    case_list_enomem();
 
     return mbt_test_summary("tstlspd");
 }

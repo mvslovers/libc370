@@ -51,10 +51,10 @@
  *
  * RC: 0 = every check passed, 1 = at least one did not.
  */
-/* clibstr.h is suppressed and the three string functions used here are
+/* string.h is suppressed and the three string functions used here are
 ** declared instead: its memset() is inline S/370 assembler that the host
 ** cannot build (see test/host/tstfprls.c, note a). */
-#define CLIBSTR_H
+#define STRING_H
 #ifndef __SIZE_T_DEFINED
 #define __SIZE_T_DEFINED
 typedef unsigned long size_t;
@@ -71,11 +71,11 @@ int     strcmp(const char *, const char *);
 #include <stdint.h>
 #include <wchar.h>
 
-#include "../../src/clib/mblen.c"
-#include "../../src/clib/mbtowc.c"
-#include "../../src/clib/wctomb.c"
-#include "../../src/clib/mbstowcs.c"
-#include "../../src/clib/wcstombs.c"
+#include "../../src/stdlib/mblen.c"
+#include "../../src/stdlib/mbtowc.c"
+#include "../../src/stdlib/wctomb.c"
+#include "../../src/stdlib/mbstowcs.c"
+#include "../../src/stdlib/wcstombs.c"
 
 /* ---- harness ---------------------------------------------------------- */
 static int mbt_run = 0, mbt_passed = 0, mbt_failed = 0;

@@ -24,8 +24,11 @@
  */
 #include <stdlib.h>
 #include <string.h>
-#include <clibos.h>
-#include <clibwto.h>
+#include <stddef.h>
+#include <ibm/mvs/ihacde.h>
+#include <mvs/wto.h>
+#include <mvs/storage.h>
+#include <mvs/wto.h>
 
 #define CHUNK   (1024 * 1024)
 

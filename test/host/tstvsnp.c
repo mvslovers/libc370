@@ -2,7 +2,7 @@
  * tstvsnp.c - libc370 #128: vsnprintf() must honour its buffer bound on
  * EVERY conversion, and must terminate what it wrote.
  *
- * ISSUE #128: the simple conversions in src/clib/vsnprint.c were bounded
+ * ISSUE #128: the simple conversions in src/stdio/vsnprint.c were bounded
  * (`if (chcount < n) outch(...)`), but every width/precision conversion is
  * handed to __examin() - and @@examin.c:61 read `unused(chcount);`: the
  * budget vsnprintf so carefully computed was DISCARDED, and outch()/memcpy
@@ -44,7 +44,7 @@
  *     R=../..
  *     cc -std=gnu99 -Wall -Wextra -fsanitize=address \
  *        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
- *        -I $R/include -o t tstvsnp.c && ./t
+ *        -I $R/include -I $R/src/internal -o t tstvsnp.c && ./t
  *
  * RED against the pre-fix source (plus the __examin() declaration, which
  * is part of the fix): case (2) dies under ASAN with a heap-buffer-overflow
@@ -52,13 +52,14 @@
  *
  * RC: 0 = every check passed, 1 = at least one did not.
  */
+#include "src/internal/fileio.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "../../src/clib/vsnprint.c"
-#include "../../src/clib/snprintf.c"
-#include "../../src/clib/@@examin.c"
+#include "../../src/stdio/vsnprint.c"
+#include "../../src/stdio/snprintf.c"
+#include "../../src/stdio/@@examin.c"
 
 /* ---- shims -------------------------------------------------------------
  * __dblcvt is the S/370 floating point renderer; the %f case here tests

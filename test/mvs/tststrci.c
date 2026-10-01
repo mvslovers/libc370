@@ -1,8 +1,10 @@
 /*
  * tststrci.c - libc370 #183: the case-insensitive comparisons.
  *
- * strcasecmp/strncasecmp are the POSIX names; stricmp/strncmpi are the
- * MS-style aliases that predate them in this library.  All four fold
+ * strcasecmp/strncasecmp, the POSIX names.  Up to 1.x the library also had
+ * stricmp/strncmpi, the same code under MS-style names; 2.0 dropped them
+ * (#250), and with them case (8) and one check of case (7), which compared
+ * the two pairs -- 30 checks where the run below counted 37.  Both fold
  * through tolower(), i.e. the __tolow table, which is what makes them
  * EBCDIC-correct -- an ASCII-style fold (c | 0x20) would be wrong here.
  *
@@ -24,7 +26,10 @@
  *          under test is the branch build.
  * RC: 0 = every check passed, 1 = a check failed (it is the COND CODE).
  *
- * Run:     mvsdev JOB00422, CC 0000, 37/37, 2026-09-22.
+ * Run:     mvsdev JOB00422, CC 0000, 37/37, 2026-09-22 -- with the aliases.
+ *          mvsdev JOB01031, CC 0000, 30/30, 2026-09-30 -- without them,
+ *          linked against the 2.0 branch's libc.a (STRCASEC and STRNCASE
+ *          in the module, STRICMP and STRNCMPI not).
  *
  * Proven red the same day against a build with two deliberate defects --
  * an n-compare that never looks for the NUL, and an ASCII-style fold --
@@ -49,6 +54,7 @@
  * (X'81'|X'40' = X'C1', and so on through all three runs) -- so JOB00414
  * caught only its NUL defect and said nothing at all about folding.
  */
+#include <strings.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -155,34 +161,11 @@ int main(void)
     memcpy(g2, "AB", 3);
     CHECK(strncasecmp(g1, g2, sizeof g1) == 0,
           "(7) n past both terminators still compares equal");
-    CHECK(strncmpi(g1, g2, sizeof g1) == 0,
-          "(7) strncmpi likewise");
     /* the same shape where the strings differ: the answer must come from
        the letters, not from the poison */
     memcpy(g2, "AC", 3);
     CHECK_SIGN(strncasecmp(g1, g2, sizeof g1), -1,
           "(7) the verdict comes from before the terminator");
-
-    printf("(8) the MS-style aliases agree with the POSIX names\n");
-    /* these two compare the pair against each other, so they are silent
-       while both are right and both wrong the same way: a divergence
-       guard for the day one of the four is edited, not an equality test.
-       They did fire in the red control, where only one of each pair was
-       defective. */
-    CHECK(stricmp("Hello", "HELLO") == strcasecmp("Hello", "HELLO"),
-          "(8) divergence guard: stricmp vs strcasecmp");
-    CHECK(strncmpi("Hello", "HELLO", 5) == strncasecmp("Hello", "HELLO", 5),
-          "(8) divergence guard: strncmpi vs strncasecmp");
-    CHECK_SIGN(stricmp("abc", "ABD"), -1, "(8) stricmp orders like strcasecmp");
-    CHECK_SIGN(strncmpi("abd", "ABC", 3), 1,
-          "(8) strncmpi orders like strncasecmp");
-    /* strncmpi had no in-tree caller and no <ctype.h>, so its tolower() was
-       an implicit declaration resolving to the out-of-line function.  This
-       is the first thing that has ever exercised it. */
-    CHECK(strncmpi("jklmnopqr", "JKLMNOPQR", 9) == 0,
-          "(8) strncmpi folds j-r");
-    CHECK(strncmpi("stuvwxyz", "STUVWXYZ", 8) == 0,
-          "(8) strncmpi folds s-z");
 
     printf("\n=== TSTSTRCI: %d/%d passed", mbt_passed, mbt_run);
     if (mbt_failed) printf(" (%d FAILED)", mbt_failed);

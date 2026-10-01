@@ -103,13 +103,14 @@
  *
  * RC: 0 = all expectations met, 8 = at least one did not.
  */
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <clibwto.h>
-#include <clibthrd.h>
-#include <clibthdi.h>
+#include <mvs/wto.h>
+#include <mvs/thread.h>
+#include <ext/time64.h>
 
 #define WORKERS         4       /* -> mintask 1, maxtask 4 (see above)      */
 #define HANDLER_SECS    8       /* outlasts the 6 s quiesce window          */

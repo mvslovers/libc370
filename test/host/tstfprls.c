@@ -2,7 +2,7 @@
  * tstfprls.c - libc370 #167: fopen() must be able to ask for RLSE, and must
  * only ask when the caller said so.
  *
- * ISSUE #167: __txrlse() (src/clib/@@txrlse.c) builds a DALRLSE (0x000D) text
+ * ISSUE #167: __txrlse() (src/mvs/dynalloc/@@txrlse.c) builds a DALRLSE (0x000D) text
  * unit and is declared in include/svc99.h - and nothing in the library ever
  * called it.  There was therefore no way to get unused space released for a
  * data set written through fopen(), which is what mvslovers/ftpd#100 and
@@ -13,7 +13,7 @@
  *
  *   RLSE is a JFCB attribute honoured at CLOSE of the DCB opened against the
  *   DD that carried it.  fclose() runs __aclose(fp->dcb) BEFORE __fpfree()
- *   drops the DD (src/clib/fclose.c) - so the DD that fopen() allocated is
+ *   drops the DD (src/stdio/fclose.c) - so the DD that fopen() allocated is
  *   still there when CLOSE looks, and an attribute set on it takes effect.
  *   ftpd, by contrast, allocates with __dsalcf(), __dsfree()s that DD, and
  *   then fopen()s the data set by name: whatever __dsalc() put on the first
@@ -90,9 +90,9 @@
  *                     array TUs (__asm__("\n&FUNC SETC 'arrayadd'")), which
  *                     the host assembler rejects.  Variadic because some of
  *                     them are extended asm with operand lists.  It does NOT
- *                     touch the asm("@@ARADD") labels in clibary.h - different
+ *                     touch the asm("@@ARADD") labels in ext/array.h - different
  *                     spelling - so host symbols keep the library's names.
- *   -D'asm(x)='       erases the asm("@@ARADD") symbol labels in clibary.h.
+ *   -D'asm(x)='       erases the asm("@@ARADD") symbol labels in ext/array.h.
  *                     Not needed on macOS/clang, REQUIRED on Linux with GNU
  *                     as: '@' is not valid in a symbol name in a .size/.type
  *                     directive.  Erasing them costs nothing here - the host
@@ -117,7 +117,7 @@
  *
  * FOUR HOST-PORT DETAILS, none of them guessable:
  *
- *   a) clibstr.h is SUPPRESSED (#define CLIBSTR_H below) and the handful of
+ *   a) string.h is SUPPRESSED (#define STRING_H below) and the handful of
  *      string functions declared here instead.  Its memset() and memclr() are
  *      static __inline S/370 assembler; -D'__asm__(...)=' does not reach them
  *      (they are written __asm__ __volatile__(...), and a function-like macro
@@ -151,8 +151,8 @@
  *      before the assertions run.
  * ==================================================================== */
 
-/* (a) suppress clibstr.h - see the note above */
-#define CLIBSTR_H
+/* (a) suppress string.h - see the note above */
+#define STRING_H
 #ifndef __SIZE_T_DEFINED
 #define __SIZE_T_DEFINED
 typedef unsigned long size_t;
@@ -172,8 +172,8 @@ int     strcmp(const char *, const char *);
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "svc99.h"
-#include "clibary.h"
+#include "mvs/dynalloc.h"
+#include "ext/array.h"
 
 /* Pre-fix fallback, so this file COMPILES and RUNS red against the library as
  * it was: without the fix the bit is simply never set, and cases (2), (3), (5)
@@ -265,7 +265,7 @@ static int    tu_overflow;
 static TXT99 *real_nwtx99(int dal, int count, int size, const char *text);
 
 #define __nwtx99 real_nwtx99
-#include "../../src/clib/@@nwtx99.c"
+#include "../../src/mvs/dynalloc/@@nwtx99.c"
 #undef __nwtx99
 
 TXT99 *__nwtx99(int dal, int count, int size, const char *text)
@@ -364,30 +364,33 @@ int __txrecf(TXT99 ***txt99, const char *recfm)
 /* --------------------------------------------------------------------------
  * The code under test.
  * ------------------------------------------------------------------------ */
-#include "../../src/clib/@@fpmode.c"
-#include "../../src/clib/@@fpold.c"
-#include "../../src/clib/@@fpnew.c"
+#include "../../src/stdio/@@fpmode.c"
+#include "../../src/stdio/@@fpold.c"
+#include "../../src/stdio/@@fpnew.c"
 
-#include "../../src/clib/@@txrddn.c"
-#include "../../src/clib/@@txdsn.c"
-#include "../../src/clib/@@txold.c"
-#include "../../src/clib/@@txnew.c"
-#include "../../src/clib/@@txcat.c"
-#include "../../src/clib/@@txrlse.c"
-#include "../../src/clib/@@txlrec.c"
-#include "../../src/clib/@@txbksz.c"
-#include "../../src/clib/@@txcyl.c"
-#include "../../src/clib/@@txtrk.c"
-#include "../../src/clib/@@txblk.c"
-#include "../../src/clib/@@txspac.c"
+#include "../../src/mvs/dynalloc/@@txrddn.c"
+#include "../../src/mvs/dynalloc/@@txdsn.c"
+#include "../../src/mvs/dynalloc/@@txold.c"
+#include "../../src/mvs/dynalloc/@@txnew.c"
+#include "../../src/mvs/dynalloc/@@txcat.c"
+#include "../../src/mvs/dynalloc/@@txrlse.c"
+#include "../../src/mvs/dynalloc/@@txlrec.c"
+#include "../../src/mvs/dynalloc/@@txbksz.c"
+#include "../../src/mvs/dynalloc/@@txcyl.c"
+#include "../../src/mvs/dynalloc/@@txtrk.c"
+#include "../../src/mvs/dynalloc/@@txblk.c"
+#include "../../src/mvs/dynalloc/@@txspac.c"
 
-#include "../../src/clib/@@txorg.c"
+#include "../../src/mvs/dynalloc/@@txorg.c"
+#include "../../src/mvs/dynalloc/@@txunit.c"   /* #172 */
+#include "../../src/mvs/dynalloc/@@txvols.c"
+#include "../../src/mvs/dynalloc/@@nwtx9a.c"   /* __txvols() builds with it */
 
-#include "../../src/clib/@@aradd.c"
-#include "../../src/clib/@@arnew.c"
-#include "../../src/clib/@@arcou.c"
-#include "../../src/clib/@@arget.c"
-#include "../../src/clib/@@arfre.c"
+#include "../../src/ext/array/@@aradd.c"
+#include "../../src/ext/array/@@arnew.c"
+#include "../../src/ext/array/@@arcou.c"
+#include "../../src/ext/array/@@arget.c"
+#include "../../src/ext/array/@@arfre.c"
 
 /* --------------------------------------------------------------------------
  * Helpers

@@ -73,8 +73,8 @@
  *   a PGRLSE that quietly did nothing would look exactly like a fixed emulator
  *
  * BUILD (host), both halves:
- *     cc370 -Iinclude test/mvs/tst75cap.c -flinker-output=iebcopy -o TST75CAP
- *     cc370 -Iinclude -L build/sdk test/mvs/tst75cap.c \
+ *     cc370 -Iinclude -I. test/mvs/tst75cap.c -flinker-output=iebcopy -o TST75CAP
+ *     cc370 -Iinclude -I. -L build/sdk test/mvs/tst75cap.c \
  *           -flinker-output=iebcopy -o TST75CPN
  *
  * RUN: see jcl/tst75cap.jcl.  Built by hand - libc370 is the cc370 sysroot,
@@ -85,9 +85,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <clibwto.h>
-#include <socket.h>
-#include <__75.h>
+#include <mvs/wto.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <mvs/socket.h>
+#include "src/net/dyn75/x75.h"
 
 #define PAGE        4096            /* MVS page size                        */
 #define SEG          256            /* the X'75' copy segment               */
@@ -453,7 +455,7 @@ static int measure(int mode, int s, void *buf, int len)
 }
 
 /*
- * The loop out of src/dyn75/@@75recv.c with the cap as a parameter, so that
+ * The loop out of src/net/dyn75/@@75recv.c with the cap as a parameter, so that
  * the pre-fix and post-fix cases differ in exactly the line the fix changes.
  * Kept deliberately verbatim otherwise - including the -2 wait - so a
  * divergence here cannot be mistaken for the defect.

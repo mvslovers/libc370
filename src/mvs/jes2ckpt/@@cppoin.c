@@ -1,0 +1,24 @@
+/* @@CPPOIN.C - Point JES Checkpoint Dataset */
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include "mvs/wto.h"
+#include "ibm/mvs/dcbd.h"
+#include "ibm/mvs/iefjfcbn.h"
+#include "mvs/jes2ckpt.h"     /* JES Checkpoint prototypes and functions            */
+
+int __cppoin(HASPCP *cp, unsigned TTRz)
+{
+    int     rc      = -1;
+
+    if (cp) {
+        DCB     *dcb    = cp->dcb;
+
+        if (dcb->dcboflgs & DCBOFOPN) {
+            __asm("POINT\t(%0),(%1)" : : "r"(dcb), "r"(&TTRz));
+            rc = 0;
+        }
+    }
+
+    return rc;
+}

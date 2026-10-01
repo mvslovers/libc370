@@ -1,0 +1,9 @@
+{
+  "source": "clibthdi.h",
+  "targets": {
+    "mvs/thread.h": {"includes": ["<time.h>", "<ext/time64.h>"]}
+  },
+  "segments": [
+    {"from": "typedef struct cthdmgr", "to": "int cthread_worker_wait(", "target": "mvs/thread.h"}
+  ]
+}

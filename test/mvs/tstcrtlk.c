@@ -51,10 +51,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <clibos.h>
-#include <cliblink.h>
-#include <clibtry.h>
-#include <clibwto.h>
+#include <stddef.h>
+#include <ibm/mvs/ihacde.h>
+#include <mvs/wto.h>
+#include <mvs/storage.h>
+#include <mvs/link.h>
+#include <mvs/recovery.h>
+#include <mvs/wto.h>
 
 #define ROUNDS  4
 #define UNIT    (64 * 1024)

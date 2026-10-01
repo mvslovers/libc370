@@ -1,6 +1,6 @@
 /*
  * tstlstvl.c - libc370 #59: the "unable to open" diagnostic in open_vatlst()
- * (src/clib/@@listvl.c) must name the data set it could not open (MVS target,
+ * (src/mvs/dslist/@@listvl.c) must name the data set it could not open (MVS target,
  * batch).
  *
  * ISSUE #59: the message had TWO %s conversions and ONE argument:
@@ -57,9 +57,9 @@
  */
 #include <stdio.h>
 #include <string.h>
-#include "clibary.h"    /* array_count() over the returned VOLLIST array */
-#include "cliblist.h"   /* __listvl(), __freevl(), VOLLIST */
-#include "clibwto.h"    /* wtof() - the markers */
+#include "ext/array.h"    /* array_count() over the returned VOLLIST array */
+#include "mvs/dslist.h"   /* __listvl(), __freevl(), VOLLIST */
+#include "mvs/wto.h"    /* wtof() - the markers */
 
 static int bad = 0;
 

@@ -39,12 +39,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <clibwto.h>
-#include <clibenv.h>
-#include <clibthrd.h>
-#include <clibmutx.h>
-#include <clibtmr.h>
-#include <clibecb.h>
+#include <mvs/wto.h>
+#include <mvs/env.h>
+#include <mvs/thread.h>
+#include <mvs/mutex.h>
+#include <mvs/timer.h>
+#include <mvs/ecb.h>
 
 static CLIBMUTX mtx;
 

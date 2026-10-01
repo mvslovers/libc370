@@ -1,0 +1,200 @@
+/* RACAUTH.C - racf_auth()
+** check authorization to resource
+** Hex Code Meaning
+** 00       The user is authorized by RACF to obtain use of a RACF-protected
+**          resource. Register 0 contains one of the following reason codes:
+**      Reason  Meaning
+**      00      Indicates a normal completion.
+**      04      Indicates STATUS=ERASE was specified and the data set is to
+**              be erased when scratched.
+**              Otherwise, indicates that the warning status of the resource
+**              was requested by the RACHECK issuer setting bit X'10' at
+**              offset 12 decimal in the RACHECK parameter list and the
+**              resource is in warning mode.
+**      10      When CLASS=TAPEVOL, indicates the TAPEVOL profile contains
+**              a TVTOC.
+**      20      When CLASS=TAPEVOL, indicates that the TAPEVOL profile can
+**              contain a TVTOC, but currently does not (for a scratch pool
+**              volume).
+**      24      When CLASS=TAPEVOL, indicates that the TAPEVOL profile does
+**              not contain a TVTOC.
+** 04       The specified resource is not protected by RACF. Register 0
+**          contains the following reason code:
+**      Reason  Meaning
+**      00      Indicates a normal completion.
+** 08       The user is not authorized by RACF to obtain use of the specified
+**          RACF-protected resource. Register 0 contains the following
+**          reason code:
+**      00      Indicates a normal completion. A possible cause would be
+**              PROTECTALL is active, no profile is found, and the user ID
+**              whose authority was checked does not have the SPECIAL attribute.
+**      04      Indicates STATUS=ERASE was specified and the data set is to
+**              be erased when scratched.
+**      08      Indicates DSTYPE=T or CLASS=�TAPEVOL� was specified and the
+**              user is not authorized to use the specified volume.
+**      0C      Indicates the user is not authorized to use the data set.
+**      10      Indicates DSTYPE=T or CLASS=�TAPEVOL� was specified and the
+**              user is not authorized to specify LABEL=(,BLP).
+**      1C      User with EXECUTE authority to the data set profile specified
+**              ATTR=READ, and RACF failed the access attempt.
+** 0C       The OLDVOL specified was not part of the multivolume data set
+**          defined by VOLSER, or it was not part of the same tape volume
+**          defined by ENTITY.
+** 10       RACINIT issued by third-party RACHECK failed. Register 0 contains
+**          the RACINIT return code.
+** 64       Indicates that the CHECK subparameter of the RELEASE keyword was
+**          specified on the execute form of the RACHECK macro; however, the
+**          list form of the macro does not have the proper RELEASE parameter.
+**          Macro processing terminates.
+*/
+#include <string.h>
+#include "mvs/racf.h"
+
+__asm__("\n&FUNC    SETC 'racf_auth'");
+int racf_auth(ACEE *acee, const char *classname, const char *resource,
+              int attr) {
+  int rc = 0;
+  int modeset = 0;
+  int len;
+  RACLASS cclass;
+  char resname[80];
+  RACHECK plist;
+
+  memset(cclass.name, ' ', sizeof(cclass.name));
+  memset(resname, ' ', sizeof(resname));
+  memset(&plist, 0, sizeof(plist));
+
+  if (classname) {
+    len = strlen(classname);
+    if (len > sizeof(cclass.name))
+      len = sizeof(cclass.name);
+    cclass.len = len;
+    memcpy(cclass.name, classname, len);
+  }
+
+  if (resource) {
+    len = strlen(resource);
+    if (len > sizeof(resname))
+      len = sizeof(resname);
+    memcpy(resname, resource, len);
+  }
+
+  switch (attr) {
+  case 0:
+    /* not specified, default to READ access */
+    attr = RACHECK_ATTR_READ;
+    break;
+  case RACHECK_ATTR_READ:
+  case RACHECK_ATTR_UPDATE:
+  case RACHECK_ATTR_CONTROL:
+  case RACHECK_ATTR_ALTER:
+    /* seems okay */
+    break;
+  default:
+    /* invalid, set to highest access allowed */
+    attr = RACHECK_ATTR_ALTER;
+  }
+  /* LOG=NONE.  This used to be 0x10 under the same name, and 0x10 is
+  ** DSTYPE=V -- so the library asked for no audit and got one, while telling
+  ** RACF the entity was a VSAM data set (#63).
+  **
+  ** The one thing that had to be proven before this bit could move is that
+  ** suppressing the audit does not soften a decision.  test/mvs/tstracmx.c
+  ** measured the whole matrix on MVS 3.8j against RAKF: a user who is not
+  ** permitted answers 8 with every flag value, in FACILITY and in DATASET,
+  ** through the plist ACEE and through the ASXBSENV fallback, and ATTR still
+  ** decides (READ granted, UPDATE refused).  Only one answer moves: a
+  ** resource with NO profile answers 4 ("not protected") instead of 0.  That
+  ** is why ftpd#82 and httpd#135 had to land first -- both accept 0 and 4 as
+  ** "allowed" now.  Callers of racf_auth() must test rc <= 4, not rc == 0.
+  */
+  plist.flag1 |= RACHECK_FLAG1_LOG_NONE;
+
+  plist.len = sizeof(plist);
+
+  /* Authorize against the caller's ACEE by passing it in the parameter list.
+  ** RACHECK resolves the ACEE from the plist first and only falls back to
+  ** ASXBSENV when the field is zero -- which is exactly what acee==NULL asks
+  ** for, so no test is needed here.  ASXBSENV is address-space-wide: writing
+  ** the ACEE there and back is visible to every other TCB in the address
+  ** space for the length of the call, and an ENQ around it only serializes
+  ** racf_auth() against itself, not against a caller switching identity for
+  ** any other reason.  Touching nothing shared is race-free by construction.
+  */
+  plist.acee = acee;
+
+  /* Enter supervisor state only when we are allowed to and not already in
+  ** it (#197).  SVC 130 answers from problem state and unauthorized: RAKF's
+  ** SVC entry has no TESTAUTH, and test/mvs/tstracun.c measured the same
+  ** answers with and without the MODESET for the runner's own identity.  A
+  ** foreign ACEE in the plist is honoured from problem state too (same
+  ** probe, cell 5; tstracmx.c is the authorized side).  An unconditional
+  ** MODESET made every unauthorized caller S047, and the unconditional
+  ** MODESET back left a caller that was already in supervisor state in
+  ** problem state.
+  */
+  __asm__("\n"
+          "*\n"
+          "* see if we're in supervisor state\n"
+          "*\n"
+          "         TESTAUTH FCTN=0,STATE=YES,KEY=NO,RBLEVEL=1\n"
+          "         ST    15,%0"
+          : "=m"(rc)
+          :
+          : "0", "1", "14", "15");
+  if (rc != 0) {
+    /* problem state: switch only if APF-authorized */
+    __asm__("\n"
+            "*\n"
+            "* see if we're APF authorized\n"
+            "*\n"
+            "         TESTAUTH FCTN=1,STATE=NO,KEY=NO,RBLEVEL=1\n"
+            "         ST    15,%0"
+            : "=m"(rc)
+            :
+            : "0", "1", "14", "15");
+    modeset = (rc == 0);
+  }
+
+  if (modeset) {
+    __asm__("\n"
+            "*\n"
+            "* enter supervisor state\n"
+            "*\n"
+            "         MODESET KEY=ZERO,MODE=SUP\n"
+            :
+            :
+            : "1", "14", "15");
+  }
+
+  __asm__("\n"
+          "*\n"
+          "* check access to resource\n"
+          "*\n"
+          "         RACHECK ENTITY=((%1)),CLASS=(%2),ATTR=(%3),MF=(E,%4)\n"
+          "         ST    15,%0"
+          : "=m"(rc)
+          : "r"(resname), "r"(&cclass), "r"(attr), "m"(plist)
+          : "1", "14", "15");
+
+  if (modeset) {
+    __asm__("\n"
+            "*\n"
+            "* return to problem state\n"
+            "*\n"
+            "         MODESET KEY=NZERO,MODE=PROB\n"
+            :
+            :
+            : "1", "14", "15");
+  }
+
+  return rc;
+}
+#if 1
+__asm__("\n"
+        "LISTLOG  RACHECK ENTITY=ENTITY,CLASS='FACILITY',ATTR=READ,LOG=NONE,   "
+        " X\n\t\tMF=L\n"
+        "LISTNOG  RACHECK ENTITY=ENTITY,CLASS='FACILITY',ATTR=READ,            "
+        " X\n\t\tMF=L\n"
+        "ENTITY   DC   CL40'THIS'\n");
+#endif

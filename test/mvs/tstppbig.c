@@ -10,8 +10,11 @@
  * BUILD (host): see test/mvs/tstcrtlk.c - travels in the same
  * ld370 --pack.  RUN: jcl/tstcrtlk.jcl.
  */
-#include <clibos.h>
-#include <clibwto.h>
+#include <stddef.h>
+#include <ibm/mvs/ihacde.h>
+#include <mvs/wto.h>
+#include <mvs/storage.h>
+#include <mvs/wto.h>
 
 /* initialized so it lands in the load module as data, not in BSS */
 static char pad[131072] = { 0xEE };

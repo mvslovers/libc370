@@ -6,7 +6,137 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-10-01
+
+**libc370 2.0 reorganises the public headers, and almost every program that
+includes one has to change its `#include` lines.** Read
+[doc/migration-2.0.md](https://github.com/mvslovers/libc370/blob/v2.0.0/doc/migration-2.0.md)
+before upgrading: what moved where, how to migrate a source file, the
+interfaces that changed meaning, and how to stay on 1.x. 1.0.8 is the last
+1.x release; its tag `v1.0.8` and the branch `1.x` stay.
+
+Headers moved into `mvs/`, `ext/`, `ibm/`, `s370/` and the POSIX headers;
+mixed headers were split, internal ones left the sysroot; there are no
+compatibility headers. Crypto moved to
+[crypto370](https://github.com/mvslovers/crypto370).
+
+### Added
+- **`inet_addr()`, `inet_ntoa()`, `inet_pton()`, `inet_ntop()` in
+  `<arpa/inet.h>` (#51).** `AF_INET` only. None of them uses `scanf` or
+  `printf`, so converting an address no longer pulls either into a load
+  module (ftpd's `sscanf("%u.%u.%u.%u")` was the case in point).
+  `inet_ntoa()` keeps BSD's semantics -- one buffer, overwritten by the next
+  call -- but takes it per process from `__wsaget()`, since a reentrant load
+  module cannot write a static; between threads use `inet_ntop()`. It
+  returns NULL when the runtime has no process anchor -- `inet_ntop()` into
+  a buffer of the caller's never does, which is why brexx370#274 uses it.
+  `INET_ADDRSTRLEN` (`<netinet/in.h>`) and `socklen_t` (`<sys/socket.h>`)
+  come with them.
+- **`__walkpd()` in `<mvs/dslist.h>` (#80).** A PDS directory member by
+  member, handed to a callback that may stop the walk; nothing is allocated,
+  so a directory of any size costs one block buffer. `__listpd()` built a
+  record per member first, and on `SYS1.SMPCDS` (some 23000) that exhausted
+  the caller's region -- ftpd's `LIST`, the remaining exposed caller. mvsMF,
+  which walks the directory itself for that reason, can use it instead.
+- **`idcams_sysprint()` in `<mvs/idcams.h>` (#71).** `idcams()` returns
+  IDCAMS's condition code and nothing else, so 8 meant "not found" and
+  "refused" alike (ftpd#87). `idcams_sysprint(fn, arg, fmt, ...)` runs the
+  same commands and calls `fn(arg, msgno, text, len)` for every SYSPRINT
+  line, with the IDCnnnnI number read from the line -- the number IDCAMS
+  hands its output exit drops the leading digit (IDC3012I arrives as 12) and
+  gives the two summaries -1 and -2, measured on MVS 3.8j (JOB01058). The
+  header documents the record format and which message explains a condition
+  code. `idcams()` is unchanged.
+- **`fopen()` can say where a new data set goes: `unit=` and `volser=`
+  (#172).** `__fpnew()` sent no `DALUNIT` and no `DALVLSER`, so every data
+  set `fopen(name, "w...")` created landed on SVC 99's default unit, and a
+  caller that needed a volume had to `__dsalcf()` first and `fopen()` the
+  existing data set (ftpd's detour). The mode string now takes the same two
+  keywords `__dsalc()` does -- `fopen(dsn, "wb,unit=sysda,volser=pub001")`,
+  several volumes as `volser=(pub001,pub002)` -- and the environment
+  `DATASET_UNIT` / `DATASET_VOLSER`, next to `DATASET_SPACE`. The mode string
+  wins, as for the other four. Without either, or with an empty value, the
+  request is the one 1.x sent. They apply where the other DCB keywords do:
+  only when `fopen()` creates the data set (DISP=NEW). Environment values are
+  passed as given, not folded to upper case, as `DATASET_RECFM` always was.
+  A request that names a unit or a volume carries `S99NOMNT`: without it a
+  volume that is not mounted does not fail -- SVC 99 goes into allocation
+  recovery (`IEF238D REPLY DEVICE NAME OR 'CANCEL'`) and the task waits for
+  the operator (JOB01082). With it, `fopen()` returns NULL at once
+  (JOB01084). Measured on MVS 3.8j (mvsdev, JOB01084): with `unit=sysda,
+  volser=pub001`, with `volser=pub001` alone, and through the environment,
+  the data set is in the catalog and in the VTOC on PUB001, where the same
+  `fopen()` without them put it on WORK01.
+  Also fixed on the way: the mode string folded everything to upper case
+  except what stood in parentheses, so a volume list would have reached
+  SVC 99 in lower case. No earlier keyword changes its result: `lrecl=`,
+  `blksize=` and `space=` carry digits, and `recfm=` goes through
+  `__txrecf()`, which folds case itself.
+
+### Changed
+- **`__listpd()` answers NULL with `errno` `ENOMEM` when storage runs out
+  (#80).** 1.x returned the records it had collected so far -- a short member
+  list indistinguishable from a complete one. It now frees them and says so.
+  It also collects on top of `__walkpd()`, and no longer uses `strtok()`,
+  which ended a caller's own `strtok()` loop (#301).
+- **`JESJOB` grows from 80 to 96 bytes: `submit_time64` and `sysid` (#79).**
+  The submit time (JCTRDRON/JCTRDTON, time on the input processor) and the
+  input processor's system id (JCTRDSID) were in the JCT and surfaced
+  nowhere; mvsMF had to leave z/OSMF's `exec-submitted` empty (mvsmf#208).
+  Both are appended at 0x50, so offsets 0x00-0x4F keep their 1.x values.
+  `jesjob()` allocates every `JESJOB`, so a consumer only rebuilds. Measured
+  on MVS 3.8j: a job held 20 seconds shows its submit 21 seconds before its
+  start (JOB01066).
+- **`DSLIST` grows from 98 to 104 bytes: `catnm`, the catalog an entry was
+  found in (#50).** mvsMF answers z/OSMF's `catnm` with `""` for want of it.
+  IDCAMS LISTCAT on MVS 3.8j names the catalog per entry (`IN-CAT ---
+  UCPUB000`, `IN-CAT --- SYS1.VSAM.MASTER.CATALOG`; JOB01086), and
+  `__listds()` already reads that output, so it costs no extra I/O. The field
+  is a `const char *`, not a `char[45]`: at 104 bytes a record still costs
+  128 bytes of GETMAIN, where an inline name would have made it 192. The string
+  belongs to the list -- consecutive entries from one catalog share it, and
+  `__freeds()` frees each name once, also after the caller has reordered the
+  array. Copy it to keep it past `__freeds()`. NULL when the listing names no
+  catalog, and in every record `__listal()` builds. Appended after `disp`, so
+  every 1.x offset is unchanged; `__listds()` and `__listal()` allocate every
+  `DSLIST`, so a consumer only rebuilds. Measured through the real
+  `__listds()` on MVS 3.8j (JOB01088): 30 entries under `IBMUSER`, all
+  `UCPUB000` in one shared string, 11 under `SYS2`, all
+  `SYS1.VSAM.MASTER.CATALOG`.
+- **`in_addr_t` is an integer and `inet_aton()` returns 1 for an address
+  (#51).** 1.x defined `in_addr_t` as `struct in_addr` and had `inet_aton()`
+  return 0 for an address and -1 for none -- the opposite of BSD, z/OS and
+  Linux, so code written for them read every valid address as an error.
+  2.0 follows POSIX: `in_addr_t` is `unsigned long` (32 bits, the type
+  `s_addr` always had), `struct in_addr` holds it as `s_addr`, and
+  `inet_aton(const char *, struct in_addr *)` returns 1 or 0. It also refuses
+  what 1.x took: anything after the last part but a blank (`"1.2.3.4x"`), and
+  a first part above 255 in the four-part form. Code that used `in_addr_t`
+  as the struct says `struct in_addr` instead; code that tested
+  `inet_aton() == 0` for success inverts the test. `struct in_addr` and
+  `sin_addr` keep their layout.
+- **`make install` replaces the sysroot's `include/` instead of adding to it
+  (#256).** It clears the directory, then copies the header tree with its
+  subdirectories, which 2.0 introduces (`mvs/`, `ibm/mvs/`, ...). Before, it
+  copied `include/*.h` and never deleted, so a header that left libc370 stayed
+  in every sysroot it had once been installed into. libc370 owns that
+  directory: cc370 searches no other, and every file found there came from
+  libc370.
+- **`libc.a` no longer carries the path it was built in (#256).** `mklibc.py`
+  names each source relative to the repository, so `assert()` in
+  `tm64syr.c` records `src/time64/tm64syr.c` instead of the builder's absolute
+  path, and two checkouts build the same library.
+
 ### Removed
+- **SHA-256, Blowfish and base64 (#244, #256).** `sha256.h`, `blowfish.h`,
+  `clibb64.h` and their ten TUs moved to
+  [crypto370](https://github.com/mvslovers/crypto370) 1.0.0. Declare
+  `mvslovers/crypto370` as a dependency and include `base64.h` instead of
+  `clibb64.h`; the C names are unchanged, the base64 symbols are now
+  `B64ENC`/`B64DEC`.
+- **`clib.h` (#256).** It included `mvs/crt.h`, `mvs/wto.h` and `clibos.h`
+  and defined eight `__getcrt()`-style aliases nothing used. Include what you
+  need directly.
 - **miniz headers (#243).** `clibmz.h`, `clibmzi.h`, `miniz.h`,
   `miniz_common.h`, `miniz_tdef.h`, `miniz_tinfl.h` and `miniz_zip.h`, plus a
   Windows download marker committed beside them. libc370 never shipped the
@@ -24,6 +154,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `srb_getmain()`/`srb_freemain()` had no code behind them and are gone.
 
 ### Fixed
+- **Abend reports show a user abend code again (#68).** `__abrpt()`
+  formatted it with `"U%04D"`; libc370's printf has no `%D` and printed the
+  letter, so a U0123 abend was reported as `UD`. Now `"U%04d"`. The same
+  kind of slip in `localtime64_r()`'s failure message (`"%016LLX"`) printed
+  `LLX` where the time value belonged.
 - **`inline_srb_freemain()` freed from subpool 0 (#248).** Its FREEMAIN read
   `SP+(%2)`, which the macro accepts and then ignores, so storage got from
   `SRB_SUBPOOL` went back to subpool 0. Now `SP=(%2)`; the expansion loads

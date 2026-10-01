@@ -42,9 +42,9 @@
  */
 #include <stdio.h>
 #include <errno.h>
-#include <cliblock.h>
-#include <clibwto.h>
-#include <clibtry.h>
+#include <mvs/lock.h>
+#include <mvs/wto.h>
+#include <mvs/recovery.h>
 
 #define NRECS   20
 

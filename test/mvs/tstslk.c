@@ -36,9 +36,9 @@
  * RC: 0 = all checks passed, 8 = at least one did not.
  */
 #include <stdio.h>
-#include <cliblock.h>
-#include <clibwto.h>
-#include <clibtry.h>
+#include <mvs/lock.h>
+#include <mvs/wto.h>
+#include <mvs/recovery.h>
 
 static int  bad = 0;
 

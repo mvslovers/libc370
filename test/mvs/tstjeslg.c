@@ -55,7 +55,7 @@
  * what makes a finding conclusive - see doc/jes-syslog-issue4.md.
  *
  * BUILD (host):
- *     cc370 -Iinclude test/mvs/tstjeslg.c -flinker-output=iebcopy -o TSTJESLG
+ *     cc370 -Iinclude -I. test/mvs/tstjeslg.c -flinker-output=iebcopy -o TSTJESLG
  *     ld370 --pack TSTJESLG.iebcopy -o probe -xmit --dsn <LOADLIB>
  *
  * RUN (MVS batch) - see jcl/tstjeslg.jcl.  Needs the two JES2 data sets on DDs
@@ -68,12 +68,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "hasphct.h"    /* JES Checkpoint Control Table                     */
-#include "hasppddb.h"   /* JES PDDB                                         */
-#include "haspiot.h"    /* JES IOT (+ track group map)                      */
-#include "clibjes2.h"   /* jesopen/jesjob/jesprint                          */
-#include "jesprb.h"     /* __jesprb() - the REAL record walk (#45)          */
-#include "clibary.h"    /* arraycount                                       */
+#include "ibm/jes2/hct.h"    /* JES Checkpoint Control Table                     */
+#include "ibm/jes2/pddb.h"   /* JES PDDB                                         */
+#include "ibm/jes2/iot.h"    /* JES IOT (+ track group map)                      */
+#include "mvs/jes2.h"   /* jesopen/jesjob/jesprint                          */
+#include "src/mvs/jes2/jesprb.h"     /* __jesprb() - the REAL record walk (#45)          */
+#include "ext/array.h"    /* arraycount                                       */
 
 #define MAXBLK      500 /* chain-follow cap: a stale block can chain wildly */
 #define DUMPBLKS    2   /* hex dump this many blocks per DD                 */
@@ -511,7 +511,7 @@ static void dumpiot(HASPCP *cp, HASPJS *js, unsigned char *buf, unsigned bufsize
     }
 }
 
-/* Run the REAL record walk (src/jes/jesprb.c) over one block and report what
+/* Run the REAL record walk (src/mvs/jes2/jesprb.c) over one block and report what
    it emitted.  This probe used to carry a hand-written copy of that walk, and
    the copy had drifted: it advanced a spanned part by 4 + len2, while the walk
    advances 4 + 2 + len2 past a FIRST part's length prefix.  On a data set of
