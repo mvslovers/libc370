@@ -382,6 +382,9 @@ int __txrecf(TXT99 ***txt99, const char *recfm)
 #include "../../src/mvs/dynalloc/@@txspac.c"
 
 #include "../../src/mvs/dynalloc/@@txorg.c"
+#include "../../src/mvs/dynalloc/@@txunit.c"   /* #172 */
+#include "../../src/mvs/dynalloc/@@txvols.c"
+#include "../../src/mvs/dynalloc/@@nwtx9a.c"   /* __txvols() builds with it */
 
 #include "../../src/ext/array/@@aradd.c"
 #include "../../src/ext/array/@@arnew.c"

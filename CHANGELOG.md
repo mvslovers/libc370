@@ -31,6 +31,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   gives the two summaries -1 and -2, measured on MVS 3.8j (JOB01058). The
   header documents the record format and which message explains a condition
   code. `idcams()` is unchanged.
+- **`fopen()` can say where a new data set goes: `unit=` and `volser=`
+  (#172).** `__fpnew()` sent no `DALUNIT` and no `DALVLSER`, so every data
+  set `fopen(name, "w...")` created landed on SVC 99's default unit, and a
+  caller that needed a volume had to `__dsalcf()` first and `fopen()` the
+  existing data set (ftpd's detour). The mode string now takes the same two
+  keywords `__dsalc()` does -- `fopen(dsn, "wb,unit=sysda,volser=pub001")`,
+  several volumes as `volser=(pub001,pub002)` -- and the environment
+  `DATASET_UNIT` / `DATASET_VOLSER`, next to `DATASET_SPACE`. The mode string
+  wins, as for the other four. Without either, or with an empty value, the
+  request is the one 1.x sent. They apply where the other DCB keywords do:
+  only when `fopen()` creates the data set (DISP=NEW). Environment values are
+  passed as given, not folded to upper case, as `DATASET_RECFM` always was.
+  Also fixed on the way: the mode string folded everything to upper case
+  except what stood in parentheses, so a volume list would have reached
+  SVC 99 in lower case. No earlier keyword changes its result: `lrecl=`,
+  `blksize=` and `space=` carry digits, and `recfm=` goes through
+  `__txrecf()`, which folds case itself.
 
 ### Changed
 - **`__listpd()` answers NULL with `errno` `ENOMEM` when storage runs out
