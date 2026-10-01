@@ -444,9 +444,13 @@ checklist is #245.
      ranges; a prerelease does not).
 8. **Prerelease `v2.0.0-rc1`** (mbt takes `-rcN`, not `-rc.1`), tagged on
    the branch `2.0`, not on `main`.
-   Before it, run the stdio MVS probes once on the `2.0` build: #300's
-   gnu99 switch changed the code of `@@fpswt`/`@@fseek` (registers only by
-   analysis, but the host tests cannot show it).
+   ~~Before it, run the stdio MVS probes once on the `2.0` build~~ --
+   **not needed** (2026-10-01, #300 comment): compiled gnu89 vs gnu99 and
+   assembled, `@@fpswt` and `@@fseek` are byte-identical objects (label
+   numbering only). Of the six TUs whose code did change, `@@listds` ran on
+   MVS (JOB01088) and `@@loadhi` runs at every start of the ported ufsd (its
+   SSI router into CSA); `bsearch`, `strtoul`, `vvscanf`, `@@tmthrd` rest on
+   #300's analysis.
    `main` stays 1.x and the consumers' build CI stays green. Check first
    that `release.yml` and the consumers' `make deps` / `[toolchain]` accept a
    prerelease tag off `main`.
