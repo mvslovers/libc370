@@ -395,9 +395,16 @@ checklist is #245.
    - consumer wishes, no interface break, taken along: **#51**
      (`inet_addr`/`inet_ntoa`), **#71** (`idcams()` keeps IDCnnnn),
      **#172** (`__fpnew()` UNIT)
-   - **investigate the three `ibm/` headers that declare functions**
-     (`iefjfcbn.h`, `pso.h`, `iefssobh.h`, #278): the declarations belong in
-     an `mvs/` header
+   - ~~**investigate the three `ibm/` headers that declare functions**~~
+     done, #296: `iefssreq()` → `mvs/subsys.h`, `rdjfcb()`/`__rdjfcb()` →
+     `mvs/dd.h`, `__getpso()` → `mvs/jes2.h` (Process SYSOUT research: #295)
+   - **done on `2.0`:** #51 (#297: `<arpa/inet.h>` on POSIX/BSD terms --
+     `in_addr_t` an integer, `inet_aton()` 1/0, new `inet_addr`/`ntoa`/
+     `pton`/`ntop`); #71 (#298: `idcams_sysprint()`, measured on MVS --
+     IDCAMS's own msgno is not the IDC number, JOB01058/JOB01060); name-scan
+     fixes on the way (#287 `#else`, #299 function-pointer typedefs)
+   - **open:** #80 defect 1, #79, #50 (method first), #172 -- each needs
+     an MVS run
    Each with a test and a CHANGELOG entry; the gate shows the intended code
    changes (`gate-allow.txt`); anything touching MVS behaviour is tested on
    MVS (Mike's OK per run).
