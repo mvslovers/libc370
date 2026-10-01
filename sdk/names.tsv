@@ -4131,6 +4131,7 @@ howmany	sys/select.h
 htonl	netinet/in.h
 htons	netinet/in.h
 idcams	mvs/idcams.h
+idcams_sysprint	mvs/idcams.h
 ieebasea	ibm/mvs/ieebasea.h
 ieecdcm	ibm/mvs/ieecdcm.h
 iefssreq	mvs/subsys.h
