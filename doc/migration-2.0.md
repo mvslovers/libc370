@@ -75,6 +75,7 @@ them over; it does not rewrite them.
 |---|---|---|---|
 | `in_addr_t` | `struct in_addr` | `unsigned long`, the address itself | httpd `credentials/src/credtest.c:47` casts to `in_addr_t *` for `inet_aton()`: becomes `struct in_addr *`; brexx370 `compat/jccompat.c:368`, whose `inet_addr()` libc370 now provides |
 | `inet_aton()` | 0 = address, -1 = none; second argument `in_addr_t *` | 1 = address, 0 = none (BSD); `struct in_addr *` | httpd `credtest.c` ignores the result; brexx370 already expects BSD's |
+| `__listpd()` | storage running out returned the records collected so far | NULL with `errno` `ENOMEM` | ftpd `ftpd#mvs.c:941` (`LIST`/`NLST`) reports NULL as "No data sets found" -- better moved to `__walkpd()`; `:1191` and mvsMF `dsapi.c:736` look up one member and are not affected |
 
 ## New in 2.0 that a consumer asked for — optional
 
@@ -83,6 +84,7 @@ something a consumer worked around, which it may now drop.
 
 | new | replaces | consumer |
 |---|---|---|
+| `__walkpd()` in `<mvs/dslist.h>` (#80): a PDS directory member by member through a callback, nothing allocated, the callback may stop | ftpd: `__listpd()` for `LIST`/`NLST`, one allocation per member (the region on a large PDS); mvsMF: its own copy of the directory walk (`dsapi.c`, "mirrors the walk in libc370's `__listpd()`") | ftpd, mvsMF |
 | `idcams_sysprint()` in `<mvs/idcams.h>` (#71): every SYSPRINT line with its IDC message number, through a callback; `idcams()` is unchanged | mapping `idcams()`'s condition code to words, which cannot tell "not found" (IDC3012I) from "refused" (IDC3203I) | ftpd (ftpd#87); mvsMF calls `idcams()` too |
 | `JESJOB.submit_time64` and `JESJOB.sysid` in `<mvs/jes2.h>` (#79): when the job was submitted, and on which system | nothing -- z/OSMF's `exec-submitted` stayed empty, `exec-system` unanswered | mvsMF (mvsmf#208, mvsmf#209) |
 | `inet_addr()`, `inet_pton()`, `inet_ntop()`, `inet_ntoa()` in `<arpa/inet.h>` (#51) | ftpd's `sscanf("%u.%u.%u.%u")`; brexx370's own `inet_addr()` and `inet_ntoa()` | ftpd, brexx370 |

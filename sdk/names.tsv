@@ -2097,6 +2097,7 @@ PDSLIST	mvs/dslist.h
 PDSLIST_IDC_ALIAS	mvs/dslist.h
 PDSLIST_IDC_TTRS	mvs/dslist.h
 PDSLIST_IDC_UDATA	mvs/dslist.h
+PDS_WALK	mvs/dslist.h
 PGMEK	ibm/mvs/iefvkeys.h
 PNONDISP	ibm/mvs/ikjtcb.h
 PPAEYE	mvs/crt.h
@@ -3898,6 +3899,7 @@ __vsstge	mvs/vsam.h
 __vstell	mvs/vsam.h
 __vsupdt	mvs/vsam.h
 __vswrit	mvs/vsam.h
+__walkpd	mvs/dslist.h
 __wsaget	mvs/wsa.h
 __xmpost	mvs/xmem.h
 _file	stdio.h

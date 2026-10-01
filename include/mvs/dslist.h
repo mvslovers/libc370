@@ -303,9 +303,51 @@ extern DSLIST **__listds(const char *level,     /* "HLQ.TEST"       */
 /* __freeds() - free DSLIST array created by __listds() */
 extern void     __freeds(DSLIST ***dslist);
 
+/* __walkpd() - every member of a PDS directory, handed to fn one at a time.
+**
+** Reads the directory of dataset (a name fopen() takes) and calls
+**
+**     fn(arg, entry)
+**
+** for each member whose name matches filter (a __patmat() pattern; NULL for
+** all), in directory order -- name, TTR, the C byte and the user data, as
+** IBM lays the entry out.  Nothing is allocated, so a directory of any size
+** costs the same: this is the call for listings, where __listpd() would
+** first build one record per member (SYS1.SMPCDS has some 23000, #80).
+**
+** entry points into a buffer that the next block overwrites: copy what you
+** keep.  fn returns 0 to go on and anything else to stop -- after N entries,
+** past the one you looked for -- and that entry still counts as delivered.
+**
+** Returns the number of entries handed to fn, 0 for none, or -1 with errno
+** set when the directory could not be opened or read: what fopen() left,
+** or EIO where it left none (it does not for a data set that does not
+** exist).  A damaged block is skipped, as __listpd() always did.
+**
+** Example -- count the members starting with "IEF", stop at 100:
+**
+**     static int count(void *arg, const PDSLIST *entry)
+**     {
+**         (void) entry;
+**         return ++*(int *) arg >= 100;
+**     }
+**     ...
+**     int n = 0;
+**     if (__walkpd("SYS1.LINKLIB", "IEF*", count, &n) < 0) ...
+*/
+typedef int (*PDS_WALK)(void *arg, const PDSLIST *entry);
+extern int      __walkpd(const char *dataset, const char *filter, PDS_WALK fn, void *arg)
+                                                                    asm("@@WALKPD");
+
 /* __listpd() - returns array of PDSLIST records for a PDS dataset.
 **              optional filter pattern string can be supplied
 **              to filter by PDS member name.
+**
+**              Every member is a calloc()ed record: on a large directory
+**              prefer __walkpd().  NULL when the directory could not be read,
+**              and NULL with errno ENOMEM when storage ran out -- 1.x
+**              returned the records it had so far, a short list that looked
+**              complete (#80).  An empty directory is NULL as well.
 */
 extern PDSLIST **__listpd(const char *dataset, const char *filter);
 

@@ -16,6 +16,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   module cannot write a static; between threads use `inet_ntop()`.
   `INET_ADDRSTRLEN` (`<netinet/in.h>`) and `socklen_t` (`<sys/socket.h>`)
   come with them.
+- **`__walkpd()` in `<mvs/dslist.h>` (#80).** A PDS directory member by
+  member, handed to a callback that may stop the walk; nothing is allocated,
+  so a directory of any size costs one block buffer. `__listpd()` built a
+  record per member first, and on `SYS1.SMPCDS` (some 23000) that exhausted
+  the caller's region -- ftpd's `LIST`, the remaining exposed caller. mvsMF,
+  which walks the directory itself for that reason, can use it instead.
 - **`idcams_sysprint()` in `<mvs/idcams.h>` (#71).** `idcams()` returns
   IDCAMS's condition code and nothing else, so 8 meant "not found" and
   "refused" alike (ftpd#87). `idcams_sysprint(fn, arg, fmt, ...)` runs the
@@ -27,6 +33,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   code. `idcams()` is unchanged.
 
 ### Changed
+- **`__listpd()` answers NULL with `errno` `ENOMEM` when storage runs out
+  (#80).** 1.x returned the records it had collected so far -- a short member
+  list indistinguishable from a complete one. It now frees them and says so.
+  It also collects on top of `__walkpd()`, and no longer uses `strtok()`,
+  which ended a caller's own `strtok()` loop (#301).
 - **`JESJOB` grows from 80 to 96 bytes: `submit_time64` and `sysid` (#79).**
   The submit time (JCTRDRON/JCTRDTON, time on the input processor) and the
   input processor's system id (JCTRDSID) were in the JCT and surfaced
