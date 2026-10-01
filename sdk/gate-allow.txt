@@ -2,4 +2,3 @@
 # <name> <reason>'.  An entry that matches no difference fails the gate, so
 # the next change finds these stale and empties the file.  See sdk/gate.py.
 
-asm     @@fpnew.s     UNIT=/VOLSER= and DATASET_UNIT/DATASET_VOLSER; parenthesised lists folded to upper case (#172)
