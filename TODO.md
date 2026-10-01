@@ -407,8 +407,11 @@ checklist is #245.
      held job (JOB01065/01066); found #301 (`jesjob()` uses `strtok()`)
    - #300: libc370 compiles as C99 (`-std=gnu99 -trigraphs`); eight TUs
      differ in code generation only (analysed in the PR)
-   - **open:** #80 defect 1, #50 (method first), #172 -- each needs an MVS
-     run
+   - #80 (#303): `__walkpd()` (callback, no allocation -- SYS1.SMPCDS's
+     23018 members walked, JOB01076); `__listpd()` NULL/ENOMEM instead of a
+     short list. #61 (`__listvl()`, same silent truncation) to follow the
+     same convention
+   - **open:** #172, #50 (method first) -- each needs an MVS run
    Each with a test and a CHANGELOG entry; the gate shows the intended code
    changes (`gate-allow.txt`); anything touching MVS behaviour is tested on
    MVS (Mike's OK per run).
