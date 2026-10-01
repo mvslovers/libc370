@@ -39,7 +39,12 @@ SRC_DIR = f"{ROOT}/src"
 # -Wuninitialized is not implied by -Wall in this gcc 3.4.6 and needs -O to run
 # at all, so it has to be named here (#102).  It finds #99 -- __loadhi() calling
 # fclose() on stack residue -- at the -O1 the build already uses.
-CFLAGS = ["-O1", "-Wuninitialized", f'-DVERSION="{VERSION}"',
+# -std=gnu99: libc370 is C99 (gnu99), like every project in the ecosystem.
+# Without it GCC 3.4 defaults to gnu89, and a C99 construct such as a
+# declaration in a for loop's first clause does not compile.  -trigraphs
+# after it: the cc370 driver enables trigraphs by default and -std=gnu99
+# turns them off again, but @@estae.c spells || as ??!??! and headers do too.
+CFLAGS = ["-O1", "-std=gnu99", "-trigraphs", "-Wuninitialized", f'-DVERSION="{VERSION}"',
           f"-I{ROOT}/include", f"-I{ROOT}"]   # private headers: "src/internal/x.h" (D10)
 ASMINC = ["-I", f"{ROOT}/maclib", "-I", f"{ROOT}/sysmac"]   # sysmac vendors SYS1.MACLIB
 STARTUPS = ("@@crt0", "@@crt1", "@@crtm")                      # -> separate startfiles
