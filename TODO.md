@@ -434,8 +434,14 @@ checklist is #245.
    `edge` stays 1.x, brexx370 pins it) -- `[toolchain] libc370 = "2.0.0-dev"`
    plus `libc370_ref: v2.0.0-dev` in build.yml. Local 2.0 builds use the
    second toolchain `~/.local/opt/cc370-libc2` (refresh after moving the tag);
-   `~/.local` keeps 1.0.8. **ufsd first**; no ufsd release from the ported
-   tree until ftpd, httpd and mvsMF follow (`libufs.h` is public).
+   `~/.local` keeps 1.0.8.
+   - **ported:** ufsd (ufsd#82, merged 2026-10-01, prerelease `v1.4.0-dev`),
+     brexx370 (brexx370#274, open; moves its pin off `edge` -- after it,
+     nothing pins `edge`). Findings folded into the brief (#310).
+   - **next:** ftpd, httpd, mvsMF -- they take ufsd as `">=1.4.0-dev"`;
+     httpd and mvsMF also crypto370. ufsd publishes **prereleases only**
+     until all three are ported (a stable release would reach their `>=`
+     ranges; a prerelease does not).
 8. **Prerelease `v2.0.0-rc1`** (mbt takes `-rcN`, not `-rc.1`), tagged on
    the branch `2.0`, not on `main`.
    Before it, run the stdio MVS probes once on the `2.0` build: #300's
