@@ -308,7 +308,7 @@ Summary:
 | `ikjupt.h` | `ibm/mvs/ikjupt.h` |  | IBM data area |
 | `@@75.h` | — |  | byte-identical copy of __75.h, no includer |
 | `@@memmgr.h` | — |  | PDPCLIB memmgr, never built: USE_MEMMGR undefined, no implementation; its branches in malloc/free/realloc dropped |
-| `__75.h` | internal |  | src/internal/x75.h: the X'75' parameter list (PL75, __75()); @@75.h dropped |
+| `__75.h` | internal |  | src/net/dyn75/x75.h: the X'75' parameter list (PL75, __75()); @@75.h dropped |
 | `clibjpa.h` | internal |  | src/internal/crtanchor.h: the @@JPA anchor of the CLIBCRT areas |
 | `clibjs.h` | `mvs/jes2spool.h` |  | public: the JES spool calls mvs/jes2.h exposes; beside mvs/jes2ckpt.h |
 | `clibprtf.h` | internal |  | merged into src/internal/printf.h (the engine's entry points) |
