@@ -106,10 +106,12 @@ already shared.
 ## What 2.0 is, and what it is not
 
 **2.0.0 is the interface cut.** It carries phases 1 and 2 (new header paths,
-internals out of the sysroot, dead headers gone, crypto out) and the **relink
-round**: the struct and signature growth that was already waiting for a
-coordinated rebuild of the consumers (#79, #50, #51, #71, #172, and #80 defect
-1's `max` parameter). A major version is the one moment consumers expect to
+internals out of the sysroot, dead headers gone, crypto out) and the
+**interface changes** that were waiting for every consumer to be recompiled
+at once: struct growth (#79, #50) and #80 defect 1's `max` parameter. Three
+consumer wishes without an interface break ride along (#51, #71, #172;
+decided 2026-10-01). Until then this was called "the relink round"; the
+point is recompiling against the new headers, not relinking. A major version is the one moment consumers expect to
 change code, so they migrate once instead of twice. **Phase 3, the source
 layout, ships in 2.0 as well** (D9): it changes nothing visible, but 2.0 is
 meant to be a clean, readable tree. Phase 4 draws the OS seam; it changes code,
@@ -130,7 +132,9 @@ other item. Header moves and parallel fix PRs would also collide on the same
 | 1 | on the integration branch `2.0` (#256): move and rename headers per the table; split the five mixed headers; drop dead ones. `install` copies subdirectories and clears the sysroot's `include/` first, since the first moved header needs it. Absorbs #39 step 2 (missing `#include`s) and #68 step 1 (the `clibsa.h` inline), since every `#include` line is touched anyway, and #250 items 1–3 | **byte-identical assembler for every TU** against the commit before the move, the method PR #242 used; `sdk/gate.py` checks it in CI, with the archive's symbols and the warnings |
 | 2 | internals to `src/internal/` (#274), included by their path from the root (D10); `libc370/` becomes `ext/` (D1) | byte-identical assembler; the migration script resolves every consumer include |
 | 3 | **done on `2.0`** (#285–#292): sources by area (#278), `src/` mirrors `include/`; assembler beside its C; `src/wip/` → `attic/` (D9). Basenames stay unique (all objects share one directory, `mklibc.py:161`), and the gate needs a map from old to new source paths | byte-identical assembler |
-| — | **the relink round**: #79, #50, #51, #71, #172, #80 defect 1 | per change, tests; CHANGELOG entry for each layout or signature change |
+| — | **interface changes**: #80 defect 1, #79, #50; taken along: #51, #71, #172; the three `ibm/` headers that declare functions | per change, tests; CHANGELOG entry for each layout or signature change |
+| — | **migration script** (`doc/migration-2.0.md`), tried on httpd, mvsMF, ftpd | it resolves every consumer include |
+| — | **prerelease `v2.0.0-rc.N`** on the branch `2.0`; a first consumer (ftpd) migrated and tested on MVS against it | the consumer green and working on MVS |
 | — | **release 2.0.0**; one migration PR per consumer | each consumer green against 2.0.0 |
 | 4 | the OS seam: core calls a narrow internal interface, not MVS services | per change, tests |
 
@@ -211,7 +215,7 @@ design, measurements, the CI analysis), and is never published.
 | D5 | where the plan lives | decided: this document plus the umbrella issue |
 | D6 | release concept | decided, see above (#249, cc370#523, mbt#121) |
 | D7 | documentation | decided: hand-written guides + generated reference, tool after a spike; `docs/` public, `doc/` internal |
-| D8 | scheduling | decided: the 2.0 critical path comes first; the relink round ships in 2.0; emergency 1.0.9 from `v1.0.8`; cc370 releases desirable, not blocking |
+| D8 | scheduling | decided: the 2.0 critical path comes first; the interface changes ship in 2.0; emergency 1.0.9 from `v1.0.8`; cc370 releases desirable, not blocking |
 | D9 | source layout | decided 2026-09-30: part of 2.0 (phase 3 before the release); `src/` mirrors `include/`; assembler beside its C, since libc370 is built by `sdk/mklibc.py`, not mbt; `src/wip/` → `attic/`. Phase 4 (the OS seam) stays in 2.x |
 | D10 | internal headers | decided 2026-09-30: shared ones flat in `src/internal/`, area-local ones beside their sources; included by their path from the repository root; plain names without prefix or suffix; `clibres.h`, `clibspl.h`, `clibsvc.h` keep their names as a not-yet-integrated marker |
 | D11 | `libc370/socket.h` | decided 2026-09-30: moves to `mvs/socket.h` for now, because its calls are bound to the socket provider (`@@75…`), which is the OS layer, not portable. To be dissolved later, parts of it into `src/internal/` |

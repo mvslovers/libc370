@@ -71,7 +71,7 @@ includes against the consumer's own tree first.
   declaration means step 3 missed a name.
 - Its generated assembler is identical to the 1.x build, TU by TU, except
   where step 4 replaced a name on purpose, or where the TU uses a struct or
-  signature the relink round changed (each is a CHANGELOG entry) — the
+  signature the 2.0 interface changes changed (each is a CHANGELOG entry) — the
   method of libc370's own `sdk/gate.py`. Any other difference is a missed
   include, not noise.
 
