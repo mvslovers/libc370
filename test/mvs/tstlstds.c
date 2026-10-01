@@ -30,6 +30,11 @@
  * Then upload probe.xmit to IBMUSER.LIBC370.LSTDSXMT, run jcl/recvlstd.jcl,
  * run jcl/tstlstds.jcl.
  *
+ * MEASURED 2026-10-01 on mvsdev, JOB01088, CC 0000, TSTLSTDS PASSED:
+ *     LEVEL('IBMUSER')  30 records, all UCPUB000, one shared string
+ *     LEVEL('SYS2')     11 records, all SYS1.VSAM.MASTER.CATALOG
+ *     __freeds() ok on both.
+ *
  * RC: 0 = every check passed, 8 = at least one did not (it is the COND CODE).
  */
 #include <stdio.h>
