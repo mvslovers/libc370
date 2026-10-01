@@ -111,6 +111,6 @@ struct __pso {                      /* PSO PARAMETER LIST DSECT                 
 };
 #define PSOLNGTH    sizeof(__PSO)   /* 128 *-PSODSECT       LENGTH OF PSO DSECT */
 
-extern __PSO *__getpso(void);
+/* __getpso() is declared in <mvs/jes2.h>: ibm/ holds IBM's data layout only */
 
 #endif

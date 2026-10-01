@@ -3,6 +3,7 @@
 #include <ibm/mvs/iefssso.h>
 #include <string.h>
 #include <mvs/jes2.h>
+#include <mvs/subsys.h>
 
 int jescanj(const char *jobname, const char *jobid, int purge)
 {

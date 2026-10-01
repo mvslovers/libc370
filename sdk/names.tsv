@@ -3714,7 +3714,7 @@ __fsqrt	math.h
 __getclk	mvs/clock.h
 __getm	mvs/storage.h
 __getmsp	mvs/storage.h
-__getpso	ibm/jes2/pso.h
+__getpso	mvs/jes2.h
 __getsp	mvs/storage.h
 __gettz	mvs/clock.h
 __gnuc_va_list	stdarg.h
@@ -3775,7 +3775,7 @@ __ppahrv	mvs/crt.h
 __prob	mvs/apf.h
 __pso	ibm/jes2/pso.h
 __pswkey	mvs/apf.h
-__rdjfcb	ibm/mvs/iefjfcbn.h
+__rdjfcb	mvs/dd.h
 __renmem	mvs/pds.h
 __setj	setjmp.h
 __setsp	mvs/storage.h
@@ -4132,7 +4132,7 @@ htons	netinet/in.h
 idcams	mvs/idcams.h
 ieebasea	ibm/mvs/ieebasea.h
 ieecdcm	ibm/mvs/ieecdcm.h
-iefssreq	ibm/mvs/iefssobh.h
+iefssreq	mvs/subsys.h
 iezjscb	ibm/mvs/iezjscb.h
 ikjcppl	ibm/mvs/ikjcppl.h
 ikject	ibm/mvs/ikject.h
@@ -4349,7 +4349,7 @@ rbbasic	ibm/mvs/iharb.h
 rbprfx	ibm/mvs/iharb.h
 rbx99	ibm/mvs/iefzb4d0.h
 rclose	mvs/rfile.h
-rdjfcb	ibm/mvs/iefjfcbn.h
+rdjfcb	mvs/dd.h
 realloc	stdlib.h
 reclen	mvs/smf.h
 recv	sys/socket.h

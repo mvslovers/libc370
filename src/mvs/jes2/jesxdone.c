@@ -1,5 +1,6 @@
 #include <string.h>
 #include <mvs/jes2.h>
+#include <mvs/subsys.h>
 
 int jesxdone(SSSO *ssso)
 {

@@ -9,6 +9,7 @@
 #include "src/internal/bsam.h"
 #include "ibm/mvs/dcbd.h"
 #include "ibm/mvs/iefjfcbn.h"
+#include <mvs/dd.h>
 
 __asm__("\n&FUNC    SETC '__fpopen'");
 int

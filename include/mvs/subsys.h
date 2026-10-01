@@ -117,4 +117,10 @@ SSIB * __ssib(void)										asm("@@SSIB");
 /* __jobid() - returns pointer to 8 character SSIBJBID in job SSIB */
 const char * __jobid(void)								asm("@@JOBID");
 
+/* ---- the subsystem request, from 1.x iefssobh.h (#278) ----------------- */
+#include <ibm/mvs/iefssobh.h>		/* SSOB struct */
+
+/* iefssreq() - pass an SSOB to the subsystem interface (IEFSSREQ) */
+extern int iefssreq(SSOB *ssob);
+
 #endif /* MVS_SUBSYS_H */

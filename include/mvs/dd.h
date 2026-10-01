@@ -28,4 +28,13 @@ TIOT *__tiot(void)										asm("@@TIOT");
 /* __jobname() - retrieve address of 8 character job name from TIOT */
 const char *__jobname(void)								asm("@@JOBNAM");
 
+/* ---- reading the JFCB, from 1.x iefjfcbn.h (#278) --------------------- */
+#include <ibm/mvs/iefjfcbn.h>		/* JFCB struct, and DCB through dcbd.h */
+
+extern int      __rdjfcb(DCB *dcb, JFCB *jfcb);
+
+/* rdjfcb() - the same code as __rdjfcb(), built a second time from
+**            src/mvs/dd/rdjfcb.c as its own routine (RDJFCB) */
+extern int      rdjfcb(DCB *dcb, JFCB *jfcb);
+
 #endif /* MVS_DD_H */
