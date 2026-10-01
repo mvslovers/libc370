@@ -1,0 +1,758 @@
+# Where every library source and private header goes in phase 3 (#278, D9).
+# today	target	why.  Maintained by hand; sdk/srcmap.py moves and checks.
+asm/@@aclose.asm	src/stdio/@@aclose.asm	BSAM, the I/O under stdio (src/internal/bsam.h)
+asm/@@adisc.asm	src/stdio/@@adisc.asm	BSAM, the I/O under stdio (src/internal/bsam.h)
+asm/@@aline.asm	src/stdio/@@aline.asm	BSAM, the I/O under stdio (src/internal/bsam.h)
+asm/@@anote.asm	src/stdio/@@anote.asm	BSAM, the I/O under stdio (src/internal/bsam.h)
+asm/@@aopen.asm	src/stdio/@@aopen.asm	BSAM, the I/O under stdio (src/internal/bsam.h)
+asm/@@apoint.asm	src/stdio/@@apoint.asm	BSAM, the I/O under stdio (src/internal/bsam.h)
+asm/@@aread.asm	src/stdio/@@aread.asm	BSAM, the I/O under stdio (src/internal/bsam.h)
+asm/@@atrout.asm	src/stdio/@@atrout.asm	BSAM, the I/O under stdio (src/internal/bsam.h)
+asm/@@awrite.asm	src/stdio/@@awrite.asm	BSAM, the I/O under stdio (src/internal/bsam.h)
+asm/@@crt0.asm	src/mvs/crt/@@crt0.asm	runtime start-up
+asm/@@crt1.asm	src/mvs/crt/@@crt1.asm	runtime start-up
+asm/@@crtm.asm	src/mvs/crt/@@crtm.asm	runtime start-up
+asm/@@crtsvc.asm	src/mvs/svc/@@crtsvc.asm	the SVC-in-C scaffold, with svcmain.c (clibsvc.h)
+asm/@@dynal.asm	src/mvs/dynalloc/@@dynal.asm	SVC 99
+asm/@@exita.asm	src/mvs/crt/@@exita.asm	runtime start-up
+asm/@@freem.asm	src/mvs/storage/@@freem.asm	GETMAIN/FREEMAIN
+asm/@@getclk.asm	src/time/@@getclk.asm	the clock and the time zone behind <time.h>
+asm/@@getm.asm	src/mvs/storage/@@getm.asm	GETMAIN/FREEMAIN
+asm/@@getpfx.asm	src/mvs/tso/@@getpfx.asm	TSO prefix
+asm/@@gettz.asm	src/time/@@gettz.asm	the clock and the time zone behind <time.h>
+asm/@@idcams.asm	src/mvs/idcams/@@idcams.asm	IDCAMS
+asm/@@longj.asm	src/setjmp/@@longj.asm	setjmp()/longjmp()
+asm/@@ppaget.asm	src/mvs/crt/@@ppaget.asm	runtime start-up
+asm/@@setj.asm	src/setjmp/@@setj.asm	setjmp()/longjmp()
+asm/@@ssctbn.asm	src/mvs/subsys/@@ssctbn.asm	SSCT lookup
+asm/@@svc99.asm	src/mvs/dynalloc/@@svc99.asm	SVC 99
+asm/@@system.asm	src/stdlib/@@system.asm	system()
+asm/gettzoff.asm	src/time/gettzoff.asm	the clock and the time zone behind <time.h>
+src/clib/@@64add.c	src/ext/int64/@@64add.c	declared in <ext/int64.h>
+src/clib/@@64ai32.c	src/ext/int64/@@64ai32.c	declared in <ext/int64.h>
+src/clib/@@64and.c	src/ext/int64/@@64and.c	declared in <ext/int64.h>
+src/clib/@@64au32.c	src/ext/int64/@@64au32.c	declared in <ext/int64.h>
+src/clib/@@64au64.c	src/ext/int64/@@64au64.c	declared in <ext/int64.h>
+src/clib/@@64ci32.c	src/ext/int64/@@64ci32.c	declared in <ext/int64.h>
+src/clib/@@64cmp.c	src/ext/int64/@@64cmp.c	declared in <ext/int64.h>
+src/clib/@@64copy.c	src/ext/int64/@@64copy.c	declared in <ext/int64.h>
+src/clib/@@64cu32.c	src/ext/int64/@@64cu32.c	declared in <ext/int64.h>
+src/clib/@@64cu64.c	src/ext/int64/@@64cu64.c	declared in <ext/int64.h>
+src/clib/@@64dec.c	src/ext/int64/@@64dec.c	declared in <ext/int64.h>
+src/clib/@@64di32.c	src/ext/int64/@@64di32.c	declared in <ext/int64.h>
+src/clib/@@64div.c	src/ext/int64/@@64div.c	declared in <ext/int64.h>
+src/clib/@@64dmod.c	src/ext/int64/@@64dmod.c	declared in <ext/int64.h>
+src/clib/@@64du32.c	src/ext/int64/@@64du32.c	declared in <ext/int64.h>
+src/clib/@@64du64.c	src/ext/int64/@@64du64.c	declared in <ext/int64.h>
+src/clib/@@64fi32.c	src/ext/int64/@@64fi32.c	declared in <ext/int64.h>
+src/clib/@@64fstr.c	src/ext/int64/@@64fstr.c	declared in <ext/int64.h>
+src/clib/@@64fu32.c	src/ext/int64/@@64fu32.c	declared in <ext/int64.h>
+src/clib/@@64fu64.c	src/ext/int64/@@64fu64.c	declared in <ext/int64.h>
+src/clib/@@64inc.c	src/ext/int64/@@64inc.c	declared in <ext/int64.h>
+src/clib/@@64init.c	src/ext/int64/@@64init.c	declared in <ext/int64.h>
+src/clib/@@64is0.c	src/ext/int64/@@64is0.c	declared in <ext/int64.h>
+src/clib/@@64isqr.c	src/ext/int64/@@64isqr.c	declared in <ext/int64.h>
+src/clib/@@64lsft.c	src/ext/int64/@@64lsft.c	declared in <ext/int64.h>
+src/clib/@@64lsh1.c	src/ext/int64/@@64lsh1.c	declared in <ext/int64.h>
+src/clib/@@64lshw.c	src/ext/int64/@@64lshw.c	declared in <ext/int64.h>
+src/clib/@@64mi32.c	src/ext/int64/@@64mi32.c	declared in <ext/int64.h>
+src/clib/@@64mod.c	src/ext/int64/@@64mod.c	declared in <ext/int64.h>
+src/clib/@@64mu32.c	src/ext/int64/@@64mu32.c	declared in <ext/int64.h>
+src/clib/@@64mu64.c	src/ext/int64/@@64mu64.c	declared in <ext/int64.h>
+src/clib/@@64mul.c	src/ext/int64/@@64mul.c	declared in <ext/int64.h>
+src/clib/@@64ni32.c	src/ext/int64/@@64ni32.c	declared in <ext/int64.h>
+src/clib/@@64nu32.c	src/ext/int64/@@64nu32.c	declared in <ext/int64.h>
+src/clib/@@64nu64.c	src/ext/int64/@@64nu64.c	declared in <ext/int64.h>
+src/clib/@@64oi32.c	src/ext/int64/@@64oi32.c	declared in <ext/int64.h>
+src/clib/@@64or.c	src/ext/int64/@@64or.c	declared in <ext/int64.h>
+src/clib/@@64ou32.c	src/ext/int64/@@64ou32.c	declared in <ext/int64.h>
+src/clib/@@64ou64.c	src/ext/int64/@@64ou64.c	declared in <ext/int64.h>
+src/clib/@@64pow.c	src/ext/int64/@@64pow.c	declared in <ext/int64.h>
+src/clib/@@64qi32.c	src/ext/int64/@@64qi32.c	declared in <ext/int64.h>
+src/clib/@@64qu32.c	src/ext/int64/@@64qu32.c	declared in <ext/int64.h>
+src/clib/@@64qu64.c	src/ext/int64/@@64qu64.c	declared in <ext/int64.h>
+src/clib/@@64rsft.c	src/ext/int64/@@64rsft.c	declared in <ext/int64.h>
+src/clib/@@64rsh1.c	src/ext/int64/@@64rsh1.c	declared in <ext/int64.h>
+src/clib/@@64rshw.c	src/ext/int64/@@64rshw.c	declared in <ext/int64.h>
+src/clib/@@64si32.c	src/ext/int64/@@64si32.c	declared in <ext/int64.h>
+src/clib/@@64su32.c	src/ext/int64/@@64su32.c	declared in <ext/int64.h>
+src/clib/@@64su64.c	src/ext/int64/@@64su64.c	declared in <ext/int64.h>
+src/clib/@@64sub.c	src/ext/int64/@@64sub.c	declared in <ext/int64.h>
+src/clib/@@64test.c	attic/@@64test.c	a program with main(), not library code
+src/clib/@@64ti32.c	src/ext/int64/@@64ti32.c	declared in <ext/int64.h>
+src/clib/@@64tstr.c	src/ext/int64/@@64tstr.c	declared in <ext/int64.h>
+src/clib/@@64tu32.c	src/ext/int64/@@64tu32.c	declared in <ext/int64.h>
+src/clib/@@64tu64.c	src/ext/int64/@@64tu64.c	declared in <ext/int64.h>
+src/clib/@@64vi32.c	src/ext/int64/@@64vi32.c	declared in <ext/int64.h>
+src/clib/@@64vu32.c	src/ext/int64/@@64vu32.c	declared in <ext/int64.h>
+src/clib/@@64vu64.c	src/ext/int64/@@64vu64.c	declared in <ext/int64.h>
+src/clib/@@64xi32.c	src/ext/int64/@@64xi32.c	declared in <ext/int64.h>
+src/clib/@@64xor.c	src/ext/int64/@@64xor.c	declared in <ext/int64.h>
+src/clib/@@64xu32.c	src/ext/int64/@@64xu32.c	declared in <ext/int64.h>
+src/clib/@@64xu64.c	src/ext/int64/@@64xu64.c	declared in <ext/int64.h>
+src/clib/@@@try.c	src/mvs/recovery/@@@try.c	declared in <mvs/recovery.h>
+src/clib/@@abrpt.c	src/mvs/recovery/@@abrpt.c	declared in <mvs/recovery.h>
+src/clib/@@apfset.c	src/mvs/apf/@@apfset.c	declared in <mvs/apf.h>
+src/clib/@@aradd.c	src/ext/array/@@aradd.c	declared in <ext/array.h>
+src/clib/@@aradf.c	src/ext/array/@@aradf.c	declared in <ext/array.h>
+src/clib/@@arcou.c	src/ext/array/@@arcou.c	declared in <ext/array.h>
+src/clib/@@ardel.c	src/ext/array/@@ardel.c	declared in <ext/array.h>
+src/clib/@@areach.c	src/ext/array/@@areach.c	declared in <ext/array.h>
+src/clib/@@arfre.c	src/ext/array/@@arfre.c	declared in <ext/array.h>
+src/clib/@@arget.c	src/ext/array/@@arget.c	declared in <ext/array.h>
+src/clib/@@arnew.c	src/ext/array/@@arnew.c	declared in <ext/array.h>
+src/clib/@@arsiz.c	src/ext/array/@@arsiz.c	declared in <ext/array.h>
+src/clib/@@ascb.c	src/mvs/xmem/@@ascb.c	declared in <mvs/xmem.h>
+src/clib/@@assert.c	src/assert/@@assert.c	declared in <assert.h>
+src/clib/@@austep.c	src/mvs/apf/@@austep.c	declared in <mvs/apf.h>
+src/clib/@@autask.c	src/mvs/apf/@@autask.c	declared in <mvs/apf.h>
+src/clib/@@autcde.c	src/mvs/apf/@@autcde.c	declared in <mvs/apf.h>
+src/clib/@@autnam.c	src/mvs/apf/@@autnam.c	declared in <mvs/apf.h>
+src/clib/@@bitops.c	src/s370/@@bitops.c	64-bit arithmetic the compiler calls (libgcc's part)
+src/clib/@@bldl.c	src/mvs/pds/@@bldl.c	declared in <mvs/pds.h>
+src/clib/@@call.c	src/mvs/link/@@call.c	declared in <mvs/link.h>
+src/clib/@@caller.c	src/stdio/@@caller.c	declared only in src/internal/fileio.h
+src/clib/@@cas.c	src/s370/@@cas.c	declared in <s370/atomic.h>
+src/clib/@@cibdel.c	src/mvs/console/@@cibdel.c	declared in <mvs/console.h>
+src/clib/@@cibget.c	src/mvs/console/@@cibget.c	declared in <mvs/console.h>
+src/clib/@@cibset.c	src/mvs/console/@@cibset.c	declared in <mvs/console.h>
+src/clib/@@cmpdi2.c	src/s370/@@cmpdi2.c	64-bit arithmetic the compiler calls (libgcc's part)
+src/clib/@@cpclos.c	src/mvs/jes2ckpt/@@cpclos.c	declared in <mvs/jes2ckpt.h>
+src/clib/@@cpopen.c	src/mvs/jes2ckpt/@@cpopen.c	declared in <mvs/jes2ckpt.h>
+src/clib/@@cppoin.c	src/mvs/jes2ckpt/@@cppoin.c	declared in <mvs/jes2ckpt.h>
+src/clib/@@cpread.c	src/mvs/jes2ckpt/@@cpread.c	declared in <mvs/jes2ckpt.h>
+src/clib/@@crtget.c	src/mvs/crt/@@crtget.c	runtime start-up and anchors
+src/clib/@@crtres.c	src/mvs/crt/@@crtres.c	runtime start-up and anchors
+src/clib/@@crtset.c	src/mvs/crt/@@crtset.c	runtime start-up and anchors
+src/clib/@@ctcrte.c	src/mvs/thread/@@ctcrte.c	declared in <mvs/thread.h>
+src/clib/@@ctcrtx.c	src/mvs/thread/@@ctcrtx.c	declared in <mvs/thread.h>
+src/clib/@@ctdel.c	src/mvs/thread/@@ctdel.c	declared in <mvs/thread.h>
+src/clib/@@ctdet.c	src/mvs/thread/@@ctdet.c	declared in <mvs/thread.h>
+src/clib/@@ctfind.c	src/mvs/thread/@@ctfind.c	declared in <mvs/thread.h>
+src/clib/@@ctgtcb.c	src/mvs/thread/@@ctgtcb.c	declared in <mvs/thread.h>
+src/clib/@@ctlock.c	src/mvs/thread/@@ctlock.c	declared in <mvs/thread.h>
+src/clib/@@ctpop.c	src/mvs/thread/@@ctpop.c	declared in <mvs/thread.h>
+src/clib/@@ctpost.c	src/mvs/thread/@@ctpost.c	declared in <mvs/thread.h>
+src/clib/@@ctpush.c	src/mvs/thread/@@ctpush.c	declared in <mvs/thread.h>
+src/clib/@@ctself.c	src/mvs/thread/@@ctself.c	declared in <mvs/thread.h>
+src/clib/@@cttwat.c	src/mvs/thread/@@cttwat.c	declared in <mvs/thread.h>
+src/clib/@@ctwait.c	src/mvs/thread/@@ctwait.c	declared in <mvs/thread.h>
+src/clib/@@ctyiel.c	src/mvs/thread/@@ctyiel.c	declared in <mvs/thread.h>
+src/clib/@@dblcvt.c	src/stdio/@@dblcvt.c	stdio internals
+src/clib/@@ddbusy.c	src/stdio/@@ddbusy.c	declared only in src/internal/fileio.h
+src/clib/@@dec.c	src/s370/@@dec.c	declared in <s370/atomic.h>
+src/clib/@@delete.c	src/mvs/link/@@delete.c	declared in <mvs/link.h>
+src/clib/@@delmem.c	src/mvs/pds/@@delmem.c	declared in <mvs/pds.h>
+src/clib/@@divdi3.c	src/s370/@@divdi3.c	64-bit arithmetic the compiler calls (libgcc's part)
+src/clib/@@doperm.c	src/stdio/@@doperm.c	stdio internals
+src/clib/@@dsalc.c	src/mvs/dynalloc/@@dsalc.c	declared in <mvs/dynalloc.h>
+src/clib/@@dsalcf.c	src/mvs/dynalloc/@@dsalcf.c	declared in <mvs/dynalloc.h>
+src/clib/@@dscbav.c	src/mvs/dscb/@@dscbav.c	declared in <mvs/dscb.h>
+src/clib/@@dscbdv.c	src/mvs/dscb/@@dscbdv.c	declared in <mvs/dscb.h>
+src/clib/@@dscbv.c	src/mvs/dscb/@@dscbv.c	declared in <mvs/dscb.h>
+src/clib/@@dsfree.c	src/mvs/dynalloc/@@dsfree.c	declared in <mvs/dynalloc.h>
+src/clib/@@ecbpst.c	src/mvs/ecb/@@ecbpst.c	declared in <mvs/ecb.h>
+src/clib/@@ecbtw.c	src/mvs/ecb/@@ecbtw.c	declared in <mvs/ecb.h>
+src/clib/@@ecbtwa.c	src/mvs/ecb/@@ecbtwa.c	declared in <mvs/ecb.h>
+src/clib/@@ecbtwl.c	src/mvs/ecb/@@ecbtwl.c	declared in <mvs/ecb.h>
+src/clib/@@ecbwa.c	src/mvs/ecb/@@ecbwa.c	declared in <mvs/ecb.h>
+src/clib/@@ecbwl.c	src/mvs/ecb/@@ecbwl.c	declared in <mvs/ecb.h>
+src/clib/@@ecbwt.c	src/mvs/ecb/@@ecbwt.c	declared in <mvs/ecb.h>
+src/clib/@@enqdeq.c	src/mvs/enq/@@enqdeq.c	declared in <mvs/enq.h>
+src/clib/@@envvar.c	src/mvs/env/@@envvar.c	the environment variable store
+src/clib/@@errno.c	src/errno/@@errno.c	declared in <errno.h>
+src/clib/@@estae.c	src/mvs/recovery/@@estae.c	declared in <mvs/recovery.h>
+src/clib/@@examin.c	src/stdio/@@examin.c	stdio internals
+src/clib/@@exit.c	src/mvs/crt/@@exit.c	declared in <mvs/crt.h>
+src/clib/@@faband.c	src/mvs/file/@@faband.c	declared in <mvs/file.h>
+src/clib/@@fdclr.c	src/stdio/@@fdclr.c	stdio internals
+src/clib/@@fflush.c	src/stdio/@@fflush.c	declared only in src/internal/fileio.h
+src/clib/@@fgetc.c	src/stdio/@@fgetc.c	declared only in src/internal/fileio.h
+src/clib/@@fgets.c	src/stdio/@@fgets.c	declared only in src/internal/fileio.h
+src/clib/@@fildef.c	src/stdio/@@fildef.c	stdio internals
+src/clib/@@finden.c	src/mvs/env/@@finden.c	declared in <mvs/env.h>
+src/clib/@@fixdi.c	src/s370/@@fixdi.c	64-bit arithmetic the compiler calls (libgcc's part)
+src/clib/@@fltdi.c	src/s370/@@fltdi.c	64-bit arithmetic the compiler calls (libgcc's part)
+src/clib/@@fmtisp.c	src/mvs/dslist/@@fmtisp.c	declared in <mvs/dslist.h>
+src/clib/@@fmtloa.c	src/mvs/dslist/@@fmtloa.c	declared in <mvs/dslist.h>
+src/clib/@@fndcde.c	src/mvs/link/@@fndcde.c	declared in <mvs/link.h>
+src/clib/@@fpfree.c	src/stdio/@@fpfree.c	declared only in src/internal/fileio.h
+src/clib/@@fpmode.c	src/stdio/@@fpmode.c	stdio internals
+src/clib/@@fpnew.c	src/stdio/@@fpnew.c	stdio internals
+src/clib/@@fpold.c	src/stdio/@@fpold.c	stdio internals
+src/clib/@@fpopen.c	src/stdio/@@fpopen.c	stdio internals
+src/clib/@@fpshr.c	src/stdio/@@fpshr.c	stdio internals
+src/clib/@@fpstar.c	src/stdio/@@fpstar.c	stdio internals
+src/clib/@@fpswt.c	src/stdio/@@fpswt.c	declared only in src/internal/fileio.h
+src/clib/@@fpterm.c	src/stdio/@@fpterm.c	declared only in src/internal/fileio.h
+src/clib/@@fptmp.c	src/stdio/@@fptmp.c	declared only in src/internal/fileio.h
+src/clib/@@fputc.c	src/stdio/@@fputc.c	declared only in src/internal/fileio.h
+src/clib/@@fputs.c	src/stdio/@@fputs.c	declared only in src/internal/fileio.h
+src/clib/@@fread.c	src/stdio/@@fread.c	declared only in src/internal/fileio.h
+src/clib/@@freeal.c	src/mvs/dslist/@@freeal.c	declared in <mvs/dslist.h>
+src/clib/@@freeds.c	src/mvs/dslist/@@freeds.c	declared in <mvs/dslist.h>
+src/clib/@@freepd.c	src/mvs/dslist/@@freepd.c	declared in <mvs/dslist.h>
+src/clib/@@freevl.c	src/mvs/dslist/@@freevl.c	declared in <mvs/dslist.h>
+src/clib/@@frtx99.c	src/mvs/dynalloc/@@frtx99.c	declared in <mvs/dynalloc.h>
+src/clib/@@frtx9a.c	src/mvs/dynalloc/@@frtx9a.c	declared in <mvs/dynalloc.h>
+src/clib/@@fseek.c	src/stdio/@@fseek.c	declared only in src/internal/fileio.h
+src/clib/@@fwrite.c	src/stdio/@@fwrite.c	declared only in src/internal/fileio.h
+src/clib/@@getpso.c	src/mvs/jes2/@@getpso.c	declared in <ibm/jes2/pso.h> (an ibm/ header declaring a function, see #278)
+src/clib/@@grtget.c	src/mvs/crt/@@grtget.c	declared in <mvs/crt.h>
+src/clib/@@grtres.c	src/mvs/crt/@@grtres.c	declared in <mvs/crt.h>
+src/clib/@@grtset.c	src/mvs/crt/@@grtset.c	declared in <mvs/crt.h>
+src/clib/@@gtcom.c	src/mvs/console/@@gtcom.c	declared in <mvs/console.h>
+src/clib/@@gtdsab.c	src/mvs/dd/@@gtdsab.c	declared in <mvs/dd.h>
+src/clib/@@gterr.c	src/stdio/@@gterr.c	declared in <stdio.h>
+src/clib/@@gtin.c	src/stdio/@@gtin.c	declared in <stdio.h>
+src/clib/@@gtout.c	src/stdio/@@gtout.c	declared in <stdio.h>
+src/clib/@@idecth.c	src/mvs/thread/@@idecth.c	declared in <mvs/thread.h>
+src/clib/@@inaton.c	src/net/@@inaton.c	declared in <arpa/inet.h>
+src/clib/@@inc.c	src/s370/@@inc.c	declared in <s370/atomic.h>
+src/clib/@@irallc.c	src/stdio/@@irallc.c	stdio internals
+src/clib/@@isauth.c	src/mvs/apf/@@isauth.c	declared in <mvs/apf.h>
+src/clib/@@isbuf.c	src/stdio/@@isbuf.c	stdio internals
+src/clib/@@isleap.c	src/time/@@isleap.c	date arithmetic behind <time.h>
+src/clib/@@ispexe.c	src/mvs/ispf/@@ispexe.c	declared in <mvs/ispf.h>
+src/clib/@@isplnk.c	src/mvs/ispf/@@isplnk.c	declared in <mvs/ispf.h>
+src/clib/@@ispsel.c	src/mvs/ispf/@@ispsel.c	declared in <mvs/ispf.h>
+src/clib/@@issup.c	src/mvs/apf/@@issup.c	declared in <mvs/apf.h>
+src/clib/@@jobid.c	src/mvs/subsys/@@jobid.c	declared in <mvs/subsys.h>
+src/clib/@@jobnam.c	src/mvs/dd/@@jobnam.c	declared in <mvs/dd.h>
+src/clib/@@jpaget.c	src/mvs/crt/@@jpaget.c	declared only in src/internal/crtanchor.h
+src/clib/@@jsclos.c	src/mvs/jes2spool/@@jsclos.c	declared in <mvs/jes2spool.h>
+src/clib/@@jsopen.c	src/mvs/jes2spool/@@jsopen.c	declared in <mvs/jes2spool.h>
+src/clib/@@jsrd4.c	src/mvs/jes2spool/@@jsrd4.c	declared in <mvs/jes2spool.h>
+src/clib/@@link.c	src/mvs/link/@@link.c	declared in <mvs/link.h>
+src/clib/@@linkds.c	src/mvs/link/@@linkds.c	declared in <mvs/link.h>
+src/clib/@@linkt.c	src/mvs/link/@@linkt.c	declared in <mvs/link.h>
+src/clib/@@listal.c	src/mvs/dslist/@@listal.c	declared in <mvs/dslist.h>
+src/clib/@@listc.c	src/mvs/dslist/@@listc.c	declared in <mvs/dslist.h>
+src/clib/@@listds.c	src/mvs/dslist/@@listds.c	declared in <mvs/dslist.h>
+src/clib/@@listpd.c	src/mvs/dslist/@@listpd.c	declared in <mvs/dslist.h>
+src/clib/@@listvl.c	src/mvs/dslist/@@listvl.c	declared in <mvs/dslist.h>
+src/clib/@@lk.c	src/mvs/lock/@@lk.c	declared in <mvs/lock.h>
+src/clib/@@lkrn.c	src/mvs/lock/@@lkrn.c	declared in <mvs/lock.h>
+src/clib/@@lkrnf.c	src/mvs/lock/@@lkrnf.c	declared in <mvs/lock.h>
+src/clib/@@lkrnte.c	src/mvs/lock/@@lkrnte.c	declared in <mvs/lock.h>
+src/clib/@@lkrnuf.c	src/mvs/lock/@@lkrnuf.c	declared in <mvs/lock.h>
+src/clib/@@lkrnun.c	src/mvs/lock/@@lkrnun.c	declared in <mvs/lock.h>
+src/clib/@@lkrtef.c	src/mvs/lock/@@lkrtef.c	declared in <mvs/lock.h>
+src/clib/@@lktest.c	src/mvs/lock/@@lktest.c	declared in <mvs/lock.h>
+src/clib/@@lktry.c	src/mvs/lock/@@lktry.c	declared in <mvs/lock.h>
+src/clib/@@lkunlk.c	src/mvs/lock/@@lkunlk.c	declared in <mvs/lock.h>
+src/clib/@@lkuntf.c	src/mvs/lock/@@lkuntf.c	declared in <mvs/lock.h>
+src/clib/@@lkuntr.c	src/mvs/lock/@@lkuntr.c	declared in <mvs/lock.h>
+src/clib/@@load.c	src/mvs/link/@@load.c	declared in <mvs/link.h>
+src/clib/@@loadhi.c	src/mvs/link/@@loadhi.c	declared in <mvs/link.h>
+src/clib/@@locate.c	src/mvs/dscb/@@locate.c	declared in <mvs/dscb.h>
+src/clib/@@mtd.c	src/time/@@mtd.c	date arithmetic behind <time.h>
+src/clib/@@muldi3.c	src/s370/@@muldi3.c	64-bit arithmetic the compiler calls (libgcc's part)
+src/clib/@@negdi2.c	src/s370/@@negdi2.c	64-bit arithmetic the compiler calls (libgcc's part)
+src/clib/@@nwtx99.c	src/mvs/dynalloc/@@nwtx99.c	declared in <mvs/dynalloc.h>
+src/clib/@@nwtx9a.c	src/mvs/dynalloc/@@nwtx9a.c	declared in <mvs/dynalloc.h>
+src/clib/@@nwtx9s.c	src/mvs/dynalloc/@@nwtx9s.c	declared in <mvs/dynalloc.h>
+src/clib/@@nxdsab.c	src/mvs/dd/@@nxdsab.c	declared in <mvs/dd.h>
+src/clib/@@patmat.c	src/ext/strutil/@@patmat.c	declared in <ext/strutil.h>
+src/clib/@@perm.c	src/stdio/@@perm.c	stdio internals
+src/clib/@@ppahrv.c	src/mvs/crt/@@ppahrv.c	declared in <mvs/crt.h>
+src/clib/@@prob.c	src/mvs/apf/@@prob.c	declared in <mvs/apf.h>
+src/clib/@@prtfx.c	src/stdio/@@prtfx.c	stdio internals
+src/clib/@@pswkey.c	src/mvs/apf/@@pswkey.c	declared in <mvs/apf.h>
+src/clib/@@rdjfcb.c	src/mvs/dd/@@rdjfcb.c	declared in <ibm/mvs/iefjfcbn.h> (an ibm/ header declaring a function, see #278)
+src/clib/@@renmem.c	src/mvs/pds/@@renmem.c	declared in <mvs/pds.h>
+src/clib/@@reopen.c	src/stdio/@@reopen.c	declared only in src/internal/fileio.h
+src/clib/@@sigdfl.c	src/signal/@@sigdfl.c	declared in <signal.h>
+src/clib/@@sigerr.c	src/signal/@@sigerr.c	declared in <signal.h>
+src/clib/@@sighdl.c	src/signal/@@sighdl.c	declared in <signal.h>
+src/clib/@@sigign.c	src/signal/@@sigign.c	declared in <signal.h>
+src/clib/@@sl.c	src/mvs/lock/@@sl.c	declared in <mvs/lock.h>
+src/clib/@@sltest.c	src/mvs/lock/@@sltest.c	declared in <mvs/lock.h>
+src/clib/@@sltry.c	src/mvs/lock/@@sltry.c	declared in <mvs/lock.h>
+src/clib/@@slunlk.c	src/mvs/lock/@@slunlk.c	declared in <mvs/lock.h>
+src/clib/@@smca.c	src/mvs/smf/@@smca.c	declared in <mvs/smf.h>
+src/clib/@@smfid.c	src/mvs/smf/@@smfid.c	declared in <mvs/smf.h>
+src/clib/@@soadd.c	src/net/@@soadd.c	declared in <mvs/socket.h>
+src/clib/@@sodel.c	src/net/@@sodel.c	declared in <mvs/socket.h>
+src/clib/@@sofind.c	src/net/@@sofind.c	declared in <mvs/socket.h>
+src/clib/@@soupd.c	src/net/@@soupd.c	declared in <mvs/socket.h>
+src/clib/@@ssfind.c	src/mvs/subsys/@@ssfind.c	declared in <mvs/subsys.h>
+src/clib/@@ssfree.c	src/mvs/subsys/@@ssfree.c	declared in <mvs/subsys.h>
+src/clib/@@ssib.c	src/mvs/subsys/@@ssib.c	declared in <mvs/subsys.h>
+src/clib/@@ssinst.c	src/mvs/subsys/@@ssinst.c	declared in <mvs/subsys.h>
+src/clib/@@ssnew.c	src/mvs/subsys/@@ssnew.c	declared in <mvs/subsys.h>
+src/clib/@@ssrem.c	src/mvs/subsys/@@ssrem.c	declared in <mvs/subsys.h>
+src/clib/@@ssremn.c	src/mvs/subsys/@@ssremn.c	declared in <mvs/subsys.h>
+src/clib/@@start.c	src/mvs/crt/@@start.c	runtime start-up and anchors
+src/clib/@@stderr.c	src/stdio/@@stderr.c	stdio internals
+src/clib/@@stdin.c	src/stdio/@@stdin.c	stdio internals
+src/clib/@@stdout.c	src/stdio/@@stdout.c	stdio internals
+src/clib/@@steplb.c	src/mvs/apf/@@steplb.c	declared in <mvs/apf.h>
+src/clib/@@stow.c	src/mvs/pds/@@stow.c	declared in <mvs/pds.h>
+src/clib/@@stymd.c	src/time/@@stymd.c	date arithmetic behind <time.h>
+src/clib/@@sudo.c	src/mvs/apf/@@sudo.c	declared in <mvs/apf.h>
+src/clib/@@sukydo.c	src/mvs/apf/@@sukydo.c	declared in <mvs/apf.h>
+src/clib/@@super.c	src/mvs/apf/@@super.c	declared in <mvs/apf.h>
+src/clib/@@svfmap.c	src/mvs/subsys/@@svfmap.c	declared in <mvs/subsys.h>
+src/clib/@@svfree.c	src/mvs/subsys/@@svfree.c	declared in <mvs/subsys.h>
+src/clib/@@svnew.c	src/mvs/subsys/@@svnew.c	declared in <mvs/subsys.h>
+src/clib/@@svset.c	src/mvs/subsys/@@svset.c	declared in <mvs/subsys.h>
+src/clib/@@swap.c	src/s370/@@swap.c	declared in <s370/atomic.h>
+src/clib/@@tiot.c	src/mvs/dd/@@tiot.c	declared in <mvs/dd.h>
+src/clib/@@tminit.c	src/mvs/timer/@@tminit.c	declared in <mvs/timer.h>
+src/clib/@@tmrecb.c	src/mvs/timer/@@tmrecb.c	declared in <mvs/timer.h>
+src/clib/@@tmrece.c	src/mvs/timer/@@tmrece.c	declared in <mvs/timer.h>
+src/clib/@@tmreck.c	src/mvs/timer/@@tmreck.c	declared in <mvs/timer.h>
+src/clib/@@tmrfue.c	src/mvs/timer/@@tmrfue.c	declared in <mvs/timer.h>
+src/clib/@@tmrfuk.c	src/mvs/timer/@@tmrfuk.c	declared in <mvs/timer.h>
+src/clib/@@tmrfun.c	src/mvs/timer/@@tmrfun.c	declared in <mvs/timer.h>
+src/clib/@@tmrget.c	src/mvs/timer/@@tmrget.c	declared in <mvs/timer.h>
+src/clib/@@tmrid.c	src/mvs/timer/@@tmrid.c	declared in <mvs/timer.h>
+src/clib/@@tmsecs.c	src/mvs/timer/@@tmsecs.c	declared in <mvs/timer.h>
+src/clib/@@tmstop.c	src/mvs/timer/@@tmstop.c	declared in <mvs/timer.h>
+src/clib/@@tmstrt.c	src/mvs/timer/@@tmstrt.c	declared in <mvs/timer.h>
+src/clib/@@tmthrd.c	src/mvs/timer/@@tmthrd.c	declared in <mvs/timer.h>
+src/clib/@@tolow.c	src/ctype/@@tolow.c	the case tables behind <ctype.h>
+src/clib/@@toup.c	src/ctype/@@toup.c	the case tables behind <ctype.h>
+src/clib/@@tqedis.c	src/mvs/timer/@@tqedis.c	declared in <mvs/timer.h>
+src/clib/@@tqeena.c	src/mvs/timer/@@tqeena.c	declared in <mvs/timer.h>
+src/clib/@@tqeget.c	src/mvs/timer/@@tqeget.c	declared in <mvs/timer.h>
+src/clib/@@tqeprg.c	src/mvs/timer/@@tqeprg.c	declared in <mvs/timer.h>
+src/clib/@@tqerst.c	src/mvs/timer/@@tqerst.c	declared in <mvs/timer.h>
+src/clib/@@tqnew.c	src/mvs/timer/@@tqnew.c	declared in <mvs/timer.h>
+src/clib/@@try.c	src/mvs/recovery/@@try.c	declared in <mvs/recovery.h>
+src/clib/@@txacat.c	src/mvs/dynalloc/@@txacat.c	declared in <mvs/dynalloc.h>
+src/clib/@@txadel.c	src/mvs/dynalloc/@@txadel.c	declared in <mvs/dynalloc.h>
+src/clib/@@txakee.c	src/mvs/dynalloc/@@txakee.c	declared in <mvs/dynalloc.h>
+src/clib/@@txauca.c	src/mvs/dynalloc/@@txauca.c	declared in <mvs/dynalloc.h>
+src/clib/@@txbfal.c	src/mvs/dynalloc/@@txbfal.c	declared in <mvs/dynalloc.h>
+src/clib/@@txbfte.c	src/mvs/dynalloc/@@txbfte.c	declared in <mvs/dynalloc.h>
+src/clib/@@txbksz.c	src/mvs/dynalloc/@@txbksz.c	declared in <mvs/dynalloc.h>
+src/clib/@@txblk.c	src/mvs/dynalloc/@@txblk.c	declared in <mvs/dynalloc.h>
+src/clib/@@txbufl.c	src/mvs/dynalloc/@@txbufl.c	declared in <mvs/dynalloc.h>
+src/clib/@@txbufn.c	src/mvs/dynalloc/@@txbufn.c	declared in <mvs/dynalloc.h>
+src/clib/@@txbufo.c	src/mvs/dynalloc/@@txbufo.c	declared in <mvs/dynalloc.h>
+src/clib/@@txcat.c	src/mvs/dynalloc/@@txcat.c	declared in <mvs/dynalloc.h>
+src/clib/@@txclos.c	src/mvs/dynalloc/@@txclos.c	declared in <mvs/dynalloc.h>
+src/clib/@@txcopy.c	src/mvs/dynalloc/@@txcopy.c	declared in <mvs/dynalloc.h>
+src/clib/@@txcyl.c	src/mvs/dynalloc/@@txcyl.c	declared in <mvs/dynalloc.h>
+src/clib/@@txdcbd.c	src/mvs/dynalloc/@@txdcbd.c	declared in <mvs/dynalloc.h>
+src/clib/@@txddn.c	src/mvs/dynalloc/@@txddn.c	declared in <mvs/dynalloc.h>
+src/clib/@@txdel.c	src/mvs/dynalloc/@@txdel.c	declared in <mvs/dynalloc.h>
+src/clib/@@txden.c	src/mvs/dynalloc/@@txden.c	declared in <mvs/dynalloc.h>
+src/clib/@@txdest.c	src/mvs/dynalloc/@@txdest.c	declared in <mvs/dynalloc.h>
+src/clib/@@txdir.c	src/mvs/dynalloc/@@txdir.c	declared in <mvs/dynalloc.h>
+src/clib/@@txdmy.c	src/mvs/dynalloc/@@txdmy.c	declared in <mvs/dynalloc.h>
+src/clib/@@txdsn.c	src/mvs/dynalloc/@@txdsn.c	declared in <mvs/dynalloc.h>
+src/clib/@@txerop.c	src/mvs/dynalloc/@@txerop.c	declared in <mvs/dynalloc.h>
+src/clib/@@txexpd.c	src/mvs/dynalloc/@@txexpd.c	declared in <mvs/dynalloc.h>
+src/clib/@@txfcb.c	src/mvs/dynalloc/@@txfcb.c	declared in <mvs/dynalloc.h>
+src/clib/@@txform.c	src/mvs/dynalloc/@@txform.c	declared in <mvs/dynalloc.h>
+src/clib/@@txhold.c	src/mvs/dynalloc/@@txhold.c	declared in <mvs/dynalloc.h>
+src/clib/@@txinpu.c	src/mvs/dynalloc/@@txinpu.c	declared in <mvs/dynalloc.h>
+src/clib/@@txkeep.c	src/mvs/dynalloc/@@txkeep.c	declared in <mvs/dynalloc.h>
+src/clib/@@txkeyl.c	src/mvs/dynalloc/@@txkeyl.c	declared in <mvs/dynalloc.h>
+src/clib/@@txlabe.c	src/mvs/dynalloc/@@txlabe.c	declared in <mvs/dynalloc.h>
+src/clib/@@txlmct.c	src/mvs/dynalloc/@@txlmct.c	declared in <mvs/dynalloc.h>
+src/clib/@@txlrec.c	src/mvs/dynalloc/@@txlrec.c	declared in <mvs/dynalloc.h>
+src/clib/@@txmod.c	src/mvs/dynalloc/@@txmod.c	declared in <mvs/dynalloc.h>
+src/clib/@@txncp.c	src/mvs/dynalloc/@@txncp.c	declared in <mvs/dynalloc.h>
+src/clib/@@txnew.c	src/mvs/dynalloc/@@txnew.c	declared in <mvs/dynalloc.h>
+src/clib/@@txold.c	src/mvs/dynalloc/@@txold.c	declared in <mvs/dynalloc.h>
+src/clib/@@txorg.c	src/mvs/dynalloc/@@txorg.c	declared in <mvs/dynalloc.h>
+src/clib/@@txoutp.c	src/mvs/dynalloc/@@txoutp.c	declared in <mvs/dynalloc.h>
+src/clib/@@txpara.c	src/mvs/dynalloc/@@txpara.c	declared in <mvs/dynalloc.h>
+src/clib/@@txperm.c	src/mvs/dynalloc/@@txperm.c	declared in <mvs/dynalloc.h>
+src/clib/@@txpgm.c	src/mvs/dynalloc/@@txpgm.c	declared in <mvs/dynalloc.h>
+src/clib/@@txpriv.c	src/mvs/dynalloc/@@txpriv.c	declared in <mvs/dynalloc.h>
+src/clib/@@txprot.c	src/mvs/dynalloc/@@txprot.c	declared in <mvs/dynalloc.h>
+src/clib/@@txrddn.c	src/mvs/dynalloc/@@txrddn.c	declared in <mvs/dynalloc.h>
+src/clib/@@txrecf.c	src/mvs/dynalloc/@@txrecf.c	declared in <mvs/dynalloc.h>
+src/clib/@@txretp.c	src/mvs/dynalloc/@@txretp.c	declared in <mvs/dynalloc.h>
+src/clib/@@txrlse.c	src/mvs/dynalloc/@@txrlse.c	declared in <mvs/dynalloc.h>
+src/clib/@@txrnd.c	src/mvs/dynalloc/@@txrnd.c	declared in <mvs/dynalloc.h>
+src/clib/@@txseq.c	src/mvs/dynalloc/@@txseq.c	declared in <mvs/dynalloc.h>
+src/clib/@@txshr.c	src/mvs/dynalloc/@@txshr.c	declared in <mvs/dynalloc.h>
+src/clib/@@txspac.c	src/mvs/dynalloc/@@txspac.c	declared in <mvs/dynalloc.h>
+src/clib/@@txsyso.c	src/mvs/dynalloc/@@txsyso.c	declared in <mvs/dynalloc.h>
+src/clib/@@txterm.c	src/mvs/dynalloc/@@txterm.c	declared in <mvs/dynalloc.h>
+src/clib/@@txtrk.c	src/mvs/dynalloc/@@txtrk.c	declared in <mvs/dynalloc.h>
+src/clib/@@txtrtc.c	src/mvs/dynalloc/@@txtrtc.c	declared in <mvs/dynalloc.h>
+src/clib/@@txucat.c	src/mvs/dynalloc/@@txucat.c	declared in <mvs/dynalloc.h>
+src/clib/@@txucs.c	src/mvs/dynalloc/@@txucs.c	declared in <mvs/dynalloc.h>
+src/clib/@@txunal.c	src/mvs/dynalloc/@@txunal.c	declared in <mvs/dynalloc.h>
+src/clib/@@txunct.c	src/mvs/dynalloc/@@txunct.c	declared in <mvs/dynalloc.h>
+src/clib/@@txunit.c	src/mvs/dynalloc/@@txunit.c	declared in <mvs/dynalloc.h>
+src/clib/@@txvlct.c	src/mvs/dynalloc/@@txvlct.c	declared in <mvs/dynalloc.h>
+src/clib/@@txvols.c	src/mvs/dynalloc/@@txvols.c	declared in <mvs/dynalloc.h>
+src/clib/@@txvseq.c	src/mvs/dynalloc/@@txvseq.c	declared in <mvs/dynalloc.h>
+src/clib/@@tzget.c	src/time/@@tzget.c	declared in <time.h>
+src/clib/@@tzset.c	src/time/@@tzset.c	declared in <time.h>
+src/clib/@@uastep.c	src/mvs/apf/@@uastep.c	declared in <mvs/apf.h>
+src/clib/@@uatask.c	src/mvs/apf/@@uatask.c	declared in <mvs/apf.h>
+src/clib/@@udec.c	src/s370/@@udec.c	declared in <s370/atomic.h>
+src/clib/@@uinc.c	src/s370/@@uinc.c	declared in <s370/atomic.h>
+src/clib/@@userex.c	src/stdlib/@@userex.c	atexit()/on_exit() table and on_exit()
+src/clib/@@ver.c	src/ext/version/@@ver.c	declared in <ext/version.h>
+src/clib/@@vscinv.c	src/mvs/vsam/@@vscinv.c	declared in <mvs/vsam.h>
+src/clib/@@vsclos.c	src/mvs/vsam/@@vsclos.c	declared in <mvs/vsam.h>
+src/clib/@@vsclr.c	src/mvs/vsam/@@vsclr.c	declared in <mvs/vsam.h>
+src/clib/@@vsdel.c	src/mvs/vsam/@@vsdel.c	declared in <mvs/vsam.h>
+src/clib/@@vseof.c	src/mvs/vsam/@@vseof.c	declared in <mvs/vsam.h>
+src/clib/@@vserr.c	src/mvs/vsam/@@vserr.c	declared in <mvs/vsam.h>
+src/clib/@@vslrec.c	src/mvs/vsam/@@vslrec.c	declared in <mvs/vsam.h>
+src/clib/@@vsmdfy.c	src/mvs/vsam/@@vsmdfy.c	declared in <mvs/vsam.h>
+src/clib/@@vsopen.c	src/mvs/vsam/@@vsopen.c	declared in <mvs/vsam.h>
+src/clib/@@vsread.c	src/mvs/vsam/@@vsread.c	declared in <mvs/vsam.h>
+src/clib/@@vsshwc.c	src/mvs/vsam/@@vsshwc.c	declared in <mvs/vsam.h>
+src/clib/@@vssteq.c	src/mvs/vsam/@@vssteq.c	declared in <mvs/vsam.h>
+src/clib/@@vsstge.c	src/mvs/vsam/@@vsstge.c	declared in <mvs/vsam.h>
+src/clib/@@vstell.c	src/mvs/vsam/@@vstell.c	declared in <mvs/vsam.h>
+src/clib/@@vsupdt.c	src/mvs/vsam/@@vsupdt.c	declared in <mvs/vsam.h>
+src/clib/@@vswrit.c	src/mvs/vsam/@@vswrit.c	declared in <mvs/vsam.h>
+src/clib/@@vsxeof.c	src/mvs/vsam/@@vsxeof.c	VSAM exit handlers
+src/clib/@@vsxerr.c	src/mvs/vsam/@@vsxerr.c	VSAM exit handlers
+src/clib/@@wsaget.c	src/mvs/wsa/@@wsaget.c	declared in <mvs/wsa.h>
+src/clib/@@wtotb.c	src/mvs/wto/@@wtotb.c	declared in <mvs/wto.h>
+src/clib/@@xmpost.c	src/mvs/xmem/@@xmpost.c	declared in <mvs/xmem.h>
+src/clib/@@ymdts.c	src/time/@@ymdts.c	date arithmetic behind <time.h>
+src/clib/@@ytd.c	src/time/@@ytd.c	date arithmetic behind <time.h>
+src/clib/@dbleps.c	src/float/@dbleps.c	the constants behind <float.h>
+src/clib/@dblmax.c	src/float/@dblmax.c	the constants behind <float.h>
+src/clib/@dblmin.c	src/float/@dblmin.c	the constants behind <float.h>
+src/clib/@flteps.c	src/float/@flteps.c	the constants behind <float.h>
+src/clib/@fltmax.c	src/float/@fltmax.c	the constants behind <float.h>
+src/clib/@fltmin.c	src/float/@fltmin.c	the constants behind <float.h>
+src/clib/abort.c	src/stdlib/abort.c	declared in <stdlib.h>
+src/clib/abs.c	src/stdlib/abs.c	declared in <stdlib.h>
+src/clib/acos.c	src/math/acos.c	declared in <math.h>
+src/clib/asctime.c	src/time/asctime.c	declared in <time.h>
+src/clib/asin.c	src/math/asin.c	declared in <math.h>
+src/clib/atan.c	src/math/atan.c	declared in <math.h>
+src/clib/atan2.c	src/math/atan2.c	declared in <math.h>
+src/clib/atexit.c	src/stdlib/atexit.c	declared in <stdlib.h>
+src/clib/atof.c	src/stdlib/atof.c	declared in <stdlib.h>
+src/clib/atoi.c	src/stdlib/atoi.c	declared in <stdlib.h>
+src/clib/atol.c	src/stdlib/atol.c	declared in <stdlib.h>
+src/clib/bsearch.c	src/stdlib/bsearch.c	declared in <stdlib.h>
+src/clib/calloc.c	src/stdlib/calloc.c	declared in <stdlib.h>
+src/clib/ceil.c	src/math/ceil.c	declared in <math.h>
+src/clib/clearerr.c	src/stdio/clearerr.c	declared in <stdio.h>
+src/clib/clibary.c	src/ext/array/clibary.c	deprecated global of the array API
+src/clib/clock.c	src/time/clock.c	declared in <time.h>
+src/clib/cos.c	src/math/cos.c	declared in <math.h>
+src/clib/cosh.c	src/math/cosh.c	declared in <math.h>
+src/clib/ctime.c	src/time/ctime.c	declared in <time.h>
+src/clib/difftime.c	src/time/difftime.c	declared in <time.h>
+src/clib/div.c	src/stdlib/div.c	declared in <stdlib.h>
+src/clib/exit.c	src/stdlib/exit.c	declared in <stdlib.h>
+src/clib/exp.c	src/math/exp.c	declared in <math.h>
+src/clib/fabs.c	src/math/fabs.c	declared in <math.h>
+src/clib/fclose.c	src/stdio/fclose.c	declared in <stdio.h>
+src/clib/fctprtf@.c	src/stdio/fctprtf@.c	declared only in src/internal/printf.h
+src/clib/feof.c	src/stdio/feof.c	declared in <stdio.h>
+src/clib/ferror.c	src/stdio/ferror.c	declared in <stdio.h>
+src/clib/fflush.c	src/stdio/fflush.c	declared in <stdio.h>
+src/clib/fgetc.c	src/stdio/fgetc.c	declared in <stdio.h>
+src/clib/fgetpos.c	src/stdio/fgetpos.c	declared in <stdio.h>
+src/clib/fgets.c	src/stdio/fgets.c	declared in <stdio.h>
+src/clib/floor.c	src/math/floor.c	declared in <math.h>
+src/clib/fmod.c	src/math/fmod.c	declared in <math.h>
+src/clib/fopen.c	src/stdio/fopen.c	declared in <stdio.h>
+src/clib/fprintf.c	src/stdio/fprintf.c	declared in <stdio.h>
+src/clib/fputc.c	src/stdio/fputc.c	declared in <stdio.h>
+src/clib/fputs.c	src/stdio/fputs.c	declared in <stdio.h>
+src/clib/fread.c	src/stdio/fread.c	declared in <stdio.h>
+src/clib/free.c	src/stdlib/free.c	declared in <stdlib.h>
+src/clib/freopen.c	src/stdio/freopen.c	declared in <stdio.h>
+src/clib/frexp.c	src/math/frexp.c	declared in <math.h>
+src/clib/fscanf.c	src/stdio/fscanf.c	declared in <stdio.h>
+src/clib/fseek.c	src/stdio/fseek.c	declared in <stdio.h>
+src/clib/fsetpos.c	src/stdio/fsetpos.c	declared in <stdio.h>
+src/clib/ftell.c	src/stdio/ftell.c	declared in <stdio.h>
+src/clib/fwrite.c	src/stdio/fwrite.c	declared in <stdio.h>
+src/clib/getc.c	src/stdio/getc.c	declared in <stdio.h>
+src/clib/getchar.c	src/stdio/getchar.c	declared in <stdio.h>
+src/clib/getenv.c	src/mvs/env/getenv.c	declared in <mvs/env.h>
+src/clib/getenvi.c	src/mvs/env/getenvi.c	declared in <mvs/env.h>
+src/clib/getmain.c	src/mvs/storage/getmain.c	declared in <mvs/storage.h>
+src/clib/gets.c	src/stdio/gets.c	declared in <stdio.h>
+src/clib/gmtime.c	src/time/gmtime.c	declared in <time.h>
+src/clib/gmtimer.c	src/time/gmtimer.c	declared in <time.h>
+src/clib/heapsp.c	src/mvs/storage/heapsp.c	declared in <mvs/storage.h>
+src/clib/hello.c	attic/hello.c	a program with main(), not library code
+src/clib/idcams.c	src/mvs/idcams/idcams.c	declared in <mvs/idcams.h>
+src/clib/iefssreq.c	src/mvs/subsys/iefssreq.c	declared in <ibm/mvs/iefssobh.h> (an ibm/ header declaring a function, see #278)
+src/clib/ikjct441.c	src/mvs/tso/ikjct441.c	TSO CLIST variable access
+src/clib/initssob.c	src/mvs/jes2/initssob.c	declared in <mvs/jes2.h>
+src/clib/isalnum.c	src/ctype/isalnum.c	declared in <ctype.h>
+src/clib/isalpha.c	src/ctype/isalpha.c	declared in <ctype.h>
+src/clib/iscntrl.c	src/ctype/iscntrl.c	declared in <ctype.h>
+src/clib/isdigit.c	src/ctype/isdigit.c	declared in <ctype.h>
+src/clib/isgraph.c	src/ctype/isgraph.c	declared in <ctype.h>
+src/clib/islower.c	src/ctype/islower.c	declared in <ctype.h>
+src/clib/isprint.c	src/ctype/isprint.c	declared in <ctype.h>
+src/clib/ispunct.c	src/ctype/ispunct.c	declared in <ctype.h>
+src/clib/isspace.c	src/ctype/isspace.c	declared in <ctype.h>
+src/clib/isupper.c	src/ctype/isupper.c	declared in <ctype.h>
+src/clib/isxdigit.c	src/ctype/isxdigit.c	declared in <ctype.h>
+src/clib/labs.c	src/stdlib/labs.c	declared in <stdlib.h>
+src/clib/ldexp.c	src/math/ldexp.c	declared in <math.h>
+src/clib/ldiv.c	src/stdlib/ldiv.c	declared in <stdlib.h>
+src/clib/loadenv.c	src/mvs/env/loadenv.c	declared in <mvs/env.h>
+src/clib/localtim.c	src/time/localtim.c	declared in <time.h>
+src/clib/localtmr.c	src/time/localtmr.c	declared in <time.h>
+src/clib/log.c	src/math/log.c	declared in <math.h>
+src/clib/log10.c	src/math/log10.c	declared in <math.h>
+src/clib/longjmp.c	src/setjmp/longjmp.c	declared in <setjmp.h>
+src/clib/malloc.c	src/stdlib/malloc.c	declared in <stdlib.h>
+src/clib/mblen.c	src/stdlib/mblen.c	declared in <stdlib.h>
+src/clib/mbstowcs.c	src/stdlib/mbstowcs.c	declared in <stdlib.h>
+src/clib/mbtowc.c	src/stdlib/mbtowc.c	declared in <stdlib.h>
+src/clib/memchr.c	src/string/memchr.c	declared in <string.h>
+src/clib/memcmp.c	src/string/memcmp.c	declared in <string.h>
+src/clib/memcpy.c	src/string/memcpy.c	declared in <string.h>
+src/clib/memcpyp.c	src/ext/strutil/memcpyp.c	declared in <ext/strutil.h>
+src/clib/memmove.c	src/string/memmove.c	declared in <string.h>
+src/clib/memset.c	src/string/memset.c	declared in <string.h>
+src/clib/mktime.c	src/time/mktime.c	declared in <time.h>
+src/clib/modf.c	src/math/modf.c	declared in <math.h>
+src/clib/mtxavail.c	src/mvs/mutex/mtxavail.c	declared in <mvs/mutex.h>
+src/clib/mtxclup.c	src/mvs/mutex/mtxclup.c	declared in <mvs/mutex.h>
+src/clib/mtxfree.c	src/mvs/mutex/mtxfree.c	declared in <mvs/mutex.h>
+src/clib/mtxheld.c	src/mvs/mutex/mtxheld.c	declared in <mvs/mutex.h>
+src/clib/mtxinit.c	src/mvs/mutex/mtxinit.c	declared in <mvs/mutex.h>
+src/clib/mtxlock.c	src/mvs/mutex/mtxlock.c	declared in <mvs/mutex.h>
+src/clib/mtxnew.c	src/mvs/mutex/mtxnew.c	declared in <mvs/mutex.h>
+src/clib/mtxnheld.c	src/mvs/mutex/mtxnheld.c	declared in <mvs/mutex.h>
+src/clib/mtxtry.c	src/mvs/mutex/mtxtry.c	declared in <mvs/mutex.h>
+src/clib/mtxunlk.c	src/mvs/mutex/mtxunlk.c	declared in <mvs/mutex.h>
+src/clib/on@exit.c	src/stdlib/on@exit.c	atexit()/on_exit() table and on_exit()
+src/clib/perror.c	src/stdio/perror.c	declared in <stdio.h>
+src/clib/pow.c	src/math/pow.c	declared in <math.h>
+src/clib/printf.c	src/stdio/printf.c	declared in <stdio.h>
+src/clib/printf@.c	src/stdio/printf@.c	declared only in src/internal/printf.h
+src/clib/putc.c	src/stdio/putc.c	declared in <stdio.h>
+src/clib/putchar.c	src/stdio/putchar.c	declared in <stdio.h>
+src/clib/putenv.c	src/stdlib/putenv.c	declared in <stdlib.h>
+src/clib/puts.c	src/stdio/puts.c	declared in <stdio.h>
+src/clib/qsort.c	src/stdlib/qsort.c	declared in <stdlib.h>
+src/clib/raise.c	src/signal/raise.c	declared in <signal.h>
+src/clib/rand.c	src/stdlib/rand.c	declared in <stdlib.h>
+src/clib/rclose.c	src/mvs/rfile/rclose.c	declared in <mvs/rfile.h>
+src/clib/realloc.c	src/stdlib/realloc.c	declared in <stdlib.h>
+src/clib/remove.c	src/stdio/remove.c	declared in <stdio.h>
+src/clib/rename.c	src/stdio/rename.c	declared in <stdio.h>
+src/clib/rewind.c	src/stdio/rewind.c	declared in <stdio.h>
+src/clib/ropen.c	src/mvs/rfile/ropen.c	declared in <mvs/rfile.h>
+src/clib/rread.c	src/mvs/rfile/rread.c	declared in <mvs/rfile.h>
+src/clib/rwrite.c	src/mvs/rfile/rwrite.c	declared in <mvs/rfile.h>
+src/clib/scanf.c	src/stdio/scanf.c	declared in <stdio.h>
+src/clib/setbuf.c	src/stdio/setbuf.c	declared in <stdio.h>
+src/clib/setenv.c	src/stdlib/setenv.c	declared in <stdlib.h>
+src/clib/setenvi.c	src/mvs/env/setenvi.c	declared in <mvs/env.h>
+src/clib/setlocal.c	src/locale/setlocal.c	declared in <locale.h>
+src/clib/setvbuf.c	src/stdio/setvbuf.c	declared in <stdio.h>
+src/clib/signal.c	src/signal/signal.c	signal()
+src/clib/sin.c	src/math/sin.c	declared in <math.h>
+src/clib/sinh.c	src/math/sinh.c	declared in <math.h>
+src/clib/sleep.c	src/unistd/sleep.c	declared in <unistd.h>
+src/clib/snprintf.c	src/stdio/snprintf.c	declared in <stdio.h>
+src/clib/snprtf@.c	src/stdio/snprtf@.c	declared only in src/internal/printf.h
+src/clib/sprintf.c	src/stdio/sprintf.c	declared in <stdio.h>
+src/clib/sprintf@.c	src/stdio/sprintf@.c	declared only in src/internal/printf.h
+src/clib/sqrt.c	src/math/sqrt.c	declared in <math.h>
+src/clib/srand.c	src/stdlib/srand.c	declared in <stdlib.h>
+src/clib/sscanf.c	src/stdio/sscanf.c	declared in <stdio.h>
+src/clib/strcasecmp.c	src/strings/strcasecmp.c	declared in <strings.h>
+src/clib/strcat.c	src/string/strcat.c	declared in <string.h>
+src/clib/strchr.c	src/string/strchr.c	declared in <string.h>
+src/clib/strcmp.c	src/string/strcmp.c	declared in <string.h>
+src/clib/strcoll.c	src/string/strcoll.c	declared in <string.h>
+src/clib/strcpy.c	src/string/strcpy.c	declared in <string.h>
+src/clib/strcpyp.c	src/ext/strutil/strcpyp.c	declared in <ext/strutil.h>
+src/clib/strcspn.c	src/string/strcspn.c	declared in <string.h>
+src/clib/strdup.c	src/string/strdup.c	declared in <string.h>
+src/clib/strerror.c	src/string/strerror.c	declared in <string.h>
+src/clib/strftime.c	src/time/strftime.c	declared in <time.h>
+src/clib/strlen.c	src/string/strlen.c	declared in <string.h>
+src/clib/strncasecmp.c	src/strings/strncasecmp.c	declared in <strings.h>
+src/clib/strncat.c	src/string/strncat.c	declared in <string.h>
+src/clib/strncmp.c	src/string/strncmp.c	declared in <string.h>
+src/clib/strncpy.c	src/string/strncpy.c	declared in <string.h>
+src/clib/strpbrk.c	src/string/strpbrk.c	declared in <string.h>
+src/clib/strrchr.c	src/string/strrchr.c	declared in <string.h>
+src/clib/strspn.c	src/string/strspn.c	declared in <string.h>
+src/clib/strstr.c	src/string/strstr.c	declared in <string.h>
+src/clib/strtod.c	src/stdlib/strtod.c	declared in <stdlib.h>
+src/clib/strtok.c	src/string/strtok.c	declared in <string.h>
+src/clib/strtol.c	src/stdlib/strtol.c	declared in <stdlib.h>
+src/clib/strtoul.c	src/stdlib/strtoul.c	declared in <stdlib.h>
+src/clib/strxfrm.c	src/string/strxfrm.c	declared in <string.h>
+src/clib/svcmain.c	src/mvs/svc/svcmain.c	declared only in src/internal/clibsvc.h
+src/clib/system.c	src/stdlib/system.c	declared in <stdlib.h>
+src/clib/tan.c	src/math/tan.c	declared in <math.h>
+src/clib/tanh.c	src/math/tanh.c	declared in <math.h>
+src/clib/testdsab.c	attic/testdsab.c	a program with main(), not library code
+src/clib/testlstv.c	attic/testlstv.c	a program with main(), not library code
+src/clib/time.c	src/time/time.c	declared in <time.h>
+src/clib/tmpfile.c	src/stdio/tmpfile.c	declared in <stdio.h>
+src/clib/tmpnam.c	src/stdio/tmpnam.c	declared in <stdio.h>
+src/clib/tolower.c	src/ctype/tolower.c	declared in <ctype.h>
+src/clib/toupper.c	src/ctype/toupper.c	declared in <ctype.h>
+src/clib/tsocmd.c	src/mvs/tso/tsocmd.c	declared in <mvs/tso.h>
+src/clib/tsocmdf.c	src/mvs/tso/tsocmdf.c	declared in <mvs/tso.h>
+src/clib/tzset.c	src/time/tzset.c	declared in <time.h>
+src/clib/ungetc.c	src/stdio/ungetc.c	declared in <stdio.h>
+src/clib/unsetenv.c	src/stdlib/unsetenv.c	declared in <stdlib.h>
+src/clib/usleep.c	src/unistd/usleep.c	declared in <unistd.h>
+src/clib/vfprintf.c	src/stdio/vfprintf.c	declared in <stdio.h>
+src/clib/vscinv.c	src/mvs/vsam/vscinv.c	declared in <mvs/vsam.h>
+src/clib/vsclear.c	src/mvs/vsam/vsclear.c	declared in <mvs/vsam.h>
+src/clib/vsclose.c	src/mvs/vsam/vsclose.c	declared in <mvs/vsam.h>
+src/clib/vsdelete.c	src/mvs/vsam/vsdelete.c	declared in <mvs/vsam.h>
+src/clib/vseof.c	src/mvs/vsam/vseof.c	declared in <mvs/vsam.h>
+src/clib/vserror.c	src/mvs/vsam/vserror.c	declared in <mvs/vsam.h>
+src/clib/vslrecl.c	src/mvs/vsam/vslrecl.c	declared in <mvs/vsam.h>
+src/clib/vsnprint.c	src/stdio/vsnprint.c	declared in <stdio.h>
+src/clib/vsnprtf@.c	src/stdio/vsnprtf@.c	declared only in src/internal/printf.h
+src/clib/vsopen.c	src/mvs/vsam/vsopen.c	declared in <mvs/vsam.h>
+src/clib/vsprintf.c	src/stdio/vsprintf.c	declared in <stdio.h>
+src/clib/vsprtf@.c	src/stdio/vsprtf@.c	declared only in src/internal/printf.h
+src/clib/vsread.c	src/mvs/vsam/vsread.c	declared in <mvs/vsam.h>
+src/clib/vssteq.c	src/mvs/vsam/vssteq.c	declared in <mvs/vsam.h>
+src/clib/vsstge.c	src/mvs/vsam/vsstge.c	declared in <mvs/vsam.h>
+src/clib/vstell.c	src/mvs/vsam/vstell.c	declared in <mvs/vsam.h>
+src/clib/vsupdate.c	src/mvs/vsam/vsupdate.c	declared in <mvs/vsam.h>
+src/clib/vswrite.c	src/mvs/vsam/vswrite.c	declared in <mvs/vsam.h>
+src/clib/vvprintf.c	src/stdio/vvprintf.c	declared only in src/internal/fileio.h
+src/clib/vvscanf.c	src/stdio/vvscanf.c	declared only in src/internal/fileio.h
+src/clib/vwtof.c	src/mvs/wto/vwtof.c	declared in <mvs/wto.h>
+src/clib/vwtorf.c	src/mvs/wto/vwtorf.c	declared in <mvs/wto.h>
+src/clib/wcstombs.c	src/stdlib/wcstombs.c	declared in <stdlib.h>
+src/clib/wctomb.c	src/stdlib/wctomb.c	declared in <stdlib.h>
+src/clib/wto.c	src/mvs/wto/wto.c	declared in <mvs/wto.h>
+src/clib/wtodump.c	src/mvs/wto/wtodump.c	declared in <mvs/wto.h>
+src/clib/wtodumpf.c	src/mvs/wto/wtodumpf.c	declared in <mvs/wto.h>
+src/clib/wtof.c	src/mvs/wto/wtof.c	declared in <mvs/wto.h>
+src/clib/wtoline.c	src/mvs/wto/wtoline.c	WTO helper
+src/clib/wtor.c	src/mvs/wto/wtor.c	declared in <mvs/wto.h>
+src/clib/wtorf.c	src/mvs/wto/wtorf.c	declared in <mvs/wto.h>
+src/cmtt/cmttfree.c	src/mvs/mtt/cmttfree.c	declared in <mvs/mtt.h>
+src/cmtt/cmttget.c	src/mvs/mtt/cmttget.c	declared in <mvs/mtt.h>
+src/cmtt/cmttnew.c	src/mvs/mtt/cmttnew.c	declared in <mvs/mtt.h>
+src/cmtt/cmtttest.c	attic/cmtttest.c	a program with main(), not library code
+src/dyn75/@@75.c	src/net/dyn75/@@75.c	the DYN75 provider
+src/dyn75/@@75acce.c	src/net/dyn75/@@75acce.c	the DYN75 provider
+src/dyn75/@@75bind.c	src/net/dyn75/@@75bind.c	the DYN75 provider
+src/dyn75/@@75clos.c	src/net/dyn75/@@75clos.c	the DYN75 provider
+src/dyn75/@@75conn.c	src/net/dyn75/@@75conn.c	the DYN75 provider
+src/dyn75/@@75exit.c	src/net/dyn75/@@75exit.c	the DYN75 provider
+src/dyn75/@@75gabn.c	src/net/dyn75/@@75gabn.c	the DYN75 provider
+src/dyn75/@@75ghba.c	src/net/dyn75/@@75ghba.c	the DYN75 provider
+src/dyn75/@@75ghbn.c	src/net/dyn75/@@75ghbn.c	the DYN75 provider
+src/dyn75/@@75init.c	src/net/dyn75/@@75init.c	the DYN75 provider
+src/dyn75/@@75ioct.c	src/net/dyn75/@@75ioct.c	the DYN75 provider
+src/dyn75/@@75list.c	src/net/dyn75/@@75list.c	the DYN75 provider
+src/dyn75/@@75pnam.c	src/net/dyn75/@@75pnam.c	the DYN75 provider
+src/dyn75/@@75recv.c	src/net/dyn75/@@75recv.c	the DYN75 provider
+src/dyn75/@@75sele.c	src/net/dyn75/@@75sele.c	the DYN75 provider
+src/dyn75/@@75selx.c	src/net/dyn75/@@75selx.c	the DYN75 provider
+src/dyn75/@@75send.c	src/net/dyn75/@@75send.c	the DYN75 provider
+src/dyn75/@@75snam.c	src/net/dyn75/@@75snam.c	the DYN75 provider
+src/dyn75/@@75sock.c	src/net/dyn75/@@75sock.c	the DYN75 provider
+src/dyn75/@@75vect.c	src/net/dyn75/@@75vect.c	the DYN75 provider
+src/dyn75/asc2ebc.c	src/net/dyn75/asc2ebc.c	the DYN75 provider
+src/dyn75/ebc2asc.c	src/net/dyn75/ebc2asc.c	the DYN75 provider
+src/internal/bsam.h	src/internal/bsam.h	shared private header, stays
+src/internal/clibres.h	src/internal/clibres.h	shared private header, stays
+src/internal/clibspl.h	src/internal/clibspl.h	shared private header, stays
+src/internal/clibsvc.h	src/internal/clibsvc.h	shared private header, stays
+src/internal/crtanchor.h	src/internal/crtanchor.h	shared private header, stays
+src/internal/dyn75.h	src/net/dyn75/dyn75.h	private to the DYN75 provider
+src/internal/enqpl.h	src/internal/enqpl.h	shared private header, stays
+src/internal/fileio.h	src/internal/fileio.h	shared private header, stays
+src/internal/loadmod.h	src/internal/loadmod.h	shared private header, stays
+src/internal/printf.h	src/internal/printf.h	shared private header, stays
+src/internal/x75.h	src/net/dyn75/x75.h	private to the DYN75 provider
+src/jes/jescanj.c	src/mvs/jes2/jescanj.c	declared in <mvs/jes2.h>
+src/jes/jesclose.c	src/mvs/jes2/jesclose.c	declared in <mvs/jes2.h>
+src/jes/jesdelj.c	src/mvs/jes2/jesdelj.c	declared in <mvs/jes2.h>
+src/jes/jesircl2.c	src/mvs/jes2/jesircl2.c	declared in <mvs/jes2.h>
+src/jes/jesircls.c	src/mvs/jes2/jesircls.c	declared in <mvs/jes2.h>
+src/jes/jesiropn.c	src/mvs/jes2/jesiropn.c	declared in <mvs/jes2.h>
+src/jes/jesirput.c	src/mvs/jes2/jesirput.c	declared in <mvs/jes2.h>
+src/jes/jesjob.c	src/mvs/jes2/jesjob.c	declared in <mvs/jes2.h>
+src/jes/jesjobf1.c	src/mvs/jes2/jesjobf1.c	declared in <mvs/jes2.h>
+src/jes/jesjobfr.c	src/mvs/jes2/jesjobfr.c	declared in <mvs/jes2.h>
+src/jes/jesopen.c	src/mvs/jes2/jesopen.c	declared in <mvs/jes2.h>
+src/jes/jesprb.c	src/mvs/jes2/jesprb.c	declared only in src/jes/jesprb.h
+src/jes/jesprb.h	src/mvs/jes2/jesprb.h	private to the JES2 sources
+src/jes/jesprint.c	src/mvs/jes2/jesprint.c	declared in <mvs/jes2.h>
+src/jes/jesreque.c	src/mvs/jes2/jesreque.c	declared in <mvs/jes2.h>
+src/jes/jesxdone.c	src/mvs/jes2/jesxdone.c	declared in <mvs/jes2.h>
+src/jes/jesxwrtr.c	src/mvs/jes2/jesxwrtr.c	declared in <mvs/jes2.h>
+src/os/osbclose.c	src/mvs/osio/osbclose.c	declared in <mvs/osio.h>
+src/os/osbdcb.c	src/mvs/osio/osbdcb.c	declared in <mvs/osio.h>
+src/os/osbopen.c	src/mvs/osio/osbopen.c	declared in <mvs/osio.h>
+src/os/oscheck.c	src/mvs/osio/oscheck.c	declared in <mvs/osio.h>
+src/os/osdclose.c	src/mvs/osio/osdclose.c	declared in <mvs/osio.h>
+src/os/osddcb.c	src/mvs/osio/osddcb.c	declared in <mvs/osio.h>
+src/os/osdopen.c	src/mvs/osio/osdopen.c	declared in <mvs/osio.h>
+src/os/osdread.c	src/mvs/osio/osdread.c	declared in <mvs/osio.h>
+src/os/osdwrite.c	src/mvs/osio/osdwrite.c	declared in <mvs/osio.h>
+src/os/osread.c	src/mvs/osio/osread.c	declared in <mvs/osio.h>
+src/os/oswrite.c	src/mvs/osio/oswrite.c	declared in <mvs/osio.h>
+src/os/osxcalc.c	src/mvs/osio/osxcalc.c	declared in <mvs/osio.h>
+src/os/osxclose.c	src/mvs/osio/osxclose.c	declared in <mvs/osio.h>
+src/os/osxdcb.c	src/mvs/osio/osxdcb.c	declared in <mvs/osio.h>
+src/os/osxopen.c	src/mvs/osio/osxopen.c	declared in <mvs/osio.h>
+src/os/osxread.c	src/mvs/osio/osxread.c	declared in <mvs/osio.h>
+src/os/osxwrite.c	src/mvs/osio/osxwrite.c	declared in <mvs/osio.h>
+src/os/rdjfcb.c	src/mvs/dd/rdjfcb.c	declared in <ibm/mvs/iefjfcbn.h> (an ibm/ header declaring a function, see #278)
+src/os/trkcalc.c	src/mvs/dasd/trkcalc.c	declared in <mvs/dasd.h>
+src/racf/racauth.c	src/mvs/racf/racauth.c	declared in <mvs/racf.h>
+src/racf/racgacee.c	src/mvs/racf/racgacee.c	declared in <mvs/racf.h>
+src/racf/raclgout.c	src/mvs/racf/raclgout.c	declared in <mvs/racf.h>
+src/racf/raclogin.c	src/mvs/racf/raclogin.c	declared in <mvs/racf.h>
+src/racf/racsacee.c	src/mvs/racf/racsacee.c	declared in <mvs/racf.h>
+src/smf/smfactive.c	src/mvs/smf/smfactive.c	declared in <mvs/smf.h>
+src/smf/smfinit.c	src/mvs/smf/smfinit.c	declared in <mvs/smf.h>
+src/smf/smfwrite.c	src/mvs/smf/smfwrite.c	declared in <mvs/smf.h>
+src/thdmgr/@@cminit.c	src/mvs/thread/@@cminit.c	declared in <mvs/thread.h>
+src/thdmgr/@@cmqadd.c	src/mvs/thread/@@cmqadd.c	declared in <mvs/thread.h>
+src/thdmgr/@@cmqdel.c	src/mvs/thread/@@cmqdel.c	declared in <mvs/thread.h>
+src/thdmgr/@@cmterm.c	src/mvs/thread/@@cmterm.c	declared in <mvs/thread.h>
+src/thdmgr/@@cmwadd.c	src/mvs/thread/@@cmwadd.c	declared in <mvs/thread.h>
+src/thdmgr/@@cmwdel.c	src/mvs/thread/@@cmwdel.c	declared in <mvs/thread.h>
+src/thdmgr/@@cmwshu.c	src/mvs/thread/@@cmwshu.c	declared in <mvs/thread.h>
+src/thdmgr/@@cmwwat.c	src/mvs/thread/@@cmwwat.c	declared in <mvs/thread.h>
+src/time64/calendar.h	src/ext/time64/calendar.h	private to the time64 sources
+src/time64/tm64asc.c	src/ext/time64/tm64asc.c	declared in <ext/time64.h>
+src/time64/tm64ascr.c	src/ext/time64/tm64ascr.c	declared in <ext/time64.h>
+src/time64/tm64clck.c	src/ext/time64/tm64clck.c	declared in <ext/time64.h>
+src/time64/tm64cti.c	src/ext/time64/tm64cti.c	declared in <ext/time64.h>
+src/time64/tm64ctir.c	src/ext/time64/tm64ctir.c	declared in <ext/time64.h>
+src/time64/tm64dim.c	src/ext/time64/tm64dim.c	declared only in src/time64/calendar.h
+src/time64/tm64dtim.c	src/ext/time64/tm64dtim.c	declared in <ext/time64.h>
+src/time64/tm64gmt.c	src/ext/time64/tm64gmt.c	declared in <ext/time64.h>
+src/time64/tm64gmtr.c	src/ext/time64/tm64gmtr.c	declared in <ext/time64.h>
+src/time64/tm64jdbm.c	src/ext/time64/tm64jdbm.c	declared only in src/time64/calendar.h
+src/time64/tm64ltm.c	src/ext/time64/tm64ltm.c	declared in <ext/time64.h>
+src/time64/tm64ltmr.c	src/ext/time64/tm64ltmr.c	declared in <ext/time64.h>
+src/time64/tm64mclk.c	src/ext/time64/tm64mclk.c	declared in <ext/time64.h>
+src/time64/tm64mcti.c	src/ext/time64/tm64mcti.c	declared in <ext/time64.h>
+src/time64/tm64mgmt.c	src/ext/time64/tm64mgmt.c	declared in <ext/time64.h>
+src/time64/tm64mkt.c	src/ext/time64/tm64mkt.c	declared in <ext/time64.h>
+src/time64/tm64mltm.c	src/ext/time64/tm64mltm.c	declared in <ext/time64.h>
+src/time64/tm64mtim.c	src/ext/time64/tm64mtim.c	declared in <ext/time64.h>
+src/time64/tm64sby.c	src/ext/time64/tm64sby.c	declared only in src/time64/calendar.h
+src/time64/tm64syr.c	src/ext/time64/tm64syr.c	declared only in src/time64/calendar.h
+src/time64/tm64test.c	attic/tm64test.c	a program with main(), not library code
+src/time64/tm64tgm.c	src/ext/time64/tm64tgm.c	declared in <ext/time64.h>
+src/time64/tm64time.c	src/ext/time64/tm64time.c	declared in <ext/time64.h>
+src/time64/tm64uclk.c	src/ext/time64/tm64uclk.c	declared in <ext/time64.h>
+src/time64/tm64ucti.c	src/ext/time64/tm64ucti.c	declared in <ext/time64.h>
+src/time64/tm64ugmt.c	src/ext/time64/tm64ugmt.c	declared in <ext/time64.h>
+src/time64/tm64ultm.c	src/ext/time64/tm64ultm.c	declared in <ext/time64.h>
+src/time64/tm64utim.c	src/ext/time64/tm64utim.c	declared in <ext/time64.h>
