@@ -602,10 +602,7 @@ struct jfcb {
 };
 #pragma pack(reset)
 
-extern int      __rdjfcb(DCB *dcb, JFCB *jfcb);
-
-/* rdjfcb() - the same code as __rdjfcb(), built a second time from
-**            src/mvs/dd/rdjfcb.c as its own routine (RDJFCB) */
-extern int      rdjfcb(DCB *dcb, JFCB *jfcb);
+/* __rdjfcb() and rdjfcb() are declared in <mvs/dd.h>: ibm/ holds IBM's data
+** layout only */
 
 #endif

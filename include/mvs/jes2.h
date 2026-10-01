@@ -268,5 +268,12 @@ int jesiropn(VSFILE **vsfile);
 int jesirput(VSFILE  *vsfile, char card[80]);
 int jesircls(VSFILE  *vsfile);
 int jesircl2(VSFILE  *vsfile, unsigned char jobid[8]);
+
+/* ---- Process SYSOUT, from 1.x pso.h (#278; see #295) --------------------- */
+#include <ibm/jes2/pso.h>                   /* $PSO struct                          */
+
+/* __getpso() - the job's own Process SYSOUT work area ($PSO), through
+**              TCB -> JSCB -> SSIB -> SJB -> SJBPSOP */
+extern __PSO *__getpso(void);
 #endif
 

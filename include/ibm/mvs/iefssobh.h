@@ -32,7 +32,6 @@ struct ssob {
 };
 #define SSOBHSIZ    sizeof(SSOB)
 
-/* call jes subsystem interface */
-extern int iefssreq(SSOB *ssob);
+/* iefssreq() is declared in <mvs/subsys.h>: ibm/ holds IBM's data layout only */
 
 #endif

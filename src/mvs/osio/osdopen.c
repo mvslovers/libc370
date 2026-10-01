@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "mvs/osio.h"
 #include "mvs/recovery.h"
+#include <mvs/dd.h>
 
 static void opendcb(DCB *dcb, int typej, int *rc);
 
