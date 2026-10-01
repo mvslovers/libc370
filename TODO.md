@@ -442,10 +442,12 @@ checklist is #245.
    `[toolchain] libc370 = "2.0.0"` and drop any `libc370_ref`** (the build CI
    follows `main`, which is 2.0). ufsd and brexx370 switch from `2.0.0-dev`
    the same way. `edge` stays on its 1.x commit until brexx370#274 merges.
-   Local 2.0 builds use the second toolchain `~/.local/opt/cc370-libc2`;
-   `~/.local` keeps 1.0.8 for the unported (swap the roles once most are
-   ported). The brief `doc/migration-2.0-agent.md` left the tree with the
-   release and needs rework for this situation (kept locally).
+   **Locally there is one sysroot, on 2.0** (2026-10-01: libc370 `v2.0.0`
+   installed into `~/.local/cc370`, the second toolchain removed): nothing is
+   built against 1.0.8 any more, so an unported project does not build here
+   until it is ported. The brief `doc/migration-2.0-agent.md` is kept out of
+   the tree on purpose (maintainer's working copy, updated for this state;
+   it compares against 1.x with `-nostdinc -I <v1.0.8>/include`).
    - **ported:** ufsd (ufsd#82, merged 2026-10-01, prerelease `v1.4.0-dev`),
      brexx370 (brexx370#274, open; moves its pin off `edge` -- after it,
      nothing pins `edge`). Findings folded into the brief (#310).
@@ -472,9 +474,9 @@ checklist is #245.
    script on a branch, rebuilt (that rebuild is the relink), tested on MVS.
    Defects in libc370 or in the maps make `rc.2`, and so on.
 10. ~~**Release 2.0.0**~~ -- **done 2026-10-01** (#311, #312, `v2.0.0`),
-    without the hold PRs (step 3) and without the rc (step 8). **Open:** the
-    CHANGELOG names no minimum cc370; the release notes carry only the
-    commit it was built with (`47b3545`). Original plan: step 3's hold PRs in the consumers (Mike's go), `2.0`
+    without the hold PRs (step 3) and without the rc (step 8). Requires the
+    current cc370 (cc370@latest; built with `47b3545`) -- added to the
+    CHANGELOG and the release notes afterwards. Original plan: step 3's hold PRs in the consumers (Mike's go), `2.0`
     → `main` (Mike's go), tag 2.0.0 with the CHANGELOG migration section and
     the minimum cc370 commit; then one migration PR per consumer, each
     removing its `libc370_ref` line again. httpd's and mvsMF's also add
