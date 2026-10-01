@@ -32,7 +32,7 @@
  * 29315-byte module, has two such records, and IRXJCL has 65.
  *
  * What the phantom item reads is the point.  __aread() on a RECFM=U member
- * does no deblocking (asm/@@aread.asm: "TM ZRECFM,DCBRECU  Also exit for U"):
+ * does no deblocking (src/stdio/@@aread.asm: "TM ZRECFM,DCBRECU  Also exit for U"):
  * it issues a READ for BLKSIZE bytes and hands back the buffer.  Behind a
  * short record sits the tail of the previous, longer one - residue that reads
  * as a perfectly plausible RLD item whose 3-byte offset can be anything.  The

@@ -117,16 +117,16 @@ int __fpupc(FILE *fp, int c)
 
 /* ---- the real thing ---------------------------------------------------- */
 
-#include "../../src/clib/@@fflush.c"
+#include "../../src/stdio/@@fflush.c"
 #undef begwrite
 #undef finwrite
-#include "../../src/clib/@@fwrite.c"
-#include "../../src/clib/@@fputc.c"
+#include "../../src/stdio/@@fwrite.c"
+#include "../../src/stdio/@@fputc.c"
 #include <ctype.h>
-#include "../../src/clib/@@isbuf.c"   /* isspace() is a table macro */
-#include "../../src/clib/@@fgetc.c"
-#include "../../src/clib/@@fread.c"
-#include "../../src/clib/@@fgets.c"
+#include "../../src/stdio/@@isbuf.c"   /* isspace() is a table macro */
+#include "../../src/stdio/@@fgetc.c"
+#include "../../src/stdio/@@fread.c"
+#include "../../src/stdio/@@fgets.c"
 
 /* ---- a FILE the shims can serve ---------------------------------------- */
 

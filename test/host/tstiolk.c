@@ -116,21 +116,21 @@ int __fputc(int c, FILE *fp)
 
 /* ---- the real TUs ---------------------------------------------------- */
 
-#include "../../src/clib/vvprintf.c"
+#include "../../src/stdio/vvprintf.c"
 #undef outch
 #undef inch
 #undef unused
-#include "../../src/clib/@@examin.c"
-#include "../../src/clib/@@fputs.c"
-#include "../../src/clib/fputs.c"
-#include "../../src/clib/fputc.c"
+#include "../../src/stdio/@@examin.c"
+#include "../../src/stdio/@@fputs.c"
+#include "../../src/stdio/fputs.c"
+#include "../../src/stdio/fputc.c"
 
 /* puts() is a public libc symbol on the host too, and the compiler
    likes to rewrite printf("...\n") into puts() calls - which would
    land the harness's own output in the probe sink.  Compile the
    library's puts under a test name and call it explicitly. */
 #define puts tst_puts
-#include "../../src/clib/puts.c"
+#include "../../src/stdio/puts.c"
 #undef puts
 
 /* puts() writes to stdout, which clibio.h resolves via __gtout() */

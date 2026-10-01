@@ -1,7 +1,7 @@
 /*
  * tstzjt.c - libc370 #211: the C99 length modifiers z, t, j and hh, on MVS.
  *
- * __examin() (src/clib/@@examin.c) is the one parser behind the whole
+ * __examin() (src/stdio/@@examin.c) is the one parser behind the whole
  * printf family.  It knew h, l, ll, L and LL; "%6zd" took the 'z' for the
  * specifier, printed nothing for it, left the size_t on the va_list and let
  * the 'd' through as text - brexx370's trace line read "d *-* ".  Every

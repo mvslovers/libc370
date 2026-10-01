@@ -220,9 +220,9 @@ static void tst_free(void *p)
 }
 
 #define free tst_free
-#include "../../src/clib/fclose.c"
+#include "../../src/stdio/fclose.c"
 #include "../../src/mvs/file/@@faband.c"
-#include "../../src/clib/@@fpterm.c"
+#include "../../src/stdio/@@fpterm.c"
 #undef free
 
 /* ---- harness ---------------------------------------------------------- */

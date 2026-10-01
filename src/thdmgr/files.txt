@@ -1,9 +1,0 @@
-@@cminit.c
-@@cmqadd.c
-@@cmqdel.c
-@@cmterm.c
-@@cmwadd.c
-@@cmwdel.c
-@@cmwshu.c
-@@cmwwat.c
-@@cti.c
