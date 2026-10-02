@@ -26,6 +26,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `c - 'A'`, which is wrong in EBCDIC past `I`. An invalid base sets
   `EINVAL`. Built with cc370 1.0.0; `test/mvs/tstll.c` passes on MVS (64/64).
 
+### Fixed
+- **`%lld`, `%lli` and `%jd` print a negative value with its sign (#321).**
+  The 64-bit path of `printf` treated every value as unsigned, so `-5`
+  printed `18446744073709551611` -- and so did `PRId64`. mvsdev JOB01165:
+  17/17, against 11 of 17 failing with 2.0.0.
+
 ## [2.0.0] - 2026-10-01
 
 **libc370 2.0 reorganises the public headers, and almost every program that
