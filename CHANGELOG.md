@@ -40,6 +40,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `EINVAL`. Built with cc370 1.0.0; `test/mvs/tstll.c` passes on MVS (64/64).
 
 ### Fixed
+- **`strtol()`, `strtoul()` -- and with them `atoi()` and `atol()` --
+  follow C99 (#316).** Rewritten on the shape of `strtoll()`/`strtoull()`.
+  **Behaviour changes a caller can see:** a digit must be below the base
+  (`strtoul("9", 8)` was 9, `"g"` in base 16 was 16); `strtoul` takes a sign
+  (`"-1"` is `ULONG_MAX`, was 0) and `strtol` rejects a second one; out-of-
+  range input saturates and sets `ERANGE` instead of wrapping (`atoi` of an
+  out-of-range string now gives `INT_MAX`/`INT_MIN`); `endptr` is `nptr`
+  when nothing converts; an invalid base sets `EINVAL`; letters past `I`
+  read right in EBCDIC. mvsdev JOB01173: 35/35, against 17 of 35 failing
+  with 2.0.0.
 - **scanf knows the length modifiers `hh`, `ll`, `j`, `z`, `t` and `L`
   (#318).** It knew `h` and `l` only: `%lld` stored a `long`, which is the
   high word of a `long long` on S/370, and left the low word as it was;

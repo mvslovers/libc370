@@ -21,7 +21,7 @@
  *
  *     cc -std=gnu99 -Wall -Wextra -fsanitize=address \
  *        -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
- *        -I include -o t test/host/tstll.c && ./t
+ *        -I include -I . -o t test/host/tstll.c && ./t
  *
  * RED by construction: on main 440cff8 none of the five TUs exists and
  * neither the functions, lldiv_t nor the three limits are declared, so
@@ -42,13 +42,8 @@ int tolower(int c);
 static int errno_;
 int *__errno(void) { return &errno_; }
 
-/* both TUs define a file-static digval() */
-#define digval digval_ull
 #include "../../src/stdlib/strtoull.c"
-#undef digval
-#define digval digval_ll
 #include "../../src/stdlib/strtoll.c"
-#undef digval
 #include "../../src/stdlib/atoll.c"
 #include "../../src/stdlib/llabs.c"
 #include "../../src/stdlib/lldiv.c"

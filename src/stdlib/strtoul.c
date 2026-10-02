@@ -2,68 +2,78 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <ctype.h>
-
-/* this logic is also in vvscanf - if you update this, update
-   that one too */
+#include <errno.h>
+#include <limits.h>
+#include "src/internal/digval.h"
 
 __PDPCLIB_API__ unsigned long int strtoul(
     const char *nptr, char **endptr, int base)
 {
+    const char *s = nptr;
     unsigned long x = 0;
-    int undecided = 0;
+    unsigned long cutoff;
+    int cutlim;
+    int d;
+    int neg = 0;
+    int any = 0;
+    int overflow = 0;
 
-    if (base == 0) {
-        undecided = 1;
+    if (base < 0 || base == 1 || base > 36) {
+        if (endptr != NULL) {
+            *endptr = (char *)nptr;
+        }
+        errno = EINVAL;
+        return (0);
     }
 
-    while (isspace((unsigned char)*nptr)) {
-        nptr++;
+    while (isspace((unsigned char)*s)) {
+        s++;
+    }
+    if (*s == '-') {
+        neg = 1;
+        s++;
+    }
+    else if (*s == '+') {
+        s++;
     }
 
-    while (1) {
-        if (isdigit((unsigned char)*nptr)) {
-            if (base == 0) {
-                if (*nptr == '0') {
-                    base = 8;
-                }
-                else {
-                    base = 10;
-                    undecided = 0;
-                }
-            }
-            x = x * base + (*nptr - '0');
-            nptr++;
-        }
-        else if (isalpha((unsigned char)*nptr)) {
-            if ((*nptr == 'X') || (*nptr == 'x')) {
-                if ((base == 0) || ((base == 8) && undecided)) {
-                    base = 16;
-                    undecided = 0;
-                    nptr++;
-                }
-                else if (base == 16) {
-                    /* hex values are allowed to have an optional 0x */
-                    nptr++;
-                }
-                else {
-                    break;
-                }
-            }
-            else if (base <= 10) {
-                break;
-            }
-            else {
-                x = x * base + (toupper((unsigned char)*nptr) - 'A') + 10;
-                nptr++;
-            }
-        }
-        else {
+    /* "0x" is a prefix only when a hex digit follows it; otherwise the
+       subject sequence is the "0" alone */
+    if ((base == 0 || base == 16) && s[0] == '0'
+        && (s[1] == 'x' || s[1] == 'X')
+        && __digval((unsigned char)s[2]) < 16) {
+        s += 2;
+        base = 16;
+    }
+    else if (base == 0) {
+        base = (s[0] == '0') ? 8 : 10;
+    }
+
+    cutoff = ULONG_MAX / (unsigned long)base;
+    cutlim = (int)(ULONG_MAX % (unsigned long)base);
+
+    for (;; s++) {
+        d = __digval((unsigned char)*s);
+        if (d >= base) {
             break;
         }
+        any = 1;
+        if (overflow) {
+            continue;
+        }
+        if (x > cutoff || (x == cutoff && d > cutlim)) {
+            overflow = 1;
+            continue;
+        }
+        x = x * (unsigned long)base + (unsigned long)d;
     }
 
     if (endptr != NULL) {
-        *endptr = (char *)nptr;
+        *endptr = (char *)(any ? s : nptr);
     }
-    return (x);
+    if (overflow) {
+        errno = ERANGE;
+        return (ULONG_MAX);
+    }
+    return (neg ? -x : x);
 }

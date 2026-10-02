@@ -4,23 +4,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
-
-/* The value of digit c, or 36 when c is no digit in any base.  A table
-   rather than c - 'A' + 10: the EBCDIC letters are not contiguous
-   (A-I, J-R, S-Z). */
-static int digval(int c)
-{
-    static const char digits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
-    int i;
-
-    c = tolower(c);
-    for (i = 0; i < 36; i++) {
-        if (digits[i] == c) {
-            return (i);
-        }
-    }
-    return (36);
-}
+#include "src/internal/digval.h"
 
 __PDPCLIB_API__ long long int strtoll(const char *nptr, char **endptr,
                                       int base)
@@ -58,7 +42,7 @@ __PDPCLIB_API__ long long int strtoll(const char *nptr, char **endptr,
        subject sequence is the "0" alone */
     if ((base == 0 || base == 16) && s[0] == '0'
         && (s[1] == 'x' || s[1] == 'X')
-        && digval((unsigned char)s[2]) < 16) {
+        && __digval((unsigned char)s[2]) < 16) {
         s += 2;
         base = 16;
     }
@@ -73,7 +57,7 @@ __PDPCLIB_API__ long long int strtoll(const char *nptr, char **endptr,
     cutlim = (int)(limit % (unsigned long long)base);
 
     for (;; s++) {
-        d = digval((unsigned char)*s);
+        d = __digval((unsigned char)*s);
         if (d >= base) {
             break;
         }
