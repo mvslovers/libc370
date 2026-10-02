@@ -16,6 +16,8 @@
 # 5. If the release already exists (made by hand, with curated notes, as
 #    v1.0.7 was), its notes are left exactly as they are; the artifacts are
 #    attached either way.
+# 6. Then pair.yml installs this release beside cc370's latest, as packages,
+#    under apt and dnf, and builds a program with the pair.
 
 name: Release
 
@@ -91,3 +93,9 @@ jobs:
               --title "libc370 $GITHUB_REF_NAME" --notes-file notes.md
           fi
           gh release upload "$GITHUB_REF_NAME" --clobber dist/*
+
+  pair:
+    needs: [requires, release]
+    uses: ./.github/workflows/pair.yml
+    with:
+      libc370: ${{ needs.requires.outputs.version }}

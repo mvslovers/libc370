@@ -1,0 +1,90 @@
+# Install cc370 and libc370 as packages, together, under the real package
+# manager, and build a program with the pair (#326).  sdk/pairtest.sh does
+# the checks: libc370 alone is refused, cc370 beside a libc370 2.0.0 is
+# refused, the pair installs, __CC370__ matches, and a printf/strtoll
+# program links its 64-bit helpers from libcc370rt.a.
+#
+# The packages are the released ones: libc370 at `libc370` (default: the
+# latest release), cc370 at `cc370` (default: its latest release).  Runs
+#   - from release.yml, after the assets are attached (the new release),
+#   - by hand (workflow_dispatch),
+#   - on a PR that changes the test itself.
+# Debian bookworm on amd64 and arm64, Fedora on amd64; the containers start
+# clean, so nothing on the runner stands in for a dependency.
+
+name: Pair install
+
+on:
+  workflow_dispatch:
+    inputs:
+      libc370:
+        description: "libc370 release (X.Y.Z); empty = latest"
+        type: string
+        default: ""
+      cc370:
+        description: "cc370 release (X.Y.Z); empty = latest"
+        type: string
+        default: ""
+  workflow_call:
+    inputs:
+      libc370:
+        type: string
+        default: ""
+      cc370:
+        type: string
+        default: ""
+  pull_request:
+    paths:
+      - .github/workflows/pair.yml
+      - sdk/pairtest.sh
+
+jobs:
+  pair:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: debian, image: "debian:bookworm", mode: deb, runner: ubuntu-latest,   deb: amd64,   rpm: "" }
+          - { os: debian, image: "debian:bookworm", mode: deb, runner: ubuntu-24.04-arm, deb: arm64,  rpm: "" }
+          - { os: fedora, image: "fedora:latest",   mode: rpm, runner: ubuntu-latest,   deb: "",      rpm: x86_64 }
+    name: ${{ matrix.os }} ${{ matrix.deb }}${{ matrix.rpm }}
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: The packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          lv="${{ inputs.libc370 }}"
+          [ -n "$lv" ] || lv=$(gh release view -R mvslovers/libc370 --json tagName -q .tagName | sed 's/^v//')
+          cv="${{ inputs.cc370 }}"
+          [ -n "$cv" ] || cv=$(gh release view -R mvslovers/cc370 --json tagName -q .tagName | sed 's/^v//')
+          echo "libc370 $lv, cc370 $cv" | tee -a "$GITHUB_STEP_SUMMARY"
+          mkdir -p pkgs/l pkgs/c
+          if [ "${{ matrix.mode }}" = deb ]; then
+            gh release download "v$lv" -R mvslovers/libc370 -D pkgs/l -p "libc370-dev_${lv}_all.deb" -p SHA256SUMS
+            gh release download "v$cv" -R mvslovers/cc370   -D pkgs/c -p "cc370_${cv}_${{ matrix.deb }}.deb" -p SHA256SUMS
+          else
+            gh release download "v$lv" -R mvslovers/libc370 -D pkgs/l -p "libc370-devel-${lv}.noarch.rpm" -p SHA256SUMS
+            gh release download "v$cv" -R mvslovers/cc370   -D pkgs/c -p "cc370-${cv}.${{ matrix.rpm }}.rpm" -p SHA256SUMS
+          fi
+          (cd pkgs/l && sha256sum -c --ignore-missing SHA256SUMS)
+          (cd pkgs/c && sha256sum -c --ignore-missing SHA256SUMS)
+          mkdir -p pkgs/all && cp pkgs/l/*.deb pkgs/l/*.rpm pkgs/c/*.deb pkgs/c/*.rpm pkgs/all/ 2>/dev/null || true
+          ls -l pkgs/all
+
+      - name: Install the pair in a clean ${{ matrix.image }}
+        run: |
+          set -o pipefail
+          docker run --rm -v "$PWD:/w" "${{ matrix.image }}" \
+            sh /w/sdk/pairtest.sh "${{ matrix.mode }}" /w/pkgs/all \
+            | tee pair.log
+          {
+            echo '```'
+            cat pair.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          ! grep -q '^FAIL' pair.log
+          grep -q '^ok    the pair installs' pair.log
