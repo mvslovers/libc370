@@ -498,8 +498,22 @@ artifacts (#326): sysroot tarball, `.deb`, `.rpm`, metadata.json,
 SHA256SUMS, built with cc370 v1.1.0. cc370's `install.sh` picks it by its
 metadata and links a program against it (checked end to end on macOS).
 
-1. **#325** — the full C99 7.x audit. Known so far: `vsscanf`/`vfscanf`/
-   `vscanf` missing, `HUGE_VAL` < `DBL_MAX`, no `HUGE_VALF`/`HUGE_VALL`.
+1. ~~**#325**~~ — the C99 audit, done 2026-10-03 (PR #343):
+   `doc/c99-audit.md`, rerun with `sdk/c99audit.py`. 18/24 headers, 476/893
+   names declared, 154/463 functions in `libc.a`, nothing declared that does
+   not link. Its gaps, ranked:
+   1. **#336** `<stdbool.h>`/`<iso646.h>` missing (every `#include
+      <stdbool.h>` fails), `va_copy`, `FLT_EVAL_METHOD`, `DECIMAL_DIG`, 35
+      `SCN*` - small, high value, minor.
+   2. **#337** the 14 ctype functions undeclared (C99 7.1.4) - small, minor.
+   3. **#338** `vprintf`/`vscanf`/`vfscanf`/`vsscanf` - wrappers, minor.
+   4. **#339** `snprintf`/`vsnprintf` take `int`, `setbuf` returns `int` -
+      **decision**: major under D6, or a defect fix.
+   5. **#340** `<math.h>` C99 additions - large; HFP has no NaN/inf; five
+      8-character name-collision groups need `asm` labels.
+   6. **#341** wide characters (`<wchar.h>` functions, `<wctype.h>`) - only
+      on demand.
+   7. **#342** `<complex.h>`/`<fenv.h>`/`<tgmath.h>` - **decision** (HFP).
 2. ~~**#326 leftover**~~ — closed 2026-10-03: `pair.yml` (PR #335) installs
    the pair under apt (bookworm amd64/arm64) and dnf (fedora), run
    37077154678 all green; it runs after every release.
