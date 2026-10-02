@@ -7,6 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Added
+- **`<inttypes.h>` (#314):** `imaxabs()`, `imaxdiv()`/`imaxdiv_t`,
+  `strtoimax()`, `strtoumax()` and the `PRI*` macros for every width,
+  `LEAST`, `FAST`, `MAX` and `PTR`. `SCN*` exists for the 16- and 32-bit
+  types and `PTR` only: `scanf` does not know `hh`, `ll` or `j` yet
+  (#318), and a missing `SCNd64` fails at compile time where `"lld"`
+  would compile and store 4 of 8 bytes. `wcstoimax()`/`wcstoumax()` follow
+  with the wide-string conversions. cc370's `-Wformat` checks every macro
+  against its type; mvsdev JOB01167, 19/19.
 - **`strtof()` and `strtold()` in `<stdlib.h>` (#314).** `long double`
   is `double` under cc370, so `strtold()` is `strtod()`. `strtof()` narrows
   `strtod()`'s result and answers a value above `FLT_MAX` itself with
