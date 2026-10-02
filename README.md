@@ -18,6 +18,36 @@ libc, maintained by the [mvslovers](https://github.com/mvslovers) community.
 is the last 1.x release. Crypto (SHA-256, Blowfish, base64) is
 [crypto370](https://github.com/mvslovers/crypto370) since 2.0.
 
+## Compatibility with cc370
+
+libc370 2.1.x needs **cc370 1.1.0 or later, below 2**. The compiler helpers
+(`libcc370rt.a`) and the prologue macros belong to cc370; headers, `libc.a`,
+the startup objects and the other macros to libc370. Every libc370 header
+checks the compiler (`#error "libc370 needs cc370 1.1.0 or later"`), and
+cc370 1.1.x in turn needs libc370 2.1.0 or later.
+
+| libc370 | cc370 |
+|---|---|
+| 2.1.x | `>= 1.1.0, < 2` |
+| 2.0.x and older | 1.0.0 |
+
+The requirement is written once, in `sdk/cc370.json`. Who owns what, why, and
+the checklist for cutting a release:
+**[doc/releasing.md](doc/releasing.md)**.
+
+## Installing a release
+
+The easy way is cc370's `install.sh` from its
+[latest release](https://github.com/mvslovers/cc370/releases/latest): it
+installs cc370 and the newest libc370 that fits it into `$PREFIX` (default
+`~/.local`), checksums verified.
+
+Each libc370 release (from 2.1.0) also carries the pieces on their own:
+`libc370-<v>-sysroot.tar.gz` (unpack into the cc370 sysroot,
+`<prefix>/cc370`), `libc370-dev_<v>_all.deb` and
+`libc370-devel-<v>.noarch.rpm` (into `/usr/lib/cc370/cc370`, depending on
+cc370's packages), `libc370-<v>-metadata.json` and `SHA256SUMS`.
+
 ## Build & install
 
 Host-native — pure `cc370 -S → as370 → ar370`, **no mbt and no MVS round-trip**.
@@ -39,7 +69,7 @@ the sysroot is `<prefix>/cc370/`, default `~/.local/cc370/`):
 | headers (`stdio.h` …, `mvs/`, `ext/`, `ibm/`, `s370/`) | `<sysroot>/include` | `cc370 -c foo.c` finds them with no `-I` |
 | `libc.a` (the runtime) | `<sysroot>/lib` | `-lc` pulls it |
 | `crt0.o` / `crt1.o` / `crtm.o` | `<sysroot>/lib` | the startup variants (separate startfiles) |
-| macros (SYS1.MACLIB + PDP) | `<sysroot>/macros` | `as370` (real binary in `<sysroot>/bin`) finds them via `<exedir>/../macros`, no `-I` |
+| macros (vendored SYS1.MACLIB + libc370's `maclib/`; the prologue macros are cc370's) | `<sysroot>/macros` | `as370` (real binary in `<sysroot>/bin`) finds them via `<exedir>/../macros`, no `-I` |
 
 After that the toolchain is self-contained:
 
