@@ -1,0 +1,897 @@
+# C99 (ISO/IEC 9899:1999) clauses 7.2-7.24, hand-written for libc370 #325.
+# header	kind	name	C99 prototype (functions)
+# kinds: f function, g function-like macro, m macro, e expression (macro or object), t typedef, s struct tag, h header only
+# wchar.h's struct tm is left out: C99 7.24.1 requires it only as an incomplete type, which no probe can tell from an undeclared one
+assert.h	g	assert	
+complex.h	m	complex	
+complex.h	m	_Complex_I	
+complex.h	m	I	
+complex.h	f	cacos	double complex cacos(double complex z)
+complex.h	f	cacosf	float complex cacosf(float complex z)
+complex.h	f	cacosl	long double complex cacosl(long double complex z)
+complex.h	f	casin	double complex casin(double complex z)
+complex.h	f	casinf	float complex casinf(float complex z)
+complex.h	f	casinl	long double complex casinl(long double complex z)
+complex.h	f	catan	double complex catan(double complex z)
+complex.h	f	catanf	float complex catanf(float complex z)
+complex.h	f	catanl	long double complex catanl(long double complex z)
+complex.h	f	ccos	double complex ccos(double complex z)
+complex.h	f	ccosf	float complex ccosf(float complex z)
+complex.h	f	ccosl	long double complex ccosl(long double complex z)
+complex.h	f	csin	double complex csin(double complex z)
+complex.h	f	csinf	float complex csinf(float complex z)
+complex.h	f	csinl	long double complex csinl(long double complex z)
+complex.h	f	ctan	double complex ctan(double complex z)
+complex.h	f	ctanf	float complex ctanf(float complex z)
+complex.h	f	ctanl	long double complex ctanl(long double complex z)
+complex.h	f	cacosh	double complex cacosh(double complex z)
+complex.h	f	cacoshf	float complex cacoshf(float complex z)
+complex.h	f	cacoshl	long double complex cacoshl(long double complex z)
+complex.h	f	casinh	double complex casinh(double complex z)
+complex.h	f	casinhf	float complex casinhf(float complex z)
+complex.h	f	casinhl	long double complex casinhl(long double complex z)
+complex.h	f	catanh	double complex catanh(double complex z)
+complex.h	f	catanhf	float complex catanhf(float complex z)
+complex.h	f	catanhl	long double complex catanhl(long double complex z)
+complex.h	f	ccosh	double complex ccosh(double complex z)
+complex.h	f	ccoshf	float complex ccoshf(float complex z)
+complex.h	f	ccoshl	long double complex ccoshl(long double complex z)
+complex.h	f	csinh	double complex csinh(double complex z)
+complex.h	f	csinhf	float complex csinhf(float complex z)
+complex.h	f	csinhl	long double complex csinhl(long double complex z)
+complex.h	f	ctanh	double complex ctanh(double complex z)
+complex.h	f	ctanhf	float complex ctanhf(float complex z)
+complex.h	f	ctanhl	long double complex ctanhl(long double complex z)
+complex.h	f	cexp	double complex cexp(double complex z)
+complex.h	f	cexpf	float complex cexpf(float complex z)
+complex.h	f	cexpl	long double complex cexpl(long double complex z)
+complex.h	f	clog	double complex clog(double complex z)
+complex.h	f	clogf	float complex clogf(float complex z)
+complex.h	f	clogl	long double complex clogl(long double complex z)
+complex.h	f	cabs	double cabs(double complex z)
+complex.h	f	cabsf	float cabsf(float complex z)
+complex.h	f	cabsl	long double cabsl(long double complex z)
+complex.h	f	cpow	double complex cpow(double complex x, double complex y)
+complex.h	f	cpowf	float complex cpowf(float complex x, float complex y)
+complex.h	f	cpowl	long double complex cpowl(long double complex x, long double complex y)
+complex.h	f	csqrt	double complex csqrt(double complex z)
+complex.h	f	csqrtf	float complex csqrtf(float complex z)
+complex.h	f	csqrtl	long double complex csqrtl(long double complex z)
+complex.h	f	carg	double carg(double complex z)
+complex.h	f	cargf	float cargf(float complex z)
+complex.h	f	cargl	long double cargl(long double complex z)
+complex.h	f	cimag	double cimag(double complex z)
+complex.h	f	cimagf	float cimagf(float complex z)
+complex.h	f	cimagl	long double cimagl(long double complex z)
+complex.h	f	conj	double complex conj(double complex z)
+complex.h	f	conjf	float complex conjf(float complex z)
+complex.h	f	conjl	long double complex conjl(long double complex z)
+complex.h	f	cproj	double complex cproj(double complex z)
+complex.h	f	cprojf	float complex cprojf(float complex z)
+complex.h	f	cprojl	long double complex cprojl(long double complex z)
+complex.h	f	creal	double creal(double complex z)
+complex.h	f	crealf	float crealf(float complex z)
+complex.h	f	creall	long double creall(long double complex z)
+ctype.h	f	isalnum	int isalnum(int c)
+ctype.h	f	isalpha	int isalpha(int c)
+ctype.h	f	isblank	int isblank(int c)
+ctype.h	f	iscntrl	int iscntrl(int c)
+ctype.h	f	isdigit	int isdigit(int c)
+ctype.h	f	isgraph	int isgraph(int c)
+ctype.h	f	islower	int islower(int c)
+ctype.h	f	isprint	int isprint(int c)
+ctype.h	f	ispunct	int ispunct(int c)
+ctype.h	f	isspace	int isspace(int c)
+ctype.h	f	isupper	int isupper(int c)
+ctype.h	f	isxdigit	int isxdigit(int c)
+ctype.h	f	tolower	int tolower(int c)
+ctype.h	f	toupper	int toupper(int c)
+errno.h	m	EDOM	
+errno.h	m	EILSEQ	
+errno.h	m	ERANGE	
+errno.h	e	errno	
+fenv.h	t	fenv_t	
+fenv.h	t	fexcept_t	
+fenv.h	m	FE_ALL_EXCEPT	
+fenv.h	m	FE_DFL_ENV	
+fenv.h	f	feclearexcept	int feclearexcept(int excepts)
+fenv.h	f	fegetexceptflag	int fegetexceptflag(fexcept_t *flagp, int excepts)
+fenv.h	f	feraiseexcept	int feraiseexcept(int excepts)
+fenv.h	f	fesetexceptflag	int fesetexceptflag(const fexcept_t *flagp, int excepts)
+fenv.h	f	fetestexcept	int fetestexcept(int excepts)
+fenv.h	f	fegetround	int fegetround(void)
+fenv.h	f	fesetround	int fesetround(int round)
+fenv.h	f	fegetenv	int fegetenv(fenv_t *envp)
+fenv.h	f	feholdexcept	int feholdexcept(fenv_t *envp)
+fenv.h	f	fesetenv	int fesetenv(const fenv_t *envp)
+fenv.h	f	feupdateenv	int feupdateenv(const fenv_t *envp)
+float.h	m	FLT_ROUNDS	
+float.h	m	FLT_EVAL_METHOD	
+float.h	m	FLT_RADIX	
+float.h	m	DECIMAL_DIG	
+float.h	m	FLT_MANT_DIG	
+float.h	m	FLT_DIG	
+float.h	m	FLT_MIN_EXP	
+float.h	m	FLT_MIN_10_EXP	
+float.h	m	FLT_MAX_EXP	
+float.h	m	FLT_MAX_10_EXP	
+float.h	m	FLT_MAX	
+float.h	m	FLT_EPSILON	
+float.h	m	FLT_MIN	
+float.h	m	DBL_MANT_DIG	
+float.h	m	DBL_DIG	
+float.h	m	DBL_MIN_EXP	
+float.h	m	DBL_MIN_10_EXP	
+float.h	m	DBL_MAX_EXP	
+float.h	m	DBL_MAX_10_EXP	
+float.h	m	DBL_MAX	
+float.h	m	DBL_EPSILON	
+float.h	m	DBL_MIN	
+float.h	m	LDBL_MANT_DIG	
+float.h	m	LDBL_DIG	
+float.h	m	LDBL_MIN_EXP	
+float.h	m	LDBL_MIN_10_EXP	
+float.h	m	LDBL_MAX_EXP	
+float.h	m	LDBL_MAX_10_EXP	
+float.h	m	LDBL_MAX	
+float.h	m	LDBL_EPSILON	
+float.h	m	LDBL_MIN	
+inttypes.h	t	imaxdiv_t	
+inttypes.h	f	imaxabs	intmax_t imaxabs(intmax_t j)
+inttypes.h	f	imaxdiv	imaxdiv_t imaxdiv(intmax_t numer, intmax_t denom)
+inttypes.h	f	strtoimax	intmax_t strtoimax(const char * restrict nptr, char ** restrict endptr, int base)
+inttypes.h	f	strtoumax	uintmax_t strtoumax(const char * restrict nptr, char ** restrict endptr, int base)
+inttypes.h	f	wcstoimax	intmax_t wcstoimax(const wchar_t * restrict nptr, wchar_t ** restrict endptr, int base)
+inttypes.h	f	wcstoumax	uintmax_t wcstoumax(const wchar_t * restrict nptr, wchar_t ** restrict endptr, int base)
+inttypes.h	m	PRId8	
+inttypes.h	m	SCNd8	
+inttypes.h	m	PRId16	
+inttypes.h	m	SCNd16	
+inttypes.h	m	PRId32	
+inttypes.h	m	SCNd32	
+inttypes.h	m	PRId64	
+inttypes.h	m	SCNd64	
+inttypes.h	m	PRIdLEAST8	
+inttypes.h	m	SCNdLEAST8	
+inttypes.h	m	PRIdLEAST16	
+inttypes.h	m	SCNdLEAST16	
+inttypes.h	m	PRIdLEAST32	
+inttypes.h	m	SCNdLEAST32	
+inttypes.h	m	PRIdLEAST64	
+inttypes.h	m	SCNdLEAST64	
+inttypes.h	m	PRIdFAST8	
+inttypes.h	m	SCNdFAST8	
+inttypes.h	m	PRIdFAST16	
+inttypes.h	m	SCNdFAST16	
+inttypes.h	m	PRIdFAST32	
+inttypes.h	m	SCNdFAST32	
+inttypes.h	m	PRIdFAST64	
+inttypes.h	m	SCNdFAST64	
+inttypes.h	m	PRIdMAX	
+inttypes.h	m	SCNdMAX	
+inttypes.h	m	PRIdPTR	
+inttypes.h	m	SCNdPTR	
+inttypes.h	m	PRIi8	
+inttypes.h	m	SCNi8	
+inttypes.h	m	PRIi16	
+inttypes.h	m	SCNi16	
+inttypes.h	m	PRIi32	
+inttypes.h	m	SCNi32	
+inttypes.h	m	PRIi64	
+inttypes.h	m	SCNi64	
+inttypes.h	m	PRIiLEAST8	
+inttypes.h	m	SCNiLEAST8	
+inttypes.h	m	PRIiLEAST16	
+inttypes.h	m	SCNiLEAST16	
+inttypes.h	m	PRIiLEAST32	
+inttypes.h	m	SCNiLEAST32	
+inttypes.h	m	PRIiLEAST64	
+inttypes.h	m	SCNiLEAST64	
+inttypes.h	m	PRIiFAST8	
+inttypes.h	m	SCNiFAST8	
+inttypes.h	m	PRIiFAST16	
+inttypes.h	m	SCNiFAST16	
+inttypes.h	m	PRIiFAST32	
+inttypes.h	m	SCNiFAST32	
+inttypes.h	m	PRIiFAST64	
+inttypes.h	m	SCNiFAST64	
+inttypes.h	m	PRIiMAX	
+inttypes.h	m	SCNiMAX	
+inttypes.h	m	PRIiPTR	
+inttypes.h	m	SCNiPTR	
+inttypes.h	m	PRIo8	
+inttypes.h	m	SCNo8	
+inttypes.h	m	PRIo16	
+inttypes.h	m	SCNo16	
+inttypes.h	m	PRIo32	
+inttypes.h	m	SCNo32	
+inttypes.h	m	PRIo64	
+inttypes.h	m	SCNo64	
+inttypes.h	m	PRIoLEAST8	
+inttypes.h	m	SCNoLEAST8	
+inttypes.h	m	PRIoLEAST16	
+inttypes.h	m	SCNoLEAST16	
+inttypes.h	m	PRIoLEAST32	
+inttypes.h	m	SCNoLEAST32	
+inttypes.h	m	PRIoLEAST64	
+inttypes.h	m	SCNoLEAST64	
+inttypes.h	m	PRIoFAST8	
+inttypes.h	m	SCNoFAST8	
+inttypes.h	m	PRIoFAST16	
+inttypes.h	m	SCNoFAST16	
+inttypes.h	m	PRIoFAST32	
+inttypes.h	m	SCNoFAST32	
+inttypes.h	m	PRIoFAST64	
+inttypes.h	m	SCNoFAST64	
+inttypes.h	m	PRIoMAX	
+inttypes.h	m	SCNoMAX	
+inttypes.h	m	PRIoPTR	
+inttypes.h	m	SCNoPTR	
+inttypes.h	m	PRIu8	
+inttypes.h	m	SCNu8	
+inttypes.h	m	PRIu16	
+inttypes.h	m	SCNu16	
+inttypes.h	m	PRIu32	
+inttypes.h	m	SCNu32	
+inttypes.h	m	PRIu64	
+inttypes.h	m	SCNu64	
+inttypes.h	m	PRIuLEAST8	
+inttypes.h	m	SCNuLEAST8	
+inttypes.h	m	PRIuLEAST16	
+inttypes.h	m	SCNuLEAST16	
+inttypes.h	m	PRIuLEAST32	
+inttypes.h	m	SCNuLEAST32	
+inttypes.h	m	PRIuLEAST64	
+inttypes.h	m	SCNuLEAST64	
+inttypes.h	m	PRIuFAST8	
+inttypes.h	m	SCNuFAST8	
+inttypes.h	m	PRIuFAST16	
+inttypes.h	m	SCNuFAST16	
+inttypes.h	m	PRIuFAST32	
+inttypes.h	m	SCNuFAST32	
+inttypes.h	m	PRIuFAST64	
+inttypes.h	m	SCNuFAST64	
+inttypes.h	m	PRIuMAX	
+inttypes.h	m	SCNuMAX	
+inttypes.h	m	PRIuPTR	
+inttypes.h	m	SCNuPTR	
+inttypes.h	m	PRIx8	
+inttypes.h	m	SCNx8	
+inttypes.h	m	PRIx16	
+inttypes.h	m	SCNx16	
+inttypes.h	m	PRIx32	
+inttypes.h	m	SCNx32	
+inttypes.h	m	PRIx64	
+inttypes.h	m	SCNx64	
+inttypes.h	m	PRIxLEAST8	
+inttypes.h	m	SCNxLEAST8	
+inttypes.h	m	PRIxLEAST16	
+inttypes.h	m	SCNxLEAST16	
+inttypes.h	m	PRIxLEAST32	
+inttypes.h	m	SCNxLEAST32	
+inttypes.h	m	PRIxLEAST64	
+inttypes.h	m	SCNxLEAST64	
+inttypes.h	m	PRIxFAST8	
+inttypes.h	m	SCNxFAST8	
+inttypes.h	m	PRIxFAST16	
+inttypes.h	m	SCNxFAST16	
+inttypes.h	m	PRIxFAST32	
+inttypes.h	m	SCNxFAST32	
+inttypes.h	m	PRIxFAST64	
+inttypes.h	m	SCNxFAST64	
+inttypes.h	m	PRIxMAX	
+inttypes.h	m	SCNxMAX	
+inttypes.h	m	PRIxPTR	
+inttypes.h	m	SCNxPTR	
+inttypes.h	m	PRIX8	
+inttypes.h	m	PRIX16	
+inttypes.h	m	PRIX32	
+inttypes.h	m	PRIX64	
+inttypes.h	m	PRIXLEAST8	
+inttypes.h	m	PRIXLEAST16	
+inttypes.h	m	PRIXLEAST32	
+inttypes.h	m	PRIXLEAST64	
+inttypes.h	m	PRIXFAST8	
+inttypes.h	m	PRIXFAST16	
+inttypes.h	m	PRIXFAST32	
+inttypes.h	m	PRIXFAST64	
+inttypes.h	m	PRIXMAX	
+inttypes.h	m	PRIXPTR	
+iso646.h	m	and	
+iso646.h	m	and_eq	
+iso646.h	m	bitand	
+iso646.h	m	bitor	
+iso646.h	m	compl	
+iso646.h	m	not	
+iso646.h	m	not_eq	
+iso646.h	m	or	
+iso646.h	m	or_eq	
+iso646.h	m	xor	
+iso646.h	m	xor_eq	
+limits.h	m	CHAR_BIT	
+limits.h	m	SCHAR_MIN	
+limits.h	m	SCHAR_MAX	
+limits.h	m	UCHAR_MAX	
+limits.h	m	CHAR_MIN	
+limits.h	m	CHAR_MAX	
+limits.h	m	MB_LEN_MAX	
+limits.h	m	SHRT_MIN	
+limits.h	m	SHRT_MAX	
+limits.h	m	USHRT_MAX	
+limits.h	m	INT_MIN	
+limits.h	m	INT_MAX	
+limits.h	m	UINT_MAX	
+limits.h	m	LONG_MIN	
+limits.h	m	LONG_MAX	
+limits.h	m	ULONG_MAX	
+limits.h	m	LLONG_MIN	
+limits.h	m	LLONG_MAX	
+limits.h	m	ULLONG_MAX	
+locale.h	s	lconv	
+locale.h	m	NULL	
+locale.h	m	LC_ALL	
+locale.h	m	LC_COLLATE	
+locale.h	m	LC_CTYPE	
+locale.h	m	LC_MONETARY	
+locale.h	m	LC_NUMERIC	
+locale.h	m	LC_TIME	
+locale.h	f	setlocale	char *setlocale(int category, const char *locale)
+locale.h	f	localeconv	struct lconv *localeconv(void)
+math.h	t	float_t	
+math.h	t	double_t	
+math.h	m	HUGE_VAL	
+math.h	m	HUGE_VALF	
+math.h	m	HUGE_VALL	
+math.h	m	INFINITY	
+math.h	m	NAN	
+math.h	m	FP_INFINITE	
+math.h	m	FP_NAN	
+math.h	m	FP_NORMAL	
+math.h	m	FP_SUBNORMAL	
+math.h	m	FP_ZERO	
+math.h	m	FP_ILOGB0	
+math.h	m	FP_ILOGBNAN	
+math.h	m	MATH_ERRNO	
+math.h	m	MATH_ERREXCEPT	
+math.h	m	math_errhandling	
+math.h	g	fpclassify	
+math.h	g	isfinite	
+math.h	g	isinf	
+math.h	g	isnan	
+math.h	g	isnormal	
+math.h	g	signbit	
+math.h	g	isgreater	
+math.h	g	isgreaterequal	
+math.h	g	isless	
+math.h	g	islessequal	
+math.h	g	islessgreater	
+math.h	g	isunordered	
+math.h	f	acos	double acos(double x)
+math.h	f	asin	double asin(double x)
+math.h	f	atan	double atan(double x)
+math.h	f	cos	double cos(double x)
+math.h	f	sin	double sin(double x)
+math.h	f	tan	double tan(double x)
+math.h	f	acosh	double acosh(double x)
+math.h	f	asinh	double asinh(double x)
+math.h	f	atanh	double atanh(double x)
+math.h	f	cosh	double cosh(double x)
+math.h	f	sinh	double sinh(double x)
+math.h	f	tanh	double tanh(double x)
+math.h	f	exp	double exp(double x)
+math.h	f	exp2	double exp2(double x)
+math.h	f	expm1	double expm1(double x)
+math.h	f	log	double log(double x)
+math.h	f	log10	double log10(double x)
+math.h	f	log1p	double log1p(double x)
+math.h	f	log2	double log2(double x)
+math.h	f	logb	double logb(double x)
+math.h	f	cbrt	double cbrt(double x)
+math.h	f	fabs	double fabs(double x)
+math.h	f	sqrt	double sqrt(double x)
+math.h	f	erf	double erf(double x)
+math.h	f	erfc	double erfc(double x)
+math.h	f	lgamma	double lgamma(double x)
+math.h	f	tgamma	double tgamma(double x)
+math.h	f	ceil	double ceil(double x)
+math.h	f	floor	double floor(double x)
+math.h	f	nearbyint	double nearbyint(double x)
+math.h	f	rint	double rint(double x)
+math.h	f	round	double round(double x)
+math.h	f	trunc	double trunc(double x)
+math.h	f	atan2	double atan2(double x, double y)
+math.h	f	hypot	double hypot(double x, double y)
+math.h	f	pow	double pow(double x, double y)
+math.h	f	fmod	double fmod(double x, double y)
+math.h	f	remainder	double remainder(double x, double y)
+math.h	f	copysign	double copysign(double x, double y)
+math.h	f	nextafter	double nextafter(double x, double y)
+math.h	f	fdim	double fdim(double x, double y)
+math.h	f	fmax	double fmax(double x, double y)
+math.h	f	fmin	double fmin(double x, double y)
+math.h	f	frexp	double frexp(double value, int *exp)
+math.h	f	ilogb	int ilogb(double x)
+math.h	f	ldexp	double ldexp(double x, int exp)
+math.h	f	modf	double modf(double value, double *iptr)
+math.h	f	scalbn	double scalbn(double x, int n)
+math.h	f	scalbln	double scalbln(double x, long int n)
+math.h	f	lrint	long int lrint(double x)
+math.h	f	llrint	long long int llrint(double x)
+math.h	f	lround	long int lround(double x)
+math.h	f	llround	long long int llround(double x)
+math.h	f	remquo	double remquo(double x, double y, int *quo)
+math.h	f	nan	double nan(const char *tagp)
+math.h	f	nexttoward	double nexttoward(double x, long double y)
+math.h	f	fma	double fma(double x, double y, double z)
+math.h	f	acosf	float acosf(float x)
+math.h	f	asinf	float asinf(float x)
+math.h	f	atanf	float atanf(float x)
+math.h	f	cosf	float cosf(float x)
+math.h	f	sinf	float sinf(float x)
+math.h	f	tanf	float tanf(float x)
+math.h	f	acoshf	float acoshf(float x)
+math.h	f	asinhf	float asinhf(float x)
+math.h	f	atanhf	float atanhf(float x)
+math.h	f	coshf	float coshf(float x)
+math.h	f	sinhf	float sinhf(float x)
+math.h	f	tanhf	float tanhf(float x)
+math.h	f	expf	float expf(float x)
+math.h	f	exp2f	float exp2f(float x)
+math.h	f	expm1f	float expm1f(float x)
+math.h	f	logf	float logf(float x)
+math.h	f	log10f	float log10f(float x)
+math.h	f	log1pf	float log1pf(float x)
+math.h	f	log2f	float log2f(float x)
+math.h	f	logbf	float logbf(float x)
+math.h	f	cbrtf	float cbrtf(float x)
+math.h	f	fabsf	float fabsf(float x)
+math.h	f	sqrtf	float sqrtf(float x)
+math.h	f	erff	float erff(float x)
+math.h	f	erfcf	float erfcf(float x)
+math.h	f	lgammaf	float lgammaf(float x)
+math.h	f	tgammaf	float tgammaf(float x)
+math.h	f	ceilf	float ceilf(float x)
+math.h	f	floorf	float floorf(float x)
+math.h	f	nearbyintf	float nearbyintf(float x)
+math.h	f	rintf	float rintf(float x)
+math.h	f	roundf	float roundf(float x)
+math.h	f	truncf	float truncf(float x)
+math.h	f	atan2f	float atan2f(float x, float y)
+math.h	f	hypotf	float hypotf(float x, float y)
+math.h	f	powf	float powf(float x, float y)
+math.h	f	fmodf	float fmodf(float x, float y)
+math.h	f	remainderf	float remainderf(float x, float y)
+math.h	f	copysignf	float copysignf(float x, float y)
+math.h	f	nextafterf	float nextafterf(float x, float y)
+math.h	f	fdimf	float fdimf(float x, float y)
+math.h	f	fmaxf	float fmaxf(float x, float y)
+math.h	f	fminf	float fminf(float x, float y)
+math.h	f	frexpf	float frexpf(float value, int *exp)
+math.h	f	ilogbf	int ilogbf(float x)
+math.h	f	ldexpf	float ldexpf(float x, int exp)
+math.h	f	modff	float modff(float value, float *iptr)
+math.h	f	scalbnf	float scalbnf(float x, int n)
+math.h	f	scalblnf	float scalblnf(float x, long int n)
+math.h	f	lrintf	long int lrintf(float x)
+math.h	f	llrintf	long long int llrintf(float x)
+math.h	f	lroundf	long int lroundf(float x)
+math.h	f	llroundf	long long int llroundf(float x)
+math.h	f	remquof	float remquof(float x, float y, int *quo)
+math.h	f	nanf	float nanf(const char *tagp)
+math.h	f	nexttowardf	float nexttowardf(float x, long double y)
+math.h	f	fmaf	float fmaf(float x, float y, float z)
+math.h	f	acosl	long double acosl(long double x)
+math.h	f	asinl	long double asinl(long double x)
+math.h	f	atanl	long double atanl(long double x)
+math.h	f	cosl	long double cosl(long double x)
+math.h	f	sinl	long double sinl(long double x)
+math.h	f	tanl	long double tanl(long double x)
+math.h	f	acoshl	long double acoshl(long double x)
+math.h	f	asinhl	long double asinhl(long double x)
+math.h	f	atanhl	long double atanhl(long double x)
+math.h	f	coshl	long double coshl(long double x)
+math.h	f	sinhl	long double sinhl(long double x)
+math.h	f	tanhl	long double tanhl(long double x)
+math.h	f	expl	long double expl(long double x)
+math.h	f	exp2l	long double exp2l(long double x)
+math.h	f	expm1l	long double expm1l(long double x)
+math.h	f	logl	long double logl(long double x)
+math.h	f	log10l	long double log10l(long double x)
+math.h	f	log1pl	long double log1pl(long double x)
+math.h	f	log2l	long double log2l(long double x)
+math.h	f	logbl	long double logbl(long double x)
+math.h	f	cbrtl	long double cbrtl(long double x)
+math.h	f	fabsl	long double fabsl(long double x)
+math.h	f	sqrtl	long double sqrtl(long double x)
+math.h	f	erfl	long double erfl(long double x)
+math.h	f	erfcl	long double erfcl(long double x)
+math.h	f	lgammal	long double lgammal(long double x)
+math.h	f	tgammal	long double tgammal(long double x)
+math.h	f	ceill	long double ceill(long double x)
+math.h	f	floorl	long double floorl(long double x)
+math.h	f	nearbyintl	long double nearbyintl(long double x)
+math.h	f	rintl	long double rintl(long double x)
+math.h	f	roundl	long double roundl(long double x)
+math.h	f	truncl	long double truncl(long double x)
+math.h	f	atan2l	long double atan2l(long double x, long double y)
+math.h	f	hypotl	long double hypotl(long double x, long double y)
+math.h	f	powl	long double powl(long double x, long double y)
+math.h	f	fmodl	long double fmodl(long double x, long double y)
+math.h	f	remainderl	long double remainderl(long double x, long double y)
+math.h	f	copysignl	long double copysignl(long double x, long double y)
+math.h	f	nextafterl	long double nextafterl(long double x, long double y)
+math.h	f	fdiml	long double fdiml(long double x, long double y)
+math.h	f	fmaxl	long double fmaxl(long double x, long double y)
+math.h	f	fminl	long double fminl(long double x, long double y)
+math.h	f	frexpl	long double frexpl(long double value, int *exp)
+math.h	f	ilogbl	int ilogbl(long double x)
+math.h	f	ldexpl	long double ldexpl(long double x, int exp)
+math.h	f	modfl	long double modfl(long double value, long double *iptr)
+math.h	f	scalbnl	long double scalbnl(long double x, int n)
+math.h	f	scalblnl	long double scalblnl(long double x, long int n)
+math.h	f	lrintl	long int lrintl(long double x)
+math.h	f	llrintl	long long int llrintl(long double x)
+math.h	f	lroundl	long int lroundl(long double x)
+math.h	f	llroundl	long long int llroundl(long double x)
+math.h	f	remquol	long double remquol(long double x, long double y, int *quo)
+math.h	f	nanl	long double nanl(const char *tagp)
+math.h	f	nexttowardl	long double nexttowardl(long double x, long double y)
+math.h	f	fmal	long double fmal(long double x, long double y, long double z)
+setjmp.h	t	jmp_buf	
+setjmp.h	g	setjmp	
+setjmp.h	f	longjmp	void longjmp(jmp_buf env, int val)
+signal.h	t	sig_atomic_t	
+signal.h	m	SIG_DFL	
+signal.h	m	SIG_ERR	
+signal.h	m	SIG_IGN	
+signal.h	m	SIGABRT	
+signal.h	m	SIGFPE	
+signal.h	m	SIGILL	
+signal.h	m	SIGINT	
+signal.h	m	SIGSEGV	
+signal.h	m	SIGTERM	
+signal.h	f	signal	void (*signal(int sig, void (*func)(int)))(int)
+signal.h	f	raise	int raise(int sig)
+stdarg.h	t	va_list	
+stdarg.h	g	va_arg	
+stdarg.h	g	va_copy	
+stdarg.h	g	va_end	
+stdarg.h	g	va_start	
+stdbool.h	m	bool	
+stdbool.h	m	true	
+stdbool.h	m	false	
+stdbool.h	m	__bool_true_false_are_defined	
+stddef.h	t	ptrdiff_t	
+stddef.h	t	size_t	
+stddef.h	t	wchar_t	
+stddef.h	m	NULL	
+stddef.h	m	offsetof	
+stdint.h	t	int8_t	
+stdint.h	t	uint8_t	
+stdint.h	t	int_least8_t	
+stdint.h	t	uint_least8_t	
+stdint.h	t	int_fast8_t	
+stdint.h	t	uint_fast8_t	
+stdint.h	t	int16_t	
+stdint.h	t	uint16_t	
+stdint.h	t	int_least16_t	
+stdint.h	t	uint_least16_t	
+stdint.h	t	int_fast16_t	
+stdint.h	t	uint_fast16_t	
+stdint.h	t	int32_t	
+stdint.h	t	uint32_t	
+stdint.h	t	int_least32_t	
+stdint.h	t	uint_least32_t	
+stdint.h	t	int_fast32_t	
+stdint.h	t	uint_fast32_t	
+stdint.h	t	int64_t	
+stdint.h	t	uint64_t	
+stdint.h	t	int_least64_t	
+stdint.h	t	uint_least64_t	
+stdint.h	t	int_fast64_t	
+stdint.h	t	uint_fast64_t	
+stdint.h	t	intptr_t	
+stdint.h	t	uintptr_t	
+stdint.h	t	intmax_t	
+stdint.h	t	uintmax_t	
+stdint.h	m	INT8_MIN	
+stdint.h	m	INT_LEAST8_MIN	
+stdint.h	m	INT_FAST8_MIN	
+stdint.h	m	INT16_MIN	
+stdint.h	m	INT_LEAST16_MIN	
+stdint.h	m	INT_FAST16_MIN	
+stdint.h	m	INT32_MIN	
+stdint.h	m	INT_LEAST32_MIN	
+stdint.h	m	INT_FAST32_MIN	
+stdint.h	m	INT64_MIN	
+stdint.h	m	INT_LEAST64_MIN	
+stdint.h	m	INT_FAST64_MIN	
+stdint.h	m	INT8_MAX	
+stdint.h	m	UINT8_MAX	
+stdint.h	m	INT_LEAST8_MAX	
+stdint.h	m	UINT_LEAST8_MAX	
+stdint.h	m	INT_FAST8_MAX	
+stdint.h	m	UINT_FAST8_MAX	
+stdint.h	m	INT16_MAX	
+stdint.h	m	UINT16_MAX	
+stdint.h	m	INT_LEAST16_MAX	
+stdint.h	m	UINT_LEAST16_MAX	
+stdint.h	m	INT_FAST16_MAX	
+stdint.h	m	UINT_FAST16_MAX	
+stdint.h	m	INT32_MAX	
+stdint.h	m	UINT32_MAX	
+stdint.h	m	INT_LEAST32_MAX	
+stdint.h	m	UINT_LEAST32_MAX	
+stdint.h	m	INT_FAST32_MAX	
+stdint.h	m	UINT_FAST32_MAX	
+stdint.h	m	INT64_MAX	
+stdint.h	m	UINT64_MAX	
+stdint.h	m	INT_LEAST64_MAX	
+stdint.h	m	UINT_LEAST64_MAX	
+stdint.h	m	INT_FAST64_MAX	
+stdint.h	m	UINT_FAST64_MAX	
+stdint.h	m	INTPTR_MIN	
+stdint.h	m	INTPTR_MAX	
+stdint.h	m	UINTPTR_MAX	
+stdint.h	m	INTMAX_MIN	
+stdint.h	m	INTMAX_MAX	
+stdint.h	m	UINTMAX_MAX	
+stdint.h	m	PTRDIFF_MIN	
+stdint.h	m	PTRDIFF_MAX	
+stdint.h	m	SIG_ATOMIC_MIN	
+stdint.h	m	SIG_ATOMIC_MAX	
+stdint.h	m	SIZE_MAX	
+stdint.h	m	WCHAR_MIN	
+stdint.h	m	WCHAR_MAX	
+stdint.h	m	WINT_MIN	
+stdint.h	m	WINT_MAX	
+stdint.h	g	INT8_C	
+stdint.h	g	INT16_C	
+stdint.h	g	INT32_C	
+stdint.h	g	INT64_C	
+stdint.h	g	UINT8_C	
+stdint.h	g	UINT16_C	
+stdint.h	g	UINT32_C	
+stdint.h	g	UINT64_C	
+stdint.h	g	INTMAX_C	
+stdint.h	g	UINTMAX_C	
+stdio.h	t	size_t	
+stdio.h	t	FILE	
+stdio.h	t	fpos_t	
+stdio.h	m	NULL	
+stdio.h	m	_IOFBF	
+stdio.h	m	_IOLBF	
+stdio.h	m	_IONBF	
+stdio.h	m	BUFSIZ	
+stdio.h	m	EOF	
+stdio.h	m	FOPEN_MAX	
+stdio.h	m	FILENAME_MAX	
+stdio.h	m	L_tmpnam	
+stdio.h	m	SEEK_CUR	
+stdio.h	m	SEEK_END	
+stdio.h	m	SEEK_SET	
+stdio.h	m	TMP_MAX	
+stdio.h	e	stderr	
+stdio.h	e	stdin	
+stdio.h	e	stdout	
+stdio.h	f	remove	int remove(const char *filename)
+stdio.h	f	rename	int rename(const char *old, const char *new)
+stdio.h	f	tmpfile	FILE *tmpfile(void)
+stdio.h	f	tmpnam	char *tmpnam(char *s)
+stdio.h	f	fclose	int fclose(FILE *stream)
+stdio.h	f	fflush	int fflush(FILE *stream)
+stdio.h	f	fopen	FILE *fopen(const char * restrict filename, const char * restrict mode)
+stdio.h	f	freopen	FILE *freopen(const char * restrict filename, const char * restrict mode, FILE * restrict stream)
+stdio.h	f	setbuf	void setbuf(FILE * restrict stream, char * restrict buf)
+stdio.h	f	setvbuf	int setvbuf(FILE * restrict stream, char * restrict buf, int mode, size_t size)
+stdio.h	f	fprintf	int fprintf(FILE * restrict stream, const char * restrict format, ...)
+stdio.h	f	fscanf	int fscanf(FILE * restrict stream, const char * restrict format, ...)
+stdio.h	f	printf	int printf(const char * restrict format, ...)
+stdio.h	f	scanf	int scanf(const char * restrict format, ...)
+stdio.h	f	snprintf	int snprintf(char * restrict s, size_t n, const char * restrict format, ...)
+stdio.h	f	sprintf	int sprintf(char * restrict s, const char * restrict format, ...)
+stdio.h	f	sscanf	int sscanf(const char * restrict s, const char * restrict format, ...)
+stdio.h	f	vfprintf	int vfprintf(FILE * restrict stream, const char * restrict format, va_list arg)
+stdio.h	f	vfscanf	int vfscanf(FILE * restrict stream, const char * restrict format, va_list arg)
+stdio.h	f	vprintf	int vprintf(const char * restrict format, va_list arg)
+stdio.h	f	vscanf	int vscanf(const char * restrict format, va_list arg)
+stdio.h	f	vsnprintf	int vsnprintf(char * restrict s, size_t n, const char * restrict format, va_list arg)
+stdio.h	f	vsprintf	int vsprintf(char * restrict s, const char * restrict format, va_list arg)
+stdio.h	f	vsscanf	int vsscanf(const char * restrict s, const char * restrict format, va_list arg)
+stdio.h	f	fgetc	int fgetc(FILE *stream)
+stdio.h	f	fgets	char *fgets(char * restrict s, int n, FILE * restrict stream)
+stdio.h	f	fputc	int fputc(int c, FILE *stream)
+stdio.h	f	fputs	int fputs(const char * restrict s, FILE * restrict stream)
+stdio.h	f	getc	int getc(FILE *stream)
+stdio.h	f	getchar	int getchar(void)
+stdio.h	f	gets	char *gets(char *s)
+stdio.h	f	putc	int putc(int c, FILE *stream)
+stdio.h	f	putchar	int putchar(int c)
+stdio.h	f	puts	int puts(const char *s)
+stdio.h	f	ungetc	int ungetc(int c, FILE *stream)
+stdio.h	f	fread	size_t fread(void * restrict ptr, size_t size, size_t nmemb, FILE * restrict stream)
+stdio.h	f	fwrite	size_t fwrite(const void * restrict ptr, size_t size, size_t nmemb, FILE * restrict stream)
+stdio.h	f	fgetpos	int fgetpos(FILE * restrict stream, fpos_t * restrict pos)
+stdio.h	f	fseek	int fseek(FILE *stream, long int offset, int whence)
+stdio.h	f	fsetpos	int fsetpos(FILE *stream, const fpos_t *pos)
+stdio.h	f	ftell	long int ftell(FILE *stream)
+stdio.h	f	rewind	void rewind(FILE *stream)
+stdio.h	f	clearerr	void clearerr(FILE *stream)
+stdio.h	f	feof	int feof(FILE *stream)
+stdio.h	f	ferror	int ferror(FILE *stream)
+stdio.h	f	perror	void perror(const char *s)
+stdlib.h	t	div_t	
+stdlib.h	t	ldiv_t	
+stdlib.h	t	lldiv_t	
+stdlib.h	t	size_t	
+stdlib.h	t	wchar_t	
+stdlib.h	m	EXIT_FAILURE	
+stdlib.h	m	EXIT_SUCCESS	
+stdlib.h	m	RAND_MAX	
+stdlib.h	m	MB_CUR_MAX	
+stdlib.h	m	NULL	
+stdlib.h	f	atof	double atof(const char *nptr)
+stdlib.h	f	atoi	int atoi(const char *nptr)
+stdlib.h	f	atol	long int atol(const char *nptr)
+stdlib.h	f	atoll	long long int atoll(const char *nptr)
+stdlib.h	f	strtod	double strtod(const char * restrict nptr, char ** restrict endptr)
+stdlib.h	f	strtof	float strtof(const char * restrict nptr, char ** restrict endptr)
+stdlib.h	f	strtold	long double strtold(const char * restrict nptr, char ** restrict endptr)
+stdlib.h	f	strtol	long int strtol(const char * restrict nptr, char ** restrict endptr, int base)
+stdlib.h	f	strtoll	long long int strtoll(const char * restrict nptr, char ** restrict endptr, int base)
+stdlib.h	f	strtoul	unsigned long int strtoul(const char * restrict nptr, char ** restrict endptr, int base)
+stdlib.h	f	strtoull	unsigned long long int strtoull(const char * restrict nptr, char ** restrict endptr, int base)
+stdlib.h	f	rand	int rand(void)
+stdlib.h	f	srand	void srand(unsigned int seed)
+stdlib.h	f	calloc	void *calloc(size_t nmemb, size_t size)
+stdlib.h	f	free	void free(void *ptr)
+stdlib.h	f	malloc	void *malloc(size_t size)
+stdlib.h	f	realloc	void *realloc(void *ptr, size_t size)
+stdlib.h	f	abort	void abort(void)
+stdlib.h	f	atexit	int atexit(void (*func)(void))
+stdlib.h	f	exit	void exit(int status)
+stdlib.h	f	_Exit	void _Exit(int status)
+stdlib.h	f	getenv	char *getenv(const char *name)
+stdlib.h	f	system	int system(const char *string)
+stdlib.h	f	bsearch	void *bsearch(const void *key, const void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *))
+stdlib.h	f	qsort	void qsort(void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *))
+stdlib.h	f	abs	int abs(int j)
+stdlib.h	f	labs	long int labs(long int j)
+stdlib.h	f	llabs	long long int llabs(long long int j)
+stdlib.h	f	div	div_t div(int numer, int denom)
+stdlib.h	f	ldiv	ldiv_t ldiv(long int numer, long int denom)
+stdlib.h	f	lldiv	lldiv_t lldiv(long long int numer, long long int denom)
+stdlib.h	f	mblen	int mblen(const char *s, size_t n)
+stdlib.h	f	mbtowc	int mbtowc(wchar_t * restrict pwc, const char * restrict s, size_t n)
+stdlib.h	f	wctomb	int wctomb(char *s, wchar_t wchar)
+stdlib.h	f	mbstowcs	size_t mbstowcs(wchar_t * restrict pwcs, const char * restrict s, size_t n)
+stdlib.h	f	wcstombs	size_t wcstombs(char * restrict s, const wchar_t * restrict pwcs, size_t n)
+string.h	t	size_t	
+string.h	m	NULL	
+string.h	f	memcpy	void *memcpy(void * restrict s1, const void * restrict s2, size_t n)
+string.h	f	memmove	void *memmove(void *s1, const void *s2, size_t n)
+string.h	f	strcpy	char *strcpy(char * restrict s1, const char * restrict s2)
+string.h	f	strncpy	char *strncpy(char * restrict s1, const char * restrict s2, size_t n)
+string.h	f	strcat	char *strcat(char * restrict s1, const char * restrict s2)
+string.h	f	strncat	char *strncat(char * restrict s1, const char * restrict s2, size_t n)
+string.h	f	memcmp	int memcmp(const void *s1, const void *s2, size_t n)
+string.h	f	strcmp	int strcmp(const char *s1, const char *s2)
+string.h	f	strcoll	int strcoll(const char *s1, const char *s2)
+string.h	f	strncmp	int strncmp(const char *s1, const char *s2, size_t n)
+string.h	f	strxfrm	size_t strxfrm(char * restrict s1, const char * restrict s2, size_t n)
+string.h	f	memchr	void *memchr(const void *s, int c, size_t n)
+string.h	f	strchr	char *strchr(const char *s, int c)
+string.h	f	strcspn	size_t strcspn(const char *s1, const char *s2)
+string.h	f	strpbrk	char *strpbrk(const char *s1, const char *s2)
+string.h	f	strrchr	char *strrchr(const char *s, int c)
+string.h	f	strspn	size_t strspn(const char *s1, const char *s2)
+string.h	f	strstr	char *strstr(const char *s1, const char *s2)
+string.h	f	strtok	char *strtok(char * restrict s1, const char * restrict s2)
+string.h	f	memset	void *memset(void *s, int c, size_t n)
+string.h	f	strerror	char *strerror(int errnum)
+string.h	f	strlen	size_t strlen(const char *s)
+tgmath.h	h	tgmath.h	
+time.h	t	clock_t	
+time.h	t	time_t	
+time.h	t	size_t	
+time.h	s	tm	
+time.h	m	NULL	
+time.h	m	CLOCKS_PER_SEC	
+time.h	f	clock	clock_t clock(void)
+time.h	f	difftime	double difftime(time_t time1, time_t time0)
+time.h	f	mktime	time_t mktime(struct tm *timeptr)
+time.h	f	time	time_t time(time_t *timer)
+time.h	f	asctime	char *asctime(const struct tm *timeptr)
+time.h	f	ctime	char *ctime(const time_t *timer)
+time.h	f	gmtime	struct tm *gmtime(const time_t *timer)
+time.h	f	localtime	struct tm *localtime(const time_t *timer)
+time.h	f	strftime	size_t strftime(char * restrict s, size_t maxsize, const char * restrict format, const struct tm * restrict timeptr)
+wchar.h	t	wchar_t	
+wchar.h	t	size_t	
+wchar.h	t	mbstate_t	
+wchar.h	t	wint_t	
+wchar.h	m	NULL	
+wchar.h	m	WCHAR_MAX	
+wchar.h	m	WCHAR_MIN	
+wchar.h	m	WEOF	
+wchar.h	f	fwprintf	int fwprintf(FILE * restrict stream, const wchar_t * restrict format, ...)
+wchar.h	f	fwscanf	int fwscanf(FILE * restrict stream, const wchar_t * restrict format, ...)
+wchar.h	f	swprintf	int swprintf(wchar_t * restrict s, size_t n, const wchar_t * restrict format, ...)
+wchar.h	f	swscanf	int swscanf(const wchar_t * restrict s, const wchar_t * restrict format, ...)
+wchar.h	f	vfwprintf	int vfwprintf(FILE * restrict stream, const wchar_t * restrict format, va_list arg)
+wchar.h	f	vfwscanf	int vfwscanf(FILE * restrict stream, const wchar_t * restrict format, va_list arg)
+wchar.h	f	vswprintf	int vswprintf(wchar_t * restrict s, size_t n, const wchar_t * restrict format, va_list arg)
+wchar.h	f	vswscanf	int vswscanf(const wchar_t * restrict s, const wchar_t * restrict format, va_list arg)
+wchar.h	f	vwprintf	int vwprintf(const wchar_t * restrict format, va_list arg)
+wchar.h	f	vwscanf	int vwscanf(const wchar_t * restrict format, va_list arg)
+wchar.h	f	wprintf	int wprintf(const wchar_t * restrict format, ...)
+wchar.h	f	wscanf	int wscanf(const wchar_t * restrict format, ...)
+wchar.h	f	fgetwc	wint_t fgetwc(FILE *stream)
+wchar.h	f	fgetws	wchar_t *fgetws(wchar_t * restrict s, int n, FILE * restrict stream)
+wchar.h	f	fputwc	wint_t fputwc(wchar_t c, FILE *stream)
+wchar.h	f	fputws	int fputws(const wchar_t * restrict s, FILE * restrict stream)
+wchar.h	f	fwide	int fwide(FILE *stream, int mode)
+wchar.h	f	getwc	wint_t getwc(FILE *stream)
+wchar.h	f	getwchar	wint_t getwchar(void)
+wchar.h	f	putwc	wint_t putwc(wchar_t c, FILE *stream)
+wchar.h	f	putwchar	wint_t putwchar(wchar_t c)
+wchar.h	f	ungetwc	wint_t ungetwc(wint_t c, FILE *stream)
+wchar.h	f	wcstod	double wcstod(const wchar_t * restrict nptr, wchar_t ** restrict endptr)
+wchar.h	f	wcstof	float wcstof(const wchar_t * restrict nptr, wchar_t ** restrict endptr)
+wchar.h	f	wcstold	long double wcstold(const wchar_t * restrict nptr, wchar_t ** restrict endptr)
+wchar.h	f	wcstol	long int wcstol(const wchar_t * restrict nptr, wchar_t ** restrict endptr, int base)
+wchar.h	f	wcstoll	long long int wcstoll(const wchar_t * restrict nptr, wchar_t ** restrict endptr, int base)
+wchar.h	f	wcstoul	unsigned long int wcstoul(const wchar_t * restrict nptr, wchar_t ** restrict endptr, int base)
+wchar.h	f	wcstoull	unsigned long long int wcstoull(const wchar_t * restrict nptr, wchar_t ** restrict endptr, int base)
+wchar.h	f	wcscpy	wchar_t *wcscpy(wchar_t * restrict s1, const wchar_t * restrict s2)
+wchar.h	f	wcsncpy	wchar_t *wcsncpy(wchar_t * restrict s1, const wchar_t * restrict s2, size_t n)
+wchar.h	f	wmemcpy	wchar_t *wmemcpy(wchar_t * restrict s1, const wchar_t * restrict s2, size_t n)
+wchar.h	f	wmemmove	wchar_t *wmemmove(wchar_t *s1, const wchar_t *s2, size_t n)
+wchar.h	f	wcscat	wchar_t *wcscat(wchar_t * restrict s1, const wchar_t * restrict s2)
+wchar.h	f	wcsncat	wchar_t *wcsncat(wchar_t * restrict s1, const wchar_t * restrict s2, size_t n)
+wchar.h	f	wcscmp	int wcscmp(const wchar_t *s1, const wchar_t *s2)
+wchar.h	f	wcscoll	int wcscoll(const wchar_t *s1, const wchar_t *s2)
+wchar.h	f	wcsncmp	int wcsncmp(const wchar_t *s1, const wchar_t *s2, size_t n)
+wchar.h	f	wcsxfrm	size_t wcsxfrm(wchar_t * restrict s1, const wchar_t * restrict s2, size_t n)
+wchar.h	f	wmemcmp	int wmemcmp(const wchar_t *s1, const wchar_t *s2, size_t n)
+wchar.h	f	wcschr	wchar_t *wcschr(const wchar_t *s, wchar_t c)
+wchar.h	f	wcscspn	size_t wcscspn(const wchar_t *s1, const wchar_t *s2)
+wchar.h	f	wcspbrk	wchar_t *wcspbrk(const wchar_t *s1, const wchar_t *s2)
+wchar.h	f	wcsrchr	wchar_t *wcsrchr(const wchar_t *s, wchar_t c)
+wchar.h	f	wcsspn	size_t wcsspn(const wchar_t *s1, const wchar_t *s2)
+wchar.h	f	wcsstr	wchar_t *wcsstr(const wchar_t *s1, const wchar_t *s2)
+wchar.h	f	wcstok	wchar_t *wcstok(wchar_t * restrict s1, const wchar_t * restrict s2, wchar_t ** restrict ptr)
+wchar.h	f	wmemchr	wchar_t *wmemchr(const wchar_t *s, wchar_t c, size_t n)
+wchar.h	f	wcslen	size_t wcslen(const wchar_t *s)
+wchar.h	f	wmemset	wchar_t *wmemset(wchar_t *s, wchar_t c, size_t n)
+wchar.h	f	wcsftime	size_t wcsftime(wchar_t * restrict s, size_t maxsize, const wchar_t * restrict format, const struct tm * restrict timeptr)
+wchar.h	f	btowc	wint_t btowc(int c)
+wchar.h	f	wctob	int wctob(wint_t c)
+wchar.h	f	mbsinit	int mbsinit(const mbstate_t *ps)
+wchar.h	f	mbrlen	size_t mbrlen(const char * restrict s, size_t n, mbstate_t * restrict ps)
+wchar.h	f	mbrtowc	size_t mbrtowc(wchar_t * restrict pwc, const char * restrict s, size_t n, mbstate_t * restrict ps)
+wchar.h	f	wcrtomb	size_t wcrtomb(char * restrict s, wchar_t wc, mbstate_t * restrict ps)
+wchar.h	f	mbsrtowcs	size_t mbsrtowcs(wchar_t * restrict dst, const char ** restrict src, size_t len, mbstate_t * restrict ps)
+wchar.h	f	wcsrtombs	size_t wcsrtombs(char * restrict dst, const wchar_t ** restrict src, size_t len, mbstate_t * restrict ps)
+wctype.h	t	wint_t	
+wctype.h	t	wctrans_t	
+wctype.h	t	wctype_t	
+wctype.h	m	WEOF	
+wctype.h	f	iswalnum	int iswalnum(wint_t wc)
+wctype.h	f	iswalpha	int iswalpha(wint_t wc)
+wctype.h	f	iswblank	int iswblank(wint_t wc)
+wctype.h	f	iswcntrl	int iswcntrl(wint_t wc)
+wctype.h	f	iswdigit	int iswdigit(wint_t wc)
+wctype.h	f	iswgraph	int iswgraph(wint_t wc)
+wctype.h	f	iswlower	int iswlower(wint_t wc)
+wctype.h	f	iswprint	int iswprint(wint_t wc)
+wctype.h	f	iswpunct	int iswpunct(wint_t wc)
+wctype.h	f	iswspace	int iswspace(wint_t wc)
+wctype.h	f	iswupper	int iswupper(wint_t wc)
+wctype.h	f	iswxdigit	int iswxdigit(wint_t wc)
+wctype.h	f	iswctype	int iswctype(wint_t wc, wctype_t desc)
+wctype.h	f	wctype	wctype_t wctype(const char *property)
+wctype.h	f	towlower	wint_t towlower(wint_t wc)
+wctype.h	f	towupper	wint_t towupper(wint_t wc)
+wctype.h	f	towctrans	wint_t towctrans(wint_t wc, wctrans_t desc)
+wctype.h	f	wctrans	wctrans_t wctrans(const char *property)
