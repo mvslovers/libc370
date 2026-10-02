@@ -23,7 +23,7 @@
  *        -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
  *        -I include -I . -o t test/host/tstscnll.c && ./t
  *
- * GREEN 23/23.  RED, 2026-10-03, the same test against vvscanf.c before
+ * GREEN 23/23 (36/36 with #316's digit and float cases).  RED, 2026-10-03, the same test against vvscanf.c before
  * #318: 8 cases fail (hh, j, L, z, t, the negated %lu) and %hhn then
  * overruns its char under ASan.  The %lld cases pass even there: host
  * long is 64 bits, so storing a long fills a long long.  That half of
@@ -44,6 +44,7 @@ int isspace(int c);
 int isdigit(int c);
 int isalpha(int c);
 int toupper(int c);
+int tolower(int c);
 
 #include "../../src/stdio/vvscanf.c"
 

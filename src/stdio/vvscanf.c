@@ -4,6 +4,9 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdlib.h>
+#include <float.h>
+#include "src/internal/digval.h"
 
 #define inch() ((fp == NULL) ? \
     (ch = (unsigned char)*s++) : (ch = getc(fp)))
@@ -243,56 +246,40 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
                     }
                     else if(ch == '+') inch();
 
-                    /* this logic is the same as strtoul so if you
-                       change this, change that one too */
-
+                    /* the digits, as strtoul() reads them (#316): a digit
+                       must be below the base, letters come from the
+                       EBCDIC-safe table, and 0x is a prefix only right
+                       after a leading 0 */
                     if (base == 0) {
                         undecided = 1;
                     }
 
                     while (!((fp != NULL && ch == EOF)
                              || (fp == NULL && ch == 0))) {
-                        if (isdigit((unsigned char)ch)) {
-                            if (base == 0) {
-                                if (ch == '0') {
-                                    base = 8;
-                                }
-                                else {
-                                    base = 10;
-                                    undecided = 0;
-                                }
-                            }
-                            x = x * base + (ch - '0');
+                        int d;
+
+                        if ((ch == 'x' || ch == 'X') && mcnt == 1 && x == 0
+                            && (base == 16 || (base == 8 && undecided))) {
+                            base = 16;
+                            undecided = 0;
                             inch();
+                            continue;
                         }
-                        else if (isalpha((unsigned char)ch)) {
-                            if ((ch == 'X') || (ch == 'x')) {
-                                if ((base == 0) || ((base == 8) && undecided)) {
-                                    base = 16;
-                                    undecided = 0;
-                                    inch();
-                                }
-                                else if (base == 16) {
-                                    /* hex values are allowed to have an
-                                       optional 0x */
-                                    inch();
-                                }
-                                else {
-                                    break;
-                                }
-                            }
-                            else if (base <= 10) {
+                        d = __digval(ch);
+                        if (base == 0) {
+                            if (d >= 10) {
                                 break;
                             }
-                            else {
-                                x = x * base +
-                                    (toupper((unsigned char)ch) - 'A') + 10;
-                                inch();
+                            base = (ch == '0') ? 8 : 10;
+                            if (base == 10) {
+                                undecided = 0;
                             }
                         }
-                        else {
+                        if (d >= base) {
                             break;
                         }
+                        x = x * base + d;
+                        inch();
                         mcnt++;
                     }
 
@@ -347,9 +334,21 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
                 else if (*format=='e' || *format=='f' || *format=='g' ||
                          *format=='E' || *format=='G') {
                     /* Floating-point (double or float) input item */
-                    int negsw1,negsw2,dotsw,expsw,ndigs1,ndigs2,nfdigs;
-                    int ntrailzer,expnum,expsignsw;
-                    double fpval,pow10;
+                    /* The characters are collected - at most SIGD
+                       significant digits, a decimal exponent and the
+                       exponent part - and handed to strtod(), which checks
+                       the HFP range before it forms an intermediate (#316):
+                       the old *10 and squared powers of ten ended S0CC
+                       past about 1e75. */
+#define SIGD 17
+                    char num[SIGD + 16];
+                    int negsw1 = 0, negsw2 = 0, dotsw = 0, expsw = 0;
+                    int ndigs1 = 0, ndigs2 = 0, nsig = 0;
+                    int expsignsw = 0;   /* nonzero: done +/- on exponent */
+                    long expnum = 0, adj = 0;
+                    double fpval;
+                    int k;
+                    char *q;
 
                     if (!skipvar) {
                         /* l, and L for long double, which is double */
@@ -357,17 +356,6 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
                             dptr = va_arg(arg, double *);
                         else fptr = va_arg(arg, float *);
                     }
-                    negsw1=0;   /* init */
-                    negsw2=0;
-                    dotsw=0;
-                    expsw=0;
-                    ndigs1=0;
-                    ndigs2=0;
-                    nfdigs=0;
-                    ntrailzer=0;  /* # of trailing 0's unaccounted for */
-                    expnum=0;
-                    expsignsw=0;  /* nonzero means done +/- on exponent */
-                    fpval=0.0;
                     /* Skip leading whitespace: */
                     while (ch>=0 && isspace(ch)) inch();
                     if (ch=='-') {
@@ -379,28 +367,23 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
                     while (ch>0) {
                         if (ch=='.' && dotsw==0 && expsw==0) dotsw=1;
                         else if (isdigit(ch)) {
-                            if(expsw) {
+                            if (expsw) {
                                 ndigs2++;
-                                expnum=expnum*10+(ch-'0');
+                                if (expnum < 10000) {
+                                    expnum=expnum*10+(ch-'0');
+                                }
                             }
                             else {
-                                /* To avoid overflow or loss of precision,
-                                   skip leading and trailing zeros unless
-                                   really needed. (Automatic for leading
-                                   0's, since 0.0*10.0 is 0.0) */
                                 ndigs1++;
-                                if (dotsw) nfdigs++;
-                                if (ch=='0' && fpval!=0.) {
-                                    /* Possible trailing 0 */
-                                    ntrailzer++;
+                                if (nsig == 0 && ch == '0') {
+                                    if (dotsw) adj--;   /* leading zero */
                                 }
-                                else {
-                                    /* Account for any preceding zeros */
-                                    while (ntrailzer>0) {
-                                        fpval*=10.;
-                                        ntrailzer--;
-                                    }
-                                    fpval=fpval*10.0+(ch-'0');
+                                else if (nsig < SIGD) {
+                                    num[nsig++] = (char)ch;
+                                    if (dotsw) adj--;
+                                }
+                                else if (!dotsw) {
+                                    adj++;   /* a digit past precision */
                                 }
                             }
                         }
@@ -415,37 +398,43 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
                     }
 
                     /* don't finish at end of input there may be a %n */
-                    /*if ((fp != NULL && ch == EOF)
-                        || (fp == NULL && ch == 0)) fin=1;*/
                     /* Check for a valid fl-pt value: */
                     if (ndigs1==0 || (expsw && ndigs2==0)) return(cnt);
-                    /* Complete the fl-pt value: */
-                    if (negsw2) expnum=-expnum;
-                    expnum+=ntrailzer-nfdigs;
-                    if (expnum!=0 && fpval!=0.0) {
-                        negsw2=0;
-                        if (expnum<0) {
-                            expnum=-expnum;
-                            negsw2=1;
+                    if (nsig == 0) {
+                        fpval = 0.0;
+                    }
+                    else {
+                        /* "<digits>e<exponent>": the exponent is
+                           bounded, so this fits num */
+                        expnum = (negsw2 ? -expnum : expnum) + adj;
+                        q = num + nsig;
+                        *q++ = 'e';
+                        if (expnum < 0) {
+                            *q++ = '-';
+                            expnum = -expnum;
                         }
-                        /* Multiply or divide by 10.0**expnum, using
-                           bits of expnum (fast method) */
-                        pow10=10.0;
-                        for (;;) {
-                            if (expnum & 1) {   /* low-order bit */
-                                if (negsw2) fpval/=pow10;
-                                else fpval*=pow10;
-                            }
-                            expnum>>=1;   /* shift right 1 bit */
-                            if (expnum==0) break;
-                            pow10*=pow10;   /* 10.**n where n is power of 2 */
+                        k = 0;
+                        do {
+                            q[k++] = (char)('0' + expnum % 10);
+                            expnum /= 10;
+                        } while (expnum > 0);
+                        q[k] = '\0';
+                        for (k--, nsig = 0; nsig < k; nsig++, k--) {
+                            char c = q[nsig];
+                            q[nsig] = q[k];
+                            q[k] = c;
                         }
+                        fpval = strtod(num, NULL);
                     }
 
                     if (negsw1) fpval=-fpval;
                     if (!skipvar) {
                         /* l modifier: assign to double */
                         if (size == 'l' || size == 'q') *dptr=fpval;
+                        /* above FLT_MAX, LRER would round past the largest
+                           exponent: S0CC (#314, strtof) */
+                        else if (fpval > FLT_MAX) *fptr = FLT_MAX;
+                        else if (fpval < -FLT_MAX) *fptr = -FLT_MAX;
                         else *fptr=(float)fpval;
                     }
                     cnt++;

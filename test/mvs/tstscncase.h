@@ -110,6 +110,50 @@ static void scn_cases(void)
     BOX(e);
     r = scan("1.5", "%Lf", &e.v);
     CHECK(r == 1 && e.v == 1.5 && INTACT(e), "%Lf into a long double");
+    /* the digits (#316): below the base, 0x only as a prefix */
+    BOX(l);
+    r = scan("9", "%lo", &l.v);
+    CHECK(r == 0 && INTACT(l), "%lo \"9\": no octal digit, no match");
+    BOX(l);
+    r = scan("g", "%lx", &l.v);
+    CHECK(r == 0 && INTACT(l), "%lx \"g\": no hex digit, no match");
+    BOX(l);
+    r = scan("0778", "%lo", &l.v);
+    CHECK(r == 1 && l.v == 63, "%lo \"0778\" stops at the 8");
+    BOX(l);
+    r = scan("1x2", "%lx", &l.v);
+    CHECK(r == 1 && l.v == 1, "%lx \"1x2\": x is no prefix after a 1");
+    BOX(l);
+    r = scan("0x1F", "%lx", &l.v);
+    CHECK(r == 1 && l.v == 31, "%lx \"0x1F\"");
+    BOX(l);
+    r = scan("0x1F", "%li", &l.v);
+    CHECK(r == 1 && l.v == 31, "%li \"0x1F\"");
+    BOX(l);
+    r = scan("017", "%li", &l.v);
+    CHECK(r == 1 && l.v == 15, "%li \"017\" is octal");
+    BOX(l);
+    r = scan("12a", "%ld", &l.v);
+    CHECK(r == 1 && l.v == 12, "%ld \"12a\" stops at the a");
+
+    /* floats in the ordinary range: host and MVS alike */
+    BOX(d);
+    r = scan("1e+3", "%lf", &d.v);
+    CHECK(r == 1 && d.v == 1000.0, "%lf 1e+3");
+    BOX(d);
+    r = scan(".5", "%lf", &d.v);
+    CHECK(r == 1 && d.v == 0.5, "%lf .5");
+    BOX(d);
+    r = scan("-0.001", "%lf", &d.v);
+    CHECK(r == 1 && d.v < -0.00099999999 && d.v > -0.00100000001,
+          "%lf -0.001");
+    BOX(d);
+    r = scan("123456789012345678901234567890", "%lf", &d.v);
+    CHECK(r == 1 && d.v > 1.2345678901234e29 && d.v < 1.2345678901235e29,
+          "%lf 30 digits");
+    BOX(d);
+    r = scan("1e", "%lf", &d.v);
+    CHECK(r == 0, "%lf 1e: no exponent digits, no match");
     BOX(d);
     r = scan("2.5", "%lf", &d.v);
     CHECK(r == 1 && d.v == 2.5 && INTACT(d), "%lf still double");
