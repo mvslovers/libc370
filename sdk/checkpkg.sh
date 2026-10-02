@@ -58,9 +58,22 @@ check "metadata version" \
 t=$(tar tzf "$TGZ" | grep -v '/$' | sort)
 d=$(dpkg-deb -c "$DEB" | awk '{print $NF}' | grep -v '/$' \
     | sed "s|^\./$SYS/||" | sort)
-r=$(rpm -qlp "$RPM" 2>/dev/null | grep "^/$SYS/" | sed "s|^/$SYS/||" | sort)
-check "deb files = tarball files" "$(echo "$d" | md5sum)" "$(echo "$t" | md5sum)"
-check "rpm files = tarball files" "$(echo "$r" | md5sum)" "$(echo "$t" | md5sum)"
+# rpm -qlp lists directories without a trailing slash: keep regular files
+r=$(rpm -qp --qf '[%{FILEMODES:perms} %{FILENAMES}\n]' "$RPM" 2>/dev/null \
+    | awk '/^-/ {print $2}' | grep "^/$SYS/" | sed "s|^/$SYS/||" | sort)
+same() {    # same "what" "list" "reference list"
+    if [ "$2" = "$3" ]; then
+        echo "ok    $1"
+    else
+        echo "FAIL  $1"
+        printf '%s\n' "$2" > /tmp/checkpkg.a
+        printf '%s\n' "$3" > /tmp/checkpkg.b
+        diff /tmp/checkpkg.a /tmp/checkpkg.b | head -20 | sed 's/^/      /'
+        fail=1
+    fi
+}
+same "deb files = tarball files" "$d" "$t"
+same "rpm files = tarball files" "$r" "$t"
 check "files outside the sysroot (deb)" \
     "$(dpkg-deb -c "$DEB" | awk '{print $NF}' | grep -v '/$' \
        | grep -vc "^\./$SYS/")" "0"
