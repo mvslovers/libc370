@@ -40,6 +40,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `EINVAL`. Built with cc370 1.0.0; `test/mvs/tstll.c` passes on MVS (64/64).
 
 ### Fixed
+- **scanf reads integers and floats like `strtoul()` and `strtod()`
+  (#316).** `%o`/`%x`/`%i` take only digits below the base and `0x` only as
+  a prefix (`"1x2"` in `%x` was 0x12); `%e`/`%f`/`%g` go through `strtod()`,
+  so a value past the HFP range no longer ends S0CC, and a `%f` above
+  `FLT_MAX` stores `FLT_MAX`. mvsdev JOB01181: 43/43; the 2.0.0 library
+  ends S0CC on the same test.
 - **`strtod()` and `atof()` no longer end S0CC out of range (#316).**
   Any exponent past about 75, either way, overflowed an intermediate:
   `strtod("1e76")`, `("8e75")` and `("1e-80")` all abended (measured).
