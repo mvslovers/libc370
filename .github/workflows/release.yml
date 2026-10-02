@@ -1,19 +1,21 @@
-# Publish a GitHub release for a v* tag (#249).
+# Publish a GitHub release for a v* tag (#249, #326).
 #
-# 1. build.yml, unchanged: the tag has to build and pass the host tests.
-# 2. VERSION has to equal the tag without its "v".  `release: vX.Y.Z` commits
+# 1. The cc370 to build with is the release sdk/cc370.json names as the
+#    minimum (tag v<min>), not cc370 main: the artifacts must be reproducible
+#    from released tools, and they are checked against the oldest compiler
+#    they claim to support.
+# 2. build.yml, unchanged otherwise: the tag has to build, pass the host
+#    tests, and produce packages that pass sdk/checkpkg.sh.  Its package job
+#    makes the artifacts with the tag's version.
+# 3. VERSION has to equal the tag without its "v".  `release: vX.Y.Z` commits
 #    set it, so a mismatch means the tag sits on the wrong commit.
-# 3. The notes are the tag's CHANGELOG.md section (sdk/changelog-section.py),
-#    followed by the cc370 commit the build used.  A tag without a section
-#    fails here, so no release goes out without notes.  The minimum cc370 a
-#    release needs is written into that section by hand: the build can only
-#    say what it used, not what is required.
-# 4. If the release already exists (made by hand, with curated notes, as
-#    v1.0.7 was), it is left exactly as it is.
-#
-# No assets yet.  The sysroot tarball waits for cc370 releases
-# (mvslovers/cc370#523): before those, it could be reproduced only as far as
-# an unnamed compiler.
+# 4. The notes are the tag's CHANGELOG.md section (sdk/changelog-section.py),
+#    then the cc370 requirement - derived from sdk/cc370.json, the one place
+#    it is written - and the cc370 the build used.  A tag without a section
+#    fails here, so no release goes out without notes.
+# 5. If the release already exists (made by hand, with curated notes, as
+#    v1.0.7 was), its notes are left exactly as they are; the artifacts are
+#    attached either way.
 
 name: Release
 
@@ -25,8 +27,27 @@ permissions:
   contents: write
 
 jobs:
+  requires:
+    runs-on: ubuntu-latest
+    outputs:
+      min: ${{ steps.req.outputs.min }}
+      version: ${{ steps.req.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: The minimum cc370
+        id: req
+        run: |
+          min=$(python3 -c 'import json; print(json.load(open("sdk/cc370.json"))["min"])')
+          echo "min=$min" >> "$GITHUB_OUTPUT"
+          echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
   build:
+    needs: requires
     uses: ./.github/workflows/build.yml
+    with:
+      cc370_ref: v${{ needs.requires.outputs.min }}
+      version: ${{ needs.requires.outputs.version }}
 
   release:
     needs: build
@@ -44,13 +65,22 @@ jobs:
             exit 1
           fi
 
+      - name: The artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: libc370-dist
+          path: dist
+
       - name: Release notes
         run: |
           python3 sdk/changelog-section.py "${GITHUB_REF_NAME#v}" > notes.md
-          printf '\n---\nBuilt with cc370 `%s`.\n' \
-            "${{ needs.build.outputs.cc370_sha }}" >> notes.md
+          {
+            printf '\n---\n%s ' "$(python3 sdk/package.py requires notes)"
+            printf 'Built with cc370 %s.\n' \
+              "${{ needs.build.outputs.cc370_version }}"
+          } >> notes.md
 
-      - name: Create the release
+      - name: Create the release, attach the artifacts
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -60,3 +90,4 @@ jobs:
             gh release create "$GITHUB_REF_NAME" \
               --title "libc370 $GITHUB_REF_NAME" --notes-file notes.md
           fi
+          gh release upload "$GITHUB_REF_NAME" --clobber dist/*

@@ -16,6 +16,7 @@ The sysroot is derived from the driver itself (cc370 -dumpmachine /
 
 Usage:  python3 sdk/mklibc.py build      # compile/assemble/archive into build/sdk
         python3 sdk/mklibc.py install    # copy artifacts into the cc370 sysroot
+        python3 sdk/mklibc.py stage DIR  # the same tree into DIR/{include,lib,macros}
         python3 sdk/mklibc.py clean      # remove build/sdk + the generated .s
         python3 sdk/mklibc.py all
 """
@@ -242,30 +243,13 @@ def cmd_build():
     return 0
 
 
-def cmd_install():
-    triple, inc, lib = sysroot()
-    # macros go in the sysroot beside include/lib; as370's real binary lives in
-    # <sysroot>/bin, so its default macro path <exedir>/../macros resolves here.
-    mac = os.path.join(os.path.dirname(inc), "macros")  # <sysroot>/macros = <prefix>/cc370/macros
+def stage(inc, lib, mac):
+    """Copy headers, libc.a + startfiles and macros into three directories.
+    Copies only, never deletes: shared by install (into the sysroot) and by
+    sdk/package.py (into a staging tree, #326)."""
     libc = f"{BUILD}/libc.a"
     if not os.path.exists(libc):
-        print("[install] build first (no", libc + ")"); return 1
-    # headers.  2.0 puts them in subdirectories (mvs/, ibm/mvs/, ...), so the
-    # whole tree is copied, not include/*.h (#256).  The sysroot's include/ is
-    # cleared first: install used to copy and never delete, so a sysroot that
-    # had 1.x installed would keep every flat 1.x header beside the new tree,
-    # and <clibwto.h> would still resolve -- from a stale copy, silently.
-    # libc370 owns that directory outright: cc370 searches no other include
-    # directory, and every file a 1.x install left there came from libc370.
-    # The path check keeps a mis-derived sysroot from costing anything else.
-    if os.path.basename(inc) != "include" or \
-            os.path.basename(os.path.dirname(inc)) != triple:
-        print(f"[install] refusing to clear {inc}: not <prefix>/{triple}/include")
-        return 1
-    stale = 0
-    if os.path.isdir(inc):
-        stale = sum(len(f) for _, _, f in os.walk(inc))
-        shutil.rmtree(inc)
+        print("[stage] build first (no", libc + ")"); return None
     for d in (inc, lib, mac):
         os.makedirs(d, exist_ok=True)
     n = 0
@@ -286,9 +270,47 @@ def cmd_install():
     # default (<exedir>/../macros); needed for hand-asm + the cc370 one-shot.
     m = 0
     for srcdir in (f"{ROOT}/sysmac", f"{ROOT}/maclib"):
-        for f in glob.glob(f"{srcdir}/*"):
+        for f in sorted(glob.glob(f"{srcdir}/*")):
             if os.path.isfile(f):
                 shutil.copy(f, mac); m += 1
+    return n, m
+
+
+def cmd_stage(prefix):
+    """Stage <prefix>/{include,lib,macros} - the sysroot's layout, anywhere."""
+    if os.path.exists(prefix) and os.listdir(prefix):
+        print(f"[stage] {prefix} is not empty"); return 1
+    r = stage(f"{prefix}/include", f"{prefix}/lib", f"{prefix}/macros")
+    if r is None:
+        return 1
+    print(f"[stage] {r[0]} headers, libc.a + crt0/1/m.o, {r[1]} macro files -> {prefix}")
+    return 0
+
+
+def cmd_install():
+    triple, inc, lib = sysroot()
+    # macros go in the sysroot beside include/lib; as370's real binary lives in
+    # <sysroot>/bin, so its default macro path <exedir>/../macros resolves here.
+    mac = os.path.join(os.path.dirname(inc), "macros")  # <sysroot>/macros = <prefix>/cc370/macros
+    if not os.path.exists(f"{BUILD}/libc.a"):
+        print("[install] build first (no", f"{BUILD}/libc.a" + ")"); return 1
+    # headers.  2.0 puts them in subdirectories (mvs/, ibm/mvs/, ...), so the
+    # whole tree is copied, not include/*.h (#256).  The sysroot's include/ is
+    # cleared first: install used to copy and never delete, so a sysroot that
+    # had 1.x installed would keep every flat 1.x header beside the new tree,
+    # and <clibwto.h> would still resolve -- from a stale copy, silently.
+    # libc370 owns that directory outright: cc370 searches no other include
+    # directory, and every file a 1.x install left there came from libc370.
+    # The path check keeps a mis-derived sysroot from costing anything else.
+    if os.path.basename(inc) != "include" or \
+            os.path.basename(os.path.dirname(inc)) != triple:
+        print(f"[install] refusing to clear {inc}: not <prefix>/{triple}/include")
+        return 1
+    stale = 0
+    if os.path.isdir(inc):
+        stale = sum(len(f) for _, _, f in os.walk(inc))
+        shutil.rmtree(inc)
+    n, m = stage(inc, lib, mac)
     print(f"[install] target {triple}")
     print(f"[install] {n} headers -> {inc} ({stale} files there before, cleared)")
     print(f"[install] libc.a + crt0/1/m.o -> {lib}")
@@ -323,6 +345,10 @@ if __name__ == "__main__":
     rc = 0
     if cmd == "clean":
         sys.exit(cmd_clean())
+    if cmd == "stage":
+        if len(sys.argv) != 3:
+            sys.exit("usage: python3 sdk/mklibc.py stage DIR")
+        sys.exit(cmd_stage(sys.argv[2]))
     if cmd in ("build", "all"):
         rc = cmd_build()
     if rc == 0 and cmd in ("install", "all"):

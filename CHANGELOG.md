@@ -7,6 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [2.1.0] - unreleased
 
 ### Added
+- **Release artifacts (#326).** Every release carries the sysroot tarball
+  `libc370-<v>-sysroot.tar.gz` (unpack it into a cc370 sysroot), the
+  packages `libc370-dev_<v>_all.deb` and `libc370-devel-<v>.noarch.rpm`
+  (`/usr/lib/cc370/cc370`), `libc370-<v>-metadata.json` with the cc370 range
+  and `SHA256SUMS`. The cc370 requirement is written once, in
+  `sdk/cc370.json`; the package dependencies, the metadata and the release
+  notes are derived from it, and the release is built with the cc370 release
+  it names as the minimum.
 - **`_Exit()` in `<stdlib.h>` (#314).** Ends the program without running
   `atexit()`/`on_exit()` functions; their registrations are dropped and the
   rest of `exit()`'s teardown still runs -- streams are closed and the
