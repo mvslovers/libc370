@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
-## [Unreleased]
+## [2.1.0] - unreleased
 
 ### Added
 - **`_Exit()` in `<stdlib.h>` (#314).** Ends the program without running
