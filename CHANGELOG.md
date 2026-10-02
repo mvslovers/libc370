@@ -40,6 +40,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `EINVAL`. Built with cc370 1.0.0; `test/mvs/tstll.c` passes on MVS (64/64).
 
 ### Fixed
+- **`strtod()` and `atof()` no longer end S0CC out of range (#316).**
+  Any exponent past about 75, either way, overflowed an intermediate:
+  `strtod("1e76")`, `("8e75")` and `("1e-80")` all abended (measured).
+  The range is now checked before any intermediate is formed; overflow
+  returns `±HUGE_VAL`, underflow 0, both with `ERANGE`. Also C99 now: `e+5`
+  is accepted, `"1e"` leaves `endptr` at the `e`, and nothing converted
+  leaves it at `nptr`. mvsdev JOB01179, 32/32.
 - **`strtol()`, `strtoul()` -- and with them `atoi()` and `atol()` --
   follow C99 (#316).** Rewritten on the shape of `strtoll()`/`strtoull()`.
   **Behaviour changes a caller can see:** a digit must be below the base
