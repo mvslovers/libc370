@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- **`strtoll()`, `strtoull()`, `atoll()`, `llabs()`, `lldiv()` and
+  `lldiv_t` in `<stdlib.h>`; `LLONG_MIN`, `LLONG_MAX` and `ULLONG_MAX` in
+  `<limits.h>` (#314).** The C99 `long long` siblings of `strtol()`,
+  `strtoul()`, `atol()`, `labs()` and `ldiv()`; before, a program calling
+  one failed to link (`STRTOLL` unresolved). The two parsers follow C99
+  where their `long` siblings do not yet: out-of-range input saturates and
+  sets `ERANGE`, `endptr` is `nptr` when nothing converts, a digit must be
+  below the base, and base-36 letters are read through a table rather than
+  `c - 'A'`, which is wrong in EBCDIC past `I`. An invalid base sets
+  `EINVAL`. Built with cc370 1.0.0; `test/mvs/tstll.c` passes on MVS (64/64).
+
 ## [2.0.0] - 2026-10-01
 
 **libc370 2.0 reorganises the public headers, and almost every program that

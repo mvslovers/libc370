@@ -724,6 +724,11 @@ src/racf/racsacee.c	src/mvs/racf/racsacee.c	declared in <mvs/racf.h>
 src/smf/smfactive.c	src/mvs/smf/smfactive.c	declared in <mvs/smf.h>
 src/smf/smfinit.c	src/mvs/smf/smfinit.c	declared in <mvs/smf.h>
 src/smf/smfwrite.c	src/mvs/smf/smfwrite.c	declared in <mvs/smf.h>
+src/stdlib/atoll.c	src/stdlib/atoll.c	new after 2.0.0 (#314)
+src/stdlib/llabs.c	src/stdlib/llabs.c	new after 2.0.0 (#314)
+src/stdlib/lldiv.c	src/stdlib/lldiv.c	new after 2.0.0 (#314)
+src/stdlib/strtoll.c	src/stdlib/strtoll.c	new after 2.0.0 (#314)
+src/stdlib/strtoull.c	src/stdlib/strtoull.c	new after 2.0.0 (#314)
 src/thdmgr/@@cminit.c	src/mvs/thread/@@cminit.c	declared in <mvs/thread.h>
 src/thdmgr/@@cmqadd.c	src/mvs/thread/@@cmqadd.c	declared in <mvs/thread.h>
 src/thdmgr/@@cmqdel.c	src/mvs/thread/@@cmqdel.c	declared in <mvs/thread.h>

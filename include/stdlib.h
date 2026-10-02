@@ -38,6 +38,7 @@ typedef int wchar_t;
 #endif
 typedef struct { int quot; int rem; } div_t;
 typedef struct { long int quot; long int rem; } ldiv_t;
+typedef struct { long long int quot; long long int rem; } lldiv_t;
 
 #define NULL ((void *)0)
 #define EXIT_SUCCESS 0
@@ -71,8 +72,11 @@ double atof(const char *nptr);
 double strtod(const char *nptr, char **endptr);
 int atoi(const char *nptr);
 long int atol(const char *nptr);
+long long int atoll(const char *nptr);
 long int strtol(const char *nptr, char **endptr, int base);
 unsigned long int strtoul(const char *nptr, char **endptr, int base);
+long long int strtoll(const char *nptr, char **endptr, int base);
+unsigned long long int strtoull(const char *nptr, char **endptr, int base);
 int mblen(const char *s, size_t n);
 int mbtowc(wchar_t *pwc, const char *s, size_t n);
 int wctomb(char *s, wchar_t wchar);
@@ -82,6 +86,8 @@ int abs(int j);
 div_t div(int numer, int denom);
 long int labs(long int j);
 ldiv_t ldiv(long int numer, long int denom);
+long long int llabs(long long int j);
+lldiv_t lldiv(long long int numer, long long int denom);
 int atexit(void (*func)(void));
 char *getenv(const char *name);
 extern int      setenv(const char *name, const char *value, int rewrite);
