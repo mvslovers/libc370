@@ -491,24 +491,17 @@ its minimum cc370 by commit, as 1.0.7 and 1.0.8 did. After 2.0.0: phase 4
 
 ---
 
-## Tier 1 — libc370 2.1.0 (no release before it; tag after consulting the coordinating session)
+## Tier 1 — after 2.1.0
 
-*Re-ranked 2026-10-03.* 2.1.0 collects the C99 work now on `main`, the
-printf/scanf/strto* fixes, #313 and #315. CHANGELOG carries the section as
-`[2.1.0] - unreleased`.
+**libc370 2.1.0 released 2026-10-03** (tag `v2.1.0` on `e65d317`), with its
+artifacts (#326): sysroot tarball, `.deb`, `.rpm`, metadata.json,
+SHA256SUMS, built with cc370 v1.1.0. cc370's `install.sh` picks it by its
+metadata and links a program against it (checked end to end on macOS).
 
-1. **#326** — release artefacts: **built and checked on every CI run since
-   PR #331** (`sdk/cc370.json` is the one place the cc370 range lives;
-   `sdk/package.py`, `sdk/checkpkg.sh`). Open: the end-to-end install of both
-   packages (needs cc370 1.1.0 packages) and the first real release run.
-2. ~~**#313 / #315**~~ — merged 2026-10-03 (PR #332, `5537e1e`): helpers and
-   prologue macros are cc370's, `<sys/_cc370.h>` in every header,
-   `sdk/cc370.json` min 1.1.0. mvsdev JOB01183 green with cc370 1.1.0-dev.
-   **Next: the 2.1.0 release commit** (VERSION, CHANGELOG date) and the tag,
-   once cc370 v1.1.0 exists and the coordinating session (mbt-4c) agrees.
-3. **#325** — the full C99 7.x audit (was #314 step 3). Known so far:
-   `vsscanf`/`vfscanf`/`vscanf` missing, `HUGE_VAL` < `DBL_MAX`, no
-   `HUGE_VALF`/`HUGE_VALL`.
+1. **#325** — the full C99 7.x audit. Known so far: `vsscanf`/`vfscanf`/
+   `vscanf` missing, `HUGE_VAL` < `DBL_MAX`, no `HUGE_VALF`/`HUGE_VALL`.
+2. **#326 leftover** — an `apt`/`dnf` install of the packages beside cc370's
+   on a real Linux system has not been exercised.
 
 ### Tier 1 before — empty since #182 (PR #227, 2026-09-29)
 
