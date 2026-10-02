@@ -1,0 +1,22 @@
+//TSTEXIT  JOB (SYS),'LIBC370 314',CLASS=A,MSGCLASS=H,
+//             MSGLEVEL=(1,1)
+//*
+//* libc370 #314 - _Exit().  See test/mvs/tstexit.c for the verdict:
+//* both steps end COND CODE 0007 and print BEFORE; only CONTROL
+//* prints ATEXIT RAN.  STEPLIB is the scratch PDS recvexit.jcl
+//* restores into.
+//*
+//* Run:     mvsdev JOB01169, 2026-10-02: both CC 0007; EXIT printed
+//*          BEFORE only, CONTROL BEFORE and ATEXIT RAN.
+//*
+//EXIT     EXEC PGM=TSTEXIT,REGION=4M
+//STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.EXITSCR
+//SYSPRINT DD  SYSOUT=*
+//SYSTERM  DD  SYSOUT=*
+//SYSUDUMP DD  SYSOUT=*
+//*
+//CONTROL  EXEC PGM=TSTEXITC,REGION=4M,COND=EVEN
+//STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.EXITSCR
+//SYSPRINT DD  SYSOUT=*
+//SYSTERM  DD  SYSOUT=*
+//SYSUDUMP DD  SYSOUT=*

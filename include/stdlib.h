@@ -60,9 +60,11 @@ void free(void *ptr);
 #if defined(__MVS__) || defined(__CMS__) || defined(__VSE__)
 void abort(void) __attribute__((noreturn));
 void exit(int status) __attribute__((noreturn));
+void _Exit(int status) __attribute__((noreturn));
 #else
 void abort(void);
 void exit(int status);
+void _Exit(int status);
 #endif
 void qsort(void *, size_t, size_t,
                            int (*)(const void *, const void *));

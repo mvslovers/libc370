@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Added
+- **`_Exit()` in `<stdlib.h>` (#314).** Ends the program without running
+  `atexit()`/`on_exit()` functions; their registrations are dropped and the
+  rest of `exit()`'s teardown still runs -- streams are closed and the
+  runtime's storage is freed, which matters where the runtime does not end
+  with its task. External name `@EXIT`. mvsdev JOB01169.
 - **`<inttypes.h>` (#314):** `imaxabs()`, `imaxdiv()`/`imaxdiv_t`,
   `strtoimax()`, `strtoumax()` and the `PRI*` macros for every width,
   `LEAST`, `FAST`, `MAX` and `PTR`. `SCN*` exists for the 16- and 32-bit

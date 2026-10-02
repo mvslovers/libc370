@@ -3597,6 +3597,7 @@ XSTAB1	ibm/mvs/iharb.h
 XSTAB2	ibm/mvs/iharb.h
 XTLST	ibm/mvs/ihaxtlst.h
 _DUMMY	ibm/jes2/jqe.h
+_Exit	stdlib.h
 _FILE	stdio.h
 _FILE_EYE	stdio.h
 _FILE_FLAG_APPEND	stdio.h
