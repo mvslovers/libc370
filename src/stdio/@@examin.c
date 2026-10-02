@@ -228,6 +228,18 @@ __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax)
 			/* 64 bit variables */
 			__64_from_i32(&base64, base);
 			neg = 0;	/* __64 values are unsigned */
+			if (((specifier == 'd') || (specifier == 'i'))
+			    && (value64.u32[0] & 0x80000000UL)) {
+				/* a negative value: print its magnitude, the two's
+				   complement.  INT64_MIN's fits the unsigned 64 bits.
+				   u32[0] is the high word, as filled above (#321) */
+				neg = 1;
+				value64.u32[0] = ~value64.u32[0];
+				value64.u32[1] = ~value64.u32[1] + 1;
+				if (value64.u32[1] == 0) {
+					value64.u32[0]++;
+				}
+			}
 			while (!(__64_is_zero(&value64))) {
 				__64_divmod(&value64, &base64, &div64, &rem64);
 				rem = __64_to_i32(&rem64);
