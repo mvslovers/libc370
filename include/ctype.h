@@ -28,6 +28,7 @@ extern short *__toup;
 #define isspace(c) (__isbuf[(c)] & 0x0100U)
 #define isupper(c) (__isbuf[(c)] & 0x0200U)
 #define isxdigit(c) (__isbuf[(c)] & 0x0400U)
+#define isblank(c) (__isbuf[(c)] & 0x0800U)
 #define tolower(c) (__tolow[(c)])
 #define toupper(c) (__toup[(c)])
 

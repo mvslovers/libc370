@@ -39,6 +39,9 @@ tst75snd() {
 tstcmtt() {
     "$CC" -std=gnu99 -Wall -Wextra -o "$B/t" tstcmtt.c && "$B/t"
 }
+tstblank() {
+    "$CC" -std=gnu99 -Wall -Wextra -Werror -o "$B/t" tstblank.c && "$B/t"
+}
 tstcnvdi() {
     "$CC" -std=gnu99 -Wall -Wextra -Werror -O1 -o "$B/t" tstcnvdi.c && "$B/t"
 }
@@ -206,7 +209,7 @@ tstwpos() {
 
 # The tests a plain run covers: all of them.  A test that stops building is
 # not dropped from here - fix it, or say which issue it waits on.
-ALL="tst75snd tstcmtt tstcnvdi tstdblcv tstdblrb tstdi3 tstdirck tstemptl
+ALL="tst75snd tstblank tstcmtt tstcnvdi tstdblcv tstdblrb tstdi3 tstdirck tstemptl
      tstenqdq tsterrfl tstfabnd tstfcls tstfpapp tstfprls tstfpunit tstidcam tstinet tstiolk tstjesop
      tstjesprb tstjestx tstll tstlspd tstlstds tstplus tstrldwk tsttm64vec tsttxdsn tstvsnp
      tstwchar tstwpos"

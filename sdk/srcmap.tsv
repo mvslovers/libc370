@@ -496,6 +496,7 @@ src/clib/ispunct.c	src/ctype/ispunct.c	declared in <ctype.h>
 src/clib/isspace.c	src/ctype/isspace.c	declared in <ctype.h>
 src/clib/isupper.c	src/ctype/isupper.c	declared in <ctype.h>
 src/clib/isxdigit.c	src/ctype/isxdigit.c	declared in <ctype.h>
+src/ctype/isblank.c	src/ctype/isblank.c	new after 2.0.0 (#314)
 src/clib/labs.c	src/stdlib/labs.c	declared in <stdlib.h>
 src/clib/ldexp.c	src/math/ldexp.c	declared in <math.h>
 src/clib/ldiv.c	src/stdlib/ldiv.c	declared in <stdlib.h>
