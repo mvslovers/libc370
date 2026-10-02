@@ -7,6 +7,8 @@
 //* STEPLIB is the scratch PDS recvll.jcl restores into.  There is no
 //* red step: before #314 the probe does not link.
 //*
+//* Run:     mvsdev JOB01155, 2026-10-02: GREEN CC 0000, 64/64.
+//*
 //* RC 0 = every check passed, 1 = a check failed (it is the COND CODE).
 //*
 //GREEN    EXEC PGM=TSTLL,REGION=4M

@@ -16,8 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   sets `ERANGE`, `endptr` is `nptr` when nothing converts, a digit must be
   below the base, and base-36 letters are read through a table rather than
   `c - 'A'`, which is wrong in EBCDIC past `I`. An invalid base sets
-  `EINVAL`. Built with cc370 1.0.0; the MVS run (`test/mvs/tstll.c`)
-  is still to come.
+  `EINVAL`. Built with cc370 1.0.0; `test/mvs/tstll.c` passes on MVS (64/64).
 
 ## [2.0.0] - 2026-10-01
 

@@ -22,7 +22,9 @@
  * Install: jcl/recvll.jcl (its own staging data set, not the mbt one).
  * Run:     jcl/tstll.jcl.
  *
- * Not run on MVS yet.
+ * GREEN: mvsdev JOB01155, CC 0000, 64/64, 2026-10-02 (RECEIVE JOB01154),
+ * linked against build/sdk from the PR branch with cc370 1.0.0.  There
+ * is no red step: before #314 this program does not link.
  *
  * RC: 0 = every check passed, 1 = a check failed (it is the COND CODE).
  */
