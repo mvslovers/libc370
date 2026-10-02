@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Added
+- **`strtof()` and `strtold()` in `<stdlib.h>` (#314).** `long double`
+  is `double` under cc370, so `strtold()` is `strtod()`. `strtof()` narrows
+  `strtod()`'s result and answers a value above `FLT_MAX` itself with
+  `FLT_MAX` and `ERANGE`: a plain `(float)` of such a value rounds past the
+  largest HFP exponent and ends **S0CC** (measured, mvsdev JOB01159).
 - **`isblank()` in `<ctype.h>` (#314)**, as macro and function, true for
   `' '` and `'\t'` (EBCDIC X'40' and X'05') only, through a new bit 0x0800
   in the `__isbuf` table. mvsdev JOB01157, 10/10.

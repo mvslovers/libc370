@@ -726,6 +726,8 @@ src/smf/smfactive.c	src/mvs/smf/smfactive.c	declared in <mvs/smf.h>
 src/smf/smfinit.c	src/mvs/smf/smfinit.c	declared in <mvs/smf.h>
 src/smf/smfwrite.c	src/mvs/smf/smfwrite.c	declared in <mvs/smf.h>
 src/stdlib/atoll.c	src/stdlib/atoll.c	new after 2.0.0 (#314)
+src/stdlib/strtof.c	src/stdlib/strtof.c	new after 2.0.0 (#314)
+src/stdlib/strtold.c	src/stdlib/strtold.c	new after 2.0.0 (#314)
 src/stdlib/llabs.c	src/stdlib/llabs.c	new after 2.0.0 (#314)
 src/stdlib/lldiv.c	src/stdlib/lldiv.c	new after 2.0.0 (#314)
 src/stdlib/strtoll.c	src/stdlib/strtoll.c	new after 2.0.0 (#314)
