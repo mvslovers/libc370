@@ -491,21 +491,21 @@ its minimum cc370 by commit, as 1.0.7 and 1.0.8 did. After 2.0.0: phase 4
 
 ---
 
-## Tier 1 — the first 2.x minor: C99 gaps (#316, #318, #325)
+## Tier 1 — libc370 2.1.0 (no release before it; tag after consulting the coordinating session)
 
-*Added 2026-10-02.* Not a defect on a running system, but a hole every new
-port meets at link time. Steps 1 and 2 of #314 landed the same day (see
-Recently landed); the issue's 14-name link probe now resolves completely.
+*Re-ranked 2026-10-03.* 2.1.0 collects the C99 work now on `main`, the
+printf/scanf/strto* fixes, #313 and #315. CHANGELOG carries the section as
+`[2.1.0] - unreleased`.
 
-1. **#318** — scanf `ll`/`hh`/`j`/`z`/`t`. `vvscanf.c` knows only `h` and `l`,
-   so `%lld` stores 4 of 8 bytes. Until it lands, `<inttypes.h>` has no
-   `SCN*8`, `SCN*64` or `SCN*MAX`.
-2. **#316** — `strtol`/`strtoul` (and by reading, `strtod` past `DBL_MAX`):
-   no digit-below-base check, no `ERANGE`, no sign in `strtoul`, EBCDIC
-   letter values. A consumer-visible change (minor).
-3. **#325** — the full C99 7.x audit (was #314 step 3; #314 closed
-   2026-10-02): one row per name, declared / in `libc.a`, then an issue per
-   real gap.
+1. **#326** — release artefacts from 2.1.0: sysroot tarball, `libc370-dev`
+   .deb / `libc370-devel` .rpm via nFPM, metadata.json, SHA256SUMS; the
+   minimum cc370 in exactly one place (shared with #315).
+2. **#313 / #315** — helpers and prologue macros move to cc370; the
+   `__CC370__ < 10100` check. **Wait for the coordinating session's go**:
+   mbt#138 is in every consumer, cc370 #687/#688 still to land.
+3. **#325** — the full C99 7.x audit (was #314 step 3). Known so far:
+   `vsscanf`/`vfscanf`/`vscanf` missing, `HUGE_VAL` < `DBL_MAX`, no
+   `HUGE_VALF`/`HUGE_VALL`.
 
 ### Tier 1 before — empty since #182 (PR #227, 2026-09-29)
 
@@ -1526,6 +1526,11 @@ Pointers only. The reasoning lives in the closing comments and the PRs.
   against the S0CC a plain `(float)` of a value above `FLT_MAX` ends in
   (JOB01159); #323 `<inttypes.h>`, `SCN*` only for 16/32/PTR (JOB01167);
   #324 `_Exit`, handlers skipped, teardown kept (JOB01169).
+- **#316, #318** (PRs #327-#330, merged 2026-10-03, unreleased) - scanf
+  `hh`/`ll`/`j`/`z`/`t`/`L` (JOB01171); `strtol`/`strtoul` to C99 with a
+  shared EBCDIC digit table (JOB01173); `strtod` checks the HFP range
+  first instead of ending S0CC past ~1e75 (red JOB01177, green JOB01179);
+  scanf's digits and floats follow (JOB01181).
 - **#321** (PR #322, merged 2026-10-02) - `%lld`/`%jd` printed every
   negative value unsigned; found by the `<inttypes.h>` test. JOB01165
   17/17, 2.0.0 11 of 17 failing.
