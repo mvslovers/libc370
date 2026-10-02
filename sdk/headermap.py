@@ -25,6 +25,9 @@ DOC = os.path.join(ROOT, "doc", "design-2.0.md")
 INC = os.path.join(ROOT, "include")
 
 KEYWORDS = ("internal", "split", "removed")
+# headers added after 2.0.0: not 1.x headers, so no row in the 1.x map
+# above, but known here so the check below does not call them stray
+NEW = {"inttypes.h": "#314"}
 BEGIN, END = "<!-- headermap:begin -->", "<!-- headermap:end -->"
 
 
@@ -127,7 +130,8 @@ def cmd_check():
         for t in sp["targets"]:
             if not t.startswith("src/"):
                 targets[t].append(sp["source"])
-    stray = sorted(p for p in present if p not in today and p not in targets)
+    stray = sorted(p for p in present
+                   if p not in today and p not in targets and p not in NEW)
     if stray:
         print(f"[headermap] in include/, but in no row: {', '.join(stray)}")
         bad += 1
