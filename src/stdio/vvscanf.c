@@ -22,19 +22,16 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
     ** read unset. The compiler cannot follow any of those pairings, so
     ** they are initialized here to keep -Wuninitialized quiet (#102). */
     char *cptr = NULL;
-    int *iptr = NULL;
-    unsigned int *uptr = NULL;
-    long *lptr = NULL;
-    unsigned long *luptr = NULL;
-    short *hptr = NULL;
-    unsigned short *huptr = NULL;
+    void *vptr = NULL;
     double *dptr = NULL;
     float *fptr = NULL;
     long startpos = 0;
     const char *startp = NULL;
     int skipvar = 0; /* nonzero if we are skipping this variable */
-    int modlong = 0;   /* nonzero if "l" modifier found */
-    int modshort = 0;   /* nonzero if "h" modifier found */
+    /* the length modifier (#318): 0 none, 'H' hh, 'h' h, 'l' l, and 'q'
+       for the 64-bit ll, j and L.  z and t are 'l': size_t and ptrdiff_t
+       are long-sized under cc370. */
+    int size = 0;
     int informatitem;  /* nonzero if % format item started */
            /* informatitem is 1 if we have processed "%l" but not the
               type letter (s,d,e,f,g,...) yet. */
@@ -58,8 +55,7 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
         else if (*format == '%' || informatitem) {
             if(*format=='%') {  /* starting a format item */
                 format++;
-                modlong=0;   /* init */
-                modshort=0;
+                size = 0;
                 skipvar = 0;
                 if (*format == '*') {
                     skipvar = 1;
@@ -73,13 +69,23 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
                 informatitem=0;
             }
             else if (*format == 'l') {
-                /* Type modifier: l  (e.g. %ld) */
-                modlong=1;
+                /* Type modifier: l (long), a second one ll (long long) */
+                size = (size == 'l') ? 'q' : 'l';
                 informatitem=1;
             }
             else if (*format == 'h') {
-                /* Type modifier: h (short int) */
-                modshort=1;
+                /* Type modifier: h (short), a second one hh (char) */
+                size = (size == 'h') ? 'H' : 'h';
+                informatitem=1;
+            }
+            else if (*format == 'j' || *format == 'L') {
+                /* intmax_t, and L: long long (L is long double for e/f/g) */
+                size = 'q';
+                informatitem=1;
+            }
+            else if (*format == 'z' || *format == 't') {
+                /* size_t, ptrdiff_t: both long-sized under cc370 */
+                size = 'l';
                 informatitem=1;
             }
             else {   /* process a type character: */
@@ -192,14 +198,23 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
                     }
                 }
                 else if (*format == 'n') {
-                    uptr = va_arg(arg, unsigned int *);
+                    long n;
+
+                    vptr = va_arg(arg, void *);
                     if (fp != NULL) {
-                        *uptr = (unsigned int)(ftell(fp) - startpos);
+                        n = ftell(fp) - startpos;
                     }
                     else {
                         /* we need a -1 because s will point to
                            the character after the NUL */
-                        *uptr = (unsigned int)(s - startp - 1);
+                        n = (long)(s - startp - 1);
+                    }
+                    switch (size) {
+                    case 'H': *(signed char *)vptr = (signed char)n; break;
+                    case 'h': *(short *)vptr = (short)n; break;
+                    case 'l': *(long *)vptr = n; break;
+                    case 'q': *(long long *)vptr = n; break;
+                    default:  *(int *)vptr = (int)n; break;
                     }
                 }
                 else if (*format == 'd' || *format == 'u'
@@ -207,7 +222,7 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
                          || *format == 'p'
                          || *format == 'i') {
                     int neg = 0;
-                    unsigned long x = 0;
+                    unsigned long long x = 0;
                     int undecided = 0;
                     int base = 10;
                     int mcnt = 0;
@@ -217,17 +232,7 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
                     else if (*format == 'o') base = 8;
                     else if (*format == 'i') base = 0;
                     if (!skipvar) {
-                        if ((*format == 'd') || (*format == 'i')) {
-                            if (modlong) lptr = va_arg(arg, long *);
-                            else if (modshort) hptr = va_arg(arg, short *);
-                            else iptr = va_arg(arg, int *);
-                        }
-                        else {
-                            if (modlong) luptr = va_arg(arg, unsigned long *);
-                            else if (modshort) huptr =
-                                     va_arg(arg, unsigned short *);
-                            else uptr = va_arg(arg, unsigned int *);
-                        }
+                        vptr = va_arg(arg, void *);
                     }
 
                     /* Skip leading whitespace: */
@@ -301,26 +306,40 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
 
 
                     if (!skipvar) {
+                        /* the sign applies to the unsigned conversions
+                           too, as in strtoull; each store truncates to
+                           the size the length modifier names */
+                        if (neg) {
+                            x = 0 - x;
+                        }
                         if ((*format == 'd') || (*format == 'i')) {
-                            long lval;
-
-                            if (neg) {
-                                lval = (long)-x;
+                            switch (size) {
+                            case 'H': *(signed char *)vptr = (signed char)x;
+                                      break;
+                            case 'h': *(short *)vptr = (short)x; break;
+                            case 'l': *(long *)vptr = (long)x; break;
+                            case 'q': *(long long *)vptr = (long long)x;
+                                      break;
+                            default:  *(int *)vptr = (int)x; break;
                             }
-                            else {
-                                lval = (long)x;
-                            }
-
-                            if (modlong) *lptr=lval;
-                                /* l modifier: assign to long */
-                            else if (modshort) *hptr = (short)lval;
-                                /* h modifier */
-                            else *iptr=(int)lval;
                         }
                         else {
-                            if (modlong) *luptr = (unsigned long)x;
-                            else if (modshort) *huptr = (unsigned short)x;
-                            else *uptr = (unsigned int)x;
+                            switch (size) {
+                            case 'H': *(unsigned char *)vptr =
+                                          (unsigned char)x;
+                                      break;
+                            case 'h': *(unsigned short *)vptr =
+                                          (unsigned short)x;
+                                      break;
+                            case 'l': *(unsigned long *)vptr =
+                                          (unsigned long)x;
+                                      break;
+                            case 'q': *(unsigned long long *)vptr = x;
+                                      break;
+                            default:  *(unsigned int *)vptr =
+                                          (unsigned int)x;
+                                      break;
+                            }
                         }
                     }
                     cnt++;
@@ -333,7 +352,9 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
                     double fpval,pow10;
 
                     if (!skipvar) {
-                        if (modlong) dptr = va_arg(arg, double *);
+                        /* l, and L for long double, which is double */
+                        if (size == 'l' || size == 'q')
+                            dptr = va_arg(arg, double *);
                         else fptr = va_arg(arg, float *);
                     }
                     negsw1=0;   /* init */
@@ -424,7 +445,7 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
                     if (negsw1) fpval=-fpval;
                     if (!skipvar) {
                         /* l modifier: assign to double */
-                        if (modlong) *dptr=fpval;
+                        if (size == 'l' || size == 'q') *dptr=fpval;
                         else *fptr=(float)fpval;
                     }
                     cnt++;

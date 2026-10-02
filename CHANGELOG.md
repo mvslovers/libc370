@@ -40,6 +40,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `EINVAL`. Built with cc370 1.0.0; `test/mvs/tstll.c` passes on MVS (64/64).
 
 ### Fixed
+- **scanf knows the length modifiers `hh`, `ll`, `j`, `z`, `t` and `L`
+  (#318).** It knew `h` and `l` only: `%lld` stored a `long`, which is the
+  high word of a `long long` on S/370, and left the low word as it was;
+  `%hhd`/`%hhn` wrote past a `char`; `j`, `z` and `t` derailed the format.
+  `%n` honours the modifiers too. Behaviour change: a `-` before a `%u`,
+  `%x` or `%o` value now negates it as `strtoul()` does, instead of being
+  dropped. mvsdev JOB01171: 23/23, against 18 of 23 failing with 2.0.0.
 - **`%lld`, `%lli` and `%jd` print a negative value with its sign (#321).**
   The 64-bit path of `printf` treated every value as unsigned, so `-5`
   printed `18446744073709551611` -- and so did `PRId64`. mvsdev JOB01165:

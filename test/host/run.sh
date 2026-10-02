@@ -157,6 +157,11 @@ tstlstds() {
        -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
        -I $R/include -I $R -o "$B/t" tstlstds.c "$R/src/ext/strutil/@@patmat.c" && "$B/t"
 }
+tstscnll() {
+    "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address \
+       -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
+       -I $R/include -I $R -o "$B/t" tstscnll.c && "$B/t"
+}
 tstll() {
     "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address \
        -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
@@ -211,7 +216,7 @@ tstwpos() {
 # not dropped from here - fix it, or say which issue it waits on.
 ALL="tst75snd tstblank tstcmtt tstcnvdi tstdblcv tstdblrb tstdi3 tstdirck tstemptl
      tstenqdq tsterrfl tstfabnd tstfcls tstfpapp tstfprls tstfpunit tstidcam tstinet tstiolk tstjesop
-     tstjesprb tstjestx tstll tstlspd tstlstds tstplus tstrldwk tsttm64vec tsttxdsn tstvsnp
+     tstjesprb tstjestx tstll tstlspd tstlstds tstplus tstrldwk tstscnll tsttm64vec tsttxdsn tstvsnp
      tstwchar tstwpos"
 
 [ $# -gt 0 ] && ALL="$*"
