@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
-## [2.1.0] - unreleased
+## [2.1.0] - 2026-10-03
 
 **Requires cc370 1.1.0 or later.** The compiler's helper routines and the
 prologue macros now ship with cc370 itself, and every libc370 header checks
