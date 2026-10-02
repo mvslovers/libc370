@@ -1943,6 +1943,8 @@ LDBL_MIN	float.h
 LDBL_MIN_10_EXP	float.h
 LDBL_MIN_EXP	float.h
 LIMCTMK	ibm/mvs/iefvkeys.h
+LLONG_MAX	limits.h
+LLONG_MIN	limits.h
 LOAD1BLK	mvs/dslist.h
 LOADAPFLG	mvs/dslist.h
 LOADCMSGN	mvs/dslist.h
@@ -3407,6 +3409,7 @@ UINT_LEAST32_MAX	stdint.h
 UINT_LEAST64_MAX	stdint.h
 UINT_LEAST8_MAX	stdint.h
 UINT_MAX	limits.h
+ULLONG_MAX	limits.h
 ULONG_LONG_MAX	stdint.h
 ULONG_MAX	limits.h
 UNITK	ibm/mvs/iefvkeys.h
@@ -3947,6 +3950,7 @@ atexit	stdlib.h
 atof	stdlib.h
 atoi	stdlib.h
 atol	stdlib.h
+atoll	stdlib.h
 bind	sys/socket.h
 bldl	mvs/pds.h
 bsearch	stdlib.h
@@ -4250,6 +4254,8 @@ ldiv	stdlib.h
 libc370_version	ext/version.h
 linger	sys/socket.h
 listen	sys/socket.h
+llabs	stdlib.h
+lldiv	stdlib.h
 loaddata	mvs/dslist.h
 loadenv	mvs/env.h
 loads01	mvs/dslist.h
@@ -4466,7 +4472,9 @@ strstr	string.h
 strtod	stdlib.h
 strtok	string.h
 strtol	stdlib.h
+strtoll	stdlib.h
 strtoul	stdlib.h
+strtoull	stdlib.h
 strxfrm	string.h
 super_do	mvs/apf.h
 super_key_do	mvs/apf.h
