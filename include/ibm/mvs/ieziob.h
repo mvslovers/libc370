@@ -1,5 +1,6 @@
 #ifndef IOB_H
 #define IOB_H
+#include <sys/_cc370.h>
 
 typedef struct iob      IOB;
 typedef struct iobprfx  IOBPRFX;

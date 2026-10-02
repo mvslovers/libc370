@@ -1,5 +1,6 @@
 #ifndef CLIBWTO_H
 #define CLIBWTO_H
+#include <sys/_cc370.h>
 #include <stdarg.h>
 #include <s370/savearea.h>
 

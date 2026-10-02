@@ -12,6 +12,7 @@
 
 #ifndef __TIME_INCLUDED
 #define __TIME_INCLUDED
+#include <sys/_cc370.h>
 
 #define CLOCKS_PER_SEC 1000
 #define NULL ((void *)0)

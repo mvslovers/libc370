@@ -1,5 +1,6 @@
 #ifndef TXT99_H
 #define TXT99_H
+#include <sys/_cc370.h>
 
 typedef struct txt99    TXT99;
 

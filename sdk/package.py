@@ -63,6 +63,36 @@ def derived(kind):
     }[kind]
 
 
+def check_header():
+    """#315: include/sys/_cc370.h carries sdk/cc370.json's minimum, and every
+    public header includes it.  Called from sdk/headermap.py check (CI)."""
+    hdr = os.path.join(ROOT, "include", "sys", "_cc370.h")
+    text = open(hdr, encoding="latin-1").read()
+    bad = 0
+    lo, _ = requires()
+    m = re.search(r"#define __LIBC370_MIN_CC370 (\d+)", text)
+    if not m or int(m.group(1)) != derived("number"):
+        print(f"[cc370] {hdr}: __LIBC370_MIN_CC370 is "
+              f"{m.group(1) if m else 'missing'}, sdk/cc370.json says "
+              f"{derived('number')}"); bad += 1
+    if f'"libc370 needs cc370 {lo} or later"' not in text:
+        print(f"[cc370] {hdr}: the #error text does not name cc370 {lo}"); bad += 1
+    inc = os.path.join(ROOT, "include")
+    missing = []
+    for d, _, files in os.walk(inc):
+        for f in files:
+            p = os.path.join(d, f)
+            if f.endswith(".h") and p != hdr and \
+                    "#include <sys/_cc370.h>" not in open(p, encoding="latin-1").read():
+                missing.append(os.path.relpath(p, inc))
+    if missing:
+        print(f"[cc370] not including <sys/_cc370.h>: {', '.join(sorted(missing))}")
+        bad += 1
+    print(f"[cc370] minimum {lo} = {derived('number')}"
+          + (f"; {bad} problem(s)" if bad else "; every header checks it"))
+    return bad
+
+
 def cmd_requires(kind):
     v = derived(kind)
     print("\n".join(v) if isinstance(v, list) else v)

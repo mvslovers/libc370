@@ -103,8 +103,15 @@ def cmd_move():
 def cmd_check():
     rows = load()
     bad = 0
-    state = {"moved": 0, "pending": 0, "stays": 0}
+    state = {"moved": 0, "pending": 0, "stays": 0, "left": 0}
     for r in rows:
+        # "<project>:<path>" - moved out of libc370 (cc370:runtime/src/..., #313):
+        # done when it is gone from this tree
+        if re.match(r"^[a-z0-9]+:", r["target"]):
+            if exists(r["today"]):
+                print(f"[srcmap] {r['today']} still here, moved to {r['target']}"); bad += 1
+            state["left"] += 1
+            continue
         a, b = exists(r["today"]), exists(r["target"])
         if r["today"] == r["target"]:           # listed so that the map is complete
             if not a:
@@ -135,7 +142,7 @@ def cmd_check():
                 if t.encode() in raw and rx.search(raw):
                     print(f"[srcmap] {f} still names {t}"); bad += 1
     print(f"[srcmap] {len(rows)} rows: {state['moved']} moved, {state['pending']} pending, "
-          f"{state['stays']} staying"
+          f"{state['stays']} staying, {state['left']} moved to another project"
           + (f"; {bad} problem(s)" if bad else "; consistent"))
     return 1 if bad else 0
 

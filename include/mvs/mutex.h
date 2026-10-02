@@ -1,5 +1,6 @@
 #ifndef CLIBMUTX_H
 #define CLIBMUTX_H
+#include <sys/_cc370.h>
 
 #define CLIB_MUTEX_RNAME    "MUTEX.%08X"
 

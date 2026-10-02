@@ -1,5 +1,6 @@
 #ifndef IEZBITS_H
 #define IEZBITS_H
+#include <sys/_cc370.h>
 
 #define BIT0    0x80
 #define BIT1    0x40

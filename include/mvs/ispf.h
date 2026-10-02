@@ -1,5 +1,6 @@
 #ifndef CLIBISPF_H
 #define CLIBISPF_H
+#include <sys/_cc370.h>
 
 /* The following function can be found in the ISP.V2R2M0.LLIB dataset */
 

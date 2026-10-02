@@ -6,8 +6,9 @@ of the [cc370](https://github.com/mvslovers/cc370) cross-toolchain.
 A reentrant C runtime: the standard C library (`stdio`, `stdlib`, `string`,
 `time`, …) plus the MVS runtime it is built on (the C startup, GETMAIN-based
 storage, dataset I/O) and MVS extras (JES2, ISPF, RACF, SMF, a thread manager).
-It is also cc370's *libgcc* — the compiler-support routines live here,
-so there is no separate libgcc.
+Since 2.1 the compiler-support routines (cc370's *libgcc*) and the
+prologue macros ship with cc370 itself (`libcc370rt.a`), so libc370 needs
+**cc370 1.1.0 or later**; every header checks it (`<sys/_cc370.h>`).
 
 Originally created as **crent370** by Michael Dean Rayborn; now the cc370 target
 libc, maintained by the [mvslovers](https://github.com/mvslovers) community.

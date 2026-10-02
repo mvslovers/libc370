@@ -1,5 +1,6 @@
 #ifndef HASPSJB_H
 #define HASPSJB_H
+#include <sys/_cc370.h>
 
 /* HASP SUBSYSTEM JOB BLOCK (SJB) DSECT */
 

@@ -12,6 +12,7 @@
 
 #ifndef __SETJMP_INCLUDED
 #define __SETJMP_INCLUDED
+#include <sys/_cc370.h>
 
 typedef struct {
     int regs[15];	/* R0-R14 */

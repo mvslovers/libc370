@@ -1,5 +1,6 @@
 #ifndef MVS_FILE_H
 #define MVS_FILE_H
+#include <sys/_cc370.h>
 /* mvs/file.h - MVS extensions to a stdio FILE.
 **
 ** libc370 2.0 splits this out of clibio.h (#256).

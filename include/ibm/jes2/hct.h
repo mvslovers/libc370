@@ -1,5 +1,6 @@
 #ifndef HASPHCT_H
 #define HASPHCT_H
+#include <sys/_cc370.h>
 
 typedef struct __hct    __HCT;
 

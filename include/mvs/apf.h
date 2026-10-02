@@ -1,5 +1,6 @@
 #ifndef CLIBAUTH_H
 #define CLIBAUTH_H
+#include <sys/_cc370.h>
 #include <ibm/mvs/ihacde.h>
 
 /* __autask() - make task APF authorized */

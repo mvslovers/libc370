@@ -1,5 +1,6 @@
 #ifndef ACEE_H
 #define ACEE_H
+#include <sys/_cc370.h>
 
 typedef struct acee         ACEE;
 typedef struct conngrp      CONNGRP;

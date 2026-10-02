@@ -1,5 +1,6 @@
 #ifndef CLIBCP_H
 #define CLIBCP_H
+#include <sys/_cc370.h>
 
 #include "ibm/mvs/dcbd.h"
 #include "ibm/jes2/hct.h"    /* JES Checkpoint Control Table, record 3 in HASPCKPT */

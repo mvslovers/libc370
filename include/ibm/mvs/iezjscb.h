@@ -1,5 +1,6 @@
 #ifndef IEZJSCB_H
 #define IEZJSCB_H
+#include <sys/_cc370.h>
 
 typedef struct iezjscb  IEZJSCB;
 typedef struct iezjscb  JSCB;

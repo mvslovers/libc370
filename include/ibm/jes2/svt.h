@@ -1,5 +1,6 @@
 #ifndef HASPSVT_H
 #define HASPSVT_H
+#include <sys/_cc370.h>
 
 typedef struct haspsvt  HASPSVT;/* JES2 subsystem vector table      */
 

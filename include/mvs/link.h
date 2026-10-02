@@ -1,5 +1,6 @@
 #ifndef CLIBLINK_H
 #define CLIBLINK_H
+#include <sys/_cc370.h>
 #include <ibm/mvs/ihacde.h>
 
 /* link to external program, dcb, r1 and prc can be NULL

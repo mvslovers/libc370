@@ -1,5 +1,6 @@
 #ifndef EXT_STRUTIL_H
 #define EXT_STRUTIL_H
+#include <sys/_cc370.h>
 /* ext/strutil.h - libc370's own string helpers: padded copies,
 ** pattern match, a clearing memset.
 **

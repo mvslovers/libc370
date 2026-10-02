@@ -1,5 +1,6 @@
 #ifndef MVS_RECOVERY_H
 #define MVS_RECOVERY_H
+#include <sys/_cc370.h>
 /* mvs/recovery.h - recovery: ESTAE and try().
 **
 ** libc370 2.0 merges clibstae.h and clibtry.h into this header (#256).

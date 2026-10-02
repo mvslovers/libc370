@@ -1,5 +1,6 @@
 #ifndef IHARB_H
 #define IHARB_H
+#include <sys/_cc370.h>
 
 typedef struct rbprfx       RBPRFX;
 typedef struct rbbasic      RBBASIC;

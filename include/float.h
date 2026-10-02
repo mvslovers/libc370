@@ -12,6 +12,7 @@
 
 #ifndef __FLOAT_INCLUDED
 #define __FLOAT_INCLUDED
+#include <sys/_cc370.h>
 
 #if defined(__CMS__) || defined(__MVS__) || defined(__VSE__)
 /*

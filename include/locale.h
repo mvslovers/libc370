@@ -12,6 +12,7 @@
 
 #ifndef __LOCALE_INCLUDED
 #define __LOCALE_INCLUDED
+#include <sys/_cc370.h>
 
 struct lconv {
     char *decimal_point;

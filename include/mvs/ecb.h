@@ -1,5 +1,6 @@
 #ifndef CLIBECB_H
 #define CLIBECB_H
+#include <sys/_cc370.h>
 
 #include <ext/array.h>
 

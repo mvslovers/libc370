@@ -108,7 +108,7 @@ src/clib/@@austep.c	src/mvs/apf/@@austep.c	declared in <mvs/apf.h>
 src/clib/@@autask.c	src/mvs/apf/@@autask.c	declared in <mvs/apf.h>
 src/clib/@@autcde.c	src/mvs/apf/@@autcde.c	declared in <mvs/apf.h>
 src/clib/@@autnam.c	src/mvs/apf/@@autnam.c	declared in <mvs/apf.h>
-src/clib/@@bitops.c	src/s370/@@bitops.c	64-bit arithmetic the compiler calls (libgcc's part)
+src/clib/@@bitops.c	cc370:runtime/src/@@bitops.c	moved to cc370 libcc370rt.a (#313, cc370#687)
 src/clib/@@bldl.c	src/mvs/pds/@@bldl.c	declared in <mvs/pds.h>
 src/clib/@@call.c	src/mvs/link/@@call.c	declared in <mvs/link.h>
 src/clib/@@caller.c	src/stdio/@@caller.c	declared only in src/internal/fileio.h
@@ -116,7 +116,7 @@ src/clib/@@cas.c	src/s370/@@cas.c	declared in <s370/atomic.h>
 src/clib/@@cibdel.c	src/mvs/console/@@cibdel.c	declared in <mvs/console.h>
 src/clib/@@cibget.c	src/mvs/console/@@cibget.c	declared in <mvs/console.h>
 src/clib/@@cibset.c	src/mvs/console/@@cibset.c	declared in <mvs/console.h>
-src/clib/@@cmpdi2.c	src/s370/@@cmpdi2.c	64-bit arithmetic the compiler calls (libgcc's part)
+src/clib/@@cmpdi2.c	cc370:runtime/src/@@cmpdi2.c	moved to cc370 libcc370rt.a (#313, cc370#687)
 src/clib/@@cpclos.c	src/mvs/jes2ckpt/@@cpclos.c	declared in <mvs/jes2ckpt.h>
 src/clib/@@cpopen.c	src/mvs/jes2ckpt/@@cpopen.c	declared in <mvs/jes2ckpt.h>
 src/clib/@@cppoin.c	src/mvs/jes2ckpt/@@cppoin.c	declared in <mvs/jes2ckpt.h>
@@ -143,7 +143,7 @@ src/clib/@@ddbusy.c	src/stdio/@@ddbusy.c	declared only in src/internal/fileio.h
 src/clib/@@dec.c	src/s370/@@dec.c	declared in <s370/atomic.h>
 src/clib/@@delete.c	src/mvs/link/@@delete.c	declared in <mvs/link.h>
 src/clib/@@delmem.c	src/mvs/pds/@@delmem.c	declared in <mvs/pds.h>
-src/clib/@@divdi3.c	src/s370/@@divdi3.c	64-bit arithmetic the compiler calls (libgcc's part)
+src/clib/@@divdi3.c	cc370:runtime/src/@@divdi3.c	moved to cc370 libcc370rt.a (#313, cc370#687)
 src/clib/@@doperm.c	src/stdio/@@doperm.c	stdio internals
 src/clib/@@dsalc.c	src/mvs/dynalloc/@@dsalc.c	declared in <mvs/dynalloc.h>
 src/clib/@@dsalcf.c	src/mvs/dynalloc/@@dsalcf.c	declared in <mvs/dynalloc.h>
@@ -171,8 +171,8 @@ src/clib/@@fgetc.c	src/stdio/@@fgetc.c	declared only in src/internal/fileio.h
 src/clib/@@fgets.c	src/stdio/@@fgets.c	declared only in src/internal/fileio.h
 src/clib/@@fildef.c	src/stdio/@@fildef.c	stdio internals
 src/clib/@@finden.c	src/mvs/env/@@finden.c	declared in <mvs/env.h>
-src/clib/@@fixdi.c	src/s370/@@fixdi.c	64-bit arithmetic the compiler calls (libgcc's part)
-src/clib/@@fltdi.c	src/s370/@@fltdi.c	64-bit arithmetic the compiler calls (libgcc's part)
+src/clib/@@fixdi.c	cc370:runtime/src/@@fixdi.c	moved to cc370 libcc370rt.a (#313, cc370#687)
+src/clib/@@fltdi.c	cc370:runtime/src/@@fltdi.c	moved to cc370 libcc370rt.a (#313, cc370#687)
 src/clib/@@fmtisp.c	src/mvs/dslist/@@fmtisp.c	declared in <mvs/dslist.h>
 src/clib/@@fmtloa.c	src/mvs/dslist/@@fmtloa.c	declared in <mvs/dslist.h>
 src/clib/@@fndcde.c	src/mvs/link/@@fndcde.c	declared in <mvs/link.h>
@@ -247,8 +247,8 @@ src/clib/@@load.c	src/mvs/link/@@load.c	declared in <mvs/link.h>
 src/clib/@@loadhi.c	src/mvs/link/@@loadhi.c	declared in <mvs/link.h>
 src/clib/@@locate.c	src/mvs/dscb/@@locate.c	declared in <mvs/dscb.h>
 src/clib/@@mtd.c	src/time/@@mtd.c	date arithmetic behind <time.h>
-src/clib/@@muldi3.c	src/s370/@@muldi3.c	64-bit arithmetic the compiler calls (libgcc's part)
-src/clib/@@negdi2.c	src/s370/@@negdi2.c	64-bit arithmetic the compiler calls (libgcc's part)
+src/clib/@@muldi3.c	cc370:runtime/src/@@muldi3.c	moved to cc370 libcc370rt.a (#313, cc370#687)
+src/clib/@@negdi2.c	cc370:runtime/src/@@negdi2.c	moved to cc370 libcc370rt.a (#313, cc370#687)
 src/clib/@@nwtx99.c	src/mvs/dynalloc/@@nwtx99.c	declared in <mvs/dynalloc.h>
 src/clib/@@nwtx9a.c	src/mvs/dynalloc/@@nwtx9a.c	declared in <mvs/dynalloc.h>
 src/clib/@@nwtx9s.c	src/mvs/dynalloc/@@nwtx9s.c	declared in <mvs/dynalloc.h>

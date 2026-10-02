@@ -1,5 +1,6 @@
 #ifndef MVS_WSA_H
 #define MVS_WSA_H
+#include <sys/_cc370.h>
 
 typedef struct clibwsa  CLIBWSA;    /* per process writable static area     */
 

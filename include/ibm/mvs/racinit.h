@@ -1,5 +1,6 @@
 #ifndef RACINIT_H
 #define RACINIT_H
+#include <sys/_cc370.h>
 
 typedef struct racinit  RACINIT;
 

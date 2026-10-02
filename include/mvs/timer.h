@@ -1,5 +1,6 @@
 #ifndef CLIBTMR_H
 #define CLIBTMR_H
+#include <sys/_cc370.h>
 
 #include <errno.h>
 #include <stdarg.h>

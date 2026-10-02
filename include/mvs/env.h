@@ -1,5 +1,6 @@
 #ifndef CLIBENV_H
 #define CLIBENV_H
+#include <sys/_cc370.h>
 
 #include <stdlib.h>
 

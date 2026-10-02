@@ -1,5 +1,6 @@
 #ifndef MVS_DD_H
 #define MVS_DD_H
+#include <sys/_cc370.h>
 /* mvs/dd.h - DD lookup: DSAB and TIOT chains.
 **
 ** libc370 2.0 merges clibdsab.h and clibtiot.h into this header (#256).

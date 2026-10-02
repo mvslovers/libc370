@@ -1,5 +1,6 @@
 #ifndef IKJECT_H
 #define IKJECT_H
+#include <sys/_cc370.h>
 
 typedef struct ikject	ECT;
 

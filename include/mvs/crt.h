@@ -1,5 +1,6 @@
 #ifndef MVS_CRT_H
 #define MVS_CRT_H
+#include <sys/_cc370.h>
 /* mvs/crt.h - the runtime anchors: CLIBGRT (process), CLIBCRT (task), CLIBPPA (program).
 **
 ** libc370 2.0 merges clibgrt.h, clibcrt.h and clibppa.h into this header (#256).

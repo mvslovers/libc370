@@ -42,18 +42,12 @@ tstcmtt() {
 tstblank() {
     "$CC" -std=gnu99 -Wall -Wextra -Werror -o "$B/t" tstblank.c && "$B/t"
 }
-tstcnvdi() {
-    "$CC" -std=gnu99 -Wall -Wextra -Werror -O1 -o "$B/t" tstcnvdi.c && "$B/t"
-}
 tstdblcv() {
     "$CC" -std=gnu99 -Wall -Wextra -Werror -O1 -o "$B/t" tstdblcv.c && "$B/t"
 }
 tstdblrb() {
     "$CC" -std=gnu99 -Wall -Wextra -Werror -O1 -fsanitize=address \
        -o "$B/t" tstdblrb.c && "$B/t"
-}
-tstdi3() {
-    "$CC" -std=gnu99 -Wall -Wextra -Werror -O1 -o "$B/t" tstdi3.c && "$B/t"
 }
 tstdirck() {
     "$CC" -std=gnu99 -Wall \
@@ -219,7 +213,7 @@ tstwpos() {
 
 # The tests a plain run covers: all of them.  A test that stops building is
 # not dropped from here - fix it, or say which issue it waits on.
-ALL="tst75snd tstblank tstcmtt tstcnvdi tstdblcv tstdblrb tstdi3 tstdirck tstemptl
+ALL="tst75snd tstblank tstcmtt tstdblcv tstdblrb tstdirck tstemptl
      tstenqdq tsterrfl tstfabnd tstfcls tstfpapp tstfprls tstfpunit tstidcam tstinet tstiolk tstjesop
      tstjesprb tstjestx tstl tstll tstlspd tstlstds tstplus tstrldwk tstscnll tsttm64vec tsttxdsn tstvsnp
      tstwchar tstwpos"

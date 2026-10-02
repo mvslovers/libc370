@@ -20,6 +20,7 @@ THE SOFTWARE.
 */
 #ifndef TIME64_H
 #define TIME64_H
+#include <sys/_cc370.h>
 #if defined(__LP64__)
 #error Your time_t is already 64-bit.
 #else

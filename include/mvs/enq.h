@@ -1,5 +1,6 @@
 #ifndef CLIBENQ_H
 #define CLIBENQ_H
+#include <sys/_cc370.h>
 
 #define ENQ_SCOPE       0x03        /* SCOPE related bits               */
 #define ENQ_SYSTEMS     0x02        /* SCOPE=SYSTEMS                    */

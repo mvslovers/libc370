@@ -1,5 +1,6 @@
 #ifndef CLIBLOCK_H
 #define CLIBLOCK_H
+#include <sys/_cc370.h>
 
 #define LOCKQNAME       "CLIBLOCK"
 #define LOCKRNAME       "LOCK.%08X"

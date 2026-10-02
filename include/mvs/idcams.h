@@ -1,5 +1,6 @@
 #ifndef MVS_IDCAMS_H
 #define MVS_IDCAMS_H
+#include <sys/_cc370.h>
 /* mvs/idcams.h - run IDCAMS commands.
 **
 ** libc370 2.0 splits this out of mvssupa.h (#256).

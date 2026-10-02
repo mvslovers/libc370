@@ -1,5 +1,6 @@
 #ifndef IHAASVT_H
 #define IHAASVT_H
+#include <sys/_cc370.h>
 
 typedef struct asvt         ASVT;
 

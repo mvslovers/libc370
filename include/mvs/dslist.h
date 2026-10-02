@@ -1,5 +1,6 @@
 #ifndef CLIBLIST_H
 #define CLIBLIST_H
+#include <sys/_cc370.h>
 
 typedef struct dslist   DSLIST; 	/* a dataset list record            */
 typedef struct pdslist  PDSLIST;	/* a PDS member list                */

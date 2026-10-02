@@ -1,5 +1,6 @@
 #ifndef HASPJOE_H
 #define HASPJOE_H
+#include <sys/_cc370.h>
 
 typedef struct __joe        __JOE;      /* work joe                         */
 typedef struct __charjoe    __CHARJOE;  /* characteristics joe              */

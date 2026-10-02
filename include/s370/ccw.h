@@ -1,5 +1,6 @@
 #ifndef CLIBCCW_H
 #define CLIBCCW_H
+#include <sys/_cc370.h>
 
 typedef struct ccw0         CCW0;   /* CCW with 24 bit address  */
 typedef struct ccw1         CCW1;   /* CCW with 31 bit address  */

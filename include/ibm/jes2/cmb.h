@@ -1,5 +1,6 @@
 #ifndef HASPCMB_H
 #define HASPCMB_H
+#include <sys/_cc370.h>
 
 /* HASP CONSOLE MESSAGE BUFFER (CMB) DSECT */
 typedef struct haspcmb  HASPCMB;

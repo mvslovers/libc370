@@ -1,5 +1,6 @@
 #ifndef CLIB64_H
 #define CLIB64_H
+#include <sys/_cc370.h>
 #include <stdint.h>
 
 /* This macro defines the word size in bytes of the array that constitues the big-number data structure. */

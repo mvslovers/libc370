@@ -12,6 +12,7 @@
 
 #ifndef __STDARG_INCLUDED
 #define __STDARG_INCLUDED
+#include <sys/_cc370.h>
 
 /* don't use builtins on MVS until they have been implemented */
 #if defined(__GNUC__) && !defined(__MVS__) && !defined(__CMS__) \

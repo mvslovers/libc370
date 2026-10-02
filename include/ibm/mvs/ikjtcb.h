@@ -1,5 +1,6 @@
 #ifndef IKJTCB_H
 #define IKJTCB_H
+#include <sys/_cc370.h>
 
 typedef struct tcb      TCB;
 typedef struct tcbfix   TCBFIX;

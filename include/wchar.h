@@ -13,6 +13,7 @@
 
 #ifndef __WCHAR_INCLUDED
 #define __WCHAR_INCLUDED
+#include <sys/_cc370.h>
 
 #ifndef __SIZE_T_DEFINED
 #define __SIZE_T_DEFINED

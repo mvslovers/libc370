@@ -1,5 +1,6 @@
 #ifndef IEEBASEA_H
 #define IEEBASEA_H
+#include <sys/_cc370.h>
 
 /********************************************************************** 
 *

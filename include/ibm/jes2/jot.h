@@ -1,5 +1,6 @@
 #ifndef HASPJOT_H
 #define HASPJOT_H
+#include <sys/_cc370.h>
 
 #include "ibm/jes2/joe.h"
 

@@ -1,5 +1,6 @@
 #ifndef IKJUPT_H
 #define IKJUPT_H
+#include <sys/_cc370.h>
 
 /**********************************************************************
 *    THE USER PROFILE TABLE (UPT) IS BUILT BY THE LOGON/LOGOFF        *

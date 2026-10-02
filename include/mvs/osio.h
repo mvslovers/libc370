@@ -1,5 +1,6 @@
 #ifndef OSIO_H
 #define OSIO_H
+#include <sys/_cc370.h>
 
 #include "ibm/mvs/dcbd.h"
 #include "ibm/mvs/iezdeb.h"

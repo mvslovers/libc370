@@ -1,5 +1,6 @@
 #ifndef IHADVA_H
 #define IHADVA_H
+#include <sys/_cc370.h>
 
 /********************************************************************/
 /*                 DEVTYPE PARAMETER AREA                           */

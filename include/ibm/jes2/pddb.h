@@ -1,5 +1,6 @@
 #ifndef HASPPDDB_H
 #define HASPPDDB_H
+#include <sys/_cc370.h>
 
 typedef struct __pddb       __PDDB;     /* JES Peripheral Data Definition Block */
 

@@ -1,5 +1,6 @@
 #ifndef SAFV_H
 #define SAFV_H
+#include <sys/_cc370.h>
 
 typedef struct safv     SAFV;   /* SAF VECTOR TABLE                         */
 

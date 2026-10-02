@@ -1,5 +1,6 @@
 #ifndef MVS_STORAGE_H
 #define MVS_STORAGE_H
+#include <sys/_cc370.h>
 /* mvs/storage.h - storage: GETMAIN/FREEMAIN and the runtime heap subpool.
 **
 ** libc370 2.0 splits this out of clibos.h (#256).

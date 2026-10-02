@@ -12,6 +12,7 @@
 
 #ifndef __STDLIB_INCLUDED
 #define __STDLIB_INCLUDED
+#include <sys/_cc370.h>
 
 #ifndef __SIZE_T_DEFINED
 #define __SIZE_T_DEFINED

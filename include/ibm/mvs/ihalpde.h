@@ -1,5 +1,6 @@
 #ifndef IHALPDE_H
 #define IHALPDE_H
+#include <sys/_cc370.h>
 
 typedef struct lpde     LPDE;   /* pointed to by CVTLPDIR   */
 

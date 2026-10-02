@@ -1,5 +1,6 @@
 #ifndef ARPA_INET_H
 #define ARPA_INET_H
+#include <sys/_cc370.h>
 /* arpa/inet.h - POSIX <arpa/inet.h>: address conversion.
 **
 ** libc370 2.0 splits this out of socket.h (#256) and brings it to POSIX and
