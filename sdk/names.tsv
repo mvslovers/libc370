@@ -4471,8 +4471,10 @@ strrchr	string.h
 strspn	string.h
 strstr	string.h
 strtod	stdlib.h
+strtof	stdlib.h
 strtok	string.h
 strtol	stdlib.h
+strtold	stdlib.h
 strtoll	stdlib.h
 strtoul	stdlib.h
 strtoull	stdlib.h

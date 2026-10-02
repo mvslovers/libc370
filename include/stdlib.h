@@ -70,6 +70,8 @@ void srand(unsigned int seed);
 int rand(void);
 double atof(const char *nptr);
 double strtod(const char *nptr, char **endptr);
+float strtof(const char *nptr, char **endptr);
+long double strtold(const char *nptr, char **endptr);
 int atoi(const char *nptr);
 long int atol(const char *nptr);
 long long int atoll(const char *nptr);
