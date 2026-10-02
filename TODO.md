@@ -497,11 +497,14 @@ its minimum cc370 by commit, as 1.0.7 and 1.0.8 did. After 2.0.0: phase 4
 printf/scanf/strto* fixes, #313 and #315. CHANGELOG carries the section as
 `[2.1.0] - unreleased`.
 
-1. **#326** — release artefacts from 2.1.0: sysroot tarball, `libc370-dev`
-   .deb / `libc370-devel` .rpm via nFPM, metadata.json, SHA256SUMS; the
-   minimum cc370 in exactly one place (shared with #315).
+1. **#326** — release artefacts: **built and checked on every CI run since
+   PR #331** (`sdk/cc370.json` is the one place the cc370 range lives;
+   `sdk/package.py`, `sdk/checkpkg.sh`). Open: the end-to-end install of both
+   packages (needs cc370 1.1.0 packages) and the first real release run.
 2. **#313 / #315** — helpers and prologue macros move to cc370; the
-   `__CC370__ < 10100` check. **Wait for the coordinating session's go**:
+   `__CC370__ < 10100` check. **Raise `sdk/cc370.json` `min` to 1.1.0 in the
+   same change** (`package.py requires number` gives the 10100), and drop
+   the three macro files, or `package.py` refuses the stage. **Wait for the coordinating session's go**:
    mbt#138 is in every consumer, cc370 #687/#688 still to land.
 3. **#325** — the full C99 7.x audit (was #314 step 3). Known so far:
    `vsscanf`/`vfscanf`/`vscanf` missing, `HUGE_VAL` < `DBL_MAX`, no
