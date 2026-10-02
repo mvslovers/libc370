@@ -501,11 +501,11 @@ printf/scanf/strto* fixes, #313 and #315. CHANGELOG carries the section as
    PR #331** (`sdk/cc370.json` is the one place the cc370 range lives;
    `sdk/package.py`, `sdk/checkpkg.sh`). Open: the end-to-end install of both
    packages (needs cc370 1.1.0 packages) and the first real release run.
-2. **#313 / #315** — helpers and prologue macros move to cc370; the
-   `__CC370__ < 10100` check. **Raise `sdk/cc370.json` `min` to 1.1.0 in the
-   same change** (`package.py requires number` gives the 10100), and drop
-   the three macro files, or `package.py` refuses the stage. **Wait for the coordinating session's go**:
-   mbt#138 is in every consumer, cc370 #687/#688 still to land.
+2. ~~**#313 / #315**~~ — merged 2026-10-03 (PR #332, `5537e1e`): helpers and
+   prologue macros are cc370's, `<sys/_cc370.h>` in every header,
+   `sdk/cc370.json` min 1.1.0. mvsdev JOB01183 green with cc370 1.1.0-dev.
+   **Next: the 2.1.0 release commit** (VERSION, CHANGELOG date) and the tag,
+   once cc370 v1.1.0 exists and the coordinating session (mbt-4c) agrees.
 3. **#325** — the full C99 7.x audit (was #314 step 3). Known so far:
    `vsscanf`/`vfscanf`/`vscanf` missing, `HUGE_VAL` < `DBL_MAX`, no
    `HUGE_VALF`/`HUGE_VALL`.
