@@ -1,6 +1,7 @@
 /* CLIBARY.H */
 #ifndef CLIBARY_H
 #define CLIBARY_H
+#include <sys/_cc370.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>

@@ -1,5 +1,6 @@
 #ifndef IEFVKEYS_H
 #define IEFVKEYS_H
+#include <sys/_cc370.h>
 
 #define ETEND       0x00    /* NONE    DICTIONARY END               */
 #define PROTECTK    0x1B    /* DD      PROTECT=                     */

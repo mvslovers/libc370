@@ -1,5 +1,6 @@
 #ifndef RB99_H
 #define RB99_H
+#include <sys/_cc370.h>
 
 typedef struct rb99     RB99;
 typedef struct rbx99    RBX99;

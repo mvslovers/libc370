@@ -12,6 +12,7 @@
 
 #ifndef __CTYPE_INCLUDED
 #define __CTYPE_INCLUDED
+#include <sys/_cc370.h>
 
 extern unsigned short *__isbuf;
 extern short *__tolow;

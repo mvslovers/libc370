@@ -1,5 +1,6 @@
 #ifndef STRINGS_H
 #define STRINGS_H
+#include <sys/_cc370.h>
 /* strings.h - POSIX <strings.h>: case-insensitive comparison.
 **
 ** libc370 2.0 (#256, #250).

@@ -1,6 +1,7 @@
 
 #ifndef IHASCVT_H
 #define IHASCVT_H
+#include <sys/_cc370.h>
 
 typedef struct scvtsect     SCVTSECT;   /* cvt->cvtabend points here    */
 typedef struct scvtsect     SCVT;       /* cvt->cvtabend points here    */

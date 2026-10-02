@@ -1,5 +1,6 @@
 #ifndef UNISTD_H
 #define UNISTD_H
+#include <sys/_cc370.h>
 /* unistd.h - the POSIX <unistd.h> functions libc370 has (D2).
 **
 ** libc370 2.0 (#256, #250).

@@ -1,5 +1,6 @@
 #ifndef HASPTAB_H
 #define HASPTAB_H
+#include <sys/_cc370.h>
 
 typedef struct __tab        __TAB;      /* JES Track Allocation Block */
 

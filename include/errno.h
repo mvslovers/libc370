@@ -1,5 +1,6 @@
 #ifndef ERRNO_H
 #define ERRNO_H
+#include <sys/_cc370.h>
 
 extern int *__errno(void);
 #define errno *(__errno())

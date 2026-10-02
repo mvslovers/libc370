@@ -1,5 +1,6 @@
 #ifndef CLIBJES2_H
 #define CLIBJES2_H
+#include <sys/_cc370.h>
 
 #include <time.h>
 #include <ext/time64.h>

@@ -1,5 +1,6 @@
 #ifndef IEECDCM_H
 #define IEECDCM_H
+#include <sys/_cc370.h>
 
 typedef struct ieecdcm  IEECDCM;
 typedef struct ieecdcm  DCM;

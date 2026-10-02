@@ -1,5 +1,6 @@
 #ifndef OSDECB_H
 #define OSDECB_H
+#include <sys/_cc370.h>
 
 typedef struct decb     DECB;       /* DECB for read/write/check */
 

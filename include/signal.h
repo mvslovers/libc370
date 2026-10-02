@@ -12,6 +12,7 @@
 
 #ifndef __SIGNAL_INCLUDED
 #define __SIGNAL_INCLUDED
+#include <sys/_cc370.h>
 
 typedef int sig_atomic_t;
 

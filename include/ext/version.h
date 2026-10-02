@@ -1,5 +1,6 @@
 #ifndef CLIBVER_H
 #define CLIBVER_H
+#include <sys/_cc370.h>
 
 /* libc370_version() - the exact libc370 linked into this module.
 **

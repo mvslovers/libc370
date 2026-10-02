@@ -1,5 +1,6 @@
 #ifndef IEFJESCT_H
 #define IEFJESCT_H
+#include <sys/_cc370.h>
 
 typedef struct jesct    JESCT;
 

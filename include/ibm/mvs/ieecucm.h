@@ -1,5 +1,6 @@
 #ifndef IEECUCM_H
 #define IEECUCM_H
+#include <sys/_cc370.h>
 
 #include <ibm/mvs/iezbits.h>
 

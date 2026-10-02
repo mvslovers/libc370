@@ -1,5 +1,6 @@
 #ifndef RACHECK_H
 #define RACHECK_H
+#include <sys/_cc370.h>
 
 typedef struct racheck  RACHECK;
 typedef struct raclass  RACLASS;

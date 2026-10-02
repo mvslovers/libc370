@@ -1,5 +1,6 @@
 #ifndef IKJPSCB_H
 #define IKJPSCB_H
+#include <sys/_cc370.h>
 
 #include "ibm/mvs/ikjupt.h"
 /**********************************************************************

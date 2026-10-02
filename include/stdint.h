@@ -194,6 +194,7 @@
 #define _STDINT_H_INCLUDED
 # ifndef PRINTF_INT64_MODIFIER
 #  define PRINTF_INT64_MODIFIER "ll"
+#include <sys/_cc370.h>
 # endif
 # ifndef PRINTF_INT32_MODIFIER
 #  define PRINTF_INT32_MODIFIER "l"

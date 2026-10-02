@@ -1,5 +1,6 @@
 #ifndef MVS_SUBSYS_H
 #define MVS_SUBSYS_H
+#include <sys/_cc370.h>
 /* mvs/subsys.h - subsystems: SSVT, SSCT, SSIB.
 **
 ** libc370 2.0 merges clibssvt.h, clibssct.h and clibssib.h into this header (#256).

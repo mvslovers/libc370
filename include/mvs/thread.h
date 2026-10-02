@@ -1,5 +1,6 @@
 #ifndef CLIBTHRD_H
 #define CLIBTHRD_H
+#include <sys/_cc370.h>
 #include <ext/time64.h>
 #include <time.h>
 

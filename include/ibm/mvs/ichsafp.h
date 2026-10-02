@@ -1,5 +1,6 @@
 #ifndef SAFP_H
 #define SAFP_H
+#include <sys/_cc370.h>
 
 typedef struct safp     SAFP;   /* SAF ROUTER PARAMETER LIST                */
 

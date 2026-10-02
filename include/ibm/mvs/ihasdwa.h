@@ -1,5 +1,6 @@
 #ifndef CLIBSDWA_H
 #define CLIBSDWA_H
+#include <sys/_cc370.h>
 
 typedef struct sdwa     SDWA;
 

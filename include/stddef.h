@@ -12,6 +12,7 @@
 
 #ifndef __STDDEF_INCLUDED
 #define __STDDEF_INCLUDED
+#include <sys/_cc370.h>
 
 /* the compiler's type, so that %td and p - q agree with it (#213) */
 #ifdef __PTRDIFF_TYPE__

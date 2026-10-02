@@ -1,5 +1,6 @@
 #ifndef STRING_H
 #define STRING_H
+#include <sys/_cc370.h>
 
 #ifndef __SIZE_T_DEFINED
 #define __SIZE_T_DEFINED

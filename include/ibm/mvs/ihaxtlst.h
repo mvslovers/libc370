@@ -1,5 +1,6 @@
 #ifndef IHAXTLST_H
 #define IHAXTLST_H
+#include <sys/_cc370.h>
 
 typedef struct xtlst        XTLST;
 

@@ -1,5 +1,6 @@
 #ifndef HASPTGM_H
 #define HASPTGM_H
+#include <sys/_cc370.h>
 
 typedef struct __tgm        __TGM;      /* JES Track Group Map                  */
 

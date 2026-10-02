@@ -1,5 +1,6 @@
 #ifndef SVC99_H
 #define SVC99_H
+#include <sys/_cc370.h>
 #include <stddef.h>
 
 #include "ibm/mvs/iefzb4d0.h"

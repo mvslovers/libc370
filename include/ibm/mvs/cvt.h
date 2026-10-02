@@ -1,5 +1,6 @@
 #ifndef CVT_H
 #define CVT_H
+#include <sys/_cc370.h>
 
 /* CVT for OS/VS2 (MVS38J) */
 

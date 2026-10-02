@@ -12,6 +12,7 @@
 
 #ifndef __LIMITS_INCLUDED
 #define __LIMITS_INCLUDED
+#include <sys/_cc370.h>
 
 #define CHAR_BIT 8
 #define SCHAR_MIN -128

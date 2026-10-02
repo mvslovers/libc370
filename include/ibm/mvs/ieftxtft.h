@@ -1,6 +1,7 @@
 /* IEFTXTFT.H Internal Text */
 #ifndef IEFTXTFT_H
 #define IEFTXTFT_H
+#include <sys/_cc370.h>
 
 typedef struct __txtpre     __TXTPRE;   /* Common to all text string types  */
 typedef struct __jobstr     __JOBSTR;   /* for JOBSTR statement type        */

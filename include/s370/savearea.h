@@ -1,5 +1,6 @@
 #ifndef SA_H
 #define SA_H
+#include <sys/_cc370.h>
 
 #include <stdio.h>
 #include <string.h>

@@ -1,5 +1,6 @@
 #ifndef CLIBSMF_H
 #define CLIBSMF_H
+#include <sys/_cc370.h>
 
 typedef struct smca		SMCA;
 

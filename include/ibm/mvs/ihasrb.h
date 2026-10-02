@@ -1,5 +1,6 @@
 #ifndef IHASRB_H
 #define IHASRB_H
+#include <sys/_cc370.h>
 
 /* IHASRB in SYS1.MACLIB */
 /* http://tommysprinkle.com/mvssp/category/srb-service-request-block/srb-overview/ */

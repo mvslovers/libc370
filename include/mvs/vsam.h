@@ -1,5 +1,6 @@
 #ifndef CLIBVSAM_H
 #define CLIBVSAM_H
+#include <sys/_cc370.h>
 
 typedef struct vsfile   VSFILE;     /* VSAM file handle                     */
 typedef enum   vstype   VSTYPE;     /* type: KSDS/ESDS/RRDS                 */

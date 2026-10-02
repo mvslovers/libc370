@@ -4,6 +4,7 @@
 */
 #ifndef CLIBDSCB_H
 #define CLIBDSCB_H
+#include <sys/_cc370.h>
 
 typedef struct extent   EXTENT;
 typedef struct dscb1    DSCB1;

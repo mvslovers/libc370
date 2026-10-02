@@ -1,5 +1,6 @@
 #ifndef STDIO_H
 #define STDIO_H
+#include <sys/_cc370.h>
 
 #include <stdarg.h>
 #include <stddef.h>

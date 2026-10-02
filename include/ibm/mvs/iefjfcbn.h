@@ -1,5 +1,6 @@
 #ifndef OSJFCB_H
 #define OSJFCB_H
+#include <sys/_cc370.h>
 
 #include "ibm/mvs/dcbd.h"
 

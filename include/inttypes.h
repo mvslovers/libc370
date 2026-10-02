@@ -6,6 +6,7 @@
 
 #ifndef __INTTYPES_INCLUDED
 #define __INTTYPES_INCLUDED
+#include <sys/_cc370.h>
 
 #include <stdint.h>
 

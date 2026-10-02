@@ -12,6 +12,7 @@
 
 #ifndef __ASSERT_INCLUDED
 #define __ASSERT_INCLUDED
+#include <sys/_cc370.h>
 
 int __assert(char *x, char *y, int z);
 

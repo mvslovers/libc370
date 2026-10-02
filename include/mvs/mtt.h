@@ -1,5 +1,6 @@
 #ifndef CLIBMTT_H
 #define CLIBMTT_H
+#include <sys/_cc370.h>
 
 #include <ibm/mvs/ieezb806.h>   /* MTTABLE, MTENTRY */
 #include <ext/array.h>    /* dynamic array functions */

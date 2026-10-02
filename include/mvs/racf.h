@@ -1,5 +1,6 @@
 #ifndef RACF_H
 #define RACF_H
+#include <sys/_cc370.h>
 
 #include "ibm/mvs/ihaacee.h"                   /* ACCESSOR ENVIRONMENT ELEMENT */
 #include "ibm/mvs/ichsafp.h"                   /* SAF ROUTER PARAMETER LIST    */

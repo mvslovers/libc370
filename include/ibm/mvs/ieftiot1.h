@@ -1,5 +1,6 @@
 #ifndef IEFTIOT_H
 #define IEFTIOT_H
+#include <sys/_cc370.h>
 
 typedef struct tiot     TIOT;
 typedef struct tiotdd   TIOTDD;

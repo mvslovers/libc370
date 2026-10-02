@@ -1,5 +1,6 @@
 #ifndef IECVUCB_H
 #define IECVUCB_H
+#include <sys/_cc370.h>
 
 typedef struct ucblist	UCBLIST;
 

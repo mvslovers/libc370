@@ -1,5 +1,6 @@
 #ifndef OSDCB_H
 #define OSDCB_H
+#include <sys/_cc370.h>
 
 typedef struct dcb      DCB;        /* DCB */
 typedef struct exitlist EXITLIST;   /* DCB exit list    */

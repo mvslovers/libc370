@@ -1,5 +1,6 @@
 #ifndef TRKCALC_H
 #define TRKCALC_H
+#include <sys/_cc370.h>
 
 typedef enum devtype    DEVTYPE;
 enum devtype {

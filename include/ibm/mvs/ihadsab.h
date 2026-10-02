@@ -1,5 +1,6 @@
 #ifndef IHADSAB_H
 #define IHADSAB_H
+#include <sys/_cc370.h>
 
 typedef struct dsab     DSAB;       /* DATA SET ASSOCIATION BLOCK           */
 typedef struct dsabanmi DSABANMI;   /* ALTERNATE DSNAME INFORMATION         */

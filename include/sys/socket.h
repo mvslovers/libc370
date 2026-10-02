@@ -1,5 +1,6 @@
 #ifndef SYS_SOCKET_H
 #define SYS_SOCKET_H
+#include <sys/_cc370.h>
 /* sys/socket.h - POSIX <sys/socket.h>: sockets, over the DYN75 interface.
 **
 ** libc370 2.0 splits this out of socket.h (#256).

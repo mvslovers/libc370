@@ -1,5 +1,6 @@
 #ifndef IEFSSCS_H
 #define IEFSSCS_H
+#include <sys/_cc370.h>
 
 #include <ibm/mvs/iefssobh.h>           /* SSOB Header                              */
 

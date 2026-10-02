@@ -1,5 +1,6 @@
 #ifndef OSDEB_H
 #define OSDEB_H
+#include <sys/_cc370.h>
 
 typedef struct deb      DEB;        /* DATA EXTENT BLOCK                    */
 typedef struct debavt   DEBAVT;     /* APPENDAGE VECTOR TABLE               */

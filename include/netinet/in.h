@@ -1,5 +1,6 @@
 #ifndef NETINET_IN_H
 #define NETINET_IN_H
+#include <sys/_cc370.h>
 /* netinet/in.h - POSIX <netinet/in.h>: IPv4 addresses, ports, protocols.
 **
 ** libc370 2.0 splits this out of socket.h (#256).

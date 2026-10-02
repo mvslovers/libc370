@@ -1,5 +1,6 @@
 #ifndef CLIBCIB_H
 #define CLIBCIB_H
+#include <sys/_cc370.h>
 
 typedef struct com      COM;
 typedef struct cib      CIB;

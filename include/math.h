@@ -12,6 +12,7 @@
 
 #ifndef __MATH_INCLUDED
 #define __MATH_INCLUDED
+#include <sys/_cc370.h>
 
 /*
   Some constants - at present these are only defined for IBM

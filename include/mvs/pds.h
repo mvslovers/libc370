@@ -1,5 +1,6 @@
 #ifndef MVS_PDS_H
 #define MVS_PDS_H
+#include <sys/_cc370.h>
 /* mvs/pds.h - PDS directory: BLDL and STOW.
 **
 ** libc370 2.0 splits this out of clibos.h (#256).

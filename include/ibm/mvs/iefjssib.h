@@ -1,5 +1,6 @@
 #ifndef IEFJSSIB_H
 #define IEFJSSIB_H
+#include <sys/_cc370.h>
 
 typedef struct ssib         SSIB;
 

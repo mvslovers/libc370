@@ -3744,6 +3744,7 @@ __JOBSTR	ibm/mvs/ieftxtft.h
 __JOE	ibm/jes2/joe.h
 __JOT	ibm/jes2/jot.h
 __JQE	ibm/jes2/jqe.h
+__LIBC370_MIN_CC370	sys/_cc370.h
 __LIMITS_INCLUDED	limits.h
 __LISTAL_OPT_CONCAT	mvs/dslist.h
 __LISTAL_OPT_DSCB	mvs/dslist.h

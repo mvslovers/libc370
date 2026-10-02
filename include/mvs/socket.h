@@ -1,5 +1,6 @@
 #ifndef MVS_SOCKET_H
 #define MVS_SOCKET_H
+#include <sys/_cc370.h>
 /* mvs/socket.h - libc370's non-POSIX socket calls and socket table,
 ** plus every POSIX socket header, for code written against 1.x socket.h.
 **

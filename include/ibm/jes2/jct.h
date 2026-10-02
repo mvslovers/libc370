@@ -1,5 +1,6 @@
 #ifndef HASPJCT_H
 #define HASPJCT_H
+#include <sys/_cc370.h>
 
 #include "ibm/jes2/tgm.h"
 

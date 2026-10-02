@@ -1,5 +1,6 @@
 #ifndef SYS_SELECT_H
 #define SYS_SELECT_H
+#include <sys/_cc370.h>
 /* sys/select.h - POSIX <sys/select.h>: fd_set and select().
 **
 ** libc370 2.0 splits this out of socket.h (#256).

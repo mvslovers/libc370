@@ -1,5 +1,6 @@
 #ifndef HASPJQE_H
 #define HASPJQE_H
+#include <sys/_cc370.h>
 
 typedef struct __jqe    __JQE;
 

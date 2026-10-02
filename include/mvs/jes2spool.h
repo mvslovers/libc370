@@ -1,5 +1,6 @@
 #ifndef MVS_JES2SPOOL_H
 #define MVS_JES2SPOOL_H
+#include <sys/_cc370.h>
 
 #include "ibm/mvs/dcbd.h"
 

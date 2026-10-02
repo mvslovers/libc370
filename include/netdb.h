@@ -1,5 +1,6 @@
 #ifndef NETDB_H
 #define NETDB_H
+#include <sys/_cc370.h>
 /* netdb.h - POSIX <netdb.h>: host lookup.
 **
 ** libc370 2.0 splits this out of socket.h (#256).

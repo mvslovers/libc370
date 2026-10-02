@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [2.1.0] - unreleased
 
+**Requires cc370 1.1.0 or later.** The compiler's helper routines and the
+prologue macros now ship with cc370 itself, and every libc370 header checks
+the compiler version.
+
+### Changed
+- **The compiler helpers and prologue macros moved to cc370 (#313).** The
+  64-bit and conversion helpers cc370 emits calls to (`@@MULDI3`,
+  `@@DIVDI3`, `@@FIXDFD`, ...) are in cc370's `libcc370rt.a` (cc370#687),
+  `PDPTOP`, `PDPPRLG` and `PDPEPIL` in its macro directory (cc370#688).
+  libc370's copies and their tests are gone. No public header declared
+  either, so no source changes; a build with mbt needs mbt#138, which links
+  `-lcc370rt`.
+- **Every public header checks the compiler (#315).** `<sys/_cc370.h>`,
+  included by all of them, stops a target build with `#error "libc370 needs
+  cc370 1.1.0 or later"` when `__CC370__` is missing or older. Host
+  compiles (no `__MVS__`) are unaffected. The number comes from
+  `sdk/cc370.json`, the one place the requirement is written; CI fails when
+  the header and that file disagree.
+
 ### Added
 - **Release artifacts (#326).** Every release carries the sysroot tarball
   `libc370-<v>-sysroot.tar.gz` (unpack it into a cc370 sysroot), the

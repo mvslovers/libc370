@@ -1,5 +1,6 @@
 #ifndef S370_ATOMIC_H
 #define S370_ATOMIC_H
+#include <sys/_cc370.h>
 /* s370/atomic.h - atomic updates of a word: compare and swap (CS).
 **
 ** libc370 2.0 splits this out of clibos.h (#256).
