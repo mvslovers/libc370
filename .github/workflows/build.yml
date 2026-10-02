@@ -22,7 +22,16 @@
 #   they all collide ("multiple definition of `no symbol'").  Mach-O has no
 #   symbol versioning, and macOS is where the tests are written.
 #
-# Also called by release.yml, so a release is built the same way.
+# package (Linux)  the release artifacts of #326, on every run: the sysroot
+#   tarball, libc370-dev .deb, libc370-devel .rpm (nFPM, pinned by checksum),
+#   metadata.json and SHA256SUMS, from the libc.a the build job made.  Then
+#   it checks them: the Debian and RPM dependencies against sdk/cc370.json,
+#   the architecture, the file tree under /usr/lib/cc370/cc370 and the
+#   checksums.  Outside a release the version is VERSION+g<sha>, so a stray
+#   package cannot pass for a release.
+#
+# Also called by release.yml, so a release is built the same way; it passes
+# the cc370 release the minimum names (cc370_ref) and the tag's version.
 #
 # 2.0 (#256): pushes to the integration branch 2.0 build too, and a PR into
 # 2.0 must pass sdk/gate.py against its base -- identical assembler for every
@@ -37,16 +46,29 @@ on:
     branches: [main, "2.0"]
   pull_request:
   workflow_call:
+    inputs:
+      cc370_ref:
+        description: "cc370 branch or tag to build with"
+        type: string
+        default: main
+      version:
+        description: "package version; empty means VERSION+g<sha>"
+        type: string
+        default: ""
     outputs:
       cc370_sha:
         description: "cc370 commit the library was built with"
         value: ${{ jobs.build.outputs.cc370_sha }}
+      cc370_version:
+        description: "cc370 --version, first line, without 'cc370 '"
+        value: ${{ jobs.build.outputs.cc370_version }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
       cc370_sha: ${{ steps.cc370.outputs.sha }}
+      cc370_version: ${{ steps.cc370v.outputs.version }}
 
     steps:
       - name: Checkout
@@ -60,7 +82,7 @@ jobs:
       - name: Clone cc370
         id: cc370
         run: |
-          git clone --depth 1 --branch main \
+          git clone --depth 1 --branch "${{ inputs.cc370_ref || 'main' }}" \
             https://github.com/mvslovers/cc370.git /tmp/cc370
           echo "sha=$(git -C /tmp/cc370 rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
@@ -88,10 +110,27 @@ jobs:
       - name: Add cc370 to PATH
         run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
+      - name: cc370 version
+        id: cc370v
+        run: |
+          v=$(cc370 --version | head -1 | sed 's/^cc370 //; s/, based on.*//')
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
       - name: Build libc370
         run: |
           set -o pipefail
           make build 2>&1 | tee build.log
+
+      - name: Keep the build
+        uses: actions/upload-artifact@v4
+        with:
+          name: libc370-build
+          path: |
+            build/sdk/libc.a
+            build/sdk/crt0.o
+            build/sdk/crt1.o
+            build/sdk/crtm.o
+          if-no-files-found: error
 
       - name: Gate (PRs into 2.0)
         if: github.event_name == 'pull_request' && github.base_ref == '2.0'
@@ -115,6 +154,55 @@ jobs:
               echo '```'
             fi
           } >> "$GITHUB_STEP_SUMMARY"
+
+  package:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      NFPM_VERSION: 2.47.0
+      NFPM_SHA256: 0660ca602b2d2d2ae4781a06c692b3eeb9d437ffea05b831d76e41f4a3188783
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: The build
+        uses: actions/download-artifact@v4
+        with:
+          name: libc370-build
+          path: build/sdk
+
+      - name: nFPM (pinned) and rpm
+        run: |
+          f=nfpm_${NFPM_VERSION}_Linux_x86_64.tar.gz
+          curl -sSfLO "https://github.com/goreleaser/nfpm/releases/download/v${NFPM_VERSION}/$f"
+          echo "${NFPM_SHA256}  $f" | sha256sum -c -
+          mkdir -p "$HOME/nfpm" && tar xzf "$f" -C "$HOME/nfpm" nfpm
+          echo "$HOME/nfpm" >> "$GITHUB_PATH"
+          sudo apt-get update && sudo apt-get install -y rpm
+
+      - name: Package
+        id: pkg
+        run: |
+          v="${{ inputs.version }}"
+          [ -n "$v" ] || v="$(cat VERSION)+g$(git rev-parse --short HEAD)"
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          python3 sdk/package.py build --version "$v" \
+            --built-with "${{ needs.build.outputs.cc370_version }}"
+
+      - name: Check the packages
+        run: sh sdk/checkpkg.sh dist "${{ steps.pkg.outputs.version }}"
+
+      - name: Keep the packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: libc370-dist
+          path: |
+            dist/*.tar.gz
+            dist/*.deb
+            dist/*.rpm
+            dist/*.json
+            dist/SHA256SUMS
+          if-no-files-found: error
 
   host-tests:
     runs-on: macos-latest

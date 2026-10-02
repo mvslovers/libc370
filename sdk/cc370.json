@@ -1,0 +1,5 @@
+{
+  "_comment": "The cc370 this tree needs: min <= version < below. The one place it is written; sdk/package.py derives the .deb/.rpm fields, metadata.json, the release notes and the __CC370__ number from it (#326, #315). True at every commit: it says what this tree builds with today; the change that starts needing a newer cc370 raises it.",
+  "min": "1.0.0",
+  "below": "2"
+}
