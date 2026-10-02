@@ -4178,6 +4178,7 @@ iobustat	ibm/mvs/ieziob.h
 ioctlsocket	mvs/socket.h
 isalnum	ctype.h
 isalpha	ctype.h
+isblank	ctype.h
 iscntrl	ctype.h
 isdigit	ctype.h
 isgraph	ctype.h

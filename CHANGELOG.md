@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Added
+- **`isblank()` in `<ctype.h>` (#314)**, as macro and function, true for
+  `' '` and `'\t'` (EBCDIC X'40' and X'05') only, through a new bit 0x0800
+  in the `__isbuf` table. mvsdev JOB01157, 10/10.
 - **`strtoll()`, `strtoull()`, `atoll()`, `llabs()`, `lldiv()` and
   `lldiv_t` in `<stdlib.h>`; `LLONG_MIN`, `LLONG_MAX` and `ULLONG_MAX` in
   `<limits.h>` (#314).** The C99 `long long` siblings of `strtol()`,
