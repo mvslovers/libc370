@@ -491,7 +491,7 @@ its minimum cc370 by commit, as 1.0.7 and 1.0.8 did. After 2.0.0: phase 4
 
 ---
 
-## Tier 1 — the first 2.x minor: C99 gaps (#314, #316, #318)
+## Tier 1 — the first 2.x minor: C99 gaps (#316, #318, #325)
 
 *Added 2026-10-02.* Not a defect on a running system, but a hole every new
 port meets at link time. Steps 1 and 2 of #314 landed the same day (see
@@ -503,7 +503,9 @@ Recently landed); the issue's 14-name link probe now resolves completely.
 2. **#316** — `strtol`/`strtoul` (and by reading, `strtod` past `DBL_MAX`):
    no digit-below-base check, no `ERANGE`, no sign in `strtoul`, EBCDIC
    letter values. A consumer-visible change (minor).
-3. **#314 step 3** — the full C99 7.x link audit.
+3. **#325** — the full C99 7.x audit (was #314 step 3; #314 closed
+   2026-10-02): one row per name, declared / in `libc.a`, then an issue per
+   real gap.
 
 ### Tier 1 before — empty since #182 (PR #227, 2026-09-29)
 
