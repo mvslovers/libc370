@@ -63,7 +63,9 @@ of it — and then the one it needs is released first.
    `libc370-<v>-sysroot.tar.gz`, `libc370-dev_<v>_all.deb`,
    `libc370-devel-<v>.noarch.rpm`, `libc370-<v>-metadata.json` (its
    `"requires"` range) and `SHA256SUMS` (`sha256sum -c`); the build log names
-   the cc370 tag it built with.
+   the cc370 tag it built with. The release's `pair` job must be green: it
+   installs the new packages beside cc370's under apt and dnf and links a
+   program with the pair (`.github/workflows/pair.yml`, `sdk/pairtest.sh`).
 
 ## Releasing cc370
 

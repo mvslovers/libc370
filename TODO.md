@@ -500,8 +500,9 @@ metadata and links a program against it (checked end to end on macOS).
 
 1. **#325** — the full C99 7.x audit. Known so far: `vsscanf`/`vfscanf`/
    `vscanf` missing, `HUGE_VAL` < `DBL_MAX`, no `HUGE_VALF`/`HUGE_VALL`.
-2. **#326 leftover** — an `apt`/`dnf` install of the packages beside cc370's
-   on a real Linux system has not been exercised.
+2. ~~**#326 leftover**~~ — closed 2026-10-03: `pair.yml` (PR #335) installs
+   the pair under apt (bookworm amd64/arm64) and dnf (fedora), run
+   37077154678 all green; it runs after every release.
 
 ### Tier 1 before — empty since #182 (PR #227, 2026-09-29)
 
