@@ -491,7 +491,21 @@ its minimum cc370 by commit, as 1.0.7 and 1.0.8 did. After 2.0.0: phase 4
 
 ---
 
-## Tier 1 — empty since #182 (PR #227, 2026-09-29)
+## Tier 1 — the first 2.x minor: C99 gaps (#314, #316)
+
+*Added 2026-10-02.* Not a defect on a running system, but a hole every new
+port meets at link time.
+
+1. **#314 step 2** — `strtof`/`strtold`, `isblank`, `<inttypes.h>`, `_Exit`.
+   Measurements and a recommendation per item are in the issue's comment of
+   2026-10-02; nothing built yet.
+2. **scanf `ll`/`hh`/`j`/`z`/`t`** — `vvscanf.c` knows only `h` and `l`, so
+   `%lld` stores 4 of 8 bytes. Prerequisite for `SCN*64`; issue still to file.
+3. **#316** — `strtol`/`strtoul`: no digit-below-base check, no `ERANGE`, no
+   sign in `strtoul`, EBCDIC letter values. A consumer-visible change (minor).
+4. **#314 step 3** — the full C99 7.x link audit.
+
+### Tier 1 before — empty since #182 (PR #227, 2026-09-29)
 
 ### ~~1 · #182~~ — fixed, PR #227, 2026-09-29
 
@@ -1503,6 +1517,11 @@ with several C names. It changes symbols, so every consumer's code changes too:
 ## Recently landed
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
+
+- **#314 step 1** (PR #317, merged 2026-10-02) - `strtoll`, `strtoull`,
+  `atoll`, `llabs`, `lldiv`/`lldiv_t`, `LLONG_MIN`/`LLONG_MAX`/`ULLONG_MAX`.
+  C99 semantics, not a copy of `strtoul.c`. Host 64/64; mvsdev JOB01155
+  CC 0000, 64/64. Unreleased.
 
 - **#140, #243, #248** (PR #255, merged 2026-09-30) - the duplicate
   `src/thdmgr/clibthdi.h` is gone; all 729 generated `.s` byte-identical but
