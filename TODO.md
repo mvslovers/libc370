@@ -491,19 +491,19 @@ its minimum cc370 by commit, as 1.0.7 and 1.0.8 did. After 2.0.0: phase 4
 
 ---
 
-## Tier 1 — the first 2.x minor: C99 gaps (#314, #316)
+## Tier 1 — the first 2.x minor: C99 gaps (#314, #316, #318)
 
 *Added 2026-10-02.* Not a defect on a running system, but a hole every new
-port meets at link time.
+port meets at link time. Steps 1 and 2 of #314 landed the same day (see
+Recently landed); the issue's 14-name link probe now resolves completely.
 
-1. **#314 step 2** — `strtof`/`strtold`, `isblank`, `<inttypes.h>`, `_Exit`.
-   Measurements and a recommendation per item are in the issue's comment of
-   2026-10-02; nothing built yet.
-2. **scanf `ll`/`hh`/`j`/`z`/`t`** — `vvscanf.c` knows only `h` and `l`, so
-   `%lld` stores 4 of 8 bytes. Prerequisite for `SCN*64`; issue still to file.
-3. **#316** — `strtol`/`strtoul`: no digit-below-base check, no `ERANGE`, no
-   sign in `strtoul`, EBCDIC letter values. A consumer-visible change (minor).
-4. **#314 step 3** — the full C99 7.x link audit.
+1. **#318** — scanf `ll`/`hh`/`j`/`z`/`t`. `vvscanf.c` knows only `h` and `l`,
+   so `%lld` stores 4 of 8 bytes. Until it lands, `<inttypes.h>` has no
+   `SCN*8`, `SCN*64` or `SCN*MAX`.
+2. **#316** — `strtol`/`strtoul` (and by reading, `strtod` past `DBL_MAX`):
+   no digit-below-base check, no `ERANGE`, no sign in `strtoul`, EBCDIC
+   letter values. A consumer-visible change (minor).
+3. **#314 step 3** — the full C99 7.x link audit.
 
 ### Tier 1 before — empty since #182 (PR #227, 2026-09-29)
 
@@ -1518,10 +1518,15 @@ with several C names. It changes symbols, so every consumer's code changes too:
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
 
-- **#314 step 1** (PR #317, merged 2026-10-02) - `strtoll`, `strtoull`,
-  `atoll`, `llabs`, `lldiv`/`lldiv_t`, `LLONG_MIN`/`LLONG_MAX`/`ULLONG_MAX`.
-  C99 semantics, not a copy of `strtoul.c`. Host 64/64; mvsdev JOB01155
-  CC 0000, 64/64. Unreleased.
+- **#314 steps 1 and 2** (all merged 2026-10-02, unreleased) - PR #317
+  `strtoll`/`strtoull`/`atoll`/`llabs`/`lldiv` + `LLONG_*` (JOB01155,
+  64/64); #319 `isblank` (JOB01157); #320 `strtof`/`strtold`, with a guard
+  against the S0CC a plain `(float)` of a value above `FLT_MAX` ends in
+  (JOB01159); #323 `<inttypes.h>`, `SCN*` only for 16/32/PTR (JOB01167);
+  #324 `_Exit`, handlers skipped, teardown kept (JOB01169).
+- **#321** (PR #322, merged 2026-10-02) - `%lld`/`%jd` printed every
+  negative value unsigned; found by the `<inttypes.h>` test. JOB01165
+  17/17, 2.0.0 11 of 17 failing.
 
 - **#140, #243, #248** (PR #255, merged 2026-09-30) - the duplicate
   `src/thdmgr/clibthdi.h` is gone; all 729 generated `.s` byte-identical but
