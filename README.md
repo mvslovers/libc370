@@ -49,7 +49,7 @@ With Homebrew (macOS, Linux), from the
 brew trust mvslovers/tap            # once: Homebrew 7 loads a dependency only
                                     # from a trusted tap
 brew install mvslovers/tap/cc370    # cc370 and, as its dependency, libc370
-brew install mvslovers/tap/libc370  # libc370 alone (works without the trust)
+brew install mvslovers/tap/libc370  # libc370 alone
 ```
 
 The formula installs the sysroot under its `libexec` (`include/`, `lib/`,
