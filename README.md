@@ -52,6 +52,11 @@ brew install mvslovers/tap/cc370    # cc370 and, as its dependency, libc370
 brew install mvslovers/tap/libc370  # libc370 alone
 ```
 
+Naming a formula trusts it, so `brew install mvslovers/tap/libc370` works
+without `brew trust`; only dependencies from the tap need it, and libc370
+has none (measured on macOS: cc370's `homebrew.yml`, run 37109110913, job
+"brew libc370 alone, untrusted tap"; not checked on Linux).
+
 The formula installs the sysroot under its `libexec` (`include/`, `lib/`,
 `macros/`), which Homebrew does not link beside the host's own C library;
 cc370 links it into its own tree. The formula is rendered by this
