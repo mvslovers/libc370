@@ -517,7 +517,8 @@ metadata and links a program against it (checked end to end on macOS).
 2. ~~**#344**~~ -Os is the default since PR #346 (2026-10-03, unreleased,
    goes into 2.2.0): -8,117 text bytes (-2.9%); libc370 55/55, rexx370 and
    brexx370 identical on MVS. `LIBC370_OPT=-O1` goes back. #345 (tstanchr
-   SA03, also in 2.0.0) came out of the series.
+   SA03, also in 2.0.0) came out of the series - fixed by PR #359: tmr_stop()
+   deleted the timer thread before it had ended (mvsdev JOB01320).
 2. ~~**#326 leftover**~~ — closed 2026-10-03: `pair.yml` (PR #335) installs
    the pair under apt (bookworm amd64/arm64) and dnf (fedora), run
    37077154678 all green; it runs after every release.
