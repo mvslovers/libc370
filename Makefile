@@ -9,6 +9,8 @@
 #   make install    install all of it into the cc370 sysroot
 #   make clean      remove build/sdk and the generated .s in src/
 #   make test-host  build and run the host tests (test/host/run.sh)
+#
+# The library is built with -Os (#344); LIBC370_OPT=-O1 make builds it -O1.
 PY := python3
 
 .PHONY: all build install clean test-host

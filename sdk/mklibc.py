@@ -20,7 +20,7 @@ Usage:  python3 sdk/mklibc.py build      # compile/assemble/archive into build/s
         python3 sdk/mklibc.py clean      # remove build/sdk + the generated .s
         python3 sdk/mklibc.py all
 """
-import os, sys, glob, subprocess, shutil, collections, concurrent.futures as cf
+import os, re, sys, glob, subprocess, shutil, collections, concurrent.futures as cf
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dupscan                    # duplicate-external gate, see #151
@@ -37,15 +37,22 @@ VERSION = open(f"{ROOT}/VERSION").read().strip() if os.path.exists(f"{ROOT}/VERS
 # attic/, outside src/.  All objects share one directory and the archive
 # member is <stem>.o, so a stem may exist only once -- sources() enforces it.
 SRC_DIR = f"{ROOT}/src"
+# -Os since #344: 2.9% less text than -O1 (284,430 -> 276,313 bytes), and the
+# MVS test series ran identically with either (libc370 55/55, rexx370 and
+# brexx370 suites against it too).  LIBC370_OPT=-O1 builds the old way, should
+# a problem need the comparison.
+OPT = os.environ.get("LIBC370_OPT", "-Os")
+if not re.fullmatch(r"-O[0123s]", OPT):
+    sys.exit(f"LIBC370_OPT={OPT!r}: want -O0, -O1, -O2, -O3 or -Os")
 # -Wuninitialized is not implied by -Wall in this gcc 3.4.6 and needs -O to run
 # at all, so it has to be named here (#102).  It finds #99 -- __loadhi() calling
-# fclose() on stack residue -- at the -O1 the build already uses.
+# fclose() on stack residue -- at the optimisation level the build uses.
 # -std=gnu99: libc370 is C99 (gnu99), like every project in the ecosystem.
 # Without it GCC 3.4 defaults to gnu89, and a C99 construct such as a
 # declaration in a for loop's first clause does not compile.  -trigraphs
 # after it: the cc370 driver enables trigraphs by default and -std=gnu99
 # turns them off again, but @@estae.c spells || as ??!??! and headers do too.
-CFLAGS = ["-O1", "-std=gnu99", "-trigraphs", "-Wuninitialized", f'-DVERSION="{VERSION}"',
+CFLAGS = [OPT, "-std=gnu99", "-trigraphs", "-Wuninitialized", f'-DVERSION="{VERSION}"',
           f"-I{ROOT}/include", f"-I{ROOT}"]   # private headers: "src/internal/x.h" (D10)
 ASMINC = ["-I", f"{ROOT}/maclib", "-I", f"{ROOT}/sysmac"]   # sysmac vendors SYS1.MACLIB
 STARTUPS = ("@@crt0", "@@crt1", "@@crtm")                      # -> separate startfiles
@@ -238,7 +245,7 @@ def cmd_build():
             print(f"[libc] MISSING startup {stem}"); return 1
         shutil.copy(crtobjs[stem], f"{BUILD}/{stem.lstrip('@')}.o")  # @@crt0 -> crt0.o
     nmem = sum(1 for l in run([AR370, "t", libc]).stdout.splitlines() if l.strip().endswith("bytes"))
-    print(f"[libc] OK -> {libc} ({nmem} members, {os.path.getsize(libc)} bytes)")
+    print(f"[libc] OK -> {libc} ({nmem} members, {os.path.getsize(libc)} bytes, {OPT})")
     print(f"[libc] startfiles -> crt0.o crt1.o crtm.o")
     return 0
 

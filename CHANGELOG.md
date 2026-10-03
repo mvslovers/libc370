@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Changed
+- **libc370 is built with `-Os` instead of `-O1` (#344).** `libc.a`'s text
+  shrinks from 284,430 to 276,313 bytes (-8,117, -2.9%; 282 members smaller,
+  89 larger by at most 71 bytes), and a program linked against it is about
+  1.7-4.3 KB smaller. The MVS test series of libc370 (55 tests), rexx370 and
+  brexx370 ran identically against the `-O1` and the `-Os` library.
+  `LIBC370_OPT=-O1` builds the previous variant.
+
 ## [2.1.0] - 2026-10-03
 
 **Requires cc370 1.1.0 or later.** The compiler's helper routines and the
