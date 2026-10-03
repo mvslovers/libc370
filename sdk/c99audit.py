@@ -34,6 +34,18 @@ INC = os.path.join(ROOT, "include")
 LIB = os.path.join(ROOT, "build", "sdk")
 CFLAGS = ["-std=gnu99", "-fno-builtin", "-nostdinc", "-I", INC,
           "-Werror-implicit-function-declaration"]
+# Headers libc370 leaves out on purpose (#342, maintainer, 2026-10-03), and why.
+ABSENT = {
+    "complex.h": "no consumer in the ecosystem; it would build on the C99 "
+                 "<math.h> additions (#340), which do not exist yet",
+    "fenv.h": "the IEEE model it controls does not match S/370 HFP: no "
+              "selectable rounding mode, no exception flags (an exponent "
+              "overflow is a program check, S0CC); a header that answers "
+              "'unsupported' at run time would be worse than one that is "
+              "missing at compile time",
+    "tgmath.h": "type-generic macros over <math.h> and <complex.h>; only "
+                "useful once every variant exists",
+}
 TYPEHDRS = ("stddef.h", "stdarg.h", "stdio.h", "stdint.h", "wchar.h", "time.h",
             "wctype.h", "inttypes.h", "setjmp.h", "fenv.h", "complex.h")
 
@@ -226,6 +238,11 @@ def write(path, rows, headers, present, shared):
     miss = [h for h in headers if h not in present]
     o.append("### Headers that do not exist\n")
     o.append(", ".join(f"`{h}`" for h in miss) + "\n" if miss else "None.\n")
+    gone = [h for h in miss if h in ABSENT]
+    if gone:
+        o.append("Left out on purpose (#342), so not gaps to fill:\n")
+        o += [f"- `<{h}>`: {ABSENT[h]}." for h in gone]
+        o.append("")
 
     def section(title, sel, note=""):
         rs = [r for r in rows if sel(r)]
