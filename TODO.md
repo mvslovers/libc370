@@ -506,8 +506,8 @@ metadata and links a program against it (checked end to end on macOS).
       01311), ~~#339~~ PR #357 (JOB01313), all 2026-10-03, unreleased (2.2.0).
       The audit now: 20/24 headers, 547/893 names, 158/463 functions, none
       declared differently from C99.
-   2. **#355** printf ignores the `0` flag for `%f` (`"%05.1f"` of 2.5 gives
-      `"  2.5"`) - found by #338's MVS test.
+   2. ~~**#355**~~ printf `0`/`-` flags and sign width for `%f/%e/%g` - fixed
+      2026-10-03, PR #358 (mvsdev JOB01315 19/19, 2.1.0 fails 13).
    5. **#340** `<math.h>` C99 additions - large; HFP has no NaN/inf; five
       8-character name-collision groups need `asm` labels.
    6. **#341** wide characters (`<wchar.h>` functions, `<wctype.h>`) - only
