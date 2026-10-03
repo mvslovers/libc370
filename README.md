@@ -60,6 +60,10 @@ make             # build only (into build/sdk)
 make clean
 ```
 
+The library is compiled with `-Os`: 2.9% smaller than `-O1`, and the MVS
+test series runs identically with either (#344). `LIBC370_OPT=-O1 make`
+builds the `-O1` variant for a comparison.
+
 `make install` produces and drops the four things cc370 looks for — all into the
 one sysroot it derives from the driver itself (`cc370 -dumpmachine` is `cc370`, so
 the sysroot is `<prefix>/cc370/`, default `~/.local/cc370/`):
