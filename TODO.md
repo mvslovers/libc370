@@ -514,6 +514,10 @@ metadata and links a program against it (checked end to end on macOS).
    6. **#341** wide characters (`<wchar.h>` functions, `<wctype.h>`) - only
       on demand.
    7. **#342** `<complex.h>`/`<fenv.h>`/`<tgmath.h>` - **decision** (HFP).
+2. **#344** size: `-Os` instead of `-O1` saves 8,117 text bytes (2.9%) of
+   `libc.a`, ~490 B of rexx370's IRXEXEC growth - **decision**, needs an
+   MVS test run on an `-Os` build first. (A shared strtol/strtoul core only
+   pays when both are linked.)
 2. ~~**#326 leftover**~~ — closed 2026-10-03: `pair.yml` (PR #335) installs
    the pair under apt (bookworm amd64/arm64) and dnf (fedora), run
    37077154678 all green; it runs after every release.
