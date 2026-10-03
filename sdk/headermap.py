@@ -27,7 +27,7 @@ INC = os.path.join(ROOT, "include")
 KEYWORDS = ("internal", "split", "removed")
 # headers added after 2.0.0: not 1.x headers, so no row in the 1.x map
 # above, but known here so the check below does not call them stray
-NEW = {"inttypes.h": "#314", "sys/_cc370.h": "#315"}
+NEW = {"inttypes.h": "#314", "sys/_cc370.h": "#315", "stdbool.h": "#336", "iso646.h": "#336"}
 BEGIN, END = "<!-- headermap:begin -->", "<!-- headermap:end -->"
 
 

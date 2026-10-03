@@ -25,6 +25,13 @@
 /* rounding direction is unpredictable */
 #define FLT_ROUNDS 0
 
+/* C99: operations are evaluated in their own type */
+#define FLT_EVAL_METHOD 0
+
+/* C99: decimal digits that round-trip the widest type, here HFP long with
+   14 hex digits: ceil(1 + 14 * log10(16)) = 18 (cc370's __DECIMAL_DIG__) */
+#define DECIMAL_DIG 18
+
 /* Floating point is HEX so RADIX is base 16 */
 #define FLT_RADIX 16
 

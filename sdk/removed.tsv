@@ -417,7 +417,6 @@ bkmk	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
 blowfish_decrypt	blowfish.h	crypto370 <blowfish.h> blowfish_decrypt	moved to crypto370 1.0.0 (#244)
 blowfish_encrypt	blowfish.h	crypto370 <blowfish.h> blowfish_encrypt	moved to crypto370 1.0.0 (#244)
 blowfish_key_setup	blowfish.h	crypto370 <blowfish.h> blowfish_key_setup	moved to crypto370 1.0.0 (#244)
-bool	clibprti.h	internal	now in src/internal/printf.h
 charf	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
 clibjpa	clibjpa.h	internal	now in src/internal/crtanchor.h
 compress	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
@@ -489,7 +488,6 @@ emfile_write_header	emfilei.h	-	emfile: sources only in attic/, never built (#24
 emfilewsa	emfilei.h	-	emfile: sources only in attic/, never built (#248)
 enqpl	enqpl.h	internal	now in src/internal/enqpl.h
 eyecheck1	@@memmgr.h	-	PDPCLIB memmgr: never built, no implementation (#276)
-false	clibprti.h	internal	now in src/internal/printf.h
 fctprintf_	clibprtf.h	internal	now in src/internal/printf.h
 find_font_widths	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
 font	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
@@ -865,7 +863,6 @@ tinfl_get_adler32	clibmz.h miniz_tinfl.h	-	miniz: declared, never in libc.a (#24
 tinfl_init	clibmz.h miniz_tinfl.h	-	miniz: declared, never in libc.a (#243)
 tinfl_put_buf_func_ptr	clibmz.h miniz_tinfl.h	-	miniz: declared, never in libc.a (#243)
 tinfl_status	clibmz.h miniz_tinfl.h	-	miniz: declared, never in libc.a (#243)
-true	clibprti.h	internal	now in src/internal/printf.h
 uInt	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
 uIntf	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
 uLong	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
