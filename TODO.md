@@ -502,13 +502,12 @@ metadata and links a program against it (checked end to end on macOS).
    `doc/c99-audit.md`, rerun with `sdk/c99audit.py`. 18/24 headers, 476/893
    names declared, 154/463 functions in `libc.a`, nothing declared that does
    not link. Its gaps, ranked:
-   1. **#336** `<stdbool.h>`/`<iso646.h>` missing (every `#include
-      <stdbool.h>` fails), `va_copy`, `FLT_EVAL_METHOD`, `DECIMAL_DIG`, 35
-      `SCN*` - small, high value, minor.
-   2. **#337** the 14 ctype functions undeclared (C99 7.1.4) - small, minor.
-   3. **#338** `vprintf`/`vscanf`/`vfscanf`/`vsscanf` - wrappers, minor.
-   4. **#339** `snprintf`/`vsnprintf` take `int`, `setbuf` returns `int` -
-      decided 2026-10-03: a defect fix, in 2.2.0.
+   1. ~~#336~~ PR #353, ~~#337~~ PR #354, ~~#338~~ PR #356 (mvsdev JOB01310/
+      01311), ~~#339~~ PR #357 (JOB01313), all 2026-10-03, unreleased (2.2.0).
+      The audit now: 20/24 headers, 547/893 names, 158/463 functions, none
+      declared differently from C99.
+   2. **#355** printf ignores the `0` flag for `%f` (`"%05.1f"` of 2.5 gives
+      `"  2.5"`) - found by #338's MVS test.
    5. **#340** `<math.h>` C99 additions - large; HFP has no NaN/inf; five
       8-character name-collision groups need `asm` labels.
    6. **#341** wide characters (`<wchar.h>` functions, `<wctype.h>`) - only
