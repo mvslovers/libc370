@@ -42,6 +42,21 @@ The easy way is cc370's `install.sh` from its
 installs cc370 and the newest libc370 that fits it into `$PREFIX` (default
 `~/.local`), checksums verified.
 
+With Homebrew (macOS, Linux), from the
+[mvslovers tap](https://github.com/mvslovers/homebrew-tap):
+
+```sh
+brew trust mvslovers/tap            # once: Homebrew 7 loads a dependency only
+                                    # from a trusted tap
+brew install mvslovers/tap/cc370    # cc370 and, as its dependency, libc370
+brew install mvslovers/tap/libc370  # libc370 alone (works without the trust)
+```
+
+The formula installs the sysroot under its `libexec` (`include/`, `lib/`,
+`macros/`), which Homebrew does not link beside the host's own C library;
+cc370 links it into its own tree. The formula is rendered by this
+repository's release workflow (`sdk/homebrew/libc370.rb.in`).
+
 Each libc370 release (from 2.1.0) also carries the pieces on their own:
 `libc370-<v>-sysroot.tar.gz` (unpack into the cc370 sysroot,
 `<prefix>/cc370`), `libc370-dev_<v>_all.deb` and
