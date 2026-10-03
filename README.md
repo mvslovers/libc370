@@ -35,6 +35,16 @@ The requirement is written once, in `sdk/cc370.json`. Who owns what, why, and
 the checklist for cutting a release:
 **[doc/releasing.md](doc/releasing.md)**.
 
+## C99 coverage
+
+[doc/c99-audit.md](doc/c99-audit.md) lists every function, macro and type of
+the C99 library (clauses 7.2-7.24) with what libc370 provides: declared or
+not, as C99 declares it or not, in `libc.a` or not. `sdk/c99audit.py`
+regenerates it. The open gaps have issues (#336-#341). `<complex.h>`,
+`<fenv.h>` and `<tgmath.h>` are left out on purpose (#342): no project uses
+them, and `<fenv.h>`'s IEEE rounding modes and exception flags have no
+counterpart in S/370 hexadecimal floating point.
+
 ## Installing a release
 
 The easy way is cc370's `install.sh` from its
