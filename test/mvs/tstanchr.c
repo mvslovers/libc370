@@ -33,6 +33,12 @@
  *
  * RUN: see jcl/tstanchr.jcl (TIME=1 as a watchdog for the ecb_wait).
  *
+ * #345: the step used to end ABEND SA03 after "PASSED": tmr_stop() deleted
+ * the timer thread before it had ended, the delete was refused (#11), the
+ * handle dropped anyway, and the program returned with the subtask still
+ * attached.  mvsdev JOB01320, 2026-10-03: GREEN (fixed libc.a) COND CODE
+ * 0000, no "has not ended" in the log; RED (installed 2.1.0) ABEND SA03.
+ *
  * RC: 0 = all expectations met, 8 = at least one did not.
  */
 #include <stdio.h>
