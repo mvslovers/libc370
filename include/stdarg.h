@@ -40,6 +40,9 @@ typedef char * va_list;
 #define va_start(ap, parmN) ap = (char *)&parmN + 4
 #define va_arg(ap, type) *(type *)(ap += sizeof(type), ap - sizeof(type))
 #define va_end(ap) ap = 0
+/* va_list is a plain pointer here, so a copy is an assignment (C99 7.15.1.2) */
+#define va_copy(dest, src) ((dest) = (src))
+#define __va_copy(dest, src) ((dest) = (src))
 
 #endif
 

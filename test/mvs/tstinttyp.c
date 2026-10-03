@@ -8,12 +8,12 @@
  *     -Wformat checks each against the <stdint.h> type, so a macro that
  *     does not match its type fails the build - that is the check, and it
  *     runs at compile time.  The macro list was generated from the header
- *     (84 PRI, 35 SCN); no runtime result is asserted there.
+ *     (84 PRI, 70 SCN); no runtime result is asserted there.
  *   - at run time: a value per width through snprintf and sscanf, and
  *     imaxabs, imaxdiv, strtoimax, strtoumax.
  *
- * SCN*8, SCN*64 and SCN*MAX are absent on purpose (scanf lacks hh, ll and
- * j, #318); the test pins that they stay absent until #318 lands.
+ * SCN*8, SCN*64 and SCN*MAX came with #336, once #318 had given scanf hh,
+ * ll and j; the test pins that they exist.
  *
  * Build:   make build
  *          cc370 -O1 -Wall -Werror -Iinclude -L build/sdk \
@@ -86,6 +86,20 @@ static void format_check(void)
       sscanf("1 2 3 4 5", "%" SCNdLEAST32 " %" SCNiLEAST32 " %" SCNoLEAST32 " %" SCNuLEAST32 " %" SCNxLEAST32, &a, &c, &d, &e, &f); }
     { int_fast32_t a, c; uint_fast32_t d, e, f;
       sscanf("1 2 3 4 5", "%" SCNdFAST32 " %" SCNiFAST32 " %" SCNoFAST32 " %" SCNuFAST32 " %" SCNxFAST32, &a, &c, &d, &e, &f); }
+    { int8_t a, c; uint8_t d, e, f;
+      sscanf("1 2 3 4 5", "%" SCNd8 " %" SCNi8 " %" SCNo8 " %" SCNu8 " %" SCNx8, &a, &c, &d, &e, &f); }
+    { int_least8_t a, c; uint_least8_t d, e, f;
+      sscanf("1 2 3 4 5", "%" SCNdLEAST8 " %" SCNiLEAST8 " %" SCNoLEAST8 " %" SCNuLEAST8 " %" SCNxLEAST8, &a, &c, &d, &e, &f); }
+    { int_fast8_t a, c; uint_fast8_t d, e, f;
+      sscanf("1 2 3 4 5", "%" SCNdFAST8 " %" SCNiFAST8 " %" SCNoFAST8 " %" SCNuFAST8 " %" SCNxFAST8, &a, &c, &d, &e, &f); }
+    { int64_t a, c; uint64_t d, e, f;
+      sscanf("1 2 3 4 5", "%" SCNd64 " %" SCNi64 " %" SCNo64 " %" SCNu64 " %" SCNx64, &a, &c, &d, &e, &f); }
+    { int_least64_t a, c; uint_least64_t d, e, f;
+      sscanf("1 2 3 4 5", "%" SCNdLEAST64 " %" SCNiLEAST64 " %" SCNoLEAST64 " %" SCNuLEAST64 " %" SCNxLEAST64, &a, &c, &d, &e, &f); }
+    { int_fast64_t a, c; uint_fast64_t d, e, f;
+      sscanf("1 2 3 4 5", "%" SCNdFAST64 " %" SCNiFAST64 " %" SCNoFAST64 " %" SCNuFAST64 " %" SCNxFAST64, &a, &c, &d, &e, &f); }
+    { intmax_t a, c; uintmax_t d, e, f;
+      sscanf("1 2 3 4 5", "%" SCNdMAX " %" SCNiMAX " %" SCNoMAX " %" SCNuMAX " %" SCNxMAX, &a, &c, &d, &e, &f); }
     { intptr_t a, c; uintptr_t d, e, f;
       sscanf("1 2 3 4 5", "%" SCNdPTR " %" SCNiPTR " %" SCNoPTR " %" SCNuPTR " %" SCNxPTR, &a, &c, &d, &e, &f); }
 }
@@ -143,10 +157,10 @@ int main(void)
           "(2) SCNx32");
     p = 0;
     CHECK(sscanf("-42", "%" SCNdPTR, &p) == 1 && p == -42, "(2) SCNdPTR");
-#if defined(SCNd8) || defined(SCNd64) || defined(SCNdMAX) || defined(SCNuLEAST64)
-    CHECK(0, "(2) SCN*8/64/MAX are absent until #318");
+#if defined(SCNd8) && defined(SCNd64) && defined(SCNdMAX) && defined(SCNuLEAST64)
+    CHECK(1, "(2) SCN*8/64/MAX exist since #336");
 #else
-    CHECK(1, "(2) SCN*8/64/MAX are absent until #318");
+    CHECK(0, "(2) SCN*8/64/MAX exist since #336");
 #endif
 
     printf("\n(3) functions:\n");

@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- **`<stdbool.h>` and `<iso646.h>` (#336).** Neither existed, and cc370
+  searches only the sysroot, so `#include <stdbool.h>` failed in every
+  program; C99 requires both even of a freestanding implementation.
+- **`va_copy` in `<stdarg.h>`, `FLT_EVAL_METHOD` (0) and `DECIMAL_DIG` (18)
+  in `<float.h>` (#336).**
+- **The 35 missing `SCN*` macros of `<inttypes.h>` (#336):** every 8-bit,
+  64-bit and `MAX` width, possible since scanf learned `hh`, `ll` and `j`
+  (#318). cc370's `-Wformat` checks all 70 against their types.
+
 ### Changed
 - **libc370 is built with `-Os` instead of `-O1` (#344).** `libc.a`'s text
   shrinks from 284,430 to 276,313 bytes (-8,117, -2.9%; 282 members smaller,
