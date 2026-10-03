@@ -327,37 +327,51 @@ __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax)
         }
 
         vdbl = va_arg(*arg, double);
-        __dblcvt(vdbl, specifier, width, precision, work,
+        /* the digits only; width and flags are placed here, as for the
+           integers: __dblcvt() pads with blanks on the left, which left the
+           0 and - flags unheard and put + or space outside the width (#355) */
+        __dblcvt(vdbl, specifier, 0, precision, work,
                  sizeof(work) - 1);   /* keep a byte for the sign (#222) */
-        slen = strlen(work);
-        if ((flagSpace || flagPlus) && (work[0] != '-')) {
-            slen++;
-            memmove(work + 1, work, slen);
-            if (flagSpace) {
-                work[0] = ' ';
+        {
+            const char  *body = work;
+            int         sign = 0;
+            int         pad;
+
+            if (*body == '-') {
+                sign = '-';
+                body++;
             }
             else if (flagPlus) {
-                work[0] = '+';
+                sign = '+';
             }
-        }
-
-        if (fq == NULL) {
-            /* bounded like outch(): copy what fits, count what the whole
-               conversion needed (#128) */
-            size_t w = slen;
-
-            if (w > (size_t)(smax - sput)) {
-                w = (smax > sput) ? (size_t)(smax - sput) : 0;
+            else if (flagSpace) {
+                sign = ' ';
             }
-            memcpy(s, work, w);
-            s += w;
-            sput += (int)w;
+            slen = strlen(body);
+            pad = width - (int)slen - (sign != 0);
+            if (pad < 0) {
+                pad = 0;
+            }
+
+            /* C99 7.19.6.1: - pads on the right; otherwise 0 pads with
+               zeros between the sign and the digits, else blanks go first */
+            if (!flagMinus && !flagZero) {
+                for (x = 0; x < pad; x++) outch(' ');
+            }
+            if (sign) {
+                outch(sign);
+            }
+            if (!flagMinus && flagZero) {
+                for (x = 0; x < pad; x++) outch('0');
+            }
+            for (x = 0; x < (int)slen; x++) {
+                outch(body[x]);
+            }
+            if (flagMinus) {
+                for (x = 0; x < pad; x++) outch(' ');
+            }
+            extraCh += pad + (sign != 0) + (int)slen;
         }
-        else {
-            /* __fputs, not fputs: the caller holds the FILE lock (#145) */
-            __fputs(work, fq);
-        }
-        extraCh += slen;
     }
     else if (specifier == 's') {
         svalue = va_arg(*arg, char *);

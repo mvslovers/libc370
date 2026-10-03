@@ -37,6 +37,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   brexx370 ran identically against the `-O1` and the `-Os` library.
   `LIBC370_OPT=-O1` builds the previous variant.
 
+### Fixed
+- **printf honours the `0` and `-` flags for `%f`, `%e` and `%g`, and counts
+  a `+` or space sign in the width (#355).** `"%05.1f"` of 2.5 printed
+  `"  2.5"` (now `"002.5"`), `"%-6.1f"` padded on the left, and `"%+6.1f"`
+  came out seven characters wide. mvsdev JOB01315: 19/19, against 13 of 19
+  failing with 2.1.0.
+
 ## [2.1.0] - 2026-10-03
 
 **Requires cc370 1.1.0 or later.** The compiler's helper routines and the
