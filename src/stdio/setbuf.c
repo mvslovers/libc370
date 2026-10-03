@@ -1,16 +1,14 @@
 /* SETBUF.C */
 #include <stdio.h>
 
-int
+/* C99 7.19.5.5: setbuf returns nothing (#339) */
+void
 setbuf(FILE *stream, char *buf)
 {
-    int ret;
-
     if (buf == NULL) {
-        ret = setvbuf(stream, NULL, _IONBF, 0);
+        (void)setvbuf(stream, NULL, _IONBF, 0);
     }
     else {
-        ret = setvbuf(stream, buf, _IOFBF, BUFSIZ);
+        (void)setvbuf(stream, buf, _IOFBF, BUFSIZ);
     }
-    return (ret);
 }

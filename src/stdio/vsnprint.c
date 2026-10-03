@@ -27,12 +27,15 @@ extern int
 __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax);
 
 int
-vsnprintf(char *s, int n, const char *format, va_list arg)
+vsnprintf(char *s, size_t n, const char *format, va_list arg)
 {
     char        *sin        = s;
     int         fin         = 0;
     int         chcount     = 0;
-    int         lim         = (n > 0) ? n - 1 : 0;   /* content budget: one
+    /* n is a size_t since #339; the budget stays an int, capped - no
+       buffer on a 24-bit machine comes near INT_MAX */
+    int         lim         = (n == 0) ? 0 : (n - 1 > (size_t)INT_MAX)
+                              ? INT_MAX : (int)(n - 1);   /* content budget: one
                                                         byte stays reserved
                                                         for the NUL (#128) */
     int         vint;

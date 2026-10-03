@@ -4,7 +4,7 @@
 #include "stddef.h"
 
 int
-snprintf(char *s, int n, const char *format, ...)
+snprintf(char *s, size_t n, const char *format, ...)
 {
     va_list arg;
     int ret;
