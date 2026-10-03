@@ -7,8 +7,8 @@
  * left as it was; %hhd stored a short into a char object, one byte past
  * it; j, z and t were not modifiers at all and derailed the format.
  *
- * This run #includes src/stdio/vvscanf.c and drives its string path
- * (fp == NULL), which is what sscanf() uses.  Every target sits between
+ * This run #includes src/stdio/vvscanf.c and src/stdio/vsscanf.c and
+ * drives the string path (fp == NULL) through vsscanf() (#338).  Every target sits between
  * two guard bytes, so a store of the wrong width shows as a changed
  * guard, not only as a wrong value.  test/mvs/tstscnll.c runs the same
  * cases on MVS through the real sscanf().
@@ -47,6 +47,7 @@ int toupper(int c);
 int tolower(int c);
 
 #include "../../src/stdio/vvscanf.c"
+#include "../../src/stdio/vsscanf.c"
 
 static int run = 0, failed = 0;
 
@@ -62,7 +63,7 @@ static int scan(const char *s, const char *f, ...)
     int r;
 
     va_start(ap, f);
-    r = vvscanf(f, ap, NULL, s);
+    r = vsscanf(s, f, ap);      /* the C99 entry point, since #338 */
     va_end(ap);
     return (r);
 }

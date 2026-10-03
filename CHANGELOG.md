@@ -19,6 +19,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   macros, so `(isalpha)(c)`, `&isalpha` or `#undef isalpha` did not compile,
   though all 14 functions were in `libc.a` (C99 7.1.4). The generated code
   of the library is unchanged.
+- **`vprintf()`, `vscanf()`, `vfscanf()`, `vsscanf()` (#338)**, the
+  `va_list` forms C99 requires; thin wrappers over the existing engines.
 
 ### Changed
 - **libc370 is built with `-Os` instead of `-O1` (#344).** `libc.a`'s text
