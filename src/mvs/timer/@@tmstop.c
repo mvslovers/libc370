@@ -6,6 +6,7 @@ int tmr_stop(void)
     TMR         *tmr    = tmr_get();
     int         lockrc;
     int         i;
+    CTHDTASK    *task;
 
     if (!tmr) return -1;        /* no TMR anchor: no timer services (#85) */
 
@@ -30,12 +31,35 @@ int tmr_stop(void)
     }
     if (lockrc==0) unlock(tmr, 0);
 
-    /* if we have a timer thread that is shut down, delete it */
+    /* Wait, bounded, for the timer thread to end before deleting it.  It
+    ** ends promptly once it sees SHUTDOWN, but it has to run to see it,
+    ** and cthread_delete() refuses a subtask that has not posted termecb
+    ** (#11).  Deleting at once used to find it still alive every time:
+    ** the delete was refused, the handle dropped regardless, and the
+    ** program then returned with the subtask attached - ABEND SA03
+    ** (#345, mvsdev JOB01194).  The wait runs outside the lock, which the
+    ** thread takes on its way out, and on a separate timeout ECB, so
+    ** termecb is only ever posted by MVS.
+    */
+    task = NULL;
+    lockrc = lock(tmr, 0);
+    if (tmr->task && (tmr->flags & TMR_FLAG_SHUTDOWN)) task = tmr->task;
+    if (lockrc==0) unlock(tmr, 0);
+    if (task && !(task->termecb & ECB_POSTED_BIT)) {
+        ECB     tecb = 0;
+        ECB     *waitlist[2];
+
+        waitlist[0] = &task->termecb;
+        waitlist[1] = (ECB *)((unsigned)&tecb | 0x80000000);
+        ecb_timed_waitlist(waitlist, &tecb, 500, 0);   /* 5 seconds at most */
+    }
+
+    /* if we have a timer thread that is shut down, delete it; a refused
+    ** delete leaves tmr->task set, keeping the handle that is still needed */
     lockrc = lock(tmr, 0);
     if (tmr->task && (tmr->flags & TMR_FLAG_SHUTDOWN)) {
         wtof("%s thread DELETE", __func__);
         cthread_delete(&tmr->task);
-        tmr->task = NULL;
     }
     if (lockrc==0) unlock(tmr, 0);
 

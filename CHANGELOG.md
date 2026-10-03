@@ -38,6 +38,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `LIBC370_OPT=-O1` builds the previous variant.
 
 ### Fixed
+- **`tmr_stop()` waits for the timer thread to end before deleting it
+  (#345).** It deleted the thread at once, the delete was refused because
+  the thread had not ended yet (#11), and the handle was dropped anyway: a
+  program that stopped its timer and returned ended **ABEND SA03**, a task
+  ending with a subtask still attached. The wait is bounded (5 seconds). If
+  the thread still runs, the handle is now kept instead of lost.
 - **printf honours the `0` and `-` flags for `%f`, `%e` and `%g`, and counts
   a `+` or space sign in the width (#355).** `"%05.1f"` of 2.5 printed
   `"  2.5"` (now `"002.5"`), `"%-6.1f"` padded on the left, and `"%+6.1f"`
