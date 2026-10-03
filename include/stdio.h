@@ -137,7 +137,7 @@ extern int      vfprintf(FILE *stream, const char *format, va_list arg);
 extern int      remove(const char *filename);
 extern int      rename(const char *old, const char *newnam);
 extern int      sprintf(char *s, const char *format, ...);
-extern int      snprintf(char *s, int n, const char *format, ...);
+extern int      snprintf(char *s, size_t n, const char *format, ...);
 extern int      vsprintf(char *s, const char *format, va_list arg);
 extern char     *fgets(char *s, int n, FILE *stream);
 extern int      ungetc(int c, FILE *stream);
@@ -150,7 +150,7 @@ extern void     rewind(FILE *stream);
 extern void     clearerr(FILE *stream);
 extern void     perror(const char *s);
 extern int      setvbuf(FILE *stream, char *buf, int mode, size_t size);
-extern int      setbuf(FILE *stream, char *buf);
+extern void     setbuf(FILE *stream, char *buf);
 extern FILE     *freopen(const char *filename, const char *mode, FILE *stream);
 extern int      fflush(FILE *stream);
 extern char     *tmpnam(char *s);
@@ -169,7 +169,7 @@ extern int      getc(FILE *stream);
 extern int      putc(int c, FILE *stream);
 extern int      feof(FILE *stream);
 extern int      ferror(FILE *stream);
-extern int      vsnprintf(char *s, int n, const char *format, va_list arg);
+extern int      vsnprintf(char *s, size_t n, const char *format, va_list arg);
 
 #define getchar()       (getc(stdin))
 #define putchar(c)      (putc((c), stdout))

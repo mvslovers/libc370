@@ -23,6 +23,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `va_list` forms C99 requires; thin wrappers over the existing engines.
 
 ### Changed
+- **`snprintf()`/`vsnprintf()` take a `size_t`, `setbuf()` returns `void`,
+  as C99 declares them (#339).** A program that declared the C99 prototype
+  itself did not compile, and host compilers warned about the declarations.
+  On S/370 callers pass the same bits, so this is treated as a defect fix:
+  **only code that used `setbuf()`'s return value needs a change** (C99 has
+  none; it was `setvbuf()`'s). A size of `SIZE_MAX` now means "large", not
+  -1. mvsdev JOB01313.
 - **libc370 is built with `-Os` instead of `-O1` (#344).** `libc.a`'s text
   shrinks from 284,430 to 276,313 bytes (-8,117, -2.9%; 282 members smaller,
   89 larger by at most 71 bytes), and a program linked against it is about
