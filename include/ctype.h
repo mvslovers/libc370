@@ -18,6 +18,23 @@ extern unsigned short *__isbuf;
 extern short *__tolow;
 extern short *__toup;
 
+/* the functions, declared beside their macros as C99 7.1.4 requires:
+   (isalpha)(c), &isalpha and #undef isalpha then reach libc.a (#337) */
+int isalnum(int c);
+int isalpha(int c);
+int isblank(int c);
+int iscntrl(int c);
+int isdigit(int c);
+int isgraph(int c);
+int islower(int c);
+int isprint(int c);
+int ispunct(int c);
+int isspace(int c);
+int isupper(int c);
+int isxdigit(int c);
+int tolower(int c);
+int toupper(int c);
+
 #define isalnum(c) (__isbuf[(c)] & 0x0001U)
 #define isalpha(c) (__isbuf[(c)] & 0x0002U)
 #define iscntrl(c) (__isbuf[(c)] & 0x0004U)

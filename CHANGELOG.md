@@ -15,6 +15,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - **The 35 missing `SCN*` macros of `<inttypes.h>` (#336):** every 8-bit,
   64-bit and `MAX` width, possible since scanf learned `hh`, `ll` and `j`
   (#318). cc370's `-Wformat` checks all 70 against their types.
+- **The `<ctype.h>` functions are declared (#337).** The header defined only
+  macros, so `(isalpha)(c)`, `&isalpha` or `#undef isalpha` did not compile,
+  though all 14 functions were in `libc.a` (C99 7.1.4). The generated code
+  of the library is unchanged.
 
 ### Changed
 - **libc370 is built with `-Os` instead of `-O1` (#344).** `libc.a`'s text
