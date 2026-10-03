@@ -18,6 +18,12 @@
 #    attached either way.
 # 6. Then pair.yml installs this release beside cc370's latest, as packages,
 #    under apt and dnf, and builds a program with the pair.
+# 7. And the Homebrew formula: sdk/homebrew/libc370.rb.in rendered with the
+#    version and the sysroot tarball's sha256 from the release's own
+#    SHA256SUMS, pushed to mvslovers/homebrew-tap (cc370#699).  Only a v* tag
+#    reaches the `release` environment that holds the tap's deploy key.  The
+#    commit is "libc370 <version>" by github-actions[bot], as cc370's are;
+#    an unchanged formula is not committed.
 
 name: Release
 
@@ -99,3 +105,43 @@ jobs:
     uses: ./.github/workflows/pair.yml
     with:
       libc370: ${{ needs.requires.outputs.version }}
+
+  homebrew:
+    needs: [requires, release]
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Render Formula/libc370.rb
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download "$GITHUB_REF_NAME" -p SHA256SUMS -O sums
+          v="${{ needs.requires.outputs.version }}"
+          s=$(grep "  libc370-$v-sysroot.tar.gz\$" sums | cut -d' ' -f1)
+          [ -n "$s" ] || { echo "::error::sysroot tarball not in SHA256SUMS"; exit 1; }
+          sed -e "s/@VERSION@/$v/g" -e "s/@SHA256@/$s/" \
+            sdk/homebrew/libc370.rb.in > libc370.rb
+          ! grep -n '@[A-Z0-9]*@' libc370.rb
+          ruby -c libc370.rb
+
+      - name: Push it to mvslovers/homebrew-tap
+        env:
+          TAP_KEY: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$TAP_KEY" > ~/.ssh/tap && chmod 600 ~/.ssh/tap
+          ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null
+          export GIT_SSH_COMMAND="ssh -i ~/.ssh/tap -o IdentitiesOnly=yes"
+          git clone -q git@github.com:mvslovers/homebrew-tap.git tap
+          cp libc370.rb tap/Formula/libc370.rb
+          cd tap
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/libc370.rb
+          v="${{ needs.requires.outputs.version }}"
+          if git diff --cached --quiet; then echo "already at $v"
+          else git commit -qm "libc370 $v" && git push -q origin HEAD:main; fi
+          rm -f ~/.ssh/tap

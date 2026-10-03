@@ -192,6 +192,16 @@ jobs:
       - name: Check the packages
         run: sh sdk/checkpkg.sh dist "${{ steps.pkg.outputs.version }}"
 
+      - name: The Homebrew formula renders
+        run: |
+          v="${{ steps.pkg.outputs.version }}"
+          s=$(grep "  libc370-$v-sysroot.tar.gz\$" dist/SHA256SUMS | cut -d' ' -f1)
+          sed -e "s/@VERSION@/$v/g" -e "s/@SHA256@/$s/" \
+            sdk/homebrew/libc370.rb.in > libc370.rb
+          ! grep -n '@[A-Z0-9]*@' libc370.rb
+          grep -q "sha256 \"$s\"" libc370.rb
+          ruby -c libc370.rb
+
       - name: Keep the packages
         uses: actions/upload-artifact@v4
         with:

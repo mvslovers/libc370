@@ -66,6 +66,9 @@ of it — and then the one it needs is released first.
    the cc370 tag it built with. The release's `pair` job must be green: it
    installs the new packages beside cc370's under apt and dnf and links a
    program with the pair (`.github/workflows/pair.yml`, `sdk/pairtest.sh`).
+   The `homebrew` job renders `sdk/homebrew/libc370.rb.in` with the new
+   version and the tarball's sha256 and pushes it to `mvslovers/homebrew-tap`
+   (commit `libc370 <version>`); edit the template there, never the tap's copy.
 
 ## Releasing cc370
 
