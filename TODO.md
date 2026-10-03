@@ -508,12 +508,13 @@ metadata and links a program against it (checked end to end on macOS).
    2. **#337** the 14 ctype functions undeclared (C99 7.1.4) - small, minor.
    3. **#338** `vprintf`/`vscanf`/`vfscanf`/`vsscanf` - wrappers, minor.
    4. **#339** `snprintf`/`vsnprintf` take `int`, `setbuf` returns `int` -
-      **decision**: major under D6, or a defect fix.
+      decided 2026-10-03: a defect fix, in 2.2.0.
    5. **#340** `<math.h>` C99 additions - large; HFP has no NaN/inf; five
       8-character name-collision groups need `asm` labels.
    6. **#341** wide characters (`<wchar.h>` functions, `<wctype.h>`) - only
       on demand.
-   7. **#342** `<complex.h>`/`<fenv.h>`/`<tgmath.h>` - **decision** (HFP).
+   7. **#342** `<complex.h>`/`<fenv.h>`/`<tgmath.h>` - decided 2026-10-03:
+      left out, documented (PR #352); open only as a resubmission.
 2. ~~**#344**~~ -Os is the default since PR #346 (2026-10-03, unreleased,
    goes into 2.2.0): -8,117 text bytes (-2.9%); libc370 55/55, rexx370 and
    brexx370 identical on MVS. `LIBC370_OPT=-O1` goes back. #345 (tstanchr
