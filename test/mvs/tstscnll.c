@@ -1,6 +1,6 @@
 /*
  * tstscnll.c - libc370 #318 on MVS: scanf's length modifiers hh, ll, j,
- * z, t and L, through the real sscanf().
+ * z, t and L, through the real vsscanf() (#338).
  *
  * test/host/tstscnll.c runs the same cases (test/mvs/tstscncase.h) on the
  * host, where long is 64 bits and the %lld defect cannot show.  Here it
@@ -30,10 +30,13 @@
  * the new shared float cases stay below 1e30, so the S0CC is in
  * hfp_cases() - scanf's own float parser past about 1e75.
  *
+ * Through vsscanf() (#338): mvsdev JOB01311, GREEN CC 0000, 43/43.
+ *
  * RC: 0 = every check passed, 1 = a check failed (it is the COND CODE).
  */
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
 #include <math.h>
 #include <float.h>
 
@@ -46,9 +49,18 @@ static int run = 0, failed = 0;
         else { failed++; printf("  FAIL: %s\n", (msg)); }                 \
     } while (0)
 
-/* the cases call scan(s, f, ...): here that is sscanf() itself (libc370
-   has no vsscanf() yet, #325) */
-#define scan sscanf
+/* the cases call scan(s, f, ...): through vsscanf(), the C99 entry point
+   since #338 (it was sscanf() itself before) */
+static int scan(const char *s, const char *f, ...)
+{
+    va_list ap;
+    int r;
+
+    va_start(ap, f);
+    r = vsscanf(s, f, ap);
+    va_end(ap);
+    return (r);
+}
 
 #include "tstscncase.h"
 

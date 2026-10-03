@@ -4764,8 +4764,11 @@ va_end	stdarg.h
 va_list	stdarg.h
 va_start	stdarg.h
 vfprintf	stdio.h
+vfscanf	stdio.h
 vollist	mvs/dslist.h
+vprintf	stdio.h
 vsaccess	mvs/vsam.h
+vscanf	stdio.h
 vscinv	mvs/vsam.h
 vsclear	mvs/vsam.h
 vsclose	mvs/vsam.h
@@ -4779,6 +4782,7 @@ vsnprintf	stdio.h
 vsopen	mvs/vsam.h
 vsprintf	stdio.h
 vsread	mvs/vsam.h
+vsscanf	stdio.h
 vssteq	mvs/vsam.h
 vsstge	mvs/vsam.h
 vstell	mvs/vsam.h

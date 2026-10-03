@@ -730,6 +730,10 @@ src/racf/racsacee.c	src/mvs/racf/racsacee.c	declared in <mvs/racf.h>
 src/smf/smfactive.c	src/mvs/smf/smfactive.c	declared in <mvs/smf.h>
 src/smf/smfinit.c	src/mvs/smf/smfinit.c	declared in <mvs/smf.h>
 src/smf/smfwrite.c	src/mvs/smf/smfwrite.c	declared in <mvs/smf.h>
+src/stdio/vfscanf.c	src/stdio/vfscanf.c	new after 2.0.0 (#338)
+src/stdio/vprintf.c	src/stdio/vprintf.c	new after 2.0.0 (#338)
+src/stdio/vscanf.c	src/stdio/vscanf.c	new after 2.0.0 (#338)
+src/stdio/vsscanf.c	src/stdio/vsscanf.c	new after 2.0.0 (#338)
 src/stdlib/@exit.c	src/stdlib/@exit.c	new after 2.0.0 (#314)
 src/stdlib/atoll.c	src/stdlib/atoll.c	new after 2.0.0 (#314)
 src/stdlib/strtof.c	src/stdlib/strtof.c	new after 2.0.0 (#314)

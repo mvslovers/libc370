@@ -125,6 +125,7 @@ extern FILE **__gterr(void);
 #define stderr          (*(__gterr()))
 
 extern int      printf(const char *format, ...);
+extern int      vprintf(const char *format, va_list arg);
 extern FILE     *fopen(const char *filename, const char *mode);
 extern int      fclose(FILE *stream);
 extern size_t   fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
@@ -157,6 +158,9 @@ extern FILE     *tmpfile(void);
 extern int      fscanf(FILE *stream, const char *format, ...);
 extern int      scanf(const char *format, ...);
 extern int      sscanf(const char *s, const char *format, ...);
+extern int      vfscanf(FILE *stream, const char *format, va_list arg);
+extern int      vscanf(const char *format, va_list arg);
+extern int      vsscanf(const char *s, const char *format, va_list arg);
 extern char     *gets(char *s);
 extern int      puts(const char *s);
 extern int      getchar(void);
