@@ -43,6 +43,13 @@
  *   (7)  catalogs alternating, then the array REVERSED before __freeds() -
  *        mvsMF sorts what it gets (dsapi.c) -> every name freed once.  A
  *        double free is ASAN's to report; a missed one is the count's.
+ *   (8)  #308: an entry with no VOLSER, then another -> the second is
+ *        listed with its own volume; it used to vanish, its volume landing
+ *        on the first.
+ *   (9)  #308: LISTC LEVEL('SYS1') VOLUME as mvsdev printed it (JOB01341):
+ *        page spaces and a cluster without volumes between data sets.
+ *   (10) a cluster whose volume comes from its DATA component, with an
+ *        indented "CLUSTER--name" association in between (not measured).
  *   after every case: no allocation left once __freeds() has run.
  *
  * Before the fix this does not build: struct dslist has no catnm.
@@ -333,11 +340,7 @@ int main(void)
 
     /* ---------------------------------------------------------------- */
     printf("\n(6) IN-CAT but no volume -> no record, name freed\n");
-    /* Only as the LAST entry: an entry with no VOLSER in the middle of a
-       listing makes parse() skip the NEXT entry line (dsn stays set, so
-       "NONVSAM" is never looked at) - the following data set vanishes and
-       its volume lands on the one before.  That predates #50 and is not
-       pinned here. */
+    /* An entry with no volume in the middle of a listing is case (8). */
     {
         static const char *fx[] = {
             ENTRY("IBMUSER.A"), INCAT("UCPUB000"), HISTORY, VOLS("WORK00"),
@@ -375,6 +378,70 @@ int main(void)
             l[i] = l[n - 1 - i];
             l[n - 1 - i] = t;
         }
+        done(l);
+    }
+
+    /* ---------------------------------------------------------------- */
+    printf("\n(8) #308: an entry without VOLSER does not swallow the next\n");
+    {
+        static const char *fx[] = {
+            ENTRY("IBMUSER.NOVOL"), INCAT("UCPUB000"), HISTORY,
+            ENTRY("IBMUSER.A"), INCAT("UCPUB000"), HISTORY, VOLS("WORK00"),
+            NULL };
+        l = run(fx, NULL);
+        CHECK_EQ(arraycount(&l), 1, "one record");
+        CHECK_STR(l[0]->dsn, "IBMUSER.A", "the entry after the orphan");
+        CHECK_STR(l[0]->volser, "WORK00", "with its own volume");
+        CHECK_STR(l[0]->catnm, "UCPUB000", "and its catalog");
+        done(l);
+    }
+
+    /* ---------------------------------------------------------------- */
+    printf("\n(9) #308: LISTC LEVEL('SYS1') VOLUME as mvsdev printed it\n");
+    /* JOB01341: page spaces and clusters carry no VOLUMES block.  Before
+       the fix SYS1.PAGECSA came back on SYS1.PARMLIB's volume and
+       SYS1.PARMLIB was missing (JOB01340, the previous library). */
+    {
+        static const char *fx[] = {
+            "PAGESPACE ----- SYS1.PAGECSA", INCAT(MASTER), HISTORY,
+            "PAGESPACE ----- SYS1.PAGELPA", INCAT(MASTER), HISTORY,
+            "PAGESPACE ----- SYS1.PAGEL00", INCAT(MASTER), HISTORY,
+            "NONVSAM ------- SYS1.PARMLIB", INCAT(MASTER), HISTORY,
+            VOLS("MVSRES"),
+            "CLUSTER ------- SYS1.STGINDEX", INCAT(MASTER), HISTORY,
+            "NONVSAM ------- SYS1.SVCLIB", INCAT(MASTER), HISTORY,
+            VOLS("MVSRES"),
+            NULL };
+        l = run(fx, NULL);
+        CHECK_EQ(arraycount(&l), 2, "two records - the two with a volume");
+        CHECK_STR(l[0]->dsn, "SYS1.PARMLIB", "record 1 is SYS1.PARMLIB");
+        CHECK_STR(l[1]->dsn, "SYS1.SVCLIB", "record 2 is SYS1.SVCLIB");
+        CHECK_STR(l[1]->volser, "MVSRES", "record 2 volser");
+        done(l);
+    }
+
+    /* ---------------------------------------------------------------- */
+    printf("\n(10) #308: a cluster still takes its DATA component's VOLSER\n");
+    /* The shape the state across lines exists for.  NOT measured: the
+       mvsdev catalog lists no component under LEVEL (JOB01341) - this is
+       the layout of the IDCAMS manual, kept as the guard that an indented
+       "CLUSTER--name" association does not start an entry. */
+    {
+        static const char *fx[] = {
+            "CLUSTER ------- IBMUSER.KSDS", INCAT("UCPUB000"), HISTORY,
+            "     ASSOCIATIONS",
+            "       DATA-----IBMUSER.KSDS.DATA",
+            "   DATA ------- IBMUSER.KSDS.DATA", INCAT("UCPUB000"), HISTORY,
+            "     ASSOCIATIONS",
+            "       CLUSTER--IBMUSER.KSDS",
+            VOLS("WORK00"),
+            ENTRY("IBMUSER.A"), INCAT("UCPUB000"), HISTORY, VOLS("WORK01"),
+            NULL };
+        l = run(fx, NULL);
+        CHECK_EQ(arraycount(&l), 2, "two records");
+        CHECK_STR(l[0]->dsn, "IBMUSER.KSDS", "record 1 is the cluster");
+        CHECK_STR(l[0]->volser, "WORK00", "on its DATA component's volume");
+        CHECK_STR(l[1]->dsn, "IBMUSER.A", "record 2");
         done(l);
     }
 
