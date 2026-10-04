@@ -10,13 +10,11 @@ libc370 is the base library of the whole ecosystem, so a defect here is a defect
 in httpd, mvsMF, ftpd, ufsd and every other consumer at once; that is what puts
 some cheap items high and some expensive ones low.
 
-**2.0.0 shipped 2026-10-01 and 2.1.0 on 2026-10-03; `main` is 2.x and what
-lands there now goes out with the next release.** **No release or tag, not
-even a patch, until the mbt session gives the go** (2026-10-04): the
-maintainer waits for brexx370 to remove its JCC compatibility layer
-(mvslovers/brexx370#298). brexx370's libc gaps arrive here as issues
-(gettimeofday, strupr, _msize, Sleep, getlogin; strcasecmp already exists,
-#183). Tier 0 (the 2.0 critical path) is done
+**2.0.0 shipped 2026-10-01, 2.1.0 on 2026-10-03, 2.2.0 on 2026-10-04**
+(tag `v2.2.0` on `0ba452a`, cc370 `>=1.1.0 <2`, built with cc370 1.1.0;
+assets, `pair` and the Homebrew tap checked; cc370's `install.sh` with cc370
+1.2.0 picks 2.2.0). `main` is 2.2.1-dev. Releases are tagged after the go of
+the coordinating mbt session and the maintainer's approval. Tier 0 (the 2.0 critical path) is done
 but for the consumer ports still pinned to 1.0.8 (step 7). 1.0.8 is the last
 1.x; a serious defect there gets an emergency 1.0.9 from the tag `v1.0.8` (D8
 in `doc/design-2.0.md`).
@@ -1653,7 +1651,7 @@ same question for reading spooled SYSOUT.
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
 
-- **2026-10-04, all unreleased (release on hold, see the top):**
+- **2026-10-04, released in 2.2.0:**
   - #181 (PR #360, + `MOUNT` keyword PR #361) - `__dsalc()`/`fopen()` with
     UNIT=/VOLSER= no longer wait on IEF238D; JOB01331, JOB01333.
   - #273 (PR #362) - `floor`/`ceil`/`modf`/`fmod` beyond 2**31; JOB01337.
