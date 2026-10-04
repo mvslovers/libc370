@@ -44,4 +44,8 @@ int ssvt_funcmap(SSVT *ssvt, unsigned index, unsigned funcnum)
         __asm__("LR\t2,%0               get prev psw key\n\t"
                 "SPKA\t0(2)             save in psw" : : "r"(prevkey) : "2");
     }
+
+    /* the success path used to fall off the end, leaving
+       0x100 | key<<4 in R15 - never 0 (#240) */
+    return 0;
 }
