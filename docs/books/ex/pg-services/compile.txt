@@ -1,0 +1,9 @@
+$ cc370 -O1 -Wall -Werror -c copyds.c
+$ cc370 -O1 -Wall -Werror -I libc370/include -c copyds.c
+In file included from libc370/include/mvs/dynalloc.h:7,
+                 from copyds.c:2:
+libc370/include/ibm/mvs/iefzb4d2.h:153:1: "/*" within comment
+...
+$ cc370 -O1 -Wall -Werror -Wno-comment -I libc370/include -c copyds.c
+$ echo $?
+0

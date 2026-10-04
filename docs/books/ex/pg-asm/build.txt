@@ -1,0 +1,5 @@
+$ as370 -o pd2int.o pd2int.asm
+$ as370 -o eachchr.o eachchr.asm
+$ cc370 -O1 -Wall -o ASMDEMO asmdemo.c pd2int.o eachchr.o -flinker-output=xmit
+$ file370 ASMDEMO.xmit
+ASMDEMO.xmit: TSO XMIT/NETDATA -> IBMUSER.HOST.LOAD, IEBCOPY, wraps IEBCOPY unload (member ASMDEMO)

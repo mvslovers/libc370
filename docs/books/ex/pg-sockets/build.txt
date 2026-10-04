@@ -1,0 +1,5 @@
+$ cc370 -Wall -O1 -o timesrv timesrv.c asc.c
+$ cc370 -Wall -O1 -o timecli timecli.c asc.c
+$ file370 timesrv timecli
+timesrv: MVS load module member -- 25 CESD, 2 IDR, 7 text record(s), 43 control, 36 w/RLD, MODEND, 101501 bytes
+timecli: MVS load module member -- 23 CESD, 2 IDR, 7 text record(s), 40 control, 33 w/RLD, MODEND, 94369 bytes

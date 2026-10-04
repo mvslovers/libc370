@@ -1,0 +1,4 @@
+$ cc370 -O1 -Wall -Wl,--ac,1 -flinker-output=iebcopy -o SMFDEMO smfrec.c
+$ file370 -v SMFDEMO.iebcopy | grep member
+    member SMFDEMO   ttr=000001  entry=000000  modlen=74280  [EXEC AC=1]
+    1 directory member entr(y/ies)

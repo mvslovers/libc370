@@ -1,0 +1,15 @@
+$ cc370 -O1 -Wall -c amtfmt.c
+$ cc370 -O1 -Wall -c amtpars.c
+$ ar370 rc libmyutil.a pd2int.o eachchr.o amtfmt.o amtpars.o
+$ cc370 -O1 -Wall -o TOTAL total.c -L. -lmyutil -Wl,--map,total2.map
+$ grep -A1 myutil total2.map
+          PC    001590  000042  ./libmyutil.a(pd2int.o) autocall
+  PD2INT        001590
+          PC    0015D8  0000B0  ./libmyutil.a(amtfmt.o) autocall
+  AMT@FORM      0015E4
+$ head -1 total.map total2.map
+==> total.map <==
+LD370 MAP  TOTAL  ENTRY @@CRT0 000000  LENGTH 013D60
+
+==> total2.map <==
+LD370 MAP  TOTAL  ENTRY @@CRT0 000000  LENGTH 0113F8

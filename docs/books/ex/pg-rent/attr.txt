@@ -1,0 +1,5 @@
+$ cc370 -O1 -Wall -o WSA wsa.c -Wl,--rent,--reus -flinker-output=xmit
+$ file370 -v WSA.xmit | grep member
+WSA.xmit: TSO XMIT/NETDATA -> IBMUSER.HOST.LOAD, IEBCOPY, wraps IEBCOPY unload (member WSA)
+    member WSA       ttr=000001  entry=000000  modlen=71312  [RENT REUS EXEC AC=0]
+    1 directory member entr(y/ies)

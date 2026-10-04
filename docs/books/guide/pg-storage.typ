@@ -168,8 +168,10 @@ of the load module. They cost no allocation, but they are there whether
 the program needs them or not, and a large initialized array makes the load
 module, and its load time, larger by its size.
 
-A load module that is reentrant, or that is fetched from a library in the
-link list, cannot store into its static data: the first store ends the
-program with abend #cmd("S0C4"). A program that may ever run that way keeps
-the data it changes in automatic storage or on the heap. @pg-rent describes
-how.
+Whether a load module can store into its static data depends on the
+library it is fetched from, not on its RENT attribute: fetched from a
+library in the link list, the module can read its static data but the
+first store ends the program with abend #cmd("S0C4")\; fetched from a
+private library through a STEPLIB, the same module stores without trouble.
+A program that may ever be installed in the link list keeps the data it
+changes in automatic storage or on the heap. @pg-rent describes how.
