@@ -14,7 +14,7 @@ Originally created as **crent370** by Michael Dean Rayborn; now the cc370 target
 libc, maintained by the [mvslovers](https://github.com/mvslovers) community.
 
 **2.0 reorganised the public headers.** Coming from 1.x, read
-[docs/migration-2.0.md](docs/migration-2.0.md); 1.0.8 (tag `v1.0.8`, branch `1.x`)
+[docs/migration-2.x.md](docs/migration-2.x.md); 1.0.8 (tag `v1.0.8`, branch `1.x`)
 is the last 1.x release. Crypto (SHA-256, Blowfish, base64) is
 [crypto370](https://github.com/mvslovers/crypto370) since 2.0.
 
