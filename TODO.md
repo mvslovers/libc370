@@ -773,7 +773,11 @@ the merge.
 See "Recently landed". cc370#483 (PR cc370#512) no longer breaks the libc370
 build. `edge` moved to the merge (`9ed55db`), sysroot installed from main.
 
-### 2 · #61, #80 defect 3, #157, #158 — four list builders hand back a silently short list
+### 2 · #61, ~~#80 defect 3~~, #157, #158 — four list builders hand back a silently short list
+
+**One of four done:** `__listpd()` (#80 defect 3) follows the convention
+since 2.0.0 (PR #303, NULL/ENOMEM instead of a short list); #80 closed
+2026-10-04. Left: `__listvl()` (#61), `__listds()` (#157), `__listal()` (#158).
 
 **The convention is decided (2026-08-30) and recorded in #61**, which was
 retitled to hold it: on any allocation failure a list builder frees the partial
