@@ -1,0 +1,6 @@
+$ cc370 -Wall -O1 -o hello hello.c
+hello: MVS load module member -- 21 CESD, 2 IDR, 6 text record(s), 34 control, 28 w/RLD, MODEND, 83409 bytes
+$ cc370 -print-file-name=libc.a
+$PREFIX/bin/../lib/cc370/1.2.0/../../../cc370/lib/libc.a
+$ cc370 -print-file-name=crt1.o
+$PREFIX/bin/../lib/cc370/1.2.0/../../../cc370/lib/crt1.o

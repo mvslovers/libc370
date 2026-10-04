@@ -1,0 +1,3 @@
+$ cc370 -O1 -o dup main.c input.c output.c
+ld370: warning: 'PROCESS@' doubly defined:
+  $TMP/ccMlLNv2.o defines it again (first definition kept)

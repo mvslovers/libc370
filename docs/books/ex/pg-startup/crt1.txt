@@ -1,0 +1,1 @@
+$ cc370 -O1 -nostartfiles -o args $(cc370 -print-file-name=crt1.o) args.c

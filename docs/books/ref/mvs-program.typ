@@ -269,9 +269,12 @@ process and task anchors. Unlike #cmd("__exit()") it does not call the
 == Environment Variables <mvs-program-env>
 
 #idx("environment variable")
-MVS has no environment for a program to inherit. The environment of a C
-program starts empty, and is filled by #cmd("setenv()"), #cmd("putenv()") and
-#cmd("loadenv()"), which reads #cmd("name=value") lines from a data set. The
+MVS has no environment for a program to inherit. At start-up the library
+loads the environment from the DD #cmd("SYSENV"), or, if that cannot be
+read, from the DD #cmd("ENVIRON"), with #cmd("loadenv()"), which reads
+#cmd("name=value") lines from a data set\; without either DD the
+environment starts empty. #cmd("setenv()"), #cmd("putenv()") and further
+calls of #cmd("loadenv()") change it. The
 variables belong to the process anchor, so all threads of a program see the
 same set. Names are compared with case, except by #cmd("getenvi()").
 
