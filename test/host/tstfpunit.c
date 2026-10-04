@@ -94,6 +94,8 @@ char   *strcpy(char *, const char *);
 char   *strchr(const char *, int);
 char   *strstr(const char *, const char *);
 char   *strtok(char *, const char *);
+size_t  strspn(const char *, const char *);   /* src/internal/tok.h */
+size_t  strcspn(const char *, const char *);
 size_t  strlen(const char *);
 int     strcmp(const char *, const char *);
 
@@ -560,6 +562,20 @@ int main(void)
     n = find_dal(DALVLSER);
     CHECK(n >= 0 && entry_is(n, 0, "TAPE01"), "DALVLSER TAPE01");
     CHECK_EQ(svc99_flag1, S99NOCNV, "mount: S99NOCNV alone");
+
+    /* ---------------------------------------------------------------- */
+    printf("\n(10) the caller's strtok() survives __fpnew()\n");
+    {
+        char  names[] = "ONE,TWO,THREE";
+        char *t = strtok(names, ",");
+
+        CHECK_EQ(setup("wb,recfm=fb,lrecl=80,space=trk(1,1),volser=pub001"),
+                 0, "__fpmode() ok");
+        rc = __fpnew(&fh);
+        CHECK_EQ(rc, 0, "__fpnew() succeeded");
+        t = strtok(NULL, ",");
+        CHECK(t && strcmp(t, "TWO") == 0, "the next token is TWO");
+    }
 
     return mbt_test_summary("TSTFPUNIT");
 }

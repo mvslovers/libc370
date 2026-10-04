@@ -68,6 +68,8 @@ char   *strcpy(char *, const char *);
 char   *strchr(const char *, int);
 char   *strstr(const char *, const char *);
 char   *strtok(char *, const char *);
+size_t  strspn(const char *, const char *);   /* src/internal/tok.h */
+size_t  strcspn(const char *, const char *);
 size_t  strlen(const char *);
 int     strcmp(const char *, const char *);
 

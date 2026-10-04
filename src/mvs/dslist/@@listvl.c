@@ -1,4 +1,5 @@
 #include <ext/strutil.h>
+#include "src/internal/tok.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -227,13 +228,14 @@ static int get_comment(char *buf, VOLLIST **vollist)
 		char 	filler2;
 	} *rec = (struct record*)buf;
 	char 		volpat[7];
+	char		*tok_save = NULL;
 
 	rec->filler1[0] = 0;	/* zero terminate volser */
 	rec->filler2 = 0;		/* zero terminate comment */
 
 	strncpy(volpat, rec->volser, sizeof(volpat)-1);
 	volpat[sizeof(volpat)-1] = 0;
-	strtok(volpat, " ");
+	__tok(volpat, " ", &tok_save);
 	
 	// wtodumpf(rec, sizeof(struct record), "@@listvl:%s: record", __func__);
 	

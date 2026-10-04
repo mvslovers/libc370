@@ -38,6 +38,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `LIBC370_OPT=-O1` builds the previous variant.
 
 ### Fixed
+- **`fopen()`, `__listds()`, `__listvl()` and the dynalloc text-unit
+  builders no longer move the caller's `strtok()` position.** They
+  tokenised with `strtok()`, whose position is one per task, so a caller
+  looping with `strtok()` and calling one of them in the loop lost its
+  place: on mvsdev the next token was `NULL` after `fopen()` creating a data
+  set or a SYSOUT with DCB keywords, and `"FUNCTION C"` - a piece of the
+  IDCAMS output - after `__listds()` (JOB01360). The library now tokenises
+  on a position of its own. #301 fixed the same in `jesjob()`; `__dsalc()`
+  already saved and restored the position.
 - **A program without SYSIN starts in about 100 K less REGION (#277).**
   @@start opens stdin as `'NULLFILE'` when there is no SYSIN DD, and with no
   DCB attributes that opened LRECL=BLKSIZE=32760: two 32 K buffers in

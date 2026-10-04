@@ -1,5 +1,6 @@
 /* @@FPSTAR.C */
 #include <stdio.h>
+#include "src/internal/tok.h"
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
@@ -25,6 +26,7 @@ __fpstar(FILE *fp)
     TXT99       **txt99 = NULL;
     RB99        rb99    = {0};
     char        temp[sizeof(fp->mode)+1];
+    char        *tok_save = NULL;
 
     /* we want the DDNAME returned to us */
     err = __txrddn(&txt99, NULL);
@@ -84,7 +86,7 @@ __fpstar(FILE *fp)
 		if (!p) p = strstr(fp->mode,"recfm(");
 		if (p) {
 			strcpy(temp,p+6);
-			recfm = strtok(temp, " ,)");
+			recfm = __tok(temp, " ,)", &tok_save);
 		}
 		if (!recfm) recfm = getenv("SYSOUT_RECFM");
 		if (!recfm) recfm = "V";
@@ -96,7 +98,7 @@ __fpstar(FILE *fp)
 		if (!p) p = strstr(fp->mode, "lrecl(");
 		if (p) {
 			strcpy(temp,p+6);
-			lrecl = strtok(temp, " ,)");
+			lrecl = __tok(temp, " ,)", &tok_save);
 		}
 		if (!lrecl) lrecl = getenv("SYSOUT_LRECL");
 		if (!lrecl) lrecl = "255";
@@ -109,7 +111,7 @@ __fpstar(FILE *fp)
 			if (!p) p = strstr(fp->mode, "blksize(");
 			if (p) {
 				strcpy(temp,p+8);
-				blksize = strtok(temp, " ,)");
+				blksize = __tok(temp, " ,)", &tok_save);
 			}
 			if (!blksize) blksize = getenv("SYSOUT_BLKSIZE");
 			if (blksize) {

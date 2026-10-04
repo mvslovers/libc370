@@ -85,6 +85,8 @@ int     memcmp(const void *, const void *, size_t);
 char   *strcpy(char *, const char *);
 char   *strcat(char *, const char *);
 char   *strtok(char *, const char *);
+size_t  strspn(const char *, const char *);   /* src/internal/tok.h */
+size_t  strcspn(const char *, const char *);
 char   *strdup(const char *);
 size_t  strlen(const char *);
 int     strcmp(const char *, const char *);
@@ -511,6 +513,21 @@ int main(void)
         l = run(fx, NULL);
         CHECK(l == NULL, "nothing listed");
         CHECK_EQ(the_errno, 0, "errno cleared on entry");
+        done(l);
+    }
+
+    /* ---------------------------------------------------------------- */
+    printf("\n(13) the caller's strtok() survives __listds()\n");
+    {
+        static const char *fx[] = {
+            ENTRY("IBMUSER.A"), INCAT("UCPUB000"), HISTORY, VOLS("WORK00"),
+            NULL };
+        char  names[] = "ONE,TWO,THREE";
+        char *t = strtok(names, ",");
+
+        l = run(fx, NULL);
+        t = strtok(NULL, ",");
+        CHECK(t && strcmp(t, "TWO") == 0, "the next token is TWO");
         done(l);
     }
 

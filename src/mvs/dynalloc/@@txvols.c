@@ -1,5 +1,6 @@
 /* @@TXVOLS.C */
 #include "mvs/dynalloc.h"
+#include "src/internal/tok.h"
 #include "ext/array.h"
 
 int
@@ -11,12 +12,13 @@ __txvols(TXT99 ***txt99, const char *vols)
     char    *buf    = calloc(1, len + 1);
     char    *p;
     TXT99   *tu;
+    char    *tok_save = NULL;
 
     if (!len) goto quit;
     if (!buf) goto quit;
 
     memcpy(buf, vols, len);
-    for(p=strtok(buf," ,"); p; p=strtok(NULL," ,")) {
+    for(p=__tok(buf, " ,", &tok_save); p; p=__tok(NULL, " ,", &tok_save)) {
         arrayadd(&tmp, p);
     }
 

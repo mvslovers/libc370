@@ -1,5 +1,6 @@
 /* @@FPTMP.C */
 #include "src/internal/fileio.h"
+#include "src/internal/tok.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -21,6 +22,7 @@ __fptmp(FILE *fp)
     TXT99       **txt99 = NULL;
     RB99        rb99    = {0};
     char        temp[sizeof(fp->mode)+1];
+    char        *tok_save = NULL;
 
     /* we want the DDNAME returned to us */
     err = __txrddn(&txt99, NULL);
@@ -47,7 +49,7 @@ __fptmp(FILE *fp)
     if (!p) p = strstr(fp->mode,"recfm(");
     if (p) {
         strcpy(temp,p+6);
-        recfm = strtok(temp, " ,)");
+        recfm = __tok(temp, " ,)", &tok_save);
     }
     if (!recfm) recfm = getenv("TEMP_RECFM");
     if (!recfm) recfm = "V";
@@ -59,7 +61,7 @@ __fptmp(FILE *fp)
     if (!p) p = strstr(fp->mode,"lrecl(");
     if (p) {
         strcpy(temp,p+6);
-        lrecl = strtok(temp, " ,)");
+        lrecl = __tok(temp, " ,)", &tok_save);
     }
     if (!lrecl) lrecl = getenv("TEMP_LRECL");
     if (!lrecl) lrecl = "255";
@@ -72,7 +74,7 @@ __fptmp(FILE *fp)
         if (!p) p = strstr(fp->mode,"blksize(");
         if (p) {
             strcpy(temp,p+8);
-            recfm = strtok(temp, " ,)");
+            recfm = __tok(temp, " ,)", &tok_save);
         }
         if (!p) p = getenv("TEMP_BLKSIZE");
         if (p) {
