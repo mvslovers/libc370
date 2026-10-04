@@ -43,7 +43,7 @@
  * distinct ACEEs, which is all (5) and (6) need.
  *
  * AUTHORIZATION and probe hygiene - see test/mvs/tstracau.c and
- * doc/consumer-notes.md: AC=1 via ld370 twice, no writable statics if this
+ * docs/consumer-notes.md: AC=1 via ld370 twice, no writable statics if this
  * runs from a LNKLST library, WTO for anything that must survive an abend.
  *
  * BUILD (host):

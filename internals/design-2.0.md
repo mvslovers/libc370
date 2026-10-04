@@ -67,7 +67,7 @@ which is not built (#248). No consumer includes any of them.
 - **2.0 is a hard cut.** No compatibility headers and no deprecation period:
   the old names are gone in 2.0.0. Consumers migrate once, driven by a script
   that reads the maps: `sdk/headermap.tsv` (headers, the table below),
-  `sdk/names.tsv` and `sdk/removed.tsv` (names); `doc/migration-2.0.md`
+  `sdk/names.tsv` and `sdk/removed.tsv` (names); `docs/migration-2.0.md`
   says how.
 - **Function names do not change in 2.0.** Moving a header is mechanical and
   provably changes no code. Renaming a function changes symbols in every
@@ -133,7 +133,7 @@ other item. Header moves and parallel fix PRs would also collide on the same
 | 2 | internals to `src/internal/` (#274), included by their path from the root (D10); `libc370/` becomes `ext/` (D1) | byte-identical assembler; the migration script resolves every consumer include |
 | 3 | **done on `2.0`** (#285–#292): sources by area (#278), `src/` mirrors `include/`; assembler beside its C; `src/wip/` → `attic/` (D9). Basenames stay unique (all objects share one directory, `mklibc.py:161`), and the gate needs a map from old to new source paths | byte-identical assembler |
 | — | **interface changes**: #80 defect 1, #79, #50; taken along: #51, #71, #172; the three `ibm/` headers that declare functions | per change, tests; CHANGELOG entry for each layout or signature change |
-| — | **migration script** (`doc/migration-2.0.md`), tried on httpd, mvsMF, ftpd | it resolves every consumer include |
+| — | **migration script** (`docs/migration-2.0.md`), tried on httpd, mvsMF, ftpd | it resolves every consumer include |
 | — | **prerelease `v2.0.0-rc.N`** on the branch `2.0`; a first consumer (ftpd) migrated and tested on MVS against it | the consumer green and working on MVS |
 | — | **release 2.0.0**; one migration PR per consumer | each consumer green against 2.0.0 |
 | 4 | the OS seam: core calls a narrow internal interface, not MVS services | per change, tests |
@@ -144,7 +144,7 @@ and drop the dead headers now (#243, #248). Nothing uses them, so they need not
 wait for the cut.
 
 Order within phase 0 matters. Consumers' build CI floats on libc370 `main`
-(`doc/ci-and-pinning.md`), so the cut must not land on `main` before they are
+(`internals/ci-and-pinning.md`), so the cut must not land on `main` before they are
 pinned. Otherwise httpd, mvsMF and ftpd go red the same day.
 
 ## Release concept (decided 2026-09-30, D6)
@@ -201,7 +201,7 @@ stamp in `libc.a` (`LIBC370 <version> (<rev>)`), which
   follow `name() - summary`, which is how a kernel-doc comment starts.
 
 **Two directories, two audiences:** `docs/` is the public documentation that
-Read the Docs builds. `doc/` stays for internal development notes (this
+Read the Docs builds. `internals/` stays for internal development notes (this
 design, measurements, the CI analysis), and is never published.
 
 ## Decisions
@@ -214,7 +214,7 @@ design, measurements, the CI analysis), and is never published.
 | D4 | compatibility | decided: hard cut, 2.0, no shims |
 | D5 | where the plan lives | decided: this document plus the umbrella issue |
 | D6 | release concept | decided, see above (#249, cc370#523, mbt#121) |
-| D7 | documentation | decided: hand-written guides + generated reference, tool after a spike; `docs/` public, `doc/` internal |
+| D7 | documentation | decided: hand-written guides + generated reference, tool after a spike; `docs/` public, `internals/` internal |
 | D8 | scheduling | decided: the 2.0 critical path comes first; the interface changes ship in 2.0; emergency 1.0.9 from `v1.0.8`; cc370 releases desirable, not blocking |
 | D9 | source layout | decided 2026-09-30: part of 2.0 (phase 3 before the release); `src/` mirrors `include/`; assembler beside its C, since libc370 is built by `sdk/mklibc.py`, not mbt; `src/wip/` → `attic/`. Phase 4 (the OS seam) stays in 2.x |
 | D10 | internal headers | decided 2026-09-30: shared ones flat in `src/internal/`, area-local ones beside their sources; included by their path from the repository root; plain names without prefix or suffix; `clibres.h`, `clibspl.h`, `clibsvc.h` keep their names as a not-yet-integrated marker |

@@ -74,7 +74,7 @@
 ** "bad++" on the failure path - the path only the pre-fix run reaches, so it
 ** looked like a library defect until the dump said otherwise.  It is not the
 ** AC and not the RENT attribute: the same module stores fine through a
-** STEPLIB (see doc/consumer-notes.md for the matrix).  It is also why libc370
+** STEPLIB (see docs/consumer-notes.md for the matrix).  It is also why libc370
 ** keeps per-program state on the heap via __wsaget().
 **
 ** So the failure counter lives in main()'s frame and every check returns its

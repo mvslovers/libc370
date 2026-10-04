@@ -9,7 +9,7 @@ path under include/, or one of
     split      divided across several headers; the note says how
     removed    gone in 2.0 (dead, or moved to another project)
 
-The table in doc/design-2.0.md is rendered from this file, and the consumer
+The table in internals/design-2.0.md is rendered from this file, and the consumer
 migration script will read it, so a mapping is written down exactly once.
 
 Usage:  python3 sdk/headermap.py render   # rewrite the tables in the design doc
@@ -21,7 +21,7 @@ import os, sys, json, glob, collections
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TSV = os.path.join(ROOT, "sdk", "headermap.tsv")
-DOC = os.path.join(ROOT, "doc", "design-2.0.md")
+DOC = os.path.join(ROOT, "internals", "design-2.0.md")
 INC = os.path.join(ROOT, "include")
 
 KEYWORDS = ("internal", "split", "removed")

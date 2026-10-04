@@ -14,7 +14,7 @@
  * @@EXITAs run, and this module passes the result through.
  *
  * wtof() only, no stdio: on the abend leg the trailing SYSPRINT
- * block would be lost anyway (doc/consumer-notes.md).
+ * block would be lost anyway (docs/consumer-notes.md).
  *
  * BUILD (host): see test/mvs/tstppafr.c - all three members travel in
  * one ld370 --pack.  RUN: jcl/tstppafr.jcl.

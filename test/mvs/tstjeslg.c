@@ -52,7 +52,7 @@
  *
  * Always run a CONTROL alongside: 'HTTPD' (an active STC whose SYSOUT
  * jesprint() prints correctly) and a finished batch job.  The comparison is
- * what makes a finding conclusive - see doc/jes-syslog-issue4.md.
+ * what makes a finding conclusive - see internals/jes-syslog-issue4.md.
  *
  * BUILD (host):
  *     cc370 -Iinclude -I. test/mvs/tstjeslg.c -flinker-output=iebcopy -o TSTJESLG

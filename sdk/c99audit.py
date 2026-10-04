@@ -24,7 +24,7 @@ cc370 maps a C name to an MVS symbol by upper-casing it, turning '_' into
 '@' and cutting it to 8 characters.  Names that land on one symbol are
 reported as a group: one link cannot tell them apart.
 
-Usage:  make build && python3 sdk/c99audit.py [--out doc/c99-audit.md]
+Usage:  make build && python3 sdk/c99audit.py [--out docs/c99-audit.md]
 """
 import argparse, collections, datetime, os, re, subprocess, sys, tempfile
 
@@ -141,7 +141,7 @@ def defined_in_src(name):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--out", default=os.path.join(ROOT, "doc", "c99-audit.md"))
+    ap.add_argument("--out", default=os.path.join(ROOT, "docs", "c99-audit.md"))
     a = ap.parse_args()
     if not os.path.exists(os.path.join(LIB, "libc.a")):
         sys.exit("build first: make build")

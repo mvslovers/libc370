@@ -19,7 +19,7 @@ per-function retry labels. `test/mvs/tstatom.c` covers both. Breaking — see th
 CHANGELOG.
 
 **#43 — `__dsalc()` narrated its failures to the operator** (PR #57). Its 16
-calls are gone or parked, the rule is in [`consumer-notes.md`](consumer-notes.md)
+calls are gone or parked, the rule is in [`consumer-notes.md`](../docs/consumer-notes.md)
 — a routine reports through its return value, the console belongs to the program
 — and `test/mvs/tstdsalc.c` guards it on target. The sweep over the other 80
 calls was surveyed and then **decided against**; the reasoning is in the closing

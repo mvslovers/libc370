@@ -48,7 +48,7 @@ of it — and then the one it needs is released first.
    by themselves; the number and the message in `include/sys/_cc370.h` are
    edited in the same change (`sdk/package.py requires number` gives the
    number), and CI fails until the two agree. Raising the minimum is a
-   **minor** release (D6 in `doc/design-2.0.md`; argued in #313).
+   **minor** release (D6 in `internals/design-2.0.md`; argued in #313).
 4. **Never** add a compiler helper or a `pdp*` prologue macro to libc370.
    Both are cc370's (see *Who owns what*). `sdk/package.py` refuses a package
    that contains one of the three macro files; the helpers have no such guard

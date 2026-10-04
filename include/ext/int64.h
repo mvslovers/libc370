@@ -31,7 +31,7 @@
  * Consequence for tests: __64, and everything built on it (all of
  * src/time64), is verified on the target only.  A host test may check
  * expected-value literals but must not exercise __64.  See #76 and the
- * "64-bit arithmetic is software" section of doc/consumer-notes.md.
+ * "64-bit arithmetic is software" section of internals/consumer-notes.md.
  */
 typedef union {
 	uint64_t	u64;					/* used internally for bit operations and assigments */

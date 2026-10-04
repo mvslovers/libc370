@@ -17,7 +17,7 @@ assets, `pair` and the Homebrew tap checked; cc370's `install.sh` with cc370
 the coordinating mbt session and the maintainer's approval. Tier 0 (the 2.0 critical path) is done
 but for the consumer ports still pinned to 1.0.8 (step 7). 1.0.8 is the last
 1.x; a serious defect there gets an emergency 1.0.9 from the tag `v1.0.8` (D8
-in `doc/design-2.0.md`).
+in `internals/design-2.0.md`).
 
 *Last reconciled against the tracker: **2026-10-04, evening**, 44 issues
 open, all placed below - closed since the morning pass: #181, #273, #308,
@@ -290,7 +290,7 @@ output expands (`SPIE`, `TIME`, `WTOR`, `PUTX`). All four declined, and the
 reason generalises: `sysmac/` exists to carry what **libc370 itself assembles**,
 and a generator decides its own macro set, so adding on request quietly turns
 this repo into the ecosystem's system macro library. The rule is in
-`doc/consumer-notes.md`, with the measurement behind it — 120 of the 123 members
+`docs/consumer-notes.md`, with the measurement behind it — 120 of the 123 members
 are reachable from libc370's own build (27 `asm/*.asm` + 716 generated `.s` +
 `maclib/`, inner macros closed transitively). The three that are not: `GENCB`
 and `TESTCB` have no user anywhere in the ecosystem, and `XCTL` has one that
@@ -330,7 +330,7 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 linked in its notes. 1.x stays reachable as tag `v1.0.8` and branch `1.x`
 (`77712b9`). What remains is step 7, the consumer ports.
 
-In this order. The plan and the gates are in `doc/design-2.0.md`; the
+In this order. The plan and the gates are in `internals/design-2.0.md`; the
 checklist is #245.
 
 1. **Prep, cheap, before anything moves.**
@@ -384,7 +384,7 @@ checklist is #245.
      moved to `src/internal/` (the last two stay for a later review;
      `clibspl.h` is a Metal C candidate)
    - #276: `@@memmgr.h` and the never-built `USE_MEMMGR` branches removed
-   - #279: layout decisions recorded in `doc/design-2.0.md` — D1 `ext/`
+   - #279: layout decisions recorded in `internals/design-2.0.md` — D1 `ext/`
      instead of `libc370/`, D10 internal includes by path from the root,
      D11 `libc370/socket.h` → `mvs/socket.h`; `clibwsa.h` becomes public
      (`mvs/wsa.h`: httpd and lua370 call `__wsaget()`), `clibjs.h` too
@@ -397,7 +397,7 @@ checklist is #245.
    - **phase 2 done** (summary on #274); the migration script is still owed
    - #284: name maps for it — `sdk/names.tsv` (generated), `sdk/removed.tsv`
      (871 names, each with its replacement; CI-enforced), procedure in
-     `doc/migration-2.0.md`. Every later move updates them in the same PR
+     `docs/migration-2.0.md`. Every later move updates them in the same PR
 5a. ~~**Phase 3 in 2.0 (#278, D9):** sources by area~~ **done** (#285–#293,
    summary on #278): `src/` mirrors `include/`, `sdk/srcmap.tsv` records
    every move, `attic/` holds what is not built; the three `ibm/` headers
@@ -448,8 +448,8 @@ checklist is #245.
    changes (`gate-allow.txt`); anything touching MVS behaviour is tested on
    MVS (Mike's OK per run).
 7. **Consumer migration -- by an agent, not a script** (decided
-   2026-10-01, #309): `doc/migration-2.0-agent.md` is the brief, with
-   `doc/migration-2.0.md` as the specification. Consumers port against the
+   2026-10-01, #309): `internals/migration-2.0-agent.md` is the brief, with
+   `docs/migration-2.0.md` as the specification. Consumers port against the
    rolling tag `v2.0.0-dev` until the release; **since 2.0.0 they pin
    `[toolchain] libc370 = "2.0.0"` and drop any `libc370_ref`** (the build CI
    follows `main`, which is 2.0). ufsd and brexx370 switch from `2.0.0-dev`
@@ -457,7 +457,7 @@ checklist is #245.
    **Locally there is one sysroot, on 2.0** (2026-10-01: libc370 `v2.0.0`
    installed into `~/.local/cc370`, the second toolchain removed): nothing is
    built against 1.0.8 any more, so an unported project does not build here
-   until it is ported. The brief `doc/migration-2.0-agent.md` is kept out of
+   until it is ported. The brief `internals/migration-2.0-agent.md` is kept out of
    the tree on purpose (maintainer's working copy, updated for this state;
    it compares against 1.x with `-nostdinc -I <v1.0.8>/include`).
    - **ported** (as of 2026-10-04, read from each `project.toml` on
@@ -514,7 +514,7 @@ SHA256SUMS, built with cc370 v1.1.0. cc370's `install.sh` picks it by its
 metadata and links a program against it (checked end to end on macOS).
 
 1. ~~**#325**~~ — the C99 audit, done 2026-10-03 (PR #343):
-   `doc/c99-audit.md`, rerun with `sdk/c99audit.py`. 18/24 headers, 476/893
+   `docs/c99-audit.md`, rerun with `sdk/c99audit.py`. 18/24 headers, 476/893
    names declared, 154/463 functions in `libc.a`, nothing declared that does
    not link. Its gaps, ranked:
    1. ~~#336~~ PR #353, ~~#337~~ PR #354, ~~#338~~ PR #356 (mvsdev JOB01310/
@@ -776,7 +776,7 @@ resumed correctly and never faulted, and the guest cannot tell them apart.
 `fseek()` was never one (the issue's own correction, #200's `ESPIPE`).
 `rclose()` returns -1 + `ENOSPC`/`EIO`; a turned `+` stream stays open and
 readable with `ferror()` set; `freopen()` still succeeds (C99 7.19.5.4) and
-leaves `errno` at `ENOSPC`/`EIO`, documented in `doc/consumer-notes.md`.
+leaves `errno` at `ENOSPC`/`EIO`, documented in `docs/consumer-notes.md`.
 `tstclspc.c` 18/18: red JOB00744 (1.0.7), green JOB00745, mvsdev only.
 Contract change with live consumers on the turn (brexx370 stream I/O, Lua
 `file:seek` on `w+`/`r+`). Not released yet; `edge` and the sysroot follow
@@ -1296,7 +1296,7 @@ a hard ER for the same name exists; not a blocker, since nothing declares a hard
 ### 32 · #169 — the authorized probe recipes pack a bare `.lm`
 
 Five places — `jcl/tstracau.jcl`, `jcl/tstracmx.jcl`, `test/mvs/tstracmx.c`,
-`test/mvs/tstracfl.c`, `doc/consumer-notes.md` — pack `NAME=NAME` instead of
+`test/mvs/tstracfl.c`, `docs/consumer-notes.md` — pack `NAME=NAME` instead of
 `NAME=NAME.iebcopy`. A bare `.lm` carries no PDS directory, so `--pack` has to
 default what only the directory holds. `--ac` given again on the pack command
 does reach it, which is why those probes really are authorized; the **entry
@@ -1607,7 +1607,7 @@ same question for reading spooled SYSOUT.
   reddens consumer CI.
 - **2.0 restructure** — **2.0.0 released 2026-10-01**; what is left is Tier 0
   step 7 (lua370, httplua, httprexx still on 1.0.8). The history: #245 (umbrella), with #244 feeding it (#243, #248 and
-  #140 landed, PR #255). The plan is `doc/design-2.0.md`: a hard cut to a
+  #140 landed, PR #255). The plan is `internals/design-2.0.md`: a hard cut to a
   standard-shaped header layout (`libc370/`, `mvs/`, `s370/`, `ibm/mvs/`,
   `ibm/jes2/`), with internals out of the sysroot. Phase 0 comes first:
   crypto370, and consumers' build CI pinned to 1.x, so the cut does not redden
@@ -1716,7 +1716,7 @@ Pointers only. The reasoning lives in the closing comments and the PRs.
   `test/host/run.sh`: 21 of 26 tests at the time; the five broken ones were
   #241 and #251 (all 26 since PR #253).
 
-- **2.0 plan** (PR #247, merged 2026-09-30) - `doc/design-2.0.md`: target
+- **2.0 plan** (PR #247, merged 2026-09-30) - `internals/design-2.0.md`: target
   layout, the phases with their gates, the release concept and a mapping for
   all 153 headers. Umbrella #245; filed with it: #243, #244, #246, #248, #249,
   mvslovers/cc370#523, mvslovers/mbt#121. D6 decided the same day.

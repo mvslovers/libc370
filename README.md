@@ -14,7 +14,7 @@ Originally created as **crent370** by Michael Dean Rayborn; now the cc370 target
 libc, maintained by the [mvslovers](https://github.com/mvslovers) community.
 
 **2.0 reorganised the public headers.** Coming from 1.x, read
-[doc/migration-2.0.md](doc/migration-2.0.md); 1.0.8 (tag `v1.0.8`, branch `1.x`)
+[docs/migration-2.0.md](docs/migration-2.0.md); 1.0.8 (tag `v1.0.8`, branch `1.x`)
 is the last 1.x release. Crypto (SHA-256, Blowfish, base64) is
 [crypto370](https://github.com/mvslovers/crypto370) since 2.0.
 
@@ -33,11 +33,11 @@ cc370 1.1.x in turn needs libc370 2.1.0 or later.
 
 The requirement is written once, in `sdk/cc370.json`. Who owns what, why, and
 the checklist for cutting a release:
-**[doc/releasing.md](doc/releasing.md)**.
+**[internals/releasing.md](internals/releasing.md)**.
 
 ## C99 coverage
 
-[doc/c99-audit.md](doc/c99-audit.md) lists every function, macro and type of
+[docs/c99-audit.md](docs/c99-audit.md) lists every function, macro and type of
 the C99 library (clauses 7.2-7.24) with what libc370 provides: declared or
 not, as C99 declares it or not, in `libc.a` or not. `sdk/c99audit.py`
 regenerates it. The open gaps have issues (#336-#341). `<complex.h>`,
