@@ -518,7 +518,7 @@ metadata and links a program against it (checked end to end on macOS).
    names declared, 154/463 functions in `libc.a`, nothing declared that does
    not link. Its gaps, ranked:
    1. ~~#336~~ PR #353, ~~#337~~ PR #354, ~~#338~~ PR #356 (mvsdev JOB01310/
-      01311), ~~#339~~ PR #357 (JOB01313), all 2026-10-03, unreleased (2.2.0).
+      01311), ~~#339~~ PR #357 (JOB01313), all 2026-10-03, released in 2.2.0.
       The audit now: 20/24 headers, 547/893 names, 158/463 functions, none
       declared differently from C99.
    2. ~~**#355**~~ printf `0`/`-` flags and sign width for `%f/%e/%g` - fixed
@@ -529,8 +529,8 @@ metadata and links a program against it (checked end to end on macOS).
       on demand.
    7. **#342** `<complex.h>`/`<fenv.h>`/`<tgmath.h>` - decided 2026-10-03:
       left out, documented (PR #352); open only as a resubmission.
-2. ~~**#344**~~ -Os is the default since PR #346 (2026-10-03, unreleased,
-   goes into 2.2.0): -8,117 text bytes (-2.9%); libc370 55/55, rexx370 and
+2. ~~**#344**~~ -Os is the default since PR #346 (2026-10-03, released in
+   2.2.0): -8,117 text bytes (-2.9%); libc370 55/55, rexx370 and
    brexx370 identical on MVS. `LIBC370_OPT=-O1` goes back. #345 (tstanchr
    SA03, also in 2.0.0) came out of the series - fixed by PR #359: tmr_stop()
    deleted the timer thread before it had ended (mvsdev JOB01320).
@@ -540,19 +540,19 @@ metadata and links a program against it (checked end to end on macOS).
 3. **Defects next** (ranked 2026-10-04), each a wrong answer or a hang on a
    running system:
    1. ~~**#181 / #305**~~ — fixed, PR #360, 2026-10-04 (mvsdev JOB01331;
-      unreleased, 2.2.0). Was: `__dsalc()` `VOLSER=` of an unmounted volume waited
+      released in 2.2.0). Was: `__dsalc()` `VOLSER=` of an unmounted volume waited
       on `IEF238D` for the operator. #305 is the duplicate with the
       measurement (JOB01082 waits, JOB01084 with `S99NOMNT` returns at
       once); `fopen()` sets the flag since #172 when it names a unit or
       volser. ftpd's STOR path.
       Moved up from rank 39.
-   2. ~~**#273**~~ (rank 44) — fixed, PR #362, 2026-10-04 (unreleased,
+   2. ~~**#273**~~ (rank 44) — fixed, PR #362, 2026-10-04 (released in
       2.2.0): the integral part from power-of-16 pieces, no `long long`
       helpers; mvsdev JOB01337 40/40, the previous library 25 of 40 failed.
       cc370 folds `floor()`/`ceil()` of a constant at compile time - a test
       has to pass its arguments through a `volatile` (JOB01335 was fooled).
       `fmod()` is still not exact in the C99 sense, only in `[0, |y|)`.
-   3. ~~**#308**~~ (rank 45) — fixed, PR #363, 2026-10-04 (unreleased,
+   3. ~~**#308**~~ (rank 45) — fixed, PR #363, 2026-10-04 (released in
       2.2.0). Not rare after all: `LEVEL('SYS1') VOLUME` lost SYS1.PARMLIB,
       SVCLIB and VTAMLIB behind volume-less page spaces and clusters
       (JOB01340/01341). `"NONVSAM VOLUME"` (ftpd, httpd, mvsMF) was not
@@ -789,7 +789,7 @@ build. `edge` moved to the merge (`9ed55db`), sysroot installed from main.
 
 ### ~~2 · #61, #80 defect 3, #157, #158~~ — four list builders hand back a silently short list
 
-**Done 2026-10-04, PR #364** (unreleased; `__listpd()` since 2.0.0, PR
+**Done 2026-10-04, PR #364** (released in 2.2.0; `__listpd()` since 2.0.0, PR
 #303). All four free what they built and answer NULL/ENOMEM, `errno` 0 for
 an empty result; the contract is at the prototypes in `mvs/dslist.h`.
 mvsdev JOB01347 fails every calloc of `__listvl`, `__listal` and `__listds`
@@ -1666,13 +1666,13 @@ Pointers only. The reasoning lives in the closing comments and the PRs.
     costs ~96 K less (`main()` from 336K instead of 448K), and @@start says
     why a standard stream failed; JOB01354, JOB01356/01358.
 
-- **#314 steps 1 and 2** (all merged 2026-10-02, unreleased) - PR #317
+- **#314 steps 1 and 2** (all merged 2026-10-02, released in 2.1.0) - PR #317
   `strtoll`/`strtoull`/`atoll`/`llabs`/`lldiv` + `LLONG_*` (JOB01155,
   64/64); #319 `isblank` (JOB01157); #320 `strtof`/`strtold`, with a guard
   against the S0CC a plain `(float)` of a value above `FLT_MAX` ends in
   (JOB01159); #323 `<inttypes.h>`, `SCN*` only for 16/32/PTR (JOB01167);
   #324 `_Exit`, handlers skipped, teardown kept (JOB01169).
-- **#316, #318** (PRs #327-#330, merged 2026-10-03, unreleased) - scanf
+- **#316, #318** (PRs #327-#330, merged 2026-10-03, released in 2.1.0) - scanf
   `hh`/`ll`/`j`/`z`/`t`/`L` (JOB01171); `strtol`/`strtoul` to C99 with a
   shared EBCDIC digit table (JOB01173); `strtod` checks the HFP range
   first instead of ending S0CC past ~1e75 (red JOB01177, green JOB01179);
