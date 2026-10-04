@@ -23,7 +23,7 @@ in `doc/design-2.0.md`).
 
 *Last reconciled against the tracker: **2026-10-04, evening**, 44 issues
 open, all placed below - closed since the morning pass: #181, #273, #308,
-#61, #157, #158, #301, #240, #277, #254 (fixed) and the nine below.* The
+#61, #157, #158, #301, #240, #277, #254, all fixed (54 - 10 = 44).* The
 morning pass: 63 issues open; 54 after the closures that pass led to (#50, #51, #71, #79,
 #80, #172, #226, #244 as done, #305 as a duplicate of #181). Closed since the last pass: #256, #274, #278, #313–#316, #318,
 #321, #325, #326, #336–#339, #344, #345, #355. That pass found seven issues
