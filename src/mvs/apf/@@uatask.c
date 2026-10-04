@@ -3,7 +3,6 @@
 #include "mvs/apf.h"
 #include "mvs/recovery.h"
 
-static void authorize(void);
 static void unauthorize(void);
 
 int

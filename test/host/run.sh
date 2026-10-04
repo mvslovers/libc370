@@ -195,6 +195,11 @@ tstrldwk() {
        -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
        -I $R/include -I $R -o "$B/t" tstrldwk.c && "$B/t"
 }
+tstssvt() {
+    "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address \
+       -D'__asm__(...)=' -D'asm(...)=' -D__32BIT__ \
+       -I $R/include -I $R -o "$B/t" tstssvt.c && "$B/t"
+}
 tsttm64vec() {
     "$CC" -std=gnu99 -Wall -Wextra -o "$B/t" tsttm64vec.c && "$B/t"
 }
@@ -229,7 +234,7 @@ tstwpos() {
 # not dropped from here - fix it, or say which issue it waits on.
 ALL="tst75snd tstblank tstcmtt tstdblcv tstdblrb tstdirck tstdsnmt tstemptl
      tstenqdq tsterrfl tstfabnd tstfcls tstfloor tstfpapp tstfprls tstfpunit tstidcam tstinet tstiolk tstjesop
-     tstjesprb tstjestx tstl tstll tstlspd tstlstds tstpfflt tstplus tstrldwk tstscnll tsttm64vec tsttxdsn tstvsnp
+     tstjesprb tstjestx tstl tstll tstlspd tstlstds tstpfflt tstplus tstrldwk tstscnll tstssvt tsttm64vec tsttxdsn tstvsnp
      tstwchar tstwpos"
 
 [ $# -gt 0 ] && ALL="$*"

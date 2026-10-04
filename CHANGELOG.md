@@ -38,6 +38,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `LIBC370_OPT=-O1` builds the previous variant.
 
 ### Fixed
+- **`ssvt_set()` and `ssvt_funcmap()` return 0 on success (#240).** The
+  success path fell off the end of the function and left
+  `0x100 | key<<4` in R15 - 384 for a key-8 caller, never 0 - so a caller
+  testing the result read every success as a failure. (ufsd, the only
+  caller, ignores the result.)
 - **`jesjob()` no longer destroys the caller's `strtok()` position
   (#301).** It trimmed blank-padded fields with `strtok()`, whose position
   is library-wide, so a caller looping over names with its own `strtok()`
