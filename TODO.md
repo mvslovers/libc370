@@ -534,7 +534,8 @@ metadata and links a program against it (checked end to end on macOS).
    37077154678 all green; it runs after every release.
 3. **Defects next** (ranked 2026-10-04), each a wrong answer or a hang on a
    running system:
-   1. **#181 / #305** — `__dsalc()` `VOLSER=` of an unmounted volume waits
+   1. ~~**#181 / #305**~~ — fixed, PR #360, 2026-10-04 (mvsdev JOB01331;
+      unreleased, 2.2.0). Was: `__dsalc()` `VOLSER=` of an unmounted volume waited
       on `IEF238D` for the operator. #305 is the duplicate with the
       measurement (JOB01082 waits, JOB01084 with `S99NOMNT` returns at
       once); `fopen()` sets the flag since #172 when it names a unit or
@@ -1449,7 +1450,11 @@ edge 7906cee): `say 1e40*1` gives `9.999999999999983124...E+39`, and TRUNC
 values only, since string arguments no longer go through a double - no
 priority from brexx370's side.
 
-### 39 · #181 (+ #305) — `__dsalc()` without `S99NOMNT` waits on the operator
+### ~~39 · #181 (+ #305)~~ — fixed, PR #360, 2026-10-04
+
+`S99NOMNT` when the opts name `UNIT=` or `VOLSER=`, the #172 rule. Host
+`test/host/tstdsnmt.c` 12/12 (9/12 before); mvsdev JOB01331: NOVOL9 refused
+at once, no IEF238D. ftpd's `__listvl()` pre-check (ftpd#133) can stay or go.
 
 **Moved to Tier 1, item 3 (2026-10-04).** #305 is the same defect (closed
 as its duplicate 2026-10-04), filed
