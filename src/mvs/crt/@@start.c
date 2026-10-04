@@ -38,10 +38,27 @@
 #include "string.h"
 #include "stddef.h"
 #include "mvs/crt.h"
+#include "mvs/wto.h"
+#include <errno.h>
 
 #define MAXPARMS 50 /* maximum number of arguments we can handle */
 
 extern int main(int argc, char **argv);
+
+/* A standard stream @@start cannot open.  Never a missing DD: "*SYSPRINT"
+   and "*SYSTERM" allocate SYSOUT when the DD is not there, and stdin falls
+   back to 'NULLFILE'.  So say what failed, with errno, in the job log - it
+   used to be "SYSTERM DD not defined" / "SYSIN DD not defined" in a
+   dynamic SYSOUT, or nothing at all for stdout, while the cause was
+   storage (#254, #277). */
+static void startfail(const char *what)
+{
+    int err = errno;
+
+    wtof("@@START: %s could not be opened: errno %d%s", what, err,
+         err == ENOMEM ? ", out of storage - raise REGION" : "");
+    errno = err;
+}
 extern void __exita(int status);
 
 int
@@ -67,11 +84,15 @@ __start(char *p, char *pgmname, int tsojbid, void **pgmr1)
     }
 
     stdout = fopen("*SYSPRINT", "w");
-    if (!stdout) __exita(EXIT_FAILURE);
+    if (!stdout) {
+        startfail("stdout (SYSPRINT)");
+        __exita(EXIT_FAILURE);
+    }
 
     stderr = fopen("*SYSTERM", "w");
     if (!stderr) {
-        printf("SYSTERM DD not defined\n");
+        startfail("stderr (SYSTERM)");
+        printf("stderr could not be opened, errno %d\n", errno);
         fclose(stdout);
         __exita(EXIT_FAILURE);
     }
@@ -79,7 +100,8 @@ __start(char *p, char *pgmname, int tsojbid, void **pgmr1)
     stdin = fopen("dd:SYSIN", "r");
     if (!stdin) stdin = fopen("'NULLFILE'", "r");
     if (!stdin) {
-        fprintf(stderr, "SYSIN DD not defined\n");
+        startfail("stdin (SYSIN, then NULLFILE)");
+        fprintf(stderr, "stdin could not be opened, errno %d\n", errno);
         fclose(stdout);
         fclose(stderr);
         __exita(EXIT_FAILURE);
