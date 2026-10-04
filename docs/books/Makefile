@@ -4,11 +4,14 @@
 TYPST ?= typst
 BM    := bookmaster
 # The PDF carries the edition: ml01-0004-0.pdf is the first edition.
-BOOKS := ml01-0004-0.pdf
+BOOKS := ml01-0003-0.pdf ml01-0004-0.pdf
 
 .PHONY: all check clean
 
 all: check $(BOOKS)
+
+ml01-0003-%.pdf: ml01-0003.typ $(wildcard guide/*.typ ex/*/*) $(BM)/bookmaster.typ
+	$(TYPST) compile --root . --font-path $(BM)/fonts --ignore-system-fonts $< $@
 
 ml01-0004-%.pdf: ml01-0004.typ $(wildcard ref/*.typ ex/*/* syntax/*.txt) $(BM)/bookmaster.typ
 	$(TYPST) compile --root . --font-path $(BM)/fonts --ignore-system-fonts $< $@
