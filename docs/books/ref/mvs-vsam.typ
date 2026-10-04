@@ -51,10 +51,12 @@ There is no test of these functions in the library's test suites.
   )
 ] <mvs-vsam-errno>
 
-#note[#cmd("<mvs/vsam.h>") uses #cmd("#pragma pack"), which cc370 ignores:
-the structures are laid out with the natural alignment of their fields,
-which gives the offsets shown in this chapter. With #cmd("-Wall -Werror")
-the warnings stop the compilation\; add #cmd("-Wno-unknown-pragmas").]
+#note[Compiled against the installed library, a program that includes #cmd("<mvs/vsam.h>")
+builds cleanly with #cmd("-Wall -Werror"): cc370 treats the headers of its
+sysroot as system headers and reports no warnings from them. Compiled
+against a libc370 source tree named with #cmd("-I"), it draws #cmd("ignoring #pragma pack"): cc370 does not implement
+the pragma, and the structures are laid out the same with or without
+packing. Add #cmd("-Wno-unknown-pragmas").]
 
 == The VSFILE Handle <mvs-vsam-vsfile>
 #idx("VSFILE")
@@ -91,8 +93,10 @@ error, and changes none of them.
   )
 ] <mvs-vsam-vsfile-tab>
 
-The handle is 188 bytes long. The header comments give #cmd("vsself") as
-X'B8' and the length as 192 bytes; the offsets in the table are those the
+The handle is 188 bytes long, packed or not. The header comments give
+#cmd("vsself") as X'B8' and the length as 192 bytes, and so does the
+assembler mapping #cmd("clibvsfi.copy") in the library's macro library,
+which the library does not use. The offsets in the table are those the
 compiler assigns.
 
 #tab(caption: [ACB and RPL fields a caller may read])[

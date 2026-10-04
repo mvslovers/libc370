@@ -12,8 +12,11 @@ equivalent, #cmd("sleep()") and #cmd("usleep()"). The header defines no
 macros or types.
 
 A program that uses other names from #cmd("<unistd.h>"), such as
-#cmd("getpid()"), #cmd("read()"), #cmd("close()") or #cmd("access()"), fails
-at compile time. Files are read and written through the streams of
+#cmd("getpid()"), #cmd("read()"), #cmd("close()") or #cmd("access()"),
+compiles: the functions are not declared, and cc370, like the GCC it is
+based on, declares them implicitly, with a warning under #cmd("-Wall") (an error only under
+#cmd("-Werror")). The link then fails, because the library does not define
+them: ld370 reports them as unresolved external references. Files are read and written through the streams of
 @std-stdio\; data sets and DD statements are described in @mvs-datasets.
 
 == sleep, usleep <std-unistd-sleep>

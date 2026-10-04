@@ -54,10 +54,19 @@ prototype reads #cmd("const char dsn[44]") or #cmd("const char vol[6]"): the
 array size documents the field that MVS sees, and the argument is still a
 string. A name is not converted to upper case unless the entry says so.
 
-#note[#cmd("<mvs/dd.h>") and #cmd("<mvs/dscb.h>") contain comments with a
-#cmd("/*") inside them, and #cmd("<mvs/dd.h>") uses #cmd("#pragma pack"),
-which cc370 ignores. With #cmd("-Wall -Werror"), compile a program that
-includes them with #cmd("-Wno-comment -Wno-unknown-pragmas") as well.]
+#note[Compiled against the installed library, a program that includes #cmd("<mvs/dd.h>") or
+#cmd("<mvs/dscb.h>")
+builds cleanly with #cmd("-Wall -Werror"): cc370 treats the headers of its
+sysroot as system headers and reports no warnings from them. Compiled
+against a libc370 source tree named with #cmd("-I"), both draw
+#cmd("\"/*\" within comment") warnings, from comments that contain
+#cmd("/*"), and #cmd("<mvs/dd.h>") also draws #cmd("ignoring #pragma pack")
+from mappings that use the pragma, which cc370 does not implement (the
+layouts are the same with or without packing). Add #cmd("-Wno-comment")
+for #cmd("<mvs/dscb.h>"), and #cmd("-Wno-comment -Wno-unknown-pragmas")
+for #cmd("<mvs/dd.h>"). #cmd("<mvs/rfile.h>") does not compile either way,
+with any options, unless #cmd("<stddef.h>") or #cmd("<stdio.h>") is
+included before it (@mvs-datasets-ropen).]
 
 == Lists <mvs-datasets-lists>
 #idx("list", "returned by a function")
@@ -1214,8 +1223,9 @@ one of:
   [#cmd("dd:")#var("ddname")], [the data set of an existing DD.],
   [#cmd("dd:")#var("ddname")#cmd("(")#var("member")#cmd(")")], [a member of
     the library of an existing DD.],
-  [#var("name")], [a data set. In TSO the user's prefix is put in front of
-    the name.],
+  [#var("name")], [a data set. When the program runs as a TSO command
+    processor, the user's prefix is put in front of the name\; in batch,
+    and under TSO by #cmd("CALL"), it is not.],
   [#cmd("'")#var("name")#cmd("'")], [a data set, fully qualified.],
   [#var("name")#cmd("(")#var("member")#cmd(")"),
     #cmd("'")#var("name")#cmd("(")#var("member")#cmd(")'")], [a member of a

@@ -142,9 +142,17 @@ The return code of RACINIT, 0 when the ACEE was deleted.
 === Notes
 - The caller must be APF-authorized or in supervisor state (see
   @mvs-security-auth-tab).
-- Neither #var("acee") nor #cmd("*")#var("acee") may be #cmd("NULL"). With
-  #cmd("*")#var("acee") zero, RACINIT falls back to the default ACEE of the
-  address space and deletes that one, and the default is then not cleared.
+- Neither #var("acee") nor #cmd("*")#var("acee") may be #cmd("NULL").
+  - With #var("acee") #cmd("NULL"), RACINIT receives no ACEE and falls back
+    to the default ACEE of the address space. Under RAKF it deletes that
+    ACEE and clears #cmd("ASXBSENV") itself, so the address space loses its
+    resting identity, typically that of the started task. RAKF treats an
+    address space without an ACEE as permitted, so the call opens access
+    rather than closing it. #cmd("racf_logout()") then stores through the
+    null pointer: a caller in problem state ends with abend #cmd("S0C4"),
+    one in key 0 overwrites the first word of low storage.
+  - With #cmd("*")#var("acee") #cmd("NULL"), RAKF takes the address 0 as
+    the ACEE and releases storage described by low storage.
 
 === Related
 @mvs-security-login

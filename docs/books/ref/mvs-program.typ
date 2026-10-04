@@ -26,6 +26,19 @@ TSO commands. The headers are:
     (@mvs-program-tso).],
 )
 
+#note[Compiled against the installed library, the headers of this chapter
+build cleanly with #cmd("-Wall -Werror"): cc370 treats the headers of its
+sysroot as system headers and reports no warnings from them. Compiled
+against a libc370 source tree named with #cmd("-I"), three of them draw
+warnings. #cmd("<mvs/recovery.h>") includes #cmd("<ibm/mvs/ihasdwa.h>"),
+which uses #cmd("#pragma pack")\; cc370 does not implement the pragma and
+reports #cmd("ignoring #pragma pack"), while the layout is the same with or
+without packing. #cmd("<mvs/link.h>") and #cmd("<mvs/apf.h>") include
+#cmd("<ibm/mvs/ihacde.h>"), which uses the pragma as well and includes
+#cmd("<ibm/mvs/ihaxtlst.h>"), whose comments contain #cmd("/*"). Add
+#cmd("-Wno-unknown-pragmas") for #cmd("<mvs/recovery.h>"), and
+#cmd("-Wno-comment -Wno-unknown-pragmas") for the other two.]
+
 #idx("start-up", "of a C program")
 How a C program is started -- the start-up modules #cmd("crt0"),
 #cmd("crt1") and #cmd("crtm"), the stack, and the parameters a program
@@ -413,10 +426,11 @@ are not used\; the environment is kept in the process anchor.
 
 #idx("writable static area")
 #idx("reentrant program", "static data")
-A load module that is reentrant, or that is fetched from a library in the
-link list, cannot store into its own static data: the store ends the
-program with abend S0C4. The library therefore keeps data that a function
-must change in a _writable static area_ on the heap, obtained by
+A load module fetched from a library in the link list cannot store into its
+own static data: the first store ends the program with abend S0C4, whatever
+its RENT attribute. Fetched from a private library through a STEPLIB, the
+same module stores without trouble. The library therefore keeps data that a
+function must change in a _writable static area_ on the heap, obtained by
 #cmd("__wsaget()") and held in the process anchor.
 
 == \_\_wsaget <mvs-program-__wsaget>

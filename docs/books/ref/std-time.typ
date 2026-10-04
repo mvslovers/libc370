@@ -339,10 +339,10 @@ locale (English names).
     [#cmd("%p")], [#cmd("AM") or #cmd("PM")],
     [#cmd("%S")], [the second, #cmd("00") to #cmd("59")],
     [#cmd("%U")], [the week of the year, the first Sunday starting week 1,
-      #cmd("00") to #cmd("53")],
+      #cmd("00") to #cmd("53")\; see the Notes],
     [#cmd("%w")], [the weekday, #cmd("0") (Sunday) to #cmd("6")],
     [#cmd("%W")], [the week of the year, the first Monday starting week 1,
-      #cmd("00") to #cmd("53")],
+      #cmd("00") to #cmd("53")\; see the Notes],
     [#cmd("%x")], [*does not work*, see the Notes],
     [#cmd("%X")], [the time as #cmd("%H:%M:%S")],
     [#cmd("%y")], [the year without the century, #cmd("00") to #cmd("99")],
@@ -369,6 +369,12 @@ result as fits, terminated by a null character.
   it reads through a null pointer and produces unpredictable characters.
   Every structure that #cmd("gmtime()"), #cmd("localtime()") and
   #cmd("mktime()") return has #cmd("tm_isdst") = -1.
+- #cmd("%U") is one too small on every day of a year that begins on a
+  Sunday, and #cmd("%W") on every day of a year that begins on a Monday: 1
+  January 2023, a Sunday, gives #cmd("%U") #cmd("00") where C99 gives
+  #cmd("01"). In other years both are correct. Compute the week as
+  #cmd("(tm_yday + 7 - tm_wday) / 7") for #cmd("%U"), or with
+  #cmd("(tm_wday + 6) % 7") in place of #cmd("tm_wday") for #cmd("%W").
 - #cmd("%c") writes the day of the month with a leading zero, where C99's
   #cmd("\"C\"") locale uses a space.
 - The C99 conversions #cmd("%C"), #cmd("%D"), #cmd("%e"), #cmd("%F"),

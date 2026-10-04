@@ -64,9 +64,10 @@ characters, a data set name to 44.
       #var("dsname"), fully qualified. The closing quote may be left out.],
     [#cmd("'")#var("dsname")#cmd("(")#var("member")#cmd(")'")], [Member
       #var("member") of the partitioned data set #var("dsname").],
-    [#var("dsname")], [Without quotes. Under TSO the TSO prefix of the user
-      and a period are put in front; in batch the name is used as it is
-      written.],
+    [#var("dsname")], [Without quotes. When the program runs as a TSO
+      command processor, the TSO prefix of the user and a period are put in
+      front\; in batch, and under TSO by #cmd("CALL"), the name is used as
+      it is written.],
     [#cmd("&&")#var("name")], [A temporary data set, allocated on VIO when
       it is opened for output. #cmd("tmpnam()") returns names of this
       form.],
@@ -715,7 +716,8 @@ The character, as an #cmd("unsigned char") converted to #cmd("int"), or
 
 - On a record stream the functions return #cmd("EOF").
 - When the end-of-file indicator is set, the functions return #cmd("EOF")
-  even if a character was pushed back with #cmd("ungetc()").
+  even if a character was pushed back with #cmd("ungetc()"). The character
+  is kept, and the first read after #cmd("clearerr()") returns it.
 
 === Related
 
@@ -1317,6 +1319,13 @@ a #cmd("'\\n'"). If #var("s") is a null pointer or empty, only the message
 is written. For a value that #cmd("strerror()") has no message for, the
 message is #cmd("unknown error:") followed by the number.
 
+=== Notes
+
+The #cmd("unknown error:") message is formatted into a static buffer of 24
+bytes, which holds a number of up to nine digits, or eight and a minus
+sign. A value of #cmd("errno") of 1000000000 or more, or of -100000000 or
+less, overruns the buffer by up to two bytes.
+
 === Example
 
 ```
@@ -1533,10 +1542,12 @@ already been pushed back.
 
 === Notes
 
-- #cmd("ungetc()") does not clear the end-of-file indicator, and a read
-  does not return a pushed-back character while the indicator is set. Call
-  #cmd("clearerr()") first to push back a character after the end of the
-  data set was reached.
+- #cmd("ungetc()") does not clear the end-of-file indicator, although C99
+  requires a successful call to clear it, and a read does not return a pushed-back character while the
+  indicator is set: after the end of the data set the next read returns
+  #cmd("EOF") again. The character is held back, not lost. Call
+  #cmd("clearerr()"), before or after #cmd("ungetc()"), and the next read
+  returns it.
 - The position that #cmd("ftell()") reports does not change.
 - #cmd("fseek()"), #cmd("fsetpos()") and #cmd("rewind()") discard the
   character.

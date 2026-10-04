@@ -18,17 +18,23 @@ default argument promotions, with no padding between them:
 
 #deflist(width: 1.6in,
   [4 bytes], [#cmd("int") (and the #cmd("char") and #cmd("short") promoted
-    to it), #cmd("long"), the unsigned types of these sizes, pointers],
-  [8 bytes], [#cmd("double") (and the #cmd("float") promoted to it),
-    #cmd("long double"), #cmd("long long"), #cmd("unsigned long long")],
+    to it), #cmd("long"), the unsigned types of these sizes, pointers, and
+    a #cmd("float") passed to a parameter declared #cmd("float") in a
+    prototype],
+  [8 bytes], [#cmd("double") (and a #cmd("float") among the variable
+    arguments, which is promoted to it), #cmd("long double"),
+    #cmd("long long"), #cmd("unsigned long long")],
 )
 
 A call #cmd("f(1, 5LL, 2, 1.5f)"), for example, builds a list of 24 bytes:
 the #cmd("int") 1 at offset 0, the #cmd("long long") at 4, the #cmd("int")
 2 at 12 and the #cmd("double") 1.5 at 16.
 
-The macros of #cmd("<stdarg.h>") walk this list with a character pointer.
-They are plain macros, not built into the compiler.
+The macros of #cmd("<stdarg.h>") are built into cc370
+(#cmd("__builtin_va_start") and its companions), so the compiler, which
+knows this layout, computes the position of every argument. They are
+correct whatever the type of the last named parameter, #cmd("double") and
+#cmd("long long") included.
 
 == va_list, va_start, va_arg, va_end, va_copy <std-stdarg-va>
 
@@ -43,20 +49,19 @@ They are plain macros, not built into the compiler.
 ```
 #include <stdarg.h>
 
-typedef char *va_list;
+typedef __builtin_va_list va_list;
 
-#define va_start(ap, parmN) ap = (char *)&parmN + 4
-#define va_arg(ap, type) \
-        *(type *)(ap += sizeof(type), ap - sizeof(type))
-#define va_end(ap) ap = 0
-#define va_copy(dest, src) ((dest) = (src))
+#define va_start(ap, parmN)  __builtin_va_start(ap, parmN)
+#define va_arg(ap, type)     __builtin_va_arg(ap, type)
+#define va_end(ap)           __builtin_va_end(ap)
+#define va_copy(dest, src)   __builtin_va_copy(dest, src)
 ```
 
 === Description
 
 #deflist(width: 1.1in,
   [#cmd("va_list")], [the type of an object that holds the position in the
-    argument list. It is a #cmd("char") pointer.],
+    argument list. It is a #cmd("char") pointer, 4 bytes long.],
   [#cmd("va_start()")], [sets #var("ap") to the first argument after the
     named parameter #var("parmN"), which must be the last named parameter
     of the function. It is called once before the first #cmd("va_arg()").],
@@ -74,38 +79,23 @@ the #cmd("va_list") again afterwards except to call #cmd("va_end()").
 
 === Notes
 
-#idx("va_start", "restrictions")
-The macros compute positions from the sizes of the types and do not check
-anything. A mistake does not fail; it reads the wrong bytes and the program
-continues with wrong values. Observe these rules:
-
-- *The last named parameter must be a 4-byte type*: #cmd("int"),
-  #cmd("long"), an unsigned type of that size, or a pointer.
-  #cmd("va_start()") assumes the next argument starts 4 bytes after it.
-  - If it is a #cmd("double") or a #cmd("long long"), #cmd("va_start()")
-    points into the middle of it, and every #cmd("va_arg()") reads 4 bytes
-    early. This is a restriction of libc370; the C standard allows these
-    types.
-  - If it is a #cmd("char"), #cmd("short") or #cmd("float"), the standard
-    leaves the behavior undefined. For #cmd("char") and #cmd("short") the
-    function works on a copy of the parameter in its own frame, and
-    #cmd("va_start()") points into that frame, not into the argument list. A
-    #cmd("float") is passed as a #cmd("double") and fails as a
-    #cmd("double") does.
-
-  When a function must take a #cmd("double") as its last named parameter,
-  add a parameter after it, such as a count, or pass the #cmd("double")
-  among the variable arguments.
+#idx("va_arg", "promoted types")
 - *#var("type") must be a promoted type.* Use #cmd("int") for an argument
   passed as #cmd("char") or #cmd("short"), and #cmd("double") for one
-  passed as #cmd("float"). #cmd("va_arg(ap, char)") advances by one byte
-  and reads the first byte of the #cmd("int"), which on this machine is its
-  high-order byte. The standard leaves this undefined too.
-- #var("type") must be a type name that becomes a pointer type when
-  followed by #cmd("*"); for a pointer to a function, define a
-  #cmd("typedef") first.
-- #var("parmN") must not be declared #cmd("register"), since its address is
-  taken.
+  passed as #cmd("float"). For #cmd("va_arg(ap, char)") cc370 warns that
+  #cmd("char") is promoted to #cmd("int") and compiles a call of
+  #cmd("abort()") in place of the read: the program ends when it reaches
+  it.
+- The last named parameter may have any type. C99 leaves the behavior
+  undefined for a #cmd("char"), #cmd("short") or #cmd("float") last
+  parameter\; cc370 handles these correctly too, but a portable program
+  avoids them.
+- #cmd("va_copy()") is defined unless the program is compiled with
+  #cmd("-ansi") or #cmd("-std=c89")\; #cmd("__va_copy()") is always
+  defined.
+- The macros check nothing at run time. A #var("type") that does not match
+  the argument passed, or a #cmd("va_arg()") past the last argument, reads
+  the wrong bytes, and the program continues with wrong values.
 
 === Example
 

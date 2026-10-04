@@ -2,8 +2,7 @@
 #include <stdio.h>
 
 /* Write a message with an identifier in front, as printf would
-   write the rest.  The last named parameter, fmt, is a pointer:
-   four bytes in the parameter list, as va_start requires. */
+   write the rest. */
 static int msg(const char *fmt, ...)
 {
     va_list ap;

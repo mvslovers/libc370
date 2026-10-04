@@ -11,7 +11,7 @@ static int tick(void *udata, TQE *tqe)
 
 int main(void)
 {
-    static int ticks;
+    int      ticks = 0;          /* main outlives the timer */
     ECB      done = 0;
     TQEID    every;
 

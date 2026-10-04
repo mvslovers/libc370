@@ -249,8 +249,10 @@ The hyperbolic cosine, sine or tangent.
 
 === Notes
 
-They inherit the limits of #cmd("exp()") (@std-math-exp). A result beyond
-the range of a #cmd("double") ends the program with abend #cmd("S0CC").
+They inherit the limits of #cmd("exp()") (@std-math-exp). #cmd("cosh()")
+and #cmd("sinh()") end the program with abend #cmd("S0CC") when the
+magnitude of #var("x") exceeds about 173, a little before their result
+would leave the range of a #cmd("double").
 Where #cmd("exp()") is called with a negative argument -- #cmd("cosh()")
 and #cmd("sinh()") of a negative #var("x"), #cmd("tanh()") of a positive
 #var("x") -- the result loses accuracy as the magnitude grows:
@@ -260,7 +262,7 @@ symmetries instead: #cmd("cosh(-x)") = #cmd("cosh(x)"), #cmd("sinh(-x)") =
 #cmd("-sinh(x)"), and for #cmd("tanh()") of a large argument the value 1.
 
 #cmd("tanh()") also ends the program with abend #cmd("S0CC") when the
-magnitude of #var("x") exceeds about 87, although its result, +1 or -1, is
+magnitude of #var("x") exceeds about 86.5, although its result, +1 or -1, is
 in range: #cmd("exp(-2 * x)") overflows, or its series does.
 
 === Related
@@ -295,10 +297,12 @@ The exponential of #var("x").
   cancel. At #var("x") = -10 only about eight digits of the result are
   correct, at -20 none, and at -30 the result is negative. For a negative argument compute #cmd("1.0 / exp(-x)"), which
   is accurate.
-- If the result exceeds the range of a #cmd("double") -- for #var("x")
-  greater than about 174.6 -- the program ends with abend #cmd("S0CC").
-  Because the terms of the series grow before they shrink, an argument
-  below about -178 does the same.
+- For #var("x") greater than about 173 or less than about -173 the program
+  ends with abend #cmd("S0CC"). The terms of the series grow before they
+  shrink, and each is formed by multiplying the previous one by #var("x")
+  before dividing, so that intermediate product overflows first:
+  #cmd("exp(174)") abends although its result, about 3.7E75, is within
+  the range of a #cmd("double").
 - No #cmd("errno") value is ever set.
 
 === Related
@@ -525,7 +529,8 @@ returns 0.
   #cmd("|y|") - 1, so a large integral exponent takes correspondingly long.
 - #cmd("pow(0.0, y)") with a negative integral #var("y") divides by zero and
   ends the program with abend #cmd("S0CF"). With a non-integral #var("y") it
-  takes the logarithm of 0 and ends with abend #cmd("S0CC").
+  takes the logarithm of 0, which is #cmd("HUGE_VAL"), and #cmd("exp()")
+  of its product with #var("y") ends with abend #cmd("S0CC").
 - A result beyond the range of a #cmd("double") ends the program with abend
   #cmd("S0CC"). With a non-integral #var("y"), a result less than 1 inherits
   the loss of accuracy of #cmd("exp()") for negative arguments:

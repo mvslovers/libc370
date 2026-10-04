@@ -50,8 +50,9 @@ they require of the caller. @mvs-subsys-auth-tab lists them.
     [#cmd("iefssreq()"), and through it #cmd("jescanj()"), #cmd("jesdelj()"),
      #cmd("jesreque()"), #cmd("jesxwrtr()"), #cmd("jesxdone()")],
     [APF authorization. #cmd("iefssreq()") issues #cmd("MODESET MODE=SUP")
-     around the call of the subsystem interface, which abends in a program
-     that is not authorized.],
+     around the call of the subsystem interface without testing the
+     authorization first, so a program that is not authorized ends with
+     abend #cmd("S047") instead of receiving a return code.],
     [All other functions],
     [None. #cmd("jesopen()"), #cmd("jesjob()") and #cmd("jesprint()") read the
      checkpoint and spool data sets with ordinary #cmd("OPEN") and
@@ -60,14 +61,18 @@ they require of the caller. @mvs-subsys-auth-tab lists them.
   )
 ] <mvs-subsys-auth-tab>
 
-#note[The headers #cmd("<mvs/subsys.h>") and #cmd("<mvs/jes2.h>") include
-mappings of IBM control blocks that do not compile cleanly under
-#cmd("-Wall"): #cmd("<ibm/mvs/iefssobh.h>") and #cmd("<ibm/mvs/iefssso.h>")
-contain #cmd("/*") inside a comment, and #cmd("<ibm/mvs/dcbd.h>") and
-#cmd("<mvs/vsam.h>") use #cmd("#pragma pack"), which cc370 reports as
-ignored. A program compiled with #cmd("-Wall -Werror") that includes either
-header therefore fails to compile. Compile it without #cmd("-Werror"), or
-add #cmd("-Wno-comment -Wno-unknown-pragmas").]
+#note[Compiled against the installed library, the headers of this chapter
+build cleanly with #cmd("-Wall -Werror"): cc370 treats the headers of its
+sysroot as system headers and reports no warnings from them. Compiled
+against a libc370 source tree named with #cmd("-I"), several of them draw
+warnings from the IBM mappings they include: #cmd("<ibm/mvs/iefssobh.h>")
+and #cmd("<ibm/mvs/iefssso.h>") contain #cmd("/*") inside a comment, and
+#cmd("<ibm/mvs/dcbd.h>") and #cmd("<mvs/vsam.h>") use #cmd("#pragma pack"),
+which cc370 reports as ignored (the layouts are the same with or without
+packing). Add #cmd("-Wno-comment") for #cmd("<mvs/subsys.h>") and
+#cmd("<ibm/jes2/pso.h>"), #cmd("-Wno-unknown-pragmas") for
+#cmd("<mvs/jes2ckpt.h>") and #cmd("<mvs/jes2spool.h>"), and both for
+#cmd("<mvs/jes2.h>").]
 
 == The Subsystem Control Blocks <mvs-subsys-cb>
 
@@ -426,8 +431,13 @@ reached a subsystem. The result of the function itself is in
 
 === Notes
 
-Requires APF authorization. The names of the return codes are defined in
-#cmd("<ibm/mvs/iefssobh.h>"), which maps the SSOB header.
+- Requires APF authorization. #cmd("iefssreq()") does not test it: it
+  issues #cmd("MODESET MODE=SUP") unconditionally, and a caller that is not
+  authorized ends with abend #cmd("S047").
+- It returns in problem state with #cmd("MODESET MODE=PROB"), so a caller
+  that was already in supervisor state comes back in problem state.
+- The names of the return codes are defined in
+  #cmd("<ibm/mvs/iefssobh.h>"), which maps the SSOB header.
 
 === Related
 
@@ -967,8 +977,12 @@ the next block, at most 4096 bytes, into #var("buf4k") (#cmd("READ") and
 
 === Notes
 
-The return code does not report I/O errors. An error that #cmd("CHECK")
-detects ends the program with an abend.
+- The return code does not report I/O errors. An error that #cmd("CHECK")
+  detects ends the program with an abend.
+- #cmd("__cpread()") gives #cmd("READ") a data event control block of 16
+  bytes on its stack, where a BSAM DECB is 20 bytes long. The access
+  method stores its record pointer word into the last four, and so
+  overwrites the 4 bytes of the stack that follow the block.
 
 === Related
 
@@ -1071,7 +1085,9 @@ The functions below ask JES2 to act on a job or its output through the
 subsystem interface (#cmd("IEFSSREQ")): to cancel a job, to delete or
 release its output, and to select output for a program that writes it
 elsewhere. They build an SSOB with #cmd("initssob()") and call
-#cmd("iefssreq()"), so they require APF authorization.
+#cmd("iefssreq()"), so they require APF authorization: called from a program
+that is not authorized, each of them ends with abend #cmd("S047") when it
+issues the request (@mvs-subsys-iefssreq).
 
 Each returns the return code that JES2 placed in #cmd("SSOBRETN"). The
 return code of the subsystem interface itself is not examined: when JES2 is
@@ -1425,9 +1441,15 @@ which a C call does not build; call the libc370 functions
 
 The program must run as a TSO command processor under ISPF.
 #cmd("isplink()") and #cmd("isp_select()") call #cmd("ISPLINK") directly,
-which the linkage editor has to resolve: link the program with the ISPF
-load library that contains #cmd("ISPLINK"), or link it with unresolved
-references allowed so that the reference is resolved on MVS.
+which must be resolved at link time. Nothing on MVS resolves it later: a
+module linked by ld370 with #cmd("--allow-unresolved") keeps
+#cmd("ISPLINK") as an unresolved external reference with an address
+constant of zero, and program fetch does not resolve external references,
+so the call would branch to address 0. Link the module a second time on
+MVS, with the linkage editor, against the ISPF load library that contains
+#cmd("ISPLINK")\; the unresolved reference is still in the module's
+composite ESD, so the linkage editor resolves it then. The same holds for
+#cmd("ISPQRY") (@mvs-subsys-ispf-available).
 
 The header defines the service names as macros, padded with blanks to the
 eight characters #cmd("ISPLINK") expects: #cmd("ISP_DISPLAY") is

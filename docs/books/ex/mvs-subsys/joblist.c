@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <mvs/jes2.h>
 #include <ext/array.h>
 
@@ -10,15 +11,20 @@ static int show(const char *line, unsigned len, void *arg)
 
 int main(int argc, char **argv)
 {
-    JES      *jes  = jesopen();
+    const char *filter = argc > 1 ? argv[1] : "*";
+    JES      *jes;
     JESJOB  **jobs;
     JESPRST   st;
     unsigned  i, n;
 
+    if (strlen(filter) > 11) {          /* jesjob() takes at most 11 */
+        fprintf(stderr, "filter too long: %s\n", filter);
+        return 8;
+    }
+    jes = jesopen();
     if (!jes) return 8;
 
-    jobs = jesjob(jes, argc > 1 ? argv[1] : "*",
-                  FILTER_JOBNAME, 1);
+    jobs = jesjob(jes, filter, FILTER_JOBNAME, 1);
     n = arraycount(&jobs);
     for (i = 0; i < n; i++) {
         JESJOB *job = jobs[i];
