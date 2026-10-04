@@ -23,6 +23,7 @@ struct __dsalc {
     char        *space;     // space=trk(n,n,n) or cyl(n,n,n) 
     char        *unit;      // unit=...
     char        *volser;    // volser=...
+    int         mount;      // mount - let SVC 99 ask for a mount (#181)
 };
 
 int
@@ -88,7 +89,8 @@ __dsalc(char *ddname, const char *opts)
 	// wtof("%s: temp=\"%s\"", __func__, temp);
 
 	for(p=strtok(temp, ";"); p; p=strtok(NULL, ";")) {
-        if (strstr(p, "BLKSIZE=")) dsalc->blksize = p+8;
+        if (strcmp(p, "MOUNT")==0) dsalc->mount = 1;
+        else if (strstr(p, "BLKSIZE=")) dsalc->blksize = p+8;
         else if (strstr(p, "DD=")) dsalc->ddn = p+3;
         else if (strstr(p, "DDNAME=")) dsalc->ddn = p+7;
         else if (strstr(p, "DISP=")) dsalc->disp = p+5;
@@ -263,8 +265,10 @@ __dsalc(char *ddname, const char *opts)
        without S99NOMNT a volume that is not mounted sends SVC 99 into
        allocation recovery (IEF238D), and the task stops until an operator
        replies (#181).  The same rule as __fpnew() (#172); without either,
-       the request stays the one it always was. */
-    if (dsalc->unit || dsalc->volser) rb99.flag1 |= S99NOMNT;
+       the request stays the one it always was.  MOUNT asks for the wait:
+       a tape, or a volume the operator is to mount. */
+    if ((dsalc->unit || dsalc->volser) && !dsalc->mount)
+        rb99.flag1 |= S99NOMNT;
     rb99.txtptr     = txt99;
 
     /* SVC 99 */

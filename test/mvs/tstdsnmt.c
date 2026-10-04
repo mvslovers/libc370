@@ -23,6 +23,17 @@
  *       see that wait from inside, so READ THE JOB LOG: an IEF238D there
  *       fails this case, whatever the probe printed.  The elapsed seconds
  *       are printed as a second witness.
+ *   (4) "UNIT=SYSDA;VOLSER=NOVOL9;MOUNT" - the same volume, but the caller
+ *       ASKS for the mount: the operator gets IEF238D, as before the fix.
+ *   (5) fopen(..., "wb,...,unit=sysda,volser=novol9,mount") - the same
+ *       through fopen()'s create path (#172 set S99NOMNT there too).
+ *
+ *       (4) and (5) NEED THE OPERATOR.  Each issues a WTO "TSTDSNMT (n)
+ *       WAITS" first, then waits on IEF238D REPLY DEVICE NAME OR 'CANCEL'.
+ *       Reply R xx,CANCEL - the allocation then fails.  The probe counts a
+ *       refusal that took at least 5 seconds as the wait it asked for; one
+ *       that came back at once means S99NOMNT was still set.  The job log
+ *       shows the IEF238D, which is the evidence.
  *
  * SETUP: none.  The work data set IBMUSER.LIBC370.DSNMT.WORK is created and
  * deleted by (1) and (2); it must NOT exist when the job starts.
@@ -51,8 +62,10 @@
 #include <time.h>
 #include "mvs/dynalloc.h" /* __dsalcf(), __dsfree() */
 #include "mvs/dscb.h"   /* __locate() */
+#include "mvs/wto.h"    /* wtof() */
 
 #define DSN     "IBMUSER.LIBC370.DSNMT.WORK"
+#define WAITED  5       /* seconds: a refusal this late was the operator */
 #define NEW     "DSN=" DSN ";DISP=(NEW,CATLG,DELETE);DSORG=PS;RECFM=FB;" \
                 "LRECL=80;BLKSIZE=800;SPACE=TRK(1,1)"
 
@@ -97,6 +110,7 @@ int main(int argc, char **argv)
     int    i;
     time_t t0;
     time_t t1;
+    FILE   *fp;
 
     if (argc > 1 && argv[1] && argv[1][0] > ' ') {
         for (i = 0; i < 6 && argv[1][i] > ' '; i++) vol[i] = argv[1][i];
@@ -158,6 +172,45 @@ int main(int argc, char **argv)
     else {
         printf("    refused - ok only if the job log shows no IEF238D\n");
     }
+
+    /* ---------------------------------------------------------------- */
+    printf("\n(4) \"UNIT=SYSDA;VOLSER=NOVOL9;MOUNT\" - the operator is asked\n");
+    wtof("TSTDSNMT (4) WAITS - REPLY CANCEL TO IEF238D");
+    t0 = time(NULL);
+    rc = __dsalcf(dd, NEW ";UNIT=SYSDA;VOLSER=NOVOL9;MOUNT");
+    t1 = time(NULL);
+    printf("    __dsalcf rc=%d after %ld s\n", rc, (long)(t1 - t0));
+    if (rc == 0) {
+        printf("    *** FAIL - it allocated: the volser was ignored\n");
+        bad++;
+        __dsfree(dd);
+        drop();
+    }
+    else if (t1 - t0 < WAITED) {
+        printf("    *** FAIL - refused at once: MOUNT did not reach SVC 99\n");
+        bad++;
+    }
+    else printf("    waited for the operator\n    ok\n");
+
+    /* ---------------------------------------------------------------- */
+    printf("\n(5) fopen(\"...,unit=sysda,volser=novol9,mount\") - the same\n");
+    wtof("TSTDSNMT (5) WAITS - REPLY CANCEL TO IEF238D");
+    t0 = time(NULL);
+    fp = fopen("'" DSN "'", "wb,recfm=fb,lrecl=80,blksize=800,"
+               "space=trk(1,1),unit=sysda,volser=novol9,mount");
+    t1 = time(NULL);
+    printf("    fopen %s after %ld s\n", fp ? "opened" : "NULL", (long)(t1 - t0));
+    if (fp) {
+        printf("    *** FAIL - it opened: the volser was ignored\n");
+        bad++;
+        fclose(fp);
+        drop();
+    }
+    else if (t1 - t0 < WAITED) {
+        printf("    *** FAIL - refused at once: mount did not reach SVC 99\n");
+        bad++;
+    }
+    else printf("    waited for the operator\n    ok\n");
 
     printf("\nTSTDSNMT %s\n", bad ? "FAILED" : "PASSED");
     return bad ? 8 : 0;

@@ -14,6 +14,8 @@
  * THE FIX: the shape #172 settled for __fpnew().  A request whose opts name
  * UNIT= or VOLSER= carries S99NOMNT ("do not mount volumes or consider
  * offline units"); one that names neither keeps the flag byte it always had.
+ * The keyword MOUNT drops it again: a caller who wants a tape or a volume
+ * mounted gets the operator's mount request, as before the fix.
  *
  * WHAT THIS TEST PINS
  * --------------------------------------------------------------------
@@ -28,6 +30,11 @@
  *   (5)  both, in lower case, the way ftpd's STOR writes them ("unit=%s;
  *        volser=%s" through __dsalcf())     -> S99NOCNV | S99NOMNT, and the
  *        call succeeds and returns the DDNAME.
+ *   (6)  MOUNT with UNIT= and VOLSER=       -> S99NOCNV alone: the caller
+ *        asked for the operator's mount (a tape, a volume to be mounted).
+ *   (7)  "mount" in lower case, as the first keyword -> the same.
+ *   (8)  a token that merely contains MOUNT ("NOMOUNT") is not the
+ *        keyword: S99NOMNT stays.
  *
  * WHAT IT DOES NOT PIN - that needs the MVS probe (test/mvs/tstdsnmt.c):
  * that SVC 99 then really returns instead of raising IEF238D.  The probe
@@ -312,6 +319,22 @@ int main(void)
     CHECK_EQ(rc, 0, "__dsalc() succeeds");
     CHECK_EQ(svc99_flag1, S99NOCNV | S99NOMNT, "unit and volser: S99NOMNT set");
     CHECK(strcmp(dd, "SYS00001") == 0, "the returned DDNAME is handed back");
+
+    printf("\n(6) MOUNT with UNIT= and VOLSER= -> S99NOCNV alone\n");
+    rc = run("DSN=MVSLOVE.TEST.NEW;DISP=(NEW,CATLG);UNIT=TAPE;"
+             "VOLSER=TAPE01;MOUNT", dd);
+    CHECK_EQ(rc, 0, "__dsalc() succeeds");
+    CHECK_EQ(svc99_flag1, S99NOCNV, "mount asked for: no S99NOMNT");
+
+    printf("\n(7) mount in lower case, first -> S99NOCNV alone\n");
+    rc = run("mount;dsn=mvslove.test.new;disp=old;volser=pub001", dd);
+    CHECK_EQ(rc, 0, "__dsalc() succeeds");
+    CHECK_EQ(svc99_flag1, S99NOCNV, "mount asked for: no S99NOMNT");
+
+    printf("\n(8) a keyword merely containing MOUNT does not count\n");
+    rc = run("DSN=MVSLOVE.TEST.NEW;DISP=OLD;VOLSER=PUB001;NOMOUNT", dd);
+    CHECK_EQ(rc, 0, "__dsalc() succeeds");
+    CHECK_EQ(svc99_flag1, S99NOCNV | S99NOMNT, "NOMOUNT is not MOUNT");
 
     return mbt_test_summary("TSTDSNMT");
 }

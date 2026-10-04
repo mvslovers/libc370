@@ -239,7 +239,11 @@ int __dynal(size_t ddn_len, char *ddn, size_t dsn_len, char *dsn);
 int __svc99(void *rb);
 
 /* ---- from 1.x clibio.h -------------------------------------------------- */
-/* __dsalc() allocate dataset - returns ddname if successful */
+/* __dsalc() allocate dataset - returns ddname if successful.  opts is a
+   ';'-separated keyword list (DSN=, DISP=, UNIT=, VOLSER=, SPACE=, ...).
+   A request naming UNIT= or VOLSER= is refused at once when the volume is
+   not mounted; the keyword MOUNT asks for the operator's mount instead
+   (IEF238D, and the task waits for the reply) (#181). */
 extern int __dsalc(char *ddname, const char *opts);
 
 /* __dsalcf() allocate dataset (printf style) - returns ddname if successful */

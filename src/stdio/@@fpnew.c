@@ -19,6 +19,7 @@ __fpnew(FILE *fp)
     char        *space  = getenv("DATASET_SPACE");
     char        *unit   = getenv("DATASET_UNIT");
     char        *volser = getenv("DATASET_VOLSER");
+    int         mount   = 0;
     char        *p      = 0;
     char 		*t;
     TXT99       **txt99 = NULL;
@@ -70,6 +71,7 @@ __fpnew(FILE *fp)
 		else if (strstr(p, "SPACE=")) space = p+6;
 		else if (strstr(p, "UNIT=")) unit = p+5;
 		else if (strstr(p, "VOLSER=")) volser = p+7;
+		else if (strcmp(p, "MOUNT")==0) mount = 1;
 	}
 
 #if 0 /* debugging */
@@ -185,8 +187,10 @@ __fpnew(FILE *fp)
        without S99NOMNT a volume that is not mounted sends SVC 99 into
        allocation recovery (IEF238D), and the task stops until an operator
        replies (#172).  Only then - without either, the request stays the
-       one it always was. */
-    if ((unit && *unit) || (volser && *volser)) rb99.flag1 |= S99NOMNT;
+       one it always was.  "mount" asks for the wait: a tape, or a volume
+       the operator is to mount (#181). */
+    if (((unit && *unit) || (volser && *volser)) && !mount)
+        rb99.flag1 |= S99NOMNT;
     rb99.txtptr     = txt99;
 
     /* SVC 99 */
