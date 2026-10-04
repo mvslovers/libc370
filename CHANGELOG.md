@@ -45,8 +45,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `SITE VOLUME=` with a wrong name. The request now carries `S99NOMNT` when
   it names a unit or a volume, as `fopen()` does since #172, and comes back
   with an error at once; without either, the request is unchanged. A caller
-  that wants a volume mounted (tape) can no longer get it through these two
-  functions. mvsdev JOB01331.
+  that wants the operator to mount a volume (a tape, a volume not yet
+  mounted) says so with the new keyword **`MOUNT`** (`fopen()`: `,mount` in
+  the mode string), which leaves `S99NOMNT` off. mvsdev JOB01331, JOB01333
+  (`MOUNT`: `IEF238D` raised, `CANCEL` replied, the call failed).
 - **`tmr_stop()` waits for the timer thread to end before deleting it
   (#345).** It deleted the thread at once, the delete was refused because
   the thread had not ended yet (#11), and the handle was dropped anyway: a

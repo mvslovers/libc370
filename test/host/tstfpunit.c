@@ -52,6 +52,8 @@
  *   (8)  unit and volser alongside every other keyword (DCB, space, rlse) ->
  *        none of the others is lost, and the end-of-list marker still sits on
  *        the last text unit.
+ *   (9)  "mount" with unit and volser -> S99NOMNT NOT set: the caller asked
+ *        for the operator's mount (#181).
  *
  * WHAT IT DOES NOT PIN - that needs the MVS probe, not a host run:
  *
@@ -548,6 +550,16 @@ int main(void)
     CHECK(svc99_identity, "array slots are the units that were built");
     CHECK(svc99_endmark, "high-order bit set on the LAST slot");
     CHECK_EQ(tu_overflow, 0, "no text unit went unrecorded");
+
+    /* ---------------------------------------------------------------- */
+    printf("\n(9) \"mount\" with a volser -> no S99NOMNT (#181)\n");
+    CHECK_EQ(setup("wb,unit=tape,volser=tape01,mount"), 0, "__fpmode() ok");
+    rc = __fpnew(&fh);
+    dump("__fpnew");
+    CHECK_EQ(rc, 0, "__fpnew() succeeded");
+    n = find_dal(DALVLSER);
+    CHECK(n >= 0 && entry_is(n, 0, "TAPE01"), "DALVLSER TAPE01");
+    CHECK_EQ(svc99_flag1, S99NOCNV, "mount: S99NOCNV alone");
 
     return mbt_test_summary("TSTFPUNIT");
 }

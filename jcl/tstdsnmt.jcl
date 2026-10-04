@@ -15,6 +15,10 @@
 //* log fails it, whatever the probe printed - the probe cannot see the
 //* operator wait from inside.
 //*
+//* Cases (4) and (5) ask for the mount (MOUNT / ",mount") and MUST
+//* wait on IEF238D: each WTOs "TSTDSNMT (n) WAITS" first.  Reply
+//* R xx,CANCEL; a refusal after 5 seconds or more counts as the wait.
+//*
 //* STEPLIB is the scratch PDS the RECEIVE in recvdsnm.jcl restores into.
 //*
 //S1       EXEC PGM=TSTDSNMT,REGION=4096K,PARM='PUB001'
