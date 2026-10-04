@@ -782,11 +782,16 @@ the merge.
 See "Recently landed". cc370#483 (PR cc370#512) no longer breaks the libc370
 build. `edge` moved to the merge (`9ed55db`), sysroot installed from main.
 
-### 2 · #61, ~~#80 defect 3~~, #157, #158 — four list builders hand back a silently short list
+### ~~2 · #61, #80 defect 3, #157, #158~~ — four list builders hand back a silently short list
 
-**One of four done:** `__listpd()` (#80 defect 3) follows the convention
-since 2.0.0 (PR #303, NULL/ENOMEM instead of a short list); #80 closed
-2026-10-04. Left: `__listvl()` (#61), `__listds()` (#157), `__listal()` (#158).
+**Done 2026-10-04, PR #364** (unreleased; `__listpd()` since 2.0.0, PR
+#303). All four free what they built and answer NULL/ENOMEM, `errno` 0 for
+an empty result; the contract is at the prototypes in `mvs/dslist.h`.
+mvsdev JOB01347 fails every calloc of `__listvl`, `__listal` and `__listds`
+in turn (the probe links its own `calloc()`): 0 short lists, the previous
+library 42. **Left: the three consumer follow-ups** — ftpd#118, mvsmf#360,
+lua370#15 — which need a release carrying this (libc370 releases on hold,
+coordinated by mbt). The text below is the history.
 
 **The convention is decided (2026-08-30) and recorded in #61**, which was
 retitled to hold it: on any allocation failure a list builder frees the partial
@@ -1576,7 +1581,7 @@ same question for reading spooled SYSOUT.
 
 ## Six campaigns instead of forty-one tickets
 
-- **Unchecked allocation** — #61, #80 defect 3, #157 and #158. The convention is
+- ~~**Unchecked allocation**~~ — **done**, PR #364 (2026-10-04); the consumer follow-ups remain. #61, #80 defect 3, #157 and #158. The convention is
   settled (NULL + guaranteed `errno`, 2026-08-30, recorded in #61) and covers all
   four list builders; what is open is one implementation pass over them, plus
   three consumer follow-ups (`ftpd#118`, `mvsmf#360`, `lua370#15`) that are filed
