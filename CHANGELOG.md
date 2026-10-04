@@ -38,6 +38,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `LIBC370_OPT=-O1` builds the previous variant.
 
 ### Fixed
+- **`floor()`, `ceil()`, `modf()` and `fmod()` are right beyond 2**31
+  (#273).** All four took the integral part through a 32-bit integer, which
+  cc370 converts modulo 2**32: `floor(2147483648.5)` gave -2147483648 and
+  `fmod(10540800000, 1)` 8589934592 (mvsdev JOB01337); brexx370 saw
+  `10540800000 % 1` = 1950865408. The integral
+  part is now built from power-of-16 pieces that are exact in HFP, without
+  linking cc370's `long long` conversion helpers; from 2**52 up a double is
+  integral and is returned as it is. `fmod()` is still computed as
+  `x - trunc(x/y)*y` - no more exact than before, but now in `[0, |y|)`
+  for any quotient. mvsdev JOB01337: 40/40, the previous library 15/40.
 - **`__dsalc()`/`__dsalcf()` with `UNIT=` or `VOLSER=` no longer wait for
   the operator (#181).** A volume that was not mounted sent SVC 99 into
   allocation recovery (`IEF238D REPLY DEVICE NAME OR 'CANCEL'`), and the

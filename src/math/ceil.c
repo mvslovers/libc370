@@ -17,15 +17,21 @@ static const double ln2 = 0.69314718055994530941723212145818 ;
 #else
 #include <stddef.h>
 #endif
+#include "src/internal/ipart.h"
 
 __PDPCLIB_API__ double ceil(double x)
 {
-    int y;
+    double y;
 
-    y = (int)x;
-    if ((double)y < x)
+    /* not through an int: wrong beyond 2**31 (#273) */
+    if (x > 0.0)
     {
-        y++;
+        y = __ipart(x);
+        if (y != x)
+        {
+            y += 1.0;
+        }
+        return (y);
     }
-    return ((double)y);
+    return (-__ipart(-x));
 }

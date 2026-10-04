@@ -24,18 +24,19 @@ static const double ln2 = 0.69314718055994530941723212145818 ;
 #else
 #include <stddef.h>
 #endif
+#include "src/internal/ipart.h"
 
 __PDPCLIB_API__ double modf(double value, double *iptr)
 {
     int neg = 0;
-    long i;
+    double i;
 
     if (value < 0)
     {
         neg = 1;
         value = -value;
     }
-    i = (long)value;
+    i = __ipart(value);     /* not through a long: wrong beyond 2**31 (#273) */
     value -= i;
     if (neg)
     {
