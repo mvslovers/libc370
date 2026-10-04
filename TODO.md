@@ -1547,7 +1547,7 @@ with several C names. It changes symbols, so every consumer's code changes too:
 
 ### ~~46 · #277~~ — fixed, PR #367, 2026-10-04
 
-Not 32 K but ~96 K: a DUMMY opened 32760/32760, two `__aopen()` buffers plus the C buffer. NULLFILE now opens 80/80; mvsdev JOB01354: `main()` from 336K, previously 448K. `//SYSIN DD DUMMY` still costs `__aopen()`'s 64 K (not known to be DUMMY before OPEN).
+Not 32 K but ~96 K: a DUMMY opened 32760/32760, two `__aopen()` buffers plus the C buffer. NULLFILE now opens 80/80; mvsdev JOB01354: `main()` from 336K, previously 448K. `//SYSIN DD DUMMY` too since PR #368: the DUMMY is recognised before OPEN through the JFCB (JOB01356/01358).
 
 Found by rexx370 (rexx370#258, MVSCE-LAB JOB01459–01462, libc370 1.0.8):
 `PGM=IRXJCL` at REGION=704K ends CC 12 with `Out of memory, bytes
