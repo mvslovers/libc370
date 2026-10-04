@@ -235,7 +235,7 @@ struct smca {
 SMCA *__smca(void);						/* @@smca.c */
 const unsigned char *__smfid(void);		/* @@smfid.c */
 
-/* SMF Record Base Header — Standard 18 Bytes */
+/* SMF Record Base Header - Standard 18 Bytes */
 typedef struct smf_header {
     short          reclen;       /* 00: Record Length                    */
     short          segdesc;      /* 02: Segment Descriptor (0)           */
@@ -247,7 +247,7 @@ typedef struct smf_header {
     unsigned char  sysid[4];     /* 0E: System ID (from SMCA)            */
 } SMF_HEADER;                    /* 12: 18 bytes total                   */
 
-/* smf_init() — Fill standard SMF header fields.
+/* smf_init() - Fill standard SMF header fields.
 ** Caller must bzero() record before calling.
 ** Sets: reclen, rectype, segdesc=0, sysiflags=2,
 **       time (1/100s since midnight via localtime),
@@ -257,13 +257,13 @@ typedef struct smf_header {
 extern void smf_init(void *record, unsigned short reclen,
                      unsigned char rectype)                 asm("SMFINIT");
 
-/* smf_write() — Write SMF record via SVC 83.
+/* smf_write() - Write SMF record via SVC 83.
 ** Handles TESTAUTH + MODESET internally (same pattern as racf_login).
 ** Returns: 0=success, non-zero=error (SVC 83 R15 or -1 if SMF inactive)
 */
 extern int  smf_write(void *record)                         asm("SMFWRITE");
 
-/* smf_active() — Check if SMF recording is active.
+/* smf_active() - Check if SMF recording is active.
 ** Checks SMCA flags (SMCAUSER | SMCAMAN).
 ** Returns: 1=active, 0=inactive or SMCA not found
 */

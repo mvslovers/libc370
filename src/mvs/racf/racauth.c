@@ -30,10 +30,10 @@
 **              whose authority was checked does not have the SPECIAL attribute.
 **      04      Indicates STATUS=ERASE was specified and the data set is to
 **              be erased when scratched.
-**      08      Indicates DSTYPE=T or CLASS=�TAPEVOL� was specified and the
+**      08      Indicates DSTYPE=T or CLASS='TAPEVOL' was specified and the
 **              user is not authorized to use the specified volume.
 **      0C      Indicates the user is not authorized to use the data set.
-**      10      Indicates DSTYPE=T or CLASS=�TAPEVOL� was specified and the
+**      10      Indicates DSTYPE=T or CLASS='TAPEVOL' was specified and the
 **              user is not authorized to specify LABEL=(,BLP).
 **      1C      User with EXECUTE authority to the data set profile specified
 **              ATTR=READ, and RACF failed the access attempt.
