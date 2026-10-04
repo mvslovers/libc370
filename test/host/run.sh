@@ -217,6 +217,7 @@ tstpfarg() {
     "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address \
        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
        -I $R/include -I $R -o "$B/t" tstpfarg.c && "$B/t"
+    return
 }
 tstvsnp() {
     "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address \

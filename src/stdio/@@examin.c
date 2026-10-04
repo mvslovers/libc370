@@ -469,15 +469,13 @@ __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax,
            conversion as it stands, so the omission shows.  %a and %A
            still take their double, or every later conversion would read
            the argument meant for the one before it (#383). */
-        const char *p;
-
         if (specifier == 'a' || specifier == 'A') {
             vdbl = va_arg(*arg, double);
             unused(vdbl);
         }
         outch('%');
         extraCh++;
-        for (p = start; p < format; p++) {
+        for (const char *p = start; p < format; p++) {
             outch(*p);
             extraCh++;
         }
