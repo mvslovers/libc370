@@ -4,7 +4,7 @@
 //* libc370 issue #4 - jesprint() returns ZERO lines for the SYSLOG spool
 //* datasets.  TSTJESLG walks the same spool block chain jesprint() walks and
 //* reports every decision instead of breaking silently.  See
-//* test/mvs/tstjeslg.c and doc/jes-syslog-issue4.md.
+//* test/mvs/tstjeslg.c and internals/jes-syslog-issue4.md.
 //*
 //* Build:   cc370 -O1 -Iinclude -I. test/mvs/tstjeslg.c \
 //*                -o TSTJESLG -flinker-output=xmit

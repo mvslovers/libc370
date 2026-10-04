@@ -1,7 +1,7 @@
 TSTJESLG probe output - libc370 issue #4
 System: MVS 3.8j (MVS/CE, node MVSC) on Hercules, JES2, 2026-08-04
 Program: test/mvs/tstjeslg.c, run via jcl/tstjeslg.jcl
-Trimmed: only the sections cited by doc/jes-syslog-issue4.md are kept.
+Trimmed: only the sections cited by internals/jes-syslog-issue4.md are kept.
 
 ==== A. JES2 init deck SYS1.PARMLIB(JES2PM00) - the relevant lines ============
 &BUFSIZE=3664                  BUFFER SIZE (5 PER TRACK ON 3350)        00000010

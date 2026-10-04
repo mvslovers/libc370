@@ -17,7 +17,7 @@
  *                    run from JCL takes this path: ambient 0, rc 0).
  *
  * wtof() only, no stdio: on the abend leg the trailing SYSPRINT block
- * would be lost anyway (doc/consumer-notes.md).
+ * would be lost anyway (docs/consumer-notes.md).
  *
  * BUILD (host): see test/mvs/tstsplnk.c - both members travel in one
  * ld370 --pack.  RUN: jcl/tstsplnk.jcl.

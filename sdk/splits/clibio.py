@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""clibio split (#256, doc/design-2.0-splits.md section 1).
+"""clibio split (#256, internals/design-2.0-splits.md section 1).
 
 stdio.h included clibio.h and nothing else, so clibio.h's content moves
 into stdio.h, less what is not ISO C:

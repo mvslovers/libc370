@@ -110,7 +110,7 @@
  * itself - RECEIVE does not merge and wants the target deleted first.
  *
  * A module fetched from the LNKLST cannot STORE into its own writable
- * statics (doc/consumer-notes.md), so this file has none: counters live in
+ * statics (docs/consumer-notes.md), so this file has none: counters live in
  * main()'s frame and every routine returns its verdict.
  */
 #include <stdio.h>

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""clibstr split (#256, doc/design-2.0-splits.md sections 2 and 6).
+"""clibstr split (#256, internals/design-2.0-splits.md sections 2 and 6).
 
 Not a sdk/splithdr.py spec, because the shape differs: string.h is itself a
 target and must not pass the other targets on -- the point is that it holds

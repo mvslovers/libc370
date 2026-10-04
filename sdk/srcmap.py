@@ -14,7 +14,7 @@ move PREFIX   git mv every row whose target starts with PREFIX and that is
               rooted includes ("src/mvs/jes2/jesprb.h"), test/host/run.sh, a test
               that #includes a source, the build comments in test/ and jcl/ --
               byte for byte, so CRLF files stay CRLF.  History (CHANGELOG.md,
-              TODO.md, doc/) and attic/ are left as written.
+              TODO.md, docs/, internals/) and attic/ are left as written.
 check         every row is at exactly one of its two places (a row whose
               target is its own path lists a file that stays, so that the
               map is complete); every source and
