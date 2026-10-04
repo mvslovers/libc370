@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
 ## [2.2.0] - 2026-10-04
 
 Requires cc370 1.1.0 or later, as 2.1.0 did (`sdk/cc370.json`: `>=1.1.0 <2`).
