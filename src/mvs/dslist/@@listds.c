@@ -250,7 +250,7 @@ check_vol:
     {
         /* compute allocated tracks from DSCB1 extents (max 3).
         ** datasets with >3 extents have additional extents in
-        ** DSCB3 which we do not read here — alloc_trks will
+        ** DSCB3 which we do not read here - alloc_trks will
         ** be an undercount in that case. */
         int e;
         unsigned short trks = 0;

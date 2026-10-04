@@ -14,7 +14,7 @@ smf_write(void *record)
 
     if (!smf_active()) return -1;
 
-    /* TESTAUTH — already in supervisor state? */
+    /* TESTAUTH - already in supervisor state? */
     __asm__("\n"
 "*\n"
 "* See if we're in supervisor state\n"
@@ -35,7 +35,7 @@ smf_write(void *record)
         : : : "1", "14", "15");
     }
 
-    /* SVC 83 — write SMF record: R0=0, R1=record address */
+    /* SVC 83 - write SMF record: R0=0, R1=record address */
     __asm__("\n"
 "*\n"
 "* write SMF record via SVC 83\n"
