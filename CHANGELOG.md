@@ -38,6 +38,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `LIBC370_OPT=-O1` builds the previous variant.
 
 ### Fixed
+- **`__dsalc()`/`__dsalcf()` with `UNIT=` or `VOLSER=` no longer wait for
+  the operator (#181).** A volume that was not mounted sent SVC 99 into
+  allocation recovery (`IEF238D REPLY DEVICE NAME OR 'CANCEL'`), and the
+  caller's task stopped until someone replied - an ftpd session thread after
+  `SITE VOLUME=` with a wrong name. The request now carries `S99NOMNT` when
+  it names a unit or a volume, as `fopen()` does since #172, and comes back
+  with an error at once; without either, the request is unchanged. A caller
+  that wants a volume mounted (tape) can no longer get it through these two
+  functions. mvsdev JOB01331.
 - **`tmr_stop()` waits for the timer thread to end before deleting it
   (#345).** It deleted the thread at once, the delete was refused because
   the thread had not ended yet (#11), and the handle was dropped anyway: a

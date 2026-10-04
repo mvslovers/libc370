@@ -94,6 +94,11 @@ tstfprls() {
        -D'__asm__(...)=' -D'asm(x)=' -D__32BIT__ \
        -I $R/include -I $R -o "$B/t" tstfprls.c && "$B/t"
 }
+tstdsnmt() {
+    "$CC" -std=gnu99 -Wall -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast \
+       -D'__asm__(...)=' -D'asm(x)=' -D__32BIT__ \
+       -I $R/include -I $R -o "$B/t" tstdsnmt.c && "$B/t"
+}
 tstfpunit() {
     "$CC" -std=gnu99 -Wall -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast \
        -D'__asm__(...)=' -D'asm(x)=' -D__32BIT__ \
@@ -218,7 +223,7 @@ tstwpos() {
 
 # The tests a plain run covers: all of them.  A test that stops building is
 # not dropped from here - fix it, or say which issue it waits on.
-ALL="tst75snd tstblank tstcmtt tstdblcv tstdblrb tstdirck tstemptl
+ALL="tst75snd tstblank tstcmtt tstdblcv tstdblrb tstdirck tstdsnmt tstemptl
      tstenqdq tsterrfl tstfabnd tstfcls tstfpapp tstfprls tstfpunit tstidcam tstinet tstiolk tstjesop
      tstjesprb tstjestx tstl tstll tstlspd tstlstds tstpfflt tstplus tstrldwk tstscnll tsttm64vec tsttxdsn tstvsnp
      tstwchar tstwpos"
