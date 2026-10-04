@@ -1,5 +1,6 @@
 /* @@FPNEW.C */
 #include <stdio.h>
+#include "src/internal/tok.h"
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
@@ -25,6 +26,7 @@ __fpnew(FILE *fp)
     TXT99       **txt99 = NULL;
     RB99        rb99    = {0};
     char        temp[sizeof(fp->mode)+1];
+    char        *tok_save = NULL;
 
 	// wtof("%s: enter", __func__);
 	
@@ -64,7 +66,7 @@ __fpnew(FILE *fp)
 	}
 	// wtof("%s:     mode=\"%s\"", __func__, temp);
 
-	for(p=strtok(temp, ";"); p; p=strtok(NULL, ";")) {
+	for(p=__tok(temp, ";", &tok_save); p; p=__tok(NULL, ";", &tok_save)) {
 		if (strstr(p, "RECFM=")) recfm = p+6;
 		else if (strstr(p, "LRECL=")) lrecl = p+6;
 		else if (strstr(p, "BLKSIZE=")) blksize = p+8;

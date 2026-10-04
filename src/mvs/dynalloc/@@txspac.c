@@ -1,5 +1,6 @@
 /* @@TXSPAC.C */
 #include "mvs/dynalloc.h"
+#include "src/internal/tok.h"
 #include "ext/array.h"
 
 int
@@ -11,6 +12,7 @@ __txspac(TXT99 ***txt99, const char *space)
     char    *p;
     char    *s;
     char    *d;
+    char    *tok_save = NULL;
     TXT99   *tu;
 
     if (!len) goto quit;
@@ -18,9 +20,9 @@ __txspac(TXT99 ***txt99, const char *space)
 
     /* "pri[,sec]" */
     memcpy(buf, space, len);
-    p = strtok(buf, " ,");
-    s = strtok(NULL, ",");
-    d = strtok(NULL, "");
+    p = __tok(buf, " ,", &tok_save);
+    s = __tok(NULL, ",", &tok_save);
+    d = __tok(NULL, "", &tok_save);
 
     /* Primary space */
     len = p ? atoi(p) : 0;

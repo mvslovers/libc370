@@ -1,5 +1,6 @@
 /* @@LISTDS.C - create DSLIST array */
 #include <strings.h>
+#include "src/internal/tok.h"
 #include <ext/strutil.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -71,6 +72,7 @@ parse(void *vdata, const char *fmt, ...)
     struct tm tm    = {0};
     char    *p;
     va_list arg;
+    char    *tok_save = NULL;
 
     if (udata->failed) goto quit;   /* the list is given up already */
 
@@ -82,13 +84,13 @@ parse(void *vdata, const char *fmt, ...)
     if (buf[0]=='1') goto quit; /* skip page headers */
 
     /* parse the formatted record looking for keywords */
-    p = strtok(buf, " -\n");
+    p = __tok(buf, " -\n", &tok_save);
     if (!p) goto quit;
 
     /* skip carriage control characters */
     if (isdigit(*p)) {
         p++;
-        if (*p==0) p = strtok(NULL, " -\n");
+        if (*p==0) p = __tok(NULL, " -\n", &tok_save);
     }
 
     /* An entry line starts at the left margin, after at most a carriage
@@ -109,7 +111,7 @@ parse(void *vdata, const char *fmt, ...)
         udata->entcat = NULL;
 
         /* get next parm */
-        p = strtok(NULL, " -\n");
+        p = __tok(NULL, " -\n", &tok_save);
         if (!p) goto quit;
 
         /* make sure name does not start with a number */
@@ -134,10 +136,10 @@ check_vol:
 
     if (strcasecmp(p, "IN")==0) {
         /* "IN-CAT --- name", one per entry, ahead of its VOLSER (#50).
-           strtok() splits it at the '-'. */
-        p = strtok(NULL, " -\n");
+           the tokeniser splits it at the '-'. */
+        p = __tok(NULL, " -\n", &tok_save);
         if (!p || strcasecmp(p, "CAT")) goto quit;
-        p = strtok(NULL, " -\n");
+        p = __tok(NULL, " -\n", &tok_save);
         if (!p) goto quit;
 
         if (udata->catnm && strcmp(udata->catnm, p)==0) {
@@ -159,7 +161,7 @@ check_vol:
 
     if (strcasecmp(p, "VOLSER")==0) {
         /* get next parm */
-        p = strtok(NULL, " -\n");
+        p = __tok(NULL, " -\n", &tok_save);
         if (!p) {
             udata->dsn[0] = 0;
             goto quit;
