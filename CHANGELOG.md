@@ -38,6 +38,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `LIBC370_OPT=-O1` builds the previous variant.
 
 ### Fixed
+- **A program without SYSIN starts in about 100 K less REGION (#277).**
+  @@start opens stdin as `'NULLFILE'` when there is no SYSIN DD, and with no
+  DCB attributes that opened LRECL=BLKSIZE=32760: two 32 K buffers in
+  `__aopen()` and a 32 K C buffer, for a stream that never transfers a
+  byte. NULLFILE read by name now opens with 80-byte records, and a DUMMY
+  read (also `//SYSIN DD DUMMY`) gets no C buffer of its record size. On
+  mvsdev a small test program now reaches `main()` from REGION=336K; it
+  needed 448K before (16K steps, so 96-128K less; JOB01354).
+- **@@start says why a standard stream could not be opened (#254).** It
+  reported "SYSTERM DD not defined" or "SYSIN DD not defined" - in a
+  dynamic SYSOUT - and nothing at all for stdout, while the cause was
+  storage. Now a WTO in the job log names the stream and errno, e.g.
+  `@@START: stderr (SYSTERM) could not be opened: errno 12, out of storage
+  - raise REGION`. `fopen()` now sets `errno` to `ENOMEM` when `__aopen()`
+  runs out of storage for its buffers (it left `errno` 0).
 - **`ssvt_set()` and `ssvt_funcmap()` return 0 on success (#240).** The
   success path fell off the end of the function and left
   `0x100 | key<<4` in R15 - 384 for a key-8 caller, never 0 - so a caller

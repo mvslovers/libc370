@@ -91,6 +91,18 @@ __fpopen(FILE *fp)
     lrecl = fp->lrecl;
     blksize = fp->blksize;
 
+    /* 'NULLFILE' read by name - @@start's stdin when the step has no SYSIN
+       - has no DCB attributes, and __aopen() then opened it LRECL=BLKSIZE=
+       32760 and GETMAINed a buffer of each: 64 K for a stream that never
+       transfers a byte (#277, mvsdev JOB01349).  Ask for 80-byte records;
+       the DCB open exit takes them where the DD has none. */
+    if (!(fp->flags & _FILE_FLAG_WRITE) && !lrecl && !blksize
+        && strcmp(fp->dataset, "NULLFILE") == 0) {
+        recfm   = 0;
+        lrecl   = 80;
+        blksize = 80;
+    }
+
     /* open dataset */
     want = mode;            /* __aopen() hands the mode back, amended */
     fp->dcb = __aopen(ddname, &mode, &recfm, &lrecl,
@@ -114,6 +126,9 @@ __fpopen(FILE *fp)
            JCL included - OPEN would take it and CLOSE would abend
            B14-04 (#198, mvsdev JOB00538) */
         if ((int)fp->dcb == -45) errno = EOPNOTSUPP;
+        /* -12: no storage for __aopen()'s buffers (#83) - say so, the
+           caller had errno 0 to go on (#254) */
+        if ((int)fp->dcb == -12) errno = ENOMEM;
         goto quit;
     }
 
@@ -145,6 +160,19 @@ __fpopen(FILE *fp)
     fp->lrecl   = dcb->dcblrecl;
     fp->blksize = dcb->dcbblksi;
 
+    /* read JFCB to get the dataset name */
+    err = __rdjfcb(fp->dcb, &jfcb);
+    if (err) goto quit;
+#if 0
+	wtodumpf(&jfcb, sizeof(jfcb), "__fpopen:jscb");
+#endif
+    if (jfcb.jfcbdsnm[0] > ' ') {
+        for(i=0; i < 44 && jfcb.jfcbdsnm[i] > ' '; i++) {
+            fp->dataset[i] = jfcb.jfcbdsnm[i];
+        }
+        fp->dataset[i] = 0;
+    }
+
     if (!(fp->flags & _FILE_FLAG_RECORD)) {
         /* not record oriented i/o */
         /* allocate file handle data buffer */
@@ -153,8 +181,19 @@ __fpopen(FILE *fp)
         case _FILE_RECFM_V: i = fp->lrecl - 4;  break;
         case _FILE_RECFM_U: i = fp->blksize;    break;
         }
+        /* A DUMMY data set - DD DUMMY, or 'NULLFILE', @@start's stdin when
+           the step has no SYSIN - never transfers a byte: the first
+           __aread() is end of file.  Read, it needs no buffer of BLKSIZE,
+           which for a DUMMY without DCB attributes is 32760: the 32 K
+           calloc that ended programs before main() at a small REGION
+           (#277).  The JFCB is read first for that. */
+        if (!(fp->flags & _FILE_FLAG_WRITE)
+            && strcmp(fp->dataset, "NULLFILE") == 0) i = 0;
         fp->buf     = calloc(1, i + 8);
-        if (!fp->buf) goto quit;
+        if (!fp->buf) {
+            err = 1;        /* the JFCB read above set it to 0 */
+            goto quit;
+        }
 
         if (fp->flags & _FILE_FLAG_DCBOUT) {
             /* set file handle buffer pointers */
@@ -168,18 +207,6 @@ __fpopen(FILE *fp)
         }
     }
 
-    /* read JFCB to get the dataset name */
-    err = __rdjfcb(fp->dcb, &jfcb);
-    if (err) goto quit;
-#if 0
-	wtodumpf(&jfcb, sizeof(jfcb), "__fpopen:jscb");
-#endif
-    if (jfcb.jfcbdsnm[0] > ' ') {
-        for(i=0; i < 44 && jfcb.jfcbdsnm[i] > ' '; i++) {
-            fp->dataset[i] = jfcb.jfcbdsnm[i];
-        }
-        fp->dataset[i] = 0;
-    }
 #if 0
 	wtof("__fpopen: jfcb.jfcdsrg1=0x%02X dcb->dcbdsrg1=0x%02X",
 		jfcb.jfcdsrg1, dcb->dcbdsrg1);
