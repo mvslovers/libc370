@@ -69,6 +69,15 @@ of it — and then the one it needs is released first.
    The `homebrew` job renders `sdk/homebrew/libc370.rb.in` with the new
    version and the tarball's sha256 and pushes it to `mvslovers/homebrew-tap`
    (commit `libc370 <version>`); edit the template there, never the tap's copy.
+8. **Rework the release page** (`gh release edit vX.Y.Z --notes-file …`).
+   `release.yml` pastes the CHANGELOG section; a reader of the page has
+   never heard of the ecosystem. Give it a lead paragraph (what the release
+   is, whether it is a drop-in, the cc370 range), "Read this first" for the
+   changes a caller notices, a before/now table of the fixes, how to
+   install, then the full changelog. **No consumer project names and no job
+   numbers or system names from private systems** — on the page or in
+   `CHANGELOG.md`; describe the effect in libc370's own terms. v2.2.0 is
+   the worked example.
 
 ## Releasing cc370
 
