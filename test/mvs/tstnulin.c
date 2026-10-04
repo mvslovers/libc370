@@ -35,6 +35,11 @@
  * "SYSTERM DD not defined" to SYSPRINT.  JOB01349 (the first run, buffer
  * fix only) showed the 64 K of __aopen() buffers still standing.
  *
+ * JOB01356 (the DUMMY test moved before OPEN, through the JFCB): a JCL
+ * //SYSIN DD DUMMY now opens 80/80 too and passes at 336K (DUMMY336); the
+ * installed library opens it 32760/32760 (DUMMYR).  JOB01358 repeated the
+ * deciding steps on the final code (memcmp() replaced by a byte loop).
+ *
  * RC: 0 = main() reached and every check passed, 1 = a check failed;
  * 12 from @@start = main() never ran.
  */

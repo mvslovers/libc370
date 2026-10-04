@@ -42,8 +42,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   @@start opens stdin as `'NULLFILE'` when there is no SYSIN DD, and with no
   DCB attributes that opened LRECL=BLKSIZE=32760: two 32 K buffers in
   `__aopen()` and a 32 K C buffer, for a stream that never transfers a
-  byte. NULLFILE read by name now opens with 80-byte records, and a DUMMY
-  read (also `//SYSIN DD DUMMY`) gets no C buffer of its record size. On
+  byte. A DUMMY read - `'NULLFILE'`, or a JCL `//SYSIN DD DUMMY` - now
+  opens with 80-byte records and no C buffer of its record size. On
   mvsdev a small test program now reaches `main()` from REGION=336K; it
   needed 448K before (16K steps, so 96-128K less; JOB01354).
 - **@@start says why a standard stream could not be opened (#254).** It
