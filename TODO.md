@@ -17,7 +17,8 @@ but for the consumer ports still pinned to 1.0.8 (step 7). 1.0.8 is the last
 in `doc/design-2.0.md`).
 
 *Last reconciled against the tracker: **2026-10-04**, 63 issues open, all
-placed below. Closed since the last pass: #256, #274, #278, #313–#316, #318,
+placed below; 54 after the closures that pass led to (#50, #51, #71, #79,
+#80, #172, #226, #244 as done, #305 as a duplicate of #181). Closed since the last pass: #256, #274, #278, #313–#316, #318,
 #321, #325, #326, #336–#339, #344, #345, #355. That pass found seven issues
 filed 2026-09-30/10-01 in no rank — #273, #277, #283, #295, #301, #305, #308 —
 and six whose work landed with 2.0 and that are still open in the tracker:
@@ -1072,9 +1073,7 @@ change an interface and need every consumer recompiled, which 2.0 forces
 anyway; #51, #71 and #172 are taken along (decided 2026-10-01).*
 
 **Done, all of it, in 2.0.0** (PRs #297, #298, #302, #303, #304, #307 — see
-Tier 0 step 6). The six issues are still open in the tracker as of
-2026-10-04 and close on the maintainer's word; #80 said itself it closes
-when `2.0` merges into `main`.
+Tier 0 step 6). The six issues were closed 2026-10-04.
 
 ### ~~10 · #80 defect 1~~ — done in 2.0, PR #303
 
@@ -1432,8 +1431,7 @@ that #222 has given `__dblcvt()` its length parameter.
 ### 38 · #225, ~~#226~~ — `__dblcvt` accuracy on HFP, float flags in `__examin()`
 
 **#226 is done by PR #358** (filed again as #355, 2026-10-03): `-`, `0` and
-the sign's width for `%f/%e/%g`, mvsdev JOB01315. Still open in the tracker
-as of 2026-10-04. #225 stands.
+the sign's width for `%f/%e/%g`, mvsdev JOB01315. Closed 2026-10-04. #225 stands.
 
 Filed 2026-09-29 out of #222, both on `main` before it. #225: the `/10`
 scaling loop truncates on HFP, so 1e60 prints `999999999999998046...` and
@@ -1449,7 +1447,8 @@ priority from brexx370's side.
 
 ### 39 · #181 (+ #305) — `__dsalc()` without `S99NOMNT` waits on the operator
 
-**Moved to Tier 1, item 3 (2026-10-04).** #305 is the same defect, filed
+**Moved to Tier 1, item 3 (2026-10-04).** #305 is the same defect (closed
+as its duplicate 2026-10-04), filed
 2026-10-01 with the measurement #172 produced (JOB01082/JOB01084); since #172
 `fopen()` sets `S99NOMNT` when it names a unit or volser, and `__dsalc()` is
 the path left. The reasoning
@@ -1486,7 +1485,7 @@ See *Recently landed*.
 ### ~~42 · #244~~ — SHA-256, Blowfish and base64 move to crypto370
 
 **Done:** the files left libc370 in phase 1, and httpd and mvsMF depend on
-crypto370 since their 2.0 ports. Still open in the tracker as of 2026-10-04.
+crypto370 since their 2.0 ports. Closed 2026-10-04.
 
 *Tier 0, steps 2 and 7.* crypto370 1.0.0 is released (2026-09-30), which is
 all the cut needs. httpd and mvsMF adopt it in their 2.0 migration PRs, and
