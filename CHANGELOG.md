@@ -17,6 +17,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   parameter. The same applies to a `char`, `short` or `float` last
   parameter, which C99 leaves undefined. Measured on MVS: 8 of 8 cases,
   previously 2.
+- **printf no longer shifts its arguments after a conversion it did not
+  handle (#383).** `%c` with a width or a flag, `%n` with a length
+  modifier, `%a` and `%A` printed nothing and did not take their argument,
+  so every later conversion printed the argument meant for the one before
+  it (`"%5c|%d"` of `'x', 42` gave `|120`). `%c` now pads to its width. `%n`
+  stores the count at the width that `hh`, `h`, `l`, `ll`, `j`, `z` or `t`
+  names. `%a` and `%A` are still not implemented: they now take their
+  `double` and print the conversion as written, as does any conversion
+  without a meaning. A `%` at the very end of a format no longer makes
+  printf read past the end of the format string. This applies to every
+  function of the printf family. Measured on MVS: 34 of 34 cases,
+  previously 0.
 
 ### Removed
 - **The PDPCLIB macros `PDPMAIN`, `PDP370`, `PDP380`, `PDP390` and

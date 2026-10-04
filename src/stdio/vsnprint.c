@@ -24,7 +24,8 @@ __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
 
 /* smax = space left in s (fq == NULL); the budget is honoured since #128 */
 extern int
-__examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax);
+__examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax,
+         int done);
 
 int
 vsnprintf(char *s, size_t n, const char *format, va_list arg)
@@ -134,7 +135,7 @@ vsnprintf(char *s, size_t n, const char *format, va_list arg)
 #if 0
                 extraCh = examine(s, extraCh, &format, &arg);
 #else
-                extraCh = __examin(&format, NULL, s, &arg, extraCh);
+                extraCh = __examin(&format, NULL, s, &arg, extraCh, chcount);
 #endif
                 if (s!=NULL) {
                     for(i=0; i < extraCh; i++) {

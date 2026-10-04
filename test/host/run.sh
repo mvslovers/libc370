@@ -213,6 +213,11 @@ tsttxdsn() {
        "$R/src/ext/array/@@arnew.c" "$R/src/ext/array/@@arcou.c" \
        "$R/src/ext/array/@@arget.c" "$R/src/ext/array/@@arfre.c" && "$B/t"
 }
+tstpfarg() {
+    "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address \
+       -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
+       -I $R/include -I $R -o "$B/t" tstpfarg.c && "$B/t"
+}
 tstvsnp() {
     "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address \
        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
@@ -234,7 +239,7 @@ tstwpos() {
 # not dropped from here - fix it, or say which issue it waits on.
 ALL="tst75snd tstblank tstcmtt tstdblcv tstdblrb tstdirck tstdsnmt tstemptl
      tstenqdq tsterrfl tstfabnd tstfcls tstfloor tstfpapp tstfprls tstfpunit tstidcam tstinet tstiolk tstjesop
-     tstjesprb tstjestx tstl tstll tstlspd tstlstds tstpfflt tstplus tstrldwk tstscnll tstssvt tsttm64vec tsttxdsn tstvsnp
+     tstjesprb tstjestx tstl tstll tstlspd tstlstds tstpfarg tstpfflt tstplus tstrldwk tstscnll tstssvt tsttm64vec tsttxdsn tstvsnp
      tstwchar tstwpos"
 
 [ $# -gt 0 ] && ALL="$*"
