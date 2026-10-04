@@ -397,7 +397,7 @@ checklist is #245.
    - **phase 2 done** (summary on #274); the migration script is still owed
    - #284: name maps for it — `sdk/names.tsv` (generated), `sdk/removed.tsv`
      (871 names, each with its replacement; CI-enforced), procedure in
-     `docs/migration-2.0.md`. Every later move updates them in the same PR
+     `docs/migration-2.x.md`. Every later move updates them in the same PR
 5a. ~~**Phase 3 in 2.0 (#278, D9):** sources by area~~ **done** (#285–#293,
    summary on #278): `src/` mirrors `include/`, `sdk/srcmap.tsv` records
    every move, `attic/` holds what is not built; the three `ibm/` headers
@@ -449,7 +449,7 @@ checklist is #245.
    MVS (Mike's OK per run).
 7. **Consumer migration -- by an agent, not a script** (decided
    2026-10-01, #309): `internals/migration-2.0-agent.md` is the brief, with
-   `docs/migration-2.0.md` as the specification. Consumers port against the
+   `docs/migration-2.x.md` as the specification. Consumers port against the
    rolling tag `v2.0.0-dev` until the release; **since 2.0.0 they pin
    `[toolchain] libc370 = "2.0.0"` and drop any `libc370_ref`** (the build CI
    follows `main`, which is 2.0). ufsd and brexx370 switch from `2.0.0-dev`

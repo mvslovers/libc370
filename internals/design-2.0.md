@@ -67,7 +67,7 @@ which is not built (#248). No consumer includes any of them.
 - **2.0 is a hard cut.** No compatibility headers and no deprecation period:
   the old names are gone in 2.0.0. Consumers migrate once, driven by a script
   that reads the maps: `sdk/headermap.tsv` (headers, the table below),
-  `sdk/names.tsv` and `sdk/removed.tsv` (names); `docs/migration-2.0.md`
+  `sdk/names.tsv` and `sdk/removed.tsv` (names); `docs/migration-2.x.md`
   says how.
 - **Function names do not change in 2.0.** Moving a header is mechanical and
   provably changes no code. Renaming a function changes symbols in every
@@ -133,7 +133,7 @@ other item. Header moves and parallel fix PRs would also collide on the same
 | 2 | internals to `src/internal/` (#274), included by their path from the root (D10); `libc370/` becomes `ext/` (D1) | byte-identical assembler; the migration script resolves every consumer include |
 | 3 | **done on `2.0`** (#285–#292): sources by area (#278), `src/` mirrors `include/`; assembler beside its C; `src/wip/` → `attic/` (D9). Basenames stay unique (all objects share one directory, `mklibc.py:161`), and the gate needs a map from old to new source paths | byte-identical assembler |
 | — | **interface changes**: #80 defect 1, #79, #50; taken along: #51, #71, #172; the three `ibm/` headers that declare functions | per change, tests; CHANGELOG entry for each layout or signature change |
-| — | **migration script** (`docs/migration-2.0.md`), tried on httpd, mvsMF, ftpd | it resolves every consumer include |
+| — | **migration script** (`docs/migration-2.x.md`), tried on httpd, mvsMF, ftpd | it resolves every consumer include |
 | — | **prerelease `v2.0.0-rc.N`** on the branch `2.0`; a first consumer (ftpd) migrated and tested on MVS against it | the consumer green and working on MVS |
 | — | **release 2.0.0**; one migration PR per consumer | each consumer green against 2.0.0 |
 | 4 | the OS seam: core calls a narrow internal interface, not MVS services | per change, tests |

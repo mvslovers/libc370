@@ -1,4 +1,7 @@
-# Migrating from libc370 1.x to 2.0
+# Migrating to libc370 2.x
+
+Most of this document is about the step from 1.x to 2.0. What a 2.x release
+after 2.0.0 asks of a program is under [Since 2.0.0](#since-200).
 
 libc370 2.0 reorganises the public headers. Function names, behaviour and
 the code a program links are, with a short list of exceptions below, what 1.x
@@ -198,6 +201,18 @@ something a program may have worked around, and may now drop.
 
   Any other difference is a missed include, not noise. This is libc370's own
   method (`sdk/gate.py`).
+
+## Since 2.0.0
+
+What a 2.x release changed that a program or a build may have to follow. The
+CHANGELOG has everything else.
+
+| Release | Change | What to do |
+|---|---|---|
+| 2.1.0 | Needs cc370 1.1.0 or later. Every public header stops with `#error` otherwise (#315) | Update cc370 |
+| 2.1.0 | The compiler helpers (`@@DIVDI3`, ...) moved to cc370's `libcc370rt.a` (#313) | A build that runs the linker itself adds `-lcc370rt` |
+| 2.2.0 | `setbuf()` returns `void` (#339) | Stop using its return value |
+| unreleased | `maclib/` no longer ships `PDPMAIN`, `PDP370`, `PDP380`, `PDP390` or `PDPORIG` (#377) | Assembler with `COPY PDPMAIN` came from a pre-cc370 compiler: regenerate it with cc370. Remove stale copies from `<sysroot>/macros` by hand, because `make install` does not delete them |
 
 ## For libc370 developers
 
