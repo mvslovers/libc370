@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- **`va_start()` with a `double` or `long long` last parameter (#382).**
+  `<stdarg.h>` defined `va_start(ap, last)` as `&last + 4`, which is right
+  only for a last parameter of 4 bytes. After a `double` or `long long`
+  every `va_arg()` read 4 bytes early. `<stdarg.h>` now uses the compiler's
+  builtins, which know the parameter list. `va_list` is still a `char *`,
+  so code that passes one on (to `vprintf()` and the like) is unaffected,
+  and no library function changes behaviour: none has such a last
+  parameter. The same applies to a `char`, `short` or `float` last
+  parameter, which C99 leaves undefined. Measured on MVS: 8 of 8 cases,
+  previously 2.
+
 ### Removed
 - **The PDPCLIB macros `PDPMAIN`, `PDP370`, `PDP380`, `PDP390` and
   `PDPORIG` (#377).** Nothing in libc370 or cc370 used them. cc370 emits
