@@ -676,6 +676,7 @@ src/internal/clibsvc.h	src/internal/clibsvc.h	shared private header, stays
 src/internal/crtanchor.h	src/internal/crtanchor.h	shared private header, stays
 src/internal/dyn75.h	src/net/dyn75/dyn75.h	private to the DYN75 provider
 src/internal/digval.h	src/internal/digval.h	new after 2.0.0 (#316), private to the strto* family
+src/internal/ipart.h	src/internal/ipart.h	new after 2.0.0 (#273), private to floor/ceil/modf/fmod
 src/internal/enqpl.h	src/internal/enqpl.h	shared private header, stays
 src/internal/fileio.h	src/internal/fileio.h	shared private header, stays
 src/internal/loadmod.h	src/internal/loadmod.h	shared private header, stays
