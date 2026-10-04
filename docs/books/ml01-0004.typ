@@ -44,6 +44,10 @@ How to write, build and run a program with libc370 -- start-up, the
 different kinds of files, the run-time environment -- is the subject of the
 companion volume, the _libc370 Programmer's Guide_.
 
+libc370 is built with, and only with, the cc370 toolchain. Every header
+checks the compiler: compiled with a cc370 older than 1.1.0 it stops with
+#cmd("#error \"libc370 needs cc370 1.1.0 or later\"").
+
 == Who Should Use This Book
 
 This book is for programmers who write C programs for MVS 3.8j. It assumes
