@@ -1485,7 +1485,9 @@ only on a path that names a `VOLSER=` explicitly — hence below the
 campaigns and not in Tier 1. Small: one flag plus a probe against an
 unmounted volser.
 
-### 40 · #240 — `ssvt_set()`/`ssvt_funcmap()` return no value on success
+### ~~40 · #240~~ — fixed, PR #366, 2026-10-04
+
+`return 0;` on the success path, `SLR 15,15` in both `.s`; host `tstssvt` 13/13 (old 8/13). Not run on MVS (key-0 store into a live SSVT).
 
 Filed out of #39's `-Wall` run. Both fall off the end after the key switch; the
 generated code leaves `0x100 | key<<4` in R15 (384 for a key-8 caller), never 0.
@@ -1550,7 +1552,9 @@ neighbour of #254 (rank 40, the same start-up at a smaller REGION, with the
 wrong message). Fails loudly, so below the defects that answer wrongly; a
 smaller or lazily allocated stdin buffer is the shape to look at.
 
-### 47 · #301 — `jesjob()` destroys the caller's `strtok()` state
+### ~~47 · #301~~ — fixed, PR #365, 2026-10-04
+
+`cutblank()` instead of `strtok()`; host `tstjestx` (13) red→green. **Same class elsewhere, not filed yet:** `strtok()` inside `fopen()`'s paths (`@@fpnew/@@fpstar/@@fptmp`), `__listds`, `__listvl`, `__walkpd`, `@@txspac`, `@@txvols` - only `__dsalc()` restores `crtstrtk`. Read from the source, not measured.
 
 Five `strtok()` calls in `src/mvs/jes2/jesjob.c` trim blank-padded fields, so
 a caller iterating with its own `strtok()` loses its place (met in #79's
