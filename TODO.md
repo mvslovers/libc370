@@ -1454,7 +1454,9 @@ priority from brexx370's side.
 
 `S99NOMNT` when the opts name `UNIT=` or `VOLSER=`, the #172 rule. Host
 `test/host/tstdsnmt.c` 12/12 (9/12 before); mvsdev JOB01331: NOVOL9 refused
-at once, no IEF238D. ftpd's `__listvl()` pre-check (ftpd#133) can stay or go.
+at once, no IEF238D. **PR #361**: the keyword `MOUNT` (`fopen()`: `,mount`)
+leaves the flag off for a caller who wants the operator's mount - JOB01333,
+IEF238D raised for both paths and answered `CANCEL` through the console. ftpd's `__listvl()` pre-check (ftpd#133) can stay or go.
 
 **Moved to Tier 1, item 3 (2026-10-04).** #305 is the same defect (closed
 as its duplicate 2026-10-04), filed
