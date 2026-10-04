@@ -10,6 +10,29 @@
 #include "ibm/mvs/dcbd.h"
 #include "ibm/mvs/iefjfcbn.h"
 #include <mvs/dd.h>
+#include "ibm/mvs/ieftiot1.h"
+
+/* Is DD ddname a DUMMY?  Its JFCB names NULLFILE, whether the DD is a JCL
+   DD DUMMY or 'NULLFILE' allocated by name.  Read through the TIOT entry's
+   SWA pointer, as __listal() reads it, so it is known BEFORE the OPEN -
+   __rdjfcb() needs an open DCB (#277). */
+static int is_dummy(const char *ddname)
+{
+    static const char nullfile[9] = "NULLFILE ";
+    DSAB    *dsab   = get_dsab(0, ddname);
+    TIOTDD  *tiotdd;
+    JFCB    *jfcb;
+    int     i;
+
+    if (!dsab || !(tiotdd = dsab->dsabtiot)) return 0;
+    jfcb = (JFCB *)(((unsigned char)tiotdd->TIOEJFCB[0] << 16
+                     | (unsigned char)tiotdd->TIOEJFCB[1] << 8
+                     | (unsigned char)tiotdd->TIOEJFCB[2]) + 16);
+    for (i = 0; i < 9; i++) {
+        if (jfcb->jfcbdsnm[i] != nullfile[i]) return 0;
+    }
+    return 1;
+}
 
 __asm__("\n&FUNC    SETC '__fpopen'");
 int
@@ -91,13 +114,14 @@ __fpopen(FILE *fp)
     lrecl = fp->lrecl;
     blksize = fp->blksize;
 
-    /* 'NULLFILE' read by name - @@start's stdin when the step has no SYSIN
-       - has no DCB attributes, and __aopen() then opened it LRECL=BLKSIZE=
-       32760 and GETMAINed a buffer of each: 64 K for a stream that never
-       transfers a byte (#277, mvsdev JOB01349).  Ask for 80-byte records;
-       the DCB open exit takes them where the DD has none. */
+    /* A DUMMY read - 'NULLFILE', @@start's stdin when the step has no
+       SYSIN, or a JCL DD DUMMY - has no DCB attributes, and __aopen() then
+       opened it LRECL=BLKSIZE=32760 and GETMAINed a buffer of each: 64 K
+       for a stream that never transfers a byte (#277, mvsdev JOB01349).
+       Ask for 80-byte records; the DCB open exit takes them where the DD
+       has none. */
     if (!(fp->flags & _FILE_FLAG_WRITE) && !lrecl && !blksize
-        && strcmp(fp->dataset, "NULLFILE") == 0) {
+        && is_dummy(fp->ddname)) {
         recfm   = 0;
         lrecl   = 80;
         blksize = 80;
