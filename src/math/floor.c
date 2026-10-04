@@ -17,22 +17,21 @@ static const double ln2 = 0.69314718055994530941723212145818 ;
 #else
 #include <stddef.h>
 #endif
+#include "src/internal/ipart.h"
 
 __PDPCLIB_API__ double floor(double x)
 {
-    int y;
+    double y;
 
+    /* not through an int: wrong beyond 2**31 (#273) */
     if (x < 0.0)
     {
-        y = (int)x;
-        if ((double)y != x)
+        y = -__ipart(-x);
+        if (y != x)
         {
-            y--;
+            y -= 1.0;
         }
+        return (y);
     }
-    else
-    {
-        y = (int)x;
-    }
-    return ((double)y);
+    return (__ipart(x));
 }

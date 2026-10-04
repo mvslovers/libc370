@@ -84,6 +84,10 @@ tstfcls() {
        "$R/src/ext/array/@@arcou.c" "$R/src/ext/array/@@ardel.c" \
        "$R/src/ext/array/@@arfre.c" "$R/src/ext/array/@@arget.c" && "$B/t"
 }
+tstfloor() {
+    "$CC" -std=gnu99 -Wall -Wextra -D__32BIT__ \
+       -I $R/include -I $R -o "$B/t" tstfloor.c && "$B/t"
+}
 tstfpapp() {
     "$CC" -std=gnu99 -Wall \
        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
@@ -224,7 +228,7 @@ tstwpos() {
 # The tests a plain run covers: all of them.  A test that stops building is
 # not dropped from here - fix it, or say which issue it waits on.
 ALL="tst75snd tstblank tstcmtt tstdblcv tstdblrb tstdirck tstdsnmt tstemptl
-     tstenqdq tsterrfl tstfabnd tstfcls tstfpapp tstfprls tstfpunit tstidcam tstinet tstiolk tstjesop
+     tstenqdq tsterrfl tstfabnd tstfcls tstfloor tstfpapp tstfprls tstfpunit tstidcam tstinet tstiolk tstjesop
      tstjesprb tstjestx tstl tstll tstlspd tstlstds tstpfflt tstplus tstrldwk tstscnll tsttm64vec tsttxdsn tstvsnp
      tstwchar tstwpos"
 
