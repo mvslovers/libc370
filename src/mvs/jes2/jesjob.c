@@ -31,6 +31,17 @@ static time64_t make_time(unsigned int t_hundreths_seconds_since_midnight, unsig
 
 static int dsid_comp(const void *, const void *);
 
+/* Cut s at the first blank after its first word - what strtok(s, " ") did
+   here, leading blanks included, without strtok()'s library-wide position:
+   a caller iterating with its own strtok() lost its place the moment it
+   called jesjob() (#301). */
+static void cutblank(char *s)
+{
+    while (*s == ' ') s++;
+    while (*s && *s != ' ') s++;
+    *s = 0;
+}
+
 /* End of the PDDBs in the IOT now in iotbuf.
  *
  * The IOT says where they stop: IOTPDDBP is the "OFFSET BEYOND LAST PDDB IN
@@ -152,7 +163,7 @@ JESJOB **jesjob(JES *jes, const char *filter, JESFILT type, int dd)
 
         sprintf(jobid, "%s%05u", jobtype, jqe->JQEJOBNO % 10000);
         memcpyp(jobname, sizeof(jobname), jqe->JQEJNAME, sizeof(jqe->JQEJNAME), 0);
-        strtok(jobname, " ");
+        cutblank(jobname);
 
         if (jct->JCTJOBFL & JCTTSUJB) {
             /* TSO User is owner of itself */
@@ -168,7 +179,7 @@ JESJOB **jesjob(JES *jes, const char *filter, JESFILT type, int dd)
                      we'll see it when we process the INTERNAL TEXT (DSID#5) below
                      and update the job->owner at that time. */
             memcpyp(owner, sizeof(owner), jct->JCTUSEID, sizeof(jct->JCTUSEID), 0);
-            if (owner[0] > ' ') strtok(owner, " "); else owner[0] = 0;
+            if (owner[0] > ' ') cutblank(owner); else owner[0] = 0;
         }
         /* wtodumpf(owner, sizeof(owner), "owner"); */
 
@@ -389,7 +400,7 @@ process_pddb(__PDDB *pddb, JESJOB *job)
     strcpy(jesdd->eye, JESDD_EYE);
 
     memcpyp(jesdd->ddname, sizeof(jesdd->ddname), pddb->PDBDSID, sizeof(pddb->PDBDSID), 0);
-    strtok(jesdd->ddname, " ");
+    cutblank(jesdd->ddname);
 
     switch (pddb->PDBDSKEY) {
         case PDBINJCL:  {
@@ -680,12 +691,12 @@ process_job(char *buf, const char *eob, char *jobname, char *userid)
         case USERK:     /* JOB     USER=                        */
             memcpy(userid, t->data, len);
             userid[len] = 0;
-            strtok(userid, " ");
+            cutblank(userid);
             break;
         case JOBK:      /* JOB     JOB                          */
             memcpy(jobname, t->data, len);
             jobname[len] = 0;
-            strtok(jobname, " ");
+            cutblank(jobname);
             break;
         }
 
@@ -727,20 +738,20 @@ process_exec(char *buf, const char *eob, char *stepname, char *procname, char *p
             /* wtof("%s PGMEK t->data=%08X, t->len=%08X", __func__, t->data, t->len); */
             memcpy(program, t->data, len);
             program[len] = 0;
-            strtok(program, " ");
+            cutblank(program);
             break;
         case PROCEK:    /* EXEC    PROC=                        */
             /* wtof("%s PROCEK t->data=%08X, t->len=%08X", __func__, t->data, t->len); */
             program[0] = 0;
             memcpy(procname, t->data, len);
             procname[len] = 0;
-            strtok(procname, " ");
+            cutblank(procname);
             break;
         case EXECK:     /* EXEC    EXEC                         */
             /* wtof("%s EXECK t->data=%08X, t->len=%08X", __func__, t->data, t->len); */
             memcpy(stepname, t->data, len);
             stepname[len] = 0;
-            strtok(stepname, " ");
+            cutblank(stepname);
             break;
         }
 
@@ -780,7 +791,7 @@ process_dd(char *buf, char *eob, char *ddname, char *dsname, char *sysout, unsig
             if ((char*)t->data + len > eob) break;
             memcpy(ddname, t->data, len);
             ddname[len] = 0;
-            strtok(ddname, " ");
+            cutblank(ddname);
             break;
         }
         case DSNAMEK: { /* DD C    DSNAME=                      */
@@ -794,7 +805,7 @@ process_dd(char *buf, char *eob, char *ddname, char *dsname, char *sysout, unsig
             if ((char*)t->data + len > eob) break;
             memcpy(dsname, t->data, len);
             dsname[len] = 0;
-            strtok(dsname, " ");
+            cutblank(dsname);
             break;
         }
         case SYSOUTK: { /* DD      SYSOUT=                      */
@@ -802,7 +813,7 @@ process_dd(char *buf, char *eob, char *ddname, char *dsname, char *sysout, unsig
             if ((char*)t->data + len > eob) break;
             memcpy(sysout, t->data, len);
             sysout[len] = 0;
-            strtok(sysout, " ");
+            cutblank(sysout);
             break;
         }
         case SYSINCTK:  /* DD      SYSIN number of records      */

@@ -38,6 +38,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `LIBC370_OPT=-O1` builds the previous variant.
 
 ### Fixed
+- **`jesjob()` no longer destroys the caller's `strtok()` position
+  (#301).** It trimmed blank-padded fields with `strtok()`, whose position
+  is library-wide, so a caller looping over names with its own `strtok()`
+  and calling `jesjob()` in the loop lost its place after the first name
+  (met in mvsdev JOB01063). The fields are trimmed by hand now, cut at the
+  same place.
 - **The list builders no longer hand back a short list when storage runs
   out (#61, #157, #158).** `__listvl()` and `__listal()` returned what they
   had built so far, and `__listds()` skipped the record and went on, so its
