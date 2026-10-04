@@ -547,9 +547,13 @@ metadata and links a program against it (checked end to end on macOS).
       cc370 folds `floor()`/`ceil()` of a constant at compile time - a test
       has to pass its arguments through a `volatile` (JOB01335 was fooled).
       `fmod()` is still not exact in the C99 sense, only in `[0, |y|)`.
-   3. **#308** (rank 45) — `__listds()`: an entry without a `VOLSER` line
-      swallows the next one; the list comes back one short with a wrong
-      volume and nothing says so. Host fixture in the issue.
+   3. ~~**#308**~~ (rank 45) — fixed, PR #363, 2026-10-04 (unreleased,
+      2.2.0). Not rare after all: `LEVEL('SYS1') VOLUME` lost SYS1.PARMLIB,
+      SVCLIB and VTAMLIB behind volume-less page spaces and clusters
+      (JOB01340/01341). `"NONVSAM VOLUME"` (ftpd, httpd, mvsMF) was not
+      affected; lua370 passes the caller's option through.
+
+   **Tier 1 item 3 is empty.**
 
 ### Tier 1 before — empty since #182 (PR #227, 2026-09-29)
 
@@ -1530,7 +1534,7 @@ Three naming styles, reserved `__` names used as public API, and 23 symbols
 with several C names. It changes symbols, so every consumer's code changes too:
 3.0 material, or additive in 2.x. Not before 2.0.0 has shipped.
 
-### ~~44 · #273~~ (PR #362), 45 · #308 — see Tier 1, item 3
+### ~~44 · #273~~ (PR #362), ~~45 · #308~~ (PR #363) — see Tier 1, item 3
 
 ### 46 · #277 — `@@start`: the 32 K stdio buffer `calloc` fails before `main()`
 
