@@ -444,5 +444,44 @@ int main(void)
         free(blk); free(jj); free(ctx); free(pb);
     }
 
+    /* ------------------------------------------------------------------
+     * (13)-(14) #301.  The parsers trimmed with strtok(buf, " "), and
+     * strtok() keeps its position library-wide: a caller iterating with
+     * its own strtok() lost its place in it the moment it called jesjob()
+     * (met in #79's probe, JOB01063).  The trim is a hand loop now; (14)
+     * pins that it cuts exactly where strtok() did, leading blanks kept.
+     * ---------------------------------------------------------------- */
+    printf("\n(13) a caller's strtok() survives the parsers (#301):\n");
+    {
+        char  names[] = "JOBA,JOBB,JOBC";
+        char *tok;
+        int   seen = 0;
+
+        for (tok = strtok(names, ","); tok; tok = strtok(NULL, ",")) {
+            a = dest12(); b = dest12(); c = dest12();
+            txt = make_jobstr(JOBK, 8, "MBT     ", 8);
+            process_job((char *)txt, txt_eob(txt, 6, 8), a, b);
+            free(txt);
+            txt = make_execstr(PGMEK, 8, "IEFBR14 ", 8);
+            process_exec((char *)txt, txt_eob(txt, 4, 8), a, b, c);
+            free(txt); free(a); free(b); free(c);
+            seen++;
+            if (seen > 3) break;
+        }
+        CHECK(seen == 3, "(13) the caller's loop saw all three names");
+    }
+
+    printf("\n(14) the trim cuts where strtok() cut (#301):\n");
+    a = dest12(); b = dest12();
+    txt = make_jobstr(JOBK, 8, "MBT  X  ", 8);
+    process_job((char *)txt, txt_eob(txt, 6, 8), a, b);
+    CHECK_STR(a, "MBT", "(14) cut at the first blank after the word");
+    free(txt); free(a); free(b);
+    a = dest12(); b = dest12();
+    txt = make_jobstr(USERK, 8, "  IBMUSR", 8);
+    process_job((char *)txt, txt_eob(txt, 6, 8), a, b);
+    CHECK_STR(b, "  IBMUSR", "(14) leading blanks kept, as strtok() left them");
+    free(txt); free(a); free(b);
+
     return mbt_test_summary("tstjestx");
 }
