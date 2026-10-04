@@ -24,6 +24,7 @@ typedef struct {
     char        *catnm;     /* last catalog name read (#50) */
     const char  *entcat;    /* catalog of the current entry, or NULL */
     int         catused;    /* catnm is in a DSLIST record */
+    int         failed;     /* storage ran out (#157) */
     char        buf[256];   /* work buffer for parsing */
     DSCB        dscb;       /* DSCB buffer */
 } UDATA;
@@ -38,11 +39,22 @@ __listds(const char *level, const char *option, const char *filter)
     udata.option    = option;
     udata.filter    = filter;
 
+    errno = 0;      /* an empty NULL is not a failure (#61) */
     rc = __listc(level, option, parse, &udata);
 
     /* a catalog name no record took: its entry was filtered out, had no
        volume, or could not be added */
     if (udata.catnm && !udata.catused) free(udata.catnm);
+
+    /* Storage ran out: no list rather than one with holes in it.  parse()
+       cannot stop __listc(), so before #157 the scan went on past a failed
+       record and the list ended where a good one would, one data set short
+       somewhere in the middle (#61, #157). */
+    if (udata.failed) {
+        if (udata.array) __freeds(&udata.array);
+        errno = ENOMEM;
+        return NULL;
+    }
 
     return udata.array;
 }
@@ -59,6 +71,8 @@ parse(void *vdata, const char *fmt, ...)
     struct tm tm    = {0};
     char    *p;
     va_list arg;
+
+    if (udata->failed) goto quit;   /* the list is given up already */
 
     /* format the record passed to us by __listc() */
     va_start(arg, fmt);
@@ -162,6 +176,7 @@ check_vol:
     if (!dslist) {
         udata->dsn[0] = 0;
         udata->volser[0] = 0;
+        udata->failed = 1;
         goto quit;
     }
 
@@ -302,6 +317,7 @@ done:
     rc = arrayadd(&udata->array, dslist);
     if (rc) {
         free(dslist);
+        udata->failed = 1;
         goto quit;
     }
     if (dslist->catnm) udata->catused = 1;

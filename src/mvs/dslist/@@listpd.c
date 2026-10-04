@@ -35,7 +35,10 @@ PDSLIST **
 __listpd(const char *dataset, const char *filter)
 {
     COLLECT     c       = { 0, 0 };
-    int         rc      = __walkpd(dataset, filter, collect, &c);
+    int         rc;
+
+    errno = 0;      /* an empty NULL is not a failure (#61) */
+    rc = __walkpd(dataset, filter, collect, &c);
 
     if (rc < 0 || c.failed) {
         int err = c.failed ? ENOMEM : errno;

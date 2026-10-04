@@ -29,6 +29,8 @@ ALCLIST **__listal(void *tcbptr, const char *ddname, unsigned opt)
     struct tm   tm          = {0};
     char        *p;
 
+    errno = 0;      /* an empty NULL is not a failure (#61) */
+
     for(ds = get_dsab(tcbptr, ddname); ds; ds=next_dsab(ds, tcbptr, ddname)) {
         TIOTDD  *tiotdd = ds->dsabtiot;
         JFCB    *jfcb = (JFCB*)((tiotdd->TIOEJFCB[0]<<16 | tiotdd->TIOEJFCB[1]<<8 | tiotdd->TIOEJFCB[2]) + 16);
@@ -96,10 +98,13 @@ new_dd:
             
             /* allocate a new record for this dd name */
             al = calloc(1, sizeof(ALCLIST));
-            if (!al) goto quit;
+            if (!al) goto nomem;
 
             rc = array_add(&alclist, al);
-            if (rc) goto quit;
+            if (rc) {
+                free(al);       /* in no list: __freeal() would miss it */
+                goto nomem;
+            }
             
             for(i=0; tiotdd->TIOEDDNM[i] > ' ' && i < 8; i++) {
                 al->ddname[i] = tiotdd->TIOEDDNM[i];
@@ -111,10 +116,13 @@ new_dd:
                                            off = use JSCB values for dataset*/
         
         dslist = calloc(1, sizeof(DSLIST));
-        if (!dslist) goto quit;
+        if (!dslist) goto nomem;
 
         rc = arrayadd(&al->dslist, dslist);
-        if (rc) goto quit;
+        if (rc) {
+            free(dslist);       /* the same */
+            goto nomem;
+        }
         
         al->count++;    /* update count of dslist records */
         
@@ -135,9 +143,15 @@ new_dd:
         /* default, use jfcb values */
         rc = get_jfcb_values(dslist, jfcb);
     }
-    
-quit:
+
     return alclist;
+
+nomem:
+    /* Out of storage: no list rather than a short one that reads as
+       complete (#61, #158) */
+    if (alclist) __freeal(&alclist);
+    errno = ENOMEM;
+    return NULL;
 }
 
 static int get_dscb_values(DSLIST *dslist)

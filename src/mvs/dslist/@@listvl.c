@@ -35,6 +35,8 @@ VOLLIST **__listvl(	const char *filter, int dolspace, const char *vatlst)
 	UCBLIST *ucblist	= cvt->cvtilk2;	/* get ptr to list of UCB's	*/
 	UCBDASD	*ucbdasd;
 	int		i;
+
+	errno = 0;		/* an empty NULL is not a failure (#61) */
 	
 	// wtof("%s: start", __func__);
 	// wtof("%s: cvt=%p ucblist=%p", __func__, cvt, ucblist);
@@ -80,18 +82,16 @@ VOLLIST **__listvl(	const char *filter, int dolspace, const char *vatlst)
 			continue;	/* skip if in vollist */
 		}
 		
-		/* Build vollist entry */
+		/* Build vollist entry.  Out of storage: no list rather than a
+		   short one that reads as complete - the caller gets NULL and
+		   errno ENOMEM, not a WTO it never sees (#61). */
 		vol = (VOLLIST*) calloc(1, sizeof(VOLLIST));
-		if (!vol) {
-			wtof("%s: out of memory", __func__);
-			break;
-		}
+		if (!vol) goto nomem;
 		
 		/* add vol to vollist array */
 		if (array_add(&vollist, vol)) {
-			wtof("%s: out of memory", __func__);
 			free(vol);
-			break;
+			goto nomem;
 		}
 		
 		/* populate UCB info for this volume */
@@ -134,9 +134,15 @@ VOLLIST **__listvl(	const char *filter, int dolspace, const char *vatlst)
 		break;
 	}
 	
-quit:
 	// wtof("%s: exit vollist=%p", __func__, vollist);
 	return vollist;
+
+nomem:
+	/* skips the VATLST read: its fopen()/fgets()/fclose() could overwrite
+	   errno, over a list that is being given up anyway */
+	if (vollist) __freevl(&vollist);
+	errno = ENOMEM;
+	return NULL;
 }
 
 static unsigned get_dasdtype(UCBDASD *ucbdasd)
