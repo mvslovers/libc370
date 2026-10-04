@@ -10,14 +10,20 @@ libc370 is the base library of the whole ecosystem, so a defect here is a defect
 in httpd, mvsMF, ftpd, ufsd and every other consumer at once; that is what puts
 some cheap items high and some expensive ones low.
 
-**Since 2026-09-30 that rule puts the 2.0 critical path first (Tier 0).**
-1.0.8 is the last 1.x release and the consumers are pinned to it, so a fix that
-lands on `main` now reaches no running system until 2.0.0 ships. Everything
-from Tier 1 on keeps its order and resumes on 2.x. A serious defect found
-before 2.0.0 gets an emergency 1.0.9 from the tag `v1.0.8` (D8 in
-`doc/design-2.0.md`).
+**2.0.0 shipped 2026-10-01 and 2.1.0 on 2026-10-03; `main` is 2.x and what
+lands there now goes out with 2.2.0.** Tier 0 (the 2.0 critical path) is done
+but for the consumer ports still pinned to 1.0.8 (step 7). 1.0.8 is the last
+1.x; a serious defect there gets an emergency 1.0.9 from the tag `v1.0.8` (D8
+in `doc/design-2.0.md`).
 
-*Last reconciled against the tracker: **2026-09-30**, 53 issues open (#140,
+*Last reconciled against the tracker: **2026-10-04**, 63 issues open, all
+placed below. Closed since the last pass: #256, #274, #278, #313–#316, #318,
+#321, #325, #326, #336–#339, #344, #345, #355. That pass found seven issues
+filed 2026-09-30/10-01 in no rank — #273, #277, #283, #295, #301, #305, #308 —
+and six whose work landed with 2.0 and that are still open in the tracker:
+#50, #51, #71, #79, #80, #172 (Tier 5), plus #226 (done by PR #358) and #244
+(crypto370 released and adopted). #305 is a duplicate of #181. #204 and #206
+are `parked`, #245 is the 2.0 umbrella.* The pass before was **2026-09-30**, 53 issues open (#140,
 #243 and #248 closed by PR #255 and #241/#251 by PR #253, all the same day;
 #254 filed out of rexx370's measurements; before that 57 — #249 closed; #240
 and #241 filed out of #39, #243–#246 and #248–#250 out of the 2.0 plan, #251
@@ -448,13 +454,16 @@ checklist is #245.
    until it is ported. The brief `doc/migration-2.0-agent.md` is kept out of
    the tree on purpose (maintainer's working copy, updated for this state;
    it compares against 1.x with `-nostdinc -I <v1.0.8>/include`).
-   - **ported:** ufsd (ufsd#82, merged 2026-10-01, prerelease `v1.4.0-dev`),
-     brexx370 (brexx370#274, open; moves its pin off `edge` -- after it,
-     nothing pins `edge`). Findings folded into the brief (#310).
-   - **next:** ftpd, httpd, mvsMF -- they take ufsd as `">=1.4.0-dev"`;
-     httpd and mvsMF also crypto370. ufsd publishes **prereleases only**
-     until all three are ported (a stable release would reach their `>=`
-     ranges; a prerelease does not).
+   - **ported** (as of 2026-10-04, read from each `project.toml` on
+     `main`): ufsd (ufsd#82, prerelease `v1.4.0-dev`), brexx370
+     (brexx370#274, merged 2026-10-01, pins `2.1.0`), ftpd (ftpd#157,
+     `1.2.0-dev`), httpd (httpd#273, prerelease `v4.2.0-dev`), mvsMF
+     (mvsmf#379, prerelease `v1.2.0-dev`), rexx370 and lstring370, all
+     pinning `2.0.0`. httpd and mvsMF took crypto370 in the same PR.
+     Findings folded into the brief (#310).
+   - **still on 1.0.8:** lua370, httplua, httprexx.
+   - **open:** nothing pins `edge` since brexx370#274 merged -- what
+     happens to it is the maintainer's call.
 8. ~~**Prerelease `v2.0.0-rc1`**~~ -- skipped (2026-10-01): ufsd and brexx370
    were ported and tested against `v2.0.0-dev` instead, and 2.0.0 was
    released directly.
@@ -522,6 +531,19 @@ metadata and links a program against it (checked end to end on macOS).
 2. ~~**#326 leftover**~~ — closed 2026-10-03: `pair.yml` (PR #335) installs
    the pair under apt (bookworm amd64/arm64) and dnf (fedora), run
    37077154678 all green; it runs after every release.
+3. **Defects next** (ranked 2026-10-04), each a wrong answer or a hang on a
+   running system:
+   1. **#181 / #305** — `__dsalc()` `VOLSER=` of an unmounted volume waits
+      on `IEF238D` for the operator. #305 is the duplicate with the
+      measurement (JOB01082 waits, JOB01084 with `S99NOMNT` returns at
+      once); `fopen()` sets the flag since #172 when it names a unit or
+      volser. ftpd's STOR path.
+      Moved up from rank 39.
+   2. **#273** (rank 44) — `floor`/`ceil`/`modf`/`fmod` go through a
+      32-bit integer and are wrong beyond 2**31; measured through brexx370.
+   3. **#308** (rank 45) — `__listds()`: an entry without a `VOLSER` line
+      swallows the next one; the list comes back one short with a wrong
+      volume and nothing says so. Host fixture in the issue.
 
 ### Tier 1 before — empty since #182 (PR #227, 2026-09-29)
 
@@ -1049,7 +1071,12 @@ not about correctness.
 change an interface and need every consumer recompiled, which 2.0 forces
 anyway; #51, #71 and #172 are taken along (decided 2026-10-01).*
 
-### 10 · #80 defect 1 — `__listpd()` has no way to ask for less
+**Done, all of it, in 2.0.0** (PRs #297, #298, #302, #303, #304, #307 — see
+Tier 0 step 6). The six issues are still open in the tracker as of
+2026-10-04 and close on the maintainer's word; #80 said itself it closes
+when `2.0` merges into `main`.
+
+### ~~10 · #80 defect 1~~ — done in 2.0, PR #303
 
 What is left of #80 after PR #139, and it is narrow: one exposed caller, ftpd's
 `LIST`/`NLST` (`ftpd#mvs.c:941`) with a user-supplied filter. On `SYS1.SMPCDS`
@@ -1058,24 +1085,24 @@ member before returning anything. A `max` parameter or an iterator form fixes it
 but either is a signature change — hence this tier. It would also let mvsMF drop
 the duplicated directory parser it carries at `dsapi.c:2076`.
 
-### 11 · #79 — JESJOB carries no submit time
+### ~~11 · #79~~ — done in 2.0, PR #302
 
 Two lines plus a struct field. Zowe shows `exec-submitted` empty today, and
 `mvslovers/mvsmf#209` is waiting on the same gap for `exec-system`. Append at
 offset 0x50 as the issue describes, so 0x00-0x4F stays stable.
 
-### 12 · #50 — catalog name in DSLIST
+### ~~12 · #50~~ — done in 2.0, PR #307
 
 Same class, more work. Decide before implementing: scrape `LISTCAT` output, walk
 the CVTCATP chain, or use the `LOCATE` return area.
 
-### 13 · #51 — `inet_addr()` / `inet_ntoa()`
+### ~~13 · #51~~ — done in 2.0, PR #297
 
 A good entry-level issue and a real memory win: it saves ftpd the entire `sscanf`
 in its load module — on a 24-bit target exactly the kind of saving that counts.
 Host test is trivial, because neither function touches MVS.
 
-### 14 · #71 — `idcams()` discards SYSPRINT and the IDCnnnn number
+### ~~14 · #71~~ — done in 2.0, PR #298
 
 One store in a `switch` branch that does nothing today, plus a companion accessor.
 Afterwards ftpd says "IDC3203I" instead of "failed". `idcams()` keeps its
@@ -1083,7 +1110,7 @@ signature.
 
 ---
 
-### 28 · #172 — `__fpnew()` sends no UNIT text unit
+### ~~28 · #172~~ — done in 2.0, PR #304
 
 Every `fopen()` that takes the DISP=NEW path allocates on whatever the system
 default hands it. Filed off #167's target run, where it is why cases (4) and (5)
@@ -1402,7 +1429,11 @@ Filed 2026-09-29 out of #209, both in `@@dblcvt.c`, both output-only. #220:
 its trailing zeros, and the exponent is always `E`. Best done together, now
 that #222 has given `__dblcvt()` its length parameter.
 
-### 38 · #225, #226 — `__dblcvt` accuracy on HFP, float flags in `__examin()`
+### 38 · #225, ~~#226~~ — `__dblcvt` accuracy on HFP, float flags in `__examin()`
+
+**#226 is done by PR #358** (filed again as #355, 2026-10-03): `-`, `0` and
+the sign's width for `%f/%e/%g`, mvsdev JOB01315. Still open in the tracker
+as of 2026-10-04. #225 stands.
 
 Filed 2026-09-29 out of #222, both on `main` before it. #225: the `/10`
 scaling loop truncates on HFP, so 1e60 prints `999999999999998046...` and
@@ -1416,7 +1447,13 @@ edge 7906cee): `say 1e40*1` gives `9.999999999999983124...E+39`, and TRUNC
 values only, since string arguments no longer go through a double - no
 priority from brexx370's side.
 
-### 39 · #181 — `__dsalc()` without `S99NOMNT` waits on the operator
+### 39 · #181 (+ #305) — `__dsalc()` without `S99NOMNT` waits on the operator
+
+**Moved to Tier 1, item 3 (2026-10-04).** #305 is the same defect, filed
+2026-10-01 with the measurement #172 produced (JOB01082/JOB01084); since #172
+`fopen()` sets `S99NOMNT` when it names a unit or volser, and `__dsalc()` is
+the path left. The reasoning
+below ("below the campaigns") predates that measurement.
 
 `src/clib/@@dsalc.c` sets `S99NOCNV` only, so an allocation naming a volume
 that is not mounted does not fail: SVC 99 raises `IEF238D` and the caller's
@@ -1446,7 +1483,10 @@ WTO + abend of the stack guard. Resumes on 2.x.
 
 See *Recently landed*.
 
-### 42 · #244 — SHA-256, Blowfish and base64 move to crypto370
+### ~~42 · #244~~ — SHA-256, Blowfish and base64 move to crypto370
+
+**Done:** the files left libc370 in phase 1, and httpd and mvsMF depend on
+crypto370 since their 2.0 ports. Still open in the tracker as of 2026-10-04.
 
 *Tier 0, steps 2 and 7.* crypto370 1.0.0 is released (2026-09-30), which is
 all the cut needs. httpd and mvsMF adopt it in their 2.0 migration PRs, and
@@ -1476,6 +1516,44 @@ Three naming styles, reserved `__` names used as public API, and 23 symbols
 with several C names. It changes symbols, so every consumer's code changes too:
 3.0 material, or additive in 2.x. Not before 2.0.0 has shipped.
 
+### 44 · #273, 45 · #308 — see Tier 1, item 3
+
+### 46 · #277 — `@@start`: the 32 K stdio buffer `calloc` fails before `main()`
+
+Found by rexx370 (rexx370#258, MVSCE-LAB JOB01459–01462, libc370 1.0.8):
+`PGM=IRXJCL` at REGION=704K ends CC 12 with `Out of memory, bytes
+needed=32768` from `__fpopen()`, `main()` never runs; 768K runs. The
+neighbour of #254 (rank 40, the same start-up at a smaller REGION, with the
+wrong message). Fails loudly, so below the defects that answer wrongly; a
+smaller or lazily allocated stdin buffer is the shape to look at.
+
+### 47 · #301 — `jesjob()` destroys the caller's `strtok()` state
+
+Five `strtok()` calls in `src/mvs/jes2/jesjob.c` trim blank-padded fields, so
+a caller iterating with its own `strtok()` loses its place (met in #79's
+probe, JOB01063). Small: cut at the first blank by hand. Host-testable.
+
+### 48 · #283 — `getmain()`/`freemain()` pull ~42 KB into a module
+
+`getmain()` reports a failure through `wtof()`, which brings the printf
+engine and stdio: rexx370's `IRXLDTSO` calls three libc370 functions and
+carries 42 304 bytes of libc370 (cc370#573 map). Size, not correctness — the
+same direction as #344 (-Os); rexx370 has been cutting libc370's stdio
+chain out on its own side (rexx370#304, #305).
+
+### 49 · #295 — JES2 Process SYSOUT (`SSOBSOUT`) as an official path
+
+Research, after 2.0. `jesxwrtr()`/`jesxdone()`/`__getpso()` exist from the
+initial commit, untested and unused. Next to #30 (rank 20), which asks the
+same question for reading spooled SYSOUT.
+
+### Parked and umbrella, not ranked
+
+- **#204** (append to a PDS member) and **#206** (O(1) backward `fseek()`
+  via NOTE/POINT) — `parked` since #189, see rank 1 · #189 above.
+- **#245** — the 2.0 umbrella; its checklist is Tier 0. Open until the
+  maintainer closes it.
+
 ---
 
 ## Six campaigns instead of forty-one tickets
@@ -1491,7 +1569,8 @@ with several C names. It changes symbols, so every consumer's code changes too:
   `-Wall` in the SDK build. #125 is the one with a measured failure and is
   independent of the rest; #68 goes last and in its own three-step order, or it
   reddens consumer CI.
-- **2.0 restructure** — #245 (umbrella), with #244 feeding it (#243, #248 and
+- **2.0 restructure** — **2.0.0 released 2026-10-01**; what is left is Tier 0
+  step 7 (lua370, httplua, httprexx still on 1.0.8). The history: #245 (umbrella), with #244 feeding it (#243, #248 and
   #140 landed, PR #255). The plan is `doc/design-2.0.md`: a hard cut to a
   standard-shaped header layout (`libc370/`, `mvs/`, `s370/`, `ibm/mvs/`,
   `ibm/jes2/`), with internals out of the sysroot. Phase 0 comes first:
@@ -1512,7 +1591,7 @@ with several C names. It changes symbols, so every consumer's code changes too:
   - open: cc370 releases (mvslovers/cc370#523); and
     `libc370_ref: v1.0.8` in each consumer's `build.yml`. That hold goes in
     **right before the cut**, not earlier, or it silences the early warning.
-- **Relink round** — #79, #50, #51, #71, #172 and #80 defect 1's `max` parameter.
+- ~~**Relink round**~~ — **shipped in 2.0.0** (Tier 5). #79, #50, #51, #71, #172 and #80 defect 1's `max` parameter.
   Land struct and signature growth in one batch, with a CHANGELOG entry and a
   coordinated rebuild of httpd, mvsMF and ftpd. **Folded into 2.0** (Tier 0,
   step 6).
