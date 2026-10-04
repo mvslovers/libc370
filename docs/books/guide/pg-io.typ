@@ -42,8 +42,9 @@ uppercase in all of them.
       #var("dsname"), allocated by #cmd("fopen()").],
     [#cmd("'")#var("dsname")#cmd("(")#var("member")#cmd(")'")], [a member
       of the cataloged library #var("dsname").],
-    [#var("dsname")], [as above; under TSO the user's prefix is put in
-      front of the name.],
+    [#var("dsname")], [as above\; when the program runs as a TSO command
+      processor the user's prefix is put in front of the name (not in batch,
+      and not under #cmd("CALL")).],
     [#cmd("&&")#var("name")], [a temporary data set, on VIO.],
     [#cmd("*")], [a new SYSOUT data set, or under TSO the terminal.],
     [#cmd("*")#var("ddname")], [the DD #var("ddname") if it exists,
@@ -245,7 +246,8 @@ it takes from the parameter. Run as in @pg-io-newds-jcl it creates
 ] <pg-io-newds-jcl>
 
 The name is put between apostrophes, so that it is taken as it is. Without
-them, under TSO, the user's prefix would be put in front of it. If the data
+them, in a program run as a TSO command processor, the user's prefix would
+be put in front of it. If the data
 set exists already, #cmd("fopen()") opens it #cmd("DISP=OLD") and
 overwrites it, with its own attributes.
 

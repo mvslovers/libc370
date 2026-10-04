@@ -117,7 +117,10 @@ parameter, before it knows more\; prefer #cmd("ppacppl").
 #idx("TSO", "prefix of data set names")
 One effect of the way a program is started is easy to miss: whether an
 unquoted data set name given to #cmd("fopen()") gets the TSO prefix put in
-front of it. A program that may be started in more than one way should
+front of it. The library adds the prefix only when #cmd("GRTFLAG1_TSO") is
+set, that is when the program runs as a TSO command processor. Under
+#cmd("CALL") the parameter has the batch shape, the flag is not set, and
+the name is used as written, just as in batch. A program that may be started in more than one way should
 write data set names fully qualified, in quotes, which mean the same in
 every environment:
 
