@@ -21,7 +21,11 @@ in `internals/design-2.0.md`).
 
 *Last reconciled against the tracker: **2026-10-04, evening**, 44 issues
 open, all placed below - closed since the morning pass: #181, #273, #308,
-#61, #157, #158, #301, #240, #277, #254, all fixed (54 - 10 = 44).* The
+#61, #157, #158, #301, #240, #277, #254, all fixed (54 - 10 = 44). Filed and
+closed the same evening, so in no rank: #377 (the unused PDPCLIB macros left
+`maclib/`; `docs/migration-2.0.md` became `migration-2.x.md` with a *Since
+2.0.0* table, PR #378) and #379 (`gate.py` reads the symbol name only, ready
+for cc370#805's `ar370 t` format, PR #380).* The
 morning pass: 63 issues open; 54 after the closures that pass led to (#50, #51, #71, #79,
 #80, #172, #226, #244 as done, #305 as a duplicate of #181). Closed since the last pass: #256, #274, #278, #313–#316, #318,
 #321, #325, #326, #336–#339, #344, #345, #355. That pass found seven issues
