@@ -541,8 +541,12 @@ metadata and links a program against it (checked end to end on macOS).
       once); `fopen()` sets the flag since #172 when it names a unit or
       volser. ftpd's STOR path.
       Moved up from rank 39.
-   2. **#273** (rank 44) — `floor`/`ceil`/`modf`/`fmod` go through a
-      32-bit integer and are wrong beyond 2**31; measured through brexx370.
+   2. ~~**#273**~~ (rank 44) — fixed, PR #362, 2026-10-04 (unreleased,
+      2.2.0): the integral part from power-of-16 pieces, no `long long`
+      helpers; mvsdev JOB01337 40/40, the previous library 25 of 40 failed.
+      cc370 folds `floor()`/`ceil()` of a constant at compile time - a test
+      has to pass its arguments through a `volatile` (JOB01335 was fooled).
+      `fmod()` is still not exact in the C99 sense, only in `[0, |y|)`.
    3. **#308** (rank 45) — `__listds()`: an entry without a `VOLSER` line
       swallows the next one; the list comes back one short with a wrong
       volume and nothing says so. Host fixture in the issue.
@@ -1526,7 +1530,7 @@ Three naming styles, reserved `__` names used as public API, and 23 symbols
 with several C names. It changes symbols, so every consumer's code changes too:
 3.0 material, or additive in 2.x. Not before 2.0.0 has shipped.
 
-### 44 · #273, 45 · #308 — see Tier 1, item 3
+### ~~44 · #273~~ (PR #362), 45 · #308 — see Tier 1, item 3
 
 ### 46 · #277 — `@@start`: the 32 K stdio buffer `calloc` fails before `main()`
 
