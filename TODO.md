@@ -1558,7 +1558,7 @@ smaller or lazily allocated stdin buffer is the shape to look at.
 
 ### ~~47 · #301~~ — fixed, PR #365, 2026-10-04
 
-`cutblank()` instead of `strtok()`; host `tstjestx` (13) red→green. **Same class elsewhere, not filed yet:** `strtok()` inside `fopen()`'s paths (`@@fpnew/@@fpstar/@@fptmp`), `__listds`, `__listvl`, `__walkpd`, `@@txspac`, `@@txvols` - only `__dsalc()` restores `crtstrtk`. Read from the source, not measured.
+`cutblank()` instead of `strtok()`; host `tstjestx` (13) red→green. **The same class elsewhere is fixed too, PR #369** (2026-10-04): `fopen()`'s create/SYSOUT/temp paths, `__listds`, `__listvl`, `@@txspac`, `@@txvols` tokenise with `src/internal/tok.h` now; mvsdev JOB01360 GREEN 5/5, the previous library 1/5.
 
 Five `strtok()` calls in `src/mvs/jes2/jesjob.c` trim blank-padded fields, so
 a caller iterating with its own `strtok()` loses its place (met in #79's
