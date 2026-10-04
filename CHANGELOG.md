@@ -38,6 +38,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `LIBC370_OPT=-O1` builds the previous variant.
 
 ### Fixed
+- **The list builders no longer hand back a short list when storage runs
+  out (#61, #157, #158).** `__listvl()` and `__listal()` returned what they
+  had built so far, and `__listds()` skipped the record and went on, so its
+  list was missing a data set somewhere in the middle - each read as
+  complete. Now all four (`__listpd()` since 2.0.0) free what they built and
+  answer `NULL` with `errno` `ENOMEM`, and clear `errno` on entry, so an
+  empty result is `NULL` with `errno` 0. `__listal()` also no longer leaks
+  the record whose array insertion failed, and `__listvl()` no longer
+  writes "out of memory" to the console. **Callers that treat `NULL` as
+  "empty" should read `errno`** (mvslovers/ftpd#118, mvslovers/mvsmf#360,
+  mvslovers/lua370#15). mvsdev JOB01347: every allocation failure point in
+  turn, 0 short lists; the previous library 42.
 - **`__listds()` no longer loses the data set after an entry without a
   volume (#308).** An entry with no `VOLSER` line kept the parser inside it,
   so the next entry line was skipped: that data set was missing and its

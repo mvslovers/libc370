@@ -50,6 +50,9 @@
  *        page spaces and a cluster without volumes between data sets.
  *   (10) a cluster whose volume comes from its DATA component, with an
  *        indented "CLUSTER--name" association in between (not measured).
+ *   (11) #157: the n-th calloc fails, for every n -> the full list, or NULL
+ *        with errno ENOMEM; never a short list, nothing left allocated.
+ *   (12) #61: an empty result -> NULL with errno 0, a stale errno cleared.
  *   after every case: no allocation left once __freeds() has run.
  *
  * Before the fix this does not build: struct dslist has no catnm.
@@ -98,7 +101,16 @@ int     strcasecmp(const char *, const char *);
  * ------------------------------------------------------------------------ */
 static long live;
 
-static void *tst_calloc(size_t n, size_t s){ void *p = calloc(n, s); if (p) live++; return p; }
+static int  callocs, fail_at;              /* fail the fail_at-th calloc */
+static void *tst_calloc(size_t n, size_t s)
+{
+    void *p;
+
+    if (fail_at && ++callocs == fail_at) return NULL;
+    p = calloc(n, s);
+    if (p) live++;
+    return p;
+}
 static char *tst_strdup(const char *s)     { char *p = strdup(s);    if (p) live++; return p; }
 static void  tst_free(void *p)             { if (p) live--; free(p); }
 
@@ -442,6 +454,63 @@ int main(void)
         CHECK_STR(l[0]->dsn, "IBMUSER.KSDS", "record 1 is the cluster");
         CHECK_STR(l[0]->volser, "WORK00", "on its DATA component's volume");
         CHECK_STR(l[1]->dsn, "IBMUSER.A", "record 2");
+        done(l);
+    }
+
+    /* ---------------------------------------------------------------- */
+    printf("\n(11) #157: storage runs out at every calloc in turn\n");
+    /* Before #157 a failed record was skipped and the scan went on: the
+       list came back one data set short in the middle, errno untouched. */
+    {
+        static const char *fx[] = {
+            ENTRY("IBMUSER.A"), INCAT("UCPUB000"), HISTORY, VOLS("WORK00"),
+            ENTRY("IBMUSER.B"), INCAT("UCPUB000"), HISTORY, VOLS("WORK00"),
+            ENTRY("SYS2.C"), INCAT(MASTER), HISTORY, VOLS("MVS000"),
+            ENTRY("IBMUSER.D"), INCAT("UCPUB000"), HISTORY, VOLS("WORK01"),
+            NULL };
+        int  n, all_ok = 1, nulls = 0;
+        char msg[80];
+
+        for (n = 1; n <= 12; n++) {
+            fail_at = n;
+            callocs = 0;
+            the_errno = 0;
+            l = run(fx, NULL);
+            if (l && arraycount(&l) == 4) {
+                /* the failure point lies past the last calloc */
+            }
+            else if (l == NULL && the_errno == ENOMEM) {
+                nulls++;
+            }
+            else {
+                sprintf(msg, "calloc %d failing: %s, errno %d", n,
+                        l ? "a SHORT list" : "NULL", the_errno);
+                CHECK(0, msg);
+                all_ok = 0;
+            }
+            fail_at = 0;
+            if (l) __freeds(&l);
+            if (live != 0) {
+                sprintf(msg, "calloc %d failing: %ld allocations left", n, live);
+                CHECK(0, msg);
+                all_ok = 0;
+                live = 0;
+            }
+        }
+        CHECK(all_ok, "every failure point: the full list, or NULL + ENOMEM");
+        CHECK(nulls >= 4, "the failure points inside the scan were hit");
+        printf("    %d of 12 failure points inside the scan\n", nulls);
+    }
+
+    /* ---------------------------------------------------------------- */
+    printf("\n(12) #61: an empty result is NULL with errno 0\n");
+    {
+        static const char *fx[] = { NULL };
+
+        the_errno = EIO;            /* stale from an earlier call */
+        l = run(fx, NULL);
+        CHECK(l == NULL, "nothing listed");
+        CHECK_EQ(the_errno, 0, "errno cleared on entry");
         done(l);
     }
 

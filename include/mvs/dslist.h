@@ -41,6 +41,12 @@ struct vollist {
 	char 			*comment;	/* 24 Comment from VATLSTxx				*/
 };								/* 28 (40 bytes)						*/
 
+/* The list builders - __listvl(), __listds(), __listpd(), __listal() -
+   answer NULL both for an empty result and for a failure, and errno says
+   which (#61): 0 for an empty result (cleared on entry), ENOMEM when
+   storage ran out.  A list that comes back is complete: on a shortage
+   the records built so far are freed, never handed over short. */
+
 /* __listvl() - return list of volumes matching filter or ALL if
 ** 		filter is NULL.
 **		if dolspace is not zero then request volume free space information.
