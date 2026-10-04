@@ -38,6 +38,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `LIBC370_OPT=-O1` builds the previous variant.
 
 ### Fixed
+- **`__listds()` no longer loses the data set after an entry without a
+  volume (#308).** An entry with no `VOLSER` line kept the parser inside it,
+  so the next entry line was skipped: that data set was missing and its
+  volume was reported for the entry before. Real on mvsdev: with the option
+  `VOLUME`, `LEVEL('SYS1')` listed `SYS1.PAGECSA` on `SYS1.PARMLIB`'s volume
+  and lost `SYS1.PARMLIB`, `SYS1.SVCLIB` and `SYS1.VTAMLIB` (page spaces and
+  clusters carry no volume there; JOB01340/JOB01341). `"NONVSAM VOLUME"`,
+  what ftpd, httpd and mvsMF pass, was not affected. An entry without a
+  volume is still not listed.
 - **`floor()`, `ceil()`, `modf()` and `fmod()` are right beyond 2**31
   (#273).** All four took the integral part through a 32-bit integer, which
   cc370 converts modulo 2**32: `floor(2147483648.5)` gave -2147483648 and

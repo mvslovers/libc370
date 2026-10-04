@@ -77,12 +77,23 @@ parse(void *vdata, const char *fmt, ...)
         if (*p==0) p = strtok(NULL, " -\n");
     }
 
-    if (udata->dsn[0]) goto check_vol;  /* we already have a dataset */
+    /* An entry line starts at the left margin, after at most a carriage
+       control character.  It begins a new entry even while one is pending:
+       an entry with no VOLSER line used to keep dsn set, so the NEXT entry
+       line was never looked at - that data set vanished and its volume
+       landed on the one before (#308).  The pending entry is dropped, as an
+       entry without a volume always was.  An indented line naming an entry
+       type - "CLUSTER--name" under a DATA component's ASSOCIATIONS - is not
+       an entry line, so a cluster still takes the VOLSER of its DATA
+       component further down. */
+    if ((strcasecmp(p, "NONVSAM")==0    ||
+         strcasecmp(p, "PAGESPACE")==0  ||
+         strcasecmp(p, "CLUSTER")==0    ||
+         strcasecmp(p, "USERCATALOG")==0) && p - buf <= 1) {
+        udata->dsn[0] = 0;
+        udata->volser[0] = 0;
+        udata->entcat = NULL;
 
-    if (strcasecmp(p, "NONVSAM")==0    ||
-        strcasecmp(p, "PAGESPACE")==0  ||
-        strcasecmp(p, "CLUSTER")==0    ||
-        strcasecmp(p, "USERCATALOG")==0) {
         /* get next parm */
         p = strtok(NULL, " -\n");
         if (!p) goto quit;
@@ -101,6 +112,8 @@ parse(void *vdata, const char *fmt, ...)
         udata->entcat = NULL;
         goto quit;
     }
+
+    if (!udata->dsn[0]) goto quit;      /* not inside an entry */
 
 check_vol:
     if (!udata->dsn[0]) goto quit;   /* no dataset, we're finished */
