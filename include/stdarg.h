@@ -14,9 +14,11 @@
 #define __STDARG_INCLUDED
 #include <sys/_cc370.h>
 
-/* don't use builtins on MVS until they have been implemented */
-#if defined(__GNUC__) && !defined(__MVS__) && !defined(__CMS__) \
-    && !defined(__VSE__)
+/* cc370's builtins know the i370 parameter list: a double or long long
+   last parameter takes 8 bytes, a char or short one is promoted to a
+   word the callee may copy into its frame.  &last + 4 below is right
+   only for a 4-byte last parameter (#382). */
+#if defined(__GNUC__)
 
 #ifndef __GNUC_VA_LIST
 #define __GNUC_VA_LIST
