@@ -1494,7 +1494,9 @@ generated code leaves `0x100 | key<<4` in R15 (384 for a key-8 caller), never 0.
 Latent: the only consumer, ufsd, ignores the result at every call. Small fix
 (`return 0;`), but the test needs the `IPK`/`SPKA` asm stubbed or an MVS run.
 
-### 40 · #254 — `@@start` blames a missing SYSIN for a failed stdin open
+### ~~40 · #254~~ — fixed, PR #367, 2026-10-04
+
+`startfail()`: WTO with stream and errno for all three standard streams (stdout used to fail silently, stderr said "SYSTERM DD not defined"); `__aopen()` -12 now `ENOMEM`.
 
 Found by rexx370 on MVSCE-LAB (JOB01424, libc370 1.0.8): at a REGION just
 large enough for the C stack, the `'NULLFILE'` fallback open fails and the
@@ -1543,7 +1545,9 @@ with several C names. It changes symbols, so every consumer's code changes too:
 
 ### ~~44 · #273~~ (PR #362), ~~45 · #308~~ (PR #363) — see Tier 1, item 3
 
-### 46 · #277 — `@@start`: the 32 K stdio buffer `calloc` fails before `main()`
+### ~~46 · #277~~ — fixed, PR #367, 2026-10-04
+
+Not 32 K but ~96 K: a DUMMY opened 32760/32760, two `__aopen()` buffers plus the C buffer. NULLFILE now opens 80/80; mvsdev JOB01354: `main()` from 336K, previously 448K. `//SYSIN DD DUMMY` still costs `__aopen()`'s 64 K (not known to be DUMMY before OPEN).
 
 Found by rexx370 (rexx370#258, MVSCE-LAB JOB01459–01462, libc370 1.0.8):
 `PGM=IRXJCL` at REGION=704K ends CC 12 with `Out of memory, bytes
