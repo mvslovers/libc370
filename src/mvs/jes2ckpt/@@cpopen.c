@@ -125,7 +125,7 @@ HASPCP *__cpopen(const char *dataset)
     }
 
     /* The first JQE is here */
-    cp->jqe = (__JQE*)&cp->buf[28]; /* skip over "JES2 COLDSTART TK4- .ï.Ì...." */
+    cp->jqe = (__JQE*)&cp->buf[28]; /* skip over "JES2 COLDSTART TK4- " and 8 binary bytes */
     cp->jqeend = (__JQE*)&cp->buf[cp->jqeblks*4096];
 
     if (cp->jotblks) {

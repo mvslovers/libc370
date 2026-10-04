@@ -23,7 +23,7 @@ struct ssvt {
 **        MATRIX FUNCTION BYTE  =0 : THE FUNCTION SPECIFIED IN THE
 **                                   SSOB IS NOT SUPPORTED BY THIS
 **                                   SUBSYSTEM.
-**        MATRIX FUNCTION BYTE ¬=0 : THE VALUE (FUNCTION BYTE-1)*4
+**        MATRIX FUNCTION BYTE NOT=0 : THE VALUE (FUNCTION BYTE-1)*4
 **                                   IS ADDED TO THE ADDRESS OF
 **                                   SSVTFRTN TO OBTAIN THE
 **                                   ADDRESS OF THE WORD CONTAINING

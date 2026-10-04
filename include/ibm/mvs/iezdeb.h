@@ -211,7 +211,7 @@ struct debprfx {
 #define DEBAMBDM        0x40        /* ... DIRECT ACCESS METHOD TYPE        */
 #define DEBAMISM        0x80        /* ... ISAM ACCESS METHOD TYPE          */
 #define DEBAMSUB        0x81        /* ... SUBSYSTEM ACCESS METHOD TYPE     */
-#define DEBAMVTM        0x82        /* ... VTAM® ACCESS METHOD TYPE         */
+#define DEBAMVTM        0x82        /* ... VTAM(R) ACCESS METHOD TYPE      */
 #define DEBAMTAP        0x84        /* ... TCAM APPLICATION ACC METHOD TYPE */
 
     short           debtblof;       /* 0E2 OFFSET IN THE DEB TABLE TO THE
