@@ -33,12 +33,11 @@ Requires cc370 1.1.0 or later, as 2.1.0 did (`sdk/cc370.json`: `>=1.1.0 <2`).
   On S/370 callers pass the same bits, so this is treated as a defect fix:
   **only code that used `setbuf()`'s return value needs a change** (C99 has
   none; it was `setvbuf()`'s). A size of `SIZE_MAX` now means "large", not
-  -1. mvsdev JOB01313.
+  -1.
 - **libc370 is built with `-Os` instead of `-O1` (#344).** `libc.a`'s text
   shrinks from 284,430 to 276,313 bytes (-8,117, -2.9%; 282 members smaller,
   89 larger by at most 71 bytes), and a program linked against it is about
-  1.7-4.3 KB smaller. The MVS test series of libc370 (55 tests), rexx370 and
-  brexx370 ran identically against the `-O1` and the `-Os` library.
+  1.7-4.3 KB smaller. The library's MVS test series (55 tests) ran identically against the `-O1` and the `-Os` library.
   `LIBC370_OPT=-O1` builds the previous variant.
 
 ### Fixed
@@ -46,9 +45,9 @@ Requires cc370 1.1.0 or later, as 2.1.0 did (`sdk/cc370.json`: `>=1.1.0 <2`).
   builders no longer move the caller's `strtok()` position.** They
   tokenised with `strtok()`, whose position is one per task, so a caller
   looping with `strtok()` and calling one of them in the loop lost its
-  place: on mvsdev the next token was `NULL` after `fopen()` creating a data
+  place: the next token was `NULL` after `fopen()` creating a data
   set or a SYSOUT with DCB keywords, and `"FUNCTION C"` - a piece of the
-  IDCAMS output - after `__listds()` (JOB01360). The library now tokenises
+  IDCAMS output - after `__listds()`. The library now tokenises
   on a position of its own. #301 fixed the same in `jesjob()`; `__dsalc()`
   already saved and restored the position.
 - **A program without SYSIN starts in about 100 K less REGION (#277).**
@@ -56,9 +55,9 @@ Requires cc370 1.1.0 or later, as 2.1.0 did (`sdk/cc370.json`: `>=1.1.0 <2`).
   DCB attributes that opened LRECL=BLKSIZE=32760: two 32 K buffers in
   `__aopen()` and a 32 K C buffer, for a stream that never transfers a
   byte. A DUMMY read - `'NULLFILE'`, or a JCL `//SYSIN DD DUMMY` - now
-  opens with 80-byte records and no C buffer of its record size. On
-  mvsdev a small test program now reaches `main()` from REGION=336K; it
-  needed 448K before (16K steps, so 96-128K less; JOB01354).
+  opens with 80-byte records and no C buffer of its record size. A
+  small test program now reaches `main()` from REGION=336K; it needed 448K
+  before (measured in 16K steps, so 96-128K less).
 - **@@start says why a standard stream could not be opened (#254).** It
   reported "SYSTERM DD not defined" or "SYSIN DD not defined" - in a
   dynamic SYSOUT - and nothing at all for stdout, while the cause was
@@ -69,13 +68,12 @@ Requires cc370 1.1.0 or later, as 2.1.0 did (`sdk/cc370.json`: `>=1.1.0 <2`).
 - **`ssvt_set()` and `ssvt_funcmap()` return 0 on success (#240).** The
   success path fell off the end of the function and left
   `0x100 | key<<4` in R15 - 384 for a key-8 caller, never 0 - so a caller
-  testing the result read every success as a failure. (ufsd, the only
-  caller, ignores the result.)
+  testing the result read every success as a failure.
 - **`jesjob()` no longer destroys the caller's `strtok()` position
   (#301).** It trimmed blank-padded fields with `strtok()`, whose position
   is library-wide, so a caller looping over names with its own `strtok()`
   and calling `jesjob()` in the loop lost its place after the first name
-  (met in mvsdev JOB01063). The fields are trimmed by hand now, cut at the
+  The fields are trimmed by hand now, cut at the
   same place.
 - **The list builders no longer hand back a short list when storage runs
   out (#61, #157, #158).** `__listvl()` and `__listal()` returned what they
@@ -86,39 +84,36 @@ Requires cc370 1.1.0 or later, as 2.1.0 did (`sdk/cc370.json`: `>=1.1.0 <2`).
   empty result is `NULL` with `errno` 0. `__listal()` also no longer leaks
   the record whose array insertion failed, and `__listvl()` no longer
   writes "out of memory" to the console. **Callers that treat `NULL` as
-  "empty" should read `errno`** (mvslovers/ftpd#118, mvslovers/mvsmf#360,
-  mvslovers/lua370#15). mvsdev JOB01347: every allocation failure point in
-  turn, 0 short lists; the previous library 42.
+  "empty" should read `errno`.** Failing every allocation in turn: 0 short
+  lists; the previous library 42.
 - **`__listds()` no longer loses the data set after an entry without a
   volume (#308).** An entry with no `VOLSER` line kept the parser inside it,
   so the next entry line was skipped: that data set was missing and its
-  volume was reported for the entry before. Real on mvsdev: with the option
+  volume was reported for the entry before. It happens in practice: with the option
   `VOLUME`, `LEVEL('SYS1')` listed `SYS1.PAGECSA` on `SYS1.PARMLIB`'s volume
   and lost `SYS1.PARMLIB`, `SYS1.SVCLIB` and `SYS1.VTAMLIB` (page spaces and
-  clusters carry no volume there; JOB01340/JOB01341). `"NONVSAM VOLUME"`,
-  what ftpd, httpd and mvsMF pass, was not affected. An entry without a
+  clusters carry no volume there). With `"NONVSAM VOLUME"` it does not
+  happen. An entry without a
   volume is still not listed.
 - **`floor()`, `ceil()`, `modf()` and `fmod()` are right beyond 2**31
   (#273).** All four took the integral part through a 32-bit integer, which
   cc370 converts modulo 2**32: `floor(2147483648.5)` gave -2147483648 and
-  `fmod(10540800000, 1)` 8589934592 (mvsdev JOB01337); brexx370 saw
-  `10540800000 % 1` = 1950865408. The integral
+  `fmod(10540800000, 1)` 8589934592. The integral
   part is now built from power-of-16 pieces that are exact in HFP, without
   linking cc370's `long long` conversion helpers; from 2**52 up a double is
   integral and is returned as it is. `fmod()` is still computed as
   `x - trunc(x/y)*y` - no more exact than before, but now in `[0, |y|)`
-  for any quotient. mvsdev JOB01337: 40/40, the previous library 15/40.
+  for any quotient. Of 40 test cases on MVS all pass; the previous library passed 15.
 - **`__dsalc()`/`__dsalcf()` with `UNIT=` or `VOLSER=` no longer wait for
   the operator (#181).** A volume that was not mounted sent SVC 99 into
   allocation recovery (`IEF238D REPLY DEVICE NAME OR 'CANCEL'`), and the
-  caller's task stopped until someone replied - an ftpd session thread after
-  `SITE VOLUME=` with a wrong name. The request now carries `S99NOMNT` when
+  caller's task stopped until someone replied - a server thread, for
+  instance, handed a mistyped volume name by a client. The request now carries `S99NOMNT` when
   it names a unit or a volume, as `fopen()` does since #172, and comes back
   with an error at once; without either, the request is unchanged. A caller
   that wants the operator to mount a volume (a tape, a volume not yet
   mounted) says so with the new keyword **`MOUNT`** (`fopen()`: `,mount` in
-  the mode string), which leaves `S99NOMNT` off. mvsdev JOB01331, JOB01333
-  (`MOUNT`: `IEF238D` raised, `CANCEL` replied, the call failed).
+  the mode string), which leaves `S99NOMNT` off.
 - **`tmr_stop()` waits for the timer thread to end before deleting it
   (#345).** It deleted the thread at once, the delete was refused because
   the thread had not ended yet (#11), and the handle was dropped anyway: a
@@ -128,8 +123,7 @@ Requires cc370 1.1.0 or later, as 2.1.0 did (`sdk/cc370.json`: `>=1.1.0 <2`).
 - **printf honours the `0` and `-` flags for `%f`, `%e` and `%g`, and counts
   a `+` or space sign in the width (#355).** `"%05.1f"` of 2.5 printed
   `"  2.5"` (now `"002.5"`), `"%-6.1f"` padded on the left, and `"%+6.1f"`
-  came out seven characters wide. mvsdev JOB01315: 19/19, against 13 of 19
-  failing with 2.1.0.
+  came out seven characters wide.
 
 ## [2.1.0] - 2026-10-03
 
@@ -140,11 +134,10 @@ the compiler version.
 ### Changed
 - **The compiler helpers and prologue macros moved to cc370 (#313).** The
   64-bit and conversion helpers cc370 emits calls to (`@@MULDI3`,
-  `@@DIVDI3`, `@@FIXDFD`, ...) are in cc370's `libcc370rt.a` (cc370#687),
-  `PDPTOP`, `PDPPRLG` and `PDPEPIL` in its macro directory (cc370#688).
-  libc370's copies and their tests are gone. No public header declared
-  either, so no source changes; a build with mbt needs mbt#138, which links
-  `-lcc370rt`.
+  `@@DIVDI3`, `@@FIXDFD`, ...) are in cc370's `libcc370rt.a`, `PDPTOP`,
+  `PDPPRLG` and `PDPEPIL` in its macro directory. libc370's copies and their
+  tests are gone. No public header declared either, so no source changes; a
+  build that runs the linker itself has to add `-lcc370rt`.
 - **Every public header checks the compiler (#315).** `<sys/_cc370.h>`,
   included by all of them, stops a target build with `#error "libc370 needs
   cc370 1.1.0 or later"` when `__CC370__` is missing or older. Host
@@ -165,7 +158,7 @@ the compiler version.
   `atexit()`/`on_exit()` functions; their registrations are dropped and the
   rest of `exit()`'s teardown still runs -- streams are closed and the
   runtime's storage is freed, which matters where the runtime does not end
-  with its task. External name `@EXIT`. mvsdev JOB01169.
+  with its task. External name `@EXIT`. Measured on MVS.
 - **`<inttypes.h>` (#314):** `imaxabs()`, `imaxdiv()`/`imaxdiv_t`,
   `strtoimax()`, `strtoumax()` and the `PRI*` macros for every width,
   `LEAST`, `FAST`, `MAX` and `PTR`. `SCN*` exists for the 16- and 32-bit
@@ -173,15 +166,15 @@ the compiler version.
   (#318), and a missing `SCNd64` fails at compile time where `"lld"`
   would compile and store 4 of 8 bytes. `wcstoimax()`/`wcstoumax()` follow
   with the wide-string conversions. cc370's `-Wformat` checks every macro
-  against its type; mvsdev JOB01167, 19/19.
+  against its type; measured on MVS, 19/19.
 - **`strtof()` and `strtold()` in `<stdlib.h>` (#314).** `long double`
   is `double` under cc370, so `strtold()` is `strtod()`. `strtof()` narrows
   `strtod()`'s result and answers a value above `FLT_MAX` itself with
   `FLT_MAX` and `ERANGE`: a plain `(float)` of such a value rounds past the
-  largest HFP exponent and ends **S0CC** (measured, mvsdev JOB01159).
+  largest HFP exponent and ends **S0CC** (measured on MVS).
 - **`isblank()` in `<ctype.h>` (#314)**, as macro and function, true for
   `' '` and `'\t'` (EBCDIC X'40' and X'05') only, through a new bit 0x0800
-  in the `__isbuf` table. mvsdev JOB01157, 10/10.
+  in the `__isbuf` table. Measured on MVS, 10/10.
 - **`strtoll()`, `strtoull()`, `atoll()`, `llabs()`, `lldiv()` and
   `lldiv_t` in `<stdlib.h>`; `LLONG_MIN`, `LLONG_MAX` and `ULLONG_MAX` in
   `<limits.h>` (#314).** The C99 `long long` siblings of `strtol()`,
@@ -198,7 +191,7 @@ the compiler version.
   (#316).** `%o`/`%x`/`%i` take only digits below the base and `0x` only as
   a prefix (`"1x2"` in `%x` was 0x12); `%e`/`%f`/`%g` go through `strtod()`,
   so a value past the HFP range no longer ends S0CC, and a `%f` above
-  `FLT_MAX` stores `FLT_MAX`. mvsdev JOB01181: 43/43; the 2.0.0 library
+  `FLT_MAX` stores `FLT_MAX`. Measured on MVS: 43/43; the 2.0.0 library
   ends S0CC on the same test.
 - **`strtod()` and `atof()` no longer end S0CC out of range (#316).**
   Any exponent past about 75, either way, overflowed an intermediate:
@@ -206,7 +199,7 @@ the compiler version.
   The range is now checked before any intermediate is formed; overflow
   returns `±HUGE_VAL`, underflow 0, both with `ERANGE`. Also C99 now: `e+5`
   is accepted, `"1e"` leaves `endptr` at the `e`, and nothing converted
-  leaves it at `nptr`. mvsdev JOB01179, 32/32.
+  leaves it at `nptr`. Measured on MVS, 32/32.
 - **`strtol()`, `strtoul()` -- and with them `atoi()` and `atol()` --
   follow C99 (#316).** Rewritten on the shape of `strtoll()`/`strtoull()`.
   **Behaviour changes a caller can see:** a digit must be below the base
@@ -215,7 +208,7 @@ the compiler version.
   range input saturates and sets `ERANGE` instead of wrapping (`atoi` of an
   out-of-range string now gives `INT_MAX`/`INT_MIN`); `endptr` is `nptr`
   when nothing converts; an invalid base sets `EINVAL`; letters past `I`
-  read right in EBCDIC. mvsdev JOB01173: 35/35, against 17 of 35 failing
+  read right in EBCDIC. Measured on MVS: 35/35, against 17 of 35 failing
   with 2.0.0.
 - **scanf knows the length modifiers `hh`, `ll`, `j`, `z`, `t` and `L`
   (#318).** It knew `h` and `l` only: `%lld` stored a `long`, which is the
@@ -223,10 +216,10 @@ the compiler version.
   `%hhd`/`%hhn` wrote past a `char`; `j`, `z` and `t` derailed the format.
   `%n` honours the modifiers too. Behaviour change: a `-` before a `%u`,
   `%x` or `%o` value now negates it as `strtoul()` does, instead of being
-  dropped. mvsdev JOB01171: 23/23, against 18 of 23 failing with 2.0.0.
+  dropped. Measured on MVS: 23/23, against 18 of 23 failing with 2.0.0.
 - **`%lld`, `%lli` and `%jd` print a negative value with its sign (#321).**
   The 64-bit path of `printf` treated every value as unsigned, so `-5`
-  printed `18446744073709551611` -- and so did `PRId64`. mvsdev JOB01165:
+  printed `18446744073709551611` -- and so did `PRId64`. Measured on MVS:
   17/17, against 11 of 17 failing with 2.0.0.
 
 ## [2.0.0] - 2026-10-01
@@ -250,34 +243,35 @@ tested with cc370 `47b3545`; an older compiler is not supported.
 - **`inet_addr()`, `inet_ntoa()`, `inet_pton()`, `inet_ntop()` in
   `<arpa/inet.h>` (#51).** `AF_INET` only. None of them uses `scanf` or
   `printf`, so converting an address no longer pulls either into a load
-  module (ftpd's `sscanf("%u.%u.%u.%u")` was the case in point).
+  module (a server parsing addresses with `sscanf("%u.%u.%u.%u")` was the
+  case in point).
   `inet_ntoa()` keeps BSD's semantics -- one buffer, overwritten by the next
   call -- but takes it per process from `__wsaget()`, since a reentrant load
   module cannot write a static; between threads use `inet_ntop()`. It
   returns NULL when the runtime has no process anchor -- `inet_ntop()` into
-  a buffer of the caller's never does, which is why brexx370#274 uses it.
+  a buffer of the caller's never does.
   `INET_ADDRSTRLEN` (`<netinet/in.h>`) and `socklen_t` (`<sys/socket.h>`)
   come with them.
 - **`__walkpd()` in `<mvs/dslist.h>` (#80).** A PDS directory member by
   member, handed to a callback that may stop the walk; nothing is allocated,
   so a directory of any size costs one block buffer. `__listpd()` built a
   record per member first, and on `SYS1.SMPCDS` (some 23000) that exhausted
-  the caller's region -- ftpd's `LIST`, the remaining exposed caller. mvsMF,
-  which walks the directory itself for that reason, can use it instead.
+  the caller's region -- an FTP server's `LIST`, for instance. A caller that
+  walks the directory itself for that reason can use it instead.
 - **`idcams_sysprint()` in `<mvs/idcams.h>` (#71).** `idcams()` returns
   IDCAMS's condition code and nothing else, so 8 meant "not found" and
-  "refused" alike (ftpd#87). `idcams_sysprint(fn, arg, fmt, ...)` runs the
+  "refused" alike. `idcams_sysprint(fn, arg, fmt, ...)` runs the
   same commands and calls `fn(arg, msgno, text, len)` for every SYSPRINT
   line, with the IDCnnnnI number read from the line -- the number IDCAMS
   hands its output exit drops the leading digit (IDC3012I arrives as 12) and
-  gives the two summaries -1 and -2, measured on MVS 3.8j (JOB01058). The
+  gives the two summaries -1 and -2, measured on MVS 3.8j. The
   header documents the record format and which message explains a condition
   code. `idcams()` is unchanged.
 - **`fopen()` can say where a new data set goes: `unit=` and `volser=`
   (#172).** `__fpnew()` sent no `DALUNIT` and no `DALVLSER`, so every data
   set `fopen(name, "w...")` created landed on SVC 99's default unit, and a
   caller that needed a volume had to `__dsalcf()` first and `fopen()` the
-  existing data set (ftpd's detour). The mode string now takes the same two
+  existing data set. The mode string now takes the same two
   keywords `__dsalc()` does -- `fopen(dsn, "wb,unit=sysda,volser=pub001")`,
   several volumes as `volser=(pub001,pub002)` -- and the environment
   `DATASET_UNIT` / `DATASET_VOLSER`, next to `DATASET_SPACE`. The mode string
@@ -288,11 +282,11 @@ tested with cc370 `47b3545`; an older compiler is not supported.
   A request that names a unit or a volume carries `S99NOMNT`: without it a
   volume that is not mounted does not fail -- SVC 99 goes into allocation
   recovery (`IEF238D REPLY DEVICE NAME OR 'CANCEL'`) and the task waits for
-  the operator (JOB01082). With it, `fopen()` returns NULL at once
-  (JOB01084). Measured on MVS 3.8j (mvsdev, JOB01084): with `unit=sysda,
-  volser=pub001`, with `volser=pub001` alone, and through the environment,
-  the data set is in the catalog and in the VTOC on PUB001, where the same
-  `fopen()` without them put it on WORK01.
+  the operator. With it, `fopen()` returns NULL at once. Measured on MVS
+  3.8j: with `unit=sysda,volser=<vol>`, with `volser=<vol>` alone, and
+  through the environment, the data set is in the catalog and in the VTOC on
+  the named volume, where the same `fopen()` without them put it on the
+  system's default volume.
   Also fixed on the way: the mode string folded everything to upper case
   except what stood in parentheses, so a volume list would have reached
   SVC 99 in lower case. No earlier keyword changes its result: `lrecl=`,
@@ -308,15 +302,15 @@ tested with cc370 `47b3545`; an older compiler is not supported.
 - **`JESJOB` grows from 80 to 96 bytes: `submit_time64` and `sysid` (#79).**
   The submit time (JCTRDRON/JCTRDTON, time on the input processor) and the
   input processor's system id (JCTRDSID) were in the JCT and surfaced
-  nowhere; mvsMF had to leave z/OSMF's `exec-submitted` empty (mvsmf#208).
+  nowhere, so a job API had to leave z/OSMF's `exec-submitted` empty.
   Both are appended at 0x50, so offsets 0x00-0x4F keep their 1.x values.
   `jesjob()` allocates every `JESJOB`, so a consumer only rebuilds. Measured
   on MVS 3.8j: a job held 20 seconds shows its submit 21 seconds before its
-  start (JOB01066).
+  start.
 - **`DSLIST` grows from 98 to 104 bytes: `catnm`, the catalog an entry was
-  found in (#50).** mvsMF answers z/OSMF's `catnm` with `""` for want of it.
-  IDCAMS LISTCAT on MVS 3.8j names the catalog per entry (`IN-CAT ---
-  UCPUB000`, `IN-CAT --- SYS1.VSAM.MASTER.CATALOG`; JOB01086), and
+  found in (#50).** A z/OSMF-style data set API had to answer `catnm` with
+  `""` for want of it. IDCAMS LISTCAT on MVS 3.8j names the catalog per
+  entry (`IN-CAT --- SYS1.VSAM.MASTER.CATALOG`, or a user catalog), and
   `__listds()` already reads that output, so it costs no extra I/O. The field
   is a `const char *`, not a `char[45]`: at 104 bytes a record still costs
   128 bytes of GETMAIN, where an inline name would have made it 192. The string
@@ -326,8 +320,8 @@ tested with cc370 `47b3545`; an older compiler is not supported.
   catalog, and in every record `__listal()` builds. Appended after `disp`, so
   every 1.x offset is unchanged; `__listds()` and `__listal()` allocate every
   `DSLIST`, so a consumer only rebuilds. Measured through the real
-  `__listds()` on MVS 3.8j (JOB01088): 30 entries under `IBMUSER`, all
-  `UCPUB000` in one shared string, 11 under `SYS2`, all
+  `__listds()` on MVS 3.8j: 30 entries of a user's high-level qualifier, all
+  from one user catalog in one shared string, 11 under `SYS2`, all
   `SYS1.VSAM.MASTER.CATALOG`.
 - **`in_addr_t` is an integer and `inet_aton()` returns 1 for an address
   (#51).** 1.x defined `in_addr_t` as `struct in_addr` and had `inet_aton()`
@@ -367,7 +361,6 @@ tested with cc370 `47b3545`; an older compiler is not supported.
   `miniz_common.h`, `miniz_tdef.h`, `miniz_tinfl.h` and `miniz_zip.h`, plus a
   Windows download marker committed beside them. libc370 never shipped the
   code: a call compiled and then failed to link. No consumer included them.
-  Compression belongs in zlib370.
 - **PDF, `emfile` and `ipc` headers, and the `emfile`/`ipc` sources (#248).**
   `clibpdf.h`/`clibpdfi.h` (a PDF generator with no code in the tree),
   `emfile.h`/`emfilei.h` (a byte-addressed file over FB 4096 blocks) and
@@ -394,12 +387,12 @@ tested with cc370 `47b3545`; an older compiler is not supported.
 ## [1.0.8] - 2026-09-30
 
 **The last 1.x release.** The next is 2.0.0, a hard cut to a new header
-layout with no compatibility headers (#245, `doc/design-2.0.md`). Consumers
-hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
+layout with no compatibility headers (#245, `doc/design-2.0.md`). Programs
+that cannot migrate yet can stay on `v1.0.8`.
 
 **Requires cc370 at `f3f7e21` or later**, unchanged from 1.0.7.
 
-**Behaviour a consumer can see**, all under "Fixed" below:
+**Behaviour a caller can see**, all under "Fixed" below:
 - a lost last block is reported: `rclose()` returns -1, and a `+` stream
   turning from write to read answers `EOF`/-1 with `ferror()` set, both with
   `errno` `ENOSPC`/`EIO`. `freopen()` still succeeds, as C99 requires, and
@@ -412,9 +405,9 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
 - **Prototypes for eight routines that had none (#39 step 1, PR #242).**
   `__tzget()` in `<time.h>`; `vwtorf()` in `clibwto.h`; `vvprintf()`,
   `vvscanf()`, `__fptmp()` and `__fpfree()` in `clibio.h`; `rdjfcb()` in
-  `osjfcb.h`; `initssob()` in `clibjes2.h`. A consumer that carries its own
-  `extern int __tzget(void);` (httpd, mvsMF) still compiles: the signature is
-  identical (httpd#270, mvsmf#375). `@@freepd.c` and `malloc.c` now call
+  `osjfcb.h`; `initssob()` in `clibjes2.h`. A program that carries its own
+  `extern int __tzget(void);` still compiles: the signature is identical.
+  `@@freepd.c` and `malloc.c` now call
   `arraycount()`/`arrayfree()`/`wto_traceback()` instead of undeclared
   aliases. All 23 touched TUs assemble byte-identical, so no code changes.
 - **CI (#249).** `.github/workflows/build.yml` builds the library on every PR
@@ -452,14 +445,12 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
     `fflush()` before the `freopen()` does not help, because the short block
     is written at CLOSE, not at the flush.
 
-  Measured on mvsdev with `test/mvs/tstclspc.c`, extended by these three
+  Measured on MVS with `test/mvs/tstclspc.c`, extended by these three
   paths over the same `TRK(1,0)` FB 80/800 cases (190 records in full
-  blocks, 195–199 lose the short block): red JOB00744 against 1.0.7 (all
-  three silent), green JOB00745, 18/18. **Contract change**, with live
-  consumers on the turn: brexx370 stream I/O seeks before every operation
-  and Lua `file:seek` on a `w+`/`r+` file, and both now get an error where
-  they got silent loss. No swept consumer calls `rclose()` or `freopen()` on
-  a writing stream.
+  blocks, 195–199 lose the short block): red against 1.0.7 (all three
+  silent), green with the fix, 18/18. **Contract change**: a program that
+  seeks on a `w+`/`r+` stream before every operation, as interpreters'
+  stream I/O does, now gets an error where it got silent loss.
 - **`rclose()` frees the DD `ropen()` allocated (#229).** `ropen()` on a data
   set name, rather than `dd:name`, allocates a DD by SVC 99 and records it in
   the handle; `rclose()` never released it, so every open by name held one
@@ -468,23 +459,21 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   failure keeps its `ENOSPC`/`EIO`). `ropen()` also releases the DD when the
   open itself fails after the allocation, e.g. on a missing member.
 
-  Measured on mvsdev with `test/mvs/tstrfree.c`, which counts the step's
-  DSAB chain: red JOB00768 against the installed sysroot, without the fix
-  (the chain grew from 6 to 28 over 22 opens by name, the failed one
-  included), green in the same job, 10/10. The data set existed, so the probe covers the SHR
-  allocation only; `ropen()`'s fallback that allocates a data set `NEW`
-  (without a normal disposition) is not measured. No swept consumer calls
-  `ropen()`.
+  Measured on MVS with `test/mvs/tstrfree.c`, which counts the step's
+  DSAB chain: red against the previous library (the chain grew from 6 to 28
+  over 22 opens by name, the failed one included), green with the fix,
+  10/10. The data set existed, so the probe covers the SHR allocation only;
+  `ropen()`'s fallback that allocates a data set `NEW` (without a normal
+  disposition) is not measured.
 - **`ropen()` opens a quoted data set name without a member (#231).** The
   form `include/rfile.h` documents, `"'my.dataset.name'"`, failed: the
   opening quote was skipped but the closing one was copied into the DSN,
   and SVC 99 rejected the name (`errno` 860, `X'035C'`). With a member the
   copy stopped at `(` first, so `'x.pds(member)'` was not affected. Under
   TSO a fully qualified name had no working spelling at all, since the
-  unquoted form gets the prefix. Measured on mvsdev with
-  `test/mvs/tstrfree.c` checks (11)/(12), JOB00789: red against the
-  installed sysroot (`rc=12 errno=860`, the only FAIL), green in the same
-  job, 12/12.
+  unquoted form gets the prefix. Measured on MVS with
+  `test/mvs/tstrfree.c` checks (11)/(12): red against the previous library
+  (`rc=12 errno=860`, the only FAIL), green with the fix, 12/12.
 - **`rwrite()` refuses a record it cannot write instead of abending or
   corrupting the data set (#232).** On RECFM=V the record carries its RDW,
   as `rread()` has always returned it; `include/rfile.h` now says so for
@@ -497,10 +486,9 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   every later read of the data set abend U1234, on FB it was cut to LRECL.
   An `__awrite()` failure now sets `errno` `ENOSPC` or `EIO` (it set none).
 
-  Measured on mvsdev with `test/mvs/tstrwrv.c`, JOB00800: against the
-  installed sysroot each of the five groups fails or abends (U0002 twice,
-  U1234 once), green in the same job, 16/16. No swept consumer calls
-  `rwrite()`.
+  Measured on MVS with `test/mvs/tstrwrv.c`: against the previous library
+  each of the five groups fails or abends (U0002 twice, U1234 once), green
+  with the fix, 16/16.
 - **libc370 builds with an as370 that diagnoses non-EBCDIC source
   (#235).** `src/jes/jesiropn.c` named `__alloc_intrdr`'s `&FUNC` with two
   EN DASHes (U+2013) instead of `__`. The current as370 assembled their
@@ -519,21 +507,17 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   `size*nmemb` that wrapped to 0. The contract is documented at
   `_FILE_FLAG_RECORD` in `include/clibio.h`.
 
-  Measured on mvsdev with `test/mvs/tstfwrec.c`, JOB00805: against the
-  installed sysroot VB accepts a record of LRECL+1 and its read-back abends
-  U1234, a plain V record and a spanned one of LRECL-3 abend U0002, and FB
-  ends with 5 records where 1 was written; green in the same job, 19/19.
-  Every record-mode user in the ecosystem only reads (`"r,record"`, sweep
-  2026-09-29); nobody writes.
+  Measured on MVS with `test/mvs/tstfwrec.c`: against the previous library
+  VB accepts a record of LRECL+1 and its read-back abends U1234, a plain V
+  record and a spanned one of LRECL-3 abend U0002, and FB ends with 5
+  records where 1 was written; green with the fix, 19/19.
 
 ## [1.0.7] - 2026-09-29
 
 ### Added
 - **`strcasecmp()` and `strncasecmp()` (#183).** The POSIX names were missing
-  entirely, and three projects had independently worked around that: rexx370
-  (`src/irx#init.c:210`, *"without strcasecmp (not in crent370)"*), ftpd
-  (`src/ftpd#adr.c:18`, *"Spelled out instead of `strcasecmp()`"*) and the
-  cobc370 port that filed the issue.
+  entirely, and programs had to work around that with their own
+  case-insensitive compare.
 
   The capability was already in the archive under the MS-style names
   `stricmp`/`strncmpi` — but **nothing declared them**, in any header, so even
@@ -592,9 +576,9 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   more, `@@FIXDFD`, `@@FIXSFD`, `@@FXUNDF`, `@@FXUNSF`, `@@FLTDDF`,
   `@@FLTDSF`, `@@CMPDI2`, `@@POPCSI/DI`, `@@PARTSI/DI`, `@@FFSDI2`,
   `@@CLZSI2/DI2`, `@@CTZSI2/DI2` (PR #194). The conversions follow cc370's
-  inline 32-bit ones (toward zero, modulo on overflow; JOB00464). A zero
-  divisor abends **S0C9**. mvsdev: JOB00449/JOB00453 1138/1138, JOB00483
-  565/565. **Requires cc370 at `f3f7e21` or later** (cc370#470) for the eight
+  inline 32-bit ones (toward zero, modulo on overflow). A zero
+  divisor abends **S0C9**. Measured on MVS: 1138/1138 and 565/565.
+  **Requires cc370 at `f3f7e21` or later** (cc370#470) for the eight
   new names; an older cc370 still calls
   `@@FIXUNS`/`@@FLOATD`/`@@POPCOU`/`@@PARITY` and still fails to link. Not
   fixed here: `ll / <constant>` (cc370#467) and `<<` dropping bit 63
@@ -612,7 +596,7 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   `EOPNOTSUPP`. `a+` counts the size at open, so `ftell()` is the size. `+`
   needs DASD: SYSOUT, terminal and tape answer `EINVAL`; a member is read-only
   on `r+` and after `w+` has switched to reading. `sizeof(FILE)` stays 192.
-  mvsdev JOB00553 15/15, JOB00576 9/9. Direction switches and backward seeks
+  Measured on MVS: 15/15 and 9/9. Direction switches and backward seeks
   past the buffer are O(n) (#206).
 - **`<wchar.h>`, types and macros only (#195).** `wint_t`, `WEOF`,
   `WCHAR_MIN/MAX`, `WINT_MIN/MAX` (also in `<stdint.h>` for `__MVS__`). The
@@ -627,10 +611,9 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   `PTRDIFF_MIN/MAX` become `LONG_MIN/MAX` with the same values. `mbstowcs()` /
   `wcstombs()` (a `strncpy` through a cast) now convert element by element,
   `mblen()` / `mbtowc()` follow C99 7.20.7, and `wcstombs()` / `wctomb()`
-  refuse a value that does not fit a byte. mvsdev JOB00649: 18/18, old libc 11
-  of 18 failed. Sweep of 24 repos, 2026-09-29: no wide-character use on MVS
-  (PR #214). **Contract change:** header types change (recompile); code
-  outside the sweep that passes a `wchar_t` buffer to `mbtowc`, `mbstowcs` or
+  refuse a value that does not fit a byte. Measured on MVS: 18/18, old libc 11
+  of 18 failed (PR #214). **Contract change:** header types change
+  (recompile); code that passes a `wchar_t` buffer to `mbtowc`, `mbstowcs` or
   `wcstombs` must be recompiled, the element goes from 1 byte to 4.
 
 ### Fixed
@@ -642,10 +625,10 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   was told it had succeeded. `__aclose()` now returns the final write's rc
   (12 out of space, 8 I/O error) and `fclose()` returns **`EOF`** with
   `errno` `ENOSPC`/`EIO` — also when the flush it runs first fails, as C99
-  7.19.5.1 requires. Measured on mvsdev with `test/mvs/tstclspc.c`: a
+  7.19.5.1 requires. Measured on MVS with `test/mvs/tstclspc.c`: a
   `TRK(1,0)` FB 80/800 data set holds 190 records in full blocks; 191–194
-  still fit and close with 0, 195–199 lose the short block — red JOB00729
-  (`fclose()` 0), green JOB00730 (`EOF`, `errno` 28). **Contract change:** a
+  still fit and close with 0, 195–199 lose the short block — red before the
+  fix (`fclose()` 0), green after it (`EOF`, `errno` 28). **Contract change:** a
   caller that ignored `fclose()`'s result is unaffected; one that treats any
   non-zero as fatal now sees the failure it was previously not told about.
 - **`racf_auth()` no longer needs APF (#197).** It issued `MODESET
@@ -653,23 +636,23 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   APF-authorized ended **S047**, although SVC 130 answers from problem state
   — RAKF's SVC entry has no `TESTAUTH`. It now enters supervisor state only
   when the caller is APF-authorized and not already there. Otherwise it issues
-  the `RACHECK` as it is. That opens the call to brexx370's `RACCHECK()` and
-  anything else unauthorized.
+  the `RACHECK` as it is. That opens the call to any unauthorized caller,
+  such as a REXX interpreter's `RACCHECK()` function.
 
   The same fix closes a second defect: the unconditional `MODESET
   KEY=NZERO,MODE=PROB` afterwards put a caller that was **already in
   supervisor state** back into problem state.
 
   `test/mvs/tstracun.c` runs unauthorized from a library outside IEAAPF00 and
-  compares `racf_auth()` against a raw SVC 130 on seven resources. mvsdev,
-  2026-09-29: red on the old library (JOB00655: S047 without APF, supervisor
-  state lost), green on the new one (JOB00659, CC 0000). Authorized callers
-  (httpd, ftpd, mvsMF) go through the same `MODESET` as before, and cell (3)
-  checks that they return in problem state.
+  compares `racf_auth()` against a raw SVC 130 on seven resources. Measured
+  on MVS: red on the old library (S047 without APF, supervisor state lost),
+  green on the new one (CC 0000). Authorized callers (servers running APF)
+  go through the same `MODESET` as before, and cell (3) checks that they
+  return in problem state.
 
   The probe also answers the question #197 left open. A **foreign ACEE**
-  passed in the parameter list from problem state is honoured: for MVSCE02,
-  `LIBC370.TSTRACMX.ALLOW` answers 0, the runner's own identity gets 8. So
+  passed in the parameter list from problem state is honoured: for another
+  user, `LIBC370.TSTRACMX.ALLOW` answers 0, the runner's own identity gets 8. So
   RAKF trusts the plist ACEE of any caller. The `MODESET` protects nothing
   there, and on this platform it never did.
 - **`strncmpi()` called `tolower()` out of line, twice per character (#183).**
@@ -720,9 +703,9 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
 
   | bound | why | measured |
   |---|---|---|
-  | an input **DD**, not an input open | `HOCSETUP` dispatches on `DSNDSTYP`, the data set's *type*, not the DCB's mode — so the check tests the direction of the stream **already holding** the DD | `fopen("dd:SYSPRINT","r")` with stdout open **succeeds** pre-fix, `JOB00429`; keying on the caller's mode alone would have broken it |
-  | spool only | a real data set tolerates two concurrent DCBs | `JOB00424` step SI3 |
-  | already open here | the refusal is about a live DEB | `fclose(stdin)` then `fopen` succeeds **and re-reads from the top**, `JOB00424` step SI2 |
+  | an input **DD**, not an input open | `HOCSETUP` dispatches on `DSNDSTYP`, the data set's *type*, not the DCB's mode — so the check tests the direction of the stream **already holding** the DD | `fopen("dd:SYSPRINT","r")` with stdout open **succeeds** pre-fix; keying on the caller's mode alone would have broken it |
+  | spool only | a real data set tolerates two concurrent DCBs | two concurrent opens of a real data set |
+  | already open here | the refusal is about a live DEB | `fclose(stdin)` then `fopen` succeeds **and re-reads from the top** |
 
   **The direction test is a proxy, not JES2's discriminator**, and the
   entry should say so: the exact one is the JFCB's SYSOUT class, which is
@@ -750,7 +733,7 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
 
   **The discriminator is not the one the header points at.** `ieftiot.h`
   documents `TIOESYIN` (X'04') as "ENTRY FOR SPOOLED SYSIN DATA SET", and
-  that bit is **never set** on MVS 3.8j (`JOB00426`). A spool DD is marked
+  that bit is **never set** on MVS 3.8j (measured). A spool DD is marked
   by `TIOESSDS` (X'02'), the VS2 meaning of the same byte. A check written
   from the comment would compile, run and never fire; `test/mvs/tstsysin.c`
   asserts the right bit so it cannot rot silently.
@@ -759,15 +742,13 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   quit path calls `fclose()`, which runs a teardown of its own, and there
   was no reason its last step should be what the caller reads.
 
-  Gate: `JOB00438`, CC 0000, 13/13 in the spool step and 8/8 against a
-  real data set. **Proven red by the same source linked against the
-  pre-fix libc**, which abends `IEC141I 013-C0,IGG0199G,TSTSYSOL,SPOOL,SYSIN`
-  (`JOB00439`) — the issue verbatim.
+  Gate: CC 0000, 13/13 in the spool step and 8/8 against a real data set.
+  **Proven red by the same source linked against the pre-fix libc**, which
+  abends `IEC141I 013-C0,IGG0199G,TSTSYSOL,SPOOL,SYSIN` — the issue verbatim.
 
-  **One stand.** Every job number here is mvsdev; nothing has run on TK5,
-  and the SO-read cell the fix now deliberately permits (`JOB00429`) has
-  been measured on that one system only. The issue author has a TK5 rig
-  and offered a run.
+  **One system.** All of this was measured on one MVS 3.8j system; nothing
+  has run on TK5, and the SO-read cell the fix now deliberately permits has
+  been measured on that one system only.
 - **`<stdint.h>` limits and constant macros conform to C99 7.18 (#188,
   #192).** The signed minimums were wrong: `INT32_MIN` was **+2147483648**
   (unsigned), `INT64_MIN`/`INTMAX_MIN` warned on every use (an error under
@@ -784,8 +765,8 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   wrote two records: every `'\n'` went to `__fflush()`, which returns at once
   on an empty buffer. A newline now goes to the new `__fflnl()`, which always
   writes a record (FB: LRECL blanks, VB: RDW only, U: one blank); `fflush()` /
-  `fclose()` still write nothing when nothing is pending. mvsdev red JOB00495,
-  green JOB00497 (PR #201). **Contract change:** blank lines now appear in
+  `fclose()` still write nothing when nothing is pending. Measured on MVS,
+  red before and green after (PR #201). **Contract change:** blank lines now appear in
   SYSOUT, logs and data sets. Not covered: a TSO terminal (TPUT skips length
   0) and `printf("\n")` (cc370#477).
 - **A write stream knows its position (#200).** `ftell()` on a writer counted
@@ -793,33 +774,33 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   re-served the stale buffer and wrote it again (`ABCxy`). A flush no longer
   resets the position, and a stream not open for reading can only seek to
   where it is; anything else is `-1`, `errno` `ESPIPE`, stream untouched,
-  error indicator not set. mvsdev red JOB00495, green JOB00522 (PR #202).
-  **Contract change:** `rewind()` / a backward `fseek()` on a `"w"` stream
-  used to reopen and truncate (when the position was non-zero); it now fails
-  with `ESPIPE`. Lua `file:seek()` backwards on a `"w"` file gets an error.
+  error indicator not set. Measured on MVS, red before and green after (PR
+  #202). **Contract change:** `rewind()` / a backward `fseek()` on a `"w"`
+  stream used to reopen and truncate (when the position was non-zero); it now
+  fails with `ESPIPE`.
 - **A stream refuses the wrong direction with `EBADF` (#189, PR #203).**
   `fgetc()` on a `"w"` stream returned bytes from the write buffer — the next
-  write produced the record `LL2` (JOB00528) — and past the buffer abended
+  write produced the record `LL2` — and past the buffer abended
   S400. `fputs()` on `"r"` returned success with `errno` 0. `fgetc`, `fread`,
   `fputc` and `fwrite` now answer `EOF`/`0` with `errno` `EBADF` (`fgets`
   `NULL`); the error indicator is not set, so the stream keeps working in its
-  own direction. Green JOB00533. **Contract change:** new `EBADF` returns.
+  own direction. Measured green on MVS. **Contract change:** new `EBADF` returns.
 - **`"a"` appends: OPEN EXTEND (#198).** `fopen(…, "a")` opened for OUTPUT and
   overwrote the data set, by name, as a member or through `DISP=OLD`; only
-  `DISP=MOD` appended (JOB00490). `"a"` now opens EXTEND (OUTPUT on SYSOUT and
+  `DISP=MOD` appended. `"a"` now opens EXTEND (OUTPUT on SYSOUT and
   unit record, as before). An existing PDS member cannot be extended by BPAM
   and is refused with `NULL`, `errno` `EOPNOTSUPP` (45), left intact; a new
   member is created. `@@aopen` returns -45 for EXTEND on a member named in the
-  JCL, which otherwise abended SB14-04 at CLOSE (JOB00538). Red JOB00536,
-  green JOB00540 (PR #205). **Contract change:** existing data sets are
+  JCL, which otherwise abended SB14-04 at CLOSE. Measured on MVS, red before
+  and green after (PR #205). **Contract change:** existing data sets are
   appended to instead of replaced; `"a"` on an existing member fails;
   `ropen()` reports `errno` 45. Appending to a member is #204.
 - **Two defects in the inherited UPDAT assembler (#189, PR #208).** `@@aread`
   rewrote the block before every record, so the read after a rewrite skipped
   the rest of the block and a second rewrite in the same block landed on the
-  wrong record (JOB00559); `@@atrout` skipped the rewrite of a block read to
-  its end (JOB00561). Both changes are guarded by UPDAT (`OPENCLOS == X'84'`);
-  every other open mode takes the old path. Green JOB00563.
+  wrong record; `@@atrout` skipped the rewrite of a block read to its end.
+  Both changes are guarded by UPDAT (`OPENCLOS == X'84'`); every other open
+  mode takes the old path. Measured green on MVS.
 - **`ftell()` on FB text writers counts in the byte view, and `fseek()` on a
   writer no longer flushes (#189, PR #207).** A writer now counts LRECL + 1
   per F record, as a reader of the same data set does: after `"L1\n"` on FB 80
@@ -830,37 +811,36 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   behind the whole printf family, did not know them, so the argument was never
   consumed and every later conversion read one slot early — `"%zu|%s|%d"`
   crashed on the host. `z`/`t` map to `l`, `j` to `ll`, `hh` is skipped like
-  `h`. mvsdev JOB00640: 24/24, pre-fix libc 20 of 24 failed (PR #212).
+  `h`. Measured on MVS: 24/24, pre-fix libc 20 of 24 failed (PR #212).
   **Contract change:** new modifiers accepted. A negative `%jd` prints its
   two's complement, as `%lld` does; `@@prtfx.c` is not changed.
 - **`tsocmd()` works from a TSO command processor (#210).** `ppacppl` was read
   by `tsocmd()` and written by nobody, so `tsocmd()` — and `ispexec()` through
   it — always returned 8 (`No CPPL`). `__start()` now records R1 as the CPPL
-  when `GRTFLAG1_TSO` is on and the CPPL's PSCB word equals `ppapscb`. mvsdev
-  red JOB00677/JOB00681, green JOB00683, caller unchanged after the call
-  JOB00686, TSO foreground and link list JOB00689 (PR #217). **Contract
-  change:** `tsocmd()`/`ispexec()` now LINK instead of returning 8. brexx370's
-  `jccompat.c` workaround is skipped and can go.
+  when `GRTFLAG1_TSO` is on and the CPPL's PSCB word equals `ppapscb`.
+  Measured on MVS: red before, green after, the caller unchanged after the
+  call, also in TSO foreground and from the link list (PR #217). **Contract
+  change:** `tsocmd()`/`ispexec()` now LINK instead of returning 8.
 - **A CPPL fills four words of `grtptrs`, not ten (#218).** A CPPL has no VL
   bit, so `__start()` copied ten words, six from past the list — for a command
   LINKed by `tsocmd()` the caller's stack frame. A recognised CPPL now gives
   exactly four; a PARM list is not read past its VL bit. A list with neither
-  still gets ten. mvsdev red JOB00699, green JOB00701/JOB00704 (PR #219).
+  still gets ten. Measured on MVS, red before and green after (PR #219).
   **Contract change:** `n` is 4 for a CP.
 - **`__dblcvt()` rounds correctly past 14 digits and never rounds zero
   (#209).** The rounding cap used `DBL_MANT_DIG` (14, in hex digits), so every
   `%e`/`%f`/`%g` of 14+ digits got a fixed 5e-15 (`…4884981308350688`), and
   `%.20g` of 0.0 printed `0.000000000000005`. The cap is now 17 decimal digits
   and 0.0 is not rounded; 6.96 million conversions below the old cap are
-  byte-identical. mvsdev red JOB00712 (22/29 failed), green JOB00714 (PR
-  #223). **Contract change:** output digits change at precision 14+.
+  byte-identical. Measured on MVS: red before (22/29 failed), green after
+  (PR #223). **Contract change:** output digits change at precision 14+.
 - **`__dblcvt()` overflowed its caller's buffer (#222).** It `strcat`ed into
   buffers it had no length for (`numbuf[50]`, `work[80]`, its own
   `work[125]`): `%f` of ≥ 1e41, `%.100f`, `%90f` and more overwrote the stack
-  — JOB00724, S0C4, PSW `078D1000 00F0F0F6`. It now takes the buffer size and
+  — S0C4, PSW `078D1000 00F0F0F6`. It now takes the buffer size and
   truncates (NUL always, exponent before fraction digits, digits before
   padding); `numbuf` is 96, `__examin()`'s `work` 128. 30,596,740 conversions
-  unchanged; mvsdev green JOB00722 59/59 (PR #224). **Contract change:**
+  unchanged; measured green on MVS, 59/59 (PR #224). **Contract change:**
   `__examin()` output longer than 126 characters (127 with sign) is cut off:
   `%.150f` of 1.0 gives 126 characters, not 152. `__dblcvt()`'s signature
   changed, but it is internal and in no header.
@@ -875,10 +855,10 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   the FILE buffer, flushed into a WRITE that failed again, and dropped at
   `@@fflush.c`'s `reset:` label — **accepted and then silently discarded.**
 
-  Measured on mvsdev (`test/mvs/tstnospc.c`, JOB00252): after one `ENOSPC`,
+  Measured on MVS (`test/mvs/tstnospc.c`): after one `ENOSPC`,
   **46 of the next 50 `fwrite()` calls returned the full 80 bytes and not one
   of those records reached the disk.** The caller heard about 4 of 50. With
-  the guards in place (JOB00254) all 50 are refused at the call, and a refusal
+  the guards in place all 50 are refused at the call, and a refusal
   costs nothing measurable — 253 µs against a 254 µs measurement floor, where
   a write that actually reached the access method and failed cost 2355 µs.
 
@@ -920,7 +900,7 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   (#168) gave a caller a way out, but nothing stopped the re-drive itself and
   one path reached it with no API call at all — `@@exit.c` walks
   `grt->grtfile` at program termination and `fclose()`s every survivor **with
-  no ESTAE around it**, so a consumer that recovered an x37 and simply
+  no ESTAE around it**, so a caller that recovered an x37 and simply
   returned from `main()` took the program check in teardown.
 
   `errno` is **`ENOSPC`, not `EIO`**: `@@AWRITE` answers **12** for the x37
@@ -935,7 +915,7 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   already behaved this way for a 16-extent x37 — the exit makes the
   one-extent case behave like the sixteen-extent case. And an x37 raised *by
   CLOSE* becomes S001 rather than D37, which is strictly less legible; the
-  exit cannot tell from the DCB that it was entered from CLOSE. JOB00245
+  exit cannot tell from the DCB that it was entered from CLOSE. It was
   measured that CLOSE with nothing pending completes on `TRK(1,0)`, so that
   path is not observed.
 
@@ -943,15 +923,15 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   X'11'` appears exactly once in the whole MVS 3.8j source tree — its own
   definition in `IHAEXLST` — and no module consults it.
 
-  **Measured** by `test/mvs/tstx37.c` + `jcl/tstx37.jcl` on mvsdev,
-  **JOB00247: CC 0000, 5/5 PASS, and no `IEC031I` line in the job log at
+  **Measured** by `test/mvs/tstx37.c` + `jcl/tstx37.jcl` on MVS:
+  **CC 0000, 5/5 PASS, and no `IEC031I` line in the job log at
   all.** The probe uses no `try()` on purpose — if the exit is not taken the
   step abends and the log says so louder than any return code. The same
   `TRK(1,0)` that produced a D37 at 200 records now stops at 200 with
   `ferror()` set, `errno` 28, `fclose()` returning and `remove()` answering 0.
-  Cross-checked by JOB00249: `test/mvs/tstfabnd.c`, whose three steps each
-  produced a D37 in JOB00245, now report `try()` = 0 and "nothing to measure"
-  in all three.
+  Cross-checked by `test/mvs/tstfabnd.c`, whose three steps each
+  produced a D37 before the change, now report `try()` = 0 and "nothing to
+  measure" in all three.
 
 ## [1.0.5] - 2026-09-13
 
@@ -960,22 +940,17 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   no way to do it. `fclose()` flushes before it closes, so when the pending
   block is exactly what could not be written, the close re-drives the failing
   WRITE, abends in turn, and never reaches `__fpfree()` — the DD stays
-  allocated for the life of the job. Measured on mvsdev 2026-09-09, an FTP
-  upload into `SPACE=TRK(1,0)` (mvslovers/ftpd#129):
-
-  ```
-  IEC031I D37-04,IFG0554T,FTPDT,FTPDT,SYS00006,251,WORK00,IBMUSER.TEST.X40
-  FTPD070E ABEND SD37 RECOVERED CMD=STOR SOCKET=3 TOTAL=1
-  FTPD076W CLOSE ABENDED AFTER STOR, DD=SYS00006 FREE RC=4
-  FTPD073W COULD NOT SCRATCH IBMUSER.TEST.X40 AFTER ABEND, IDCAMS RC=8
-  ```
+  allocated for the life of the job. Measured on MVS 3.8j with an FTP
+  server receiving an upload into `SPACE=TRK(1,0)`: the D37 was recovered,
+  the CLOSE after it abended, freeing the DD answered 4 and IDCAMS could
+  not scratch the data set (RC 8).
 
   `__dsfree()` on that DD by name answers 4 — the DCB the failed CLOSE left
   open still holds the allocation — and IDCAMS `DELETE` answers 8 from inside
   the address space. So a server that runs out of space on a data set it
   created can neither clean it up nor let its user clean it up; only a restart
-  releases it. ftpd's `DISP=(NEW,CATLG,DELETE)` says the partial should be
-  scratched, and it could not be.
+  releases it. The server's `DISP=(NEW,CATLG,DELETE)` says the partial
+  should be scratched, and it could not be.
 
   `__fabandon(FILE *)` discards the buffer instead of flushing, tells the DCB
   there is nothing pending (`__adisc()`, new `asm/@@adisc.asm`, clearing
@@ -985,7 +960,7 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   would not unallocate, `-3` ESTAE CREATE failed and nothing was torn down.
 
   **It is the C buffer, not the DCB buffer.** The issue put the crux on the
-  DCB's own state, and for ftpd's shape — `fopen(dsn,"wb")`, the buffered
+  DCB's own state, and for that server's shape — `fopen(dsn,"wb")`, the buffered
   `__fputc` path — it is not: the D37 fires inside `__awrite()`, the caller's
   ESTAE unwinds *through* libc370, `@@fflush.c`'s `reset:` label never runs,
   and `fp->upto` still points past the block that failed. `@@ATROUT` clears
@@ -1019,8 +994,8 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   `__aclose()` precedes `__fpfree()` (#167's ordering).
 
   **Measured on the target**, `test/mvs/tstfabnd.c` + `jcl/tstfabnd.jcl`, run
-  on mvsdev 2026-09-13 (JOB00245): **job CC 0000**, all three steps green, 7/7
-  checks pass, no teardown abend. `TRK(1,0)` on WORK00 takes 200 records of 80
+  on MVS 3.8j: **job CC 0000**, all three steps green, 7/7
+  checks pass, no teardown abend. `TRK(1,0)` takes 200 records of 80
   before the D37; then
 
   | step | | |
@@ -1059,17 +1034,16 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   `__fpold()` (DISP=OLD) and `__fpnew()` (DISP=NEW) add the text unit.
 
   **Opt-in, not a default.** Setting `DALRLSE` unconditionally would change
-  what `fclose()` does for every consumer's output `fopen()` — httpd, mvsMF,
-  ufsd, ftpd — and would take an append-mode writer's primary extent at every
-  close. Nothing changes for a caller that does not spell the keyword.
+  what `fclose()` does for every caller's output `fopen()`, and would take
+  an append-mode writer's primary extent at every close. Nothing changes for a caller that does not spell the keyword.
 
   **It has to be here and not in `__dsalc()`'s opts parser.** RLSE is honoured
   at CLOSE of the DCB opened against the DD that carried it, and `fclose()`
   runs `__aclose(fp->dcb)` *before* `__fpfree()` drops the DD — so the DD
-  `fopen()` allocated is still there when CLOSE looks. mvslovers/ftpd allocates
-  with `__dsalcf()`, `__dsfree()`s that DD and *then* `fopen()`s the data set by
-  name (ftpd#100, ftpd#127): an `RLSE` keyword in the opts parser would be a
-  no-op for exactly the caller that asked for this.
+  `fopen()` allocated is still there when CLOSE looks. A caller that
+  allocates with `__dsalcf()`, `__dsfree()`s that DD and *then* `fopen()`s the
+  data set by name — an FTP server receiving an upload does exactly that —
+  would find an `RLSE` keyword in the opts parser a no-op.
 
   **Skipped for a PDS member.** `fopen()` tries `__fpshr()` for a member and
   falls through to `__fpold()` when that fails, so the flag alone would put
@@ -1089,8 +1063,8 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   **Measured, not just built.** Host red/green: `test/host/tstfprls.c`, 51
   checks, 8 red before the fix, links the real `@@fpmode.c`/`@@fpold.c`/
   `@@fpnew.c` and captures the text unit array at the SVC 99 call. Target:
-  `test/mvs/tstfprls.c` + `jcl/tstfprls.jcl`, run on mvsdev 2026-09-13
-  (JOB00229, CC 0000, volume WORK00, 30 tracks/cylinder). Each case allocates
+  `test/mvs/tstfprls.c` + `jcl/tstfprls.jcl`, run on MVS 3.8j
+  (CC 0000, a 3350 volume, 30 tracks/cylinder). Each case allocates
   `TRK(30,5)`, writes one record, closes, and adds up the extents from the
   format-1 DSCB:
 
@@ -1102,8 +1076,8 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   | DISP=NEW | no `rlse` | 30 |
   | DISP=NEW | `",rlse"` | **1** |
 
-  **SVC 99 accepts `DALRLSE` with DISP=OLD and no space keys** — ftpd's exact
-  shape — and CLOSE released 29 of the 30 tracks. No SVC 99 returned nonzero.
+  **SVC 99 accepts `DALRLSE` with DISP=OLD and no space keys** — the FTP
+  server's exact shape — and CLOSE released 29 of the 30 tracks. No SVC 99 returned nonzero.
   That matters beyond the feature: had SVC 99 rejected it, `__fpold()` would
   fail, `fopen()` would fall through to `__fpnew()`, DISP=NEW on an existing
   cataloged data set would fail too, and the caller would lose the open
@@ -1143,18 +1117,18 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   faults having moved nothing, where resuming from the start is correct, or it
   completes. The defect needs one **completed** segment before the fault, which
   is why every larger cap looked like a fix and then failed — 4096 here since
-  `cd43a70`, then 2048 in mvsMF, which failed five days later, after which
-  `receive_raw_data()` went to one byte per `recv()` and has stayed there.
+  `cd43a70`, then 2048 in a caller, which failed five days later, after which
+  that caller went to one byte per `recv()` and has stayed there.
   The comment being replaced blamed a dyn75/Hercules buffer-size limit that
   does not exist; the symptom it recorded was real and is that replay.
   Measured red/green under a forced fault by `test/mvs/tst75rst.c`
-  (`jcl/tst75rst.jcl`), and independently sighted in production as
-  `mvslovers/ftpd#122`: a 4577-byte ASCII upload came out as stream bytes
+  (`jcl/tst75rst.jcl`), and independently sighted in production: a
+  4577-byte ASCII upload to an FTP server came out as stream bytes
   `[0:2560] + [0:1536] + [4096:4577]` — first bad byte a multiple of 256, tail
   a clean replay of the buffer head, total length exactly right.
   Cost is 16x more X'75' pairs than at 4096 and still a large net win against
-  the single-byte reads consumers use today; mvsMF can now go back to bulk
-  reads. The cap is **permanent**: no return value, status bit or function code
+  the single-byte reads some callers use today; they can now go back to
+  bulk reads. The cap is **permanent**: no return value, status bit or function code
   lets a guest tell a patched emulator from an unpatched one, so it can never
   be raised again on the strength of the host-side fix
   (SDL-Hercules-390/hyperion `4675e7e1`, merged 2026-09-06), which is
@@ -1178,8 +1152,8 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   libc370 does not use brings it along and points `as370` at it with `-I`,
   which is searched before the sysroot, so it keeps the other 120 for free.
   The rule and the three pre-existing exceptions are in
-  `doc/consumer-notes.md`; one of them, `xctl.macro`, has a live consumer in
-  rexx370, which is why `<sysroot>/macros` is treated as a published surface.
+  `doc/consumer-notes.md`; one of them, `xctl.macro`, has a live user outside
+  libc370, which is why `<sysroot>/macros` is treated as a published surface.
 
 ### Fixed
 - **Four external names were each exported by two archived objects, and
@@ -1216,18 +1190,18 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   Without one, the first genuine I/O error on any libc370 FILE — bad track,
   wrong-length record, device error — reached CHECK error processing as
   `NO ERROR HANDLING, (SYNAD), EXIT SPECIFIED` and killed the whole address
-  space; that is what turned ftpd#117's corrupted PUT into a dead STC, and
-  what #145 could narrow but not remove. The exit follows the `EOFR24`
+  space; that is what turned a server's corrupted PUT into a dead started
+  task, and what #145 could narrow but not remove. The exit follows the `EOFR24`
   pattern: a six-byte stub copied into the per-FILE work area, planted in
   `DCBSYNA`, finding the new `IOSFLAGS` byte relative to its own entry
   address (R15) — no assumption about the other SYNAD entry registers, which
   is not a theoretical nicety: the first cut derived the work area from R1
-  as the DECB address and, measured on 3.8j (JOB02248), the flag landed
+  as the DECB address and, measured on 3.8j, the flag landed
   nowhere while the truncated block was delivered as *data*. `@@AREAD`
   answers RC=1 (EOF stays −1), `@@AWRITE` RC=8, and `__fgetc`/`__fread`/
   `__fflush`/`__fwrite` map both to `_FILE_FLAG_ERROR` + `errno EIO`.
-  Measured red (JOB02246: S001-1 on a wrong-length READ, `try()`-caught) and
-  green (JOB02250, CC 0000: zero garbage lines, `ferror()` set, `feof()`
+  Measured red (S001-1 on a wrong-length READ, `try()`-caught) and
+  green (CC 0000: zero garbage lines, `ferror()` set, `feof()`
   clear, `errno` EIO, `fclose()` survives, the program runs on) by
   `test/mvs/tstsynad.c`. The EXCP tape path keeps its own error handling; a
   write-side error is not forceable from an unprivileged batch probe and is
@@ -1247,8 +1221,8 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   every DEQ went out SCOPE=STEP, so `sysunlock()`'s DEQ addressed a different
   resource than `syslock()`'s SCOPE=SYSTEM ENQ, answered rc=8, and the
   system-scope lock stayed held until task end — measured red on 3.8j
-  (JOB02241: re-`syslock()` after `sysunlock()` still answered 8) and green
-  after the one-character fix (`|=`, JOB02243: release and fresh re-acquire
+  (re-`syslock()` after `sysunlock()` still answered 8) and green
+  after the one-character fix (`|=`: release and fresh re-acquire
   both rc=0). Guards: `test/host/tstiolk.c` case 9, `test/host/tstenqdq.c`
   (SVC parameter-list capture), `test/host/tstfcls.c` (teardown-under-hold
   ledger), `test/mvs/tstslk.c`. The fourth #147 neighbour — a SYNAD on the
@@ -1264,11 +1238,11 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   conversion. Everything after it — including the `\n`-triggered
   `__fflush()`/QSAM PUT — ran unserialized, and two tasks printf'ing the same
   FILE merged and truncated records until the broken PUT surfaced as ABEND
-  S001-1 with no SYNAD (mvslovers/ftpd#117), or as a task silently wedged in
+  S001-1 with no SYNAD, or as a task silently wedged in
   the corrupted QSAM state. Both faces were reproduced on demand by
-  `test/mvs/tstiolk.c` against the unfixed library (JOB02235: the literal
-  `IEC020I 001-1` seconds after start; JOB02237: a writer wedged after 8 of
-  400 lines, no abend at all), and the fix measured green (JOB02239, CC 0000:
+  `test/mvs/tstiolk.c` against the unfixed library (the literal
+  `IEC020I 001-1` seconds after start; a writer wedged after 8 of
+  400 lines, no abend at all), and the fix measured green (CC 0000:
   800 of 800 records intact, zero corrupt). Two layers: `vvprintf()` /
   `__examin()` write through `__fputs()`/`__fputc()` — which also removes an
   ENQ/DEQ SVC pair *per byte* on width/precision conversions — and `fputs` /
@@ -1277,8 +1251,8 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   (`owned = (lock(fp,0) == 0)`); the nested-acquire rc=8 contract that rests
   on was measured on 3.8j (TSTIOLK round 1) before being relied on.
   `fprintf()` was never affected — it formats into a private buffer and issues
-  one `fwrite()`. Consumers that printf from more than one task (ftpd, httpd,
-  ufsd) pick this up on their next relink against a released libc370.
+  one `fwrite()`. Programs that printf from more than one task pick this up
+  on their next relink against a released libc370.
   `test/host/tstiolk.c` pins the lock ledger per conversion path on the host
   (one acquire per line, every byte under the hold) as the fast regression
   guard.
@@ -1295,10 +1269,9 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   next to it, and `src/clib/sleep.c` and `src/clib/@@tzset.c` include `<time.h>`
   themselves so the definitions are checked against the prototypes — the pattern
   `tzset.c` has carried since #5.
-  **Nothing in the ecosystem conflicts:** httpd declared both locally while
-  waiting for this (`httpprm.c:24`, `mvslovers/httpd#140`) with the signatures
-  taken from the definitions, so the header agrees rather than collides, and its
-  local declarations can now go. No other consumer declares either.
+  **No known caller conflicts:** a program that declared either locally with
+  the signatures taken from the definitions agrees with the header rather than
+  colliding, and its local declarations can now go.
   This is a step of #39 — the goal there is `-Wall` in `sdk/mklibc.py`, which is
   the only thing that stops the class from coming back.
 - **`DCBDSN=` allocates a data set modelled on an existing one (#123, PR
@@ -1316,15 +1289,14 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   #119).** The jobid arrives in `rpl.rplrbar` — an inline field of the RPL
   embedded in the `VSFILE` — as the answer to the `ENDREQ` inside the close,
   and the close frees that `VSFILE`. Every consumer that wanted the jobid was
-  therefore reading freed storage (mvsMF `jobsapi.c`, ftpd's `jes.c`).
+  therefore reading freed storage.
   `jesircl2(vsfile, jobid)` copies the eight bytes out between the `ENDREQ`
   and the close — the only moment they can legally be read — and zeroes the
   buffer on every early exit, so an ignored return code cannot pass stack
   garbage off as a jobid. `jesircls()` becomes the NULL delegate, which keeps
   the `ENDREQ`, the #115 work-area release and the close in one place; it
   closes exactly as it always did, so nothing has to migrate to keep working.
-  Consumer migrations are tracked separately (`mvslovers/mvsmf#296` and the
-  ftpd counterpart) and **need this in the sysroot first**.
+  A caller that moves to `jesircl2()` **needs this in the sysroot first**.
 
 ### Changed
 - **`strcpyp()` takes a `const void *source` (#104, PR #136).** It never writes
@@ -1339,9 +1311,9 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   noise floor the next real warning would have had to be spotted against, the
   same dynamic that hid #99.
   **Source-compatible in the direction that matters:** a caller passing a
-  non-const pointer still compiles unchanged, and a sweep of httpd, mvsMF,
-  ftpd, ufsd, httplua, httprexx, lua370 and rexx370 finds call sites only and
-  no local redeclaration — so nothing in the ecosystem has to move with this.
+  non-const pointer still compiles unchanged, and a sweep of the known callers
+  finds call sites only and no local redeclaration — so nothing has to move
+  with this.
   `test/host/tstjestx.c` did have to move in the same commit: it defines a
   `strcpyp()` shim to satisfy the linker and reaches the real prototype through
   `jesjob.c` → `clibary.h` → `string.h` → `clibstr.h`, so leaving the shim
@@ -1363,15 +1335,15 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   `@@ctcrtx.c` (ATTACH) — the last worth a second look, because it loads R1 and
   reads R15 back into memory operands, so it already knew those registers were
   in play and just never said so to the compiler.
-  **The failure mode is not theoretical.** In ftpd the identical bare form put
-  a struct pointer in R15 and kept it there across a `STIMER`; the next
+  **The failure mode is not theoretical.** In a server the identical bare form
+  put a struct pointer in R15 and kept it there across a `STIMER`; the next
   iteration of the loop tested whatever the SVC had left, read a field from
   that address and exited — on MVS a wait loop returning after one pass with
-  none of its exit conditions true (`mvslovers/ftpd#113`).
+  none of its exit conditions true.
   Nothing here is miscompiled today, and the reason **does not generalise**:
   every one of these loop bodies happens to contain a function call, and the
   call already forces R0/R1/R14/R15 to be treated as dead across that region.
-  ftpd's loop had none. `@@cminit.c` is the one waiting to bite — it sits
+  That server's loop had none. `@@cminit.c` is the one waiting to bite — it sits
   inside `#if 0`, so whoever re-enables it gets no call before the `STIMER`.
   Generated code compared before and after with `cc370 -O1 -S` for all seven
   files: six are byte-identical and `@@cmterm.c` gets *better* — with the
@@ -1394,12 +1366,12 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   register form, *unconditional* — so an address space that could not spare
   the ~262K abended inside SVC 10 with nothing to say. What reached the
   operator was a bare `S80A`, which on a busy system is indistinguishable
-  from any other storage abend anywhere else in it: httpd logged only
-  `HTTPD908E EXTERNAL PROGRAM MVSMF failed with S80A ABEND`, and neither the
-  requester nor the size was recoverable from it. All three sites now issue
+  from any other storage abend anywhere else in it: a server that loaded the
+  program logged only `failed with S80A ABEND`, and neither the requester nor
+  the size was recoverable from it. All three sites now issue
   `GETMAIN RC,LV=(R8),SP=(R2)` and, on a nonzero R15, `WTO` the module name
   and `ABEND 801,DUMP` — the same shape the CLIBGRT and CLIBCRT guards in
-  those very files have carried since #81/#85. httpd renders that as
+  those very files have carried since #81/#85. Such a server now reports
   `failed with U0801 ABEND`, and the console carries
   `@@CRT0 - No storage for C stack`.
   **This does not reverse #83's decision, it completes it.** #83 left these
@@ -1413,8 +1385,8 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   The refused length stays in **R8** for the dump. It is deliberately not in
   the WTO text: formatting a number needs writable storage, and at that point
   there is none — the GETMAIN just failed, and the CSECT itself is not
-  writable because consumer load modules link RENT by default (mbt passes
-  `--norent` only on request), which is the one place a static work area would
+  writable because consumer load modules link RENT by default (`--norent`
+  only on request), which is the one place a static work area would
   turn this diagnostic into the S0C4 it is meant to explain.
   **What changes for callers:** nothing at compile time; the new abend code
   arrives at each consumer's next relink. Monitoring keyed on `S80A` from a
@@ -1469,13 +1441,10 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   built for the unjoined case — otherwise the dispatch thread ending normally
   would license `free(mgr)` under a live TCB, turning an S33E in a dying address
   space into a use-after-free on a running task.
-  **Contract change worth reading, though nothing in the ecosystem moves with
-  it:** `cthread_detach()` now returns `CTHREAD_DETACH_LIVE` and does nothing
-  when the subtask has not posted `termecb`, where it used to terminate it.
-  nsf370 is the only consumer that calls it directly and already waits for
-  `termecb` first (`nsfthr.c`, its ADR-0025), so the gate is a no-op there;
-  httpd and ftpd reach it only through `cthread_delete()` on their socket task,
-  and both ignore `cthread_manager_term()`'s rc. No owner check was added on
+  **Contract change worth reading:** `cthread_detach()` now returns
+  `CTHREAD_DETACH_LIVE` and does nothing when the subtask has not posted
+  `termecb`, where it used to terminate it. A caller that already waits for
+  `termecb` first sees no change. No owner check was added on
   top: MVS already refuses a DETACH from anything but the attaching task, and
   turning that loud failure into a silent skip would hide a defect rather than
   prevent one.
@@ -1502,8 +1471,8 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   the end of the array.
   **This reaches the bounded callers too**, which is why it is worth landing
   ahead of the rest of #80: the filter is applied *inside* the loop, after the
-  entry has been read, so mvsMF `dsapi.c:713` and ftpd `ftpd#mvs.c:1191` run
-  through the same overrun as the unbounded ones.
+  entry has been read, so a caller that passes a filter runs through the same
+  overrun as one that does not.
   The fixed-part bound now lives in the loop condition, where `pos + 12 <= len`
   covers the sentinel and the length byte together, and the variable part is
   tested once the entry size is known (`if (pos + size > len) break`). `len` is
@@ -1552,15 +1521,15 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   life of the renaming step).  Names of the form `dsn(member)` on BOTH
   sides with the same dsn now go to `__renmem()` (STOW change, TTR and
   ISPF statistics preserved); whole data sets and cross-data-set forms
-  keep IDCAMS ALTER.  No shipped caller was exposed - mvsMF and ftpd
+  keep IDCAMS ALTER.  No known caller was exposed - those that rename members
   already call `__renmem()` directly - so this closes the API-level trap.
 - **`vsnprintf()` honours its bound on every conversion and always
   terminates (#128).** The simple conversions were bounded, but every
   width/precision conversion went to `__examin()`, whose first act was
   `unused(chcount)` - the remaining-space budget was discarded and the
   conversion written unbounded through `*s++`; `snprintf(buf, 10, "S%03X
-  U%04d", ...)` overran its buffer (caught by mvsMF's TSTABND canary the
-  first time a `make test-mvs` had readable output again).  vsnprintf also
+  U%04d", ...)` overran its buffer (caught by a caller's buffer-canary
+  test).  vsnprintf also
   wrote up to n content bytes with no NUL on truncation.  `__examin()`'s
   fifth parameter now is the space left in s and the string sink stops
   there (including the %f memcpy) while still returning the logical
@@ -1573,10 +1542,10 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   (#127).** IDCAMS DELETE allocates its target exclusively, and MVS keeps
   one SYSDSN ENQ per DSN per address space at the highest level any
   allocation needs: with a standing allocation of the same DSN in the
-  address space (a STEPLIB, an httpd SYSENV DD), the shared ENQ was
+  address space (a STEPLIB, a server's SYSENV DD), the shared ENQ was
   escalated to exclusive - and MVS ENQ has no way back down, so the data
   set stayed blocked for every other address space until the step ended
-  (mvslovers/mvsmf#342: SYS2.PARMLIB locked until the HTTPD restart).
+  (a long-running server kept SYS2.PARMLIB locked until it was restarted).
   Names of exactly the form `dsn(member)` now go to the new `__delmem()` -
   allocate `DISP=SHR`, open the BPAM DCB for OUTPUT, STOW delete, close,
   free, the pattern `__renmem()` has always used - which also routes the
@@ -1587,7 +1556,7 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   stride for simple records and derails exactly where the record structure
   shows: the `0xFF` end-of-block marker, read as the high byte of a
   text-string length, sent `process_dd()` up to 64K past the buffer (the
-  layout-dependent S0C4 storms behind mvslovers/mvsmf#282), and a spanned
+  layout-dependent S0C4 storms seen reading job output), and a spanned
   record - any statement over 255 bytes arrives as SPLINE parts - could
   desynchronise the walk into stale buffer tails.  The blocks now go
   through `__jesprb()`, the hardened record
@@ -1597,7 +1566,7 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   since #28.  Separately, everything the walk builds is anchored in the JES
   handle while it is being built - measured before the fix, each S0C4
   leaked ~26K of half-built job arrays and buffers, which is what degraded
-  the httpd address space - so recovery that only holds the handle frees it
+  a long-running server's address space - so recovery that only holds the handle frees it
   via `jesclose()`.  `test/host/tstjestx.c` grows four walk-bounding cases,
   including a storm-shaped block driven through the real `__jesprb()`.
 - **`send()` honours the X'75' retry code `-2`, on a bounded budget (#120).**
@@ -1609,17 +1578,16 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   CPU thread. A client that stopped reading filled the host send buffer, the
   guest `send()` blocked, the CPU stopped making progress, and the Hercules
   watchdog killed the whole emulator by design (`impl.c` `CRASH()`).
-  `mvslovers/hyperion` `1a599b0d` made that send non-blocking and gave it the
+  A Hercules patch (hyperion `1a599b0d`) made that send non-blocking and gave it the
   contract RECV and ACCEPT have always had: a non-blocking guest socket
   (`FIONBIO`) gets `-1` with `EWOULDBLOCK`, a blocking one — the default,
   `Ccom_blk = 1` — gets `-2`. On a patched emulator that gap turned a
-  transiently full send buffer into a **failed transfer**:
-  `ftpd_data_send()` (`ftpd/src/ftpd#dat.c:314`) treats `rc <= 0` as fatal, so
-  any client slower than the server could abort a download, and the
-  control-socket sends (`ftpd#ses.c:115` and friends) discard the return value
-  entirely and would drop a response line silently. **httpd was never
-  affected** — it sets `FIONBIO` on every accepted socket and takes the
-  `-1`/`EWOULDBLOCK` path its own send layer already handles.
+  transiently full send buffer into a **failed transfer**: a caller that
+  treats `rc <= 0` as fatal - an FTP server's data transfer, say - let any
+  client slower than the server abort a download, and one that discards the
+  return value would drop a response line silently. **A caller that sets
+  `FIONBIO` was never affected** — it takes the `-1`/`EWOULDBLOCK` path its
+  own send layer already handles.
   **The change is purely additive.** An unpatched Hercules cannot return `-2`
   from SEND at all — its `case 10` yields only `-1` or a count — so on such a
   system the new branch is dead code and behaviour is bit-identical to before.
@@ -1630,8 +1598,8 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   identical buffer is reissued unchanged and no accumulation is needed. A
   short write stays a byte count and is returned as one after a single X'75':
   a general partial-send loop would change `send()`'s semantics for every
-  caller, and httpd builds its state machine on exactly that partial return
-  (`httpd/src/httpfile.c`).
+  caller, and callers build state machines on exactly that partial return
+  (an HTTP server's file sender, for one).
   **The parameter list is rebuilt for every attempt, and that is the
   load-bearing part.** `@@75.s` ends with `STM 0,15,0(11)` — it stores all
   sixteen registers back into the caller's `PL75` — and x75.c's guest-to-host
@@ -1642,11 +1610,11 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   budget against a peer that had in fact drained. That is why `@@75recv.c`
   re-does its `XC` clear and re-sets R6-R9 inside its loop; R1/R5/R7/R8 are
   now re-set the same way.
-  **The wait is bounded on httpd's policy:** `SEND_STALL_MAX` 100 attempts ×
+  **The wait is bounded:** `SEND_STALL_MAX` 100 attempts ×
   `STIMER WAIT,BINTVL==F'10'` (0.10 s) = ten seconds without progress, then
   `-1` with `EWOULDBLOCK` so the caller can tear the session down. The numbers
-  are httpd's `SEND_STALL_MAX`/`SEND_STALL_PAUSE` deliberately, so a stalled
-  peer is dropped on one number across the ecosystem instead of three. That
+  match an existing HTTP server's stall policy deliberately, so a stalled
+  peer is dropped on one number instead of several. That
   errno is set in C, not fetched: `Cerr[]` was never assigned for a `-2`, so
   there is no emulator errno to ask for.
   **The 4096-byte chunking `@@75recv.c` documents is *not* mirrored here.**
@@ -1663,11 +1631,11 @@ hold their build CI on `v1.0.8` while they migrate (mvslovers/mbt#121).
   itself (the host recipe removes it with the `XC`; it is by inspection of
   `@@75send.s`, the same line `@@75recv.c` has shipped for years, and nothing
   live crosses it — SVC 47 preserves R2-R13 and R12 is reloaded behind it) and
-  that `-2` actually arrives — the end-to-end gate is `mvslovers/httpd` →
-  `docs/hercules-x75-send-stall-repro.md`, driven against ftpd.
+  that `-2` actually arrives — the end-to-end gate is a send-stall
+  reproduction on a patched Hercules, driven against an FTP server.
   **This reaches a running system only after a relink:** libc370 is the cc370
-  sysroot and is statically linked, so ftpd needs `sdk/mklibc.py all` on its
-  build host, a rebuild, and a deploy before the fix is anywhere.
+  sysroot and is statically linked, so a program needs `sdk/mklibc.py all` on
+  its build host, a rebuild, and a deploy before the fix is anywhere.
 
 - **A failed internal reader open no longer leaks the handle, the RPL work area
   and the DD (#115, PR #117).** `__vsam_close_intrdr()` was a stub that returned
@@ -1763,8 +1731,8 @@ which can finally fail: storage shortage returns NULL with `errno = ENOMEM`
 where it used to abend S878 — and the `fopen()`/dynalloc path, which follows
 suit: shortage during an open fails the call instead of abending S80A. `__txdsn()` is
 the second, and the plainer case: it dumped a control block on the path where
-everything had worked. `__loadhi()` — the load-into-CSA path ufsd and nsf370
-depend on — carries two more of the same kind: an `fclose()` on stack residue,
+everything had worked. `__loadhi()` — the load-into-CSA path a subsystem
+depends on — carries two more of the same kind: an `fclose()` on stack residue,
 in supervisor state under PSW key 0 where that is cross-key corruption rather
 than an abend, and an RLD walk bounded by a continuation bit instead of the
 record's byte count, which relocated past the end of the module and stored an
@@ -1790,7 +1758,7 @@ warning on an otherwise successful compile now reaches the build output.
   calls `__setsp(n)`**: the ambient value is 0 everywhere today, cthread TCBs
   (no PPA) stay pinned to 0 by construction, and the T0 probe (`tstsubp`)
   measured subpools 1-127 as strictly per-task on MVS 3.8, so one constant
-  subpool number is all httpd#154's stage 2 needs. Guard rails that came with
+  subpool number is enough for a caller that pins storage per task. Guard rails that came with
   it: `__getm()` now refuses a rounded size past 24 bits (it is callable
   directly and malloc's 6M cap does not protect it), and the danger inherent
   in an ambient subpool — server-lifetime storage allocated from module
@@ -1801,17 +1769,16 @@ warning on an otherwise successful compile now reaches the build output.
   when it did not — and then `*expect` holds what is in memory instead, which is
   what a retry loop needs and what a plain exchange cannot tell you. `-1` for
   NULL arguments, so "did not swap" and "you passed nonsense" are
-  distinguishable. This is the operation rexx370 needed when it worked around
-  the broken `__cs()` by swapping a value in and back out again
-  (`irx#anch.c`): between those two swaps another thread sees a value that was
+  distinguishable. This is the operation a caller needed that worked around
+  the broken `__cs()` by swapping a value in and back out again: between those two swaps another thread sees a value that was
   never meant to be published. One `CS` has no such window.
 - **`JESPR_TRUNC` (#23).** A new `jesprint()` stop reason: a record ran past the
   end of a block, so the block is truncated or malformed and the rest of it was
   skipped. The chain is intact and the walk continues with the next block, same
   as `JESPR_NOBUF`. Purely additive — a consumer that does not know the constant
   reports nothing for it, exactly as it does today for a block it never noticed
-  was bad. httpd and mvsmf should each gain one `case` in their
-  `do_print_sysout_why()`.
+  was bad. A caller that reports the stop reasons should gain one `case`
+  for it.
 - **A spanned-record fixture from a real spool block (#44).** Case (12) of
   `test/host/tstjesprb.c` is a byte-for-byte reconstruction of a 4000-byte
   SYSOUT record captured on MVS 3.8j: a `FIRST` part carrying 3647 bytes and
@@ -1843,8 +1810,7 @@ warning on an otherwise successful compile now reaches the build output.
   87/87 on both, COND CODE 0000 on MVS 3.8j.
 - **Prototypes for `loadenv()`, `tzset()`, `__exit()` and `__svc99()` (#5).**
   All four link fine — only the declarations were missing, so consumers got
-  implicit-declaration warnings and carried local `extern`s (httplua's
-  `a804a8f`). `loadenv()` is now in `clibenv.h`, `tzset()` in `time.h`,
+  implicit-declaration warnings and carried local `extern`s. `loadenv()` is now in `clibenv.h`, `tzset()` in `time.h`,
   `__exit()` in `clibcrt.h`, and `__svc99()` moved out of the `#ifdef MUSIC`
   guard in `mvssupa.h` that hid it on MVS — SVC 99 is an MVS service. No
   `#pragma linkage` on `__svc99()`: `@@SVC99` takes the standard OS parameter
@@ -1893,22 +1859,19 @@ warning on an otherwise successful compile now reaches the build output.
   abending S878 (#81).** `@@GETM` issued `GETMAIN RU` — register form,
   *unconditional* — which does not report a shortage, it abends. So every
   `if (!p)` in this library and in every consumer was dead code for the exact
-  case it was written for, and a storage race in httpd/mvsmf surfaced as an
-  S878 somewhere down whatever call chain allocated next (the #217 death
-  spiral). `@@GETM` now issues `GETMAIN RC` and returns NULL on a nonzero
+  case it was written for, and a storage race in a server surfaced as an
+  S878 somewhere down whatever call chain allocated next. `@@GETM` now issues `GETMAIN RC` and returns NULL on a nonzero
   R15, and `malloc()` sets `errno = ENOMEM` on the way out. `calloc()`,
   `realloc()` and `strdup()` already propagated NULL correctly, so the whole
   family fails the way its callers always assumed. The fix sits in `@@GETM`
-  itself and not in a wrapper above it because httpd and mvsmf call
+  itself and not in a wrapper above it because callers also call
   `__getm()` directly.
   **What changes for callers:** nothing at compile time — the change is
   source-compatible and arrives at each consumer's next relink. At run time,
   allocation checks that never ran can now run; a site that does not check
   gets a NULL dereference at the point of *use* instead of an S878 at the
-  point of *allocation*. The ecosystem sweep lives in #81: httpd, httplua,
-  lua370, ufsd and mvsmf each have named follow-up work, and
-  picozip370-app/mqtt370 build against crent370 and are not covered by this
-  change at all.
+  point of *allocation*. The sweep of known callers lives in #81. Programs that build
+  against crent370 instead are not covered by this change at all.
   Two guards ride along because a failable allocator creates hazards ahead
   of `main()`. The CRT startup code — `@@crt0`/`@@crt1`, mainline and
   CTHREAD, plus `@@crtm` — used the `@@CRTGET` result as a base register
@@ -1920,7 +1883,7 @@ warning on an otherwise successful compile now reaches the build output.
   The `wtof("Out of memory, bytes needed=%u")` + save area traceback in
   `malloc()`, previously unreachable for real shortage, now fires on every
   failed allocation — it names the requester, which is exactly the
-  diagnostic #217 lacked. That path allocates nothing itself, so it cannot
+  diagnostic that was missing. That path allocates nothing itself, so it cannot
   recurse.
   `test/mvs/tstgetm.c` (with `jcl/tstgetm.jcl`, REGION=2048K) is the
   red→green probe: it drives its own region to exhaustion, which abends
@@ -1968,11 +1931,8 @@ warning on an otherwise successful compile now reaches the build output.
   the µs/ms/s tier agreement, monotonicity, `difftime64()` and case (9) — is
   untouched and green on both sides, which is the evidence that `time64()` did
   not move.
-  Known consumer: lua370's `os.clock()` (`src/loslib.c`) reads `clock64()`
-  directly and reimplemented the same `/CLOCKS_PER_SEC` compensation; it moves
-  to `mclock64()`. rexx370 migrated to `uclock64()` ahead of this
-  (mvslovers/rexx370#103). No other repository in the ecosystem calls
-  `clock64()` at all.
+  A caller that read `clock64()` directly and compensated with
+  `/CLOCKS_PER_SEC` moves to `mclock64()`.
 - **BREAKING — `racf_auth()` asks for `LOG=NONE` with the bit that means it,
   and an unprotected resource now answers 4 instead of 0 (#63).** The library
   set `0x10` under the name `RACHECK_FLAG1_LOG_NONE`. `0x10` is **`DSTYPE=V`**
@@ -1981,9 +1941,7 @@ warning on an otherwise successful compile now reaches the build output.
   every `CLASS=DATASET` check it issued told RACF the entity was a VSAM data
   set. **What changes for callers:** a resource with no profile answered
   `0` and now answers `4` — "not protected", which is SAF's other way of
-  saying allowed. **Test `rc <= 4`, not `rc == 0`.** ftpd (ftpd#82) and httpd
-  (httpd#135) already do; mvsmf calls only `racf_set_acee()` and is
-  unaffected. A denial is unchanged at 8.
+  saying allowed. **Test `rc <= 4`, not `rc == 0`.** A denial is unchanged at 8.
   The gate on this was never the rc — it was whether suppressing the audit
   also softens a decision, and that is now measured rather than assumed.
   `test/mvs/tstracmx.c` walks eight cells against RAKF on MVS 3.8j, each with
@@ -2016,8 +1974,7 @@ warning on an otherwise successful compile now reaches the build output.
   data set that already exists — an ordinary outcome — put three lines on the
   console: a `wtof()`, a 20-byte hex dump of the SVC 99 request block, and this
   once per attempt for a client that retries. The rc and `S99ERROR` reach the
-  caller unchanged; mvsMF already prints what a human needs (`MVSMF64E`), and it
-  is the caller, not the library, that knows whether the failure was expected.
+  caller unchanged, and it is the caller, not the library, that knows whether the failure was expected.
   The dump is parked under `#if 0`, the way `@@dsfree.c` already parks the same
   one. Fourteen further calls in the routine went with it — thirteen
   `Invalid …` reports and a duplicate of the out-of-storage message `malloc()`
@@ -2066,9 +2023,7 @@ warning on an otherwise successful compile now reaches the build output.
   comparison into an unconditional exchange, because the caller never gets to
   say what it expected. So the exchange survives as `__swap()`, correct this
   time, and `__cas()` is the operation the name always promised. Nothing in the
-  library or in httpd, mvsmf, ftpd or ufsd called it, so the rename breaks
-  nobody; the one project that tried, rexx370, had already backed out to a plain
-  load/store. `test/mvs/tstcs.c` became `test/mvs/tstatom.c` and covers both
+  library called it, and no known caller depended on it. `test/mvs/tstcs.c` became `test/mvs/tstatom.c` and covers both
   functions, including the slot-claim pattern that motivated
   `__cas()`.
 - **`TSTJESLG` drives the shipping walk instead of a copy of it (#45).** The
@@ -2091,9 +2046,8 @@ warning on an otherwise successful compile now reaches the build output.
   returns 0, 404 or 503 and nothing else; a callback that stops the walk is
   `st->reason == JESPR_STOPPED` with its rc in `st->prtrc`, and the lines that
   went out are `st->lines`. **Consumers that read the negative rc must move to
-  `st` and relink** — mvsmf `jobsapi.c` (its `RC_SPOOL_CAP` sentinel travelled
-  back through `rc`) and httpd `httpjes2.c` (`if (rc < 0) goto quit`). ftpd
-  already reads `st->reason`/`st->prtrc` and needs no change. The break is
+  `st` and relink**; one that already reads `st->reason`/`st->prtrc` needs
+  no change. The break is
   silent — the signature is unchanged, so an un-updated consumer compiles and
   simply stops noticing.
 - **`jesprint()`'s record walk extracted to `__jesprb()` (#25).** The block and
@@ -2124,9 +2078,9 @@ warning on an otherwise successful compile now reaches the build output.
   chain follow is now bounded (#22): a self-chaining block ends the walk with
   `JESPR_LOOP`, `JESPR_MAXBLK` caps the iterations. The print callback gains a
   `void *arg`, removing the need to route context through the per-task GRT.
-  **httpd, mvsmf and ftpd must be updated and relinked.** The overloaded return
+  **Every caller must be updated and relinked.** The overloaded return
   value is deliberately unchanged; untangling it is #26. Verified on MVS 3.8j
-  (JOB00321) with `test/mvs/tstjeslg.c` `PARM=',PRINT'` — on-target only, since
+  with `test/mvs/tstjeslg.c` `PARM=',PRINT'` — on-target only, since
   `spool_read()` is a BDAM READ/CHECK and the TU carries file-scope assembler.
 
 ### Fixed
@@ -2143,8 +2097,8 @@ warning on an otherwise successful compile now reaches the build output.
   residue reads as a perfectly plausible RLD item whose 3-byte offset can be
   anything, and `store()` wrote the adcon into unmapped storage: **S0C4,
   deterministic, no diagnostic**, and moving as soon as the module grows. An
-  ld370 before mvslovers/cc370#42 emits that stale bit routinely — UFSDSSIR has
-  two such records, IRXJCL 65. The walk now runs to `rldcnt`, capped at the
+  older ld370 emits that stale bit routinely — one real module has two such
+  records, another 65. The walk now runs to `rldcnt`, capped at the
   length `__aread()` actually returned, and the T bit only selects the next
   item's size; a stale bit on the last item ends the loop instead of stepping
   past it, so every module an older ld370 already produced — which is everything
@@ -2157,10 +2111,10 @@ warning on an otherwise successful compile now reaches the build output.
   load fails rather than being published to the caller, because half-relocated
   code in CSA is worse than no module at all. The control/text interleaving the
   report suspected is not what fails: ld370 emits control and RLD records
-  separately, established by walking a real UFSDSSIR's record stream before
+  separately, established by walking a real module's record stream before
   touching any code. Red→green on the host over real module bytes —
   `test/host/tstrldwk.c` links and executes the real `@@loadhi.c` against the 252
-  bytes at offset 27383 of an ld370-linked UFSDSSIR, one of the records whose
+  bytes at offset 27383 of an ld370-linked load module, one of the records whose
   last item carries the stale bit. Pre-fix ASan reports `heap-buffer-overflow,
   READ of size 1, 0 bytes after the 252-byte region` — the phantom item's flag
   byte; post-fix 8/8, 41 items walked and not 42. `fetch()`/`store()` are out of
@@ -2215,7 +2169,7 @@ warning on an otherwise successful compile now reaches the build output.
   `cannot GETMAIN 25784 bytes from subpool 241` is followed by something that
   looks like a storage overlay somewhere else entirely — and whether it abends at
   all depends on stack residue, so the same error reproduces differently between
-  builds. Both callers, ufsd and nsf370, run `__loadhi()` in supervisor state
+  builds. Its callers run `__loadhi()` in supervisor state
   under PSW key 0, where a garbage `fp` that happens to point into mapped storage
   raises no protection exception at all: `fclose()` writes, and the failure
   degrades from an abend into silent cross-key corruption. Every other variable
@@ -2246,19 +2200,17 @@ warning on an otherwise successful compile now reaches the build output.
   have.  Everything is validated before it is trusted (24-bit pointers,
   eyecatchers, never the survivor's GRT) — what does not validate is left
   alone, a leak instead of a corruption.  Measured red→green on MVS 3.8j:
-  172K per abend steady state, 132K of it release-proof (JOB00903, RC 8 on
-  the probe's 16K thresholds) → ~0K per abend (JOB00906, COND CODE 0000);
-  the #93 probe's drain verdict improves from 3 to 4 of 4 1M blocks
-  (JOB00907), tstsplnk and tstecbtw stay green (JOB00908/909).  Together
-  with #93 the fixed per-caught-abend cost measured in mvslovers/httpd#172
-  goes from ~427K to ~0.
+  172K per abend steady state, 132K of it release-proof (RC 8 on
+  the probe's 16K thresholds) → ~0K per abend (COND CODE 0000);
+  the #93 probe's drain verdict improves from 3 to 4 of 4 1M blocks,
+  tstsplnk and tstecbtw stay green.  Together with #93 the fixed
+  per-caught-abend cost goes from ~427K to ~0.
 - **`ecb_timed_waitlist()` no longer waits on an ECB nothing will post (#94).**
   The STIMER REAL failure code stored by `ERRET=SAVERC` was never read: the
   WAIT ran regardless, and for a caller-local ECB the timer exit is the only
   poster in the address space — a failed STIMER meant a task frozen in that
-  WAIT forever, the shape of mvslovers/httpd#159's wedged worker, reachable
-  exactly when storage is tight enough for STIMER REAL to fail (the
-  httpd#154/#172 exhaustion curve).  The macro's ERRET path reaches the
+  WAIT forever, the shape of a wedged server worker, reachable
+  exactly when storage is tight enough for STIMER REAL to fail.  The macro's ERRET path reaches the
   fall-through only via `LTR 15,15`, so rc is 0 exactly when the timer
   exists; on nonzero the call now unparks the plist slot from `fsa[0]`,
   skips the WAIT and returns `-rc` — no ECB is touched, callers own the
@@ -2274,9 +2226,9 @@ warning on an otherwise successful compile now reaches the build output.
   timer-post semantics, the parked `fsa[0]` word across every call, and a
   drained-region leg (~5.7M malloc'd away, wtof-only while drained).  On a
   healthy system LSQA is fenced from the region, so STIMER survives a full
-  problem-state drain — outcome B on both libcs (JOB00890 pre-fix,
-  JOB00893 post-fix, both COND CODE 0000): the freeze itself needs
-  httpd#159's degraded field state, and the probe documents which outcome
+  problem-state drain — outcome B on both libcs (pre-fix and
+  post-fix, both COND CODE 0000): the freeze itself needs
+  a degraded production state, and the probe documents which outcome
   it saw (a pre-#94 libc hangs at the marked call on such a system; the
   fixed one returns the error).  What the runs do prove: the guard never
   false-triggers under storage pressure, and the timer path is unchanged
@@ -2286,7 +2238,7 @@ warning on an otherwise successful compile now reaches the build output.
   and then discarded the address — the stack+PPA block `@@CRT0` obtained as
   one subpool-0 GETMAIN (~262K: `MAINSTK` alone is 65536 fullwords) stayed
   allocated for the life of the address space, 61% of the fixed ~427K
-  per-caught-abend cost measured from the consumer side in httpd#172.
+  per-caught-abend cost measured from the caller's side.
   `call()` now walks `PPASAVE` from the abandoned head back to its snapshot —
   so a dead program that itself LINKed a dead program releases the whole
   chain — validating every hop the way `@@PPAGET` does (non-zero, 24-bit,
@@ -2306,13 +2258,13 @@ warning on an otherwise successful compile now reaches the build output.
   many of four 1M mallocs fit in REGION=6M, sized against the ~434K measured
   per-abend cost so neither IEFUSI generosity nor fragmentation can decide
   it — while normal returns must not double-free and garbage at `8(TCBFSAB)`
-  must free nothing.  Verified red→green on MVS 3.8j: pre-fix JOB00880
-  (RC 8, 0 of 4 blocks fit), post-fix JOB00882 (COND CODE 0000, 3 of 4, and
+  must free nothing.  Verified red→green on MVS 3.8j: pre-fix
+  (RC 8, 0 of 4 blocks fit), post-fix (COND CODE 0000, 3 of 4, and
   successive inner stacks land at the SAME address — the block demonstrably
   comes back).  The out-of-scope CLIBCRT/stdio remainder (~170K per caught
-  abend, the rest of httpd#172's ~427K) still leaks by design.  `tstsplnk`'s
+  abend, the rest of the ~427K) still leaks by design.  `tstsplnk`'s
   red control leg leaned on the pre-#93 leak and moves from five to six
-  unreclaimed 1M abends — green again in JOB00883.
+  unreclaimed 1M abends — green again.
 - **`@@AOPEN`'s buffer-1 cleanup exists again (#90).** The failure path
   "buffer 1 obtained, VBS record area not" was written as
   `FREEMAIN R,LV=(0),A=(1),SP=SUBPOOL`, which the FREEMAIN macro rejects
@@ -2325,23 +2277,22 @@ warning on an otherwise successful compile now reaches the build output.
   `test/mvs/tstabuf.c`: a carved 22K window (the only hole in an exhausted
   region) feeds three failing opens of a RECFM=VS data set whose 28K record
   area cannot fit — pre-fix each open leaks buffer 1 into the window and an
-  18K probe no longer fits (JOB00820, RC 8); post-fix the window survives
-  intact (JOB00822, COND 0000), and the #83 probe `tstaopn` stays green
-  (JOB00824).
+  18K probe no longer fits (RC 8); post-fix the window survives
+  intact (COND 0000), and the #83 probe `tstaopn` stays green.
 - **`try()` no longer resumes with a dead LINKed program's runtime environment
   (found by #89's T4 probe).** When a C program entered through LINK abends
   under an ESTAE, its `@@EXITA` never runs, so the PPA its `@@CRT0` chained
   at `8(TCBFSAB)` stayed there after the retry — and every CRT-anchored libc
   call in the surviving caller (stdio, `__crtget()`, since #89 the ambient
   heap subpool) resolved through the dead program's environment.  Under a
-  worker that keeps running, that is httpd's post-CGI-abend state today; in
-  the probe it was an immediate S0C4 (JOB00790).  `___try()`'s `call()` now
+  worker that keeps running, that is a server's state after an abend in a module
+  it LINKed; in the probe it was an immediate S0C4.  `___try()`'s `call()` now
   snapshots the word before dispatching the protected function and restores
   it on the retry path, so a caught abend leaves the caller's own runtime
   current.  The abandoned PPA and stack still leak (subpool 0 by #89's scope
   decision), but they are no longer *live*.  The unreachable `__try()` twin
   in `@@try.c` carries the same guard so the copies do not drift.  Verified
-  red→green with `test/mvs/tstsplnk.c` (JOB00790 S0C4 → JOB00802 COND 0000,
+  red→green with `test/mvs/tstsplnk.c` (S0C4 → COND 0000,
   eight caught S0C1s, `8(TCBFSAB)` asserted after each).
 - **The CRT/GRT anchor tier no longer dereferences NULL (#85).**
   `__crtget()`/`__grtget()` can return NULL — "CRT for TCB not found", and
@@ -2453,8 +2404,8 @@ warning on an otherwise successful compile now reaches the build output.
   ASXBSENV on entry, parked the ACEE being deleted there, and wrote the *observed
   value* back on exit. In a server with one TCB per user that observed value is
   routinely another session's ACEE, so the restore re-pinned an identity whose
-  owner had already moved on — the chain in mvslovers/ftpd#64, which ftpd could
-  not close from its side. The delete needs no poke: the ACEE travels in the
+  owner had already moved on — a chain a
+  server could not close from its side. The delete needs no poke: the ACEE travels in the
   parameter list at offset X'34', which is where RACINIT looks first.
   One thing did **not** survive contact with the target. The issue expected
   RACINIT to clear ASXBSENV itself when it holds the ACEE being deleted, and the
@@ -2469,8 +2420,8 @@ warning on an otherwise successful compile now reaches the build output.
   worker TCB parking NULL in ASXBSENV reads back a foreign ACEE 14 times in 1210
   loops while the main task churns 200 login/logout pairs (case 6) — COND CODE
   0008. With the fix all three are clean and the run is 0000. Consumers see no
-  API change; ftpd's ABEND-recovery DEQ and its `SITE ABEND=LOCK` hook lose their
-  subject once this ships (mvslovers/ftpd#81).
+  API change; a caller's ABEND-recovery DEQ of the ASXB loses its subject
+  once this ships.
 - **`racf_auth()` passes the ACEE in the RACHECK plist instead of writing it
   into ASXBSENV (#58).** It used to authorize against a caller-supplied ACEE by
   parking it in ASXBSENV for the length of the RACHECK and restoring it after,
@@ -2486,9 +2437,8 @@ warning on an otherwise successful compile now reaches the build output.
   race-free by construction rather than by locking; `acee == NULL` leaves the
   field zero and the ASXBSENV fallback behaves exactly as before, so callers see
   no API change. Consumers that DEQ the ASXB defensively after an ABEND inside
-  `racf_auth()` (ftpd, `src/ftpd#ses.c`) keep working — the DEQ becomes a no-op —
-  and can drop that cleanup once they require this version. See mvslovers/ftpd#64
-  for the full failure chain.
+  `racf_auth()` keep working — the DEQ becomes a no-op —
+  and can drop that cleanup once they require this version.
   A second defect goes with the ENQ, and it is the one that could be proven on
   target: `lock()` returns 8 when you already hold the lock, `racf_auth()`
   ignored that and DEQd unconditionally, so a caller holding the ASXB lock
@@ -2579,8 +2529,7 @@ warning on an otherwise successful compile now reaches the build output.
 - **The build reused stale generated `.s` (#8).** `compile_c()` skipped `cc370
   -S` whenever the `.s` was newer than its `.c`, which is not a staleness test:
   a `.c` mtime says nothing about the headers it includes, the flags it was
-  compiled with, or the code generator that compiled it. A fixed cc370
-  (mvslovers/cc370#14) and an edited `include/*.h` both left the old `.s` in
+  compiled with, or the code generator that compiled it. A fixed cc370 and an edited `include/*.h` both left the old `.s` in
   place, so `libc.a` kept the old object code with nothing in the build output
   to show a skip — the miscompile was only caught by reading the raw object
   bytes. Every `.c` is now compiled on every build, which costs ~7s for all 712
@@ -2597,13 +2546,12 @@ warning on an otherwise successful compile now reaches the build output.
   path, which rounds every request to `(size + 8 + 63) & ~63` — 64 bytes for a
   member with no user data, 128 with full ISPF statistics, roughly 128 KB per
   listing of a 1000-member PDS. The storage is not reclaimed at the end of the
-  request either: httpd runs its CGIs with `__linkds()` on a pooled worker task
+  request either: a server that runs its programs with `__linkds()` on a pooled
+  worker task
   that loops until shutdown, so subpool 0 blocks accumulate for the life of the
   address space, and because `__getm()` issues `GETMAIN RU` the exhaustion
-  surfaces as an S80A rather than a NULL from `malloc()`. Removes one contributor
-  to mvsmf#43. `-Wall` could not catch it — the variable is used after the second
-  assignment, so no dead-store warning fires; a sweep across libc370, httpd,
-  mvsmf, ufsd, ftpd and ufsd-utils found no other site.
+  surfaces as an S80A rather than a NULL from `malloc()`. `-Wall` could not catch it — the variable is used after the second
+  assignment, so no dead-store warning fires; a sweep across libc370 and its known callers found no other site.
 
 ## [1.0.1] - 2026-07-26
 
@@ -2614,9 +2562,9 @@ well-formed inputs.
 - **`cmtt_get_array` MTT-walk bounds (#14, PR #15).** Both walk loops now
   validate the whole entry (`start + 10 + mtentlen <= mttendpt`) and reject a
   negative `mtentlen` (`>= 0`, so a legitimate zero-length entry still advances
-  and is not dropped). Fixes the over-read (upstream of mvsmf#176) and the
+  and is not dropped). Fixes the over-read and the
   backward-jump non-termination that drove unbounded `array_add` until GETMAIN
-  failed — the mechanism of the S878 on `GET /zosmf/restconsoles/v1/log`. Adds
+  failed — the mechanism of an S878 in a reader of the console log. Adds
   host regression `test/host/tstcmtt.c` (over-read, backward-jump, zero-length
   survival).
 - **SDWACLUP guard on the reachable `failed()` (#16).** Mirrors the cleanup-only
