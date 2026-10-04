@@ -11,13 +11,20 @@ in httpd, mvsMF, ftpd, ufsd and every other consumer at once; that is what puts
 some cheap items high and some expensive ones low.
 
 **2.0.0 shipped 2026-10-01 and 2.1.0 on 2026-10-03; `main` is 2.x and what
-lands there now goes out with 2.2.0.** Tier 0 (the 2.0 critical path) is done
+lands there now goes out with the next release.** **No release or tag, not
+even a patch, until the mbt session gives the go** (2026-10-04): the
+maintainer waits for brexx370 to remove its JCC compatibility layer
+(mvslovers/brexx370#298). brexx370's libc gaps arrive here as issues
+(gettimeofday, strupr, _msize, Sleep, getlogin; strcasecmp already exists,
+#183). Tier 0 (the 2.0 critical path) is done
 but for the consumer ports still pinned to 1.0.8 (step 7). 1.0.8 is the last
 1.x; a serious defect there gets an emergency 1.0.9 from the tag `v1.0.8` (D8
 in `doc/design-2.0.md`).
 
-*Last reconciled against the tracker: **2026-10-04**, 63 issues open, all
-placed below; 54 after the closures that pass led to (#50, #51, #71, #79,
+*Last reconciled against the tracker: **2026-10-04, evening**, 44 issues
+open, all placed below - closed since the morning pass: #181, #273, #308,
+#61, #157, #158, #301, #240, #277, #254 (fixed) and the nine below.* The
+morning pass: 63 issues open; 54 after the closures that pass led to (#50, #51, #71, #79,
 #80, #172, #226, #244 as done, #305 as a duplicate of #181). Closed since the last pass: #256, #274, #278, #313–#316, #318,
 #321, #325, #326, #336–#339, #344, #345, #355. That pass found seven issues
 filed 2026-09-30/10-01 in no rank — #273, #277, #283, #295, #301, #305, #308 —
@@ -1645,6 +1652,21 @@ same question for reading spooled SYSOUT.
 ## Recently landed
 
 Pointers only. The reasoning lives in the closing comments and the PRs.
+
+- **2026-10-04, all unreleased (release on hold, see the top):**
+  - #181 (PR #360, + `MOUNT` keyword PR #361) - `__dsalc()`/`fopen()` with
+    UNIT=/VOLSER= no longer wait on IEF238D; JOB01331, JOB01333.
+  - #273 (PR #362) - `floor`/`ceil`/`modf`/`fmod` beyond 2**31; JOB01337.
+  - #308 (PR #363) - `__listds()` lost the entry after a volume-less one
+    (SYS1.PARMLIB behind the page spaces); JOB01340/01341.
+  - #61, #157, #158 (PR #364) - list builders NULL+ENOMEM instead of a
+    short list; JOB01347.
+  - #301 (PR #365) - `jesjob()` and `strtok()`; the class in `fopen()`,
+    `__listds()`, `__listvl()`, `@@txspac`/`@@txvols` (PR #369, JOB01360).
+  - #240 (PR #366) - `ssvt_set()`/`ssvt_funcmap()` return 0.
+  - #277, #254 (PR #367, + JCL DD DUMMY PR #368) - stdin without SYSIN
+    costs ~96 K less (`main()` from 336K instead of 448K), and @@start says
+    why a standard stream failed; JOB01354, JOB01356/01358.
 
 - **#314 steps 1 and 2** (all merged 2026-10-02, unreleased) - PR #317
   `strtoll`/`strtoull`/`atoll`/`llabs`/`lldiv` + `LLONG_*` (JOB01155,
