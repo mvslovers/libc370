@@ -95,7 +95,7 @@ def archive(tree):
         if line.rstrip().endswith("bytes"):
             members.add(line.split()[0].rstrip("/"))
         elif line.startswith("  ") and line.strip():
-            symbols.add(line.strip())
+            symbols.add(line.split()[0])
     return members, symbols
 
 
