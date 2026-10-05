@@ -29,9 +29,11 @@ for cc370#805's `ar370 t` format, PR #380).
 
 *2026-10-05: #382-#420 filed (39), the defects found while writing the Library
 Reference (ML01-0004) after a second reading; the evidence is in each issue. Not
-yet ranked below. #382 (va_start after a double/long long) is fixed by PR #421;
-the next candidates are #383 (printf argument shift), #386 (scanf widths), #415
-(remove `#pragma pack`, decided) and #400 (`__enq`/`__deq`).* The
+yet ranked below. #382 (va_start after a double/long long) is fixed by PR #421,
+#383 (printf argument shift) by PR #422 (its SonarCloud S3776 on `__examin`,
+complexity 206, accepted: split the function with #384). Next: #386 (scanf
+widths), #415 (remove `#pragma pack`, decided), #400 (`__enq`/`__deq`); `%a`/`%A`
+are still unimplemented (printed as written since #383).* The
 morning pass: 63 issues open; 54 after the closures that pass led to (#50, #51, #71, #79,
 #80, #172, #226, #244 as done, #305 as a duplicate of #181). Closed since the last pass: #256, #274, #278, #313–#316, #318,
 #321, #325, #326, #336–#339, #344, #345, #355. That pass found seven issues
