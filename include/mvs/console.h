@@ -11,7 +11,6 @@ struct com {
     CIB             *comcibpt;  /* PTR TO COMMAND INPUT BUFFER (CIB)        */
 };
 
-#pragma pack(1)
 struct cib {
     CIB             *cibnext;   /* ADDRESS OF NEXT CIB IN QUEUE (0 FOR LAST)*/
     unsigned char   cibverb;    /* COMMAND VERB CODE                        */
@@ -34,7 +33,6 @@ struct cib {
     /*                       TERMINATING FIRST POSITIONAL PARAMETER         */
     /*              STOP -   NONE (CIB GENERATED ONLY TO GIVE CONSOLE ID)   */
 };
-#pragma pack(reset)
 
 /* __gtcom() - return console communcation handle */
 extern COM *__gtcom(void);

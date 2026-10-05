@@ -4,7 +4,6 @@
 
 typedef struct decb     DECB;       /* DECB for read/write/check */
 
-#pragma pack(1)
 struct decb {
     unsigned    decsdecb;           /* 00 EVENT CONTROL BLOCK               */
     char        dectype1;           /* 04 TYPE OF LENGTH OPERAND            */
@@ -35,6 +34,5 @@ struct decb {
     void        *decnaa;            /* 1C ADDRESS OF THE NEXT ADDRESS
                                           FEEDBACK FIELD                    */
 };
-#pragma pack(reset)
 
 #endif

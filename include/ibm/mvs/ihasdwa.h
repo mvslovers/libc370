@@ -4,7 +4,6 @@
 
 typedef struct sdwa     SDWA;
 
-#pragma pack(1)
 
 struct sdwa {
     void        *SDWAPARM;      /* PARAMETER LIST ADDRESS IF (E)STA MACRO
@@ -599,6 +598,5 @@ struct sdwa {
 #define SDWALEN     ((sizeof(SDWA)+7) & 0x7FFFFFF8)
 #define SDWAFLEN    (SDWALEN+272)   /* GETMAIN LENGTH FOR FRR SDWA           */
 
-#pragma pack(reset)
 
 #endif

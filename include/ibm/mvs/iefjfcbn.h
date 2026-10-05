@@ -6,7 +6,6 @@
 
 typedef struct jfcb     JFCB;       /* Job File Control Block               */
 
-#pragma pack(1)
 struct jfcb {
     char            jfcbdsnm[44];   /* 00 DATA SET NAME                     */
     char            jfcbelnm[8];    /* 2C ELEMENT NAME OR RELATIVE GENERATION
@@ -601,7 +600,6 @@ struct jfcb {
                                           BE USED BY THIS DATA SET WHEN
                                           SPLIT CYLINDER IS INDICATED       */
 };
-#pragma pack(reset)
 
 /* __rdjfcb() and rdjfcb() are declared in <mvs/dd.h>: ibm/ holds IBM's data
 ** layout only */

@@ -228,7 +228,6 @@ extern int __txauca(TXT99 ***txt99, const char *unused);
 extern int  __txclos(TXT99 ***txt99, const char *unused);
 
 /* ---- from 1.x mvssupa.h ------------------------------------------------- */
-#pragma linkage(__dynal, OS)
 int __dynal(size_t ddn_len, char *ddn, size_t dsn_len, char *dsn);
 
 /* SVC 99 (dynamic allocation) is an MVS service, so it belongs outside the
