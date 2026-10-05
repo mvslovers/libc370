@@ -73,8 +73,10 @@ Two build-side guards are worth knowing because they change what ships:
   the instruction; that is how `__stow()` once shipped as a no-op (#32). A
   flagged assembly now deletes the object and fails the build.
 
-`crt0.o`, `crt1.o` and `crtm.o` are startfiles that deliberately sit **outside**
-`libc.a`, so the linker takes exactly one — pick it per program, see
+The C startup `@@CRT0` is a member of `libc.a` (#159): a program's `main` refers
+to it, so automatic library call brings it in, and cc370 from 1.4.0 names no
+startfile on the link line. The only startfile left is `crtm.o`, the nested
+startup, which sits outside `libc.a` because it defines `@@CRT0` too — see
 [`startup.md`](startup.md).
 
 ## VL parameter lists are yours to build
@@ -227,7 +229,7 @@ that may abend should say where it is with `wtof()`, which reaches the job log
 immediately; that is how the table above was measured after SYSPRINT came back
 empty three times.
 
-## Authorized programs: the AC has to be set by ld370, twice
+## Authorized programs: link AC=1 into an `-iebcopy` member
 
 Anything calling a libc370 routine that issues `MODESET KEY=ZERO,MODE=SUP` —
 `racf_login()`, `racf_logout()`, `racf_set_acee()` — has to be linked **AC=1** and
@@ -237,15 +239,20 @@ fetched from an APF-authorized library, or the step ends S047.
 caller is authorized, and otherwise issues the `RACHECK` from problem state,
 which SVC 130 answers the same way (`test/mvs/tstracun.c`).
 
-`cc370` accepts `-Wl,--ac,1` and **silently drops it**: the output is
-byte-identical to a link without it. And `ld370 --pack` loses the flag again
-unless `--ac 1` is repeated on the pack step:
+The AC lives in the **directory entry**, not in the module. A bare member file
+(`ld370 -o PROG` without `-iebcopy`, or `cc370 -o prog` without
+`-flinker-output=`) has no directory entry, so it carries no AC: with and
+without `-Wl,--ac,1` it is byte-identical. Link into an `-iebcopy` member,
+whose directory entry holds the AC and the entry point, and pack that —
+`ld370 --pack` keeps both:
 
 ```sh
 cc370 -O1 -Iinclude -c prog.c -o prog.o
-ld370 --entry @@CRT0 --ac 1 -o PROG crt0.o prog.o -L<lib> -lc
-ld370 --pack PROG=PROG --ac 1 -o out -xmit --dsn <LOADLIB>
+ld370 --entry @@CRT0 --ac 1 -iebcopy -o PROG prog.o -L<lib> -lc
+ld370 --pack PROG=PROG.iebcopy -o out -xmit --dsn <LOADLIB>
 ```
+
+(`cc370 -Wl,--ac,1 -flinker-output=iebcopy` sets it the same way.)
 
 A module that lost its AC looks exactly like a working one until it runs, and
 the S047 arrives with an empty SYSPRINT for the reason above. Filed against the
@@ -289,10 +296,11 @@ bit integers maximum"). libc370 ships a small bignum — `__64`, 16-bit limbs, i
 `include/ext/int64.h` and `src/ext/int64/@@64*.c` — which is what `src/ext/time64` is built
 on. Use it where you would otherwise reach for `long long`.
 
-Note that a plain `unsigned long long` divide does not link: cc370 compiles it
-into a call to `@@UDIVDI`, which `libc.a` does not define, and `ld370` reports
-it unresolved. Shifts, addition and subtraction on `long long` are generated
-inline and are fine — only divide and modulo need `__64_div*` / `__64_divmod*`.
+A `long long` divide or modulo compiles into a call to a compiler helper
+(`@@UDIVDI`, `@@DIVDI3`, ...). Since 2.1.0 those live in cc370's
+`libcc370rt.a`, not in `libc.a` (#313); the cc370 driver and mbt link it
+(`-lcc370rt -lc -lcc370rt`). Only a hand-written `ld370` line without
+`-lcc370rt` leaves them unresolved.
 
 ### `__64` is big-endian by design — it cannot be tested on a host
 

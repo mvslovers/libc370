@@ -77,7 +77,7 @@ same "rpm files = tarball files" "$r" "$t"
 check "files outside the sysroot (deb)" \
     "$(dpkg-deb -c "$DEB" | awk '{print $NF}' | grep -v '/$' \
        | grep -vc "^\./$SYS/")" "0"
-for f in lib/libc.a lib/crt0.o lib/crt1.o lib/crtm.o include/stdio.h \
+for f in lib/libc.a lib/crtm.o include/stdio.h \
          include/mvs/crt.h macros/getmain.macro; do
     check "tarball has $f" "$(echo "$t" | grep -cx "$f")" "1"
 done

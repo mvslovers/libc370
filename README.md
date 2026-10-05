@@ -103,7 +103,7 @@ the sysroot is `<prefix>/cc370/`, default `~/.local/cc370/`):
 |----------|----------|--------|
 | headers (`stdio.h` …, `mvs/`, `ext/`, `ibm/`, `s370/`) | `<sysroot>/include` | `cc370 -c foo.c` finds them with no `-I` |
 | `libc.a` (the runtime) | `<sysroot>/lib` | `-lc` pulls it |
-| `crt0.o` / `crt1.o` / `crtm.o` | `<sysroot>/lib` | the startup variants (separate startfiles) |
+| `crtm.o` | `<sysroot>/lib` | the nested startup (a startfile); the C startup `@@CRT0` is inside `libc.a` |
 | macros (vendored SYS1.MACLIB + libc370's `maclib/`; the prologue macros are cc370's) | `<sysroot>/macros` | `as370` (real binary in `<sysroot>/bin`) finds them via `<exedir>/../macros`, no `-I` |
 
 After that the toolchain is self-contained:

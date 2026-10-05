@@ -30,7 +30,7 @@ a gate that cries wolf gets ignored:
     crtm.o, never archived, and defines @@CRT0 like the CRT member @@crt0
     does; at most one of the two is linked into a load module, and an
     explicit crtm.o beats the archive.  (@@crt0 itself is archived since
-    #159, and crt0.o/crt1.o are copies of it.)
+    #159; its copies crt0.o/crt1.o were dropped in 2.4.0.)
 
     python3 sdk/dupscan.py [path ...]      default: src asm
 

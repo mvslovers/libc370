@@ -3,9 +3,9 @@
 # Builds host-native (cc370 -S -> as370 -> ar370; no mbt, no MVS) and installs
 # into the cc370 sysroot, so the toolchain finds it by itself:
 #   cc370 -c foo.c                  # <stdio.h> ... found with no -I
-#   cc370 foo.c -o foo.xmit         # links libc.a + crt0.o, ready for RECV370
+#   cc370 foo.c -o foo -flinker-output=xmit   # links libc.a (@@CRT0 from it), XMIT for RECV370
 #
-#   make            build libc.a + crt0/1/m.o + stage headers & macros
+#   make            build libc.a + crtm.o + stage headers & macros
 #   make install    install all of it into the cc370 sysroot
 #   make clean      remove build/sdk and the generated .s in src/
 #   make test-host  build and run the host tests (test/host/run.sh)
