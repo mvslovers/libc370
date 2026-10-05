@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- **`cthread_delete()` after `cthread_wait(&task->termecb)` frees the
+  finished subtask (#431).** `cthread_wait()` clears the ECB it waited on,
+  and `cthread_delete()`/`cthread_detach()` decided "ended" from the posted
+  bit of that very ECB. So they kept the subtask attached, and the step
+  ended ABEND SA03. They now also ask the TCB, whose "task terminated" flag
+  stays set until the DETACH. Measured on MVS: 4 of 4 cases; before, the
+  delete was refused and the step abended.
+
+## [2.3.0] - 2026-10-05
+
+Requires cc370 1.1.0 or later, as 2.1.0 and 2.2.0 did (`sdk/cc370.json`:
+`>=1.1.0 <2`). Programs that include `<string.h>` should be rebuilt
+against it (#425).
+
 ### Changed
 - **One C startup, and it is a member of `libc.a` (#159).** `crt0.o` and
   `crt1.o` differed in a single IDENTIFY of the subtask driver `CTHREAD`:
@@ -23,6 +38,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   the entry point, as it always did. Measured on MVS: with and without
   threads, from the archive and from `crt0.o`, all as expected; the old
   `crt0.o` and `crt1.o` each fail their half.
+- **`docs/migration-2.0.md` is now `docs/migration-2.x.md`.** A new
+  section, *Since 2.0.0*, lists what each later 2.x release asks of a
+  program or a build.
 
 ### Fixed
 - **`memset()` and `memclr()` can no longer be undone by the compiler
@@ -74,11 +92,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   that still contains `COPY PDPMAIN` comes from a pre-cc370 compiler.
   Regenerate it with cc370. `make install` does not delete macro files, so
   a sysroot that had them keeps its copies until they are removed by hand.
-
-### Changed
-- **`docs/migration-2.0.md` is now `docs/migration-2.x.md`.** A new
-  section, *Since 2.0.0*, lists what each later 2.x release asks of a
-  program or a build.
 
 ## [2.2.0] - 2026-10-04
 
