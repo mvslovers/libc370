@@ -25,6 +25,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `crt0.o` and `crt1.o` each fail their half.
 
 ### Fixed
+- **`memset()` and `memclr()` can no longer be undone by the compiler
+  (#425).** Both are inline functions in the public headers (`<string.h>`,
+  `<ext/strutil.h>`) whose assembler did not declare that it writes memory.
+  A value stored before the call could come back after it, and a store
+  before it could be moved past it (`x = 5; memset(&x, 0, 4); return x;`
+  returned 5 at `-Os`, `-O1` and `-O2`). The library's own code was not
+  affected, but every program that includes these headers was: **rebuild
+  against this version.** Measured on MVS: 4 of 4 cases, previously 0.
+- **`vsread()` reports end of file on the read that reaches it (#426,
+  #411).** Since 2.2.0 (built with `-Os`) the flags the end-of-file and
+  error exits set during the GET were tested from a copy taken before it.
+  The read at the end returned a record length, and only the next one -1.
+  The return value now reflects the call's own GET, so an earlier error
+  no longer fails every later read; `vseof()`/`vserror()` still report the
+  sticky state until `vsclear()`. A read after the end, which VSAM reports
+  as a logical error, returns -1 as well. Measured on MVS: 7 of 7 cases.
+- **`clib_identify_cthread()` returns IDENTIFY's return code (#427).** It
+  always returned 0. Measured on MVS: 4 for a name that exists.
 - **`va_start()` with a `double` or `long long` last parameter (#382).**
   `<stdarg.h>` defined `va_start(ap, last)` as `&last + 4`, which is right
   only for a last parameter of 4 bytes. After a `double` or `long long`

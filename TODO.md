@@ -40,7 +40,10 @@ CTHREAD IDENTIFYed only when linked; #159 stays open for the doc round, the
 startfile removal after mbt#158 and cc370's STARTFILE_SPEC, and the CGI/crtm
 question). Filed from the inline-asm sweep: #425 (memset/memclr inlines - every
 consumer), #426 (vsread() misses EOF/errors since 2.2.0's -Os - a regression),
-#427 (clib_identify_cthread() always 0, 20 fragile sites).* The
+#427 (clib_identify_cthread() always 0, 20 fragile sites). PR #428 fixed #425 and
+#426, the BROKEN case of #427 and #411's sticky flags; next: 2.2.1 (needs the mbt
+go and the maintainer's OK), then #427's fragile sites plus a "memory"-invariance
+CI gate. The consumer memset measurement goes onto #425.* The
 morning pass: 63 issues open; 54 after the closures that pass led to (#50, #51, #71, #79,
 #80, #172, #226, #244 as done, #305 as a duplicate of #181). Closed since the last pass: #256, #274, #278, #313–#316, #318,
 #321, #325, #326, #336–#339, #344, #345, #355. That pass found seven issues

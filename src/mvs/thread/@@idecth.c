@@ -16,7 +16,9 @@ clib_identify_cthread(void)
     __asm__("L     1,=V(CTHREAD)    A(thread driver routine)\n\t"
             "LA    0,=CL8'CTHREAD'\n\t"
             "IDENTIFY EPLOC=(0),ENTRY=(1)\n\t"
-            "ST    15,0(,%0)\n" : : "r" (&rc): "0", "1", "14", "15");
+            "ST    15,%0\n" : "=m" (rc) : : "0", "1", "14", "15");
+    /* rc is an OUTPUT: passed as an input pointer, the compiler kept the
+       0 it was initialised with and returned that (#427) */
     __asm__("\n*\n");
 
     return rc;
