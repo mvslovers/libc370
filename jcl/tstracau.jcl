@@ -18,12 +18,13 @@
 //* in case (1) with an EMPTY SYSPRINT.  On the reference system SYS2.LINKLIB
 //* is in SYS1.PARMLIB(IEAAPF00) and in the LNKLST, hence no STEPLIB DD here.
 //*
-//* Build - the AC goes to ld370, TWICE.  cc370 silently drops -Wl,--ac,1,
-//* and --pack loses the flag again unless it is repeated:
+//* Build - link with -iebcopy and pack that: the AC and the entry
+//* offset travel in its directory entry.  A bare member would be packed
+//* at entry 0 and at --pack's own AC (mvslovers/cc370#850, #159):
 //*   cc370 -O1 -Iinclude -c test/mvs/tstracau.c -o tstracau.o
-//*   ld370 --entry @@CRT0 --ac 1 -o TSTRACAU build/sdk/crt0.o tstracau.o \
-//*         -Lbuild/sdk -lc
-//*   ld370 --pack TSTRACAU=TSTRACAU --ac 1 -o probe -xmit \
+//*   ld370 --entry @@CRT0 --ac 1 -iebcopy -o TSTRACAU \
+//*         build/sdk/crt0.o tstracau.o -Lbuild/sdk -lc
+//*   ld370 --pack TSTRACAU=TSTRACAU.iebcopy -o probe -xmit \
 //*         --dsn IBMUSER.LIBC370.PROBE.LINKLIB
 //* Install: RECEIVE into a scratch library, IEBCOPY the member into the APF
 //*          library, and delete it again afterwards.  Never RECEIVE over the

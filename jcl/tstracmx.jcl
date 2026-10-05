@@ -22,11 +22,12 @@
 //* SYS1.PARMLIB(IEAAPF00) and in the LNKLST, hence no STEPLIB DD here.  An
 //* authorized program's WTO has no '+' prefix - that is how to tell.
 //*
-//* Build - the AC goes to ld370 TWICE (mvslovers/cc370#37):
+//* Build - link with -iebcopy and pack that: the AC and the entry
+//* offset travel in its directory entry (mvslovers/cc370#37, #850):
 //*   cc370 -O1 -Iinclude -c test/mvs/tstracmx.c -o tstracmx.o
-//*   ld370 --entry @@CRT0 --ac 1 -o TSTRACMX build/sdk/crt0.o tstracmx.o \
-//*         -Lbuild/sdk -lc
-//*   ld370 --pack TSTRACMX=TSTRACMX --ac 1 -o probe -xmit \
+//*   ld370 --entry @@CRT0 --ac 1 -iebcopy -o TSTRACMX \
+//*         build/sdk/crt0.o tstracmx.o -Lbuild/sdk -lc
+//*   ld370 --pack TSTRACMX=TSTRACMX.iebcopy -o probe -xmit \
 //*         --dsn IBMUSER.LIBC370.PROBE.LINKLIB
 //* Install: RECEIVE into a scratch library, IEBCOPY the member into the APF
 //*          library, and delete it again afterwards.  Never RECEIVE over the
