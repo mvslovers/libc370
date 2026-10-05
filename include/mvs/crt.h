@@ -181,4 +181,17 @@ CLIBPPA * __ppaget(void);
    validate is left alone. */
 void __ppahrv(CLIBPPA *ppa);
 
+/* __premain() - a program's own startup step (cc370#10).  Define it and
+   libc370's startup calls it before it opens the standard streams and
+   before main():
+       parm     the raw parameter: two length bytes, then the text (a TSO
+                command buffer has a 4-byte prefix instead)
+       pgmname  the program name, 8 bytes, blank padded
+       pgmr1    the caller's R1 parameter list
+   A stream it sets (stdin, stdout, stderr) is used as it is; one it
+   leaves NULL is opened as usual.  Return 0 to go on to main(), nonzero to
+   end the program with that return code.  A program that does not define
+   it is unaffected: the startup refers to it weakly. */
+int __premain(char *parm, char *pgmname, void **pgmr1);
+
 #endif /* MVS_CRT_H */
