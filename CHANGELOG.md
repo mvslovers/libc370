@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- **`__premain()`, a startup hook (cc370#10).** A program that defines
+  `int __premain(char *parm, char *pgmname, void **pgmr1)` (declared in
+  `<mvs/crt.h>`) has it called by the startup first: before the standard
+  streams are opened and before `main()`. A stream it sets is kept, one it
+  leaves `NULL` is opened as usual, and a nonzero return ends the program
+  with that code. Programs that replaced `@@START` to do this can use the
+  hook instead. The reference is weak, so a program that does not define
+  it is unchanged. It works with every supported cc370: cc370 1.3's weak
+  references when present, the same `WXTRN` in assembler otherwise.
+  Measured on MVS with both: the hook's own `stdout` received `main()`'s
+  output, a return of 12 ended the step with 12 before `main()`, and a
+  program without a hook ran as before.
+
 ## [2.3.1] - 2026-10-05
 
 Requires cc370 1.1.0 or later, as 2.3.0 did (`sdk/cc370.json`: `>=1.1.0 <2`).
