@@ -1,0 +1,101 @@
+# Upgrade libc370 as a package, under the real package manager, and look at
+# what is left in the sysroot's lib/.  Written for #159: 2.4.0 no longer
+# ships crt0.o/crt1.o, which the 2.3.x packages own, so dpkg and rpm should
+# remove them on the upgrade -- this measures it instead of assuming it.
+#
+# Installs cc370 `cc_from` + libc370 `from` in a clean container, lists
+# lib/, upgrades to cc370 `cc_to` + libc370 `to` (cc370 1.4 requires libc370
+# 2.3.0 or later, libc370 2.4 requires cc370 1.4, so the pair moves
+# together), lists lib/ again and checks: crt0.o and crt1.o gone, crtm.o and
+# libc.a present.  Runs by hand, and on a PR that changes this file.
+
+name: Package upgrade
+
+on:
+  workflow_dispatch:
+    inputs:
+      from:
+        description: "libc370 release before the upgrade"
+        type: string
+        default: "2.3.1"
+      cc_from:
+        description: "cc370 release before the upgrade"
+        type: string
+        default: "1.3.1"
+      to:
+        description: "libc370 release after the upgrade"
+        type: string
+        default: "2.4.0"
+      cc_to:
+        description: "cc370 release after the upgrade"
+        type: string
+        default: "1.4.0"
+  pull_request:
+    paths:
+      - .github/workflows/upgrade.yml
+
+jobs:
+  upgrade:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: debian, image: "debian:bookworm", mode: deb, arch: amd64 }
+          - { os: fedora, image: "fedora:latest",   mode: rpm, arch: x86_64 }
+    name: ${{ matrix.os }} ${{ matrix.arch }}
+    runs-on: ubuntu-latest
+    env:
+      FROM: ${{ inputs.from || '2.3.1' }}
+      CC_FROM: ${{ inputs.cc_from || '1.3.1' }}
+      TO: ${{ inputs.to || '2.4.0' }}
+      CC_TO: ${{ inputs.cc_to || '1.4.0' }}
+    steps:
+      - name: The packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "libc370 $FROM + cc370 $CC_FROM -> libc370 $TO + cc370 $CC_TO" | tee -a "$GITHUB_STEP_SUMMARY"
+          mkdir -p old new
+          if [ "${{ matrix.mode }}" = deb ]; then
+            gh release download "v$FROM"    -R mvslovers/libc370 -D old -p "libc370-dev_${FROM}_all.deb"
+            gh release download "v$CC_FROM" -R mvslovers/cc370   -D old -p "cc370_${CC_FROM}_${{ matrix.arch }}.deb"
+            gh release download "v$TO"      -R mvslovers/libc370 -D new -p "libc370-dev_${TO}_all.deb"
+            gh release download "v$CC_TO"   -R mvslovers/cc370   -D new -p "cc370_${CC_TO}_${{ matrix.arch }}.deb"
+          else
+            gh release download "v$FROM"    -R mvslovers/libc370 -D old -p "libc370-devel-${FROM}.noarch.rpm"
+            gh release download "v$CC_FROM" -R mvslovers/cc370   -D old -p "cc370-${CC_FROM}.${{ matrix.arch }}.rpm"
+            gh release download "v$TO"      -R mvslovers/libc370 -D new -p "libc370-devel-${TO}.noarch.rpm"
+            gh release download "v$CC_TO"   -R mvslovers/cc370   -D new -p "cc370-${CC_TO}.${{ matrix.arch }}.rpm"
+          fi
+          ls -l old new
+
+      - name: Install, upgrade and list lib/ in a clean ${{ matrix.image }}
+        run: |
+          cat > run.sh <<'EOF'
+          #!/bin/sh
+          set -e
+          L=/usr/lib/cc370/cc370/lib
+          if [ "$1" = deb ]; then
+              export DEBIAN_FRONTEND=noninteractive
+              apt-get update -qq >/dev/null
+              apt-get install -y -q --no-install-recommends /pk/old/*.deb >/dev/null
+              echo "== before ($(dpkg-query -W -f='${Version}' libc370-dev))"; ls "$L"
+              apt-get install -y -q --no-install-recommends /pk/new/*.deb >/dev/null
+              echo "== after ($(dpkg-query -W -f='${Version}' libc370-dev))"; ls "$L"
+          else
+              dnf -y -q install /pk/old/*.rpm >/dev/null
+              echo "== before ($(rpm -q libc370-devel))"; ls "$L"
+              dnf -y -q upgrade /pk/new/*.rpm >/dev/null
+              echo "== after ($(rpm -q libc370-devel))"; ls "$L"
+          fi
+          fail=0
+          for f in crt0.o crt1.o; do
+              if [ -e "$L/$f" ]; then echo "FAIL  $f still in $L"; fail=1; else echo "ok    $f gone"; fi
+          done
+          for f in crtm.o libc.a; do
+              if [ -e "$L/$f" ]; then echo "ok    $f present"; else echo "FAIL  $f missing"; fail=1; fi
+          done
+          exit $fail
+          EOF
+          docker run --rm -v "$PWD:/pk" "${{ matrix.image }}" sh /pk/run.sh "${{ matrix.mode }}" | tee out.txt
+          { echo '```'; cat out.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
