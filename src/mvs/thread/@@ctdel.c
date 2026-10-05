@@ -4,6 +4,19 @@
 #include "mvs/thread.h"
 #include "mvs/wto.h"     /* wtof(): a prototype decides linkage here (#39) */
 
+/* Has the subtask ended?  MVS posts the ATTACH ECB (termecb) at task end,
+** but cthread_wait() clears the ECB it waited on, so after
+** cthread_wait(&task->termecb) that bit is gone.  The TCB, which stays until
+** the DETACH, still says so: TCBFLGS5 TCBFC, X'80' at TCB+X'21' (#431). */
+static int
+ended(CTHDTASK *task)
+{
+    const unsigned char *tcb = (const unsigned char *)task->tcb;
+
+    if (task->termecb & 0x40000000) return 1;
+    return tcb != NULL && (tcb[0x21] & 0x80) != 0;
+}
+
 __asm__("\n&FUNC    SETC 'cthread_delete'");
 void
 cthread_delete(CTHDTASK **task)
@@ -24,7 +37,7 @@ cthread_delete(CTHDTASK **task)
     ** below reachable, which is the half that actually corrupts (#11).
     ** *task is left non-NULL so the caller keeps the handle it must retain.
     */
-    if ((*task)->tcb && !((*task)->termecb & 0x40000000)) {
+    if ((*task)->tcb && !ended(*task)) {
         wtof("cthread_delete(%08X): TCB(%06X) has not ended, "
             "task and stack retained", *task, (*task)->tcb);
         goto quit;
