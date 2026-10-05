@@ -6,7 +6,7 @@
 
 #define SSOBSOUT    1               /* SYSOUT FUNCTION ID (SSOBFUNC)        */
 /*
-/*  PROCESS SYSOUT DATA SETS RETURN CODES (SSOBRETN)
+ *  PROCESS SYSOUT DATA SETS RETURN CODES (SSOBRETN)
 */
 #define SSSORTOK    0               /* EVERYTHING IS OK                     */
 #define SSSOEODS    4               /* NO MORE DATA SETS TO SELECT          */
@@ -61,8 +61,8 @@ struct ssso {
     unsigned char   SSSODSN[44];/* 34 SYSOUT DATA SET NAME                  */
     unsigned char   SSSOFORM[4];/* 60 FORM NUMBER                           */
 /*
-/*  SSSOCLSL WILL CONTAIN 1-8 CLASSES WHEN USED FOR REROUTING OR DELETE
-/*  FUNCTIONS AND WILL CONTAIN ONLY ONE CLASS WHEN USED FOR PRINTING.
+ *  SSSOCLSL WILL CONTAIN 1-8 CLASSES WHEN USED FOR REROUTING OR DELETE
+ *  FUNCTIONS AND WILL CONTAIN ONLY ONE CLASS WHEN USED FOR PRINTING.
 */
     unsigned char   SSSOCLSL[8];/* 64 CLASS SELECTION LIST FOR              */
 /*                                    DATA SET SELECTION                    */

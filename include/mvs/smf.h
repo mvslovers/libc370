@@ -17,7 +17,7 @@ struct smca {
 #define SMCAVOL  	0x08		/*    VOLUME ACCOUNTING (DSV=1 OR 3) */
 #define SMCARS01 	0x04		/*    RESERVED  */
 #define SMCATDS  	0x02		/*    TYPE 17 RECORDS MAINTAINED FOR TEMPORARY  
-                                /*    DATA SETS (REC=2 OR 3) */
+                                 *    DATA SETS (REC=2 OR 3) */
 #define SMCAFGND 	0x01		/*    SMF FOREGROUND OPTIONS BIT.  IF 0, ABOVE
                                       BITS DESCRIBE BACKGROUND OPTIONS.  IF 1, 
                                       ABOVE BITS DESCRIBE FOREGROUND OPTIONS. */

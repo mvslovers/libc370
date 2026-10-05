@@ -1,6 +1,7 @@
 #ifndef RFILE_H
 #define RFILE_H
 #include <sys/_cc370.h>
+#include <stddef.h>          /* size_t (#414) */
 /* This header defines a record oriented dataset interface. */
 
 /* ROPEN provides a low level structure for sequential access

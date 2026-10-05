@@ -124,6 +124,9 @@ jobs:
           set -o pipefail
           make build 2>&1 | tee build.log
 
+      - name: Headers under -Wall -Werror
+        run: python3 sdk/hdrcheck.py   # each public header alone, as a consumer includes it (#414)
+
       - name: Keep the build
         uses: actions/upload-artifact@v4
         with:

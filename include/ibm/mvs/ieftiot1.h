@@ -37,18 +37,18 @@ struct tiot {
 };
 
 /***********************************************************************
-/*                                                                     *
-/*   DD ENTRY                                                          *
-/*                                                                     *
-/*        THERE IS A 16-BYTE DD ENTRY FOR EACH DD STATEMENT IN THE     *
-/*        JOB STEP OR PROCEDURE STEP.  (REFERENCES TO GDG (ALL) DATA   *
-/*        SETS, THE JOBLIB DATA SET OR PGM=*.DDNAME CREATE STILL       *
-/*        OTHER DD ENTRIES.)                                           *
-/*                                                                     *
-/*        A DD ENTRY INCLUDES A DEVICE ENTRY.  BEFORE ALLOCATION,      *
-/*        THERE MAY BE SEVERAL DEVICE ENTRIES IN EACH DD ENTRY.        *
-/*                                                                     *
-/**********************************************************************/
+ *                                                                     *
+ *   DD ENTRY                                                          *
+ *                                                                     *
+ *        THERE IS A 16-BYTE DD ENTRY FOR EACH DD STATEMENT IN THE     *
+ *        JOB STEP OR PROCEDURE STEP.  (REFERENCES TO GDG (ALL) DATA   *
+ *        SETS, THE JOBLIB DATA SET OR PGM=*.DDNAME CREATE STILL       *
+ *        OTHER DD ENTRIES.)                                           *
+ *                                                                     *
+ *        A DD ENTRY INCLUDES A DEVICE ENTRY.  BEFORE ALLOCATION,      *
+ *        THERE MAY BE SEVERAL DEVICE ENTRIES IN EACH DD ENTRY.        *
+ *                                                                     *
+ **********************************************************************/
 struct tiotdd {
 /* TIOENTRY EQU   * -            TIODDPTR                                       */
     char        TIOELNGH;       /* 00 LENGTH, IN BYTES, OF THIS ENTRY           */
@@ -107,17 +107,17 @@ struct tiotdd {
 #define TIOSBALS    0x01        /* ... SECONDARY SUBALLOCATE                    */
 
 /***********************************************************************
-/*                                                                     *
-/*   DEVICE ENTRIES                                                    *
-/*                                                                     *
-/*      1. DURING ALLOCATION -                                         *
-/*                ONE DEVICE ENTRY FOR EACH DEVICE REQUIRED, OR FOR    *
-/*                EACH PUBLIC DEVICE ELIGIBLE.                         *
-/*                                                                     *
-/*      2. DURING PROBLEM PROGRAM -                                    *
-/*                ONE DEVICE ENTRY FOR EACH ALLOCATED DEVICE.          *
-/*                                                                     *
-/**********************************************************************/
+ *                                                                     *
+ *   DEVICE ENTRIES                                                    *
+ *                                                                     *
+ *      1. DURING ALLOCATION -                                         *
+ *                ONE DEVICE ENTRY FOR EACH DEVICE REQUIRED, OR FOR    *
+ *                EACH PUBLIC DEVICE ELIGIBLE.                         *
+ *                                                                     *
+ *      2. DURING PROBLEM PROGRAM -                                    *
+ *                ONE DEVICE ENTRY FOR EACH ALLOCATED DEVICE.          *
+ *                                                                     *
+ **********************************************************************/
     char        TIOESTTB;       /* 10 STATUS BYTE B - DURING ALLOCATION AND     */
                                 /*    DURING PROBLEM PROGRAM                    */
 #define TIOSUSED    0x80        /* ... DATA SET IS ON DEVICE                    */
