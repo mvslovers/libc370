@@ -162,11 +162,15 @@ Two more distinctive details:
 
 Default stack: `MAINSTK DS 16384F` = **64 KB** (a quarter of `@@CRT0`'s).
 
-**Caveat:** `__start` re-opens `stdout`/`stderr`/`stdin` and overwrites
-`grt->grtout/...`. Because crtm shares the parent's GRT, a crtm nesting
-**clobbers the parent's standard streams**. crtm fits where that is intended or
-harmless (its own I/O world), not for "call one C function and keep the parent's
-stdout".
+**Caveat:** crtm shares the parent's GRT, and the GRT holds the standard
+streams, the list of open files, the `atexit()` table and the environment.
+Since 2.4.0 `__start` opens a standard stream only when it is `NULL`, so a crtm
+module starts with the parent's streams instead of opening new ones over them.
+But it still ends through `__exit()`, which works on that same GRT: it runs the
+parent's `atexit()` functions, **closes every open file — the parent's standard
+streams included —** and frees the environment. (Read from `@@exit.c` and
+`@@start.c`; not measured on MVS.) crtm fits where the nested module's end may
+end the caller's C I/O as well, not for "call one C function and carry on".
 
 ## Exit paths at a glance
 
