@@ -185,20 +185,11 @@ static __inline void *memset(void *s, int c, size_t n);
 - As with #cmd("memcpy()"), #var("n") must be less than 16 megabytes.
 - Because the function is #cmd("static"), its address differs from one
   source file to the next.
-- *The inline function does not tell the compiler that it writes storage.*
-  Its assembler statement names no memory operand, so with optimization
-  (#cmd("-O1"), #cmd("-Os"), #cmd("-O2")) the compiler may keep a value of
-  the target that it knew before the call -- one it stored there, or one it
-  loaded -- in a register and use it after the call, as if
-  #cmd("memset()") had changed nothing. Compiled with #cmd("-O1"),
-  #cmd("p->a = 5; memset(p, 0, sizeof *p); return p->a;") returns 5. This
-  happens in the program's own source files, wherever #cmd("<string.h>") is
-  included, not in the library. To be safe, follow each call with a
-  compiler barrier, which makes the compiler read the storage again:
-  ```
-  memset(p, 0, sizeof *p);
-  __asm__ __volatile__("" : : : "memory");
-  ```
+- The inline function tells the compiler that it writes storage, so no
+  value of the target from before the call is used after it. In earlier
+  versions of the header it did not, and an optimized program could read a
+  stale value back; a program compiled against such a header must be
+  compiled again.
 
 === Related
 

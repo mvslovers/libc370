@@ -1037,15 +1037,14 @@ starts, in every program that links #cmd("CTHREAD")\; #cmd("clib_apf_setup()")
 also calls this function for an authorized program (see @mvs-program).
 
 === Returns
-0, whatever #cmd("IDENTIFY") answered: the function stores the return code
-of the macro, but returns the value it had before.
+The return code of #cmd("IDENTIFY"): 0 when the name was added, 4 when it
+exists already.
 
 === Notes
 The function refers to #cmd("CTHREAD"), so calling it links the thread
 driver into the program, and the start-up has then identified it already.
-IDENTIFY does not add a name a second time: it answers 4 and changes
-nothing, and the function returns 0 all the same. A program has no need to
-call it.
+IDENTIFY does not add a name a second time: the call returns 4 and
+changes nothing. A program has no need to call it.
 
 // -------------------------------------------------------------------------
 == Worker Thread Pool <mvs-sync-pool>

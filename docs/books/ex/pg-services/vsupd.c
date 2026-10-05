@@ -24,7 +24,7 @@ int bump(const char *keyval)
     memcpy(key, keyval, strlen(keyval) < KEYLEN ? strlen(keyval) : KEYLEN);
 
     len = vsread(vs, rec, sizeof(rec), key, sizeof(key));
-    if (len < 0 || vserror(vs) || vseof(vs)) {
+    if (len < 0) {
         /* a missing key is an error (reason 16), not end of data */
         printf("key %.8s: rc %d, reason %d\n", key, vs->rc, vs->rsn);
         vsclose(vs);

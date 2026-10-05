@@ -32,8 +32,9 @@ is no handle yet. #cmd("__vsmdfy()") and #cmd("__vsshwc()") exist only in the
 return, component and reason codes of the RPL feedback word in the handle, set
 the error or end-of-file flag, and make the request return 8 (logical error),
 12 (physical error) or 4 (end of data). *The flags stay set* until
-#cmd("vsclear()") resets them: after an error every further #cmd("vsread()")
-reports an error, even when its own GET succeeds. The #cmd("errno") values of
+#cmd("vsclear()") resets them, as the end-of-file and error indicators of a
+stream do, and #cmd("vseof()") and #cmd("vserror()") test them. The value
+#cmd("vsread()") returns reflects only its own GET. The #cmd("errno") values of
 @mvs-vsam-errno are set by #cmd("vsopen()") and #cmd("vsread()").
 
 There is no test of these functions in the library's test suites.
@@ -251,33 +252,24 @@ argument already in the RPL names. For an ESDS #var("key") is an RBA and for
 an RRDS a relative record number, each four bytes.
 
 === Returns
-The length of the record read; -1 at end of data; -2 after an error.
+The length of the record read. -1 when the read reached the end of the data,
+and for every further read after the end: VSAM answers that one with a
+logical error (feedback code X'04'), which the function reports as end of
+data. -2 when the GET failed.
 
 === Errors
 #deflist(width: 1.0in,
-  [#cmd("EVSERROR")], [The request failed, or an earlier one did and the
-    error flag was not reset. #cmd("vs->rc") and #cmd("vs->rsn") hold the
-    VSAM codes.],
+  [#cmd("EVSERROR")], [The GET failed. #cmd("vs->rc") and #cmd("vs->rsn")
+    hold the VSAM codes.],
 )
 
 === Notes
-- End of data and errors are sticky (see the chapter introduction). Call
-  #cmd("vsclear()") before reading on.
-- A key that is not found makes the positioning fail with a logical error
-  (reason code 16), so the read returns -2, not -1.
-- *In libc370 2.2.0 and later, which is built with #cmd("-Os"),
-  #cmd("vsread()") does not report the end of the data or an error that its
-  own #cmd("GET") meets.* The function reads the flags of #var("vs") before
-  the #cmd("GET") and tests that copy afterwards, so the flags that the
-  exit routines set during the #cmd("GET") are not seen: the call returns a
-  length from #cmd("SHOWCB") as if a record had been read, with the record
-  area unchanged, and sets no #cmd("errno"). Because the flags are sticky,
-  the _next_ call returns -1 or -2. A failure of the positioning by
-  #var("key"), and a flag left from an earlier request, are reported as
-  described. Test #cmd("vseof()") and #cmd("vserror()") after each call,
-  as the example under @mvs-vsam-vsopen does, rather than the return value
-  alone.
-
+- The return value reflects only this call's GET. The end-of-data and error
+  flags that #cmd("vseof()") and #cmd("vserror()") test stay set until
+  #cmd("vsclear()"), like #cmd("feof()") and #cmd("ferror()") of a stream,
+  but they do not make a later read fail.
+- A key that is not found is a logical error (reason code 16), so the read
+  returns -2, not -1.
 === Related
 @mvs-vsam-vssteq, @mvs-vsam-vsclear
 
@@ -380,8 +372,9 @@ Position the handle with #cmd("POINT") for the next sequential
 or 12 for a physical error.
 
 === Notes
-A failed positioning sets the error flag of the handle; call
-#cmd("vsclear()") before the next #cmd("vsread()").
+A failed positioning sets the error flag of the handle, which
+#cmd("vserror()") reports until #cmd("vsclear()") resets it. It does not
+make a later #cmd("vsread()") fail.
 
 === Related
 @mvs-vsam-vsread

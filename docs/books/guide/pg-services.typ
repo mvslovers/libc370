@@ -364,12 +364,14 @@ record by its key and rewrite it:
 ] <pg-services-vsupd-jcl>
 
 #idx("vsclear")
-*Errors stay set.* When a request fails, or reaches the end of the data,
-the handle remembers it, and every later #cmd("vsread()") reports the same
-condition, even when its own request succeeds. After an error that the
-program handles and survives, such as a key not found, call
-#cmd("vsclear()") before it reads on. @pg-services-vsupd-fig simply closes
-the handle instead.
+*The return value says what this read did.* #cmd("vsread()") returns the
+length of the record, -1 at the end of the data -- also for any further
+read after the end -- and -2 when its own request failed. The handle also
+remembers an end of data or an error, as a stream remembers end of file and
+errors: #cmd("vseof()") and #cmd("vserror()") report it until
+#cmd("vsclear()") resets it. A remembered error does not make a later read
+fail, so a program that handles an error, such as a key not found, can read
+on.
 
 Each function exists in two forms: #cmd("vsread()") takes a lock on the
 handle around the request, so that several tasks can share one handle, and
