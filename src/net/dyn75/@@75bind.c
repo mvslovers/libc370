@@ -11,13 +11,14 @@
 #include "mvs/socket.h"
 #include "mvs/wto.h"
 
+static int bind1(int ss, struct sockaddr_in * name, int length);
+
 /* bind() */
 __asm__("\n&FUNC    SETC 'bind'");
 extern int
 bind(int ss, struct sockaddr_in * name, int length)
 {
     int     rc;
-    PL75    pl;
 
     if (name->sin_port==0) {
         /* caller wants system to assign a random port */
@@ -28,11 +29,24 @@ bind(int ss, struct sockaddr_in * name, int length)
         srand(now & 0X7FFF);
         for(i=0; i < 100; i++) {
             name->sin_port = (unsigned short) (rand() & 0x7FFF) + 10000;
-            rc = __75bind(ss, name, length);
+            rc = bind1(ss, name, length);
             if (rc==0) return rc;
         }
         name->sin_port = 0; /* reset port back to 0 */
     }
+
+    return bind1(ss, name, length);
+}
+
+/* One bind request for name as it stands.  The port loop above called
+** __75bind() for this, which is bind() itself under its vector name: the
+** same external @@75BIND, so cc370 1.3.0 warns that the two collide. */
+__asm__("\n&FUNC    SETC 'bind1'");
+static int
+bind1(int ss, struct sockaddr_in * name, int length)
+{
+    int     rc;
+    PL75    pl;
 
 #if 0
     memset(&pl, 0, sizeof(pl));
