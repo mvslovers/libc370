@@ -82,7 +82,7 @@ the thread's handle, a #cmd("CTHDTASK"). To run a function in a thread:
   Check the handle\; #cmd("NULL") means that no thread was created.
 + When you need the result, wait for the thread's end with
   #cmd("ecb_wait(&task->termecb)"). MVS posts #cmd("termecb") when the task
-  ends\; its posted bit is the one reliable sign that the thread has ended.
+  ends.
 + Read #cmd("task->rc"), the return value of the function.
 + Call #cmd("cthread_delete(&task)"). It frees the handle and the stack and
   sets the handle to #cmd("NULL").
@@ -102,6 +102,11 @@ Some rules follow from how the handle works:
 - *The library never ends a running thread.* #cmd("cthread_delete()") of a
   thread that has not ended deletes nothing: it writes a message to the
   operator and leaves the handle as it was. Wait first, then delete.
+- *Either wait will do.* #cmd("cthread_wait(&task->termecb)") clears the
+  ECB it waited on, but #cmd("cthread_delete()") then finds the end of the
+  thread in its TCB. (Up to libc370 2.3.0 it did not: the delete was
+  refused and the step ended with abend #cmd("SA03"). With those releases,
+  wait for #cmd("termecb") with #cmd("ecb_wait()").)
 - *A thread ends itself* by returning from its function or by calling
   #cmd("cthread_exit()") with the return value. #cmd("cthread_exit()") is
   only for threads\; #cmd("main()") ends with #cmd("return") or
@@ -133,8 +138,9 @@ Two families of functions wait and post:
     is not lost. Use them for an ECB that is posted again and again.],
   [#cmd("ecb_wait()"), #cmd("ecb_post()")], [wait and post and leave the
     ECB as it is. Use them for an ECB that is posted once, such as
-    #cmd("termecb"), and clear the ECB yourself before you wait on it
-    again.],
+    #cmd("termecb"), whose posted bit you may still want to test
+    afterwards. To use such an ECB again, clear it yourself before the next
+    wait.],
 )
 
 @pg-tasks-chan-fig gives a thread work through one ECB and takes the answer

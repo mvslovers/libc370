@@ -703,10 +703,12 @@ The handle, a #cmd("CTHDTASK"), remains after the thread has ended, until
   [#cmd("tcb")], [the TCB address of the thread, 0 when it was never
     attached or has been detached.],
   [#cmd("termecb")], [the ECB that MVS posts when the thread ends. Its
-    posted bit (#cmd("0x40000000")) is the one reliable sign that the
-    thread has ended\; its post code is the completion code of the task.],
-  [#cmd("rc")], [the return value of the thread function, valid once
-    #cmd("termecb") is posted.],
+    posted bit (#cmd("0x40000000")) is the sign that the thread has ended,
+    as long as nothing has cleared it\; its post code is the completion
+    code of the task. #cmd("ecb_wait()") leaves the ECB as it is,
+    #cmd("cthread_wait()") clears it.],
+  [#cmd("rc")], [the return value of the thread function, valid once the
+    thread has ended.],
 )
 
 The task that created a thread must wait for its end, and delete it, before
@@ -716,7 +718,11 @@ the task itself ends: MVS ends a task that still has subtasks abnormally.
 The library never detaches a thread that is still running. A forced DETACH
 would end it abnormally while its stack, which is part of the handle, is
 being freed. #cmd("cthread_detach()") and #cmd("cthread_delete()") therefore
-refuse a thread whose #cmd("termecb") is not yet posted.
+refuse a thread that has not ended. They take a thread as ended when its
+#cmd("termecb") is posted or, when #cmd("cthread_wait()") has cleared
+#cmd("termecb"), when its TCB says that the task has terminated (flag
+#cmd("TCBFC"), #cmd("X'80'") at offset #cmd("X'21'")), which stays set
+until the DETACH.
 
 #note[Compiled against the installed library, a program that includes #cmd("<mvs/thread.h>") or
 #cmd("<mvs/timer.h>")
@@ -821,16 +827,20 @@ handle itself remains. A thread that has not ended is not detached.
 #deflist(width: 1.6in,
   [0], [The subtask was detached, or there was nothing to detach:
     #var("task") is #cmd("NULL") or its #cmd("tcb") is 0.],
-  [#cmd("CTHREAD_DETACH_LIVE") (-1)], [The thread has not ended. Nothing
-    was done.],
+  [#cmd("CTHREAD_DETACH_LIVE") (-1)], [The thread has not ended: its
+    #cmd("termecb") is not posted and its TCB does not show it terminated.
+    Nothing was done.],
   [other], [The return code of DETACH, or the abend code when DETACH
     failed.],
 )
 
 === Notes
-The DETACH return code is stored in the #cmd("rc") field of the handle,
-where it replaces the return value of the thread function. Read
-#cmd("task->rc") before you detach the thread.
+- The thread counts as ended after either #cmd("ecb_wait(&task->termecb)")
+  or #cmd("cthread_wait(&task->termecb)"), although the latter clears the
+  ECB (see the introduction to this section).
+- The DETACH return code is stored in the #cmd("rc") field of the handle,
+  where it replaces the return value of the thread function. Read
+  #cmd("task->rc") before you detach the thread.
 
 === Related
 @mvs-sync-cthread_delete
@@ -858,8 +868,14 @@ Nothing is done when #var("task") or #var("*task") is #cmd("NULL"), or when
 the handle does not carry the eye-catcher #cmd("CTHDTASK").
 
 === Notes
-Wait for the end of the thread first, for example with
-#cmd("ecb_wait(&task->termecb)"), and save #cmd("task->rc") if you need it.
+- Wait for the end of the thread first, with #cmd("ecb_wait(&task->termecb)")
+  or #cmd("cthread_wait(&task->termecb)"), and save #cmd("task->rc") if you
+  need it. Both waits are recognized: the second clears #cmd("termecb"), and
+  the delete then finds the end of the thread in its TCB.
+- In libc370 2.3.0 and earlier, the delete looked at #cmd("termecb") only. A
+  delete after #cmd("cthread_wait(&task->termecb)") was refused, the subtask
+  stayed attached, and the step ended with abend #cmd("SA03"). With those
+  releases, wait with #cmd("ecb_wait()").
 
 === Related
 @mvs-sync-cthread_detach, @mvs-sync-cthread_create
