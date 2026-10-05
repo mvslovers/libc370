@@ -44,14 +44,14 @@ ENQ itself is open to every program, but MVS reserves queue names beginning
 with #cmd("SYSZ") for authorized programs\; the library's own queue names do
 not begin with it.
 
-#idx("crt0", "needed for threads")
-*Threads need the right start-up.* A thread is attached with
-#cmd("ATTACH EP=CTHREAD"), and the name #cmd("CTHREAD") is made known to MVS
-by the start-up module #cmd("crt0") when the program starts. A program
-linked with the start-up module #cmd("crt1") cannot create threads:
-#cmd("cthread_create()") returns #cmd("NULL"). The timer service and the
-worker pool create threads of their own and have the same requirement. The
-start-up modules are described in the _libc370 Programmer's Guide_.
+#idx("CTHREAD", "thread driver")
+*Threads need nothing at link time.* A thread is attached with
+#cmd("ATTACH EP=CTHREAD"). The thread driver #cmd("CTHREAD") is a member of
+#cmd("libc.a") that #cmd("cthread_create()") links, and the C start-up makes
+the name known to MVS with #cmd("IDENTIFY"); a program without threads
+carries no driver and identifies nothing. The same holds for the timer
+service and the worker pool. The start-up is described in the _libc370
+Programmer's Guide_.
 
 #idx("interval", "units of 0.01 second")
 *Units.* Wherever a function takes an interval named #var("bintvl"), the
@@ -757,8 +757,10 @@ created: no storage, the run-time anchors are missing, or the ATTACH
 failed.
 
 === Notes
-- The ATTACH fails in a program linked with the start-up module
-  #cmd("crt1"). See the introduction to this chapter.
+- The function links the thread driver #cmd("CTHREAD"), and the C
+  start-up identifies it (see the introduction to this chapter). A module
+  started with #cmd("crtm") identifies nothing: its ATTACH works only when
+  the calling C program has identified #cmd("CTHREAD").
 - #var("stacksize") must be less than 1 MB (#cmd("0x100000")). Only the
   low-order 20 bits of the rounded size are kept, so a size of 1 MB or more
   gives a stack of that size modulo 1 MB, and exactly 1 MB gives a stack too
@@ -1030,16 +1032,20 @@ int clib_identify_cthread(void);
 
 === Description
 Makes the thread driver #cmd("CTHREAD") known to MVS, by issuing
-#cmd("IDENTIFY EPLOC=CTHREAD"). The start-up module #cmd("crt0") does this
-when the program starts\; #cmd("clib_apf_setup()") also does it for an
-authorized program (see @mvs-program).
+#cmd("IDENTIFY EPLOC=CTHREAD"). The C start-up does this when the program
+starts, in every program that links #cmd("CTHREAD")\; #cmd("clib_apf_setup()")
+also calls this function for an authorized program (see @mvs-program).
 
 === Returns
-The return code of IDENTIFY: 0 when the name was added.
+0, whatever #cmd("IDENTIFY") answered: the function stores the return code
+of the macro, but returns the value it had before.
 
 === Notes
-IDENTIFY does not add a name a second time, so in a program started with
-#cmd("crt0") the call returns a non-zero code and changes nothing.
+The function refers to #cmd("CTHREAD"), so calling it links the thread
+driver into the program, and the start-up has then identified it already.
+IDENTIFY does not add a name a second time: it answers 4 and changes
+nothing, and the function returns 0 all the same. A program has no need to
+call it.
 
 // -------------------------------------------------------------------------
 == Worker Thread Pool <mvs-sync-pool>

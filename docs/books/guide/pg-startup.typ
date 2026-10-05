@@ -20,18 +20,20 @@ pass it settings through the #cmd("SYSENV") DD statement.
 == What Happens Before main() <pg-startup-sequence>
 
 #idx("@@CRT0")#idx("@@START")#idx("entry point")
-The entry point of a C load module is #cmd("@@CRT0"), the start-up module
-of the library. cc370 links it into every program and makes it the entry
-point; @pg-startup-sequence-fig shows the path from MVS to #cmd("main()").
+The entry point of a C load module is #cmd("@@CRT0"), the start-up routine
+of the library. A source file that defines #cmd("main()") refers to it, so
+every C program is linked with it and enters there;
+@pg-startup-sequence-fig shows the path from MVS to #cmd("main()").
 
 #fig(caption: [From MVS to main()])[
   #code("MVS            EXEC PGM=, CALL, LINK, ATTACH
   |
   v
-@@CRT0         start-up module: crt0.o, crt1.o or crtm.o
+@@CRT0         start-up routine (libc.a, crt0.o; crtm.o for a module)
   |              - one GETMAIN for the program area and the stack
   |              - the anchors: program, task, process
   |              - program name, TSO or batch
+  |              - IDENTIFY CTHREAD, if the program has threads
   v
 @@START        C start-up routine in libc.a
   |              - opens stdout, stderr, stdin
@@ -45,8 +47,7 @@ exit(status)   atexit() functions, files closed, storage freed,
                status returned to MVS in register 15")
 ] <pg-startup-sequence-fig>
 
-In detail, the start-up module (#cmd("crt0") or #cmd("crt1"), see
-@pg-startup-variants):
+In detail, #cmd("@@CRT0"):
 
 + obtains one area of storage, with a conditional #cmd("GETMAIN"), that
   holds the _program properties area_ and the C stack. The size of the
@@ -59,6 +60,8 @@ In detail, the start-up module (#cmd("crt0") or #cmd("crt1"), see
   open files, the #cmd("atexit()") functions and the environment variables;
 + records the program name and finds out whether the program runs under
   TSO, in the foreground or in the background;
++ makes the thread driver #cmd("CTHREAD") known to MVS with
+  #cmd("IDENTIFY"), if the program contains it (@pg-startup-variants);
 + calls #cmd("@@START").
 
 #cmd("@@START") then opens #cmd("stdout"), #cmd("stderr") and #cmd("stdin")
@@ -86,81 +89,115 @@ Two things can stop a program before #cmd("main()"):
   #cmd("SYSTERM") is replaced by a SYSOUT data set, a missing #cmd("SYSIN")
   by an empty input.
 
-In the messages the name of the start-up module appears as #cmd("@@CRT1")
-when the program was linked with #cmd("crt1").
+== The Start-Up Routines <pg-startup-variants>
 
-== Choosing a Start-Up Module <pg-startup-variants>
+#idx("@@CRT0", "in libc.a")#idx("crt0")#idx("crt1")#idx("crtm")
+#idx("start-up module")
+There are two start-up routines, and both define the entry point
+#cmd("@@CRT0"), so a program is linked with exactly one of them:
 
-#idx("crt0")#idx("crt1")#idx("crtm")#idx("start-up module")
-The library has three start-up modules. All three define the entry point
-#cmd("@@CRT0"), so a program is linked with exactly one of them. They are
-separate object files beside #cmd("libc.a"), not members of it:
-#cmd("crt0.o"), #cmd("crt1.o") and #cmd("crtm.o").
-
-#tab(caption: [The start-up modules])[
-  #table(columns: (0.6in, 1.15in, 1fr),
-    [Module], [Default stack], [Use it for],
-    [#cmd("crt0")], [256 KB], [A program that creates threads with
-      #cmd("cthread_create()") (@pg-tasks). This is the module cc370 links
-      when nothing else is said.],
-    [#cmd("crt1")], [256 KB], [A program that creates no threads -- the
-      common case. It builds the same C environment as #cmd("crt0"), but does
-      not make the thread driver known to MVS, so a thread cannot be
-      created.],
-    [#cmd("crtm")], [64 KB], [A C module that is called from a C program
+#tab(caption: [The start-up routines])[
+  #table(columns: (1.1in, 0.9in, 1fr),
+    [Routine], [Default stack], [Use it for],
+    [#cmd("@@CRT0"), a member of #cmd("libc.a")], [256 KB], [Every C
+      program, with or without threads. It builds the C environment
+      described above and releases it when the program ends.],
+    [#cmd("crtm.o")], [64 KB], [A C module that is called from a C program
       running on the same task and shares its C environment. It builds no
       environment of its own. Never use it for a program that MVS starts.],
   )
 ] <pg-startup-variants-tab>
 
-#cmd("crt0") and #cmd("crt1") differ in one step only: #cmd("crt0") issues
-#cmd("IDENTIFY") for the thread driver #cmd("CTHREAD"), so that a later
-#cmd("ATTACH") for a thread can find it. There is no saving in size between
-the two. Choose #cmd("crt1") unless the program creates threads: the
-#cmd("IDENTIFY") is one more thing that can fail, for example when one C
-program calls another and both try to add the same name.
+#cmd("@@CRT0") is a member of #cmd("libc.a"), so a link that names no
+start-up object takes it from the library, like any other function. It is
+also installed as the files #cmd("crt0.o") and #cmd("crt1.o"), two identical
+copies for the build tools that name a start-up object explicitly; the cc370
+driver links #cmd("crt0.o"). Which of the three a program is linked with
+makes no difference to what it does.
+
+#idx("CTHREAD", "and the start-up")#idx("IDENTIFY", "CTHREAD")
+*Threads.* A thread is attached under the name #cmd("CTHREAD"), the thread
+driver of the library. The driver is a member of #cmd("libc.a") of its own,
+which a call of #cmd("cthread_create()") links into the program. The
+start-up looks for it, and only when it finds it does it make the name known
+to MVS with #cmd("IDENTIFY"). A program without threads therefore carries no
+driver and issues no #cmd("IDENTIFY"), and a program with threads needs
+nothing of its own to make them work. A program that issues the
+#cmd("IDENTIFY") itself as well gets return code 4 from it, which does no
+harm. The start-up does not check the return code of its own
+#cmd("IDENTIFY")\; @pg-tasks describes threads.
+
+#note[Up to libc370 2.2.0 there were two start-up objects that differed in
+this one step: #cmd("crt0.o") identified #cmd("CTHREAD") in every program,
+and a program linked with #cmd("crt1.o") could not create threads. A load
+module keeps the start-up it was linked with, so an old module behaves the
+old way until it is linked again.]
+
+#idx("entry point", "not at offset 0")
+*Where the entry point is.* When #cmd("@@CRT0") comes from #cmd("crt0.o"),
+named first on the link, it is at offset 0 of the load module. When it comes
+from #cmd("libc.a"), it lies wherever the linker placed it. MVS does not
+care: the entry point is recorded in the directory entry of the load module,
+which ld370 writes in either case, and #cmd("LINK"), #cmd("ATTACH") and
+#cmd("LOAD") take it from there. Only code that treats the first byte of a
+module as its entry point would notice.
+
+@pg-startup-crtlink-fig shows three modules as file370 lists them:
+#cmd("plain"), a program without threads, and #cmd("thread"), one that
+calls #cmd("cthread_create()"), both linked with #cmd("crt0.o") first as
+the cc370 driver does it, and #cmd("plain2"), the first program linked
+without a start-up object. The thread driver #cmd("CTHREAD") is an
+unresolved weak reference (#cmd("WX")) in a program without threads, and
+#cmd("@@CRT0") is at offset 0 only when #cmd("crt0.o") was named.
+
+#fig(caption: [The start-up routine and the thread driver in three load
+  modules])[
+  #screen(raw(read("../ex/pg-startup/crtlink.txt")))
+] <pg-startup-crtlink-fig>
 
 #idx("crtm", "restrictions")
-#cmd("crtm") is for a narrow case. It expects to find the anchors of a C
-program that is already running on the same task, uses them instead of
-building its own, and at the end releases only its own stack. It is
+*crtm.* #cmd("crtm") is for a narrow case. It expects to find the anchors
+of a C program that is already running on the same task, uses them instead
+of building its own, and at the end releases only its own stack. It is
 entered with the address of its parameter in register 0, not through a
 parameter list in register 1, so it is called by code written for it, not
-by MVS. Two consequences follow:
+by MVS. Three consequences follow:
 
 - Started as a job step, or on a task without a C program, a #cmd("crtm")
   module abends at once.
 - Its #cmd("@@START") opens the standard streams again, in the shared
   environment, so the calling program finds its #cmd("stdout"),
   #cmd("stderr") and #cmd("stdin") replaced.
+- It issues no #cmd("IDENTIFY"). A thread it creates can be attached only
+  when the calling program has made #cmd("CTHREAD") known.
 
 A program that calls another C program with #cmd("__link()") or
-#cmd("system()") does not need #cmd("crtm"): the called program, linked
-with #cmd("crt0") or #cmd("crt1"), builds its own environment and releases
-it before it returns.
+#cmd("system()") does not need #cmd("crtm"): the called program, with the
+usual #cmd("@@CRT0"), builds its own environment and releases it before it
+returns.
 
-=== Linking with a Start-Up Module <pg-startup-link>
+=== Linking with crtm <pg-startup-link>
 
 #idx("-nostartfiles")
-cc370 links #cmd("crt0.o") unless it is told otherwise. To link with
-another start-up module:
+To link a module with #cmd("crtm"):
 
 + Leave out #cmd("crt0.o") with #cmd("-nostartfiles").
-+ Name the module you want. #cmd("cc370 -print-file-name=")#var("file")
-  gives its full name in the installed library.
++ Name #cmd("crtm.o"). #cmd("cc370 -print-file-name=crtm.o") gives its full
+  name in the installed library.
 
-@pg-startup-crt1-fig builds the program of @pg-startup-args-fig with
-#cmd("crt1"). The command is silent when it succeeds.
+@pg-startup-crtm-fig shows the command, which is silent when it succeeds,
+and the entry point, which #cmd("crtm.o") puts at offset 0.
 
-#fig(caption: [Linking with crt1])[
-  #screen(raw(read("../ex/pg-startup/crt1.txt")))
-] <pg-startup-crt1-fig>
+#fig(caption: [Linking with crtm])[
+  #screen(raw(read("../ex/pg-startup/crtm.txt")))
+] <pg-startup-crtm-fig>
 
 #idx("mbt", "start-up module")
 With mbt, the key #cmd("startup") of a #cmd("[[module]]") in
-#cmd("project.toml") selects the module: #cmd("startup = \"crt1\""). The
-_cc370 Command Reference_, Chapter 1, “The cc370 Command”, describes the
-link options.
+#cmd("project.toml") selects the start-up object: #cmd("\"crt0\"") (the
+default) and #cmd("\"crt1\"") now give the same module, #cmd("\"crtm\"")
+links #cmd("crtm.o"). The _cc370 Command Reference_, Chapter 1, “The cc370
+Command”, describes the link options.
 
 == Receiving Arguments <pg-startup-parm>
 
@@ -284,8 +321,7 @@ the records still in their buffers are lost; see @pg-errors.]
 The automatic variables of every C function, and the save area of every
 call, are kept on the C stack, which the start-up obtains in one piece
 before #cmd("main()") is called. Its size is fixed for the life of the
-program: 256 KB with #cmd("crt0") and #cmd("crt1"), 64 KB with
-#cmd("crtm").
+program: 256 KB with #cmd("@@CRT0"), 64 KB with #cmd("crtm").
 
 *The stack is not checked.* Each function takes its frame from the top of
 the stack as it is called, and nothing tests whether the frame still fits.

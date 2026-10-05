@@ -965,8 +965,18 @@ static __inline void *memclr(void *s, size_t n);
 
 === Notes
 
-#cmd("memclr()") is an inline function in the header\; it is compiled into
-the program, and no library module is called.
+- #cmd("memclr()") is an inline function in the header\; it is compiled
+  into the program, and no library module is called.
+- *The function does not tell the compiler that it writes storage*, like
+  the inline #cmd("memset()") of #cmd("<string.h>") (see @std-string-memset):
+  with optimization (#cmd("-O1"), #cmd("-Os"), #cmd("-O2")) a value of the
+  target that the compiler knew before the call can be used after it, as if
+  the storage had not been cleared. This happens in the source file that
+  calls #cmd("memclr()"). Follow each call with a compiler barrier:
+  ```
+  memclr(p, sizeof *p);
+  __asm__ __volatile__("" : : : "memory");
+  ```
 
 == memcpyp, strcpyp <ext-strcpyp>
 

@@ -1,0 +1,3 @@
+$ cc370 -O1 -nostartfiles -o modm $(cc370 -print-file-name=crtm.o) modm.c
+$ file370 -v modm | grep @@CRT0
+    CESD 146  @@CRT0    LR   addr=000000  owner=1  seg=1

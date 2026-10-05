@@ -19,14 +19,15 @@ Every function is described in the _libc370 Library Reference_, Chapter 30,
 
 == Before You Start <pg-tasks-start>
 
-#idx("crt0", "needed for threads")
-*Link with #cmd("crt0").* A thread is attached under the name
-#cmd("CTHREAD"), which the start-up module #cmd("crt0") makes known to MVS
-when the program starts. #cmd("crt0") is what cc370 links when nothing else
-is said, and it is the default #cmd("startup") of an mbt module. A program
-linked with #cmd("crt1") cannot create threads: #cmd("cthread_create()")
-returns #cmd("NULL") (@pg-startup-variants). The timer service and the
-worker pool create threads of their own and need #cmd("crt0") too.
+#idx("CTHREAD", "thread driver")
+*Nothing to do at link time.* A thread is attached under the name
+#cmd("CTHREAD"), the thread driver of the library. A program that calls
+#cmd("cthread_create()") links the driver from #cmd("libc.a"), and the C
+start-up makes the name known to MVS before #cmd("main()") is called
+(@pg-startup-variants). Any start-up of a C program will do; the timer
+service and the worker pool, which create threads of their own, need
+nothing more either. Only a module linked with #cmd("crtm") identifies
+nothing itself and depends on the program that called it.
 
 *Know what the threads share.* @pg-tasks-share-tab lists what belongs to the
 program as a whole and what each task has for itself.

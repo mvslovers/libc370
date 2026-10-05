@@ -40,8 +40,8 @@ without packing. #cmd("<mvs/link.h>") and #cmd("<mvs/apf.h>") include
 #cmd("-Wno-comment -Wno-unknown-pragmas") for the other two.]
 
 #idx("start-up", "of a C program")
-How a C program is started -- the start-up modules #cmd("crt0"),
-#cmd("crt1") and #cmd("crtm"), the stack, and the parameters a program
+How a C program is started -- the start-up routine #cmd("@@CRT0"), the
+start-up module #cmd("crtm"), the stack, and the parameters a program
 receives -- is described in the _libc370 Programmer's Guide_. This chapter
 describes only the interfaces of #cmd("<mvs/crt.h>") that a program may call.
 
@@ -483,8 +483,8 @@ address that points to a halfword length followed by the text, and set the
 high-order bit of that address, as in the example under
 @mvs-program-__linkt.
 
-A C program called this way may itself be a C program built with
-#cmd("crt0") or #cmd("crt1"). It then builds its own run-time anchors and
+A program called this way may itself be a C program with the usual
+start-up, #cmd("@@CRT0"). It then builds its own run-time anchors and
 releases them before it returns.
 
 == \_\_link <mvs-program-__link>
@@ -1258,6 +1258,10 @@ returns 0.
 
 The return codes of the marking of #var("pgm") and of
 #cmd("clib_identify_cthread()") are not reported.
+
+Through #cmd("clib_identify_cthread()") the function refers to
+#cmd("CTHREAD"), so a program that calls it links the thread driver, whether
+or not it creates threads.
 
 The external name is #cmd("@@APFSET").
 

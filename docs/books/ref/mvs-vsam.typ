@@ -265,6 +265,18 @@ The length of the record read; -1 at end of data; -2 after an error.
   #cmd("vsclear()") before reading on.
 - A key that is not found makes the positioning fail with a logical error
   (reason code 16), so the read returns -2, not -1.
+- *In libc370 2.2.0 and later, which is built with #cmd("-Os"),
+  #cmd("vsread()") does not report the end of the data or an error that its
+  own #cmd("GET") meets.* The function reads the flags of #var("vs") before
+  the #cmd("GET") and tests that copy afterwards, so the flags that the
+  exit routines set during the #cmd("GET") are not seen: the call returns a
+  length from #cmd("SHOWCB") as if a record had been read, with the record
+  area unchanged, and sets no #cmd("errno"). Because the flags are sticky,
+  the _next_ call returns -1 or -2. A failure of the positioning by
+  #var("key"), and a flag left from an earlier request, are reported as
+  described. Test #cmd("vseof()") and #cmd("vserror()") after each call,
+  as the example under @mvs-vsam-vsopen does, rather than the return value
+  alone.
 
 === Related
 @mvs-vsam-vssteq, @mvs-vsam-vsclear

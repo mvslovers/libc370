@@ -22,9 +22,15 @@ int main(void)
         vsclear(vs);
     }
 
-    while ((len = vsread(vs, rec, sizeof(rec), NULL, 0)) >= 0)
+    /* test vseof() and vserror() too: the return value of vsread()
+       can report the end of the data one call late */
+    for (;;) {
+        len = vsread(vs, rec, sizeof(rec), NULL, 0);
+        if (len < 0 || vseof(vs) || vserror(vs))
+            break;
         printf("%.*s\n", len, rec);
-    if (len == -2)
+    }
+    if (len == -2 || vserror(vs))
         printf("read error: rc %d, reason %d\n", vs->rc, vs->rsn);
 
     vsclose(vs);

@@ -1,0 +1,9 @@
+$ file370 -v plain | grep -E '@@CRT0|CTHREAD'
+    CESD 148  CTHREAD   WX 
+    CESD 154  @@CRT0    LR   addr=000000  owner=1  seg=1
+$ file370 -v thread | grep -E '@@CRT0|CTHREAD'
+    CESD 160  CTHREAD   LR   addr=009678  owner=71  seg=1
+    CESD 166  @@CRT0    LR   addr=000000  owner=1  seg=1
+$ file370 -v plain2 | grep -E '@@CRT0|CTHREAD'
+    CESD 147  @@CRT0    LR   addr=000080  owner=2  seg=1
+    CESD 152  CTHREAD   WX 

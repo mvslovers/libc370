@@ -153,9 +153,10 @@ was chosen:
 #deflist(width: 1.4in,
   [#cmd("cc370/include")], [the headers, with the subdirectories of
     @pg-intro-dirs-tab.],
-  [#cmd("cc370/lib")], [#cmd("libc.a"), the library itself; the start-up
-    modules #cmd("crt0.o"), #cmd("crt1.o") and #cmd("crtm.o")\; and cc370's
-    #cmd("libcc370rt.a").],
+  [#cmd("cc370/lib")], [#cmd("libc.a"), the library itself, which also holds
+    the start-up routine #cmd("@@CRT0")\; the start-up objects
+    #cmd("crt0.o"), #cmd("crt1.o") (two copies of #cmd("@@CRT0")) and
+    #cmd("crtm.o")\; and cc370's #cmd("libcc370rt.a").],
   [#cmd("cc370/macros")], [the assembler macros: libc370's own and the MVS
     system macros that the library needs, for programs that include
     assembler source (@pg-asm).],
@@ -200,7 +201,7 @@ string functions with it. A program that is small on MVS follows the same
 rule in its own libraries.
 
 Even so, a C program carries a run-time environment. The program of
-@pg-intro-hello-fig is a load module of 70,640 bytes, nearly all of it the
+@pg-intro-hello-fig is a load module of 71,312 bytes, nearly all of it the
 library: the start-up, the standard streams, the data set I/O beneath them
 and the formatted output of #cmd("printf()"). Each further function adds
 only what it needs.

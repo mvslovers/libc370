@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <mvs/vsam.h>
 
@@ -9,6 +10,7 @@ int bump(const char *keyval)
 {
     VSFILE  *vs;
     char    rec[80];
+    char    num[6];
     char    key[KEYLEN];
     int     len, n, rc;
 
@@ -22,7 +24,7 @@ int bump(const char *keyval)
     memcpy(key, keyval, strlen(keyval) < KEYLEN ? strlen(keyval) : KEYLEN);
 
     len = vsread(vs, rec, sizeof(rec), key, sizeof(key));
-    if (len < 0) {
+    if (len < 0 || vserror(vs) || vseof(vs)) {
         /* a missing key is an error (reason 16), not end of data */
         printf("key %.8s: rc %d, reason %d\n", key, vs->rc, vs->rsn);
         vsclose(vs);
@@ -34,7 +36,9 @@ int bump(const char *keyval)
         return 8;
     }
 
-    sscanf(rec + 9, "%5d", &n);
+    memcpy(num, rec + 9, 5);            /* columns 10-14 ...         */
+    num[5] = '\0';                      /* ... as a string           */
+    n = (int)strtol(num, NULL, 10);
     sprintf(rec + 9, "%05d", n + 1);    /* overwrites column 15 ...  */
     rec[14] = ' ';                      /* ... so restore it         */
 

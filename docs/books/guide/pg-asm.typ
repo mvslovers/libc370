@@ -208,8 +208,8 @@ The program should print an amount of 1234 and report six digits.
 
 *An assembler program that is not called from C has no C environment*, and
 cannot call a C function directly: there is no C stack and no run-time
-anchor. Let it call a C _program_ instead -- a load module linked with
-#cmd("crt0") or #cmd("crt1") -- with #cmd("LINK"), #cmd("ATTACH") or
+anchor. Let it call a C _program_ instead -- a load module with the usual C
+start-up, #cmd("@@CRT0") -- with #cmd("LINK"), #cmd("ATTACH") or
 #cmd("CALL"). The C start-up then builds the environment, and releases it
 when #cmd("main()") returns. @pg-startup describes the start-up modules,
 including #cmd("crtm") for the special case of a C module called on a task

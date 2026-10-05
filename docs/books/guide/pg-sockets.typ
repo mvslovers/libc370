@@ -78,8 +78,8 @@ program closes its sockets, every socket program includes
 
 The program must run in the C run-time environment that the start-up module
 builds (see @pg-startup): the library keeps its table of the program's
-sockets there, one for each address space. Either #cmd("crt0") or
-#cmd("crt1") will do.
+sockets there, one for each address space. The usual start-up,
+#cmd("@@CRT0"), builds it.
 
 == Text on the Line: EBCDIC and ASCII <pg-sockets-text>
 
