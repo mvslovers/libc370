@@ -6,10 +6,12 @@ three artifacts a cross-libc needs and drops them where cc370 already looks:
 
   headers   -> <sysroot>/include   (cc370 finds <stdio.h> etc. with no -I)
   libc.a    -> <sysroot>/lib       (the libc370 runtime; -lc pulls it)
-  crt0/1/m.o-> <sysroot>/lib       (startup variants, SEPARATE startfiles --
-                                    like glibc crt1.o, NOT inside libc.a, so the
-                                    linker picks exactly one @@CRT0 and there is
-                                    no startup-variant collision)
+  crt0/1/m.o-> <sysroot>/lib       (startfiles.  @@CRT0 is ALSO a member of
+                                    libc.a since #159: crt0.o and crt1.o are
+                                    copies of that one CRT, kept for drivers
+                                    and build tools that still name them; an
+                                    explicit object beats the archive.  crtm.o
+                                    stays outside: it defines @@CRT0 too)
 
 The sysroot is derived from the driver itself (cc370 -dumpmachine /
 -print-prog-name=cc1), so renaming the target triple later needs no edit here.
@@ -55,7 +57,10 @@ if not re.fullmatch(r"-O[0123s]", OPT):
 CFLAGS = [OPT, "-std=gnu99", "-trigraphs", "-Wuninitialized", f'-DVERSION="{VERSION}"',
           f"-I{ROOT}/include", f"-I{ROOT}"]   # private headers: "src/internal/x.h" (D10)
 ASMINC = ["-I", f"{ROOT}/maclib", "-I", f"{ROOT}/sysmac"]   # sysmac vendors SYS1.MACLIB
-STARTUPS = ("@@crt0", "@@crt1", "@@crtm")                      # -> separate startfiles
+STARTUPS = ("@@crtm",)              # -> separate startfile, never archived
+# crt0.o and crt1.o are the one CRT (#159), archived AND copied out under
+# both names for as long as cc370's STARTFILE_SPEC and mbt name them
+STARTFILES = (("crt0.o", "@@crt0"), ("crt1.o", "@@crt0"), ("crtm.o", "@@crtm"))
 
 
 def run(cmd, cwd=None):
@@ -209,6 +214,8 @@ def cmd_build():
                 crtobjs[stem] = o
             else:
                 objs.append(o)
+                if stem == "@@crt0":                  # archived, and a startfile
+                    crtobjs[stem] = o
     if fails:
         print(f"[libc] {len(fails)} failure(s):")
         for f in fails[:15]:
@@ -240,13 +247,13 @@ def cmd_build():
     r = run([AR370, "rc", libc] + sorted(objs))
     if r.returncode != 0:
         print("[libc] ar370 failed:", r.stderr); return 1
-    for stem in STARTUPS:
+    for name, stem in STARTFILES:
         if stem not in crtobjs:
             print(f"[libc] MISSING startup {stem}"); return 1
-        shutil.copy(crtobjs[stem], f"{BUILD}/{stem.lstrip('@')}.o")  # @@crt0 -> crt0.o
+        shutil.copy(crtobjs[stem], f"{BUILD}/{name}")
     nmem = sum(1 for l in run([AR370, "t", libc]).stdout.splitlines() if l.strip().endswith("bytes"))
     print(f"[libc] OK -> {libc} ({nmem} members, {os.path.getsize(libc)} bytes, {OPT})")
-    print(f"[libc] startfiles -> crt0.o crt1.o crtm.o")
+    print(f"[libc] startfiles -> crt0.o crt1.o (= the @@CRT0 member) crtm.o")
     return 0
 
 

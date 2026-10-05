@@ -74,6 +74,11 @@ quit:
     return task;
 }
 
+/* ATTACH names CTHREAD only as a string, which links nothing.  This hard
+** reference pulls the subtask driver out of libc.a, and with it @@CRT0's
+** weak reference resolves and the startup IDENTIFYs CTHREAD (#159). */
+__asm__("\n\tEXTRN CTHREAD");
+
 __asm__("\n&FUNC    SETC 'attach'");
 static int
 attach(CTHDTASK *task)

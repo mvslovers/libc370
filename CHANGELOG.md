@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+- **One C startup, and it is a member of `libc.a` (#159).** `crt0.o` and
+  `crt1.o` differed in a single IDENTIFY of the subtask driver `CTHREAD`:
+  crt0 issued it in every program, crt1 in none. There is now one `@@CRT0`.
+  It is archived in `libc.a`, so a link with no startup object gets it by
+  automatic library call. It is also still installed as `crt0.o` and
+  `crt1.o`, which are identical, for drivers and build tools that name
+  them. `CTHREAD` and `@@CTEXIT` moved into a member of their own, which
+  `cthread_create()` pulls in. The startup IDENTIFYs `CTHREAD` only when it
+  is linked. A program without threads is smaller and identifies nothing.
+  A program with threads needs no IDENTIFY of its own; one that is still
+  there gets RC 4 and does no harm. `crtm.o` is unchanged and stays
+  outside the archive. When the startup comes from the archive, `@@CRT0`
+  no longer sits at offset 0 of the module; the directory entry carries
+  the entry point, as it always did. Measured on MVS: with and without
+  threads, from the archive and from `crt0.o`, all as expected; the old
+  `crt0.o` and `crt1.o` each fail their half.
+
 ### Fixed
 - **`va_start()` with a `double` or `long long` last parameter (#382).**
   `<stdarg.h>` defined `va_start(ap, last)` as `&last + 4`, which is right

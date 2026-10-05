@@ -26,10 +26,11 @@ a gate that cries wolf gets ignored:
   * anything exporting @@MAIN -- mklibc.py drops those objects from libc.a by
     design ("a stray main must not land in libc.a"), so the handful of test and
     demo programs carrying one never share the namespace;
-  * the crt startfiles (STARTUPS below) -- they are copied out as crt0.o /
-    crt1.o / crtm.o and are mutually exclusive by construction: exactly one is
-    linked into any load module, so the @@CRT0 / CTHREAD / @@CTEXIT names they
-    share cannot collide.
+  * the separate startfile crtm (STARTUPS below) -- it is copied out as
+    crtm.o, never archived, and defines @@CRT0 like the CRT member @@crt0
+    does; at most one of the two is linked into a load module, and an
+    explicit crtm.o beats the archive.  (@@crt0 itself is archived since
+    #159, and crt0.o/crt1.o are copies of it.)
 
     python3 sdk/dupscan.py [path ...]      default: src asm
 
@@ -52,7 +53,7 @@ import sys
 
 # mirrors mklibc.py's STARTUPS -- kept in step by hand, and the build gate
 # passes its own list so a drift here cannot silently narrow the scan
-STARTUPS = ("@@crt0", "@@crt1", "@@crtm")
+STARTUPS = ("@@crtm",)
 
 ENTRY_DIR = re.compile(r"^\s+ENTRY\s+(\S+)", re.I)
 PROLOGUE = re.compile(r"^(\S+)\s+PDPPRLG\b.*\bENTRY=YES\b", re.I)
