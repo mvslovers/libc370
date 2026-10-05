@@ -53,7 +53,7 @@ struct ucm {
 #define UCMTPUTA    BIT2            /* ... TPUTTER IS ACTIVE (OS/VS2) */
 #define UCMRSV14    BIT3            /* ... RESERVED                 */
 #define UCMAMFA     BIT4            /* ... ACCEPT 'VARY' CMD W/MSTCONS OPND FROM    
-                                    /*     ANY MCS SECONDARY CONSOLE */
+                                     *     ANY MCS SECONDARY CONSOLE */
 #define UCMOGCE     BIT5            /* ... ONLY GRAPHIC CONSOLES ACTIVE */
 #define UCMMCS      BIT6            /* ... MCS GENERATED WITH SYSTEM */
 #define UCMFIX      BIT7            /* ... CONTROL PROGRAM MODE  

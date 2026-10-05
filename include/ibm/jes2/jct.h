@@ -41,7 +41,7 @@ JCTSTART EQU   *                   START OF DATA WRITTEN TO SPOOL
     unsigned int    JCTJLOGC;   /* 28 RESUME TRACK FOR LOG DATA SET         */
     unsigned int    JCTMSGSC;   /* 2C RESUME TRACK FOR MSG DATA SET         */
     unsigned char   __1[2];     /* 30 RESERVED                              */
-    unsigned char   JCTPRTY[2]; /* 32 /*PRIORITY OR JOB CARD 'PRTY='        */
+    unsigned char   JCTPRTY[2]; /* 32 / *PRIORITY OR JOB CARD 'PRTY='        */
     unsigned short  JCTJSSTP;   /* 34 JOB SELECT RESTART STEP (SSRQSTEP)    */
     unsigned short  JCTHQRCT;   /* 36 HOLD QUEUE RECORD COUNT               */
     unsigned char   JCTJSFLG;   /* 38 JOB SELECT FLAGS (SSRQFLG1)           */
@@ -68,9 +68,9 @@ JCTSTART EQU   *                   START OF DATA WRITTEN TO SPOOL
 #define JCTPURGE    JCTJOBFL    /* 3A START OF SMF PURGE RECORD             */
 
     unsigned char   JCTJBOPT;   /* 3B HASP JOB OPTIONS                      */
-#define JCTPRICD    0x80        /* ... /*PRIORITY CARD OR
+#define JCTPRICD    0x80        /* ... / *PRIORITY CARD OR
                                        JOB CARD 'PRTY=' PRESENT             */
-#define JCTSETUP    0x40        /* ... /*SETUP CARD(S) PRESENT              */
+#define JCTSETUP    0x40        /* ... / *SETUP CARD(S) PRESENT              */
 #define JCTTHOLD    0x20        /* ... TYPERUN=HOLD WAS SPECIFIED           */
 #define JCTNOLOG    0x10        /* ... NO JOB LOG OPTION                    */
 #define JCTXBACH    0x08        /* ... EXECUTION BATCHING JOB               */

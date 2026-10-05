@@ -150,23 +150,23 @@ struct txt99 {
 /*                                                                          */
 #define DALBSLM  0x0822 /*    BLKSZLIM                                      */
 /*******************************************************************
-/**
-/** KEYS FOR CONCATENATION FUNCTION
-/**
-/******************************************************************/
+ **
+ ** KEYS FOR CONCATENATION FUNCTION
+ **
+ ******************************************************************/
 #define DCCDDNAM 0x0001 /*    DDNAMES                                       */
 #define DCCPERMC 0x0004 /*    PERMANENTLY CONCATENATED                      */
 /*******************************************************************
-/**
-/** KEYS FOR DECONCATENATION FUNCTION
-/**
-/******************************************************************/
+ **
+ ** KEYS FOR DECONCATENATION FUNCTION
+ **
+ ******************************************************************/
 #define DDCDDNAM 0x0001 /*    DDNAME                                        */
 /*******************************************************************
-/**
-/** KEYS FOR INFORMATION RETRIEVAL FUNCTION
-/**
-/******************************************************************/
+ **
+ ** KEYS FOR INFORMATION RETRIEVAL FUNCTION
+ **
+ ******************************************************************/
 #define DINDDNAM 0x0001 /*    DDNAME                                        */
 #define DINDSNAM 0x0002 /*    DSNAME                                        */
 #define DINRTDDN 0x0004 /*    RETURN DDNAME                                 */
@@ -207,24 +207,24 @@ struct txt99 {
 /**        SJF DD INFORMATION RETRIEVAL INPUT KEYS                          */
 #define DINPATH  0x8017 /*    PATH                                          */
 /*************************************************************
-/**
-/** KEYS FOR REMOVE IN-USE FUNCTION
-/**
-/*************************************************************/
+ **
+ ** KEYS FOR REMOVE IN-USE FUNCTION
+ **
+ *************************************************************/
 #define DRITCBAD 0x0001 /*    TCB ADDRESS                                   */
 #define DRICURNT 0x0002 /*    CURRENT TASK OPTION                           */
 /*************************************************************
-/**
-/** KEYS FOR DDNAME ALLOCATION FUNCTION
-/**
-/*************************************************************/
+ **
+ ** KEYS FOR DDNAME ALLOCATION FUNCTION
+ **
+ *************************************************************/
 #define DDNDDNAM 0x0001 /*    DDNAME                                        */
 #define DDNRTDUM 0x0002 /*    RETURN DUMMY D.S. INDIC                       */
 /*************************************************************
-/**
-/** KEYS FOR UNALLOCATION FUNCTION
-/**
-/*************************************************************/
+ **
+ ** KEYS FOR UNALLOCATION FUNCTION
+ **
+ *************************************************************/
 #define DUNDDNAM 0x0001 /*    DDNAME                                        */
 #define DUNDSNAM 0x0002 /*    DSNAME                                        */
 #define DUNMEMBR 0x0003 /*    MEMBER NAME                                   */

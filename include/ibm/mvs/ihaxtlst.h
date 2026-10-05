@@ -6,10 +6,10 @@ typedef struct xtlst        XTLST;
 
 struct xtlst {
 /**********************************************************************
-/*                         EXTENT LIST                                *
-/*                                                                    *
-/*                     OS/VS2 RELEASE 2  8/28/74                      *
-/*********************************************************************/
+ *                         EXTENT LIST                                *
+ *                                                                    *
+ *                     OS/VS2 RELEASE 2  8/28/74                      *
+ *********************************************************************/
     unsigned        xtllnth;            /* 00 NUMBER OF BYTES IN EXTENT LIST (=16)      */
     unsigned        xtlnrfac;           /* 04 NUMBER OF RELOCATION FACTORS (=1)         */
     union {

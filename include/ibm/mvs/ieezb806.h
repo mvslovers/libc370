@@ -46,9 +46,9 @@ struct mttable {
     };
     
     char            mttwrptm[12];/* 14 TIME TABLE WAS INITIALIZED OR
-                                /*     LAST WRAPPED, IN FORM               
-                                /*     IT/WTHH:MM:SS.S PRODUCED BY         
-                                /*     THE USE OF THE CONTIME MACRO */
+                                 *     LAST WRAPPED, IN FORM               
+                                 *     IT/WTHH:MM:SS.S PRODUCED BY         
+                                 *     THE USE OF THE CONTIME MACRO */
     MTENTRY         *mttwrppt;  /* 20 ADDRESS OF LAST ENTRY STORED BEFORE TABLE WRAP */
     unsigned        mttpflag;   /* 24 MASTER TRACE FACILITY INTERNAL TRACING FLAGS USED BY IEEMB808 */
     unsigned        mttdarea;   /* 28 DATA AREA LENGTH              */

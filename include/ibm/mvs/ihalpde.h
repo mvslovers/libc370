@@ -6,10 +6,10 @@ typedef struct lpde     LPDE;   /* pointed to by CVTLPDIR   */
 
 struct lpde {
 /***********************************************************************
-/*              LINK PACK DIRECTORY ENTRY                              *
-/*                                                                     *
-/*            AOS/2 REL 2, 04/07/72, LEVEL=3                           *
-/**********************************************************************/
+ *              LINK PACK DIRECTORY ENTRY                              *
+ *                                                                     *
+ *            AOS/2 REL 2, 04/07/72, LEVEL=3                           *
+ **********************************************************************/
     LPDE            *lpdechn;       /* 00 ADDRESS OF NEXT LPDE IN CHAIN OF LPDE SYNONYMS */
     unsigned        lpderbp;        /* 04 RESERVED                                  */
     char            lpdename[8];    /* 08 EITHER MODULE NAME OR ALIAS NAME          */
