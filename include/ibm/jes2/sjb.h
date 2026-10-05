@@ -80,7 +80,7 @@ struct __sjb {
     unsigned        SJBESTPU;       /* 98 PUNCH EXCESSION LIMIT                 */
     void            *SJBXBSDB;      /* 9C ADDRESS OF XBM INPUT SDB              */
     unsigned char   SJBXBJNM[8];    /* A0 NAME OF BATCH DRIVER JOB              */
-    void            SJBCSCB;        /* A8 ADDRESS OF CSCB                       */
+    void            *SJBCSCB;       /* A8 ADDRESS OF CSCB                       */
     unsigned        SJBECB;         /* AC ECB FOR SJBIOB & JOB SELECT           */
     void            *SJBECBP;       /* B0 POINTER TO SJB'S ECB                  */
     void            *SJBASCBP;      /* B4 POINTER TO RELATED ASCB               */

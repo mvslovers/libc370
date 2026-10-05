@@ -13,7 +13,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   packing every layout is the same (637 offsets and sizes measured). The
   linkage pragmas never had an effect and newer cc370 warns about them.
   The generated library is byte-for-byte unchanged. 24 public headers
-  still fail `-Wall -Werror` for other reasons (#414).
+  still failed `-Wall -Werror` for other reasons (#414, below).
+- **Every public header compiles under `-Wall -Werror` (#414).** 13
+  headers carried a `/*` inside a comment, `<mvs/rfile.h>` used `size_t`
+  without `<stddef.h>`, and `<ibm/jes2/sjb.h>` declared a `void` member
+  (`SJBCSCB`, now `void *`). Together with #415 that was 38 of 130
+  headers a program could not include under `-Werror`; now all 130 can,
+  and a build check compiles each one alone to keep it so. The generated
+  library is byte-for-byte unchanged.
 - **`cthread_delete()` after `cthread_wait(&task->termecb)` frees the
   finished subtask (#431).** `cthread_wait()` clears the ECB it waited on,
   and `cthread_delete()`/`cthread_detach()` decided "ended" from the posted

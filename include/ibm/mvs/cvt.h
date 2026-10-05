@@ -225,7 +225,7 @@ struct cvt {
     unsigned char   cvtgtfa[3];     /* ED ADDRESS OF MAIN MONITOR CALL ROUTING      */
                                     /*    TABLE, MCHEAD  (OS/VS2)                   */
 
-    /* CVTAQAVT DS    0A -          /* F0 ADDRESS OF THE FIRST WORD OF THE TCAM     */
+    /* CVTAQAVT DS    0A -          / * F0 ADDRESS OF THE FIRST WORD OF THE TCAM     */
                                     /*    DISPATCHER WHICH CONTAINS THE ADDRESS OF  */
                                     /*    THE ADDRESS VECTOR TABLE (AVT).  IF ZERO, */
                                     /*    TCAM IS NOT STARTED.                      */

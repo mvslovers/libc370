@@ -1,6 +1,6 @@
 /* CLIBDSCB.H
-/*
-/* Data Set Control Blocks (MVS)
+ *
+ * Data Set Control Blocks (MVS)
 */
 #ifndef CLIBDSCB_H
 #define CLIBDSCB_H
@@ -214,14 +214,14 @@ struct locwork {
 };
 
 /* The following functions use the OBTAIN service and return the OBTAIN return code.
-/* Return Code
-/*    0(X'00') Successful completion of OBTAIN routine.
-/*    4(X'04') The required volume was not mounted.
-/*    8(X'08') The format-1 DSCB was not found in the VTOC of the specified volume.
-/*   12(X'0C') A permanent I/O error was encountered, or an invalid format-1 DSCB
-/*             was found when processing the specified volume, or an unexpected
-/*             error return code was received from CVAF (common VTOC access facility).
-/*   16(X'10') Invalid work area pointer.
+ * Return Code
+ *    0(X'00') Successful completion of OBTAIN routine.
+ *    4(X'04') The required volume was not mounted.
+ *    8(X'08') The format-1 DSCB was not found in the VTOC of the specified volume.
+ *   12(X'0C') A permanent I/O error was encountered, or an invalid format-1 DSCB
+ *             was found when processing the specified volume, or an unexpected
+ *             error return code was received from CVAF (common VTOC access facility).
+ *   16(X'10') Invalid work area pointer.
  */
 
 /* __dscbdv() - get DSCB by dataset name and volume */
