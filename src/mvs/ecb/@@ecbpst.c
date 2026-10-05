@@ -21,7 +21,7 @@ ecb_post(ECB *ecb, unsigned postcode)
         wto_traceback(NULL);
     }
 #endif
-    __asm__("POST  (%0),(%1)" : : "r"(ecb), "r"(postcode) : "1", "14", "15");
+    __asm__("POST  (%0),(%1)" : : "r"(ecb), "r"(postcode) : "1", "14", "15", "memory");
 
     return 0;
 }

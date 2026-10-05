@@ -41,7 +41,7 @@ __dscbv(const char vol[6], DSCB *dscb)
     "LR\t%0,15"
     : "=r" (rc)
     : "r" (&parms)
-    : "0", "1", "15" );
+    : "0", "1", "15" , "memory");
 
     return rc;
 }

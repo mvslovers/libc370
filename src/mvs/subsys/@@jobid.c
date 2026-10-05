@@ -11,7 +11,7 @@ const char *__jobid(void)
           "L\t15,JSCBSSIB             SSIB ADDRESS\n\t"
           "DROP\t15\n\t"
           "LA\t15,SSIBJBID-SSIB(,15)  JOB ID\n\t"
-          "ST\t15,%0" : "=m"(jobid));
+          "ST\t15,%0" : "=m"(jobid) : : "memory");
 	
 	return jobid;
 }

@@ -15,7 +15,7 @@ osxclose(DCB *dcb, int freedcb)
 
     /* normal close */
     __asm__("LR    1,%0\n\tSVC   20         CLOSE"
-        : : "r"(&plist) : "1", "14", "15");
+        : : "r"(&plist) : "1", "14", "15", "memory");
 
     /* if we have any private DCB storage we need to free it now */
     if (dcb->dcbpriv) {

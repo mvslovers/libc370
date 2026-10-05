@@ -37,7 +37,7 @@ void *getmain(unsigned size, unsigned sp)
     if (__issup()) {
         /* yes, get the PSW key */
         __asm__("IPK\t0             get psw key in R2\n\t"
-                "STC\t2,0(,%0)      save psw key" : : "r"(&pswkey) : "2");
+                "STC\t2,0(,%0)      save psw key" : : "r"(&pswkey) : "2", "memory");
     }
     else {
         unsigned        *psa        = 0;                            /* low core == PSA      */
@@ -58,7 +58,7 @@ void *getmain(unsigned size, unsigned sp)
             "LR\t%1,1               save the returned address"
             : "=r"(rc), "=r"(r1)
             : "r"(lv), "r"(sp)
-            : "0", "1", "14", "15");
+            : "0", "1", "14", "15", "memory");
 
     if (rc) {
         wtof("%s request for %u bytes from sp=%u failed, rc=0x%02X (%d)", __func__, lv, sp, rc, rc);
@@ -110,14 +110,14 @@ int freemain(void *addr)
 "         SLR   0,0             => source (NULL)\n"
 "         SLR   1,1             => fill 0\n"
 "         MVCL  14,0            Set target to fill character"
-    : : "r"(addr), "r"(lv) : "0", "1", "14", "15");
+    : : "r"(addr), "r"(lv) : "0", "1", "14", "15", "memory");
 
     /* release allocated storage */
     __asm__("FREEMAIN RC,A=(%1),LV=(%2),SP=(%3)\n\t"
             "LR\t%0,15"
             : "=r"(rc)
             : "r"(addr), "r"(lv), "r"(sp)
-            : "0", "1", "14", "15");
+            : "0", "1", "14", "15", "memory");
 
 quit:
     return rc;

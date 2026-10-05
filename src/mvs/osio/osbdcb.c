@@ -12,7 +12,7 @@ osbdcb(const char *ddname, EXITLIST *exitlist)
 
     if (!dcb) goto quit;
 
-    __asm__("MVC   0(PROTOLEN,%0),PROTODCB" : : "r"(dcb));
+    __asm__("MVC   0(PROTOLEN,%0),PROTODCB" : : "r"(dcb) : "memory");
 
     if (ddname) {
         if (ddname[2]==':') ddname += 3;

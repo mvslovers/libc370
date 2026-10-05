@@ -11,12 +11,12 @@ osddcb(const char *ddname)
     int     i;
 
     __asm("LA\t0,PROTOLEN\n\t"
-          "ST\t0,0(,%0)" : : "r"(&i));
+          "ST\t0,0(,%0)" : : "r"(&i) : "memory");
 
     dcb = calloc(1, i);
     if (!dcb) goto quit;
 
-    __asm__("MVC   0(PROTOLEN,%0),PROTODCB" : : "r"(dcb));
+    __asm__("MVC   0(PROTOLEN,%0),PROTODCB" : : "r"(dcb) : "memory");
 
     if (ddname) {
         if (ddname[2]==':') ddname += 3;

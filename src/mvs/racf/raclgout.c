@@ -23,7 +23,7 @@ racf_logout(ACEE **acee)
     RACINIT         plist;
 
     __asm__("XC\t0(0,%0),0(%0)      clear plist *** executed ***\n\t"
-            "EX\t%1,*-6" : : "r"(&plist), "r"(sizeof(plist)-1));
+            "EX\t%1,*-6" : : "r"(&plist), "r"(sizeof(plist)-1) : "memory");
     plist.len   = sizeof(plist);
 
     __asm__("\n"
@@ -31,7 +31,7 @@ racf_logout(ACEE **acee)
 "* See if we're in supervisor state\n"
 "*\n"
 "         TESTAUTH FCTN=0,STATE=YES,KEY=NO,RBLEVEL=1\n\tST\t15,%0" : "=m"(rc)
-        : : "1", "14", "15");
+        : : "1", "14", "15", "memory");
     if (rc==0) {
         /* we're in supervisor state */
         sup = 1;
@@ -43,14 +43,14 @@ racf_logout(ACEE **acee)
 "*\n"
 "* we're in supervisor state, switch to key 0\n"
 "*\n"
-"         IPK\t,\n\tST\t2,%0\n\tSPKA\t0(0)" : "=m"(key) : : "2");
+"         IPK\t,\n\tST\t2,%0\n\tSPKA\t0(0)" : "=m"(key) : : "2", "memory");
     }
     else {
         __asm__("\n"
 "*\n"
 "* enter supervisor state\n"
 "*\n"
-"         MODESET KEY=ZERO,MODE=SUP\n" : : : "1", "14", "15");
+"         MODESET KEY=ZERO,MODE=SUP\n" : : : "1", "14", "15", "memory");
     }
 
     /* The ACEE to delete travels in the parameter list (ACEE= below, offset
@@ -66,7 +66,7 @@ racf_logout(ACEE **acee)
 "* delete ACEE\n"
 "*\n"
 "         RACINIT ENVIR=DELETE,ACEE=(%1),MF=(E,%2)\n"
-"         ST\t15,%0" : "=m"(rc) : "r"(acee), "m"(plist) : "1", "14", "15");
+"         ST\t15,%0" : "=m"(rc) : "r"(acee), "m"(plist) : "1", "14", "15", "memory");
 
     /* One thing does have to be done by hand.  If ASXBSENV points at the ACEE
     ** just deleted it must be cleared, and RAKF does NOT do it -- measured,
@@ -88,14 +88,14 @@ racf_logout(ACEE **acee)
 "*\n"
 "* we're in supervisor state, switch back to callers key\n"
 "*\n"
-"         SPKA\t0(%0)" : : "r"(key));
+"         SPKA\t0(%0)" : : "r"(key) : "memory");
     }
     else {
         __asm__("\n"
 "*\n"
 "* return to problem state\n"
 "*\n"
-"         MODESET KEY=NZERO,MODE=PROB\n" : : : "1", "14", "15");
+"         MODESET KEY=NZERO,MODE=PROB\n" : : : "1", "14", "15", "memory");
     }
 
     *acee = (ACEE*)0;

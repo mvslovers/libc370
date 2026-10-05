@@ -21,7 +21,7 @@ sleep(unsigned seconds)
     if (seconds > 0) {
 #if 0
         __asm__("STIMER WAIT,BINTVL=(%0)"
-                : : "r"(&t): "0", "1", "14", "15");
+                : : "r"(&t): "0", "1", "14", "15", "memory");
 #else
         ecb_timed_wait(&timeout_ecb, seconds * 100, 0);
 #endif

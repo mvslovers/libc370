@@ -19,7 +19,7 @@ __rdjfcb(DCB *dcb, JFCB *jfcb)
 "         ST     15,%0"
         : "=m"(rc)
         : "r"(dcb), "r"(&plist)
-        : "1", "14", "15" );
+        : "1", "14", "15" , "memory");
 
     dcb->dcbexlst = (void*)exlst;
 

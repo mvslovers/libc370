@@ -18,7 +18,7 @@ int __prob(unsigned char pswkey, unsigned char *savekey)
         /* yes */
         if (savekey) {
             /* get current PSW key */
-            __asm__("IPK\t0\n\tSTC\t2,0(,%0)" : : "r"(savekey) : "2");
+            __asm__("IPK\t0\n\tSTC\t2,0(,%0)" : : "r"(savekey) : "2", "memory");
         }
 
         /* are we to set a new PSW key? */
@@ -28,11 +28,11 @@ int __prob(unsigned char pswkey, unsigned char *savekey)
             if (pswkey < 0x10) pswkey = pswkey << 4;    /* put key value in next higher nibble */
 
             /* set new PSW key */
-            __asm__("IC\t2,0(,%0)\n\tSPKA\t0(2)" : : "r"(&pswkey) : "2");
+            __asm__("IC\t2,0(,%0)\n\tSPKA\t0(2)" : : "r"(&pswkey) : "2", "memory");
         }
 
         /* switch to problem mode */
-        __asm__("MODESET\tMODE=PROB\n\tST\t15,0(,%0)" : : "r"(&rc) : "1", "14", "15");
+        __asm__("MODESET\tMODE=PROB\n\tST\t15,0(,%0)" : : "r"(&rc) : "1", "14", "15", "memory");
         goto quit;
     }
 

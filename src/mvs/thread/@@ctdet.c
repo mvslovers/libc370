@@ -78,7 +78,7 @@ detach(CTHDTASK *task)
     __asm("DS\t0H\n\t"
         "DETACH (%1),STAE=YES   detach the subtask\n\t"
         "ST\t15,%0          save the return code"
-        : "=m"(task->rc) : "r"(&tcb) : "14","15","0","1" );
+        : "=m"(task->rc) : "r"(&tcb) : "14","15","0","1" , "memory");
 #if 0
     wtof("Return from DETACH for task=%08X, TCB=%08X, RC=%d", task, task->tcb, task->rc);
 #endif

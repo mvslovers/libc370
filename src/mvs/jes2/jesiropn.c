@@ -139,33 +139,33 @@ static int __vsam_open_intrdr(char *ddname, VSFILE **vsfile)
 
     /* get prototype ACB */
     __asm__("MVC\t0($ACBLEN,%0),ACBMODEL    Copy prototype ACB"
-        : : "r"(&vs->acb));
+        : : "r"(&vs->acb) : "memory");
 
     /* put DD name into ACB */
     memcpy(acb->acbddnm, vs->ddname, sizeof(acb->acbddnm));
 
     /* get prototype RPL */
     __asm__("MVC\t0($RPLLEN,%0),RPLMODEL    Copy prototype RPL"
-        : : "r"(&vs->rpl));
+        : : "r"(&vs->rpl) : "memory");
 
     /* put ACB address into RPL */
     __asm__("MODCB RPL=(%0),ACB=((%1)),MF=(G,(%2))"
-        : : "r"(&vs->rpl), "r"(&vs->acb), "r"(pl));
+        : : "r"(&vs->rpl), "r"(&vs->acb), "r"(pl) : "0", "1", "14", "15", "memory");
 
     /* set ACB properties */
     __asm__("MODCB ACB=(%0),MF=(G,(%1))"
-            : : "r"(&vs->acb), "r"(pl) : "1", "14", "15");
+            : : "r"(&vs->acb), "r"(pl) : "1", "14", "15", "memory");
 
     /* set RPL properties */
     __asm__("MODCB RPL=(%0),AREA=(%1),AREALEN=80,RECLEN=80,MF=(G,(%2))"
-             : : "r"(&vs->rpl), "r"(wa), "r"(pl) : "1", "14", "15");
+             : : "r"(&vs->rpl), "r"(wa), "r"(pl) : "1", "14", "15", "memory");
 
 
     /* open VSAM cluster */
     __asm__("MVC\t0($OPNLEN,%1),OPNMODEL    Copy prototype OPEN\n\t"
             "OPEN  ((%0)),MF=(E,(%1))\n\t"
             "ST    15,%2"
-        : : "r"(&vs->acb), "r"(pl), "m"(rc) : "1", "14", "15");
+        : : "r"(&vs->acb), "r"(pl), "m"(rc) : "1", "14", "15", "memory");
 
     /* The open flag decides, not R15: OPEN can come back with a warning
      * (R15=4) over an ACB that is open and usable, and reporting that as

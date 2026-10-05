@@ -21,7 +21,7 @@ check(DECB *decb)
     __asm__(
          "LR    1,%0\n"
 "         CHECK (1)"
-        : : "r"(decb) : "0", "1", "14", "15");
+        : : "r"(decb) : "0", "1", "14", "15", "memory");
 
     return;
 }

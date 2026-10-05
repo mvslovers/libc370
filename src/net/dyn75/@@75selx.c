@@ -34,7 +34,7 @@ selectex(int maxsock, fd_set *r, fd_set *w, fd_set *e, timeval * t,
     int         bytes;
     PL75        pl;
 
-    __asm__("XC\t0(64,%0),0(%0)     clear __75 parameter list" : : "r" (&pl));
+    __asm__("XC\t0(64,%0),0(%0)     clear __75 parameter list" : : "r" (&pl) : "memory");
 
     /* maxsock *should* be highest sockets plus 1, so min is 2
     ** since the DYN75 code starts socket assignment with 1.
@@ -145,7 +145,7 @@ selectex(int maxsock, fd_set *r, fd_set *w, fd_set *e, timeval * t,
         }
 
         /* we need to wait 0.08 seconds */
-        __asm__("STIMER WAIT,BINTVL==F'8'   0.08 seconds" : : : "0", "1");
+        __asm__("STIMER WAIT,BINTVL==F'8'   0.08 seconds" : : : "0", "1", "memory");
     }
 
 check:

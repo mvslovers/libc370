@@ -78,7 +78,7 @@ void *__getmsp(size_t size, unsigned char sp)
             "LR\t%1,1               save the returned address"
             : "=r"(rc), "=r"(r1)
             : "r"(lv), "r"(usp)
-            : "0", "1", "14", "15");
+            : "0", "1", "14", "15", "memory");
     if (rc) return (void *)0;
 
     /* @@GETM's header, not getmain()'s: +4 is the plain requested size

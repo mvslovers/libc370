@@ -33,7 +33,7 @@ __asm__( "DS    0H\n"
 "         B     DONE\n"
 "POSTERR  DS    0H\n"
 "         BR    14\n"
-"DONE     DS    0H" : : "r"(ascb), "r"(ecb), "r"(postcode) );
+"DONE     DS    0H" : : "r"(ascb), "r"(ecb), "r"(postcode)  : "0", "1", "14", "15", "memory");
 
 
 }

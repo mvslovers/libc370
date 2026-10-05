@@ -44,7 +44,7 @@ int __link(const char *pgm, void *dcb, void *r1, int *prc)
 "DONE\tDS\t0H\n\t"
         "LR\t%0,15           save return code"
         :"=r"(rc)
-        :"r"(plist), "r"(r1));
+        :"r"(plist), "r"(r1) : "0", "1", "14", "15", "memory");
 
 quit:
     if (prc) *prc = rc;         /* give return code to caller */

@@ -52,7 +52,7 @@ racf_login(const char *user, const char *pass, const char *group, int *racf_rc)
     ** address-space-wide serialization point (#64). */
 
     __asm__("XC\t0(0,%0),0(%0)      clear plist *** executed ***\n\t"
-            "EX\t%1,*-6" : : "r"(&plist), "r"(sizeof(plist)-1));
+            "EX\t%1,*-6" : : "r"(&plist), "r"(sizeof(plist)-1) : "memory");
     plist.len   = sizeof(plist);
 
     /* provide default for user */
@@ -63,11 +63,11 @@ racf_login(const char *user, const char *pass, const char *group, int *racf_rc)
     userid[0] = (char)len;
     if (len > 0) {
         __asm__("MVC\t0(8,%0),=CL8' '   clear userid to spaces"
-            : : "r"(&userid[1]));
+            : : "r"(&userid[1]) : "memory");
         __asm__("MVC\t0(0,%0),0(%1)     copy userid *** executed ***\n\t"
-                "EX\t%2,*-6" : : "r"(&userid[1]), "r"(user), "r"(len-1));
+                "EX\t%2,*-6" : : "r"(&userid[1]), "r"(user), "r"(len-1) : "memory");
         __asm__("OC\t0(8,%0),=CL8' '    fold to upper case"
-            : : "r"(&userid[1]));
+            : : "r"(&userid[1]) : "memory");
     }
 
     if (pass) {
@@ -76,11 +76,11 @@ racf_login(const char *user, const char *pass, const char *group, int *racf_rc)
         password[0] = (char)len;
         if (len > 0) {
             __asm__("MVC\t0(8,%0),=CL8' '   clear password to spaces"
-                : : "r"(&password[1]));
+                : : "r"(&password[1]) : "memory");
             __asm__("MVC\t0(0,%0),0(%1)     copy password *** executed ***\n\t"
-                    "EX\t%2,*-6" : : "r"(&password[1]), "r"(pass), "r"(len-1));
+                    "EX\t%2,*-6" : : "r"(&password[1]), "r"(pass), "r"(len-1) : "memory");
             __asm__("OC\t0(8,%0),=CL8' '    fold to upper case"
-                : : "r"(&password[1]));
+                : : "r"(&password[1]) : "memory");
         }
     }
 
@@ -89,11 +89,11 @@ racf_login(const char *user, const char *pass, const char *group, int *racf_rc)
     groupid[0] = (char)len;
     if (len > 0) {
         __asm__("MVC\t0(8,%0),=CL8' '   clear group to spaces"
-            : : "r"(&groupid[1]));
+            : : "r"(&groupid[1]) : "memory");
         __asm__("MVC\t0(0,%0),0(%1)     copy group *** executed ***\n\t"
-                "EX\t%2,*-6" : : "r"(&groupid[1]), "r"(group), "r"(len-1));
+                "EX\t%2,*-6" : : "r"(&groupid[1]), "r"(group), "r"(len-1) : "memory");
         __asm__("OC\t0(8,%0),=CL8' '    fold to upper case"
-            : : "r"(&groupid[1]));
+            : : "r"(&groupid[1]) : "memory");
         group = groupid;
     }
 
@@ -102,7 +102,7 @@ racf_login(const char *user, const char *pass, const char *group, int *racf_rc)
 "* See if we're in supervisor state\n"
 "*\n"
 "         TESTAUTH FCTN=0,STATE=YES,KEY=NO,RBLEVEL=1\n\tST\t15,%0" : "=m"(rc)
-        : : "1", "14", "15");
+        : : "1", "14", "15", "memory");
     if (rc==0) {
         /* we're in supervisor state */
         sup = 1;
@@ -115,7 +115,7 @@ racf_login(const char *user, const char *pass, const char *group, int *racf_rc)
 "* enter supervisor state\n"
 "*\n"
 "         MODESET KEY=ZERO,MODE=SUP\n"
-        : : : "1", "14", "15");
+        : : : "1", "14", "15", "memory");
     }
 
     if (pass) {
@@ -127,7 +127,7 @@ racf_login(const char *user, const char *pass, const char *group, int *racf_rc)
 "               ACEE=(%1),USERID=(%2),PASSWRD=(%3),GROUP=(%4),MF=(E,%5)\n"
 "         ST\t15,%0" : "=m"(rc)
             : "r"(&acee), "r"(userid), "r"(password), "r"(group), "m"(plist)
-            : "1", "14", "15");
+            : "1", "14", "15", "memory");
     }
     else {
         __asm__("\n"
@@ -138,7 +138,7 @@ racf_login(const char *user, const char *pass, const char *group, int *racf_rc)
 "               ACEE=(%1),USERID=(%2),GROUP=(%3),MF=(E,%4)\n"
 "         ST\t15,%0" : "=m"(rc)
             : "r"(&acee), "r"(userid), "r"(group), "m"(plist)
-            : "1", "14", "15");
+            : "1", "14", "15", "memory");
     }
 
     if (!sup) {
@@ -148,7 +148,7 @@ racf_login(const char *user, const char *pass, const char *group, int *racf_rc)
 "* return to problem state\n"
 "*\n"
 "         MODESET KEY=NZERO,MODE=PROB\n"
-        : : : "1", "14", "15");
+        : : : "1", "14", "15", "memory");
     }
 
     if (racf_rc) *racf_rc = rc;

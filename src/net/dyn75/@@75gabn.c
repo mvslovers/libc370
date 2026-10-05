@@ -19,7 +19,7 @@ getaddrbyname(const char *name)
     int         len;
     PL75        pl;
 
-    __asm__("XC\t0(64,%0),0(%0)     clear __75 parameter list" : : "r" (&pl));
+    __asm__("XC\t0(64,%0),0(%0)     clear __75 parameter list" : : "r" (&pl) : "memory");
 
     len = strlen(name);
     if (!len) goto quit;

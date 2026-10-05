@@ -95,7 +95,7 @@ attach(CTHDTASK *task)
         "ST\t15,%1"
         : "=m"(task->tcb), "=m"(task->rc)
         : "r"(task), "r"(&task->termecb), "r"(work)
-        : "0", "1", "14", "15" );
+        : "0", "1", "14", "15" , "memory");
 
     return task->rc;
 }

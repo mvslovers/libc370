@@ -46,9 +46,9 @@ wtor(char *reply, unsigned replymax, const char *text)
     }
 
     __asm__("LR\t1,%0\n\t"
-            "SVC\t35" : : "r"(&msg) : "0", "1", "14", "15");
+            "SVC\t35" : : "r"(&msg) : "0", "1", "14", "15", "memory");
 
     if (msg.ecb) {
-        __asm__("WAIT\t1,ECB=(%0)" : : "r"(msg.ecb) : "0", "1", "14", "15");
+        __asm__("WAIT\t1,ECB=(%0)" : : "r"(msg.ecb) : "0", "1", "14", "15", "memory");
     }
 }

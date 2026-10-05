@@ -20,10 +20,10 @@ __vsshwc(ACB *acb, const char *name, char *buf, int buflen)
     strcpyp(tmp, sizeof(tmp), name, ' ');
 
     __asm__("SHOWCAT ACB=(%0),AREA=(%1),NAME=(%2),MF=(B,(%3))"
-        : : "r"(acb), "r"(buf), "r"(tmp), "r"(&pl) : "1", "14", "15");
+        : : "r"(acb), "r"(buf), "r"(tmp), "r"(&pl) : "1", "14", "15", "memory");
 
     __asm__("SHOWCAT MF=(E,(%0))\n\t"
-            "ST\t15,%1" : : "r"(&pl), "m"(rc) : "1", "14", "15");
+            "ST\t15,%1" : : "r"(&pl), "m"(rc) : "1", "14", "15", "memory");
 
     return rc;
 }

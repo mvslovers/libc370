@@ -171,7 +171,7 @@ tso_getline(unsigned char *buf, size_t len)
 	__asm__(
 		"LR\t0,%0                buffer length\n\t"
 		"LR\t1,%1                flags and buffer address\n\t"
-		"TGET\t(1),(0),R" : : "r"(r0), "r"(r1) );
+		"TGET\t(1),(0),R" : : "r"(r0), "r"(r1)  : "0", "1", "14", "15", "memory");
 
 	buf[len-1] = 0;
 	// wtodumpf(buf, len, "%s: buf 1", __func__);

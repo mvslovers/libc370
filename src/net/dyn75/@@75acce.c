@@ -22,14 +22,14 @@ accept(int ss, struct sockaddr_in *name, int *length)
 #if 0
         memset(&temp, 0, sizeof(temp));
 #else
-        __asm__("XC\t0(16,%0),0(%0)     clear temp sockaddr_in" : : "r"(name));
+        __asm__("XC\t0(16,%0),0(%0)     clear temp sockaddr_in" : : "r"(name) : "memory");
 #endif
     }
 
 #if 0
     memset(&pl, 0, sizeof(pl));
 #else
-    __asm__("XC\t0(64,%0),0(%0)     clear __75 parameter list" : : "r" (&pl));
+    __asm__("XC\t0(64,%0),0(%0)     clear __75 parameter list" : : "r" (&pl) : "memory");
 #endif
 
     for(;;) {
@@ -44,7 +44,7 @@ accept(int ss, struct sockaddr_in *name, int *length)
         if (rc!=-2) break;
 
         /* we need to wait */
-        __asm__("STIMER WAIT,BINTVL==F'8'   0.08 seconds" : : : "0", "1");
+        __asm__("STIMER WAIT,BINTVL==F'8'   0.08 seconds" : : : "0", "1", "memory");
     }
 
     if (rc >= 0) {

@@ -11,7 +11,7 @@ int __bldl(BLDL *bldl, void *dcb)
     if (!bldl->ll)  bldl->ll    = sizeof(DE76);
 
     __asm__("BLDL\t(%1),(%2)\n\t"
-            "LR\t%0,R15" : "=r"(rc) : "r"(dcb), "r"(bldl) : "0", "1", "14", "15");
+            "LR\t%0,R15" : "=r"(rc) : "r"(dcb), "r"(bldl) : "0", "1", "14", "15", "memory");
 
     return rc;
 }

@@ -17,7 +17,7 @@ __PDPCLIB_API__ void *memcpy(void *s1, const void *s2, size_t n)
 "         L    0,%2     => source (s2)\n"
 "         L    1,%1     => length (n)\n"
 "         MVCL 14,0     Copy source to target"
-    : : "m"(s1), "m"(n), "m"(s2) : "0", "1", "14", "15");
+    : : "m"(s1), "m"(n), "m"(s2) : "0", "1", "14", "15", "memory");
 
     return (s1);
 }

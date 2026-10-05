@@ -7,7 +7,7 @@ int
 ecb_waitlist(ECB **ecblist)
 {
     /* wait for ECB post */
-    __asm__("WAIT ECBLIST=(%0)" : : "r"(ecblist) : "0", "1", "14", "15");
+    __asm__("WAIT ECBLIST=(%0)" : : "r"(ecblist) : "0", "1", "14", "15", "memory");
 
     return 0;
 }

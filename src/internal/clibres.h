@@ -125,7 +125,7 @@ static __inline int res_request_sup(RES *res)
         "LR\tR1,%2          request code\n\t"
         "BALR\tR14,%1       call SVC stub\n\t"
         "LR\t%0,R15         save return code"
-        : "=r"(rc) : "r"(res->svcstub), "r"(SVCMAIN_SUP) : "0", "1", "14", "15");
+        : "=r"(rc) : "r"(res->svcstub), "r"(SVCMAIN_SUP) : "0", "1", "14", "15", "memory");
 
     /* rc==0 caller was in problem state before call
     ** rc!=0 caller was already in supervisor state before call
@@ -143,7 +143,7 @@ static __inline int res_request_prob(RES *res)
         "LR\tR1,%2          request code\n\t"
         "BALR\tR14,%1       call SVC stub\n\t"
         "LR\t%0,R15         save return code"
-        : "=r"(rc) : "r"(res->svcstub), "r"(SVCMAIN_PROB) : "0", "1", "14", "15");
+        : "=r"(rc) : "r"(res->svcstub), "r"(SVCMAIN_PROB) : "0", "1", "14", "15", "memory");
 
     /* rc==0 caller was in supervisor state before call
     ** rc!=0 caller was already in problem state before call
@@ -162,7 +162,7 @@ static __inline int res_request_key(RES *res, unsigned char pswkey)
         "LR\tR1,%2          request code\n\t"
         "BALR\tR14,%1       call SVC stub\n\t"
         "LR\t%0,R15         save old psw key"
-        : "=r"(rc) : "r"(res->svcstub), "r"(SVCMAIN_KEY), "r"(pswkey) : "0", "1", "14", "15");
+        : "=r"(rc) : "r"(res->svcstub), "r"(SVCMAIN_KEY), "r"(pswkey) : "0", "1", "14", "15", "memory");
 
     /* rc==previous psw key */
     return rc;
@@ -178,7 +178,7 @@ static __inline int res_request_authon(RES *res)
         "LR\tR1,%2          request code\n\t"
         "BALR\tR14,%1       call SVC stub\n\t"
         "LR\t%0,R15         save return code"
-        : "=r"(rc) : "r"(res->svcstub), "r"(SVCMAIN_AUTHON) : "0", "1", "14", "15");
+        : "=r"(rc) : "r"(res->svcstub), "r"(SVCMAIN_AUTHON) : "0", "1", "14", "15", "memory");
 
     /* rc==0 caller was not authorized before call
     ** rc!=0 caller was already authorized before call
@@ -196,7 +196,7 @@ static __inline int res_request_authoff(RES *res)
         "LR\tR1,%2          request code\n\t"
         "BALR\tR14,%1       call SVC stub\n\t"
         "LR\t%0,R15         save return code"
-        : "=r"(rc) : "r"(res->svcstub), "r"(SVCMAIN_AUTHOFF) : "0", "1", "14", "15");
+        : "=r"(rc) : "r"(res->svcstub), "r"(SVCMAIN_AUTHOFF) : "0", "1", "14", "15", "memory");
 
     /* rc==0 caller was authorized before call
     ** rc!=0 caller was not authorized before call
@@ -211,7 +211,7 @@ static __inline int res_request_state(void)
     __asm__ __volatile__("\n*** ARE WE IN SUPERVISOR STATE ***");
     __asm__ __volatile__(
         "TESTAUTH FCTN=0,STATE=YES,KEY=NO,RBLEVEL=1,BRANCH=NO\n\t"
-        "LR\t%0,R15     R15==0 is supervisor state" : "=r"(rc) : : "0", "1", "14", "15");
+        "LR\t%0,R15     R15==0 is supervisor state" : "=r"(rc) : : "0", "1", "14", "15", "memory");
 
     return rc;  /* rc==0 in supervisor state, rc!=0 in problem state */
 }
@@ -244,7 +244,7 @@ static __inline void *res_request_getmain(RES *res, unsigned size, unsigned sp)
         "LA\tR1,%2          => parameter list\n\t"
         "BALR\tR14,R15      call dispatcher\n\t"
         "LR\t%0,R15         save return code"
-        : "=r"(rc) : "r"(res), "m"(plist) : "0", "1", "14", "15");
+        : "=r"(rc) : "r"(res), "m"(plist) : "0", "1", "14", "15", "memory");
 
     if (rc!=0) return 0;
     return (void*)*(plist.stg);
@@ -264,7 +264,7 @@ static __inline int res_request_freemain(RES *res, void *stg)
         "LA\tR1,%2          => parameter list\n\t"
         "BALR\tR14,R15      call dispatcher\n\t"
         "LR\t%0,R15         save return code"
-        : "=r"(rc) : "r"(res), "m"(plist) : "0", "1", "14", "15");
+        : "=r"(rc) : "r"(res), "m"(plist) : "0", "1", "14", "15", "memory");
 
     return rc;
 }
@@ -281,7 +281,7 @@ static __inline int res_request_wto(RES *res, const char *buf)
         "LR\tR15,%1         => resident address\n\t"
         "LA\tR1,%2          => parameter list\n\t"
         "BALR\tR14,R15      call dispatcher\n\t"
-        : : "r"(res), "m"(plist) : "0", "1", "14", "15");
+        : : "r"(res), "m"(plist) : "0", "1", "14", "15", "memory");
 
     return 0;
 }
@@ -301,7 +301,7 @@ static __inline int res_request_wtof(RES *res, const char *buf, ...)
         "LR\tR15,%1         => resident address\n\t"
         "LA\tR1,%2          => parameter list\n\t"
         "BALR\tR14,R15      call dispatcher\n\t"
-        : : "r"(res), "m"(plist) : "0", "1", "14", "15");
+        : : "r"(res), "m"(plist) : "0", "1", "14", "15", "memory");
 
     va_end(plist.tlist);
 
@@ -325,7 +325,7 @@ static __inline int res_request_vsnprintf(RES *res, char *s, int n, const char *
         "LA\tR1,%2          => parameter list\n\t"
         "BALR\tR14,R15      call dispatcher\n\t"
         "LR\t%0,R15         save return code"
-        : "=r"(rc) : "r"(res), "m"(plist) : "0", "1", "14", "15");
+        : "=r"(rc) : "r"(res), "m"(plist) : "0", "1", "14", "15", "memory");
 
     return rc;
 }
@@ -349,7 +349,7 @@ static __inline int res_request_snprintf(RES *res, char *s, int n, const char *f
         "LA\tR1,%2          => parameter list\n\t"
         "BALR\tR14,R15      call dispatcher\n\t"
         "LR\t%0,R15         save return code"
-        : "=r"(rc) : "r"(res), "m"(plist) : "0", "1", "14", "15");
+        : "=r"(rc) : "r"(res), "m"(plist) : "0", "1", "14", "15", "memory");
 
     va_end(plist.arg);
 
@@ -371,7 +371,7 @@ static __inline int res_request_wtodump(RES *res, const char *title, void *varea
         "LR\tR15,%1         => resident address\n\t"
         "LA\tR1,%2          => parameter list\n\t"
         "BALR\tR14,R15      call dispatcher\n\t"
-        : : "r"(res), "m"(plist) : "0", "1", "14", "15");
+        : : "r"(res), "m"(plist) : "0", "1", "14", "15", "memory");
 
     return 0;
 }
@@ -399,7 +399,7 @@ static __inline int res_request_wtodumpf(RES *res, void *buf, int len, const cha
         "LR\tR15,%1         => resident address\n\t"
         "LA\tR1,%2          => parameter list\n\t"
         "BALR\tR14,R15      call dispatcher\n\t"
-        : : "r"(res), "m"(plist) : "0", "1", "14", "15");
+        : : "r"(res), "m"(plist) : "0", "1", "14", "15", "memory");
 
     return 0;
 }
@@ -420,7 +420,7 @@ static __inline void *res_request_getstack(RES *res, unsigned size)
         "LA\tR1,%2          => parameter list\n\t"
         "BALR\tR14,R15      call dispatcher\n\t"
         "LR\t%0,R15         save return code"
-        : "=r"(rc) : "r"(res), "m"(plist) : "0", "1", "14", "15");
+        : "=r"(rc) : "r"(res), "m"(plist) : "0", "1", "14", "15", "memory");
 
     if (rc!=0) return 0;
     return (void*)*(plist.stg);
@@ -440,7 +440,7 @@ static __inline int res_request_freestack(RES *res, void *stg)
         "LA\tR1,%2          => parameter list\n\t"
         "BALR\tR14,R15      call dispatcher\n\t"
         "LR\t%0,R15         save return code"
-        : "=r"(rc) : "r"(res), "m"(plist) : "0", "1", "14", "15");
+        : "=r"(rc) : "r"(res), "m"(plist) : "0", "1", "14", "15", "memory");
 
     return rc;
 }
@@ -460,7 +460,7 @@ static __inline int res_request_step_lock(RES *res, void *stg, int read)
         "LA\tR1,%2          => parameter list\n\t"
         "BALR\tR14,R15      call dispatcher\n\t"
         "LR\t%0,R15         save return code"
-        : "=r"(rc) : "r"(res), "m"(plist) : "0", "1", "14", "15");
+        : "=r"(rc) : "r"(res), "m"(plist) : "0", "1", "14", "15", "memory");
 
     return rc;
 }
@@ -480,7 +480,7 @@ static __inline int res_request_step_unlock(RES *res, void *stg, int read)
         "LA\tR1,%2          => parameter list\n\t"
         "BALR\tR14,R15      call dispatcher\n\t"
         "LR\t%0,R15         save return code"
-        : "=r"(rc) : "r"(res), "m"(plist) : "0", "1", "14", "15");
+        : "=r"(rc) : "r"(res), "m"(plist) : "0", "1", "14", "15", "memory");
 
     return rc;
 }
@@ -500,7 +500,7 @@ static __inline int res_request_system_lock(RES *res, void *stg, int read)
         "LA\tR1,%2          => parameter list\n\t"
         "BALR\tR14,R15      call dispatcher\n\t"
         "LR\t%0,R15         save return code"
-        : "=r"(rc) : "r"(res), "m"(plist) : "0", "1", "14", "15");
+        : "=r"(rc) : "r"(res), "m"(plist) : "0", "1", "14", "15", "memory");
 
     return rc;
 }
@@ -520,7 +520,7 @@ static __inline int res_request_system_unlock(RES *res, void *stg, int read)
         "LA\tR1,%2          => parameter list\n\t"
         "BALR\tR14,R15      call dispatcher\n\t"
         "LR\t%0,R15         save return code"
-        : "=r"(rc) : "r"(res), "m"(plist) : "0", "1", "14", "15");
+        : "=r"(rc) : "r"(res), "m"(plist) : "0", "1", "14", "15", "memory");
 
     return rc;
 }

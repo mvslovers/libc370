@@ -14,7 +14,7 @@ __vsclos(VSFILE *vs)
         if (vs->flags & VSFILE_FLAG_OPEN) {
             __asm__("MVC\t0($CLSLEN,%1),CLSMODEL\n\t"
                     "CLOSE ((%0)),MF=(E,(%1))"
-                : : "r"(&vs->acb), "r"(pl) : "1", "14", "15");
+                : : "r"(&vs->acb), "r"(pl) : "1", "14", "15", "memory");
 
         }
         free(vs);

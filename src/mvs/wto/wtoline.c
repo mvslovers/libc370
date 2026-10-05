@@ -19,5 +19,5 @@ wtoline(const WTOMSG *msg)
     __asm__("LA\t1,0(,%0)\n\t"
             "SVC\t35        WTO"
             : /* no output */
-            : "r" (msg));
+            : "r" (msg) : "0", "1", "14", "15", "memory");
 }

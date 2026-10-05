@@ -73,7 +73,7 @@ __estae(ESTAE_OP op, void *fp, void *udata)
         "ESTAE (2),CT,PARAM=(3),PURGE=NONE,ASYNCH=YES,TERM=YES,        X\n\t"
         "      MF=(E,(1))\n\t"
         "LR\t%0,15"
-        : "=r"(rc): "r"(p), "r"(work) : "0", "1", "2", "3", "14", "15");
+        : "=r"(rc): "r"(p), "r"(work) : "0", "1", "2", "3", "14", "15", "memory");
         if (rc==0) crt->crtestct++;
         break;
     case ESTAE_OVERLAY:
@@ -89,7 +89,7 @@ __estae(ESTAE_OP op, void *fp, void *udata)
         "ESTAE (2),OV,PARAM=(3),PURGE=NONE,ASYNCH=YES,TERM=YES,        X\n\t"
         "      MF=(E,(1))\n\t"
         "LR\t%0,15"
-        : "=r"(rc): "r"(p), "r"(work) : "0", "1", "2", "3", "14", "15");
+        : "=r"(rc): "r"(p), "r"(work) : "0", "1", "2", "3", "14", "15", "memory");
         crt->crtestct++;
         break;
     case ESTAE_DELETE:
@@ -97,7 +97,7 @@ __estae(ESTAE_OP op, void *fp, void *udata)
         __asm__(
         "ESTAE 0\n\t"
         "LR\t%0,15"
-        : "=r" (rc): : "0", "1", "14", "15");
+        : "=r" (rc): : "0", "1", "14", "15", "memory");
         break;
     }
 

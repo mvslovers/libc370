@@ -26,7 +26,7 @@ int isplink(const char *service_name, ...)
 	}
 	
 	/* on entry, R11 points to service_name (parameter list) */
-	__asm__("ST\t11,%0" : "=m"(r1));
+	__asm__("ST\t11,%0" : "=m"(r1) : : "memory");
 
 	/* make sure we have a parameter address with a high order bit set */
 	for(i=0, u=r1; i < 20; i++) {
@@ -41,7 +41,7 @@ int isplink(const char *service_name, ...)
 	__asm__("LR\t1,11           parameter list\n\t"
 			"L\t15,=V(ISPLINK)\n\t"
 			"BALR\t14,15          call ISPLINK\n\t"
-			"ST\t15,%0      save return code" : "=m"(rc) );
+			"ST\t15,%0      save return code" : "=m"(rc)  : : "memory");
 quit:
 	return rc;
 }

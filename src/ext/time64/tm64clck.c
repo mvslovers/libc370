@@ -16,7 +16,7 @@ clock64_t clock64(void)
 
 __asm__("LA\t2,%0\tget address of 8 byte work area\n\t"
        	"STCK\t0(2)\tstore clock into work area\n\t"
-		: "=m" (clock.u64) : : "2");
+		: "=m" (clock.u64) : : "2", "memory");
 
 #if 0 /* accurate but slightly slower */
 

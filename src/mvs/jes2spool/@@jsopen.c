@@ -46,7 +46,7 @@ HASPJS *__jsopen(const char *dataset)
     /* copy model DCB into our dcb area */
     __asm("L\t1,=A(HASPACE)        model DCB for HASPACE\n\t"
           "MVC\t0(DCBLEN,%0),0(1)   copy model to our dcb area"
-          : :"r"(dcb));
+          : :"r"(dcb) : "memory");
 
     /* Get DD or DATASET allocated */
     if (toupper(dataset[0])=='D' && toupper(dataset[1])=='D' && dataset[2]==':') {
@@ -71,7 +71,7 @@ HASPJS *__jsopen(const char *dataset)
     }
 
     /* open the checkpoint dataset */
-    __asm("OPEN\t((%0)),MF=(E,(%1))" : : "r"(dcb), "r"(&openpl));
+    __asm("OPEN\t((%0)),MF=(E,(%1))" : : "r"(dcb), "r"(&openpl) : "0", "1", "14", "15", "memory");
     if (!(dcb->dcboflgs & DCBOFOPN)) {
         __jsclos(js);
         js = NULL;
@@ -82,7 +82,7 @@ HASPJS *__jsopen(const char *dataset)
 #endif
 
     /* get spool device info */
-    __asm("DEVTYPE (%0),((%1),20),DEVTAB" : :"r"(js->ddname), "r"(devinfo));
+    __asm("DEVTYPE (%0),((%1),20),DEVTAB" : :"r"(js->ddname), "r"(devinfo) : "0", "1", "14", "15", "memory");
 #if 0
     wtodumpf(devinfo, sizeof(devinfo), "devinfo");
 #endif

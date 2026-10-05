@@ -15,13 +15,13 @@ __vsdel(VSFILE *vs, void *rec, int reclen)
     "\tMODCB RPL=(%0),RECLEN=(%1),                                     X\n"
     "\t\tAREALEN=(%1),AREA=(%2),MF=(G,(%3))"
             : : "r"(&vs->rpl), "r"(reclen), "r"(rec), "r"(pl)
-            : "1", "14", "15");
+            : "1", "14", "15", "memory");
 
     __asm__("LA\t2,DONE\n\t"
             "ERASE\tRPL=(%0)\n"
    "DONE\tDS\t0H\n\t"
             "ST\t15,%1"
-        : : "r"(&vs->rpl), "m"(rc) : "1", "2", "14", "15");
+        : : "r"(&vs->rpl), "m"(rc) : "1", "2", "14", "15", "memory");
 
 quit:
     return rc;

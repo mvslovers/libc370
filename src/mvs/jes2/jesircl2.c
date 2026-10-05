@@ -40,7 +40,7 @@ int jesircl2(VSFILE *vsfile, unsigned char jobid[8])
     /* call ENDREQ macro */
     __asm__("ENDREQ RPL=(%0)\n\t"
             "ST  15,%1\n"
-        : : "r"(&vsfile->rpl), "m"(rc) : "1", "14", "15");
+        : : "r"(&vsfile->rpl), "m"(rc) : "1", "14", "15", "memory");
 
     if (jobid) memcpy(jobid, vsfile->rpl.rplrbar, 8);
 
