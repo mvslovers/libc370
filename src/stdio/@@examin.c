@@ -33,7 +33,8 @@ __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
          char *result, size_t rsize);
 
 int
-__examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax)
+__examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax,
+         int done)
 {
     int         extraCh     = 0;
     int         sput        = 0;    /* bytes actually written to s (#128)  */
@@ -46,6 +47,7 @@ __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax)
     int         precision   = -1;
     int         half        = 0;
     int         lng         = 0;
+    int         hmod        = 0;    /* %n: 1 = h, 2 = hh (#383)          */
     int         specifier   = 0;
     int         fin;
     long        lvalue;
@@ -59,6 +61,7 @@ __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax)
     int         y;
     int         rem;
     const char  *format;
+    const char  *start;     /* first character after the % (#383)  */
     int         base;
     int         fillCh;
     int         neg;
@@ -71,6 +74,7 @@ __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax)
 	__64		base64;
 
     format = *formt;
+    start = format;
 
     /* processing flags */
     fin = 0;
@@ -140,8 +144,10 @@ __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax)
            so we should be able to ignore the 'h' specifier.
            It will create problems otherwise. */
         /* half = 1; */
+        hmod = 1;
         if (*(format+1) == 'h') {
             format++;               /* hh: char promotes to int too */
+            hmod = 2;
         }
     }
     else if (*format == 'z' || *format == 't') {
@@ -415,6 +421,72 @@ __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax)
                     outch(fillCh);
                 }
             }
+        }
+    }
+    else if (specifier == 'c') {
+        /* %c with a width or a flag; a plain %c never gets here (#383) */
+        ivalue = va_arg(*arg, int);
+        for (x = 1; !flagMinus && x < width; x++) {
+            outch(' ');
+            extraCh++;
+        }
+        outch((unsigned char)ivalue);
+        extraCh++;
+        for (x = 1; flagMinus && x < width; x++) {
+            outch(' ');
+            extraCh++;
+        }
+    }
+    else if (specifier == 'n') {
+        /* %n with a length modifier: the count is what the caller wrote
+           before this conversion, stored at the width the modifier
+           names (C99 7.19.6.1) - flags and a width have no meaning here */
+        void *vptr = va_arg(*arg, void *);
+
+        if (lng == 2) {
+            *(long long *)vptr = done;
+        }
+        else if (lng == 1) {
+            *(long *)vptr = done;
+        }
+        else if (hmod == 2) {
+            *(signed char *)vptr = (signed char)done;
+        }
+        else if (hmod == 1) {
+            *(short *)vptr = (short)done;
+        }
+        else {
+            *(int *)vptr = done;
+        }
+    }
+    else if (specifier == '%') {
+        /* %% with flags or a width: still one % */
+        outch('%');
+        extraCh++;
+    }
+    else {
+        /* Not supported (%a, %A) or no meaning at all: print the
+           conversion as it stands, so the omission shows.  %a and %A
+           still take their double, or every later conversion would read
+           the argument meant for the one before it (#383). */
+        if (specifier == 'a' || specifier == 'A') {
+            vdbl = va_arg(*arg, double);
+            unused(vdbl);
+        }
+        outch('%');
+        extraCh++;
+        for (const char *p = start; p < format; p++) {
+            outch(*p);
+            extraCh++;
+        }
+        if (specifier != 0) {
+            outch(specifier);
+            extraCh++;
+        }
+        else {
+            /* "...%" at the end: the caller steps past the character
+               *formt names, and that must not be the NUL */
+            format--;
         }
     }
     *formt = format;
