@@ -20,7 +20,7 @@ int __cpclos(HASPCP *cp)
         unsigned plist  = 0x80000000;
 
         if (dcb->dcboflgs & DCBOFOPN) {
-            __asm("CLOSE\t((%0)),MF=(E,(%1))" : : "r"(dcb), "r"(&plist));
+            __asm("CLOSE\t((%0)),MF=(E,(%1))" : : "r"(dcb), "r"(&plist) : "0", "1", "14", "15", "memory");
         }
 
         deallocate_checkpoint(cp);

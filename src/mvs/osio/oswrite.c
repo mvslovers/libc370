@@ -21,7 +21,7 @@ oswrite(DECB *decb, DCB *dcb, void *buf, int length)
 "         WRITE (%1),SF,(%2),(%3),(%4),MF=E\n"
 "         LR    %0,15"
         : "=r"(rc) : "r"(decb), "r"(dcb), "r"(buf), "r"(length)
-        : "0", "1", "14", "15");
+        : "0", "1", "14", "15", "memory");
 
 quit:
     return rc;

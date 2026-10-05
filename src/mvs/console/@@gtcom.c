@@ -13,7 +13,7 @@ __gtcom(void)
 
     if (!com) {
         __asm__("EXTRACT (%0),FIELDS=COMM,MF=(E,(%1))" : :
-            "r" (&grt->grtcom), "r"(work) : "1", "14", "15");
+            "r" (&grt->grtcom), "r"(work) : "1", "14", "15", "memory");
         return grt->grtcom;
     }
 

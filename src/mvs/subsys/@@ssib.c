@@ -10,7 +10,7 @@ SSIB *__ssib(void)
           "L\t15,JSCBACT              ACTIVE JSCB ADDRESS\n\t"
           "L\t15,JSCBSSIB             SSIB ADDRESS\n\t"
           "DROP\t15\n\t"
-          "ST\t15,%0" : "=m"(ssib));
+          "ST\t15,%0" : "=m"(ssib) : : "memory");
 
     return ssib;
 }

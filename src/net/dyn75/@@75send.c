@@ -44,7 +44,7 @@ send(int ss, const void *buf, int len, int flags)
          * from a pointer that is already past the buffer.
          */
         __asm__("XC\t0(64,%0),0(%0)     clear __75 parameter list"
-            : : "r" (&pl));
+            : : "r" (&pl) : "memory");
         pl.r1   = (unsigned) len;
         pl.r5   = (unsigned) buf;
         pl.r7   = (unsigned) 10;        /* function code for send() */
@@ -71,7 +71,7 @@ send(int ss, const void *buf, int len, int flags)
             rc = -1;
             goto quit;
         }
-        __asm__("STIMER WAIT,BINTVL==F'10'  0.10 seconds" : : : "0", "1");
+        __asm__("STIMER WAIT,BINTVL==F'10'  0.10 seconds" : : : "0", "1", "memory");
     }
 
     if (rc!=-1) goto quit;

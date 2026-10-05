@@ -18,7 +18,7 @@ osdread(DECB *decb, DCB *dcb, void *buf, int length, unsigned block)
 "         READ (%1),DI,(%2),(%3),(%4),0,(%5),MF=E\n"
 "         LR    %0,15"
         : "=r"(rc) : "r"(decb), "r"(dcb), "r"(buf), "r"(length), "r"(rec+1)
-        : "0", "1", "14", "15");
+        : "0", "1", "14", "15", "memory");
 
 quit:
     return rc;

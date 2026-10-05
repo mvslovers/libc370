@@ -15,13 +15,13 @@ int __super(unsigned char pswkey, unsigned char *savekey)
     /* are we already in supervisor mode? */
     if (!__issup()) {
         /* no, switch to supervisor mode */
-        __asm__("MODESET\tMODE=SUP\n\tST\t15,0(,%0)" : : "r"(&rc) : "1", "14", "15");
+        __asm__("MODESET\tMODE=SUP\n\tST\t15,0(,%0)" : : "r"(&rc) : "1", "14", "15", "memory");
         if (rc) goto quit;  /* not likely, but just in case */
     }
 
     if (savekey) {
         /* get current PSW key */
-        __asm__("IPK\t0\n\tSTC\t2,0(,%0)" : : "r"(savekey) : "2");
+        __asm__("IPK\t0\n\tSTC\t2,0(,%0)" : : "r"(savekey) : "2", "memory");
     }
 
     /* are we to set a new PSW key? */
@@ -31,7 +31,7 @@ int __super(unsigned char pswkey, unsigned char *savekey)
         if (pswkey < 0x10) pswkey = pswkey << 4;    /* put key value in next higher nibble */
 
         /* set new PSW key */
-        __asm__("IC\t2,0(,%0)\n\tSPKA\t0(2)" : : "r"(&pswkey) : "2");
+        __asm__("IC\t2,0(,%0)\n\tSPKA\t0(2)" : : "r"(&pswkey) : "2", "memory");
     }
 
 quit:

@@ -62,7 +62,7 @@ recv(int ss, void *vbuf, int len, int flags)
         if (chunk > 256) chunk = 256;
         
         __asm__("XC\t0(64,%0),0(%0)     clear __75 parameter list"
-            : : "r" (&pl));
+            : : "r" (&pl) : "memory");
         pl.r6   = (unsigned) buf;
         pl.r7   = (unsigned) 11;    /* function code for recv() */
         pl.r8   = (unsigned) ss;    /* socket number            */
@@ -73,7 +73,7 @@ recv(int ss, void *vbuf, int len, int flags)
         rc = (int) pl.r4;
         if (rc==-2) {
             /* special case, we have to wait for some reason??? */
-            __asm__("STIMER WAIT,BINTVL==F'8'   0.08 seconds" : : : "0", "1");
+            __asm__("STIMER WAIT,BINTVL==F'8'   0.08 seconds" : : : "0", "1", "memory");
             rc = 0;
             continue;
         }

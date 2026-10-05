@@ -43,14 +43,14 @@ failed(SDWA *sdwa, void *udata)
     }
 
     /* get the retry address */
-    __asm__("L\t%0,=A(RETRY)" : "=r" (retry));
+    __asm__("L\t%0,=A(RETRY)" : "=r" (retry) : : "memory");
 
     /* suppress dump */
     sdwa->SDWACMPF = 0;
 
     /* update the retry registers */
     __asm__("MVC\t0(64,%0),0(%1)" :
-        : "r" (&sdwa->SDWASR00), "r" (regs) );
+        : "r" (&sdwa->SDWASR00), "r" (regs)  : "memory");
 
     /* RC=4,RETRY=retry,restore registers */
     SETRP(sdwa,4,retry,1);
@@ -88,7 +88,7 @@ call(void *func, void *plist)
     }
 
     /* populate the retry registers */
-    __asm__("STM\t0,14,0(%0)" : : "r" (&regs));
+    __asm__("STM\t0,14,0(%0)" : : "r" (&regs) : "memory");
     regs.r[15] = (unsigned) (-1);
 
 	if (crt) crt->crttryrc = 0;
@@ -108,14 +108,14 @@ call(void *func, void *plist)
     "LR\t%0,15         save return code"
     : "=r" (rc)
     : "r" (func), "r" (plist)
-    : "0", "1", "14", "15");
+    : "0", "1", "14", "15", "memory");
 
 	if (!rc) goto cleanup;
 
     __asm__("\n"
 "RETRY    DS   0H");
 
-    __asm__("LR\t%0,15" : "=r" (rc));
+    __asm__("LR\t%0,15" : "=r" (rc) : : "memory");
 
     /* abend path: unhook whatever a dead LINKed program left chained
        at 8(TCBFSAB) before any CRT-anchored libc runs (see above),
@@ -160,7 +160,7 @@ call(void *func, void *plist)
                     "LR\t%0,15"
                     : "=r"(frc)
                     : "r"(ppa), "r"(lv), "r"(sp)
-                    : "0", "1", "14", "15");
+                    : "0", "1", "14", "15", "memory");
             if (frc) {
                 char    msg[] = "libc370 @@@try.c call(): FREEMAIN of an abandoned PPA failed, walk stopped";
 

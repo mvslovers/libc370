@@ -36,7 +36,7 @@ unsigned __swap(unsigned *mem, unsigned new_value)
 "         CS    0,1,0(%1)   save new value in memory\n"
 "         BNZ   @@SWPAGN    changed under us, try again\n"
 "         ST    0,%0        return the value we replaced"
-        : "=m"(old_value) : "r"(mem), "r"(new_value) : "0", "1");
+        : "=m"(old_value) : "r"(mem), "r"(new_value) : "0", "1", "memory");
 
 quit:
     return old_value;

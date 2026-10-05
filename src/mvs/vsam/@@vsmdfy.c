@@ -15,7 +15,7 @@ __vsmdfy(VSFILE *vs, void *rec, int reclen, void *key, int keylen)
     "\tMODCB RPL=(%0),RECLEN=(%1),                                     X\n"
     "\t\tAREALEN=(%1),AREA=(%2),MF=(G,(%3))"
             : : "r"(&vs->rpl), "r"(reclen), "r"(rec), "r"(pl)
-            : "1", "14", "15" );
+            : "1", "14", "15" , "memory");
 
     if (!key) goto quit;
 
@@ -23,13 +23,13 @@ __vsmdfy(VSFILE *vs, void *rec, int reclen, void *key, int keylen)
         /* set relative record key */
         __asm__("MODCB RPL=(%0),ARG=(%1),MF=(G,(%2))"
                 : : "r"(&vs->rpl), "r"(key), "r"(pl)
-                : "1", "14", "15" );
+                : "1", "14", "15" , "memory");
     }
     else if (vs->type==VSTYPE_KSDS) {
         /* set keyed sequential key */
         __asm__("MODCB RPL=(%0),ARG=(%1),KEYLEN=(%2),MF=(G,(%3))"
                 : : "r"(&vs->rpl), "r"(key), "r"(keylen), "r"(pl)
-                : "1", "14", "15" );
+                : "1", "14", "15" , "memory");
     }
 
 quit:

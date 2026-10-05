@@ -43,7 +43,7 @@ __75(PL75 *pl)
     "STM\t0,15,0(11)       Save results in parameter list\n\t"
     "LM\t0,11,0(14)       Restore registers\n\t"
     "LR\t%0,15"
-    : "=r" (rc) : "r" (pl), "r" (regs) : "0", "1", "14", "15");
+    : "=r" (rc) : "r" (pl), "r" (regs) : "0", "1", "14", "15", "memory");
 
     return rc;
 }
@@ -71,7 +71,7 @@ __75(PL75 *pl)
     "STM\t0,15,0(11)       Save results in parameter list\n\t"
     "LM\t0,11,20(13)      Restore registers from stack\n\t"
     "LR\t%0,15"
-    : "=r" (rc) : "r" (pl) : "0", "1", "15");
+    : "=r" (rc) : "r" (pl) : "0", "1", "15", "memory");
 
     return rc;
 }

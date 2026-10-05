@@ -8,6 +8,7 @@ int
 osbopen(DCB *dcb, int typej, const char *mode)
 {
     int         rc      = -1;
+    int         orc     = 0;    /* OPEN's R15, not used: DCBOFOPN decides */
 
 #if 0
     wtof("osbopen dcb=%08X, typej=%d, mode=%s",
@@ -45,8 +46,11 @@ osbopen(DCB *dcb, int typej, const char *mode)
         }
     }
 
-    /* use try() in case of abend */
-    rc = try(opendcb, dcb, typej, &rc);
+    /* use try() in case of abend.  opendcb() stores OPEN's R15 into orc;
+    ** whether the data set opened is decided by DCBOFOPN below, as before -
+    ** the old code passed &rc and then overwrote it with try()'s result,
+    ** which is the same outcome said less plainly (#427). */
+    rc = try(opendcb, dcb, typej, &orc);
     if (rc) goto quit;
 
     /* make sure the dataset was opened */
@@ -79,12 +83,12 @@ opendcb(DCB *dcb, int typej, int *rc)
     if (!typej) {
         /* normal OPEN for a single dataset */
         __asm__("LR    1,%1\n\tSVC   19         OPEN\n\tST\t15,0(,%0)"
-            : : "r"(rc), "r"(&plist) : "1", "14", "15");
+            : : "r"(rc), "r"(&plist) : "1", "14", "15", "memory");
     }
     else {
         /* OPEN type J for a single dataset */
         __asm__("LR    1,%1\n\tSVC   22         OPENJ\n\tST\t15,0(,%0)"
-            : : "r"(rc), "r"(&plist) : "1", "14", "15");
+            : : "r"(rc), "r"(&plist) : "1", "14", "15", "memory");
     }
 
     return;

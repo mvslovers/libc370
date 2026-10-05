@@ -18,7 +18,7 @@ SSVT * ssvt_new(unsigned funcmax)
 
     /* save current PSW key */
     __asm__("IPK\t0             get psw key in R2\n\t"
-            "LR\t%0,2           save psw key in register" : "=r"(prevkey) : : "2");
+            "LR\t%0,2           save psw key in register" : "=r"(prevkey) : : "2", "memory");
 
     if (prevkey != PSWKEY0) {
         /* we need to switch to KEY 0 */
@@ -26,7 +26,7 @@ SSVT * ssvt_new(unsigned funcmax)
 
         /* set PSW key 0 */
         __asm__("SLR\t2,2               PSW key 0 value\n\t"
-                "SPKA\t0(2)             save in psw" : : : "2");
+                "SPKA\t0(2)             save in psw" : : : "2", "memory");
     }
 
     /* calulate size of SSVT we need to allocate */
@@ -44,7 +44,7 @@ SSVT * ssvt_new(unsigned funcmax)
     if (restore) {
         /* reset PSW key to callers key */
         __asm__("LR\t2,%0               get prev psw key\n\t"
-                "SPKA\t0(2)             save in psw" : : "r"(prevkey) : "2");
+                "SPKA\t0(2)             save in psw" : : "r"(prevkey) : "2", "memory");
     }
 
     return ssvt;

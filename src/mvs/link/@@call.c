@@ -16,7 +16,7 @@ __call(void *func, void *plist)
     "LR\t%0,15          save return code"
     : "=r" (rc)
     : "r" (func), "r" (plist)
-    : "0", "1", "14", "15");
+    : "0", "1", "14", "15", "memory");
 
     return rc;
 }

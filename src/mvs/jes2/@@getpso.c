@@ -13,7 +13,7 @@ __PSO *__getpso(void)
           "DROP\t15\n\t"
           "L\t15,SSIBSUSE-SSIB(,15)   SJB ADDRESS\n\t"
           "L\t15,SJBPSOP-SJBDSECT(,15) PSO ADDRESS\n\t"
-          "ST\t15,0(,%0)" : : "r"(&pso));
+          "ST\t15,0(,%0)" : : "r"(&pso) : "0", "1", "14", "15", "memory");
 
     return pso;
 }

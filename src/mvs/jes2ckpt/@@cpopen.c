@@ -44,7 +44,7 @@ HASPCP *__cpopen(const char *dataset)
     /* copy model DCB into our dcb area */
     __asm("L\t1,=A(HASPCKPT)        model DCB for HASPCKPT\n\t"
           "MVC\t0(DCBLEN,%0),0(1)   copy model to our dcb area"
-          : :"r"(dcb));
+          : :"r"(dcb) : "memory");
 
     /* Get DD or DATASET allocated */
     if (toupper(dataset[0])=='D' && toupper(dataset[1])=='D' && dataset[2]==':') {
@@ -69,7 +69,7 @@ HASPCP *__cpopen(const char *dataset)
     }
 
     /* open the checkpoint dataset */
-    __asm("OPEN\t((%0)),MF=(E,(%1))" : : "r"(dcb), "r"(&openpl));
+    __asm("OPEN\t((%0)),MF=(E,(%1))" : : "r"(dcb), "r"(&openpl) : "0", "1", "14", "15", "memory");
     if (!(dcb->dcboflgs & DCBOFOPN)) {
         __cpclos(cp);
         cp = NULL;

@@ -11,7 +11,7 @@ __austep(void)
     volatile int    steplib = 0;
 
     /* check for APF authorization */
-    __asm__("TESTAUTH\tFCTN=1\n\tST\t15,%0" : "=m" (rc));
+    __asm__("TESTAUTH\tFCTN=1\n\tST\t15,%0" : "=m" (rc) : : "memory");
     if (rc!=0) goto quit;
 
     /* we're APF authorized, fixup the STEPLIB DEB if needed */
@@ -45,7 +45,7 @@ __austep(void)
 "         DROP  1\n"
 "QUITON   DS    0H\n"
 "         MODESET KEY=NZERO,MODE=PROB" : "=m"(steplib)
-    : : "0", "1", "14", "15");
+    : : "0", "1", "14", "15", "memory");
 
     if (steplib) {
         if (crt) {

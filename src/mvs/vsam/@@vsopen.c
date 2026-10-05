@@ -88,33 +88,33 @@ __vsopen(const char *ddname, VSTYPE t, VSACCESS a, VSMODE m, VSFILE **vsfile)
 
     /* get prototype ACB */
     __asm__("MVC\t0($ACBLEN,%0),ACBMODEL    Copy prototype ACB"
-        : : "r"(&vs->acb));
+        : : "r"(&vs->acb) : "memory");
 
     /* put DD name into ACB */
     memcpy(acb->acbddnm, vs->ddname, sizeof(acb->acbddnm));
 
     /* get prototype RPL */
     __asm__("MVC\t0($RPLLEN,%0),RPLMODEL    Copy prototype RPL"
-        : : "r"(&vs->rpl));
+        : : "r"(&vs->rpl) : "memory");
 
     /* put ACB address into RPL */
     __asm__("MODCB RPL=(%0),ACB=((%1)),MF=(G,(%2))"
-        : : "r"(&vs->rpl), "r"(&vs->acb), "r"(pl));
+        : : "r"(&vs->rpl), "r"(&vs->acb), "r"(pl) : "0", "1", "14", "15", "memory");
 
     /* TYPE */
     switch(t) {
     case VSTYPE_KSDS:
     case VSTYPE_RRDS:
         __asm__("MODCB ACB=(%0),MACRF=(KEY),MF=(G,(%1))"
-                : : "r"(&vs->acb), "r"(pl) : "1", "14", "15");
+                : : "r"(&vs->acb), "r"(pl) : "1", "14", "15", "memory");
         __asm__("MODCB RPL=(%0),OPTCD=(KEY),MF=(G,(%1))"
-                : : "r"(&vs->rpl), "r"(pl) : "1", "14", "15");
+                : : "r"(&vs->rpl), "r"(pl) : "1", "14", "15", "memory");
         break;
     case VSTYPE_ESDS:
         __asm__("MODCB ACB=(%0),MACRF=(ADR),MF=(G,(%1))"
-                : : "r"(&vs->acb), "r"(pl) : "1", "14", "15");
+                : : "r"(&vs->acb), "r"(pl) : "1", "14", "15", "memory");
         __asm__("MODCB RPL=(%0),OPTCD=(ADR),MF=(G,(%1))"
-                : : "r"(&vs->rpl), "r"(pl) : "1", "14", "15");
+                : : "r"(&vs->rpl), "r"(pl) : "1", "14", "15", "memory");
         break;
     default:
         rc = EVSTYPE;
@@ -125,19 +125,19 @@ __vsopen(const char *ddname, VSTYPE t, VSACCESS a, VSMODE m, VSFILE **vsfile)
     switch(a) {
     case VSACCESS_DIR:      /* direct access        */
         __asm__("MODCB ACB=(%0),MACRF=(DIR),MF=(G,(%1))"
-                : : "r"(&vs->acb), "r"(pl) : "1", "14", "15");
+                : : "r"(&vs->acb), "r"(pl) : "1", "14", "15", "memory");
         break;
     case VSACCESS_SEQ:      /* sequential access    */
         __asm__("MODCB ACB=(%0),MACRF=(SEQ),MF=(G,(%1))"
-                : : "r"(&vs->acb), "r"(pl) : "1", "14", "15");
+                : : "r"(&vs->acb), "r"(pl) : "1", "14", "15", "memory");
         break;
     case VSACCESS_DYNAM:    /* dynamic access       */
         __asm__("MODCB ACB=(%0),MACRF=(SEQ,DIR),MF=(G,(%1))"
-                : : "r"(&vs->acb), "r"(pl) : "1", "14", "15");
+                : : "r"(&vs->acb), "r"(pl) : "1", "14", "15", "memory");
         break;
     case VSACCESS_ADR:      /* address access       */
         __asm__("MODCB ACB=(%0),MACRF=(ADR),MF=(G,(%1))"
-                : : "r"(&vs->acb), "r"(pl) : "1", "14", "15");
+                : : "r"(&vs->acb), "r"(pl) : "1", "14", "15", "memory");
         break;
     default:
         rc = EVSACCESS;
@@ -146,16 +146,16 @@ __vsopen(const char *ddname, VSTYPE t, VSACCESS a, VSMODE m, VSFILE **vsfile)
     switch(a) {
     case VSACCESS_DIR:      /* direct access        */
         __asm__("MODCB RPL=(%0),OPTCD=(DIR),MF=(G,(%1))"
-                : : "r"(&vs->rpl), "r"(pl) : "1", "14", "15");
+                : : "r"(&vs->rpl), "r"(pl) : "1", "14", "15", "memory");
         break;
     case VSACCESS_SEQ:      /* sequential access    */
     case VSACCESS_DYNAM:    /* dynamic access       */
         __asm__("MODCB RPL=(%0),OPTCD=(SEQ),MF=(G,(%1))"
-                : : "r"(&vs->rpl), "r"(pl) : "1", "14", "15");
+                : : "r"(&vs->rpl), "r"(pl) : "1", "14", "15", "memory");
         break;
     case VSACCESS_ADR:      /* address access       */
         __asm__("MODCB RPL=(%0),OPTCD=(ADR),MF=(G,(%1))"
-                : : "r"(&vs->rpl), "r"(pl) : "1", "14", "15");
+                : : "r"(&vs->rpl), "r"(pl) : "1", "14", "15", "memory");
         break;
     }
 
@@ -163,12 +163,12 @@ __vsopen(const char *ddname, VSTYPE t, VSACCESS a, VSMODE m, VSFILE **vsfile)
     switch(m) {
     case VSMODE_IN:         /* input (read only)        */
         __asm__("MODCB ACB=(%0),MACRF=(IN),MF=(G,(%1))"
-                : : "r"(&vs->acb), "r"(pl) : "1", "14", "15");
+                : : "r"(&vs->acb), "r"(pl) : "1", "14", "15", "memory");
         break;
     case VSMODE_OUT:        /* output (write only)      */
     case VSMODE_UPD:        /* update (read and write)  */
         __asm__("MODCB ACB=(%0),MACRF=(OUT),MF=(G,(%1))"
-                : : "r"(&vs->acb), "r"(pl) : "1", "14", "15");
+                : : "r"(&vs->acb), "r"(pl) : "1", "14", "15", "memory");
         break;
     default:
         rc = EVSMODE;
@@ -178,11 +178,11 @@ __vsopen(const char *ddname, VSTYPE t, VSACCESS a, VSMODE m, VSFILE **vsfile)
     case VSMODE_IN:         /* input (read only)        */
     case VSMODE_OUT:        /* output (write only)      */
         __asm__("MODCB RPL=(%0),OPTCD=(NUP),MF=(G,(%1))"
-                : : "r"(&vs->rpl), "r"(pl) : "1", "14", "15");
+                : : "r"(&vs->rpl), "r"(pl) : "1", "14", "15", "memory");
         break;
     case VSMODE_UPD:        /* update (read and write)  */
         __asm__("MODCB RPL=(%0),OPTCD=(UPD),MF=(G,(%1))"
-                : : "r"(&vs->rpl), "r"(pl) : "1", "14", "15");
+                : : "r"(&vs->rpl), "r"(pl) : "1", "14", "15", "memory");
         break;
     }
 
@@ -190,7 +190,7 @@ __vsopen(const char *ddname, VSTYPE t, VSACCESS a, VSMODE m, VSFILE **vsfile)
     __asm__("MVC\t0($OPNLEN,%1),OPNMODEL    Copy prototype OPEN\n\t"
             "OPEN  ((%0)),MF=(E,(%1))\n\t"
             "ST    15,%2"
-        : : "r"(&vs->acb), "r"(pl), "m"(rc) : "1", "14", "15");
+        : : "r"(&vs->acb), "r"(pl), "m"(rc) : "1", "14", "15", "memory");
     if (acb->acboflgs & ACBOPEN) {
         vs->flags |= VSFILE_FLAG_OPEN;
     }

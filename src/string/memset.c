@@ -18,7 +18,7 @@ __PDPCLIB_API__ void *memset(void *s, int c, size_t n)
 "         L    1,%2     => fill (c)\n"
 "         SLL  1,24     move fill char to high byte\n"
 "         MVCL 14,0     Set target to fill character"
-    : : "m"(s), "m"(n), "m"(c) : "0", "1", "14", "15");
+    : : "m"(s), "m"(n), "m"(c) : "0", "1", "14", "15", "memory");
 
     return (s);
 }

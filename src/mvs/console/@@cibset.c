@@ -9,7 +9,7 @@ __cibset(unsigned count)
 
     if (count) {
         __asm__("QEDIT ORIGIN=(%1),CIBCTR=(%2)\n\tLR\t%0,15"
-            : "=r" (rc) : "r" (&com->comcibpt), "r" (count));
+            : "=r" (rc) : "r" (&com->comcibpt), "r" (count) : "0", "1", "14", "15", "memory");
     }
 
 quit:

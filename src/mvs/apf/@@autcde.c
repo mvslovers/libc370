@@ -11,9 +11,9 @@ clib_auth_cde(CDE *cde)
     int     rc = 0;
 
     if (cde) {
-        __asm__("MODESET KEY=ZERO,MODE=SUP\n" : : : "0", "1", "14", "15");
+        __asm__("MODESET KEY=ZERO,MODE=SUP\n" : : : "0", "1", "14", "15", "memory");
         cde->CDATTR2 |= (CDSYSLIB | CDAUTH);
-        __asm__("MODESET KEY=NZERO,MODE=PROB" : : : "0", "1", "14", "15");
+        __asm__("MODESET KEY=NZERO,MODE=PROB" : : : "0", "1", "14", "15", "memory");
     }
 
     return rc;

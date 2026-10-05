@@ -65,7 +65,7 @@ cthread_worker_shutdown(CTHDWORK *work)
             ** and detach a live subtask.  ecb_timed_waitlist() with a separate
             ** timeout ecb is the other correct form.
             */
-            __asm__("STIMER WAIT,BINTVL==F'10'   0.10 seconds" : : : "0", "1", "14", "15");
+            __asm__("STIMER WAIT,BINTVL==F'10'   0.10 seconds" : : : "0", "1", "14", "15", "memory");
         }
 
         /* The worker never posted termecb, so its subtask is STILL RUNNING.

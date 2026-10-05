@@ -19,7 +19,7 @@ __vsxerr(RPL *rpl, int code)
     __asm__("\n"
     "\tSHOWCB RPL=(%0),                                               X\n"
     "\t\tFIELDS=FDBK,AREA=(%1),LENGTH=4,MF=(G,(%2))"
-        : : "r"(rpl), "r"(fdbk), "r"(pl) : "1", "14", "15" );
+        : : "r"(rpl), "r"(fdbk), "r"(pl) : "1", "14", "15" , "memory");
 
     vs->rc          = fdbk[1];
     vs->component   = fdbk[2];

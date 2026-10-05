@@ -21,7 +21,7 @@ __vswrit(VSFILE *vs, void *rec, int reclen, void *key, int keylen)
     if (vs->mode==VSMODE_UPD) {
         /* turn off UPD for record insertion */
         __asm__("MODCB RPL=(%0),OPTCD=(NUP),MF=(G,(%1))"
-            : : "r"(&vs->rpl), "r"(pl) : "1", "14", "15");
+            : : "r"(&vs->rpl), "r"(pl) : "1", "14", "15", "memory");
         /* SYNAD exit will call our restore function on error */
         vs->vsreset = restore;
     }
@@ -31,7 +31,7 @@ __vswrit(VSFILE *vs, void *rec, int reclen, void *key, int keylen)
             "PUT\tRPL=(%0)\n"
    "PUTDONE\tDS\t0H\n\t"
             "ST\t15,%1"
-        : : "r"(&vs->rpl), "m"(rc) : "1", "2", "14", "15");
+        : : "r"(&vs->rpl), "m"(rc) : "1", "2", "14", "15", "memory");
 
     if (vs->mode==VSMODE_UPD && vs->vsreset) {
         /* restore UPD in RPL */
@@ -48,7 +48,7 @@ restore(VSFILE *vs)
     unsigned    pl[16]  = {0};
 
     __asm__("MODCB RPL=(%0),OPTCD=(UPD),MF=(G,(%1))"
-        : : "r"(&vs->rpl), "r"(pl) : "1", "14", "15");
+        : : "r"(&vs->rpl), "r"(pl) : "1", "14", "15", "memory");
 
     vs->vsreset = 0;
 

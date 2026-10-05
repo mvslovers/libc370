@@ -26,8 +26,8 @@ gethostbyaddr(void *addr)
 
     if (!crt) goto quit;
 
-    __asm__("XC\t0(64,%0),0(%0)     clear __75 parameter list" : : "r" (&pl));
-    __asm__("XC\t0(256,%0),0(%0)    clear name buffer" : : "r" (name));
+    __asm__("XC\t0(64,%0),0(%0)     clear __75 parameter list" : : "r" (&pl) : "memory");
+    __asm__("XC\t0(256,%0),0(%0)    clear name buffer" : : "r" (name) : "memory");
 
     /* crthoste[0]  A(alias) */
     /* crthoste[1]  addr */

@@ -44,10 +44,10 @@ osxwrite(DCB *dcb, unsigned blkstrk, unsigned block, void *buf, char *sense)
     iob.iobdcbpt = dcb;
 
     /* give IOB to EXCP processor SVC 0 */
-    __asm__("EXCP (%0)" : : "r"(&iob.iobflag1) : "1", "14", "15");
+    __asm__("EXCP (%0)" : : "r"(&iob.iobflag1) : "1", "14", "15", "memory");
 
     /* wait for I/O completion */
-    __asm__("WAIT 1,ECB=(%0)" : : "r"(&ecb) : "1", "14", "15");
+    __asm__("WAIT 1,ECB=(%0)" : : "r"(&ecb) : "1", "14", "15", "memory");
 
     /* put completion code in rc */
     rc = (int) (ecb >> 24);
