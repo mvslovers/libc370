@@ -6,6 +6,8 @@
 //* restores into.  N = no threads, T = threads; no suffix = @@CRT0 from
 //* libc.a, 0 = this tree's crt0.o, R = the installed sysroot's crt0.o
 //* and crt1.o before #159 - the red controls.
+//* (libc370 2.4.0 builds no crt0.o any more: the 0 and R variants were
+//*  measured with 2.3.x; N and T are the ones that still apply.)
 //*
 //* Run:     mvsdev JOB01370, 2026-10-05: N/T/N0/T0 CC 0000 (1/1, 4/4);
 //*          red NR and TR CC 0001.
