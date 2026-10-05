@@ -52,7 +52,7 @@ reference from ld370 or the save area trace of an abend: they show the
 eight-character name. Search the headers for it to find the C function.
 
 #note[#cmd("#pragma map") and #cmd("#pragma linkage") of the IBM compilers are
-accepted by cc370 and have no effect. Use an #cmd("asm") label to set an
+accepted by cc370, have no effect, and draw a warning that says so. Use an #cmd("asm") label to set an
 external name\; there is only one linkage convention.]
 
 == The Linkage Convention <pg-asm-linkage>
