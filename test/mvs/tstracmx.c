@@ -96,13 +96,14 @@
  *
  * AUTHORIZATION: this probe issues MODESET KEY=ZERO,MODE=SUP itself, so the
  * module must be linked AC=1 and run from an APF-authorized library or it
- * S047s with an EMPTY SYSPRINT.  cc370 silently drops -Wl,--ac,1 and ld370
- * --pack loses it again, so the AC goes to ld370 TWICE (mvslovers/cc370#37):
+ * S047s with an EMPTY SYSPRINT.  Link with --ac 1 -iebcopy and pack that:
+ * the AC and the entry offset travel in its directory entry; a bare member
+ * is packed at entry 0 and at --pack's own AC (mvslovers/cc370#37, #850):
  *
  *     cc370 -O1 -Iinclude -c test/mvs/tstracmx.c -o tstracmx.o
- *     ld370 --entry @@CRT0 --ac 1 -o TSTRACMX build/sdk/crt0.o tstracmx.o \
- *           -Lbuild/sdk -lc
- *     ld370 --pack TSTRACMX=TSTRACMX --ac 1 -o probe -xmit \
+ *     ld370 --entry @@CRT0 --ac 1 -iebcopy -o TSTRACMX \
+ *           build/sdk/crt0.o tstracmx.o -Lbuild/sdk -lc
+ *     ld370 --pack TSTRACMX=TSTRACMX.iebcopy -o probe -xmit \
  *           --dsn IBMUSER.LIBC370.PROBE.LINKLIB
  *
  * Install: RECEIVE into a scratch library, IEBCOPY the member into the APF

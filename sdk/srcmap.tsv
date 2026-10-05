@@ -10,7 +10,6 @@ asm/@@aread.asm	src/stdio/@@aread.asm	BSAM, the I/O under stdio (src/internal/bs
 asm/@@atrout.asm	src/stdio/@@atrout.asm	BSAM, the I/O under stdio (src/internal/bsam.h)
 asm/@@awrite.asm	src/stdio/@@awrite.asm	BSAM, the I/O under stdio (src/internal/bsam.h)
 asm/@@crt0.asm	src/mvs/crt/@@crt0.asm	runtime start-up
-asm/@@crt1.asm	src/mvs/crt/@@crt1.asm	runtime start-up
 asm/@@crtm.asm	src/mvs/crt/@@crtm.asm	runtime start-up
 asm/@@crtsvc.asm	src/mvs/svc/@@crtsvc.asm	the SVC-in-C scaffold, with svcmain.c (clibsvc.h)
 asm/@@dynal.asm	src/mvs/dynalloc/@@dynal.asm	SVC 99
@@ -207,6 +206,7 @@ src/clib/@@gterr.c	src/stdio/@@gterr.c	declared in <stdio.h>
 src/clib/@@gtin.c	src/stdio/@@gtin.c	declared in <stdio.h>
 src/clib/@@gtout.c	src/stdio/@@gtout.c	declared in <stdio.h>
 src/clib/@@idecth.c	src/mvs/thread/@@idecth.c	declared in <mvs/thread.h>
+src/mvs/thread/@@cthrd.asm	src/mvs/thread/@@cthrd.asm	new after 2.0.0: CTHREAD/@@CTEXIT out of the startup (#159)
 src/clib/@@inaton.c	src/net/@@inaton.c	declared in <arpa/inet.h>
 src/clib/@@inc.c	src/s370/@@inc.c	declared in <s370/atomic.h>
 src/clib/@@irallc.c	src/stdio/@@irallc.c	stdio internals

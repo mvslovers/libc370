@@ -43,14 +43,14 @@
  * distinct ACEEs, which is all (5) and (6) need.
  *
  * AUTHORIZATION and probe hygiene - see test/mvs/tstracau.c and
- * docs/consumer-notes.md: AC=1 via ld370 twice, no writable statics if this
+ * docs/consumer-notes.md: AC=1 on the ld370 -iebcopy link, no writable statics if this
  * runs from a LNKLST library, WTO for anything that must survive an abend.
  *
  * BUILD (host):
  *     cc370 -O1 -Iinclude -c test/mvs/tstracfl.c -o tstracfl.o
- *     ld370 --entry @@CRT0 --ac 1 -o TSTRACFL build/sdk/crt0.o tstracfl.o \
- *           -Lbuild/sdk -lc
- *     ld370 --pack TSTRACFL=TSTRACFL --ac 1 -o probe -xmit --dsn <LOADLIB>
+ *     ld370 --entry @@CRT0 --ac 1 -iebcopy -o TSTRACFL \
+ *           build/sdk/crt0.o tstracfl.o -Lbuild/sdk -lc
+ *     ld370 --pack TSTRACFL=TSTRACFL.iebcopy -o probe -xmit --dsn <LOADLIB>
  * Install: RECEIVE into a scratch library, IEBCOPY into an APF-authorized
  *          one, delete the member again afterwards.
  *
