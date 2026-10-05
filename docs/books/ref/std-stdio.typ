@@ -382,8 +382,8 @@ modifier, and then the conversion character. The flags are #cmd("-"),
       decimal, octal or hexadecimal. #cmd("x") uses lowercase digits,
       #cmd("X") uppercase. The flag #cmd("#") puts #cmd("0x") in front of
       #cmd("x") and of #cmd("X") alike, and has no effect on #cmd("o").],
-    [#cmd("c")], [One character. Only #cmd("%c") itself is supported; see
-      below.],
+    [#cmd("c")], [One character. A width pads it with blanks, on the
+      left or, with the flag #cmd("-"), on the right.],
     [#cmd("s")], [A string. A null pointer is printed as #cmd("(null)") by
       #cmd("%s") without width and precision only.],
     [#cmd("p")], [A pointer, as eight uppercase hexadecimal digits, without
@@ -397,8 +397,13 @@ modifier, and then the conversion character. The flags are #cmd("-"),
       -4 or not below the precision, otherwise fixed notation; see
       below.],
     [#cmd("n")], [Stores the number of characters written so far in the
-      #cmd("int") that the argument points to.],
-    [#cmd("%")], [A #cmd("%") character.],
+      object the argument points to: an #cmd("int"), or with #cmd("hh"),
+      #cmd("h"), #cmd("l"), #cmd("ll"), #cmd("j"), #cmd("z") or #cmd("t")
+      the type that modifier names.],
+    [#cmd("%")], [A #cmd("%") character. A flag or a width is ignored.],
+    [#cmd("a"), #cmd("A")], [Not supported. The argument, a #cmd("double"),
+      is consumed, and the conversion specification is printed as it is
+      written: #cmd("printf(\"%a\", 1.0)") prints #cmd("%a").],
   )
 ] <std-stdio-printf-tab>
 
@@ -411,14 +416,14 @@ and #cmd("int") are both 32 bits. #cmd("long double") is the same type as
 
 These rules differ from C99:
 
-- #cmd("h") and #cmd("hh") are accepted and ignored: the value is printed as
-  the #cmd("int") it was passed as, and #cmd("printf(\"%hhd\", 300)")
+- On the integer conversions #cmd("h") and #cmd("hh") are accepted and
+  ignored: the value is printed as the #cmd("int") it was passed as, and #cmd("printf(\"%hhd\", 300)")
   prints #cmd("300").
-- #cmd("c") with a flag or a width, #cmd("n") with a length modifier,
-  #cmd("a"), #cmd("A") and every conversion character that is not in the
-  table produce no output *and do not consume their argument*, so every
-  later argument is taken for the conversion before it. Write #cmd("%c") and
-  #cmd("%n") with nothing between the #cmd("%") and the letter.
+- #cmd("%a") and #cmd("%A") are not implemented; see the table.
+- A conversion character that has no meaning is printed as written,
+  together with its flags, width and precision, and consumes no argument:
+  #cmd("printf(\"%y|%d\", 5)") prints #cmd("%y|5"). A #cmd("%") at the
+  end of the format is printed as #cmd("%").
 - The flag #cmd("0") on a negative number, or together with #cmd("+") or
   space, puts the zeros in front of the sign: #cmd("printf(\"%05d\", -3)")
   prints #cmd("000-3"). The width does not include the #cmd("0x") of the
@@ -451,6 +456,7 @@ about 15 significant decimal digits and no infinity and no NaN.
     [#cmd("printf(\"%g\", 0.000123456)")], [#cmd("0.000123")], [#cmd("0.000123456")],
     [#cmd("printf(\"%010.2f\", -3.14159)")], [#cmd("-000003.14")], [#cmd("-000003.14")],
     [#cmd("printf(\"%05d\", -3)")], [#cmd("000-3")], [#cmd("-0003")],
+    [#cmd("printf(\"%a\", 1.0)")], [#cmd("%a")], [#cmd("0x1p+0")],
     [#cmd("printf(\"%p\", p)")], [#cmd("00001234")], [an implementation-defined form],
   )
 ] <std-stdio-printf-ex>

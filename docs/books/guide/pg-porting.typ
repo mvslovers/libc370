@@ -255,9 +255,9 @@ into. The ones that most often matter:
   a width: the conversion fails, and with it the rest of the format. A
   format such as #cmd("\"%2d%2d\"") must be replaced, for example by
   #cmd("strtol()") on the fields.
-- *#cmd("printf()")* ignores #cmd("h") and #cmd("hh"), and a #cmd("%c")
-  with a flag or a width produces nothing and does not consume its
-  argument, which shifts every later one. Write #cmd("%c") alone.
+- *#cmd("printf()")* ignores #cmd("h") and #cmd("hh") on the integer
+  conversions, so a value is printed as the #cmd("int") it was passed as,
+  and does not implement #cmd("%a"): the conversion is printed as written.
 - *Floating point is hexadecimal* (HFP), not IEEE: a #cmd("float") holds
   21 to 24 bits of precision, a #cmd("double") 53 to 56, both reach about
   #cmd("7.2E+75"), and there is no infinity and no NaN. Results that are
