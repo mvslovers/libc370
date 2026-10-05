@@ -251,8 +251,22 @@ def cmd_build():
         shutil.copy(crtobjs[stem], f"{BUILD}/{name}")
     nmem = sum(1 for l in run([AR370, "t", libc]).stdout.splitlines() if l.strip().endswith("bytes"))
     print(f"[libc] OK -> {libc} ({nmem} members, {os.path.getsize(libc)} bytes, {OPT})")
-    print(f"[libc] startfile -> crtm.o (@@CRT0 is a libc.a member)")
+    print("[libc] startfile -> crtm.o (@@CRT0 is a libc.a member)")
     return 0
+
+
+def copy_headers(inc):
+    """Copy include/ as a tree into inc; -> the number of headers."""
+    n = 0
+    src_inc = f"{ROOT}/include"
+    for d, _, files in os.walk(src_inc):
+        for f in sorted(files):
+            if not f.endswith(".h"):
+                continue
+            rel = os.path.relpath(os.path.join(d, f), src_inc)
+            os.makedirs(os.path.join(inc, os.path.dirname(rel)), exist_ok=True)
+            shutil.copy(os.path.join(d, f), os.path.join(inc, rel)); n += 1
+    return n
 
 
 def stage(inc, lib, mac):
@@ -264,25 +278,11 @@ def stage(inc, lib, mac):
         print("[stage] build first (no", libc + ")"); return None
     for d in (inc, lib, mac):
         os.makedirs(d, exist_ok=True)
-    n = 0
-    src_inc = f"{ROOT}/include"
-    for d, _, files in os.walk(src_inc):
-        for f in sorted(files):
-            if not f.endswith(".h"):
-                continue
-            rel = os.path.relpath(os.path.join(d, f), src_inc)
-            os.makedirs(os.path.join(inc, os.path.dirname(rel)), exist_ok=True)
-            shutil.copy(os.path.join(d, f), os.path.join(inc, rel)); n += 1
+    n = copy_headers(inc)
     # libc.a + startfiles
     shutil.copy(libc, f"{lib}/libc.a")
     for crt, _ in STARTFILES:
         shutil.copy(f"{BUILD}/{crt}", f"{lib}/{crt}")
-    # crt0.o/crt1.o from an install before 2.4.0: nothing reads them any
-    # more (cc370 1.4 names no startfile, mbt finds the sysroot by libc.a),
-    # and a stale copy of an old @@CRT0 is only a trap (#159)
-    for crt in STALE_STARTFILES:
-        if os.path.exists(f"{lib}/{crt}"):
-            os.remove(f"{lib}/{crt}")
     # assembler macros: sysmac (vendored SYS1.MACLIB) THEN maclib (libc370's
     # PDPTOP/PDPPRLG/... override any collision) -> one dir as370 finds by
     # default (<exedir>/../macros); needed for hand-asm + the cc370 one-shot.
@@ -329,6 +329,15 @@ def cmd_install():
         stale = sum(len(f) for _, _, f in os.walk(inc))
         shutil.rmtree(inc)
     n, m = stage(inc, lib, mac)
+    # crt0.o/crt1.o from an install before 2.4.0: nothing reads them any
+    # more (cc370 1.4 names no startfile, mbt finds the sysroot by libc.a),
+    # and a stale copy of an old @@CRT0 is only a trap (#159).  Install only:
+    # lib comes from the driver's own sysroot, and a staging tree is new.
+    for crt in STALE_STARTFILES:
+        old = os.path.join(lib, crt)
+        if os.path.isfile(old):
+            os.remove(old)
+            print(f"[install] removed the old startfile {old}")
     print(f"[install] target {triple}")
     print(f"[install] {n} headers -> {inc} ({stale} files there before, cleared)")
     print(f"[install] libc.a + crtm.o -> {lib}")
