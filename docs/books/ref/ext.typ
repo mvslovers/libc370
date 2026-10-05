@@ -1071,7 +1071,7 @@ that was linked into the program and the source revision it was built
 from, in the form
 
 ```
-LIBC370 2.2.0 (6b676dc)
+LIBC370 2.3.1 (cfa5afd)
 ```
 
 with #cmd("-dirty") added to the revision when the library was built from

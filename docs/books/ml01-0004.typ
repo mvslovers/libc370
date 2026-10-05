@@ -10,13 +10,9 @@
   edition: [
     #text(font: head-font, weight: "bold", size: 11pt)[First Edition (October 2026)]
 
-    This edition applies to the release of libc370 that follows libc370
-    2.2.0, and to all subsequent releases and modifications until otherwise
-    indicated in new editions. The release number is entered here when that
-    release is made.
-
-    *Draft.* This book is in preparation and describes the library as it is
-    being developed. It is published together with that release.
+    This edition applies to Version 2 Release 3 Modification 1 of libc370
+    (libc370 2.3.1), used with cc370 1.3.0 or later, and to all subsequent
+    releases and modifications until otherwise indicated in new editions.
 
     Comments on this book may be addressed to the issue tracker of
     the mvslovers/libc370 repository on GitHub.
