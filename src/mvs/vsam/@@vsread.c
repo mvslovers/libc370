@@ -10,7 +10,8 @@ __vsread(VSFILE *vs, void *rec, int reclen, void *key, int keylen)
 {
     unsigned    pl[16]  = {0};
     int         rc      = 0;
-    unsigned char had, got;
+    unsigned char had;
+    unsigned char got;
 
     if (key && keylen) {
         /* position to desired record */
