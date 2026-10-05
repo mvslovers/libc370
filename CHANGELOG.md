@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.3.1] - 2026-10-05
+
+Requires cc370 1.1.0 or later, as 2.3.0 did (`sdk/cc370.json`: `>=1.1.0 <2`).
+A drop-in for 2.3.0: fixes only, no interface change.
+
 ### Fixed
 - **No `#pragma pack` and no `#pragma linkage` in the headers (#415).**
   cc370 ignores both. The pack pragmas only produced "ignoring #pragma
