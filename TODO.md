@@ -12,10 +12,11 @@ some cheap items high and some expensive ones low.
 
 **2.0.0 shipped 2026-10-01, 2.1.0 on 2026-10-03, 2.2.0 on 2026-10-04, 2.3.0 on
 2026-10-05** (tag `v2.3.0` on `27f1d73`, PR #429: one CRT #424, #377, #382, #383,
-#425-#427; built with cc370 v1.1.0; assets, `pair`, tap and `install.sh` checked)
+#425-#427; built with cc370 v1.1.0; assets, `pair`, tap and `install.sh` checked), 2.3.1 on
+2026-10-05 too (tag `v2.3.1` on `cfa5afd`, PR #437: #431, #427, #415, #414, #436)
 (tag `v2.2.0` on `0ba452a`, cc370 `>=1.1.0 <2`, built with cc370 1.1.0;
 assets, `pair` and the Homebrew tap checked; cc370's `install.sh` with cc370
-1.2.0 picks 2.2.0). `main` is 2.3.1-dev. Releases are tagged after the go of
+1.2.0 picks 2.2.0). `main` is 2.3.2-dev. Releases are tagged after the go of
 the coordinating mbt session and the maintainer's approval. Tier 0 (the 2.0 critical path) is done
 but for the consumer ports still pinned to 1.0.8 (step 7). 1.0.8 is the last
 1.x; a serious defect there gets an emergency 1.0.9 from the tag `v1.0.8` (D8
@@ -49,7 +50,7 @@ CI gate. The consumer memset measurement is on #425 (no shipped product miscompi
 by PR #432; #427 (every extended asm declares "memory", sdk/asmlint.py in CI) by PR
 #433; #415 plus #pragma linkage by PR #434; #414 by PR #435 (all 130 headers clean
 under -Wall -Werror, sdk/hdrcheck.py in CI).
-All unreleased since 2.3.0. cc370 weak references (cc370#866) are on cc370 main: once
+Released in 2.3.1. cc370 weak references (cc370#866) are on cc370 main: once
 released, cc370#10's __premain hook can be written in @@start.c.* The
 morning pass: 63 issues open; 54 after the closures that pass led to (#50, #51, #71, #79,
 #80, #172, #226, #244 as done, #305 as a duplicate of #181). Closed since the last pass: #256, #274, #278, #313–#316, #318,
