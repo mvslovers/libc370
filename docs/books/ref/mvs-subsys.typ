@@ -61,15 +61,6 @@ they require of the caller. @mvs-subsys-auth-tab lists them.
   )
 ] <mvs-subsys-auth-tab>
 
-#note[Compiled against the installed library, the headers of this chapter
-build cleanly with #cmd("-Wall -Werror"): cc370 treats the headers of its
-sysroot as system headers and reports no warnings from them. Compiled
-against a libc370 source tree named with #cmd("-I"), #cmd("<mvs/subsys.h>"),
-#cmd("<mvs/jes2.h>") and #cmd("<ibm/jes2/pso.h>") draw
-#cmd("\"/*\" within comment") from the mappings #cmd("<ibm/mvs/iefssobh.h>")
-and #cmd("<ibm/mvs/iefssso.h>"), whose comments contain #cmd("/*")\; add
-#cmd("-Wno-comment").]
-
 == The Subsystem Control Blocks <mvs-subsys-cb>
 
 #idx("SSCT")

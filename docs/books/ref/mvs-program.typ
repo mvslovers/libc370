@@ -26,14 +26,6 @@ TSO commands. The headers are:
     (@mvs-program-tso).],
 )
 
-#note[Compiled against the installed library, the headers of this chapter
-build cleanly with #cmd("-Wall -Werror"): cc370 treats the headers of its
-sysroot as system headers and reports no warnings from them. Compiled
-against a libc370 source tree named with #cmd("-I"), #cmd("<mvs/link.h>")
-and #cmd("<mvs/apf.h>") draw #cmd("\"/*\" within comment"): they include
-#cmd("<ibm/mvs/ihacde.h>"), and through it #cmd("<ibm/mvs/ihaxtlst.h>"),
-whose comments contain #cmd("/*"). Add #cmd("-Wno-comment").]
-
 #idx("start-up", "of a C program")
 How a C program is started -- the start-up routine #cmd("@@CRT0"), the
 start-up module #cmd("crtm"), the stack, and the parameters a program

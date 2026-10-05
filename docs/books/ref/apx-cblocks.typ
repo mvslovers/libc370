@@ -40,28 +40,6 @@ uppercase of the macro. A bit or value defined by the macro is a
 only the part of a block that the library uses and fill the rest with
 reserved fields, so that the fields present keep their offsets.
 
-#idx("control block mappings", "compiler warnings")
-Compiled against the installed library, the mapping headers draw no
-warnings: cc370 treats the headers of its sysroot as system headers. A
-program compiled against a libc370 source tree named with #cmd("-I") sees
-them as ordinary headers, and then thirteen of them stop a build with
-#cmd("-Wall -Werror"), with #cmd("\"/*\" within comment"): #cmd("cvt.h"),
-#cmd("ieecucm.h"), #cmd("ieezb806.h"), #cmd("iefsscs.h"),
-#cmd("iefssobh.h"), #cmd("iefssso.h"), #cmd("ieftiot1.h"),
-#cmd("iefzb4d2.h"), #cmd("ihacde.h"), #cmd("ihalpde.h"),
-#cmd("ihaxtlst.h"), and in #cmd("ibm/jes2/") #cmd("jct.h") and
-#cmd("pso.h"). Their comments, or those of the mappings they include,
-contain #cmd("/*"). A program that includes one of them, directly or
-through a library header, needs #cmd("-Wno-comment") as well.
-
-#cmd("ibm/jes2/sjb.h") does not compile at all, installed or not, with any
-options: it declares a member #cmd("SJBCSCB") of type #cmd("void"). No
-other header includes it. In all, 24 of the 130 headers of libc370 fail
-under #cmd("-Wall -Werror") when they are reached through #cmd("-I"): 22
-on nested comments, #cmd("sjb.h"), and #cmd("<mvs/rfile.h>"), which needs
-#cmd("<stddef.h>") before it. The chapters that describe the library
-headers say which of their headers need #cmd("-Wno-comment").
-
 The tables list the headers by subject. The second column names the control
 block and, in parentheses, the IBM macro that maps it\; the third the C type
 names the header defines.
@@ -278,8 +256,7 @@ Their type names begin with two underscores, except #cmd("HASPCMB") (also
       block.],
     [#cmd("tgm.h")], [TGM (\$TGM)], [#cmd("__TGM")], [The track group map.],
     [#cmd("sjb.h")], [SJB (\$SJB)], [#cmd("__SJB")], [The subsystem job
-      block, reached through the SSIB. The header does not
-      compile.],
+      block, reached through the SSIB.],
     [#cmd("pso.h")], [PSO (\$PSO)], [#cmd("__PSO")], [The process SYSOUT work
       area in common storage.],
     [#cmd("svt.h")], [SVT (\$SVT)], [#cmd("HASPSVT")], [The JES2 subsystem

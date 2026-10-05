@@ -78,13 +78,6 @@ the return code.
   than returning #cmd("NULL"), so the "storage ran out" returns described
   below are seldom seen.
 
-#note[Compiled against the installed library, a program that includes #cmd("<mvs/dynalloc.h>")
-builds cleanly with #cmd("-Wall -Werror"): cc370 treats the headers of its
-sysroot as system headers and reports no warnings from them. Compiled
-against a libc370 source tree named with #cmd("-I"), the mapping #cmd("<ibm/mvs/iefzb4d2.h>") that it includes draws
-#cmd("\"/*\" within comment") warnings\; add #cmd("-Wno-comment").
-#cmd("<mvs/idcams.h>") builds cleanly either way.]
-
 === Request Block and Text Unit
 
 @mvs-dynalloc-rb99-tab lists the fields of the request block, which a

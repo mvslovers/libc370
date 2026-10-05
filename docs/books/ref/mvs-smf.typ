@@ -33,12 +33,6 @@ On MVS 3.8j the SMF options of the system are set at IPL by the
 #cmd("SMFPRMxx") member of #cmd("SYS1.PARMLIB"). A record is written only
 when SMF is active and the options ask for user records.
 
-#note[Compiled against the installed library, a program that includes #cmd("<mvs/smf.h>")
-builds cleanly with #cmd("-Wall -Werror"): cc370 treats the headers of its
-sysroot as system headers and reports no warnings from them. Compiled
-against a libc370 source tree named with #cmd("-I"), it draws #cmd("\"/*\" within comment"), from a comment that
-contains #cmd("/*"). Add #cmd("-Wno-comment").]
-
 == The SMF Record Header <mvs-smf-header>
 #idx("SMF_HEADER")
 

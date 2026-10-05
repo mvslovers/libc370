@@ -54,16 +54,6 @@ prototype reads #cmd("const char dsn[44]") or #cmd("const char vol[6]"): the
 array size documents the field that MVS sees, and the argument is still a
 string. A name is not converted to upper case unless the entry says so.
 
-#note[Compiled against the installed library, a program that includes #cmd("<mvs/dd.h>") or
-#cmd("<mvs/dscb.h>")
-builds cleanly with #cmd("-Wall -Werror"): cc370 treats the headers of its
-sysroot as system headers and reports no warnings from them. Compiled
-against a libc370 source tree named with #cmd("-I"), both draw
-#cmd("\"/*\" within comment") warnings, from comments that contain
-#cmd("/*")\; add #cmd("-Wno-comment"). #cmd("<mvs/rfile.h>") does not
-compile either way, with any options, unless #cmd("<stddef.h>") or
-#cmd("<stdio.h>") is included before it (@mvs-datasets-ropen).]
-
 == Lists <mvs-datasets-lists>
 #idx("list", "returned by a function")
 #idx("arraycount")
@@ -1196,7 +1186,6 @@ be deleted.
 
 === Format
 ```
-#include <stddef.h>
 #include <mvs/rfile.h>
 
 int ropen(const char *fnm, int write, RFILE **fp);
@@ -1289,8 +1278,6 @@ DD could not be freed\; the handle is freed in either case.
 - #cmd("rread()") does not tell the end of the data from an error.
 - On a spanned data set (RECFM=VS or VBS) a record can be at most
   #cmd("lrecl") - 4 bytes long.
-- #cmd("<mvs/rfile.h>") uses #cmd("size_t") without declaring it: include
-  #cmd("<stddef.h>") or #cmd("<stdio.h>") before it.
 - A handle has no lock. Do not use one handle in two tasks at the same
   time.
 
