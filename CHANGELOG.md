@@ -6,7 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
-**Requires cc370 1.4.0 or later** (`sdk/cc370.json`: `>=1.4.0 <2`).
+## [2.4.0] - 2026-10-05
+
+**Requires cc370 1.4.0 or later** (`sdk/cc370.json`: `>=1.4.0 <2`): cc370
+1.4 names no startfile, and libc370 no longer installs `crt0.o`/`crt1.o`.
+Builds that name them need mbt 2.2.0 or later.
 
 ### Changed
 - **libc370 needs cc370 1.4.0 (#159).** cc370 1.4 no longer puts a startfile
