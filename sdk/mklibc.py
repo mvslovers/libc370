@@ -6,12 +6,11 @@ three artifacts a cross-libc needs and drops them where cc370 already looks:
 
   headers   -> <sysroot>/include   (cc370 finds <stdio.h> etc. with no -I)
   libc.a    -> <sysroot>/lib       (the libc370 runtime; -lc pulls it)
-  crt0/1/m.o-> <sysroot>/lib       (startfiles.  @@CRT0 is ALSO a member of
-                                    libc.a since #159: crt0.o and crt1.o are
-                                    copies of that one CRT, kept for drivers
-                                    and build tools that still name them; an
-                                    explicit object beats the archive.  crtm.o
-                                    stays outside: it defines @@CRT0 too)
+  crtm.o    -> <sysroot>/lib       (the nested-startup startfile; it defines
+                                    @@CRT0 too, so it stays outside libc.a.
+                                    The C startup @@CRT0 is a member of libc.a
+                                    (#159); crt0.o and crt1.o, its copies for
+                                    cc370 before 1.4.0, are gone since 2.4.0)
 
 The sysroot is derived from the driver itself (cc370 -dumpmachine /
 -print-prog-name=cc1), so renaming the target triple later needs no edit here.
@@ -58,9 +57,10 @@ CFLAGS = [OPT, "-std=gnu99", "-trigraphs", "-Wuninitialized", f'-DVERSION="{VERS
           f"-I{ROOT}/include", f"-I{ROOT}"]   # private headers: "src/internal/x.h" (D10)
 ASMINC = ["-I", f"{ROOT}/maclib", "-I", f"{ROOT}/sysmac"]   # sysmac vendors SYS1.MACLIB
 STARTUPS = ("@@crtm",)              # -> separate startfile, never archived
-# crt0.o and crt1.o are the one CRT (#159), archived AND copied out under
-# both names for as long as cc370's STARTFILE_SPEC and mbt name them
-STARTFILES = (("crt0.o", "@@crt0"), ("crt1.o", "@@crt0"), ("crtm.o", "@@crtm"))
+# the startfiles installed beside libc.a.  crt0.o and crt1.o were copies of
+# the archived @@CRT0 for cc370 before 1.4.0 (#159); 2.4.0 needs 1.4.0
+STARTFILES = (("crtm.o", "@@crtm"),)
+STALE_STARTFILES = ("crt0.o", "crt1.o")   # an earlier install left them
 
 
 def run(cmd, cwd=None):
@@ -214,8 +214,6 @@ def cmd_build():
                 crtobjs[stem] = o
             else:
                 objs.append(o)
-                if stem == "@@crt0":                  # archived, and a startfile
-                    crtobjs[stem] = o
     if fails:
         print(f"[libc] {len(fails)} failure(s):")
         for f in fails[:15]:
@@ -253,7 +251,7 @@ def cmd_build():
         shutil.copy(crtobjs[stem], f"{BUILD}/{name}")
     nmem = sum(1 for l in run([AR370, "t", libc]).stdout.splitlines() if l.strip().endswith("bytes"))
     print(f"[libc] OK -> {libc} ({nmem} members, {os.path.getsize(libc)} bytes, {OPT})")
-    print(f"[libc] startfiles -> crt0.o crt1.o (= the @@CRT0 member) crtm.o")
+    print(f"[libc] startfile -> crtm.o (@@CRT0 is a libc.a member)")
     return 0
 
 
@@ -277,8 +275,14 @@ def stage(inc, lib, mac):
             shutil.copy(os.path.join(d, f), os.path.join(inc, rel)); n += 1
     # libc.a + startfiles
     shutil.copy(libc, f"{lib}/libc.a")
-    for crt in ("crt0.o", "crt1.o", "crtm.o"):
+    for crt, _ in STARTFILES:
         shutil.copy(f"{BUILD}/{crt}", f"{lib}/{crt}")
+    # crt0.o/crt1.o from an install before 2.4.0: nothing reads them any
+    # more (cc370 1.4 names no startfile, mbt finds the sysroot by libc.a),
+    # and a stale copy of an old @@CRT0 is only a trap (#159)
+    for crt in STALE_STARTFILES:
+        if os.path.exists(f"{lib}/{crt}"):
+            os.remove(f"{lib}/{crt}")
     # assembler macros: sysmac (vendored SYS1.MACLIB) THEN maclib (libc370's
     # PDPTOP/PDPPRLG/... override any collision) -> one dir as370 finds by
     # default (<exedir>/../macros); needed for hand-asm + the cc370 one-shot.
@@ -297,7 +301,7 @@ def cmd_stage(prefix):
     r = stage(f"{prefix}/include", f"{prefix}/lib", f"{prefix}/macros")
     if r is None:
         return 1
-    print(f"[stage] {r[0]} headers, libc.a + crt0/1/m.o, {r[1]} macro files -> {prefix}")
+    print(f"[stage] {r[0]} headers, libc.a + crtm.o, {r[1]} macro files -> {prefix}")
     return 0
 
 
@@ -327,7 +331,7 @@ def cmd_install():
     n, m = stage(inc, lib, mac)
     print(f"[install] target {triple}")
     print(f"[install] {n} headers -> {inc} ({stale} files there before, cleared)")
-    print(f"[install] libc.a + crt0/1/m.o -> {lib}")
+    print(f"[install] libc.a + crtm.o -> {lib}")
     print(f"[install] {m} macro files -> {mac}")
     print(f"[install] => an as370 installed in {os.path.dirname(mac)}/bin finds these by default;")
     print(f"[install]    otherwise set AS370_MACLIB={mac}")

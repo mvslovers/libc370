@@ -5,10 +5,10 @@
 *                                                                     *
 *  This startup code requires elements from the CLIB datasets.        *
 *                                                                     *
-*  The one C startup (#159): a member of libc.a, and copied out as    *
-*  crt0.o and crt1.o for drivers and build tools that still name      *
-*  them.  CTHREAD/@@CTEXIT are a member of their own (@@cthrd.asm);   *
-*  this startup IDENTIFYs CTHREAD only when the program links it.     *
+*  The one C startup (#159), a member of libc.a: cc370 1.4 names no   *
+*  startfile, and a main's EXTRN @@CRT0 pulls it by autocall.         *
+*  CTHREAD/@@CTEXIT are a member of their own (@@cthrd.asm); this     *
+*  startup IDENTIFYs CTHREAD only when the program links it.          *
 *                                                                     *
 *  RELEASED TO THE PUBLIC DOMAIN                                      *
 ***********************************************************************

@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+**Requires cc370 1.4.0 or later** (`sdk/cc370.json`: `>=1.4.0 <2`).
+
+### Changed
+- **libc370 needs cc370 1.4.0 (#159).** cc370 1.4 no longer puts a startfile
+  on the link line: a program's `main` refers to `@@CRT0`, and automatic
+  library call takes it from `libc.a`, where it has been since 2.3.0. Every
+  public header now stops an older compiler with
+  `#error "libc370 needs cc370 1.4.0 or later"`.
+
+### Removed
+- **`crt0.o` and `crt1.o` (#159).** Since 2.3.0 both were identical copies of
+  the `@@CRT0` member of `libc.a`, kept for compilers and build tools that
+  still named them. cc370 1.4 and mbt 2.2 no longer do. A hand-written link
+  that names one of them drops it. `make install` removes copies an earlier
+  install left in `<sysroot>/lib`. `crtm.o`, the nested startup, stays.
+
 ### Added
 - **`__premain()`, a startup hook (cc370#10).** A program that defines
   `int __premain(char *parm, char *pgmname, void **pgmr1)` (declared in

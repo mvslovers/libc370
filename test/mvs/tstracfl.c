@@ -49,7 +49,7 @@
  * BUILD (host):
  *     cc370 -O1 -Iinclude -c test/mvs/tstracfl.c -o tstracfl.o
  *     ld370 --entry @@CRT0 --ac 1 -iebcopy -o TSTRACFL \
- *           build/sdk/crt0.o tstracfl.o -Lbuild/sdk -lc
+ *           tstracfl.o -Lbuild/sdk -lc
  *     ld370 --pack TSTRACFL=TSTRACFL.iebcopy -o probe -xmit --dsn <LOADLIB>
  * Install: RECEIVE into a scratch library, IEBCOPY into an APF-authorized
  *          one, delete the member again afterwards.

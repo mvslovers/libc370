@@ -1,30 +1,40 @@
-# C startup variants: `@@crt0`, `@@crt1`, `@@crtm`
+# C startup: `@@crt0` and `@@crtm`
 
-This note explains the three C startup ("crt") modules in `src/mvs/crt/`, what they
+This note explains the C startup ("crt") modules in `src/mvs/crt/`, what they
 actually do (not just what their comments claim), and **when to use which**.
 
 ## TL;DR
 
-All three define the **same** entry point `@@CRT0`. They are **mutually
-exclusive startfiles** — exactly like glibc's `crt1.o`. `mklibc.py` builds them
-as separate objects (`crt0.o`, `crt1.o`, `crtm.o`) that live *outside* `libc.a`,
-so the linker pulls **exactly one** into any given program. "Which module do I
-use?" therefore means "which startfile do I link this one program with?".
+There is **one** C startup, `@@CRT0` (`src/mvs/crt/@@crt0.asm`), and since
+2.3.0 it is a **member of `libc.a`** (#159). Nothing names it: a C `main`
+compiles into a stub that references `@@CRT0` (`EXTRN @@CRT0`), so automatic
+library call brings the startup in, and cc370 from 1.4.0 puts no startfile on
+the link line. libc370 2.4.0 requires that cc370 and no longer installs the
+startfile copies `crt0.o`/`crt1.o` (2.3.x still shipped them, identical).
 
-| Startfile | Use it for | Threads | Builds the runtime? |
-|-----------|------------|:-------:|---------------------|
-| `crt0.o`  | A standalone C program that creates threads (`cthread_create*`) | yes | yes (full) |
-| `crt1.o`  | A standalone C program that does **not** create threads (the common case) | no | yes (full) |
-| `crtm.o`  | A C module entered **inside an already-running C runtime on the same TCB** (LINK/XCTL/LOAD+BALR from a C program) | no | no — it **reuses** the caller's runtime |
+| Module | Use it for | Threads | Builds the runtime? |
+|--------|------------|:-------:|---------------------|
+| `@@CRT0` in `libc.a` | every standalone C program | when it calls `cthread_create*()` | yes (full) |
+| `crtm.o` (a startfile) | a C module entered **inside an already-running C runtime on the same TCB** (LINK/XCTL/LOAD+BALR from a C program) | no | no — it **reuses** the caller's runtime |
 
 Rules of thumb:
 
-* **crt0 vs crt1** = *"do I need threads?"* — the only real difference is the
-  `IDENTIFY EPLOC=CTHREAD` at startup.
-* **crt0/crt1 vs crtm** = *"do I build the runtime (top level) or inherit one
-  (nested)?"*.
-* **Never use `crtm` as the top-level startfile.** Without a prior crt0/crt1 on
-  the same TCB its unchecked `@@CRTGET` dereferences a NULL CLIBCRT and abends.
+* **Threads need no decision.** The subtask driver `CTHREAD` (with `@@CTEXIT`)
+  is a member of its own, `src/mvs/thread/@@cthrd.asm`. `cthread_create_ex()`
+  references it hard, so it is linked exactly when the program can create a
+  thread; `@@CRT0` refers to it weakly and issues `IDENTIFY EPLOC=CTHREAD`
+  only when it is there. A program without threads carries neither.
+* **`@@CRT0` vs `crtm`** = *"do I build the runtime (top level) or inherit one
+  (nested)?"*. `crtm.o` is named explicitly; an explicit object beats the
+  archive, so `@@CRT0` is then not pulled.
+* **Never use `crtm` as the top-level startfile.** Without a prior `@@CRT0`
+  on the same TCB its unchecked `@@CRTGET` dereferences a NULL CLIBCRT and
+  abends.
+* **Startup work of your own goes into `__premain()`**, not into a private
+  `@@START` (cc370#10): define
+  `int __premain(char *parm, char *pgmname, void **pgmr1)` (`<mvs/crt.h>`) and
+  `__start()` calls it first, before it opens the standard streams. A stream
+  it sets is kept, a nonzero return ends the program before `main()`.
 
 ## The runtime model you need first
 
@@ -57,7 +67,7 @@ So each startup does `LA R0,MAINSTK; ST R0,THEIRSTK` to set the initial NAB to
 the start of its GETMAIN'd stack region. Every C call then bumps the NAB to
 carve out its frame. `MAINSTK` is that stack region.
 
-## `@@crt0` — full startup, with threads
+## `@@CRT0` — the full startup
 
 In order:
 
@@ -88,49 +98,38 @@ In order:
 10. `EXTRACT TIOT,TSO,PSB` -> `PPATIOT`, TSO foreground/background flags,
     `PPAPSCB` (environment detection).
 11. Arguments: dereference `R1 -> A(parm)` into `ARGPTR`; set `PGMNPTR`.
-12. **`IDENTIFY EPLOC=CTHREAD`** — register the embedded `CTHREAD` entry point as
-    a CDE minor so that `ATTACH EP=CTHREAD` can find it.
+12. **`IDENTIFY EPLOC=CTHREAD`, when `CTHREAD` is linked** — `WXTRN CTHREAD`,
+    `ICM`, skip when zero (the `@@STKLEN` pattern). It registers the subtask
+    driver as a CDE minor so that `ATTACH EP=CTHREAD` can find it. The RC is
+    not checked: 4 means the name exists already (a program that IDENTIFYs it
+    itself), 20 that another module in the task identified its own copy.
 13. Call `@@START` -> `__start` -> `main()` -> `__exit()`. Normally never
     returns.
 
-The module also contains the `CTHREAD` subtask driver and `@@CTEXIT` (thread
-exit). The thread manager relies on step 12: `@@ctcrtx.c` issues
-`ATTACH EP=CTHREAD,DPMOD=-1`, which only resolves because of the `IDENTIFY`.
+The `CTHREAD` subtask driver and `@@CTEXIT` (thread exit) are **not** in this
+module: they are `src/mvs/thread/@@cthrd.asm`, pulled in by the hard
+`EXTRN CTHREAD` in `@@ctcrtx.c`. Its `ATTACH EP=CTHREAD,DPMOD=-1` resolves
+because of step 12.
 
-Teardown is **not** in crt0 — it references `=V(@@EXITA)`, pulled from
+Teardown is **not** in `@@CRT0` — it references `=V(@@EXITA)`, pulled from
 `@@exita.asm` in `libc.a`, which does the **full** dismantle: `@@GRTRES`,
 `@@CRTRES`, restore `8(TCBFSAB)` from `PPASAVE`, then FREEMAIN the PPA+stack.
 
 Default stack: `MAINSTK DS 65536F` = **256 KB**.
 
-## `@@crt1` — crt0 minus IDENTIFY (no threads)
+## `@@crt1` — gone
 
-`@@crt1.asm` is a near copy of crt0 whose one *intended* functional change is
-that the `IDENTIFY EPLOC=CTHREAD` is commented out. Everything else — PPA,
-TCBFSA anchoring, the #89 `PPAHEAPS` inheritance, `@@CRTSET`/`@@GRTSET`,
-`EXTRACT`, the external `@@EXITA` — is identical. (Two incidental drifts exist
-on the dead CTHREAD path: the WTO texts say `@@CRT1`, and crt1's `@@CTEXIT`
-reads its return code from `0(R1)` only *after* the `@@CRTGET` call, which does
-not preserve `R1` — harmless while the path is unreachable, but not
-"line-for-line".)
-
-Consequence worth knowing: the `CTHREAD`/`@@CTEXIT` code is **still assembled
-into crt1 but is dead/unreachable**. With no CDE entry, `ATTACH EP=CTHREAD`
-cannot resolve the name, so `cthread_create_ex()` fails (its `attach()` wraps the
-ATTACH in `try()` for exactly this reason). So **crt1 = full C runtime, thread
-creation disabled.** There is essentially no size saving — the choice is purely
-semantic. Use crt1 to avoid the IDENTIFY (and its failure modes, e.g. a
-duplicate CDE for nested C programs) when you do not spawn threads.
-
-Default stack: **256 KB**.
+Until 2.3.0 there was a second startfile, `@@crt1`: a copy of crt0 with the
+`IDENTIFY` commented out, so that a program could choose "no threads". The
+choice is now made by what the program links (above), and the copy is gone.
 
 ## `@@crtm` — minimal, nested startup
 
-`@@crtm` is **not** "crt0 with a smaller stack". It omits fundamental setup and
+`@@crtm` is **not** "`@@CRT0` with a smaller stack". It omits fundamental setup and
 therefore **requires an already-initialised C runtime on the same TCB**. What it
-does *not* do, versus crt0/crt1:
+does *not* do, versus `@@CRT0`:
 
-| Step | crt0 / crt1 | crtm |
+| Step | `@@CRT0` | crtm |
 |------|:-----------:|:----:|
 | GETMAIN for the **PPA** | yes (`+ L'CLIBPPA`) | **no** — stack only |
 | Build PPA eyecatcher / `PPASTKLN` | yes | **no** |
@@ -143,13 +142,13 @@ does *not* do, versus crt0/crt1:
 Instead crtm calls `@@CRTGET` to fetch an **existing** CLIBCRT, saves its current
 `CRTSAVE` into `OLDSAVE`, and swaps in its own save area. **`@@CRTGET` is
 dereferenced without a NULL check** — if no CRT exists, the store lands in
-protected low core and abends. So crtm is only valid when an outer crt0/crt1
+protected low core and abends. So crtm is only valid when an outer `@@CRT0`
 already put a PPA in the TCBFSA and registered a CRT for this TCB; `@@CRTGET ->
 @@PPAGET` then finds the *parent's* anchors.
 
 Two more distinctive details:
 
-* **Non-standard linkage.** crt0 takes the parm via `R1 -> A(parm)`. crtm keeps
+* **Non-standard linkage.** `@@CRT0` takes the parm via `R1 -> A(parm)`. crtm keeps
   **R0** (`PGMR0`) and passes it as `__start`'s first argument `p` — i.e. the
   address of the length-prefixed parm block goes **directly in R0**, one
   indirection less. This signals that crtm is entered by purpose-built caller
@@ -161,7 +160,7 @@ Two more distinctive details:
   **neither `@@GRTRES` nor `@@CRTRES`** — crtm did not create CRT/GRT/PPA, so it
   must not tear them down.
 
-Default stack: `MAINSTK DS 16384F` = **64 KB** (a quarter of crt0).
+Default stack: `MAINSTK DS 16384F` = **64 KB** (a quarter of `@@CRT0`'s).
 
 **Caveat:** `__start` re-opens `stdout`/`stderr`/`stdin` and overwrites
 `grt->grtout/...`. Because crtm shares the parent's GRT, a crtm nesting
@@ -173,11 +172,11 @@ stdout".
 
 | | Teardown module | GRT freed | CRT freed | PPA out of TCBFSA | FREEMAIN |
 |---|---|:--:|:--:|:--:|:--:|
-| crt0 / crt1 | `@@exita.o` (from `libc.a`) | yes (`@@GRTRES`) | yes (`@@CRTRES`) | yes | PPA + stack |
+| `@@CRT0` | `@@exita.o` (from `libc.a`) | yes (`@@GRTRES`) | yes (`@@CRTRES`) | yes | PPA + stack |
 | crtm | inline `@@EXITA` | no | no | no | own stack only |
 
 `@@exita.asm` finds the PPA directly via `8(TCBFSAB)` (not through `@@PPAGET`),
-relying on crt0 having put it there — consistent with crtm not doing so and thus
+relying on `@@CRT0` having put it there — consistent with crtm not doing so and thus
 needing its own exit.
 
 ## Note on stale comments

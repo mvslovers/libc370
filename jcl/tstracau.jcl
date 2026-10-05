@@ -23,7 +23,7 @@
 //* at entry 0 and at --pack's own AC (mvslovers/cc370#850, #159):
 //*   cc370 -O1 -Iinclude -c test/mvs/tstracau.c -o tstracau.o
 //*   ld370 --entry @@CRT0 --ac 1 -iebcopy -o TSTRACAU \
-//*         build/sdk/crt0.o tstracau.o -Lbuild/sdk -lc
+//*         tstracau.o -Lbuild/sdk -lc
 //*   ld370 --pack TSTRACAU=TSTRACAU.iebcopy -o probe -xmit \
 //*         --dsn IBMUSER.LIBC370.PROBE.LINKLIB
 //* Install: RECEIVE into a scratch library, IEBCOPY the member into the APF

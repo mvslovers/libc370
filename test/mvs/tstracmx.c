@@ -102,7 +102,7 @@
  *
  *     cc370 -O1 -Iinclude -c test/mvs/tstracmx.c -o tstracmx.o
  *     ld370 --entry @@CRT0 --ac 1 -iebcopy -o TSTRACMX \
- *           build/sdk/crt0.o tstracmx.o -Lbuild/sdk -lc
+ *           tstracmx.o -Lbuild/sdk -lc
  *     ld370 --pack TSTRACMX=TSTRACMX.iebcopy -o probe -xmit \
  *           --dsn IBMUSER.LIBC370.PROBE.LINKLIB
  *

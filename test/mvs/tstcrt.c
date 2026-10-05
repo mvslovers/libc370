@@ -44,6 +44,9 @@
  * 4/4, TSTCRTN0 1/1, TSTCRTT0 4/4, all CC 0000; red: TSTCRTNR (old
  * crt0.o) and TSTCRTTR (old crt1.o) CC 0001, 0/1 each.
  *
+ * Since 2.4.0 the tree builds no crt0.o: the N0/T0 variants were measured
+ * with 2.3.x, which still shipped it as a copy of the @@CRT0 member.
+ *
  * RC: 0 = every check passed, 1 = a check failed (it is the COND CODE).
  */
 #include <stdio.h>
