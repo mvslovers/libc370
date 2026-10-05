@@ -385,14 +385,23 @@ libc370 1.x they are in `libc.a`.
 
 ## Linking a server module for httpd
 
-The libc-facing part of the contract (httpd 4.0.0, its `project.toml`):
+The libc-facing part of the contract (httpd with mbt 2.2.0 and libc370 2.4.0,
+its `project.toml`):
 
-* Each module links `startup = "crt1"` plus `src/cgistart.c`. `crt1` is the full
-  runtime with thread creation disabled — a module builds its own C runtime and
-  does not attach threads of its own.
+* A module names no startup object: `@@CRT0` comes out of `libc.a` (#159). It
+  lists `src/cgistart.c` in its `sources`. `cgistart` defines its own `@@START`,
+  which wins over libc370's as an explicit object. A CGI or display module
+  calls no thread function, so the thread driver `CTHREAD` is not linked and
+  its startup issues no IDENTIFY.
+* mbt 2.2.0 searches libc370 ahead of a project's dependencies. A module that
+  takes its `@@START` from a dependency's archive instead of naming the object
+  (mvsMF's module from httpd's library, for example) sets `dep_startup = true`;
+  otherwise mbt stops the build.
 * `cgistart` opens `HTTPDOUT` / `HTTPDERR` / `HTTPDIN` as `stdout` / `stderr` /
   `stdin` — never `SYSPRINT` / `SYSTERM` / `SYSIN`, which the server needs free
-  for the utilities it drives. httpd's own `httpstrt.c` enforces this: if any of
-  the three is allocated to the STC it WTOs and exits before starting.
-* httpd `__load()`s the modules at startup and calls them through the HTTPX
-  function vector; a module never links against server code directly.
+  for the utilities it drives. httpd's own startup enforces this from its
+  `__premain()` hook (`src/httpstrt.c`, libc370 2.4.0 and later): if any of the
+  three is allocated to the STC it WTOs and ends before `main()`.
+* httpd runs a module with LINK (`__linkds()`, `src/httplink.c`) and hands it
+  the server through the HTTPX function vector; a module never links against
+  server code directly.
