@@ -16,16 +16,13 @@ typedef struct exitlist EXITLIST;   /* DCB exit list    */
 #define BIT7     0x01
 #endif
 
-#pragma pack(1)
 struct exitlist {
    unsigned exit_code;              /* 00 actually an enum _e_exit,
                                           possibly with LAST bit set        */
    void *exit_addr;                 /* 04 exit function address             */
 };
-#pragma pack(reset)
 
 
-#pragma pack(1)
 struct dcb {
     union {
         unsigned    dcbrelad;       /* 00 PARTITIONED ORGANIZATION DATA SET -
@@ -669,6 +666,5 @@ struct dcb {
     void    *dcbuser;               /* 60 not part of DCB proper, user data */
     void    *dcbpriv;               /* 64 not part of DCB proper, internal  */
 };  /* struct dcb */
-#pragma pack(reset)
 
 #endif

@@ -47,9 +47,7 @@ unsigned char __getsp(void);
 void *__getmsp(size_t size, unsigned char sp);
 
 /* ---- from 1.x mvssupa.h ------------------------------------------------- */
-#pragma linkage(__getm, OS)
 void *__getm(size_t sz);
-#pragma linkage(__freem, OS)
 void __freem(void *ptr);
 
 #endif /* MVS_STORAGE_H */

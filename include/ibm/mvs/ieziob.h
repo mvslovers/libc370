@@ -5,7 +5,6 @@
 typedef struct iob      IOB;
 typedef struct iobprfx  IOBPRFX;
 
-#pragma pack(1)
 struct iobprfx {
     /* IOB Prefix area */
     char            iobcflg1;       /* 00 I/O INDICATORS                    */
@@ -325,6 +324,5 @@ struct iob {
         };
     };
 };                                  /* 28 (40 bytes)                        */
-#pragma pack(reset)
 
 #endif

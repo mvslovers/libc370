@@ -7,6 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Fixed
+- **No `#pragma pack` and no `#pragma linkage` in the headers (#415).**
+  cc370 ignores both. The pack pragmas only produced "ignoring #pragma
+  pack", which made 19 headers fail `-Wall -Werror`; with and without
+  packing every layout is the same (637 offsets and sizes measured). The
+  linkage pragmas never had an effect and newer cc370 warns about them.
+  The generated library is byte-for-byte unchanged. 24 public headers
+  still fail `-Wall -Werror` for other reasons (#414).
 - **`cthread_delete()` after `cthread_wait(&task->termecb)` frees the
   finished subtask (#431).** `cthread_wait()` clears the ECB it waited on,
   and `cthread_delete()`/`cthread_detach()` decided "ended" from the posted

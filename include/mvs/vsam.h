@@ -14,7 +14,6 @@ typedef struct shwpl    SHWPL;      /* SHOWCAT parameter list               */
 typedef struct shwout   SHWOUT;     /* SHOWCAT return area (not D or I)     */
 typedef struct shwoutdi SHWOUTDI;   /* SHOWCAT return area (D or I)         */
 
-#pragma pack(1)
 struct acb {                        /* ACCESS METHOD CONTROL BLOCK          */
     unsigned char   acbid;          /* 00 ACB IDENTIFIER                    */
 #define ACBIDVAL            0xA0    /* ... IDENTIFIER VALUE - X'A0'         */
@@ -208,9 +207,7 @@ struct acb {                        /* ACCESS METHOD CONTROL BLOCK          */
                                           ADDRESS(VTAM)                     */
     };
 };                                  /* 4C (76 bytes)                        */
-#pragma pack(reset)
 
-#pragma pack(1)
 struct rpl {
     unsigned char   rplid;          /* 00 RPL IDENTIFIER                    */
 #define RPLIDD              0x00    /* ... IDENTIFIER VALUE - X'00'         */
@@ -537,9 +534,7 @@ struct rpl {
     unsigned short  rplemlen;       /* 46 LENGTH OF THE ERROR MESSAGE AREA  */
     void            *rplermsa;      /* 48 POINTER TO THE ERROR MESSAGE AREA */
 };                                  /* 4C (76 bytes)                        */
-#pragma pack(reset)
 
-#pragma pack(1)
 struct shwpl {                      /* SHOW CATALOG INPUT MAPPING           */
     unsigned char   shwflgs;        /* 00 FIRST SHOW CAT FLAGS              */
 #define SHWNAME             0x80    /* ... 1 - NAME SPECIFIED
@@ -549,9 +544,7 @@ struct shwpl {                      /* SHOW CATALOG INPUT MAPPING           */
     ACB             *shwacb;        /* 08 ACB ADDRESS                       */
     void            *shwarea;       /* 0C RETURN AREA ADDRESS               */
 };                                  /* 10 (16 bytes)                        */
-#pragma pack(reset)
 
-#pragma pack(1)
 struct shwout {                     /* SHOW CATALOG OUTPUT MAPPING          */
     unsigned short  shwlen1;        /* 00 CALLER WORK AREA LENGTH           */
     unsigned short  shwlen2;        /* 02 WORK AREA LENGTH REQUIRED BY
@@ -589,14 +582,11 @@ struct shwoutdi {                   /* SHOW CATALOG OUTPUT MAPPING (D or I) */
     char            shwass[0];      /* 18 ASSOCIATIONS BEGIN HERE -
                                           D OR I                            */
 };
-#pragma pack(reset)
 
-#pragma pack(1)
 struct shwassoc {                   /* SHOW CATALOG OUTPUT MAPPING          */
     unsigned char   shwatype;       /* 00 ASSOCIATION TYPE                  */
     unsigned char   shwaci[3];      /* 01 ASSOCIATION CI NUMBER             */
 };
-#pragma pack(reset)
 
 /* __vsshwc() - issue SHOWCAT for name, ACB is optional, info returned in buf*/
 extern int  __vsshwc(ACB *acb, const char *name, char *buf, int buflen);
@@ -605,7 +595,6 @@ extern int  __vsshwc(ACB *acb, const char *name, char *buf, int buflen);
 /* VSFILE handle for accessing VSAM datasets
 ** Note: keep this struct sync'd with VSFILE DSECT in CLIBVSFI.COPY
 */
-#pragma pack(1)
 struct vsfile {
     char                eye[8];     /* 00 eye catcher for dumps             */
 #define VSFILE_EYE      "*VSFILE*"  /* ...                                  */
@@ -630,7 +619,6 @@ struct vsfile {
     void                *vsself;    /* B8 pointer to self, used in __vserr  */
     void                *vsreset;   /* BC reset function (called by __vserr)*/
 };                                  /* A0 (192 bytes)                       */
-#pragma pack(reset)
 
 enum vstype {
     VSTYPE_KSDS=0,                  /* keyed sequential dataset     (key)   */
