@@ -50,7 +50,11 @@ CI gate. The consumer memset measurement is on #425 (no shipped product miscompi
 by PR #432; #427 (every extended asm declares "memory", sdk/asmlint.py in CI) by PR
 #433; #415 plus #pragma linkage by PR #434; #414 by PR #435 (all 130 headers clean
 under -Wall -Werror, sdk/hdrcheck.py in CI).
-Released in 2.3.1. cc370 weak references (cc370#866) are on cc370 main: once
+Released in 2.3.1.
+
+*cc370#10: the __premain() startup hook landed with PR #440 (weak reference, asm
+WXTRN fallback for cc370 < 1.3; MVS-tested), unreleased. Consumers that replace
+@@START (httpd's CGI launcher) can move onto it.* cc370 weak references (cc370#866) are on cc370 main: once
 released, cc370#10's __premain hook can be written in @@start.c.* The
 morning pass: 63 issues open; 54 after the closures that pass led to (#50, #51, #71, #79,
 #80, #172, #226, #244 as done, #305 as a duplicate of #181). Closed since the last pass: #256, #274, #278, #313–#316, #318,
