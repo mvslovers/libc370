@@ -60,13 +60,9 @@ builds cleanly with #cmd("-Wall -Werror"): cc370 treats the headers of its
 sysroot as system headers and reports no warnings from them. Compiled
 against a libc370 source tree named with #cmd("-I"), both draw
 #cmd("\"/*\" within comment") warnings, from comments that contain
-#cmd("/*"), and #cmd("<mvs/dd.h>") also draws #cmd("ignoring #pragma pack")
-from mappings that use the pragma, which cc370 does not implement (the
-layouts are the same with or without packing). Add #cmd("-Wno-comment")
-for #cmd("<mvs/dscb.h>"), and #cmd("-Wno-comment -Wno-unknown-pragmas")
-for #cmd("<mvs/dd.h>"). #cmd("<mvs/rfile.h>") does not compile either way,
-with any options, unless #cmd("<stddef.h>") or #cmd("<stdio.h>") is
-included before it (@mvs-datasets-ropen).]
+#cmd("/*")\; add #cmd("-Wno-comment"). #cmd("<mvs/rfile.h>") does not
+compile either way, with any options, unless #cmd("<stddef.h>") or
+#cmd("<stdio.h>") is included before it (@mvs-datasets-ropen).]
 
 == Lists <mvs-datasets-lists>
 #idx("list", "returned by a function")

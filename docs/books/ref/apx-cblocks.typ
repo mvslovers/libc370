@@ -44,32 +44,23 @@ reserved fields, so that the fields present keep their offsets.
 Compiled against the installed library, the mapping headers draw no
 warnings: cc370 treats the headers of its sysroot as system headers. A
 program compiled against a libc370 source tree named with #cmd("-I") sees
-them as ordinary headers, and then twenty of them stop a build with
-#cmd("-Wall -Werror"). A program that includes one of them, directly or
-through a library header, needs the option named here as well:
-
-#deflist(width: 1.6in,
-  [#cmd("-Wno-comment")], [#cmd("cvt.h"), #cmd("ieecucm.h"),
-    #cmd("ieezb806.h"), #cmd("iefsscs.h"), #cmd("iefssobh.h"),
-    #cmd("iefssso.h"), #cmd("ieftiot1.h"), #cmd("iefzb4d2.h"),
-    #cmd("ihalpde.h"), #cmd("ihaxtlst.h"), and in #cmd("ibm/jes2/")
-    #cmd("jct.h") and #cmd("pso.h"). Their comments, or those of the
-    mappings they include, contain #cmd("/*"), which draws #cmd("\"/*\" within comment").],
-  [#cmd("-Wno-unknown-pragmas")], [#cmd("dcbd.h"), #cmd("iefjfcbn.h"),
-    #cmd("iezdeb.h"), #cmd("ieziob.h"), #cmd("ihadecb.h"),
-    #cmd("ihasdwa.h"). They use #cmd("#pragma pack"), which cc370 does not
-    implement and reports as ignored. The layouts are the same with or
-    without packing.],
-  [both], [#cmd("ihacde.h"), which uses the pragma and includes
-    #cmd("ihaxtlst.h").],
-)
+them as ordinary headers, and then thirteen of them stop a build with
+#cmd("-Wall -Werror"), with #cmd("\"/*\" within comment"): #cmd("cvt.h"),
+#cmd("ieecucm.h"), #cmd("ieezb806.h"), #cmd("iefsscs.h"),
+#cmd("iefssobh.h"), #cmd("iefssso.h"), #cmd("ieftiot1.h"),
+#cmd("iefzb4d2.h"), #cmd("ihacde.h"), #cmd("ihalpde.h"),
+#cmd("ihaxtlst.h"), and in #cmd("ibm/jes2/") #cmd("jct.h") and
+#cmd("pso.h"). Their comments, or those of the mappings they include,
+contain #cmd("/*"). A program that includes one of them, directly or
+through a library header, needs #cmd("-Wno-comment") as well.
 
 #cmd("ibm/jes2/sjb.h") does not compile at all, installed or not, with any
 options: it declares a member #cmd("SJBCSCB") of type #cmd("void"). No
-other header includes it. In all, 38 of the 130 headers of libc370 fail
-under #cmd("-Wall -Werror") when they are reached through #cmd("-I")\; the
-chapters that describe the library headers name the options each one
-needs.
+other header includes it. In all, 24 of the 130 headers of libc370 fail
+under #cmd("-Wall -Werror") when they are reached through #cmd("-I"): 22
+on nested comments, #cmd("sjb.h"), and #cmd("<mvs/rfile.h>"), which needs
+#cmd("<stddef.h>") before it. The chapters that describe the library
+headers say which of their headers need #cmd("-Wno-comment").
 
 The tables list the headers by subject. The second column names the control
 block and, in parentheses, the IBM macro that maps it\; the third the C type

@@ -29,15 +29,10 @@ TSO commands. The headers are:
 #note[Compiled against the installed library, the headers of this chapter
 build cleanly with #cmd("-Wall -Werror"): cc370 treats the headers of its
 sysroot as system headers and reports no warnings from them. Compiled
-against a libc370 source tree named with #cmd("-I"), three of them draw
-warnings. #cmd("<mvs/recovery.h>") includes #cmd("<ibm/mvs/ihasdwa.h>"),
-which uses #cmd("#pragma pack")\; cc370 does not implement the pragma and
-reports #cmd("ignoring #pragma pack"), while the layout is the same with or
-without packing. #cmd("<mvs/link.h>") and #cmd("<mvs/apf.h>") include
-#cmd("<ibm/mvs/ihacde.h>"), which uses the pragma as well and includes
-#cmd("<ibm/mvs/ihaxtlst.h>"), whose comments contain #cmd("/*"). Add
-#cmd("-Wno-unknown-pragmas") for #cmd("<mvs/recovery.h>"), and
-#cmd("-Wno-comment -Wno-unknown-pragmas") for the other two.]
+against a libc370 source tree named with #cmd("-I"), #cmd("<mvs/link.h>")
+and #cmd("<mvs/apf.h>") draw #cmd("\"/*\" within comment"): they include
+#cmd("<ibm/mvs/ihacde.h>"), and through it #cmd("<ibm/mvs/ihaxtlst.h>"),
+whose comments contain #cmd("/*"). Add #cmd("-Wno-comment").]
 
 #idx("start-up", "of a C program")
 How a C program is started -- the start-up routine #cmd("@@CRT0"), the
@@ -868,8 +863,7 @@ header.
 the GETMAIN fails.
 
 === Notes
-The header declares both with #cmd("#pragma linkage(..., OS)"). They are
-written in assembler. The storage is not cleared.
+Both are written in assembler. The storage is not cleared.
 
 Use #cmd("malloc()") and #cmd("free()") rather than these functions:
 #cmd("malloc()") also sets #cmd("errno") to #cmd("ENOMEM") when storage is

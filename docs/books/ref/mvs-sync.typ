@@ -724,16 +724,6 @@ refuse a thread that has not ended. They take a thread as ended when its
 #cmd("TCBFC"), #cmd("X'80'") at offset #cmd("X'21'")), which stays set
 until the DETACH.
 
-#note[Compiled against the installed library, a program that includes #cmd("<mvs/thread.h>") or
-#cmd("<mvs/timer.h>")
-builds cleanly with #cmd("-Wall -Werror"): cc370 treats the headers of its
-sysroot as system headers and reports no warnings from them. Compiled
-against a libc370 source tree named with #cmd("-I"), both draw #cmd("ignoring #pragma pack") from
-#cmd("<ibm/mvs/ihasdwa.h>"), which they reach through
-#cmd("<mvs/recovery.h>"): cc370 does not implement the pragma, and the
-layout is the same with or without packing. Add
-#cmd("-Wno-unknown-pragmas").]
-
 == cthread\_create, cthread\_create\_ex <mvs-sync-cthread_create>
 #idx("cthread_create")
 #idx("cthread_create_ex")

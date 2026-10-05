@@ -44,15 +44,13 @@ And the return code of a service says whether the request was made, not
 always whether the work was done: where a function returns a list or a
 count, look at the result as well.
 
-#idx("-Wno-comment")#idx("-Wno-unknown-pragmas")
+#idx("-Wno-comment")
 #note[Several headers of this chapter include mappings of IBM control
-blocks that contain #cmd("/*") inside a comment, or use #cmd("#pragma pack"),
-which cc370 ignores. When the headers are installed in the cc370 sysroot,
+blocks that contain #cmd("/*") inside a comment. When the headers are installed in the cc370 sysroot,
 as they normally are, the compiler treats them as system headers and does
 not report these warnings. When you compile against a copy of the headers
 named with #cmd("-I"), it does, and #cmd("-Werror") turns them into errors
-(@pg-services-warn-fig). Add #cmd("-Wno-comment") and
-#cmd("-Wno-unknown-pragmas") in that case.]
+(@pg-services-warn-fig). Add #cmd("-Wno-comment") in that case.]
 
 #fig(caption: [The same source against the sysroot and against a copy of
   the headers])[

@@ -31,17 +31,13 @@ message at most 122. The functions issue the messages without routing or
 descriptor codes, so the installation defaults apply. The text is EBCDIC,
 as every string in a libc370 program is.
 
-#note[Compiled against the installed library, a program that includes #cmd("<mvs/console.h>") or
-#cmd("<mvs/mtt.h>")
+#note[Compiled against the installed library, a program that includes #cmd("<mvs/mtt.h>")
 builds cleanly with #cmd("-Wall -Werror"): cc370 treats the headers of its
 sysroot as system headers and reports no warnings from them. Compiled
-against a libc370 source tree named with #cmd("-I"), #cmd("<mvs/console.h>")
-draws #cmd("ignoring #pragma pack"): cc370 does not implement the
-#cmd("#pragma pack") that the header places around #cmd("struct cib"),
-whose layout is the same with or without packing. Add
-#cmd("-Wno-unknown-pragmas"). #cmd("<mvs/mtt.h>") includes a mapping whose
-comments contain #cmd("/*"), which draws #cmd("\"/*\" within comment")\;
-add #cmd("-Wno-comment").]
+against a libc370 source tree named with #cmd("-I"), it draws #cmd("\"/*\" within comment") from the
+mapping #cmd("<ibm/mvs/ieezb806.h>"), whose comments contain #cmd("/*")\;
+add #cmd("-Wno-comment"). #cmd("<mvs/console.h>") and #cmd("<mvs/wto.h>")
+build cleanly either way.]
 
 == wto <mvs-console-wto>
 #idx("wto")

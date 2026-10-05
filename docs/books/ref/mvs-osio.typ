@@ -79,14 +79,6 @@ is no test of these functions in the library's test suites.
   )
 ] <mvs-osio-exitlist>
 
-#note[Compiled against the installed library, a program that includes #cmd("<mvs/osio.h>")
-builds cleanly with #cmd("-Wall -Werror"): cc370 treats the headers of its
-sysroot as system headers and reports no warnings from them. Compiled
-against a libc370 source tree named with #cmd("-I"), the control block headers it includes draw
-#cmd("ignoring #pragma pack"): cc370 does not implement the pragma, and the
-structures are laid out the same with or without packing. Add
-#cmd("-Wno-unknown-pragmas").]
-
 == osbdcb, osxdcb, osddcb <mvs-osio-dcb>
 #idx("osbdcb")#idx("osxdcb")#idx("osddcb")#idx("DCB", "allocating")
 

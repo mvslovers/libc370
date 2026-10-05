@@ -149,9 +149,6 @@ To call a function under #cmd("try()"):
   function; pass #cmd("0") to a function that takes none.
 + Test the result: negative, zero, or a completion code. The system code
   is #cmd("(rc >> 12) & 0xFFF"), the user code #cmd("rc & 0xFFF").
-+ Compile with #cmd("-Wno-unknown-pragmas") when warnings are errors:
-  #cmd("<mvs/recovery.h>") includes the mapping of the system diagnostic work
-  area, whose #cmd("#pragma pack") cc370 does not know and warns about.
 
 @pg-errors-guard-fig calls the same function twice, once with a valid
 pointer and once with a null pointer, through which the store abends with

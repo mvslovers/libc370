@@ -82,10 +82,8 @@ the return code.
 builds cleanly with #cmd("-Wall -Werror"): cc370 treats the headers of its
 sysroot as system headers and reports no warnings from them. Compiled
 against a libc370 source tree named with #cmd("-I"), the mapping #cmd("<ibm/mvs/iefzb4d2.h>") that it includes draws
-#cmd("\"/*\" within comment") warnings, silenced by #cmd("-Wno-comment"),
-and the header itself draws #cmd("#pragma linkage has no effect"), which
-only #cmd("-w") silences\; with #cmd("-Werror") that build fails. The same
-holds for #cmd("<mvs/idcams.h>").]
+#cmd("\"/*\" within comment") warnings\; add #cmd("-Wno-comment").
+#cmd("<mvs/idcams.h>") builds cleanly either way.]
 
 === Request Block and Text Unit
 
@@ -314,11 +312,9 @@ length out of range, and #cmd("0x048040")#var("nn") when its work area
 could not be obtained, #var("nn") being the GETMAIN return code.
 
 === Notes
-The header declares the function with #cmd("#pragma linkage(__dynal, OS)").
-cc370 ignores the pragma and warns that it has no effect (a warning that is
-not shown when the header comes from the sysroot): the call is an ordinary cc370
-call, with register 1 pointing to a list of the four argument values, which
-is the parameter list the assembler routine expects. A member name in #var("dsn") is not recognized.
+The call is an ordinary cc370 call, with register 1 pointing to a list of
+the four argument values, which is the parameter list the assembler routine
+expects. A member name in #var("dsn") is not recognized.
 
 A call with a DD name and a #var("dsn_len") of 0 frees that DD and then
 returns #cmd("0x14000001").
@@ -766,11 +762,8 @@ the request and its save areas in its own module. It cannot run in two
 tasks at once, and it must not be used in a program that is loaded into
 storage it cannot modify. Use #cmd("idcams()") instead.
 
-The header declares the function with
-#cmd("#pragma linkage(__idcams, OS)"). cc370 ignores the pragma and warns
-that it has no effect (a warning that is not shown when the header comes
-from the sysroot): the call is an ordinary cc370 call, with register 1 pointing to a list
-of the two argument values, the length and the address of the text, which
+The call is an ordinary cc370 call, with register 1 pointing to a list of
+the two argument values, the length and the address of the text, which
 is the parameter list the assembler routine expects.
 
 === Related
