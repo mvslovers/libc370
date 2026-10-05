@@ -54,7 +54,8 @@ Released in 2.3.1.
 
 *cc370#10: the __premain() startup hook landed with PR #440 (weak reference, asm
 WXTRN fallback for cc370 < 1.3; MVS-tested), unreleased. Consumers that replace
-@@START (httpd's CGI launcher) can move onto it.* cc370 weak references (cc370#866) are on cc370 main: once
+@@START (httpd's CGI launcher) can move onto it. The books describe 2.3.1: on the
+next release, send session "Book" one line naming what it contains (__premain first).* cc370 weak references (cc370#866) are on cc370 main: once
 released, cc370#10's __premain hook can be written in @@start.c.* The
 morning pass: 63 issues open; 54 after the closures that pass led to (#50, #51, #71, #79,
 #80, #172, #226, #244 as done, #305 as a duplicate of #181). Closed since the last pass: #256, #274, #278, #313–#316, #318,
