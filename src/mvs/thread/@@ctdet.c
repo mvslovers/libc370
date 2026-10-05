@@ -11,7 +11,7 @@ static int detach(CTHDTASK *task);
 ** cthread_wait(&task->termecb) that bit is gone.  The TCB, which stays until
 ** the DETACH, still says so: TCBFLGS5 TCBFC, X'80' at TCB+X'21' (#431). */
 static int
-ended(CTHDTASK *task)
+ended(const CTHDTASK *task)
 {
     const unsigned char *tcb = (const unsigned char *)task->tcb;
 
