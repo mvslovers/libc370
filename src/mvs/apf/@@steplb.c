@@ -15,7 +15,7 @@ __steplb(void)
 "         ICM   1,15,TCBJLB-TCB(1)  Get STEPLIB DCB\n"
 "         LA    1,0(,1)             Purify DCB address\n"
 "         LR    %0,1                Save STEPLIB DCB address"
-    : "=r"(steplib) : : "1");
+    : "=r"(steplib) : : "1", "memory");
 
     return steplib;
 }

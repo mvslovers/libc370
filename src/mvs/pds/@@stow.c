@@ -52,7 +52,7 @@ __stow(void *dcb, void *area, int func)
                 "LR\tR0,%2\n\t"
                 "SVC\t21\n\t"
                 "LR\t%0,R15"
-                : "=r"(rc) : "r"(dcb), "r"(area) : "0", "1", "14", "15");
+                : "=r"(rc) : "r"(dcb), "r"(area) : "0", "1", "14", "15", "memory");
         break;
     case 'R': case 'r':
         __asm__("LR\tR1,%1\n\t"
@@ -60,7 +60,7 @@ __stow(void *dcb, void *area, int func)
                 "LCR\tR1,R1\n\t"
                 "SVC\t21\n\t"
                 "LR\t%0,R15"
-                : "=r"(rc) : "r"(dcb), "r"(area) : "0", "1", "14", "15");
+                : "=r"(rc) : "r"(dcb), "r"(area) : "0", "1", "14", "15", "memory");
         break;
     case 'D': case 'd':
         __asm__("LR\tR1,%1\n\t"
@@ -68,7 +68,7 @@ __stow(void *dcb, void *area, int func)
                 "LCR\tR0,R0\n\t"
                 "SVC\t21\n\t"
                 "LR\t%0,R15"
-                : "=r"(rc) : "r"(dcb), "r"(area) : "0", "1", "14", "15");
+                : "=r"(rc) : "r"(dcb), "r"(area) : "0", "1", "14", "15", "memory");
         break;
     case 'C': case 'c':
         __asm__("LR\tR1,%1\n\t"
@@ -77,7 +77,7 @@ __stow(void *dcb, void *area, int func)
                 "LCR\tR0,R0\n\t"
                 "SVC\t21\n\t"
                 "LR\t%0,R15"
-                : "=r"(rc) : "r"(dcb), "r"(area) : "0", "1", "14", "15");
+                : "=r"(rc) : "r"(dcb), "r"(area) : "0", "1", "14", "15", "memory");
         break;
     }
 

@@ -29,7 +29,7 @@ ecb_timed_waitlist(ECB **waitlist, ECB *timeout_ecb, unsigned bintvl, unsigned p
     plist[2] = (unsigned)postcode & 0X3FFFFFFF;
     __asm__("L\t0,76(,13)       get NAB\n\t"
             "ST\t0,0(,%0)         save in plist"
-            : : "r"(&plist[3]) : "0");
+            : : "r"(&plist[3]) : "0", "memory");
 
     /* save the plist address in TCB first save area "next" so the EXITDRVR can find it */
     fsa[0]   = (unsigned)plist;
@@ -86,7 +86,7 @@ ecb_timed_waitlist(ECB **waitlist, ECB *timeout_ecb, unsigned bintvl, unsigned p
     }
 
     /* wait for ECB post */
-    __asm__("WAIT ECBLIST=(%0)" : : "r"(waitlist) : "0", "1", "14", "15");
+    __asm__("WAIT ECBLIST=(%0)" : : "r"(waitlist) : "0", "1", "14", "15", "memory");
 
 #if 0
     wtof("%s RUNNING TCB(%06X)", __func__, tcb);
@@ -96,7 +96,7 @@ ecb_timed_waitlist(ECB **waitlist, ECB *timeout_ecb, unsigned bintvl, unsigned p
 #endif
 
     /* cancel the timer exit */
-    __asm__("TTIMER CANCEL" : : : "0", "1", "14", "15");
+    __asm__("TTIMER CANCEL" : : : "0", "1", "14", "15", "memory");
 
     /* restore fsa value */
     fsa[0]   = save;

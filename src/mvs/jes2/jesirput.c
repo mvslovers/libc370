@@ -22,7 +22,7 @@ int jesirput(VSFILE *vsfile, const char *rec)
 
     __asm__("PUT RPL=(%0)\n\t"
             "ST  15,%1"
-        : : "r"(&vsfile->rpl), "m"(rc) : "1", "14", "15");
+        : : "r"(&vsfile->rpl), "m"(rc) : "1", "14", "15", "memory");
     
 quit:
     return rc;

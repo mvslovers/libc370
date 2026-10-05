@@ -6,7 +6,7 @@ TIOT *__tiot(void)
 
 	__asm("L\t15,PSATOLD-PSA		OUR TCB ADDRESS\n\t"
           "L\t15,TCBTIO-TCB(,15)	TIOT ADDRESS\n\t"
-          "ST\t15,%0" : "=m"(tiot));
+          "ST\t15,%0" : "=m"(tiot) : : "memory");
 
 	return tiot;
 }

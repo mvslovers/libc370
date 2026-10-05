@@ -16,7 +16,7 @@ cthread_wait(unsigned *ecb)
 #endif
     if (!ecb) goto quit;
 
-    __asm__("WAIT\tECB=(%0)" : : "r"(ecb) : "1", "14", "15");
+    __asm__("WAIT\tECB=(%0)" : : "r"(ecb) : "1", "14", "15", "memory");
 #ifdef WTODEBUG
     wtof("cthdwait(%08X) ecb=%08X after WAIT", ecb, *ecb);
 #endif
@@ -30,7 +30,7 @@ cthread_wait(unsigned *ecb)
 "         BNZ   @@CTWAGN       ecb changed, try again\n"
 "         N     0,=X'3FFFFFFF'\n"
 "         ST    0,%0        return ecb value"
-        : "=m"(rc) : "r"(ecb) : "0", "1");
+        : "=m"(rc) : "r"(ecb) : "0", "1", "memory");
 #else
     rc = (int)(*ecb & 0x3FFFFFFF);
     *ecb = 0;

@@ -5,7 +5,6 @@
 
 typedef struct cde      CDE;
 
-#pragma pack(1)
 struct cde {
 /***********************************************************************
  *          MACCOMP OS/VS2,RELEASE 4       SC1CJ/PZD81                 *
@@ -68,6 +67,5 @@ struct cde {
 
     unsigned short  CDATTR3;    /* 1E RESERVED */
 };
-#pragma pack(reset)
 
 #endif

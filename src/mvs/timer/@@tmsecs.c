@@ -10,7 +10,7 @@ TMRSEC tmr_secs(TMRSEC *secs)
     if (!secs) secs = &tmp;
 
     /* get STCK value */
-    __asm__("STCK\t0(%0)" : : "r" (&tod));
+    __asm__("STCK\t0(%0)" : : "r" (&tod) : "memory");
 
     /* make Jan 1 1900 (STCK) relative to Jan 1 1970 (unix epoch) */
     tod -=  0x7D91048BCA000000ULL;  /* STCK value for Jan 1 1970 */
@@ -24,7 +24,7 @@ TMRSEC tmr_secs(TMRSEC *secs)
         "D\t0,=F'1000000'  divide by 1000000\n\t"
         "ST\t1,0(0,%1)       store seconds (quotient)\n\t"
         "ST\t0,4(0,%1)       store microseconds (remainder)"
-        : : "r" (&tod), "r" (&tv));
+        : : "r" (&tod), "r" (&tv) : "memory");
 
     /* Scale the microseconds and add to our result (secs.usecs) */
     *secs = ((double)tv.tv_sec + ((double)tv.tv_usec / 1000000.0));

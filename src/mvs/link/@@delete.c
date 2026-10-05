@@ -26,7 +26,7 @@ int __delete(const char *module)
     /* delete module from memory */
 __asm__( "DELETE EPLOC=(%1)\n\t"
          "LR\t%0,15         save return code"
-        : "=r"(rc) : "r"(name) : "0", "1", "14", "15");
+        : "=r"(rc) : "r"(name) : "0", "1", "14", "15", "memory");
 
 quit:
     return rc;

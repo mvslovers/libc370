@@ -7,6 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Fixed
+- **No `#pragma pack` and no `#pragma linkage` in the headers (#415).**
+  cc370 ignores both. The pack pragmas only produced "ignoring #pragma
+  pack", which made 19 headers fail `-Wall -Werror`; with and without
+  packing every layout is the same (637 offsets and sizes measured). The
+  linkage pragmas never had an effect and newer cc370 warns about them.
+  The generated library is byte-for-byte unchanged. 24 public headers
+  still fail `-Wall -Werror` for other reasons (#414).
 - **`cthread_delete()` after `cthread_wait(&task->termecb)` frees the
   finished subtask (#431).** `cthread_wait()` clears the ECB it waited on,
   and `cthread_delete()`/`cthread_detach()` decided "ended" from the posted
@@ -14,6 +21,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   ended ABEND SA03. They now also ask the TCB, whose "task terminated" flag
   stays set until the DETACH. Measured on MVS: 4 of 4 cases; before, the
   delete was refused and the step abended.
+- **Every inline assembler statement declares what it writes (#427).**
+  An asm that stored into C storage without saying so let the compiler
+  keep a stale copy. That is what broke `memset()`, `vsread()` and
+  `clib_identify_cthread()` in 2.3.0's fixes. About twenty more places
+  worked only by chance, among them `__issup()`, `__super()`,
+  `racf_login()`, `trkcalc()`, VSAM, JES2 and EXCP I/O. All now clobber
+  `"memory"`, and the macro calls that use registers 0, 1, 14 and 15 say
+  so. The JES2 spool read no longer leaves the base register pointing at
+  its return code. A new build check fails on any extended asm without
+  `"memory"`. 19 of the 752 translation units assemble differently, all
+  by reloading values; spool reads and VSAM reads were rerun on MVS with
+  identical results.
 
 ## [2.3.0] - 2026-10-05
 

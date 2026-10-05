@@ -15,7 +15,7 @@ int __cppoin(HASPCP *cp, unsigned TTRz)
         DCB     *dcb    = cp->dcb;
 
         if (dcb->dcboflgs & DCBOFOPN) {
-            __asm("POINT\t(%0),(%1)" : : "r"(dcb), "r"(&TTRz));
+            __asm("POINT\t(%0),(%1)" : : "r"(dcb), "r"(&TTRz) : "0", "1", "14", "15", "memory");
             rc = 0;
         }
     }

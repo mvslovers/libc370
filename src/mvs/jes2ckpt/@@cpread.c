@@ -17,7 +17,7 @@ int __cpread(HASPCP *cp, void *buf4k)
 
         if (dcb->dcboflgs & DCBOFOPN) {
             __asm("READ  (%0),SF,(%1),(%2),4096,MF=E READ FIRST RECORD\n\t"
-                  "CHECK (%0)" : : "r"(decb), "r"(dcb), "r"(buf4k));
+                  "CHECK (%0)" : : "r"(decb), "r"(dcb), "r"(buf4k) : "0", "1", "14", "15", "memory");
             rc = 0;
         }
     }

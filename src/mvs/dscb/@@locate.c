@@ -38,7 +38,7 @@ __locate(const char dsn[44], LOCWORK *workarea)
     "LR\t%0,15"
     : "=r" (rc)
     : "r" (&parms)
-    : "0", "1", "15" );
+    : "0", "1", "15" , "memory");
 
     return rc;
 }

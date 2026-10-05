@@ -17,7 +17,7 @@ trkcalc(DEVTYPE devtype, int keylen, int blksize)
 "               TYPE=(%0),R=1,K=(%1),DD=(%2),MF=(E,(%3))\n"
 "         ST    15,0(%4)\n"
 "         ST    0,0(%5)" : : "r"(devtype), "r"(keylen), "r"(blksize),
-        "r"(work), "r"(&rc), "r"(&count) );
+        "r"(work), "r"(&rc), "r"(&count)  : "memory");
 
     if (rc) {
         count = 0;

@@ -16,7 +16,7 @@ closesocket(int ss)
 #if 0
     memset(&pl, 0, sizeof(pl));
 #else
-    __asm__("XC\t0(64,%0),0(%0)     clear __75 parameter list" : : "r" (&pl));
+    __asm__("XC\t0(64,%0),0(%0)     clear __75 parameter list" : : "r" (&pl) : "memory");
 #endif
 
     pl.r7   = (unsigned) 12;        /* function code for closesocket() */

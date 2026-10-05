@@ -16,13 +16,13 @@ int super_key_do(unsigned char pswkey, void *func, ...)
     if (!sup) {
         /* no, switch to supervisor mode */
         __asm__("MODESET\tMODE=SUP      switch to supervisor state\n\t"
-                "LR\t%0,15              save return code" : "=r"(rc) : : "1", "14", "15");
+                "LR\t%0,15              save return code" : "=r"(rc) : : "1", "14", "15", "memory");
         if (rc) goto quit;  /* not likely, but just in case */
     }
 
     /* save current PSW key */
     __asm__("IPK\t0             get psw key in R2\n\t"
-            "STC\t2,0(,%0)      save psw key" : : "r"(&prevkey) : "2");
+            "STC\t2,0(,%0)      save psw key" : : "r"(&prevkey) : "2", "memory");
 
     /* are we to set a new PSW key? */
     if (pswkey != PSWKEYNONE) {
@@ -32,7 +32,7 @@ int super_key_do(unsigned char pswkey, void *func, ...)
 
         /* set new PSW key */
         __asm__("IC\t2,0(,%0)           get new psw key\n\t"
-                "SPKA\t0(2)             save in psw" : : "r"(&pswkey) : "2");
+                "SPKA\t0(2)             save in psw" : : "r"(&pswkey) : "2", "memory");
     }
 
     /* call the function in supervisor state */
@@ -43,15 +43,15 @@ int super_key_do(unsigned char pswkey, void *func, ...)
     "LR\t%0,15          save return code"
     : "=r" (rc)
     : "r" (func), "r" (r1)
-    : "0", "1", "14", "15");
+    : "0", "1", "14", "15", "memory");
 
     /* reset PSW key to callers key */
     __asm__("IC\t2,0(,%0)           get prev psw key\n\t"
-            "SPKA\t0(2)             save in psw" : : "r"(&prevkey) : "2");
+            "SPKA\t0(2)             save in psw" : : "r"(&prevkey) : "2", "memory");
 
     if (!sup) {
         /* return caller to problem state */
-        __asm__("MODESET\tMODE=PROB     switch to problem state" : : : "1", "14", "15");
+        __asm__("MODESET\tMODE=PROB     switch to problem state" : : : "1", "14", "15", "memory");
     }
 
 quit:

@@ -141,7 +141,7 @@ int racf_auth(ACEE *acee, const char *classname, const char *resource,
           "         ST    15,%0"
           : "=m"(rc)
           :
-          : "0", "1", "14", "15");
+          : "0", "1", "14", "15", "memory");
   if (rc != 0) {
     /* problem state: switch only if APF-authorized */
     __asm__("\n"
@@ -152,7 +152,7 @@ int racf_auth(ACEE *acee, const char *classname, const char *resource,
             "         ST    15,%0"
             : "=m"(rc)
             :
-            : "0", "1", "14", "15");
+            : "0", "1", "14", "15", "memory");
     modeset = (rc == 0);
   }
 
@@ -164,7 +164,7 @@ int racf_auth(ACEE *acee, const char *classname, const char *resource,
             "         MODESET KEY=ZERO,MODE=SUP\n"
             :
             :
-            : "1", "14", "15");
+            : "1", "14", "15", "memory");
   }
 
   __asm__("\n"
@@ -175,7 +175,7 @@ int racf_auth(ACEE *acee, const char *classname, const char *resource,
           "         ST    15,%0"
           : "=m"(rc)
           : "r"(resname), "r"(&cclass), "r"(attr), "m"(plist)
-          : "1", "14", "15");
+          : "1", "14", "15", "memory");
 
   if (modeset) {
     __asm__("\n"
@@ -185,7 +185,7 @@ int racf_auth(ACEE *acee, const char *classname, const char *resource,
             "         MODESET KEY=NZERO,MODE=PROB\n"
             :
             :
-            : "1", "14", "15");
+            : "1", "14", "15", "memory");
   }
 
   return rc;

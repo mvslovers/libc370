@@ -46,7 +46,10 @@ consumer), #426 (vsread() misses EOF/errors since 2.2.0's -Os - a regression),
 #426, the BROKEN case of #427 and #411's sticky flags; next: #427's fragile sites plus a "memory"-invariance
 CI gate. The consumer memset measurement is on #425 (no shipped product miscompiled).
 #431 (from httpd#262: cthread_delete after cthread_wait kept the subtask, SA03) fixed
-by PR #432, unreleased.* The
+by PR #432; #427 (every extended asm declares "memory", sdk/asmlint.py in CI) by PR
+#433; #415 plus #pragma linkage by PR #434 (24 headers still fail -Werror: #414).
+All unreleased since 2.3.0. cc370 weak references (cc370#866) are on cc370 main: once
+released, cc370#10's __premain hook can be written in @@start.c.* The
 morning pass: 63 issues open; 54 after the closures that pass led to (#50, #51, #71, #79,
 #80, #172, #226, #244 as done, #305 as a duplicate of #181). Closed since the last pass: #256, #274, #278, #313–#316, #318,
 #321, #325, #326, #336–#339, #344, #345, #355. That pass found seven issues

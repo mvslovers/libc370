@@ -33,17 +33,17 @@ osbclose(DCB *dcb, const char *option, int freedcb, int type_t)
 
     if (type_t) {
         __asm__("LR    1,%0\n\tSVC   23         TCLOSE"
-            : : "r"(&plist) : "1", "14", "15");
+            : : "r"(&plist) : "1", "14", "15", "memory");
         /* close,type=t leave the DCB open, so we're done */
         goto quit;
     }
 
     /* normal close */
     __asm__("LR    1,%0\n\tSVC   20         CLOSE"
-        : : "r"(&plist) : "1", "14", "15");
+        : : "r"(&plist) : "1", "14", "15", "memory");
 #if 0
     /* release buffer pool (if any) */
-    __asm__("FREEPOOL ((%0))" : : "r"(dcb) : "1", "14", "15");
+    __asm__("FREEPOOL ((%0))" : : "r"(dcb) : "1", "14", "15", "memory");
 #endif
     /* if we have any private DCB storage we need to free it now */
     if (dcb->dcbpriv) {

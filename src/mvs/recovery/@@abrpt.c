@@ -244,16 +244,16 @@ snap_dump(SDWA *sdwa)
 
     /* open SNAP DCB for output */
     __asm__( "OPEN  (SNAPDCB,(OUTPUT))         Open SNAP DCB\n\t"
-"         LR\t%0,15" : "=r" (rc) : : "0", "1", "14", "15");
+"         LR\t%0,15" : "=r" (rc) : : "0", "1", "14", "15", "memory");
     if (rc) {
         wtof("OPEN for SNAP DD failed, rc=%d", rc);
         goto quit;
     }
 
     __asm__( "LA\t2,SNAPDCB\n\tSNAP DCB=(2),SDATA=ALL,PDATA=ALL"
-    : : : "0", "1", "2", "14", "15");
+    : : : "0", "1", "2", "14", "15", "memory");
 
-    __asm__( "CLOSE SNAPDCB                    Close the SNAP DCB" : : : "0", "1", "14", "15");
+    __asm__( "CLOSE SNAPDCB                    Close the SNAP DCB" : : : "0", "1", "14", "15", "memory");
 
     sdwa->SDWACMPF &= (0XFF - SDWAREQ); /* turn off dump flag */
 
@@ -336,7 +336,7 @@ recovery(SDWA *sdwa, void *udata)
         sprintf(abend, "U%04d", abcode);
     }
 
-    __asm__("MVC\t0(8,%0),0(%1)" : : "r" (psw), "r" (&sdwa->SDWAEMK1));
+    __asm__("MVC\t0(8,%0),0(%1)" : : "r" (psw), "r" (&sdwa->SDWAEMK1) : "memory");
     epa = sdwa->SDWAEPA;
     if (sdwa->SDWANAME[0] <= ' ') {
         sprintf(epname, "%08X", sdwa->SDWAEPA);

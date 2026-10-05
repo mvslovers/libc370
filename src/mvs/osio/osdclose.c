@@ -15,7 +15,7 @@ osdclose(DCB *dcb, int freedcb)
 
     /* normal close */
     __asm__("LR    1,%0\n\tSVC   20         CLOSE"
-        : : "r"(&plist) : "1", "14", "15");
+        : : "r"(&plist) : "1", "14", "15", "memory");
 
     /* if caller is done with DCB area we'll free it now */
     if (freedcb) {

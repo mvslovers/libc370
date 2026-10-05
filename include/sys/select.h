@@ -29,7 +29,7 @@ typedef struct fd_set {
 #define	FD_ZERO(p) \
     __asm__("XC\t0(0,%1),0(%1)      *** executed ***\n\t" \
     "EX\t%0,*-6            clear memory" \
-    : : "r" (sizeof(*(p))), "r" ((p)))
+    : : "r" (sizeof(*(p))), "r" ((p)) : "memory")
 
 typedef struct timeval
 {

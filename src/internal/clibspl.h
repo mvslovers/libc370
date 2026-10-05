@@ -10,7 +10,7 @@ spl_memset(void *s, int c, size_t n)
 "         L     1,%2            fill character\n"
 "         SLL   1,24            move fill to high byte\n"
 "         MVCL  14,0            Set target to fill character"
-    : : "m"(s), "m"(n), "m"(c) : "0", "1", "14", "15");
+    : : "m"(s), "m"(n), "m"(c) : "0", "1", "14", "15", "memory");
     return s;
 }
 
@@ -23,7 +23,7 @@ spl_memclr(void *s, size_t n)
 "         SLR   0,0             => source (NULL)\n"
 "         SLR   1,1             zero fill\n"
 "         MVCL  14,0            Set target to fill character"
-    : : "m"(s), "m"(n) : "0", "1", "14", "15");
+    : : "m"(s), "m"(n) : "0", "1", "14", "15", "memory");
     return s;
 }
 
@@ -36,7 +36,7 @@ spl_memcpy(void *s1, const void *s2, size_t n)
 "         L    0,%2     => source (s2)\n"
 "         L    1,%1     => length (n)\n"
 "         MVCL 14,0     Copy source to target"
-    : : "m"(s1), "m"(n), "m"(s2) : "0", "1", "14", "15");
+    : : "m"(s1), "m"(n), "m"(s2) : "0", "1", "14", "15", "memory");
 
     return (s1);
 }
@@ -52,7 +52,7 @@ spl_memcpyp(void *target, int tlen, void *source, int slen, int pad)
 "         SLL   1,24            move fill to high byte\n"
 "         AL    1,%3            source length (slen)\n"
 "         MVCL  14,0            Copy source to target"
-    : : "m"(target), "m"(tlen), "m"(source), "m"(slen), "m"(pad) : "0", "1", "14", "15");
+    : : "m"(target), "m"(tlen), "m"(source), "m"(slen), "m"(pad) : "0", "1", "14", "15", "memory");
     return target;
 }
 

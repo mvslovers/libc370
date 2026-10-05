@@ -33,7 +33,7 @@ static __inline SAVEAREA *sa_get(void)
 {
     SAVEAREA *sa;
 
-    __asm__("ST     13,%0        return save area address" : "=m"(sa));
+    __asm__("ST     13,%0        return save area address" : "=m"(sa) : : "memory");
 
     return sa;
 }

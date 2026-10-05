@@ -44,7 +44,7 @@ int __cas(unsigned *mem, unsigned *expect, unsigned new_value)
 "@@CASOK  SR    1,1\n"
 "         ST    1,%0        rc = 0, swapped\n"
 "@@CASX   DS    0H"
-        : "=m"(rc) : "r"(mem), "r"(expect), "r"(new_value) : "0", "1");
+        : "=m"(rc) : "r"(mem), "r"(expect), "r"(new_value) : "0", "1", "memory");
 
 quit:
     return rc;

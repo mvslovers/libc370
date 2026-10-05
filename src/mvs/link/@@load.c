@@ -45,7 +45,7 @@ __asm__( "LOAD DE=(%2),DCB=(%3),ERRET=LOADFAIL\n\t"
          "XR\t%0,%0         Failed, no EPA\n\t"
          "XR\t%1,%1         Failed, no AC or Size\n"
 "LOADDONE DS\t0H"
-        : "=r"(epa), "=r"(work) : "r"(bldl.de76), "r"(dcb) : "0", "1", "14", "15");
+        : "=r"(epa), "=r"(work) : "r"(bldl.de76), "r"(dcb) : "0", "1", "14", "15", "memory");
 
     /* did we load okay? */
     if (epa) {

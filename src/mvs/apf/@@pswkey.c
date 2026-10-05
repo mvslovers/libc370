@@ -14,7 +14,7 @@ int __pswkey(unsigned char *savekey)
 
     if (__issup()) {
         /* get current PSW key */
-        __asm__("IPK\t0\n\tSTC\t2,0(,%0)" : : "r"(savekey) : "2");
+        __asm__("IPK\t0\n\tSTC\t2,0(,%0)" : : "r"(savekey) : "2", "memory");
         goto quit;
     }
 

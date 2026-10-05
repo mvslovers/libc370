@@ -190,7 +190,7 @@ static int get_lspace(VOLLIST *vol)
 			"SVC\t78\t Issue SVC 78 LSPACE\n\t"
 			"ST\t15,%0\tSave LSPACE RC" 
 			: "=m"(rc)
-			: "r" (ucbdasd), "r" (&parmarea) );
+			: "r" (ucbdasd), "r" (&parmarea)  : "0", "1", "14", "15", "memory");
 
 	// wtof("@@listvl:%s: LSPACE RC=%d", __func__, rc);
 	

@@ -23,6 +23,7 @@ int __jsrd4(HASPJS *js, unsigned mttr, void *buf4k, unsigned buflen)
     unsigned    hh       = 0;
     unsigned    decb[8]  = {0};
     unsigned char block[8] = "";
+    unsigned    save10;         /* R10 across the READ (#427) */
 
     if (!js) goto quit;
 
@@ -42,21 +43,29 @@ int __jsrd4(HASPJS *js, unsigned mttr, void *buf4k, unsigned buflen)
           "ST\t1,0(,%3)       Store cylinder number\n\t"
           "MVC\t3(2,%4),2(%3)  Copy cylinder number\n\t"
           "MVC\t5(2,%4),2(%2)  Copy head number"
-          : :"r"(mttr), "r"(js->trkcyl), "r"(&hh), "r"(&cc), "r"(block));
+          : :"r"(mttr), "r"(js->trkcyl), "r"(&hh), "r"(&cc), "r"(block) : "memory");
 #if 0
     wtof("mttr=%08X, trkcyl=%u, cc=%u, hh=%u", mttr, js->trkcyl, cc, hh);
     wtodumpf(block, 8, "mbbcchhr");
 #endif
 
     rc = 0;
-    __asm("USING\tIHADCB,%0      ADDRESSING FOR DCB DSECT\n\t"
+    /* The SYNAD exit below stores the error into rc through R10, which
+    ** survives into the exit.  R10 is also cc370's page-table register, so
+    ** it is saved here and restored after the CHECK: clobbering it left
+    ** the following "L 12,0(,10)" loading rc into the base register (#427). */
+    __asm("ST\t10,%0            save R10 (page table)\n\t"
+          "USING\tIHADCB,%1      ADDRESSING FOR DCB DSECT\n\t"
           "MVC\tDCBSYNAD+1(3),=AL3(SYNAD)  SET SYNAD ADDR IN DCB\n\t"
-          "DROP\t%0             DROP ADDRESSING FOR DCB\n\t"
-          "LR\t10,%5            R10 => rc\n\t"
-          "READ\t(%1),DI,(%0),(%2),(%3),,(%4),MF=E\n\t"
-          "CHECK\t(%1)\n\t"
+          "DROP\t%1             DROP ADDRESSING FOR DCB\n\t"
+          "LR\t10,%6            R10 => rc\n\t"
+          "READ\t(%2),DI,(%1),(%3),(%4),,(%5),MF=E\n\t"
+          "CHECK\t(%2)\n\t"
+          "L\t10,%0             restore R10\n\t"
           "B\tQUIT"
-          : :"r"(js->dcb), "r"(decb), "r"(buf4k), "r"(buflen), "r"(block), "r"(&rc) : "10");
+          : "=m"(save10)
+          : "r"(js->dcb), "r"(decb), "r"(buf4k), "r"(buflen), "r"(block), "r"(&rc)
+          : "0", "1", "14", "15", "memory");
 
     __asm("\n"
           "SYNAD    SYNADAF ACSMETH=BDAM DECODE ERROR CAUSE\n"
@@ -65,7 +74,7 @@ int __jsrd4(HASPJS *js, unsigned mttr, void *buf4k, unsigned buflen)
           "         ST    0,0(,10)       Save ECB value as return code\n"
           "         SYNADRLS ,           RELEASE WORK AREA\n"
           "         BR    14             RETURN TO OP SYS\n"
-          "QUIT     DS    0H" : : :"10");
+          "QUIT     DS    0H" : : : "memory");
 
 quit:
 #if 0

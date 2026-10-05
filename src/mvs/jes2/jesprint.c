@@ -195,7 +195,7 @@ esc_print(char *line, unsigned linelen, void *arg)
           "LR\t14,%1         => length of line\n\t"
           "BCTR\t14,0        decrement for execute\n\t"
           "EX\t14,TRLINE     translate unsafe characters"
-          : :"r"(line), "r"(linelen) : "14", "1");
+          : :"r"(line), "r"(linelen) : "14", "1", "memory");
 
     /* print the translated buffer */
     rc = ctx->prt(line, linelen, ctx->arg);

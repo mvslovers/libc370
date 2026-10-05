@@ -9,7 +9,7 @@ __uastep(void)
     volatile int    rc      = 0;
 
     /* check for APF authorization */
-    __asm__("TESTAUTH\tFCTN=1\n\tST\t15,%0" : "=m" (rc));
+    __asm__("TESTAUTH\tFCTN=1\n\tST\t15,%0" : "=m" (rc) : : "memory");
     if (rc!=0) goto quit;
 
     if (crt) {
@@ -40,7 +40,7 @@ __uastep(void)
 #endif
 "         DROP  1\n"
 "QUITOFF  DS    0H\n"
-"         MODESET KEY=NZERO,MODE=PROB" : : : "0", "1", "14", "15");
+"         MODESET KEY=NZERO,MODE=PROB" : : : "0", "1", "14", "15", "memory");
 
     if (crt) {
         crt->crtauth &= 0xFF - CRTAUTH_STEPLIB;

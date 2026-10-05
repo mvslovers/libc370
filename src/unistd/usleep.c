@@ -10,7 +10,7 @@ usleep(unsigned usec)
     if (!t) t = 1;  /* sleep at least 26.04166 microsends */
 
     __asm__("STIMER WAIT,TUINTVL=%0"
-            : : "m"(t): "0", "1", "14", "15");
+            : : "m"(t): "0", "1", "14", "15", "memory");
 
     return 0;
 }

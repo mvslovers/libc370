@@ -10,7 +10,7 @@ mclock64_t mclock64(void)
 
 __asm__("LA\t2,%0\tget address of 8 byte work area\n\t"
        	"STCK\t0(2)\tstore clock into work area\n\t"
-		: "=m" (clock.u64) : : "2");
+		: "=m" (clock.u64) : : "2", "memory");
 
     /* make Jan 1 1900 (STCK) relative to Jan 1 1970 (unix epoch) */
     clock.u64 -=  0x7D91048BCA000000ULL;  /* STCK value for Jan 1 1970 */

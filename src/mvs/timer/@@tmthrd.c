@@ -173,7 +173,7 @@ timed_waitlist(ECB **waitlist, ECB *timeout_ecb, unsigned bintvl, unsigned postc
     if (!timeout_ecb) timeout_ecb = waitlist[0];
 
     /* cancel the timer exit */
-    __asm__("TTIMER CANCEL" : : :"0", "1", "14", "15");
+    __asm__("TTIMER CANCEL" : : :"0", "1", "14", "15", "memory");
 
     /* build parameter list for our EXITDRVR routine */
 #if 0
@@ -185,7 +185,7 @@ timed_waitlist(ECB **waitlist, ECB *timeout_ecb, unsigned bintvl, unsigned postc
     plist[2] = (unsigned)postcode & 0X3FFFFFFF;
     __asm__("L\t0,76(,13)       get NAB\n\t"
             "ST\t0,0(,%0)         save in plist"
-            : : "r"(&plist[3]) : "0");
+            : : "r"(&plist[3]) : "0", "memory");
 
     /* save the plist address in TCB first save area "next" so the EXITDRVR can find it */
     fsa[0]   = (unsigned)plist;
@@ -204,7 +204,7 @@ timed_waitlist(ECB **waitlist, ECB *timeout_ecb, unsigned bintvl, unsigned postc
 #endif
     __asm__("L\t0,=A(EXITDRVR)\n\tSTIMER REAL,(0),BINTVL=(%0),ERRET=SAVERC\n"
             "SAVERC\tST\t15,0(,%1)"
-            : : "r"(&bintvl), "r"(&rc) : "0", "1", "14", "15");
+            : : "r"(&bintvl), "r"(&rc) : "0", "1", "14", "15", "memory");
 #if 0
     wtof("%s STIMER REAL RC=%d",__func__, rc);
     /* debugging */
@@ -212,7 +212,7 @@ timed_waitlist(ECB **waitlist, ECB *timeout_ecb, unsigned bintvl, unsigned postc
 #endif
 
     /* wait for ECB post */
-    __asm__("WAIT ECBLIST=(%0)" : : "r"(waitlist) : "0", "1", "14", "15");
+    __asm__("WAIT ECBLIST=(%0)" : : "r"(waitlist) : "0", "1", "14", "15", "memory");
 
 #if 0
     wtof("%s RUNNING TCB(%06X)", __func__, tcb);
@@ -222,7 +222,7 @@ timed_waitlist(ECB **waitlist, ECB *timeout_ecb, unsigned bintvl, unsigned postc
 #endif
 
     /* cancel the timer exit */
-    __asm__("TTIMER CANCEL" : : :"0", "1", "14", "15");
+    __asm__("TTIMER CANCEL" : : :"0", "1", "14", "15", "memory");
 
     /* restore fsa value */
     fsa[0]   = save;

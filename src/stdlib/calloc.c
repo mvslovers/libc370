@@ -31,7 +31,7 @@ __PDPCLIB_API__ void *calloc(size_t nmemb, size_t size)
 "         LR    15,%1   == total size\n"
 "         SLR   0,0\n"
 "         LR    1,0\n"
-"         MVCL  14,0\n" : : "r"(ptr), "r"(total) : "0", "1", "14", "15");
+"         MVCL  14,0\n" : : "r"(ptr), "r"(total) : "0", "1", "14", "15", "memory");
     }
 
     return (ptr);

@@ -86,7 +86,6 @@ typedef struct debisam  DEBISAM;    /* DEB ISAM DEPENDENT SECTION           */
  *            APPENDAGE VECTOR TABLE SECTION OF THE DEB               *
  *              POINTED TO BY DEBAPPAD                                *
  **********************************************************************/
-#pragma pack(1)
 struct debavt {
     union {
         void        *debeoea;       /* 00 ADDRESS OF END-OF-EXTENT
@@ -175,12 +174,10 @@ struct debavt {
         };
     };
 };
-#pragma pack(reset)
 
 /**********************************************************************
  *                    DEB PREFIX TABLE                                *
  **********************************************************************/
-#pragma pack(1)
 struct debprfx {
     union {
         void        *debwkara;      /* 00 I/O SUPPORT WORK AREA
@@ -217,12 +214,10 @@ struct debprfx {
     short           debtblof;       /* 0E2 OFFSET IN THE DEB TABLE TO THE
                                           ENTRY FOR THIS DEB                */
 };
-#pragma pack(reset)
 
 /***********************************************************************
  *                     DEB BASIC SECTION                               *
  ***********************************************************************/
-#pragma pack(1)
 struct debbasic {
     union {
         void        *debtcbad;      /* 00 ADDRESS OF TCB FOR THIS DEB       */
@@ -399,7 +394,6 @@ struct debbasic {
         };
     };
 };
-#pragma pack(reset)
 
 /***********************************************************************
  *      UNIT RECORD, MAGNETIC TAPE, TELECOMMUNICATIONS DEVICES SECTION *
@@ -407,7 +401,6 @@ struct debbasic {
  *        NOTE  FOR TELECOMMUNICATIONS DEVICES, THE UCB ADDRESS IS     *
  *              REPEATED FOR EACH LINE ASSIGNED                        *
  ***********************************************************************/
-#pragma pack(1)
 struct debdds1 {
     union {
         void        *debsucba;      /* 00 ADDRESS OF A UCB ASSOCIATED WITH
@@ -504,7 +497,6 @@ struct debdds1 {
         };
     };
 };
-#pragma pack(reset)
 
 /***********************************************************************
  *                DEB ISAM DEPENDENT SECTION                           *
@@ -513,7 +505,6 @@ struct debdds1 {
  *              SECTION AND PRECEDES THE DIRECT ACCESS STORAGE DEVICE  *
  *              SECTION.  COUNTED AS ONE EXTENT IN DEBNMEXT.           *
  ***********************************************************************/
-#pragma pack(1)
 struct debisam {
     union {
         void        *debfiead;      /* 00 ADDRESS OF FIRST INDEX EXTENT     */
@@ -565,7 +556,6 @@ struct debisam {
         };
     };
 };
-#pragma pack(reset)
 
 /***********************************************************************
  *             DIRECT-ACCESS STORAGE DEVICE SECTION                    *
@@ -576,7 +566,6 @@ struct debisam {
  *                                                                     *
  *              THERE IS ONE OF THESE SECTIONS FOR EACH EXTENT.        *
  ***********************************************************************/
-#pragma pack(1)
 struct debdasd {
     union {
         void        *debucbad;      /* 00 ADDRESS OF UCB ASSOCIATED WITH
@@ -605,12 +594,10 @@ struct debdasd {
                                           OF THE EXTENT AND THE END ADDRESS
                                           OF THE EXTENT.                    */
 };
-#pragma pack(reset)
 
 /***********************************************************************
  *        EXCP ACCESS METHOD, BSAM AND QSAM DEPENDENT SECTION          *
  ***********************************************************************/
-#pragma pack(1)
 struct debacsmd {
     union {
         unsigned short  debvolsq;   /* 00 VOLUME SEQUENCE NUMBER FOR
@@ -646,7 +633,6 @@ struct debacsmd {
     unsigned short  debblksi;       /* 0C MAXIMUM BLOCK SIZE                */
     unsigned short  deblrecl;       /* 0E LOGICAL RECORD LENGTH             */
 };
-#pragma pack(reset)
 
 /***********************************************************************
  *                 SUBROUTINE NAME SECTION                             *
@@ -655,7 +641,6 @@ struct debacsmd {
  *              DEVICE DEPENDENT SECTION IF THERE IS NO ACCESS         *
  *              METHOD SECTION                                         *
  ***********************************************************************/
-#pragma pack(1)
 struct debsubnm {
     char    debsubid[2];            /* 00 SUBROUTINE IDENTIFICATION.
                                           EACH ACCESS METHOD SUBROUTINE,
@@ -667,13 +652,11 @@ struct debsubnm {
                                           IF THE SUBROUTINE IS LOADED BY
                                           THE OPEN ROUTINES.                */
 };
-#pragma pack(reset)
 
 /***********************************************************************
  *                 DEB EXTENSION (OS/VS2)                              *
  *                 POINTED TO BY DEBXTNP                               *
  ***********************************************************************/
-#pragma pack(1)
 struct debxtn {
     short           debxlngh;       /* 00 LENGTH OF DEB EXTENSION           */
     char            debxflg1;       /* 02 FLAG BYTE                         */
@@ -724,15 +707,12 @@ struct debxtn {
     char            debxopet[8];    /* 20 DATASET OPEN TIME SET BY OPEN
                                           INITIAL                           */
 };
-#pragma pack(reset)
 
-#pragma pack(1)
 struct deb {
     DEBAVT          debavt;         /* 00 appendage vector table            */
     DEBPRFX         debprfx;        /* 14 prefix table                      */
     DEBBASIC        debbasic;       /* 24 basic section                     */
     DEBDASD         debdasd;        /* 54 dasd section                      */
 };
-#pragma pack(reset)
 
 #endif

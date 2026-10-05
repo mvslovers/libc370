@@ -25,7 +25,7 @@ unsigned __uinc(void *mem)
 "         CS    0,1,0(%1)   save new value in memory\n"
 "         BNZ   @@UINAGN       changed, try again\n"
 "         ST    0,%0        return value"
-        : "=m"(old_value) : "r"(mem) : "0", "1");
+        : "=m"(old_value) : "r"(mem) : "0", "1", "memory");
 
 quit:
     return old_value;

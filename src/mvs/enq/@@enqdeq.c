@@ -41,7 +41,7 @@ __enqdeq(const char *qn, const char *rn, unsigned options, int deq)
         pl.opt |= ENQ_OPT_HAVE;
         __asm__( "DS    0H       Request DEQ\n"
         "         LA    1,%0\n"
-        "         SVC   48       DEQ" : : "m"(pl) : "0", "1", "15");
+        "         SVC   48       DEQ" : : "m"(pl) : "0", "1", "15", "memory");
     }
     else {
         if (options & ENQ_SHR) pl.opt |= ENQ_OPT_SHARED;
@@ -53,7 +53,7 @@ __enqdeq(const char *qn, const char *rn, unsigned options, int deq)
         }
         __asm__( "DS    0H       Request ENQ\n"
         "         LA    1,%0\n"
-        "         SVC   56       ENQ" : : "m"(pl) : "0", "1", "15");
+        "         SVC   56       ENQ" : : "m"(pl) : "0", "1", "15", "memory");
     }
 
     err = pl.rc;

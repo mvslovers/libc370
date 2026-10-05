@@ -9,7 +9,7 @@ __cibdel(CIB *cib)
 
     if (cib) {
         __asm__("QEDIT ORIGIN=(%1),BLOCK=(%2)\n\tLR\t%0,15"
-            : "=r" (rc) : "r" (&com->comcibpt), "r" (cib));
+            : "=r" (rc) : "r" (&com->comcibpt), "r" (cib) : "0", "1", "14", "15", "memory");
     }
 
 quit:

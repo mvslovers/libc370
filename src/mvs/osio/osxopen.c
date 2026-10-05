@@ -49,12 +49,12 @@ opendcb(DCB *dcb, int typej, int *rc)
     if (!typej) {
         /* normal OPEN for a single dataset */
         __asm__("LR    1,%1\n\tSVC   19         OPEN\n\tST\t15,0(,%0)"
-            : : "r"(rc), "r"(&plist) : "1", "14", "15");
+            : : "r"(rc), "r"(&plist) : "1", "14", "15", "memory");
     }
     else {
         /* OPEN type J for a single dataset */
         __asm__("LR    1,%1\n\tSVC   22         OPENJ\n\tST\t15,0(,%0)"
-            : : "r"(rc), "r"(&plist) : "1", "14", "15");
+            : : "r"(rc), "r"(&plist) : "1", "14", "15", "memory");
     }
 
     return;

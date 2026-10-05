@@ -13,14 +13,14 @@ __autask(void)
     volatile int rc = 0;
 
     /* check for APF authorization */
-    __asm__("TESTAUTH\tFCTN=1\n\tST\t15,%0" : "=m" (rc));
+    __asm__("TESTAUTH\tFCTN=1\n\tST\t15,%0" : "=m" (rc) : : "memory");
     /* wtof("%s TESTAUTH #1 rc=%d", __func__, rc); */
     if (rc==0) goto quit;
 
     /* get APF authorization */
     try(authorize,0);
 
-    __asm__("TESTAUTH\tFCTN=1\n\tST\t15,%0" : "=m" (rc));
+    __asm__("TESTAUTH\tFCTN=1\n\tST\t15,%0" : "=m" (rc) : : "memory");
     /* wtof("%s TESTAUTH #2 rc=%d", __func__, rc); */
     if (rc!=0) goto quit;
 

@@ -20,7 +20,7 @@ connect(int ss, struct sockaddr_in *name, int length)
 #if 0
     memset(&pl, 0, sizeof(pl));
 #else
-    __asm__("XC\t0(64,%0),0(%0)     clear __75 parameter list" : : "r" (&pl));
+    __asm__("XC\t0(64,%0),0(%0)     clear __75 parameter list" : : "r" (&pl) : "memory");
 #endif
 
     pl.r7   = (unsigned) 1;
@@ -56,7 +56,7 @@ connect(int ss, struct sockaddr_in *name, int length)
 
         /* wait one second */
         __asm__("STIMER WAIT,BINTVL==F'100'     1.00 seconds"
-        : : : "0", "1", "15");
+        : : : "0", "1", "15", "memory");
     }
 
     /* check for error */
