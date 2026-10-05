@@ -6,6 +6,19 @@
 
 static int detach(CTHDTASK *task);
 
+/* Has the subtask ended?  MVS posts the ATTACH ECB (termecb) at task end,
+** but cthread_wait() clears the ECB it waited on, so after
+** cthread_wait(&task->termecb) that bit is gone.  The TCB, which stays until
+** the DETACH, still says so: TCBFLGS5 TCBFC, X'80' at TCB+X'21' (#431). */
+static int
+ended(const CTHDTASK *task)
+{
+    const unsigned char *tcb = (const unsigned char *)task->tcb;
+
+    if (task->termecb & 0x40000000) return 1;
+    return tcb != NULL && (tcb[0x21] & 0x80) != 0;
+}
+
 __asm__("\n&FUNC    SETC 'cthread_detach'");
 int
 cthread_detach(CTHDTASK *task)
@@ -31,14 +44,15 @@ cthread_detach(CTHDTASK *task)
     ** bugs (#11).
     **
     ** termecb is the ATTACH ECB= that MVS posts at task end (@@ctcrtx.c
-    ** attach), and it is the single source of truth for "this TCB is gone".
+    ** attach); after cthread_wait() cleared it, the TCB's own TCBFC flag
+    ** says the same (ended() above, #431).
     **
     ** No owner check on top of this, deliberately: MVS already refuses a
     ** DETACH issued by anything but the attaching task, and turning that loud
     ** failure into a silent skip here would hide a real defect rather than
     ** prevent one.
     */
-    if (!(task->termecb & 0x40000000)) {
+    if (!ended(task)) {
         rc = CTHREAD_DETACH_LIVE;
         goto quit;
     }
@@ -63,8 +77,8 @@ detach(CTHDTASK *task)
 #endif
     __asm("DS\t0H\n\t"
         "DETACH (%1),STAE=YES   detach the subtask\n\t"
-        "ST\t15,0(,%0)          save the return code"
-        : : "r"(&task->rc), "r"(&tcb) : "14","15","0","1" );
+        "ST\t15,%0          save the return code"
+        : "=m"(task->rc) : "r"(&tcb) : "14","15","0","1" );
 #if 0
     wtof("Return from DETACH for task=%08X, TCB=%08X, RC=%d", task, task->tcb, task->rc);
 #endif

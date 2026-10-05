@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- **`cthread_delete()` after `cthread_wait(&task->termecb)` frees the
+  finished subtask (#431).** `cthread_wait()` clears the ECB it waited on,
+  and `cthread_delete()`/`cthread_detach()` decided "ended" from the posted
+  bit of that very ECB. So they kept the subtask attached, and the step
+  ended ABEND SA03. They now also ask the TCB, whose "task terminated" flag
+  stays set until the DETACH. Measured on MVS: 4 of 4 cases; before, the
+  delete was refused and the step abended.
+
 ## [2.3.0] - 2026-10-05
 
 Requires cc370 1.1.0 or later, as 2.1.0 and 2.2.0 did (`sdk/cc370.json`:
