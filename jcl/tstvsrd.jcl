@@ -1,0 +1,49 @@
+//TSTVSRD  JOB (SYS),'LIBC370 426',CLASS=A,MSGCLASS=H,
+//             MSGLEVEL=(1,1)
+//*
+//* libc370 #426 #411 - vsread() and end of file.
+//* See test/mvs/tstvsrd.c.  STEPLIB is the scratch PDS recvvsr.jcl
+//* restores into.  TSTVSRD links this tree's libc.a, TSTVSRDR the
+//* installed one (2.2.0, -Os) - the red control.  The ESDS is defined,
+//* loaded with two records and deleted again by this job.  VOLUMES may
+//* need changing on another system.
+//*
+//* Run:     mvsdev JOB01378, 2026-10-05: GREEN CC 0000, 7/7;
+//*          RED CC 0001, 6/7 (read 3 gave 80).
+//*
+//* RC 0 = every check passed, 1 = a check failed (it is the COND CODE).
+//*
+//DEFINE   EXEC PGM=IDCAMS
+//SYSPRINT DD  SYSOUT=*
+//IN       DD  *
+RECORD1 FIRST OF TWO
+RECORD2 SECOND OF TWO
+/*
+//SYSIN    DD  *
+  DELETE IBMUSER.LIBC370.VSRDTST CLUSTER PURGE
+  SET MAXCC = 0
+  DEFINE CLUSTER (NAME(IBMUSER.LIBC370.VSRDTST) -
+         NONINDEXED RECORDSIZE(80 80) TRACKS(1 1) -
+         VOLUMES(PUB000) UNIQUE) -
+         DATA (NAME(IBMUSER.LIBC370.VSRDTST.DATA))
+  REPRO INFILE(IN) OUTDATASET(IBMUSER.LIBC370.VSRDTST)
+/*
+//GREEN    EXEC PGM=TSTVSRD,REGION=4M,COND=(0,NE,DEFINE)
+//STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.VSRSCR
+//VSAMESDS DD  DISP=SHR,DSN=IBMUSER.LIBC370.VSRDTST
+//SYSPRINT DD  SYSOUT=*
+//SYSTERM  DD  SYSOUT=*
+//SYSUDUMP DD  SYSOUT=*
+//*
+//RED      EXEC PGM=TSTVSRDR,REGION=4M,COND=(0,NE,DEFINE)
+//STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.VSRSCR
+//VSAMESDS DD  DISP=SHR,DSN=IBMUSER.LIBC370.VSRDTST
+//SYSPRINT DD  SYSOUT=*
+//SYSTERM  DD  SYSOUT=*
+//SYSUDUMP DD  SYSOUT=*
+//*
+//CLEANUP  EXEC PGM=IDCAMS,COND=EVEN
+//SYSPRINT DD  SYSOUT=*
+//SYSIN    DD  *
+  DELETE IBMUSER.LIBC370.VSRDTST CLUSTER PURGE
+/*

@@ -26,7 +26,8 @@ static __inline void *memclr(void *s, size_t n)
 "         SLR   0,0             => source (NULL)\n"
 "         SLR   1,1             zero fill\n"
 "         MVCL  14,0            Set target to fill character"
-    : : "r"(s), "r"(n) : "0", "1", "14", "15");
+    /* "memory": the MVCL writes *s (#425, as memset in <string.h>) */
+    : : "r"(s), "r"(n) : "0", "1", "14", "15", "memory");
     return s;
 }
 
