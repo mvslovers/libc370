@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- **A parameter of 1 to 3 bytes whose third byte is zero is no longer taken
+  for a TSO command buffer.** The startup then copied length - 4 bytes,
+  which is negative; the copy only failed to overrun because the move
+  instruction refuses overlapping operands, and the program lost its name
+  in `argv[0]`. The TSO shape now needs a length of at least 4. Measured on
+  MVS: `argv[0]` is the program name again.
+
 ## [2.4.0] - 2026-10-05
 
 **Requires cc370 1.4.0 or later** (`sdk/cc370.json`: `>=1.4.0 <2`): cc370
