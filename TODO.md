@@ -33,7 +33,14 @@ yet ranked below. #382 (va_start after a double/long long) is fixed by PR #421,
 #383 (printf argument shift) by PR #422 (its SonarCloud S3776 on `__examin`,
 complexity 206, accepted: split the function with #384). Next: #386 (scanf
 widths), #415 (remove `#pragma pack`, decided), #400 (`__enq`/`__deq`); `%a`/`%A`
-are still unimplemented (printed as written since #383): #423.* The
+are still unimplemented (printed as written since #383): #423.
+
+*#159: the libc370 half landed with PR #424 (one CRT in libc.a, crt0.o = crt1.o,
+CTHREAD IDENTIFYed only when linked; #159 stays open for the doc round, the
+startfile removal after mbt#158 and cc370's STARTFILE_SPEC, and the CGI/crtm
+question). Filed from the inline-asm sweep: #425 (memset/memclr inlines - every
+consumer), #426 (vsread() misses EOF/errors since 2.2.0's -Os - a regression),
+#427 (clib_identify_cthread() always 0, 20 fragile sites).* The
 morning pass: 63 issues open; 54 after the closures that pass led to (#50, #51, #71, #79,
 #80, #172, #226, #244 as done, #305 as a duplicate of #181). Closed since the last pass: #256, #274, #278, #313–#316, #318,
 #321, #325, #326, #336–#339, #344, #345, #355. That pass found seven issues
