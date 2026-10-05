@@ -49,7 +49,9 @@ static __inline void *memset(void *s, int c, size_t n)
 "         LR    1,%2            fill character\n"
 "         SLL   1,24            move fill to high byte\n"
 "         MVCL  14,0            Set target to fill character"
-    : : "r"(s), "r"(n), "r"(c) : "0", "1", "14", "15");
+    /* "memory": the MVCL writes *s, and without it the compiler may keep
+       a value stored there before and read it back after (#425) */
+    : : "r"(s), "r"(n), "r"(c) : "0", "1", "14", "15", "memory");
     return s;
 }
 #endif
