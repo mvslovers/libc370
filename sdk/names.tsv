@@ -3939,6 +3939,7 @@ __patmat	ext/strutil.h
 __pddb	ibm/jes2/pddb.h
 __ppaget	mvs/crt.h
 __ppahrv	mvs/crt.h
+__premain	mvs/crt.h
 __prob	mvs/apf.h
 __pso	ibm/jes2/pso.h
 __pswkey	mvs/apf.h

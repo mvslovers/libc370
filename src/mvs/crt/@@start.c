@@ -61,6 +61,39 @@ static void startfail(const char *what)
 }
 extern void __exita(int status);
 
+/* __premain() - the startup hook (cc370#10).  A program that needs to act
+   before libc370 opens the standard streams - set stdin/stdout/stderr to
+   files of its own, check its environment, look at the caller's parameter
+   list - defines
+       int __premain(char *parm, char *pgmname, void **pgmr1);
+   and __start() calls it first.  Nothing else changes: a stream the hook
+   leaves NULL is opened as always, and a nonzero return ends the program
+   with that code before main().  The reference is weak, so a program that
+   does not define the hook links nothing and runs as before; nobody needs
+   to replace @@START any more.  parm is the raw parameter (two length
+   bytes first, plus the TSO prefix when bytes 2..3 say so), pgmname the
+   8-byte program name, pgmr1 the caller's R1 list. */
+typedef int (*premain_fn)(char *parm, char *pgmname, void **pgmr1);
+
+#if defined(__CC370_WEAK__)
+extern int __premain(char *parm, char *pgmname, void **pgmr1)
+    __attribute__((weak));
+#define premain_hook()  ((premain_fn)__premain)
+#else
+/* cc370 before 1.3.0 has no weak attribute: the same WXTRN by hand.  The
+   C name __premain maps to the MVS name @@PREMAI (eight characters). */
+static premain_fn
+premain_hook(void)
+{
+    premain_fn  fn;
+
+    __asm__("WXTRN @@PREMAI\n\t"
+            "L     %0,=V(@@PREMAI)"
+            : "=r"(fn) : : "memory");
+    return fn;
+}
+#endif
+
 int
 __start(char *p, char *pgmname, int tsojbid, void **pgmr1)
 {
@@ -73,6 +106,7 @@ __start(char *p, char *pgmname, int tsojbid, void **pgmr1)
     int         parmLen;
     int         progLen = 0;
     char        parmbuf[310];
+    premain_fn  premain = premain_hook();
 
     /* need to know if this is a TSO environment straight away
        because it determines how the permanent files will be
@@ -83,13 +117,19 @@ __start(char *p, char *pgmname, int tsojbid, void **pgmr1)
         progLen = (unsigned int)p[3];
     }
 
-    stdout = fopen("*SYSPRINT", "w");
+    /* the program's own startup step, if it has one (cc370#10) */
+    if (premain) {
+        rc = premain(p, pgmname, pgmr1);
+        if (rc) __exit(rc);
+    }
+
+    if (!stdout) stdout = fopen("*SYSPRINT", "w");
     if (!stdout) {
         startfail("stdout (SYSPRINT)");
         __exita(EXIT_FAILURE);
     }
 
-    stderr = fopen("*SYSTERM", "w");
+    if (!stderr) stderr = fopen("*SYSTERM", "w");
     if (!stderr) {
         startfail("stderr (SYSTERM)");
         printf("stderr could not be opened, errno %d\n", errno);
@@ -97,7 +137,7 @@ __start(char *p, char *pgmname, int tsojbid, void **pgmr1)
         __exita(EXIT_FAILURE);
     }
 
-    stdin = fopen("dd:SYSIN", "r");
+    if (!stdin) stdin = fopen("dd:SYSIN", "r");
     if (!stdin) stdin = fopen("'NULLFILE'", "r");
     if (!stdin) {
         startfail("stdin (SYSIN, then NULLFILE)");

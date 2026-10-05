@@ -6,6 +6,40 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.4.0] - 2026-10-05
+
+**Requires cc370 1.4.0 or later** (`sdk/cc370.json`: `>=1.4.0 <2`): cc370
+1.4 names no startfile, and libc370 no longer installs `crt0.o`/`crt1.o`.
+Builds that name them need mbt 2.2.0 or later.
+
+### Changed
+- **libc370 needs cc370 1.4.0 (#159).** cc370 1.4 no longer puts a startfile
+  on the link line: a program's `main` refers to `@@CRT0`, and automatic
+  library call takes it from `libc.a`, where it has been since 2.3.0. Every
+  public header now stops an older compiler with
+  `#error "libc370 needs cc370 1.4.0 or later"`.
+
+### Removed
+- **`crt0.o` and `crt1.o` (#159).** Since 2.3.0 both were identical copies of
+  the `@@CRT0` member of `libc.a`, kept for compilers and build tools that
+  still named them. cc370 1.4 and mbt 2.2 no longer do. A hand-written link
+  that names one of them drops it. `make install` removes copies an earlier
+  install left in `<sysroot>/lib`. `crtm.o`, the nested startup, stays.
+
+### Added
+- **`__premain()`, a startup hook (cc370#10).** A program that defines
+  `int __premain(char *parm, char *pgmname, void **pgmr1)` (declared in
+  `<mvs/crt.h>`) has it called by the startup first: before the standard
+  streams are opened and before `main()`. A stream it sets is kept, one it
+  leaves `NULL` is opened as usual, and a nonzero return ends the program
+  with that code. Programs that replaced `@@START` to do this can use the
+  hook instead. The reference is weak, so a program that does not define
+  it is unchanged. It works with every supported cc370: cc370 1.3's weak
+  references when present, the same `WXTRN` in assembler otherwise.
+  Measured on MVS with both: the hook's own `stdout` received `main()`'s
+  output, a return of 12 ended the step with 12 before `main()`, and a
+  program without a hook ran as before.
+
 ## [2.3.1] - 2026-10-05
 
 Requires cc370 1.1.0 or later, as 2.3.0 did (`sdk/cc370.json`: `>=1.1.0 <2`).
