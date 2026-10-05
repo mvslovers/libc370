@@ -1,0 +1,4 @@
+$ file370 -v premain | grep @@PREMAI
+    CESD 152  @@PREMAI  LR   addr=000028  owner=1  seg=1
+$ file370 -v plain | grep @@PREMAI
+    CESD 171  @@PREMAI  WX 

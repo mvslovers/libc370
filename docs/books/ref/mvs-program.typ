@@ -10,7 +10,8 @@ TSO commands. The headers are:
 
 #deflist(width: 1.35in,
   [#cmd("<mvs/crt.h>")], [the run-time anchors of a program, a task and the
-    address space (@mvs-program-anchors).],
+    address space, and the start-up hook #cmd("__premain()")
+    (@mvs-program-anchors).],
   [#cmd("<mvs/env.h>")], [environment variables loaded from a data set
     (@mvs-program-env).],
   [#cmd("<mvs/wsa.h>")], [writable static areas (@mvs-program-wsa).],
@@ -230,6 +231,84 @@ return value in a function that ends with a call to it.
 
 === Related
 #cmd("exit()") in @std-stdlib
+
+== \_\_premain <mvs-program-__premain>
+#idx("__premain")
+#idx("@@PREMAI")
+#idx("start-up", "hook")
+
+=== Format
+```
+#include <mvs/crt.h>
+
+int __premain(char *parm, char *pgmname, void **pgmr1);
+```
+
+=== Description
+A function that the program defines, not the library. When a program
+defines #cmd("__premain()"), the C start-up calls it first: before it opens
+the standard streams, before it reads the environment variables of the
+#cmd("SYSENV") DD and before #cmd("main()").
+
+#deflist(width: 0.9in,
+  [#var("parm")], [the parameter as the program received it: two bytes of
+    length followed by the text, or, for a TSO command, the command buffer
+    with its prefix of four bytes.],
+  [#var("pgmname")], [the program name, eight characters padded with
+    blanks, not terminated by a null character.],
+  [#var("pgmr1")], [the parameter list that register 1 addressed when the
+    program was called.],
+)
+
+A standard stream that the function sets -- #cmd("stdin"), #cmd("stdout")
+or #cmd("stderr") -- is kept by the start-up. One that it leaves
+#cmd("NULL") is opened as usual.
+
+=== Returns
+0 to go on to #cmd("main()"). Any other value ends the program with that
+value as its return code, as #cmd("exit()") does: the #cmd("atexit()")
+functions are called, the open files are closed, and #cmd("main()") is not
+called.
+
+=== Notes
+The start-up refers to #cmd("__premain()") with a weak external reference,
+under the external name #cmd("@@PREMAI"). A program that does not define it
+links nothing for it and starts as before.
+
+The C environment exists when the function is called, but the standard
+streams are not open: the function must not write to #cmd("stdout") or
+#cmd("stderr") before it has set them itself. #cmd("wtof()") reaches the
+console. #cmd("getenv()") does not see the variables of the #cmd("SYSENV")
+DD yet.
+
+The function replaces the practice of supplying a private #cmd("@@START")\;
+which #cmd("@@START") a program gets then depends on the order of its link
+line, and a wrong choice is not reported.
+
+A module started with #cmd("crtm") also calls the function, if it defines
+one.
+
+=== Example
+```
+#include <stdio.h>
+#include <mvs/crt.h>
+#include <mvs/wto.h>
+
+int __premain(char *parm, char *pgmname, void **pgmr1)
+{
+    (void)parm;
+    (void)pgmr1;
+    stdout = fopen("DD:REPORT", "w");
+    if (stdout == NULL) {
+        wtof("%.8s: DD REPORT is missing", pgmname);
+        return 16;
+    }
+    return 0;
+}
+```
+
+=== Related
+@mvs-program-__exit
 
 == Other Anchor Functions <mvs-program-anchor-internal>
 #idx("__crtset")

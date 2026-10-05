@@ -124,20 +124,22 @@ services, @pg-tasks for multitasking, @pg-tso for TSO.
 libc370 is built with cc370 and only with cc370, and the two are released
 as a pair. cc370 provides the compiler, the routines the compiler calls
 (#cmd("libcc370rt.a")) and the assembler macros of the function prologue
-and epilogue; libc370 provides the headers, #cmd("libc.a"), the start-up
-modules and the other macros. Each depends on the other's version:
+and epilogue; libc370 provides the headers, #cmd("libc.a") with the start-up
+routine, the start-up object #cmd("crtm.o") and the other macros. Each
+depends on the other's version:
 
-- This release of libc370 needs cc370 1.1.0 or later, below 2.0.
-- cc370 1.1.0 and later need libc370 2.1.0 or later.
+- This release of libc370 needs cc370 1.4.0 or later, below 2.0.
+- cc370 1.4 needs libc370 2.3.0 or later: its link step names no start-up
+  object and takes #cmd("@@CRT0") from #cmd("libc.a").
 
 The library checks the first rule itself. Every libc370 header includes
 #cmd("<sys/_cc370.h>"), which compares the macro #cmd("__CC370__") that cc370
 predefines -- the version as #var("major")#cmd(" * 10000 + ")#var("minor")#cmd(" * 100 + ")#var("patch"),
-10100 for 1.1.0 -- with the minimum, and stops the compilation of a program
+10400 for 1.4.0 -- with the minimum, and stops the compilation of a program
 built with an older compiler:
 
 ```
-#error "libc370 needs cc370 1.1.0 or later"
+#error "libc370 needs cc370 1.4.0 or later"
 ```
 
 The installation procedures of the toolchain install a matching pair; the
@@ -154,9 +156,9 @@ was chosen:
   [#cmd("cc370/include")], [the headers, with the subdirectories of
     @pg-intro-dirs-tab.],
   [#cmd("cc370/lib")], [#cmd("libc.a"), the library itself, which also holds
-    the start-up routine #cmd("@@CRT0")\; the start-up objects
-    #cmd("crt0.o"), #cmd("crt1.o") (two copies of #cmd("@@CRT0")) and
-    #cmd("crtm.o")\; and cc370's #cmd("libcc370rt.a").],
+    the start-up routine #cmd("@@CRT0")\; #cmd("crtm.o"), the start-up
+    object for a module called by a C program (@pg-startup-variants)\; and
+    cc370's #cmd("libcc370rt.a").],
   [#cmd("cc370/macros")], [the assembler macros: libc370's own and the MVS
     system macros that the library needs, for programs that include
     assembler source (@pg-asm).],
@@ -167,7 +169,7 @@ A program needs no option to find any of this. The compiler searches
 #cmd("cc370/include") for #cmd("#include <...>") after the directories
 given with #cmd("-I"), and the driver names the start-up module and the
 libraries itself when it links. #cmd("-print-file-name") shows where a file
-is: in @pg-intro-build-fig, #cmd("$PREFIX/bin/../lib/cc370/1.2.0/../../..")
+is: in @pg-intro-build-fig, #cmd("$PREFIX/bin/../lib/cc370/1.4.0/../../..")
 is the prefix itself, so the library is #cmd("$PREFIX/cc370/lib/libc.a").
 
 #fig(caption: [Building a program and finding the library (the
@@ -175,9 +177,11 @@ is the prefix itself, so the library is #cmd("$PREFIX/cc370/lib/libc.a").
   #screen(raw(read("../ex/pg-intro/build.txt")))
 ] <pg-intro-build-fig>
 
-@pg-intro-link-fig shows the link step of the same build: the start-up
-module #cmd("crt0.o") first, then the program, then the libraries
-#cmd("-lcc370rt -lc -lcc370rt").
+@pg-intro-link-fig shows the link step of the same build: the entry point
+#cmd("@@CRT0"), the program, and then the libraries
+#cmd("-lcc370rt -lc -lcc370rt"). No start-up object is named: the program's
+#cmd("main()") refers to #cmd("@@CRT0"), and the linker takes it from
+#cmd("libc.a").
 
 #fig(caption: [The link step (the prefix is shown as \$PREFIX, the temporary
   directory as \$TMP, and the long line is broken)])[
@@ -201,7 +205,7 @@ string functions with it. A program that is small on MVS follows the same
 rule in its own libraries.
 
 Even so, a C program carries a run-time environment. The program of
-@pg-intro-hello-fig is a load module of 71,312 bytes, nearly all of it the
+@pg-intro-hello-fig is a load module of 71,440 bytes, nearly all of it the
 library: the start-up, the standard streams, the data set I/O beneath them
 and the formatted output of #cmd("printf()"). Each further function adds
 only what it needs.
@@ -248,12 +252,13 @@ search the headers for it.
 In a program of your own, two external names that agree in their first
 eight characters are the same name on MVS. Within one source file the
 compiler warns and the assembly fails. In different source files nothing
-stops the build: ld370 keeps the first definition, warns, and every call of
-the second function reaches the first, as @pg-intro-dup-fig shows for the
+stops the build: the compiler warns where both are declared, ld370 keeps
+the first definition and warns, and every call of the second function
+reaches the first, as @pg-intro-dup-fig shows for the
 functions #cmd("process_input") and #cmd("process_output").
 
 #fig(caption: [Two functions with the same external name (the temporary
-  directory is shown as \$TMP, and the long line is broken)])[
+  directory is shown as \$TMP, and the long lines are broken)])[
   #screen(raw(read("../ex/pg-intro/dupname.txt")))
 ] <pg-intro-dup-fig>
 

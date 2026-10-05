@@ -1,3 +1,6 @@
 $ cc370 -O1 -o dup main.c input.c output.c
+main.c: In function `main':
+main.c:3: warning: external symbol `process_output' collides with
+  `process_input': both map to the MVS name `PROCESS@'
 ld370: warning: 'PROCESS@' doubly defined:
-  $TMP/ccMlLNv2.o defines it again (first definition kept)
+  $TMP/ccvMX4HM.o defines it again (first definition kept)

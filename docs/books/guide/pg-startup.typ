@@ -29,13 +29,14 @@ every C program is linked with it and enters there;
   #code("MVS            EXEC PGM=, CALL, LINK, ATTACH
   |
   v
-@@CRT0         start-up routine (libc.a, crt0.o; crtm.o for a module)
+@@CRT0         start-up routine (libc.a; crtm.o for a module)
   |              - one GETMAIN for the program area and the stack
   |              - the anchors: program, task, process
   |              - program name, TSO or batch
   |              - IDENTIFY CTHREAD, if the program has threads
   v
 @@START        C start-up routine in libc.a
+  |              - calls __premain(), if the program has one
   |              - opens stdout, stderr, stdin
   |              - reads the SYSENV (or ENVIRON) DD
   |              - splits the parameter into argc and argv
@@ -64,8 +65,9 @@ In detail, #cmd("@@CRT0"):
   #cmd("IDENTIFY"), if the program contains it (@pg-startup-variants);
 + calls #cmd("@@START").
 
-#cmd("@@START") then opens #cmd("stdout"), #cmd("stderr") and #cmd("stdin")
-(@pg-io describes them), loads the environment variables, sets the time
+#cmd("@@START") then calls the program's #cmd("__premain()") function, if
+it has one (@pg-startup-premain), opens #cmd("stdout"), #cmd("stderr") and
+#cmd("stdin") (@pg-io describes them), loads the environment variables, sets the time
 zone, divides the parameter into #cmd("argv") (@pg-startup-parm) and calls
 #cmd("main()"). When #cmd("main()") returns, it calls #cmd("exit()") with
 the value #cmd("main()") returned.
@@ -91,8 +93,7 @@ Two things can stop a program before #cmd("main()"):
 
 == The Start-Up Routines <pg-startup-variants>
 
-#idx("@@CRT0", "in libc.a")#idx("crt0")#idx("crt1")#idx("crtm")
-#idx("start-up module")
+#idx("@@CRT0", "in libc.a")#idx("crtm")#idx("start-up module")
 There are two start-up routines, and both define the entry point
 #cmd("@@CRT0"), so a program is linked with exactly one of them:
 
@@ -108,12 +109,23 @@ There are two start-up routines, and both define the entry point
   )
 ] <pg-startup-variants-tab>
 
-#cmd("@@CRT0") is a member of #cmd("libc.a"), so a link that names no
-start-up object takes it from the library, like any other function. It is
-also installed as the files #cmd("crt0.o") and #cmd("crt1.o"), two identical
-copies for the build tools that name a start-up object explicitly; the cc370
-driver links #cmd("crt0.o"). Which of the three a program is linked with
-makes no difference to what it does.
+#cmd("@@CRT0") is a member of #cmd("libc.a"). A source file that defines
+#cmd("main()") refers to it, so the linker takes it from the library like
+any other function, and the cc370 driver names no start-up object on the
+link line at all. An object module named before the libraries that defines
+#cmd("@@CRT0") wins over the library: that is how #cmd("crtm.o") is used
+(@pg-startup-link).
+
+#idx("crt0.o", "no longer installed")#idx("crt1.o", "no longer installed")
+#note[Releases of libc370 up to 2.3 also installed #cmd("@@CRT0") as the
+files #cmd("crt0.o") and #cmd("crt1.o"), and earlier compilers named
+#cmd("crt0.o") on every link. They are gone. A build that still names one
+of them fails -- cc370 reports #cmd("crt0.o: No such file or directory")
+-- so drop the name from the link line. An mbt build needs mbt 2.2.0 or later. Up to libc370 2.2 the
+two files also differed: #cmd("crt0.o") identified #cmd("CTHREAD") in every
+program, and a program linked with #cmd("crt1.o") could not create threads.
+A load module keeps the start-up it was linked with until it is linked
+again.]
 
 #idx("CTHREAD", "and the start-up")#idx("IDENTIFY", "CTHREAD")
 *Threads.* A thread is attached under the name #cmd("CTHREAD"), the thread
@@ -127,30 +139,21 @@ nothing of its own to make them work. A program that issues the
 harm. The start-up does not check the return code of its own
 #cmd("IDENTIFY")\; @pg-tasks describes threads.
 
-#note[Up to libc370 2.2.0 there were two start-up objects that differed in
-this one step: #cmd("crt0.o") identified #cmd("CTHREAD") in every program,
-and a program linked with #cmd("crt1.o") could not create threads. A load
-module keeps the start-up it was linked with, so an old module behaves the
-old way until it is linked again.]
-
 #idx("entry point", "not at offset 0")
-*Where the entry point is.* When #cmd("@@CRT0") comes from #cmd("crt0.o"),
-named first on the link, it is at offset 0 of the load module. When it comes
-from #cmd("libc.a"), it lies wherever the linker placed it. MVS does not
-care: the entry point is recorded in the directory entry of the load module,
-which ld370 writes in either case, and #cmd("LINK"), #cmd("ATTACH") and
-#cmd("LOAD") take it from there. Only code that treats the first byte of a
-module as its entry point would notice.
+*Where the entry point is.* #cmd("@@CRT0") lies wherever the linker placed
+it, usually not at offset 0 of the load module. MVS does not care: the entry
+point is recorded in the directory entry of the load module, which ld370
+writes, and #cmd("LINK"), #cmd("ATTACH") and #cmd("LOAD") take it from
+there. Only code that treats the first byte of a module as its entry point
+would notice.
 
-@pg-startup-crtlink-fig shows three modules as file370 lists them:
+@pg-startup-crtlink-fig shows two modules as file370 lists them:
 #cmd("plain"), a program without threads, and #cmd("thread"), one that
-calls #cmd("cthread_create()"), both linked with #cmd("crt0.o") first as
-the cc370 driver does it, and #cmd("plain2"), the first program linked
-without a start-up object. The thread driver #cmd("CTHREAD") is an
-unresolved weak reference (#cmd("WX")) in a program without threads, and
-#cmd("@@CRT0") is at offset 0 only when #cmd("crt0.o") was named.
+calls #cmd("cthread_create()"). In #cmd("plain") the thread driver
+#cmd("CTHREAD") is an unresolved weak reference (#cmd("WX")), and in
+neither module is #cmd("@@CRT0") at offset 0.
 
-#fig(caption: [The start-up routine and the thread driver in three load
+#fig(caption: [The start-up routine and the thread driver in two load
   modules])[
   #screen(raw(read("../ex/pg-startup/crtlink.txt")))
 ] <pg-startup-crtlink-fig>
@@ -178,26 +181,119 @@ returns.
 
 === Linking with crtm <pg-startup-link>
 
-#idx("-nostartfiles")
-To link a module with #cmd("crtm"):
-
-+ Leave out #cmd("crt0.o") with #cmd("-nostartfiles").
-+ Name #cmd("crtm.o"). #cmd("cc370 -print-file-name=crtm.o") gives its full
-  name in the installed library.
-
+To link a module with #cmd("crtm"), name #cmd("crtm.o") on the link line,
+ahead of the libraries. #cmd("cc370 -print-file-name=crtm.o") gives its
+full name in the installed library. Because it defines #cmd("@@CRT0"), the
+linker does not take the one in #cmd("libc.a").
 @pg-startup-crtm-fig shows the command, which is silent when it succeeds,
-and the entry point, which #cmd("crtm.o") puts at offset 0.
+and the entry point, which #cmd("crtm.o"), named first, puts at offset 0.
 
 #fig(caption: [Linking with crtm])[
   #screen(raw(read("../ex/pg-startup/crtm.txt")))
 ] <pg-startup-crtm-fig>
 
 #idx("mbt", "start-up module")
-With mbt, the key #cmd("startup") of a #cmd("[[module]]") in
-#cmd("project.toml") selects the start-up object: #cmd("\"crt0\"") (the
-default) and #cmd("\"crt1\"") now give the same module, #cmd("\"crtm\"")
+With mbt, a C program leaves out the key #cmd("startup") of its
+#cmd("[[module]]") in #cmd("project.toml")\; #cmd("startup = \"crtm\"")
 links #cmd("crtm.o"). The _cc370 Command Reference_, Chapter 1, “The cc370
 Command”, describes the link options.
+
+== Running Code Before main() <pg-startup-premain>
+
+#idx("__premain")#idx("@@PREMAI")
+Some programs must act before the start-up opens the standard streams: a
+program that writes its output to a DD of its own choosing rather than
+#cmd("SYSPRINT"), a module whose caller has its own claim on
+#cmd("SYSPRINT"), #cmd("SYSTERM") and #cmd("SYSIN"), or a program that
+must refuse to start in the wrong environment. For them the start-up calls
+a function the program may define, declared in #cmd("<mvs/crt.h>"):
+
+```
+int __premain(char *parm, char *pgmname, void **pgmr1);
+```
+
+#cmd("@@START") calls it first, before it opens the standard streams, reads
+the #cmd("SYSENV") DD and calls #cmd("main()"). Its arguments are:
+
+#deflist(width: 0.9in,
+  [#var("parm")], [the parameter as the program received it: two bytes
+    of length, then the text\; a TSO command buffer has a prefix of four
+    bytes instead (@pg-startup-parm).],
+  [#var("pgmname")], [the program name, eight characters padded with
+    blanks and not terminated by a null character.],
+  [#var("pgmr1")], [the parameter list that register 1 pointed to when the
+    program was called.],
+)
+
+What the function does decides how the start-up goes on:
+
+- A standard stream it sets -- #cmd("stdout = fopen(...)") -- is kept. One
+  it leaves #cmd("NULL") is opened as usual.
+- It returns 0, and the start-up goes on to #cmd("main()"). It returns
+  any other value, and the program ends with that value as its return code
+  through #cmd("exit()"): the #cmd("atexit()") functions run, open streams
+  are closed, and #cmd("main()") is not called.
+
+While #cmd("__premain()") runs, the C environment is built -- storage,
+#cmd("errno"), the files it opens -- but the standard streams are not
+open: #cmd("printf()") and #cmd("perror()") must not be called before the
+function has set #cmd("stdout") or #cmd("stderr") itself. Write to the
+console with #cmd("wtof()") instead. The environment variables of the
+#cmd("SYSENV") DD are not loaded yet either.
+
+A program that does not define #cmd("__premain()") links nothing for it:
+the start-up refers to it weakly, under the external name #cmd("@@PREMAI").
+
+@pg-startup-premain-fig sends #cmd("stdout") to the DD #cmd("REPORT") and
+does not start without it. Run with @pg-startup-premain-jcl, it writes
+#cmd("REPORT BEGINS") to #cmd("REPORT")\; without the DD it writes
+#cmd("PREMAIN : DD REPORT is missing") to the console and ends with return
+code 16.
+
+#fig(caption: [Opening stdout before main()])[
+  #code(read("../ex/pg-startup/premain.c"), numbers: true)
+] <pg-startup-premain-fig>
+
+#fig(caption: [JCL for PREMAIN])[
+  #code(read("../ex/pg-startup/premain.jcl"))
+] <pg-startup-premain-jcl>
+
+@pg-startup-premain-link-fig shows the difference in the load modules: in
+#cmd("premain") the reference is resolved (#cmd("LR")), in #cmd("plain"),
+which has no such function, it stays an unresolved weak reference
+(#cmd("WX")).
+
+#fig(caption: [The start-up's reference to \_\_premain()])[
+  #screen(raw(read("../ex/pg-startup/premain.txt")))
+] <pg-startup-premain-link-fig>
+
+=== Replacing a Private \@\@START <pg-startup-replace-start>
+
+#idx("@@START", "replacing")
+Before #cmd("__premain()") existed, a program that had to open its own
+streams supplied a start-up routine of its own: an object module, or a
+member of one of its libraries, that defined #cmd("@@START") and so took
+the place of the library's. That is fragile. The linker takes
+#cmd("@@START") from the first object or archive that defines it, so which
+one a program gets depends on the order of the link line, and a wrong
+choice is not reported. A private #cmd("@@START") also has to repeat
+everything the library's does -- the standard streams, the
+#cmd("SYSENV") DD, the time zone, the parameter -- and falls behind when
+the library changes.
+
+To replace a private #cmd("@@START") with #cmd("__premain()"):
+
++ Move the work that comes before the standard streams -- the checks, the
+  streams the program opens itself -- into a function
+  #cmd("int __premain(char *parm, char *pgmname, void **pgmr1)").
++ Assign the streams to #cmd("stdin"), #cmd("stdout") and #cmd("stderr")
+  there, and leave the others #cmd("NULL") for the start-up to open.
++ Return 0 to go on, or a return code to stop before #cmd("main()").
++ Delete the private #cmd("@@START") from the program and from every
+  library on its link line. With mbt, remove the key #cmd("dep_startup")
+  that chose it.
++ Link again and check with file370 that #cmd("@@PREMAI") is resolved, as
+  in @pg-startup-premain-link-fig.
 
 == Receiving Arguments <pg-startup-parm>
 

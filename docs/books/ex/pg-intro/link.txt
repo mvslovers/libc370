@@ -1,7 +1,6 @@
 $ cc370 -### -O1 -o hello hello.c
 ...
- "$PREFIX/bin/../libexec/cc370/1.2.0/ld" "--entry" "@@CRT0" "-o" "hello"
-   "$PREFIX/bin/../lib/cc370/1.2.0/../../../cc370/lib/crt0.o"
-   "-L$PREFIX/bin/../lib/cc370/1.2.0" "-L$PREFIX/bin/../lib"
-   "-L$PREFIX/bin/../lib/cc370/1.2.0/../../../cc370/lib"
-   "$TMP/ccDMWzpv.o" "-lcc370rt" "-lc" "-lcc370rt"
+ "$PREFIX/bin/../libexec/cc370/1.4.0/ld" "--entry" "@@CRT0" "-o" "hello"
+   "-L$PREFIX/bin/../lib/cc370/1.4.0" "-L$PREFIX/bin/../lib"
+   "-L$PREFIX/bin/../lib/cc370/1.4.0/../../../cc370/lib"
+   "$TMP/ccRCQIth.o" "-lcc370rt" "-lc" "-lcc370rt"
