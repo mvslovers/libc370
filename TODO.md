@@ -10,10 +10,12 @@ libc370 is the base library of the whole ecosystem, so a defect here is a defect
 in httpd, mvsMF, ftpd, ufsd and every other consumer at once; that is what puts
 some cheap items high and some expensive ones low.
 
-**2.0.0 shipped 2026-10-01, 2.1.0 on 2026-10-03, 2.2.0 on 2026-10-04**
+**2.0.0 shipped 2026-10-01, 2.1.0 on 2026-10-03, 2.2.0 on 2026-10-04, 2.3.0 on
+2026-10-05** (tag `v2.3.0` on `27f1d73`, PR #429: one CRT #424, #377, #382, #383,
+#425-#427; built with cc370 v1.1.0; assets, `pair`, tap and `install.sh` checked)
 (tag `v2.2.0` on `0ba452a`, cc370 `>=1.1.0 <2`, built with cc370 1.1.0;
 assets, `pair` and the Homebrew tap checked; cc370's `install.sh` with cc370
-1.2.0 picks 2.2.0). `main` is 2.2.1-dev. Releases are tagged after the go of
+1.2.0 picks 2.2.0). `main` is 2.3.1-dev. Releases are tagged after the go of
 the coordinating mbt session and the maintainer's approval. Tier 0 (the 2.0 critical path) is done
 but for the consumer ports still pinned to 1.0.8 (step 7). 1.0.8 is the last
 1.x; a serious defect there gets an emergency 1.0.9 from the tag `v1.0.8` (D8
@@ -41,8 +43,7 @@ startfile removal after mbt#158 and cc370's STARTFILE_SPEC, and the CGI/crtm
 question). Filed from the inline-asm sweep: #425 (memset/memclr inlines - every
 consumer), #426 (vsread() misses EOF/errors since 2.2.0's -Os - a regression),
 #427 (clib_identify_cthread() always 0, 20 fragile sites). PR #428 fixed #425 and
-#426, the BROKEN case of #427 and #411's sticky flags; next: 2.2.1 (needs the mbt
-go and the maintainer's OK), then #427's fragile sites plus a "memory"-invariance
+#426, the BROKEN case of #427 and #411's sticky flags; next: #427's fragile sites plus a "memory"-invariance
 CI gate. The consumer memset measurement goes onto #425.* The
 morning pass: 63 issues open; 54 after the closures that pass led to (#50, #51, #71, #79,
 #80, #172, #226, #244 as done, #305 as a duplicate of #181). Closed since the last pass: #256, #274, #278, #313–#316, #318,
