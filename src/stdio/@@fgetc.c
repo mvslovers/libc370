@@ -117,12 +117,10 @@ success:
     /* successful read of dataset */
     if (read > 0) {
         if (!(fp->flags & _FILE_FLAG_BINARY)) {
-            /* get rid of any trailing NULs in text mode */
-            unsigned char *p = memchr(dptr, '\0', read);
-
-            if (p) {
-                read = p - dptr;
-            }
+            /* get rid of trailing NULs in text mode.  Only the trailing
+               ones: a X'00' inside the record is data, and memchr() for
+               the first one cut the record there (#454) */
+            while (read > 0 && dptr[read - 1] == '\0') read--;
         }
 
         /* copy to buffer */
