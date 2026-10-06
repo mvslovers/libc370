@@ -244,8 +244,9 @@ On a text stream a record is a line.
 - *Reading.* Each record is returned followed by a #cmd("'\\n'"). The record
   is returned as it is: a fixed-length record of length 80 is read as 80
   characters and #cmd("'\\n'"), trailing blanks included, and a program that
-  does not want them removes them itself. If a record contains a byte
-  X'00', the line ends there and the rest of the record is not returned.
+  does not want them removes them itself. Bytes X'00' at the end of a
+  record are dropped\; a byte X'00' inside a record is data and is
+  returned with the rest of the line.
   The record descriptor word of a variable-length record is not part of
   the line.
 - *Writing.* #cmd("'\\n'") ends the record. An empty line is a record of its

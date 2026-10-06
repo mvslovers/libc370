@@ -153,10 +153,11 @@ stream:
   80 characters and a #cmd("'\\n'"), however short the text in it. A
   program that compares lines, or writes them somewhere else, removes the
   blanks first, as @pg-io-count-fig does.
-- *Two bytes end a line early.* A byte X'00' in a record ends the line at
-  that point and the rest of the record is not returned. A byte X'15', the
-  value of #cmd("'\\n'") (@pg-charset), is read as the end of a line. Data
-  that may contain either is read as a binary or record stream.
+- *X'00' and X'15' are not plain data.* Bytes X'00' at the end of a
+  record are dropped, as if they were padding\; a byte X'00' inside a
+  record is returned as data. A byte X'15', the value of #cmd("'\\n'")
+  (@pg-charset), is read as the end of a line. Data that may end in X'00'
+  or contain X'15' is read as a binary or record stream.
 - *Carriage control is the program's business.* On a data set with
   #cmd("RECFM=FBA") or #cmd("VBA"), the first character of every line is
   the control character, and the program writes it: #cmd("'1'") for a new

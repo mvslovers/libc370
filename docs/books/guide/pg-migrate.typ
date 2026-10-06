@@ -310,5 +310,9 @@ What later 2.x releases ask of a program or a build:
     [2.4.0], [#cmd("__premain()") is called before the standard streams are
       opened and before #cmd("main()").], [Replace a private
       #cmd("@@START") with it (@pg-startup-premain).],
+    [2.4.1], [A text stream drops only the bytes X'00' at the end of a
+      record. Up to 2.4.0 the line ended at the first X'00', and the rest
+      of the record was lost.], [Nothing, unless a program relied on the
+      cut: it now receives the bytes after an X'00' as well.],
   )
 ] <pg-migrate-since-tab>

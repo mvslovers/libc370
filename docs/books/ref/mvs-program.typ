@@ -253,7 +253,10 @@ the standard streams, before it reads the environment variables of the
 #deflist(width: 0.9in,
   [#var("parm")], [the parameter as the program received it: two bytes of
     length followed by the text, or, for a TSO command, the command buffer
-    with its prefix of four bytes.],
+    with its prefix of four bytes. The start-up takes the parameter for a
+    command buffer when its length is at least 4 and its third byte is
+    X'00'\; otherwise it is the first form. (Up to 2.4.0 a length of 1 to
+    3 with a third byte X'00' was taken for a command buffer as well.)],
   [#var("pgmname")], [the program name, eight characters padded with
     blanks, followed by a null character.],
   [#var("pgmr1")], [the parameter list that register 1 addressed when the
