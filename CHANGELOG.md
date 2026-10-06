@@ -7,6 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Fixed
+- **A text-mode read no longer cuts a record at its first X'00' (#454).**
+  Every text read dropped what it took for trailing NULs, but
+  looked for the first X'00' anywhere in the record, so the rest of the
+  record was lost to `fgetc()`, `fgets()` and `fread()` on a text stream.
+  Only trailing X'00' bytes are dropped now; one inside a record is data.
+  Binary streams were not affected. Measured on MVS: a record `A`, X'00',
+  `B` followed by blanks reads back whole (80 bytes, was 1).
 - **A parameter of 1 to 3 bytes whose third byte is zero is no longer taken
   for a TSO command buffer.** The startup then copied length - 4 bytes,
   which is negative; the copy only failed to overrun because the move
