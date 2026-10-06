@@ -23,7 +23,15 @@ but for the consumer ports still pinned to 1.0.8 (step 7). 1.0.8 is the last
 1.x; a serious defect there gets an emergency 1.0.9 from the tag `v1.0.8` (D8
 in `internals/design-2.0.md`).
 
-*Last reconciled against the tracker: **2026-10-04, evening**, 44 issues
+*Last reconciled against the tracker: **2026-10-06**, 83 issues open: the
+44 below, plus #384-#420 less #414/#415 (closed), #423, #448 (the doc
+rewrite for #159), #453 and #454, all placed in Tier 1 item 4. Closed since
+2026-10-04: #382, #383, #414, #415, #425-#427, #431 (released in 2.3.x).
+PR #446 (a short parameter taken for TSO-shaped) is merged and unreleased:
+it is the content of 2.4.1. PR #381 (the Library
+Reference) is open as a draft.*
+
+*The pass before: **2026-10-04, evening**, 44 issues
 open, all placed below - closed since the morning pass: #181, #273, #308,
 #61, #157, #158, #301, #240, #277, #254, all fixed (54 - 10 = 44). Filed and
 closed the same evening, so in no rank: #377 (the unused PDPCLIB macros left
@@ -598,6 +606,39 @@ metadata and links a program against it (checked end to end on macOS).
       affected; lua370 passes the caller's option through.
 
    **Tier 1 item 3 is empty.**
+4. **The Library Reference defects** (#384-#420, filed 2026-10-05, plus
+   #423, #453, #454; ranked 2026-10-06). Most are read from source and not
+   measured on MVS, so each fix starts with a test that shows the failure.
+   Ordered by what a running program loses:
+   1. **#454** — a text-mode read cuts a record at its first X'00'
+      (`__fgetc()` `memchr()` for "trailing" NULs). Silent data loss on every
+      `fgetc()`/`fgets()`/`fread()` of a text stream; measured with an
+      interpreter on MVS (writer intact, reader cuts).
+   2. **#385** — `fprintf()` cuts at 8191 bytes, writes the NUL as byte 8192
+      and returns the wrong count.
+   3. **#453** — `fgetc()`/`fputc()` take an ENQ and a DEQ per byte (plus a
+      `sprintf()` of the resource name): 6.0 s against 0.34 s for a 44,000-byte
+      file, measured. Every `getc()` loop pays it.
+   4. **#396** — `select()` turns 0.5 s into 625 s, `FD_ZERO` clears 129 bytes,
+      `FIONBIO` cannot go back to blocking. No current caller sets `tv_usec`.
+   5. **#403** — `mtxfree()` dequeues the wrong resource and frees a
+      registered mutex.
+   6. **#402, #405, #407** — authorized paths: unconditional MODESET (S047),
+      `racf_logout(NULL)` deletes the resting ACEE (fail-open), `ssvt_set()`
+      can overwrite key-0 CSA.
+   7. **#394** — `malloc(0)` reports ENOMEM with a console message and a
+      traceback.
+   8. **#386, #384, #393, #388** — `scanf` widths, `printf` integer flags,
+      `strstr(s, "")`, `bsearch()` argument order: wrong answers from ISO
+      functions.
+   9. **#416, #417** — `<ctype.h>` and the socket calls fail a consumer's
+      `-Werror` build; #418-#420 the remaining header defects.
+   10. **#406, #408-#413** — the MVS services: JES2 SSI return codes,
+       `__dsalc` UNCATLG, `__dscbav`, `__listc`, the rest of #411 (OPEN rc 4,
+       DD name case, `__vsclos`), osio DCBs, `tsocmd`.
+   11. **#389-#392, #387, #395, #397-#401, #404, #423** — math, time,
+       `rand()`, stdio edge cases, int64, `arrayaddf`, ctype brackets,
+       `__enq`/`__deq`, `getmain()` wrap, console, `%a`.
 
 ### Tier 1 before — empty since #182 (PR #227, 2026-09-29)
 
