@@ -160,17 +160,23 @@ neither module is #cmd("@@CRT0") at offset 0.
 
 #idx("crtm", "restrictions")
 *crtm.* #cmd("crtm") is for a narrow case. It expects to find the anchors
-of a C program that is already running on the same task, uses them instead
-of building its own, and at the end releases only its own stack. It is
-entered with the address of its parameter in register 0, not through a
-parameter list in register 1, so it is called by code written for it, not
-by MVS. Three consequences follow:
+of a C program that is already running on the same task and uses them
+instead of building its own. It is entered with the address of its
+parameter in register 0, not through a parameter list in register 1, so it
+is called by code written for it, not by MVS. Three consequences follow:
 
 - Started as a job step, or on a task without a C program, a #cmd("crtm")
   module abends at once.
-- Its #cmd("@@START") opens the standard streams again, in the shared
-  environment, so the calling program finds its #cmd("stdout"),
-  #cmd("stderr") and #cmd("stdin") replaced.
+- It shares the caller's standard streams, open files, #cmd("atexit()")
+  functions and environment variables. It starts with the caller's
+  streams and opens none of its own. But it ends through #cmd("exit()"),
+  like any C program, and that works on the shared environment: it calls
+  the caller's #cmd("atexit()") functions, closes every open file, the
+  caller's standard streams included, and frees the environment
+  variables. Only its own stack is released, but the caller's C input and
+  output does not survive it. (This follows from the library source and
+  has not been verified on MVS.) Use #cmd("crtm") only where the end of
+  the module may end the caller's C input and output as well.
 - It issues no #cmd("IDENTIFY"). A thread it creates can be attached only
   when the calling program has made #cmd("CTHREAD") known.
 
@@ -220,7 +226,7 @@ the #cmd("SYSENV") DD and calls #cmd("main()"). Its arguments are:
     of length, then the text\; a TSO command buffer has a prefix of four
     bytes instead (@pg-startup-parm).],
   [#var("pgmname")], [the program name, eight characters padded with
-    blanks and not terminated by a null character.],
+    blanks, followed by a null character.],
   [#var("pgmr1")], [the parameter list that register 1 pointed to when the
     program was called.],
 )
@@ -276,7 +282,9 @@ member of one of its libraries, that defined #cmd("@@START") and so took
 the place of the library's. That is fragile. The linker takes
 #cmd("@@START") from the first object or archive that defines it, so which
 one a program gets depends on the order of the link line, and a wrong
-choice is not reported. A private #cmd("@@START") also has to repeat
+choice is not reported: ld370's #cmd("--warn-shadow") names a
+#cmd("@@START") from an earlier library, and nothing names one from an
+object module. A private #cmd("@@START") also has to repeat
 everything the library's does -- the standard streams, the
 #cmd("SYSENV") DD, the time zone, the parameter -- and falls behind when
 the library changes.

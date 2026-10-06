@@ -167,7 +167,7 @@ was chosen:
 #idx("-I option", "and libc370 headers")
 A program needs no option to find any of this. The compiler searches
 #cmd("cc370/include") for #cmd("#include <...>") after the directories
-given with #cmd("-I"), and the driver names the start-up module and the
+given with #cmd("-I"), and the driver names the entry point and the
 libraries itself when it links. #cmd("-print-file-name") shows where a file
 is: in @pg-intro-build-fig, #cmd("$PREFIX/bin/../lib/cc370/1.4.0/../../..")
 is the prefix itself, so the library is #cmd("$PREFIX/cc370/lib/libc.a").

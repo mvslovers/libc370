@@ -255,7 +255,7 @@ the standard streams, before it reads the environment variables of the
     length followed by the text, or, for a TSO command, the command buffer
     with its prefix of four bytes.],
   [#var("pgmname")], [the program name, eight characters padded with
-    blanks, not terminated by a null character.],
+    blanks, followed by a null character.],
   [#var("pgmr1")], [the parameter list that register 1 addressed when the
     program was called.],
 )
@@ -283,10 +283,14 @@ DD yet.
 
 The function replaces the practice of supplying a private #cmd("@@START")\;
 which #cmd("@@START") a program gets then depends on the order of its link
-line, and a wrong choice is not reported.
+line, and a wrong choice is not reported: ld370's #cmd("--warn-shadow")
+names a #cmd("@@START") from an earlier library, and nothing names one from
+an object module.
 
 A module started with #cmd("crtm") also calls the function, if it defines
-one.
+one. Under #cmd("crtm") the standard streams are the caller's, so a stream
+the function sets replaces the caller's stream for the caller as well.
+(This follows from the library source and has not been verified on MVS.)
 
 === Example
 ```
