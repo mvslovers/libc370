@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.4.1] - 2026-10-06
+
+A patch release with two fixes, a drop-in for 2.4.0. The cc370 range is
+unchanged: `>=1.4.0 <2`.
+
 ### Fixed
 - **A text-mode read no longer cuts a record at its first X'00' (#454).**
   Every text read dropped what it took for trailing NULs, but
