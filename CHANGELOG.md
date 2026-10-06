@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- **`fprintf()` writes results of 8192 characters and more in full (#385).**
+  It formatted into an 8 KB buffer on the stack and wrote that: a longer
+  result was cut to 8192 bytes, the last of them X'00', and the return
+  value was the number of bytes written, not the formatted length. It now
+  goes through `vfprintf()`, as `printf()` always did, and needs no buffer.
+  Measured on MVS: 9000 characters are written and counted in full, and so
+  is a `%*d` of width 9000.
+- **`printf()`, `fprintf()` and `vfprintf()` return a negative value on an
+  output error (#385).** They returned the count even when the stream
+  refused the output; a stream not open for writing now gives -1 and
+  `errno` `EBADF`, and a stream whose error indicator is set gives -1.
+
 ## [2.4.1] - 2026-10-06
 
 A patch release with two fixes, a drop-in for 2.4.0. The cc370 range is
