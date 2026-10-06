@@ -614,8 +614,9 @@ metadata and links a program against it (checked end to end on macOS).
    1. ~~**#454**~~ — fixed, PR #456, 2026-10-06 (mvsdev JOB01542, 13/13;
       installed 2.4.0 fails R1/R3). A text-mode read cut a record at its
       first X'00'; now only trailing X'00' bytes go. Released in 2.4.1.
-   2. **#385** — `fprintf()` cuts at 8191 bytes, writes the NUL as byte 8192
-      and returns the wrong count.
+   2. ~~**#385**~~ — fixed, PR #458, 2026-10-06 (mvsdev JOB01544, 8/8;
+      installed 2.4.1 2/8). `fprintf()` goes through `vfprintf()`; the
+      printf family returns -1 on an output error. Unreleased.
    3. **#453** — `fgetc()`/`fputc()` take an ENQ and a DEQ per byte (plus a
       `sprintf()` of the resource name): 6.0 s against 0.34 s for a 44,000-byte
       file, measured. Every `getc()` loop pays it.
