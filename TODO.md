@@ -14,10 +14,11 @@ some cheap items high and some expensive ones low.
 2026-10-05** (tag `v2.3.0` on `27f1d73`, PR #429: one CRT #424, #377, #382, #383,
 #425-#427; built with cc370 v1.1.0; assets, `pair`, tap and `install.sh` checked), 2.3.1 on
 2026-10-05 too (tag `v2.3.1` on `cfa5afd`, PR #437: #431, #427, #415, #414, #436), 2.4.0 on 2026-10-05 too (tag `v2.4.0`
-on `ecfb39f`, PR #442: cc370 >= 1.4.0, no crt0.o/crt1.o #441, __premain #440)
+on `ecfb39f`, PR #442: cc370 >= 1.4.0, no crt0.o/crt1.o #441, __premain #440), 2.4.1 on 2026-10-06 (tag `v2.4.1` on `f062bfc`, PR #457: #454 text
+read cut at X'00' PR #456, short TSO-shaped parameter PR #446; assets, `pair`, tap checked)
 (tag `v2.2.0` on `0ba452a`, cc370 `>=1.1.0 <2`, built with cc370 1.1.0;
 assets, `pair` and the Homebrew tap checked; cc370's `install.sh` with cc370
-1.2.0 picks 2.2.0). `main` is 2.4.1-dev. Releases are tagged after the go of
+1.2.0 picks 2.2.0). `main` is 2.4.2-dev. Releases are tagged after the go of
 the coordinating mbt session and the maintainer's approval. Tier 0 (the 2.0 critical path) is done
 but for the consumer ports still pinned to 1.0.8 (step 7). 1.0.8 is the last
 1.x; a serious defect there gets an emergency 1.0.9 from the tag `v1.0.8` (D8
@@ -27,8 +28,8 @@ in `internals/design-2.0.md`).
 44 below, plus #384-#420 less #414/#415 (closed), #423, #448 (the doc
 rewrite for #159), #453 and #454, all placed in Tier 1 item 4. Closed since
 2026-10-04: #382, #383, #414, #415, #425-#427, #431 (released in 2.3.x).
-PR #446 (a short parameter taken for TSO-shaped) and PR #456 (#454) are
-merged and unreleased: they are the content of 2.4.1. PR #381 (the Library
+PR #446 (a short parameter taken for TSO-shaped) and PR #456 (#454) were
+released in 2.4.1. PR #381 (the Library
 Reference) is open as a draft.*
 
 *The pass before: **2026-10-04, evening**, 44 issues
@@ -612,7 +613,7 @@ metadata and links a program against it (checked end to end on macOS).
    Ordered by what a running program loses:
    1. ~~**#454**~~ — fixed, PR #456, 2026-10-06 (mvsdev JOB01542, 13/13;
       installed 2.4.0 fails R1/R3). A text-mode read cut a record at its
-      first X'00'; now only trailing X'00' bytes go. Unreleased: 2.4.1.
+      first X'00'; now only trailing X'00' bytes go. Released in 2.4.1.
    2. **#385** — `fprintf()` cuts at 8191 bytes, writes the NUL as byte 8192
       and returns the wrong count.
    3. **#453** — `fgetc()`/`fputc()` take an ENQ and a DEQ per byte (plus a
