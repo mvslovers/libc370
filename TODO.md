@@ -27,8 +27,8 @@ in `internals/design-2.0.md`).
 44 below, plus #384-#420 less #414/#415 (closed), #423, #448 (the doc
 rewrite for #159), #453 and #454, all placed in Tier 1 item 4. Closed since
 2026-10-04: #382, #383, #414, #415, #425-#427, #431 (released in 2.3.x).
-PR #446 (a short parameter taken for TSO-shaped) is merged and unreleased:
-it is the content of 2.4.1. PR #381 (the Library
+PR #446 (a short parameter taken for TSO-shaped) and PR #456 (#454) are
+merged and unreleased: they are the content of 2.4.1. PR #381 (the Library
 Reference) is open as a draft.*
 
 *The pass before: **2026-10-04, evening**, 44 issues
@@ -610,10 +610,9 @@ metadata and links a program against it (checked end to end on macOS).
    #423, #453, #454; ranked 2026-10-06). Most are read from source and not
    measured on MVS, so each fix starts with a test that shows the failure.
    Ordered by what a running program loses:
-   1. **#454** — a text-mode read cuts a record at its first X'00'
-      (`__fgetc()` `memchr()` for "trailing" NULs). Silent data loss on every
-      `fgetc()`/`fgets()`/`fread()` of a text stream; measured with an
-      interpreter on MVS (writer intact, reader cuts).
+   1. ~~**#454**~~ — fixed, PR #456, 2026-10-06 (mvsdev JOB01542, 13/13;
+      installed 2.4.0 fails R1/R3). A text-mode read cut a record at its
+      first X'00'; now only trailing X'00' bytes go. Unreleased: 2.4.1.
    2. **#385** — `fprintf()` cuts at 8191 bytes, writes the NUL as byte 8192
       and returns the wrong count.
    3. **#453** — `fgetc()`/`fputc()` take an ENQ and a DEQ per byte (plus a
