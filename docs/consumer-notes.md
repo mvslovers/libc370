@@ -293,8 +293,8 @@ against your own data set before relying on it. The same caveat applies to
 
 Under the TSO terminal monitor program, PUTLINE is the one correct way to
 write a line. In a batch TMP (`PGM=IKJEFT01`) it writes through the TMP's own
-SYSTSPRT, in order with the TMP's messages. In the foreground it reaches the
-terminal. A second DCB on SYSTSPRT has no ordering against the TMP, and TPUT
+SYSTSPRT, in order with the TMP's messages. In the foreground it is meant
+for the terminal; that is not measured yet, only the batch TMP is. A second DCB on SYSTSPRT has no ordering against the TMP, and TPUT
 does nothing in a batch TMP.
 
 `fopen("*PUTLINE", "w")` (or `"a"`, the name in any case) opens such a stream
