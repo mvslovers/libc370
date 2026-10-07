@@ -17,10 +17,11 @@ some cheap items high and some expensive ones low.
 on `ecfb39f`, PR #442: cc370 >= 1.4.0, no crt0.o/crt1.o #441, __premain #440), 2.4.1 on 2026-10-06 (tag `v2.4.1` on `f062bfc`, PR #457: #454 text
 read cut at X'00' PR #456, short TSO-shaped parameter PR #446; assets, `pair`, tap checked), 2.5.0 on 2026-10-07 (tag `v2.5.0` on `5578cfb`, PR #466:
 *PUTLINE #463, no FILE lock without threads #453, fprintf #385, tmpfile #395; assets, `pair`, tap checked), 2.6.0 on 2026-10-07 (tag `v2.6.0` on `5388287`, PR #469:
-*GETLINE #467; assets, `pair`, tap checked)
+*GETLINE #467; assets, `pair`, tap checked), 2.6.1 on 2026-10-07 (tag `v2.6.1` on `ba0e7ef`,
+PR #472: lock skip from the task tree #470; assets, `pair`, tap checked)
 (tag `v2.2.0` on `0ba452a`, cc370 `>=1.1.0 <2`, built with cc370 1.1.0;
 assets, `pair` and the Homebrew tap checked; cc370's `install.sh` with cc370
-1.2.0 picks 2.2.0). `main` is 2.6.1-dev. Releases are tagged after the go of
+1.2.0 picks 2.2.0). `main` is 2.6.2-dev. Releases are tagged after the go of
 the coordinating mbt session and the maintainer's approval. Tier 0 (the 2.0 critical path) is done
 but for the consumer ports still pinned to 1.0.8 (step 7). 1.0.8 is the last
 1.x; a serious defect there gets an emergency 1.0.9 from the tag `v1.0.8` (D8
@@ -625,7 +626,7 @@ metadata and links a program against it (checked end to end on macOS).
       `flockfile`/`getc_unlocked`), #462 (`research`: a lock without an SVC
       under contention). #465: one S43E in `tstctwd` during the
       regression runs, not pinned on #460.
-   3c. ~~**#470**~~ — PR #471, 2026-10-07 (mvsdev JOB01642), unreleased: the
+   3c. ~~**#470**~~ — PR #471, 2026-10-07 (mvsdev JOB01642), released in 2.6.1: the
       #453 lock skip asks the task tree, not the caller's GRT; a module with
       its own `@@CRT0` LINKed on a thread (a server's trace FILE) locks again.
    3a. ~~**#463**~~ — PR #464, 2026-10-07: `fopen("*PUTLINE")` through the TMP's
