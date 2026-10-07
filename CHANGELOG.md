@@ -25,6 +25,10 @@ unchanged: `>=1.4.0 <2`.
   thread a call still costs about 2.5 microseconds, in batch and under a
   TSO TMP.
 
+The manuals ML01-0003 and ML01-0004 (Draft edition) and their `SHA256SUMS`
+lines were added to the 2.6.1 release on 2026-10-07; no other file of the
+release changed.
+
 ## [2.6.0] - 2026-10-07
 
 A minor release: one new interface, `fopen("*GETLINE")`, the reading side
