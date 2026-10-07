@@ -87,7 +87,7 @@ characters, a data set name to 44.
       called #cmd("PUTLINE").],
     [#cmd("*GETLINE")], [The input of the TSO terminal monitor program,
       read with GETLINE: under #cmd("IKJEFT01") in batch the next line of
-      #cmd("SYSTSIN"), in a TSO session the terminal (not yet measured).
+      #cmd("SYSTSIN"), in a TSO session the terminal.
       For reading only. The name is reserved and never opens a DD called
       #cmd("GETLINE").],
   )

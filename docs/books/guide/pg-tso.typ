@@ -206,8 +206,11 @@ Each line comes from GETLINE: under #cmd("IKJEFT01") in batch, the next
 line of #cmd("SYSTSIN"). A line the program reads is not run by the
 terminal monitor program as a command\; the commands go on after the last
 line read. At the end of #cmd("SYSTSIN") the stream reaches end of file,
-and the terminal monitor program still ends normally. In a TSO session the
-line comes from the terminal\; that has not been measured yet. Leading
+and the terminal monitor program still ends normally. The end of file is
+the #cmd("END") that the terminal monitor program supplies for itself
+there: the read takes it, so the #cmd("END") line that otherwise closes
+#cmd("SYSTSPRT") is missing. In a TSO session the line comes from the
+terminal, without a DD. Leading
 blanks are kept and trailing blanks removed. Without the terminal monitor
 program the open fails with #cmd("ENODEV").
 
