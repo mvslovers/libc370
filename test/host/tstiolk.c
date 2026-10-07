@@ -116,6 +116,13 @@ int __fputc(int c, FILE *fp)
 
 /* ---- the real TUs ---------------------------------------------------- */
 
+/* __flock() as in a program with threads: the lock is taken (#453).  The
+   real one reads the PPA, which a host does not have. */
+int __flock(FILE *fp)
+{
+    return lock(fp, 0) == 0;
+}
+
 #include "../../src/stdio/vvprintf.c"
 #undef outch
 #undef inch

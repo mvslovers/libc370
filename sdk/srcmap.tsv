@@ -781,3 +781,5 @@ src/time64/tm64ucti.c	src/ext/time64/tm64ucti.c	declared in <ext/time64.h>
 src/time64/tm64ugmt.c	src/ext/time64/tm64ugmt.c	declared in <ext/time64.h>
 src/time64/tm64ultm.c	src/ext/time64/tm64ultm.c	declared in <ext/time64.h>
 src/time64/tm64utim.c	src/ext/time64/tm64utim.c	declared in <ext/time64.h>
+src/internal/lkname.h	src/internal/lkname.h	new after 2.0.0 (#453), the CLIBLOCK resource name without sprintf()
+src/stdio/@@flock.c	src/stdio/@@flock.c	new after 2.0.0 (#453): the FILE lock for one stdio call, skipped without threads
