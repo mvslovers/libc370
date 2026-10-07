@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+- **`fgetc()`, `fputc()` and the other stdio calls no longer take the
+  stream's ENQ while the program has no threads (#453).** Each call took an
+  ENQ and a DEQ to serialize the stream against other tasks, about 120
+  microseconds against 1 for the work itself. Until `cthread_create()` has
+  created a thread, no other task can use the stream, and the lock is now
+  skipped. Measured on MVS: a `fgetc()`/`fputc()` call costs 2.5
+  microseconds without a thread (was about 127). A program with threads
+  locks as before, from its first `cthread_create()` to its end. A program that ATTACHes subtasks of its own, outside
+  `cthread_create()`, and shares a stream with them must serialize it
+  itself.
+- **`lock()`, `unlock()`, `trylock()` and `testlock()` build their resource
+  name without `sprintf()` (#453).** The name is unchanged, `LOCK.` and
+  eight hex digits; a stdio call that takes the lock costs about 30 percent less.
+
 ### Fixed
 - **`tmpfile()` can read back what was written to it (#395).** It opened
   the temporary data set `"wb"` instead of `"wb+"`, so a read after

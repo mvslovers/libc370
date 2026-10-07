@@ -13,7 +13,7 @@ puts(const char *s)
     /* one critical section for the string AND its newline, so a
        concurrent printf cannot split the line at the '\n' (#147);
        rc=8 = caller already holds it (#145) */
-    owned = (lock(fp,0) == 0);
+    owned = __flock(fp);
 
     ret = __fputs(s, fp);
     if (ret != EOF) {

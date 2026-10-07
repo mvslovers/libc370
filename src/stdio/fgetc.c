@@ -9,7 +9,7 @@ fgetc(FILE *fp)
     int             c;
     int             owned;
 
-    owned = (lock(fp, 0) == 0); /* rc=8 = caller already holds it (#145) */
+    owned = __flock(fp); /* rc=8 = caller already holds it (#145) */
 
     c = __fgetc(fp);
 

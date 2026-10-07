@@ -41,7 +41,7 @@ vvprintf(const char *format, va_list arg, FILE *fq, char *s)
 
     /* lock file handle (required for __fputc() call); rc=8 means the
        caller already holds it, and then it is not ours to release (#145) */
-    if (fq) owned = (lock(fq,0) == 0);
+    if (fq) owned = __flock(fq);
 
     /* a stream not open for writing takes nothing (#385) */
     if (fq && !(fq->flags & _FILE_FLAG_WRITE)) {
