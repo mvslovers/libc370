@@ -29,10 +29,14 @@ program sees. How it does so depends on the record format of the data set
 and on whether the stream is a text stream, a binary stream or a record
 stream; see @std-stdio-records.
 
-Each stream carries a lock. Every function that reads or writes a stream
+Each stream carries a lock. Once the program has created a thread with
+#cmd("cthread_create()"), every function that reads or writes a stream
 holds it for the length of the call, so a line written by one
 #cmd("printf()") or #cmd("puts()") is not split by a write from another task
-on the same stream.
+on the same stream. Before the first thread, no other task can use the
+stream, and the lock is not taken. A program that attaches subtasks of its
+own, without #cmd("cthread_create()"), and shares a stream with them must
+serialize the stream itself.
 
 At normal program end -- return from #cmd("main()"), #cmd("exit()") or
 #cmd("_Exit()") -- every stream that is still open is closed. When the
@@ -75,6 +79,12 @@ characters, a data set name to 44.
       when the stream is opened.],
     [#cmd("*")#var("ddname")], [The DD #var("ddname") if it exists;
       otherwise the same as #cmd("*").],
+    [#cmd("*PUTLINE")], [The output of the TSO terminal monitor program,
+      written with PUTLINE: under #cmd("IKJEFT01") in batch into
+      #cmd("SYSTSPRT")\; in a TSO session it is meant for the terminal,
+      but it has been measured only under #cmd("IKJEFT01") in batch. For
+      writing only.
+      The name is reserved and never opens a DD called #cmd("PUTLINE").],
   )
 ] <std-stdio-names-tab>
 
@@ -819,7 +829,11 @@ opened.
   [#cmd("EBUSY")], [The DD is a JES2 input stream (#cmd("SYSIN")
     #cmd("DD *")) that is already open. JES2 allows one open at a time, and
     a second one would end the program with an abend.],
-  [#cmd("EINVAL")], [A #cmd("+") mode on a device other than direct access.],
+  [#cmd("EINVAL")], [A #cmd("+") mode on a device other than direct access,
+    or #cmd("*PUTLINE") opened for reading: with #cmd("\"r\"") or a
+    #cmd("+") mode.],
+  [#cmd("ENODEV")], [#cmd("*PUTLINE") in a program that does not run under
+    the TSO terminal monitor program.],
   [#cmd("ENOMEM")], [Not enough storage for the buffers. Raise the
     #cmd("REGION").],
   [#cmd("EOPNOTSUPP")], [#cmd("\"a\"") for a member that exists.],
@@ -838,6 +852,10 @@ cataloged, a mode that is not valid, a refused allocation -- the value of
   is closed. A member is allocated #cmd("DISP=SHR").
 - A DD with #cmd("DUMMY") or #cmd("'NULLFILE'") opened for reading
   returns end of file at once.
+- A stream on #cmd("*PUTLINE") writes each line as one PUTLINE. A line of
+  more than 252 characters goes out as several lines. The return code of
+  PUTLINE is not checked, so a failed write is not reported: neither
+  #cmd("ferror()") nor a negative return value shows it.
 
 === Example
 
@@ -896,18 +914,17 @@ null pointer.
 #cmd("printf()"), #cmd("sprintf()") and #cmd("snprintf()") return the
 number of characters formatted, without the null character. For
 #cmd("snprintf()") this is the length the whole result has, also when it
-was cut to fit #var("n"). #cmd("fprintf()") returns the number of
-characters written to the stream. None of them returns a negative value.
+was cut to fit #var("n"). #cmd("fprintf()") and #cmd("printf()") return a
+negative value on an output error: when the stream is not open for writing
+(#cmd("errno") #cmd("EBADF")), or when its error indicator is set.
 
 === Notes
 
-- #cmd("fprintf()") formats into a buffer of 8192 bytes and writes that.
-  A result of 8192 characters or more is cut to 8191, and a null character
-  is written in place of the 8192nd. #cmd("printf()") and
-  #cmd("vfprintf()") have no such limit; use #cmd("vfprintf()") for long
-  output to a stream other than #cmd("stdout").
-- An output error is not reported in the return value of
-  #cmd("printf()"). Test #cmd("ferror()").
+- The output has no limit on its length.
+- Output still in the buffer fails only when the buffer is written, at a
+  later call or at #cmd("fclose()")\; a return value of 0 or more does not
+  prove that the data has reached the data set. Test #cmd("ferror()")
+  before the stream is closed, and the return value of #cmd("fclose()").
 - #cmd("sprintf()") does not know the size of #var("s"). Use
   #cmd("snprintf()").
 - On a record stream nothing is written.
@@ -1470,7 +1487,8 @@ FILE *tmpfile(void);
 === Description
 
 #cmd("tmpfile()") creates a temporary data set with a name from
-#cmd("tmpnam()") and opens it with mode #cmd("\"wb\""). The data set is
+#cmd("tmpnam()") and opens it with mode #cmd("\"wb+\""): what is written
+can be read back after #cmd("rewind()") or #cmd("fseek()"). The data set is
 allocated on VIO, with the attributes of @std-stdio-defaults. As a
 temporary data set, it is deleted by the system at the end of the step at
 the latest.
@@ -1481,10 +1499,8 @@ A pointer to the stream, or #cmd("NULL").
 
 === Notes
 
-C99 opens the file with #cmd("\"wb+\""). The stream that #cmd("tmpfile()")
-returns can only be written; to write a temporary data set and read it
-back, open a name from #cmd("tmpnam()") with #cmd("fopen()") and mode
-#cmd("\"wb+\"").
+Up to libc370 2.4 the stream was opened #cmd("\"wb\"") and could only be
+written.
 
 === Related
 
@@ -1592,7 +1608,7 @@ As for the functions without #cmd("v").
 === Notes
 
 #cmd("vfprintf()") writes each character to the stream as it is formatted
-and has no limit on the length of the output, unlike #cmd("fprintf()").
+and has no limit on the length of the output.
 
 === Example
 

@@ -184,6 +184,40 @@ streams are lost. Under TSO a line has normally reached the terminal once it
 is ended, but output to a data set or to SYSOUT is lost up to the last full
 block (see @pg-errors).]
 
+=== Output Beside the TMP's Messages: \*PUTLINE <pg-tso-putline>
+
+#idx("*PUTLINE")#idx("PUTLINE")#idx("SYSTSPRT")
+Under #cmd("IKJEFT01") in batch, the terminal monitor program writes its
+messages and the output of commands to #cmd("SYSTSPRT"), while
+#cmd("stdout") goes to #cmd("SYSPRINT") or to a SYSOUT data set of its own.
+To put a program's output into #cmd("SYSTSPRT"), in order with everything
+else, open the file name #cmd("*PUTLINE") for writing. Each line goes out
+as a PUTLINE into #cmd("SYSTSPRT"). In a TSO session the stream is meant
+for the terminal, but it has been measured only under #cmd("IKJEFT01") in
+batch. A line of more than 252 characters is written as several lines.
+
+Without the terminal monitor program -- a program run with
+#cmd("EXEC PGM=") -- #cmd("fopen(\"*PUTLINE\", \"w\")") returns
+#cmd("NULL") with #cmd("errno") #cmd("ENODEV"). The stream cannot be read.
+
+To send all of a program's standard output there, set #cmd("stdout") in
+#cmd("__premain()") (@pg-startup-premain), and keep the usual
+#cmd("stdout") where there is no terminal monitor program:
+
+```
+#include <stdio.h>
+#include <mvs/crt.h>
+
+int __premain(char *parm, char *pgmname, void **pgmr1)
+{
+    FILE *fp = fopen("*PUTLINE", "w");
+
+    if (fp)
+        stdout = fp;
+    return 0;
+}
+```
+
 == Calling TSO Commands from a Program <pg-tso-cmd>
 
 #idx("tsocmd")

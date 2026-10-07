@@ -314,5 +314,15 @@ What later 2.x releases ask of a program or a build:
       record. Up to 2.4.0 the line ended at the first X'00', and the rest
       of the record was lost.], [Nothing, unless a program relied on the
       cut: it now receives the bytes after an X'00' as well.],
+    [2.5.0], [A stream takes its lock only after the first
+      #cmd("cthread_create()").], [A program that attaches subtasks of its
+      own and shares a stream with them serializes the stream itself.],
+    [2.5.0], [#cmd("printf()"), #cmd("fprintf()") and #cmd("vfprintf()")
+      return a negative value on an output error, and #cmd("fprintf()")
+      writes results of 8192 characters and more in full.], [Test the
+      return value for a negative value where the count is used.],
+    [2.5.0], [#cmd("tmpfile()") opens #cmd("\"wb+\"").], [Nothing\; a
+      program that opened a #cmd("tmpnam()") name to read its data back can
+      use #cmd("tmpfile()").],
   )
 ] <pg-migrate-since-tab>

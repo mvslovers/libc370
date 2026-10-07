@@ -256,8 +256,8 @@ overwrites it, with its own attributes.
 A temporary data set, for data that lives only while the program runs, is
 opened with a name from #cmd("tmpnam()"), which returns names of the form
 #cmd("&&TMP")#var("nnnnn"). Open it #cmd("\"wb+\"") to write it and read
-it back. #cmd("tmpfile()") is no substitute: the stream it returns can
-only be written. MVS deletes a temporary data set at the end of the step at
+it back. #cmd("tmpfile()") does both in one call and returns such a
+stream. MVS deletes a temporary data set at the end of the step at
 the latest.
 
 == Writing a Member of a Library <pg-io-member>
