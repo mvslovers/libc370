@@ -1,0 +1,10 @@
+$ cc370 -Wall -O1 -o zuser zuser.c
+ld370: unresolved external reference(s):
+    ISPLINK
+ld370: 1 unresolved external(s) -- the module would S0C4 at runtime (each is a NULL adcon); add the defining object/archive, or pass --allow-unresolved to override
+(return code 1)
+$ cc370 -Wall -O1 -Wl,--allow-unresolved -o zuser zuser.c
+ld370: unresolved external reference(s):
+    ISPLINK
+ld370: 1 unresolved external(s) left for the loader (--allow-unresolved)
+(return code 0)

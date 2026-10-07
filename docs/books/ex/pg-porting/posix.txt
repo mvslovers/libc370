@@ -1,0 +1,16 @@
+$ cc370 -std=gnu99 -O1 -Wall -o POSIX posix.c
+posix.c: In function `main':
+posix.c:6: warning: implicit declaration of function `getpid'
+posix.c:7: warning: implicit declaration of function `close'
+ld370: unresolved external reference(s):
+    GETPID
+    CLOSE
+ld370: 2 unresolved external(s) -- the module would S0C4 at runtime (each is a NULL adcon); add the defining object/archive, or pass --allow-unresolved to override
+$ echo $?
+1
+$ cc370 -std=gnu99 -O1 -Wall -Werror -o POSIX posix.c
+posix.c: In function `main':
+posix.c:6: warning: implicit declaration of function `getpid'
+posix.c:7: warning: implicit declaration of function `close'
+$ echo $?
+1

@@ -1,0 +1,8 @@
+$ cc370 -O1 -Wall -c collide.c
+collide.c: In function `table_add_pair':
+collide.c:2: warning: external symbol `table_add_pair' collides with `table_add': both map to the MVS name `TABLE@AD'
+TABLE@AD       DS    0H                                                      
+ ERROR: Symbol previously defined (IFOX00 IFO196) - TABLE@AD in line 30 (statement 143)
+ Assembler Done   1 Statement Flagged /   8 was Highest Severity
+$ echo $?
+1

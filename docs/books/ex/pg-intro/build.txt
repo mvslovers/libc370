@@ -1,0 +1,5 @@
+$ cc370 -Wall -O1 -o hello hello.c
+$ cc370 -print-file-name=libc.a
+$PREFIX/bin/../lib/cc370/1.4.0/../../../cc370/lib/libc.a
+$ cc370 -print-file-name=crtm.o
+$PREFIX/bin/../lib/cc370/1.4.0/../../../cc370/lib/crtm.o

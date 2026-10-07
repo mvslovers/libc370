@@ -1,0 +1,7 @@
+#include <stdlib.h>              /* bcopy()                       */
+#include <clibstr.h>             /* stricmp()                     */
+#include <clibwto.h>             /* wtof()                        */
+#include <cliblink.h>            /* __link()                      */
+    ...
+    bcopy(rec, save, len);
+    if (stricmp(opt, "TRACE") == 0)

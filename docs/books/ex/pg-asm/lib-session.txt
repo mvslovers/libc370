@@ -1,0 +1,21 @@
+$ as370 -o pd2int.o pd2int.asm
+$ as370 -o eachchr.o eachchr.asm
+$ cc370 -O1 -Wall -c amount.c
+$ ar370 rc libmyutil.a pd2int.o eachchr.o amount.o
+$ ar370 t libmyutil.a
+members:
+  pd2int.o         320 bytes
+  eachchr.o        320 bytes
+  amount.o         1040 bytes
+symbol table: 4 symbol(s)
+  PD2INT    pd2int.o
+  EACHCHR   eachchr.o
+  AMT@FORM  amount.o
+  AMT@PARS  amount.o
+$ cc370 -O1 -Wall -o TOTAL total.c -L. -lmyutil -Wl,--map,total.map
+$ grep -A2 myutil total.map
+          PC    001590  000042  ./libmyutil.a(pd2int.o) autocall
+  PD2INT        001590
+          PC    0015D8  000170  ./libmyutil.a(amount.o) autocall
+  AMT@FORM      0015E4
+  AMT@PARS      001690

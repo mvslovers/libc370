@@ -1,0 +1,5 @@
+$ cc370 -std=gnu99 -O1 -Wall -c rec.c count.c check.c
+$ cc370 -o REC rec.o count.o check.o
+ld370: warning: 'RECORD@C' doubly defined: check.o defines it again (first definition kept)
+$ echo $?
+0
