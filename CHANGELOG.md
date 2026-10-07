@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.6.2] - 2026-10-07
+
+A patch release with one fix, a drop-in for 2.6.1. The cc370 range is
+unchanged: `>=1.4.0 <2`.
+
 ### Fixed
 - **`fseek()` to a position inside the current record of an `"r"` stream
   lands there, and `ftell()` follows (#473).** The library reaches such a
@@ -40,8 +45,9 @@ unchanged: `>=1.4.0 <2`.
   TSO TMP.
 
 The manuals ML01-0003 and ML01-0004 (Draft edition) and their `SHA256SUMS`
-lines were added to the 2.6.1 release on 2026-10-07; no other file of the
-release changed.
+lines were added to the 2.6.1 release on 2026-10-07, and replaced the same
+day because their edition notice read "Version 2 Release 4" instead of
+"Release 6"; no other file of the release changed.
 
 ## [2.6.0] - 2026-10-07
 
