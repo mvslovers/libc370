@@ -282,7 +282,12 @@ TGETREAD L     R6,ZIOECT          RESTORE ECT ADDRESS
 TGETNEOF L     R6,BUFFADDR        GET INPUT BUFFER
          LR    R8,R1              INPUT LINE W/RDW
          LH    R9,0(,R1)          GET LENGTH
-         LR    R7,R9               FOR V, IN LEN = OUT LEN
+*   A line longer than the buffer is cut to BLKSIZE.  For V the copy
+*   took the line's own length and ran past the buffer (#467).
+         C     R9,BLKSIZE         LONGER THAN OUR BUFFER?
+         BNH   TGETFITS           NO
+         L     R9,BLKSIZE         KEEP WHAT FITS
+TGETFITS LR    R7,R9               FOR V, IN LEN = OUT LEN
          CLI   RECFMIX,4          RECFM=V ?
          BE    TGETHAVE           YES
          BL    TGETSKPF
@@ -296,7 +301,11 @@ TGETHAVE ST    R6,0(,R3)          RETURN ADDRESS
          STM   R6,R7,KEPTREC      Remember record info
          ICM   R9,8,=C' '           BLANK FILL
          MVCL  R6,R8              PRESERVE IT FOR USER
-         SR    R6,R6              NO EOF
+         CLI   RECFMIX,4          RECFM=V ?
+         BNE   TGETNRDW           NO
+         L     R14,KEPTREC        THE COPY
+         MVC   0(2,R14),KEPTREC+6 ITS RDW: THE LENGTH KEPT (#467)
+TGETNRDW SR    R6,R6              NO EOF
 TGETFREE LH    R0,0(,R1)          GET LENGTH
          ICM   R0,8,=AL1(1)       SUBPOOL 1
          FREEMAIN R,LV=(0),A=(1)  FREE SYSTEM BUFFER

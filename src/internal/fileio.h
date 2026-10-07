@@ -46,6 +46,10 @@ extern int      __fptmp(FILE *fp);
  * PUTLINE to the TSO terminal monitor program, ECT and UPT found through
  * the LWA (#463).  1 with errno ENODEV when there is no TMP. */
 extern int      __fpput(FILE *fp);
+/* __fpget() - open fp as "*GETLINE": a stream that reads each line through
+ * GETLINE from the TMP - SYSTSIN in a batch TMP, the terminal in the
+ * foreground (#467).  1 with errno ENODEV when there is no TMP. */
+extern int      __fpget(FILE *fp);
 
 /* the formatting engines behind the printf and scanf families: output goes
  * to fq, or to s when fq is NULL; input comes from fp, or from s when fp is NULL */
