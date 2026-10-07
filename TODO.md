@@ -627,6 +627,10 @@ metadata and links a program against it (checked end to end on macOS).
    3a. ~~**#463**~~ — PR #464, 2026-10-07: `fopen("*PUTLINE")` through the TMP's
       PUTLINE, ECT/UPT via the LWA (mvsdev JOB01607). Released in 2.5.0; for
       brexx370's `__premain()`.
+   3b. **#467** — `fopen("*GETLINE", "r")`, the read side (SYSTSIN in a batch
+      TMP, the terminal in the foreground; SA32-0972 PARSE PULL/PULLEXTR).
+      Measure first: consumed line, EOF rc and TMP end, foreground TIOT,
+      record shape (an FB 80 DD pads to 80 today). Consumer: brexx370.
    4. **#396** — `select()` turns 0.5 s into 625 s, `FD_ZERO` clears 129 bytes,
       `FIONBIO` cannot go back to blocking. No current caller sets `tv_usec`.
    5. **#403** — `mtxfree()` dequeues the wrong resource and frees a
