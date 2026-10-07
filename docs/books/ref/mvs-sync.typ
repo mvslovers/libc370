@@ -1044,7 +1044,8 @@ also calls this function for an authorized program (see @mvs-program).
 
 === Returns
 The return code of #cmd("IDENTIFY"): 0 when the name was added, 4 when it
-exists already.
+exists already, 20 when another module in the task has identified a
+#cmd("CTHREAD") of its own.
 
 === Notes
 The function refers to #cmd("CTHREAD"), so calling it links the thread
@@ -1323,7 +1324,9 @@ second: once (#cmd("tmr_ecb()")), once and then kept disabled
 (#cmd("tmr_ecb_every()")). The timer thread is started if it is not running.
 
 === Returns
-The identifier of the request, or 0 when it could not be made.
+The identifier of the request, or 0 when it could not be made. If the timer
+thread cannot be started, the request is queued and its identifier
+returned all the same, but it never fires (a defect, libc370 issue 476).
 
 === Notes
 - The post code is the identifier of the request.
@@ -1357,7 +1360,9 @@ hundredths of a second: once, once and then kept disabled, or every
 thread.
 
 === Returns
-The identifier of the request, or 0 when it could not be made.
+The identifier of the request, or 0 when it could not be made. As for
+#cmd("tmr_ecb()"), a request whose timer thread could not be started is
+returned with an identifier and never fires (libc370 issue 476).
 
 === Example
 #code(read("../ex/mvs-sync/timer.c"))
@@ -1387,8 +1392,9 @@ TQE *tqe_get(TQEID id);
 Act on the request #var("id").
 
 #cmd("tqe_disable()") suspends it: it does not fire until it is enabled.
-#cmd("tqe_enable()") enables it again and starts its interval anew, so that
-it fires one interval from now.
+#cmd("tqe_enable()") enables it again and, when it has an interval
+(#var("bintvl") not 0), starts the interval anew, so that it fires one
+interval from now.
 
 #cmd("tqe_reset()") changes its interval to #var("bintvl") and, unless the
 request is disabled, starts the interval anew.

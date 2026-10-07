@@ -24,8 +24,8 @@ Every stream is a data control block (DCB) opened on one DD statement. The
 DD either exists before the stream is opened -- it was coded in the JCL of
 the step, or the program allocated it -- or #cmd("fopen()") allocates it
 itself by dynamic allocation and frees it again at #cmd("fclose()"). The
-data set is read and written with BSAM, one record at a time; tape is
-read and written with EXCP. VSAM data sets cannot be opened as streams.
+data set is read and written with BSAM, one record at a time, on tape as
+well. VSAM data sets cannot be opened as streams.
 
 The first argument of #cmd("fopen()") says which DD to use or how to
 allocate one. @pg-io-names-tab shows the forms; letters are converted to
@@ -375,10 +375,10 @@ has to go back, #cmd("rewind()") and read forward.
 The #cmd("+") modes open a data set on disk for reading and writing. A
 write in the middle replaces data in place, and a record never changes its
 length: a write that would make a record longer -- or, on variable-length
-and undefined records, shorter -- fails with #cmd("EOPNOTSUPP"). The DCB
-is open in one direction at a time, and every change between reading and
-writing closes and opens it again. Updating in place is therefore for a
-few changes to records of fixed length. To change many records, or their
+and undefined records, shorter -- fails with #cmd("EOPNOTSUPP"). A write
+in the middle rewrites the record in place\; only a write at the end of the
+data set closes the DCB and opens it again for output. Updating in place is
+therefore for a few changes to records of fixed length. To change many records, or their
 length, read the data set and write a new one.
 
 == Errors and Full Data Sets <pg-io-errors>
@@ -399,11 +399,14 @@ set is closed. Three rules follow:
   space, the library does not let MVS end the program with an x37 abend:
   the write fails, the error indicator of the stream is set and
   #cmd("errno") is #cmd("ENOSPC")\; any other permanent I/O error gives
-  #cmd("EIO"). Every later read or write on the stream fails at once in the
-  same way until the program calls #cmd("clearerr()").
-+ *The return value of #cmd("printf()") does not report a write error.* It
-  counts the characters formatted. Test #cmd("ferror()") instead, at the
-  latest before #cmd("fclose()").
+  #cmd("EIO"). Every later write on the stream fails at once in the same
+  way, and every later read with #cmd("EIO"), until the program calls
+  #cmd("clearerr()").
++ *The return value of #cmd("printf()") reports an error only when it is
+  already known.* It is negative when the stream is not open for writing or
+  its error indicator is set\; output that is still in the buffer fails only
+  when the buffer is written. Test #cmd("ferror()") as well, at the latest
+  before #cmd("fclose()"), and the return value of #cmd("fclose()").
 
 #idx("errno", "after fopen")
 When #cmd("fopen()") fails, #cmd("errno") tells the reason only in a few

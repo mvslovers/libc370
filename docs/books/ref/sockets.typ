@@ -118,7 +118,7 @@ Host names are the exception: #cmd("gethostbyname()") and
 #cmd("getaddrbyname()") take the name in EBCDIC and the emulator translates
 it, and #cmd("gethostbyaddr()") returns the name translated to EBCDIC.
 
-=== Blocking
+=== Blocking <sockets-blocking>
 
 #idx("non-blocking socket")
 A socket is created blocking. While a blocking call waits -- for a
@@ -127,7 +127,12 @@ leave the program waiting in the emulator. It repeats the call at short
 intervals and waits between attempts with #cmd("STIMER"), so other work on
 the system goes on. The interval is 0.08 seconds for #cmd("accept()"),
 #cmd("recv()") and #cmd("select()"), 0.1 seconds for #cmd("send()") and one
-second for #cmd("connect()"). The entries below say how each call behaves.
+second for #cmd("connect()"). For #cmd("send()") this needs an emulator
+whose send does not block: Hercules built with
+#cmd("OPTION_USE_X75_NONE_BLOCKING_SEND"), which only the development
+branches of SDL Hyperion have so far, in no released build. Elsewhere
+#cmd("send()") with a full send buffer waits inside the emulator, blocking
+or not. The entries below say how each call behaves.
 
 #cmd("ioctlsocket()") with #cmd("FIONBIO") makes a socket non-blocking. A call
 on a non-blocking socket that cannot complete at once returns -1 and sets
@@ -802,7 +807,9 @@ supported:
   emulator, not the value it points to. A pointer to a word holding 0
   therefore makes the socket non-blocking, just as a pointer to a word
   holding 1 does\; to make a socket blocking again, pass NULL.
-- After #cmd("FIONBIO") the word at #var("argp") is set to 0.
+- After #cmd("FIONBIO") the word at #var("argp") is set to 0. When #var("s")
+  is not an open socket, the call still returns 0 and stores
+  #cmd("0xFFFFFFFF") there.
 - #cmd("FIONREAD") counts what has reached the host. A program that asks
   #cmd("recv()") for exactly that many bytes does not wait, on a blocking
   socket either.
@@ -1006,7 +1013,9 @@ buffer is nearly full\; the program then sends the rest with another call.
 
 When the send buffer is full, a blocking #cmd("send()") waits for the peer to
 read: it tries again every 0.1 seconds, up to 100 times. If no byte could be
-sent in those ten seconds, it fails.
+sent in those ten seconds, it fails. This holds only on an emulator with a
+non-blocking send (see @sockets-blocking)\; on others the call waits inside the
+emulator until the peer reads.
 
 === Returns
 
@@ -1017,7 +1026,8 @@ The number of bytes sent, or -1 for an error.
 #deflist(width: 1.35in,
   [#cmd("EWOULDBLOCK")], [nothing could be sent: #var("ss") is
     non-blocking and the send buffer is full, or #var("ss") is blocking and
-    the peer has not read for ten seconds.],
+    the peer has not read for ten seconds. Only on an emulator with a
+    non-blocking send.],
 )
 
 === Notes

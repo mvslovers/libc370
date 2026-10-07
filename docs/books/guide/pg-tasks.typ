@@ -138,9 +138,11 @@ aligns a variable of type #cmd("ECB").
 Two families of functions wait and post:
 
 #deflist(width: 1.6in,
-  [#cmd("cthread_wait()"), #cmd("cthread_post()")], [return the post code
-    and clear the ECB in one atomic step, so that a post arriving meanwhile
-    is not lost. Use them for an ECB that is posted again and again.],
+  [#cmd("cthread_wait()"), #cmd("cthread_post()")], [#cmd("cthread_wait()")
+    returns the post code and clears the ECB in one atomic step, so that a
+    post arriving meanwhile is not lost. #cmd("cthread_post()") posts the
+    ECB, with the code masked to the bits a post code may have, and returns
+    0. Use them for an ECB that is posted again and again.],
   [#cmd("ecb_wait()"), #cmd("ecb_post()")], [wait and post and leave the
     ECB as it is. Use them for an ECB that is posted once, such as
     #cmd("termecb"), whose posted bit you may still want to test

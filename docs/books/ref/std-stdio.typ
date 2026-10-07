@@ -21,8 +21,9 @@ Every open stream is a DCB opened on one DD. The DD either exists already
 -- it was coded in the JCL of the step or allocated by the program -- or
 #cmd("fopen()") allocates it by dynamic allocation (SVC 99) and frees it
 again when the stream is closed. The data set is read and written with
-BSAM, one record at a time; on tape the library uses EXCP. VSAM data sets
-cannot be opened as streams.
+BSAM, one record at a time, on tape as well\; only a tape stream opened
+with the option #cmd("bsam") and a block size above 32760 is read and
+written with EXCP. VSAM data sets cannot be opened as streams.
 
 The library converts between records and the byte stream that a C
 program sees. How it does so depends on the record format of the data set
@@ -114,7 +115,7 @@ that depends on the mode:
 - For writing (#cmd("\"w\""), #cmd("\"a\"") and the three
   #cmd("+") modes), the library tries, in this order, until one of them
   succeeds: a temporary data set (#cmd("&&") names only) with
-  #cmd("DISP=NEW") on VIO; #cmd("DISP=SHR") when a member is named;
+  #cmd("DISP=(NEW,CATLG)") and #cmd("UNIT=VIO"); #cmd("DISP=SHR") when a member is named;
   #cmd("DISP=OLD")\; and finally #cmd("DISP=(NEW,CATLG)"), which creates
   the data set. #cmd("\"r+\"") never creates a data set.
 
@@ -242,6 +243,14 @@ data set only. A SYSOUT data set (#cmd("*")) takes #cmd("recfm="),
 #cmd("recfm="), #cmd("lrecl=") and #cmd("space="), and no block size. Other
 text in the mode string is ignored.
 
+Two of these do not work as written, because the mode string is converted
+to lowercase before it is examined (a defect, libc370 issue 474, read
+from the library source): #cmd("space=cyl(...)") and #cmd("space=trk(...)") for a temporary
+data set are taken as a space in blocks, and #cmd("blksize=") for a SYSOUT
+data set is never used, since its record format is tested for an uppercase
+#cmd("B"). The environment variables #cmd("TEMP_SPACE") and
+#cmd("SYSOUT_RECFM"), in uppercase, work.
+
 == Records and Lines <std-stdio-records>
 
 #idx("record format")
@@ -355,9 +364,9 @@ distinguished.
 A write error ends the stream's ability to write. A data set that runs
 out of space does not end the program with an x37 abend: the write fails,
 the error indicator is set and #cmd("errno") is #cmd("ENOSPC")\; any
-other permanent I/O error sets #cmd("EIO"). Every later read or write on
-the stream fails at once with the same #cmd("errno"), and nothing more is
-written, until #cmd("clearerr()") is called. Because the last block is
+other permanent I/O error sets #cmd("EIO"). Every later write on the
+stream fails at once with the same #cmd("errno"), every later read with
+#cmd("EIO"), and nothing more is written, until #cmd("clearerr()") is called. Because the last block is
 written at close, running out of space on it is reported by
 #cmd("fclose()") and by nothing earlier.
 
@@ -378,6 +387,11 @@ by reading:
 - Forward, it reads up to the position.
 - Backward on an input stream, it closes and opens the data set again and
   reads from the beginning. The time this takes grows with the position.
+  A target inside the record in the buffer is reached without reopening,
+  but that shortcut is defective (libc370 issue 473): the stream is placed wrongly within the
+  record and #cmd("ftell()") keeps the old position. Even
+  #cmd("fseek(fp, ftell(fp), SEEK_SET)") in the middle of a record moves to
+  the start of the record. Seek to the start of a record.
 - An output stream (#cmd("\"w\""), #cmd("\"a\"")) is always at its end and
   cannot move. #cmd("fseek()") to the current position succeeds; any other
   position fails with #cmd("ESPIPE").
@@ -457,9 +471,10 @@ These rules differ from C99:
   digits, and then removes trailing zeros. In exponent notation it keeps
   them. @std-stdio-printf-ex shows the effect.
 - The precision of an integer conversion must not exceed 126.
-- The functions do not report output errors: the return value is the number
-  of characters formatted, whether or not they reached the data set. Use
-  #cmd("ferror()") to find out.
+- An output error is reported only when it is already known: the return
+  value is negative when the stream is not open for writing or its error
+  indicator is set. Output that is still in the buffer fails only when the
+  buffer is written\; use #cmd("ferror()") to find out.
 
 Floating-point values are System/370 hexadecimal floating point, which has
 about 15 significant decimal digits and no infinity and no NaN.
@@ -1181,7 +1196,10 @@ they do not return #cmd("EOF").
   #cmd("sscanf()"), into arrays as long as the line buffer, so that no
   input can overrun them.
 - #cmd("fscanf()") and #cmd("scanf()") read one character beyond the last
-  one they convert and push it back with #cmd("ungetc()").
+  one they convert and push it back with #cmd("ungetc()") -- but only when
+  the format runs to its end. When they stop early, at a character that
+  does not match the format or at an input failure, that character is
+  consumed (a defect, libc370 issue 474).
 
 === Example
 
@@ -1221,7 +1239,9 @@ bytes from the beginning (#cmd("SEEK_SET")), from the current position
 describes the positions and how the library reaches them.
 #cmd("fsetpos()") is #cmd("fseek(stream, *pos, SEEK_SET)"), and
 #cmd("rewind()") is #cmd("fseek(stream, 0L, SEEK_SET)") without a return
-value. A character pushed back with #cmd("ungetc()") is discarded.
+value. A character pushed back with #cmd("ungetc()") is discarded, except
+on a stream opened with a #cmd("+") mode, where it survives the move (a
+defect, libc370 issue 474).
 
 === Returns
 
@@ -1248,8 +1268,11 @@ failure.
   the data set and ignores #var("offset").
 - A position beyond the end of a data set opened #cmd("\"r\"") fails, sets
   the error and end-of-file indicators and leaves the stream at the end.
+  On a record stream it returns 0 and sets no indicator (a defect,
+  libc370 issue 474).
 - Moving backward, or forward over a long distance, reads the data set and
-  takes time in proportion.
+  takes time in proportion. A backward move within the current record does
+  not, and lands in the wrong place (@std-stdio-position).
 - On a record stream the position is a record number.
 
 === Related
@@ -1318,7 +1341,9 @@ which is #var("size") #sym.times #var("nmemb"), and bytes 2 and 3 are zero.
 The number of complete elements written; less than #var("nmemb") on an
 error. On a record stream 1 when the record was written and 0 when it was
 not, whatever #var("nmemb") is. When #var("size") or #var("nmemb") is 0,
-nothing is written and 0 is returned.
+nothing is written\; on a record stream 0 is returned, but on a text or
+binary stream #var("nmemb") is returned (#cmd("fwrite(p, 0, 5, f)")
+returns 5), which is a defect (libc370 issue 474).
 
 === Errors
 
@@ -1587,7 +1612,8 @@ already been pushed back.
   returns it.
 - The position that #cmd("ftell()") reports does not change.
 - #cmd("fseek()"), #cmd("fsetpos()") and #cmd("rewind()") discard the
-  character.
+  character, except on a stream opened with a #cmd("+") mode (a defect, libc370
+  issue 474).
 
 === Related
 

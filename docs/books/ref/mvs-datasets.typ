@@ -151,7 +151,9 @@ reads. The DD name and the JFCB are reached through the TIOT entry.
 
 === Returns
 The DSAB, or #cmd("NULL") when there is none. #cmd("NULL") is also returned
-when a block on the chain does not carry the identifier #cmd("DSAB").
+when a block on the chain does not carry the identifier #cmd("DSAB"). With a
+#cmd("NULL") or blank name, the head of the chain is returned without that
+check.
 
 === Notes
 - #var("tcbptr") is used only to find the first DSAB: #cmd("next_dsab()")
@@ -267,9 +269,10 @@ The return code of LOCATE: 0 when the data set was found.
 === Notes
 - The name is passed to LOCATE as given. Pass it in upper case, fully
   qualified and without quotes.
-- The list functions of this chapter use #cmd("__locate()") for a data set
-  that the catalog shows on the volume #cmd("******"), the system residence
-  volume, to find its real volume.
+- #cmd("__listds()") uses #cmd("__locate()") for a data set that the
+  catalog shows on the volume #cmd("******"), the system residence volume,
+  to find its real volume. #cmd("__listal()") uses it when the volume
+  serial in the JFCB is blank and #cmd("__LISTAL_OPT_DSCB") is given.
 
 === Example
 ```
@@ -617,8 +620,11 @@ The list, or #cmd("NULL") for an empty result or a failure
   #cmd("__locate()").
 - #cmd("alloc_trks") counts the extents in the format-1 DSCB only. A data
   set with more than three extents on the volume shows fewer tracks than it
-  has. A device with a number of tracks per cylinder that the function does
-  not know is shown as #cmd("\"3390\"").
+  has. The device name is guessed from the number of tracks per cylinder:
+  19 gives #cmd("\"3380\""), 15 #cmd("\"3390\""), 30 #cmd("\"3350\""), which
+  is also shown when the device cannot be read, and a number the function
+  does not know gives #cmd("\"3390\""). A 3330 is therefore shown as
+  #cmd("\"3380\"").
 - #cmd("secondary") is 16 bits wide. A larger secondary quantity is cut.
 - The DSCB of every data set is read, so a level with many data sets costs
   one OBTAIN for each.
@@ -1255,7 +1261,9 @@ data set of the same format.
 ] <mvs-datasets-rfile-tab>
 
 === Returns
-#cmd("ropen()"): 0 when the data set is open, 1 otherwise.
+#cmd("ropen()"): 0 when the data set is open. When dynamic allocation
+fails, the return code of SVC 99, with its reason code in #cmd("errno")\;
+1 when the data set could not be opened for another reason.
 #cmd("rread()"): 0 when a record was read, 1 at the end of the data or on
 an error. #cmd("rwrite()"): 0 when the record was written, 1 otherwise.
 #cmd("rclose()"): 0, or -1 when the last block could not be written or the
@@ -1271,7 +1279,7 @@ DD could not be freed\; the handle is freed in either case.
   [#cmd("EIO")], [#cmd("rwrite()"), #cmd("rclose()"): an I/O error\; or
     #cmd("rclose()") could not free the DD.],
   [other], [#cmd("ropen()"): the reason the data set could not be
-    allocated or opened.],
+    allocated (the SVC 99 reason code) or opened.],
 )
 
 === Notes

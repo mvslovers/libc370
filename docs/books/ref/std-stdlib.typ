@@ -77,8 +77,11 @@ allocated to #cmd("ENVIRON"). Without either, the list starts empty.
 Each record of the data set that contains an equal sign sets one variable:
 
 - The part before the first #cmd("=") is the name, the rest the value.
-  Blanks at the start and end of the name, at the start of the value and at
-  the end of the record are removed.
+  Blanks at the start of the value and at the end of the record are
+  removed. A blank before the #cmd("=") stays part of the name, so
+  #cmd("NAME = value") sets a variable #cmd("NAME ")\; a name given twice
+  that way is stored twice, and #cmd("getenv()") returns the first, older
+  value (a defect, libc370 issue 475). Write #cmd("NAME=value").
 - A record that begins with #cmd("*") or #cmd("#") is a comment.
 - If the last eight characters of a record longer than eight characters are
   all digits, they are taken for a sequence number and removed. A variable
@@ -788,10 +791,15 @@ int unsetenv(const char *name);
 === Description
 
 #cmd("setenv()") sets the environment variable #var("name") to
-#var("value"). Blanks at the start and end of #var("name") and at the start
-of #var("value") are removed. If a variable of that name exists already, it
-is replaced when #var("rewrite") is not 0 and left alone otherwise. The
-name and value are copied.
+#var("value"). Blanks at the start of #var("value") are removed. If a
+variable of that name exists already, it is replaced when #var("rewrite")
+is not 0 and left alone otherwise\; the search for it ignores case when no
+name matches exactly. The name and value are copied.
+
+Blanks around #var("name") are left out only when its length is checked:
+the variable is looked up and stored under the name as given. So
+#cmd("\"NAME \"") does not find #cmd("NAME") and is added beside it, a
+defect (libc370 issue 475).
 
 #cmd("putenv()") takes a string of the form #cmd("name=value") and calls
 #cmd("setenv(name, value, 1)"). A string without #cmd("=") sets the variable
@@ -803,13 +811,15 @@ to an empty value.
 
 #cmd("setenv()") and #cmd("putenv()") return 0 if the variable was set or
 left alone as requested, and 1 if #var("name") is empty, #var("value") is
-#cmd("NULL"), or the storage could not be obtained. #cmd("unsetenv()")
+#cmd("NULL"), or the storage for the variable could not be obtained. They
+return -1 when the program has no C environment, and -1 with
+#cmd("errno") #cmd("ENOMEM") when the table of variables cannot grow. #cmd("unsetenv()")
 always returns 0.
 
 === Notes
 
-- *Different from POSIX:* #cmd("setenv()") and #cmd("putenv()") return 1,
-  not -1, on failure, and set no #cmd("errno").
+- *Different from POSIX:* #cmd("setenv()") and #cmd("putenv()") mostly
+  return 1, not -1, on failure, and then set no #cmd("errno").
 - #cmd("setenv()") looks for an existing variable first with the exact name
   and then regardless of case. #cmd("setenv(\"Path\", ...)") with
   #var("rewrite") therefore replaces a variable #cmd("PATH"), and the

@@ -59,7 +59,7 @@ None of these functions needs APF authorization, and none of them changes
 the state or the key of the caller: SVC 99 is issued in the state the
 program runs in, and MVS applies its own rules to the request. The library
 writes no message to the operator for a failed request\; the outcome is
-the return code.
+the return code. (A shortage of storage is the exception: see below.)
 
 === Restrictions on MVS 3.8j
 
@@ -73,10 +73,10 @@ the return code.
   operator to mount it (message IEF238D), and the task waits for the
   reply. #cmd("__dsalc()") prevents this unless asked for it\; see
   @mvs-dynalloc-dsalc.
-- Storage for text units comes from #cmd("calloc()"). On MVS a shortage of
-  storage ends the program with an abend (S80A) in #cmd("malloc()") rather
-  than returning #cmd("NULL"), so the "storage ran out" returns described
-  below are seldom seen.
+- Storage for text units comes from #cmd("calloc()"). When storage runs
+  out, #cmd("malloc()") returns #cmd("NULL") with #cmd("errno")
+  #cmd("ENOMEM") and writes #cmd("Out of memory") to the operator, and the
+  function returns as described below for that case.
 
 === Request Block and Text Unit
 
@@ -166,7 +166,8 @@ converted to uppercase. A keyword that is not in the table is ignored.
       name. Without it MVS generates a name, which is returned in
       #var("ddname").],
     [#cmd("DSN=")#var("dsn"), #cmd("DSNAME=")#var("dsn")], [The data set
-      name, optionally with a member: #cmd("DSN=A.B(MEM)").],
+      name. A member cannot be given: #cmd("DSN=A.B(MEM)") reaches the
+      allocation as #cmd("A.B=MEM"), a defect (libc370 issue 408).],
     [#cmd("DISP=")#var("status"), #cmd("DISP=(")#var("status")#cmd(",")#var("normal")#cmd(",")#var("abnormal")#cmd(")")],
       [#var("status") is #cmd("NEW"), #cmd("OLD"), #cmd("MOD") or
       #cmd("SHR"). #var("normal") and #var("abnormal") are #cmd("KEEP"),
@@ -287,8 +288,9 @@ int __dynal(size_t ddn_len, char *ddn, size_t dsn_len, char *dsn);
 
 === Description
 #cmd("__dynal()") allocates the existing data set #var("dsn") with
-#cmd("DISP=SHR") and #cmd("FREE=CLOSE"), so that the DD is removed when the
-data set is closed. #var("dsn") is #var("dsn_len") characters long, 1 to
+#cmd("DISP=SHR"). The DD stays allocated after the data set is closed:
+#cmd("FREE=CLOSE") is meant, but the request does not pass it (a defect,
+libc370 issue 408). Free the DD when it is no longer needed. #var("dsn") is #var("dsn_len") characters long, 1 to
 44, and need not be terminated by a null character.
 
 #var("ddn") names the DD, #var("ddn_len") characters, 1 to 8. If the name
@@ -640,7 +642,10 @@ list, build an #cmd("RB99") that points to the list, and call
 is out of range, or when storage ran out\; nothing is added then, except
 that #cmd("__txdsn()") may leave the #cmd("DALMEMBR") unit of a member
 name in the list. A routine whose argument is unused fails only for lack
-of storage.
+of storage. Two exceptions: #cmd("__txkeyl(NULL)") and
+#cmd("__txbufo(NULL)") build a value of 0 and return 0, and
+#cmd("__txblk()") and #cmd("__txdir()") accept a negative value, since
+they test only that the length is not 0.
 
 === Notes
 - The routines check the form of the value, not whether MVS will accept

@@ -42,9 +42,12 @@ The last 1.x release is 1.0.8. Its tag #cmd("v1.0.8") and the branch
 - Installed by hand: #cmd("git checkout v1.0.8") and #cmd("make install").
 
 #cmd("make install") installs into the sysroot of the first cc370 on the
-#cmd("PATH") and _replaces_ the headers there. To keep both, install the
-toolchain twice under two prefixes, each with its own libc370, and build each
-project with the #cmd("PATH") it needs. mbt refuses a sysroot older than the
+#cmd("PATH"). The #cmd("make install") of 1.0.8 copies its headers over the
+ones there and deletes nothing, so over a 2.x sysroot it leaves a mix of
+both. To keep both, install the toolchain twice under two prefixes, each
+with its own libc370, and build each project with the #cmd("PATH") it
+needs. libc370 1.0.8 installs #cmd("crt0.o"), which cc370 1.4 no longer
+names, so its prefix probably needs an older cc370 as well (not tried). mbt refuses a sysroot older than the
 #cmd("[toolchain]") pin of a project, so a wrong one is noticed.
 
 == What Changed in 2.0 <pg-migrate-changes>
@@ -56,7 +59,7 @@ project with the #cmd("PATH") it needs. mbt refuses a sysroot older than the
   #cmd("<sys/socket.h>"), #cmd("<netinet/in.h>"), #cmd("<arpa/inet.h>"),
   #cmd("<strings.h>"), #cmd("<unistd.h>") and others. Headers that mixed
   purposes were _split_\; internal ones left the sysroot.
-- *Names:* 880 of the 5481 public names of 1.x are gone from the public
+- *Names:* 877 of the 5481 public names of 1.x are gone from the public
   headers, nearly all of them declared and never built, or internal. The
   few a program can have used have a replacement (@pg-migrate-removed).
 - *Cryptography* -- SHA-256, Blowfish and base64 -- moved to the separate
@@ -292,7 +295,7 @@ What later 2.x releases ask of a program or a build:
       itself adds #cmd("-lcc370rt").],
     [2.2.0], [#cmd("setbuf()") returns #cmd("void").], [Stop using its
       return value.],
-    [after 2.2.0], [#cmd("PDPMAIN"), #cmd("PDP370"), #cmd("PDP380"),
+    [2.3.0], [#cmd("PDPMAIN"), #cmd("PDP370"), #cmd("PDP380"),
       #cmd("PDP390") and #cmd("PDPORIG") are no longer shipped.],
       [Compile again with cc370 the C source of any assembler that copies
       #cmd("PDPMAIN"). Remove the old members from the sysroot's

@@ -82,8 +82,11 @@ in the _libc370 Library Reference_, Chapter 29, “Program Management and
 Storage”.
 
 #idx("S047 abend")
-A program that calls one of these functions without being authorized ends
-with abend S047. To run authorized:
+A program that calls one of these functions without being authorized
+normally ends with abend S047. Two differ: #cmd("cmtt_new()") returns
+#cmd("NULL") instead, and #cmd("__xmpost()") does not change the state or
+the key itself, so its caller must already run in supervisor state with
+key 0. To run authorized:
 
 + Link the program with authorization code 1. With the cc370 driver, pass
   #cmd("-Wl,--ac,1")\; with ld370, #cmd("--ac 1")\; in an mbt project, set
@@ -319,8 +322,10 @@ with a DD statement #cmd("LOADLIB") for the library.
 relative-record clusters through a handle, a #cmd("VSFILE"). There is no
 stream interface to VSAM: #cmd("fopen()") does not open a cluster.
 
-#note[The VSAM functions are built into the library but are not covered by
-its test suites. Try your program against a copy of your own cluster before
+#note[The library's tests cover reading an entry-sequenced cluster
+(#cmd("vsopen()"), #cmd("vsread()"), #cmd("vseof()"), #cmd("vserror()"),
+#cmd("vsclear()")) on MVS. Writing, updating and the other cluster types
+are not tested. Try your program against a copy of your own cluster before
 you let it change data that matters.]
 
 The cluster is named by a DD statement. A typical task is to read one
@@ -541,8 +546,9 @@ and the step needs DD statements for both (@pg-services-jes2-jcl).
 Points to watch:
 
 - *Filters.* A job name or job identifier pattern for #cmd("jesjob()") may
-  have at most 11 characters. A longer one is not cut but overwrites
-  storage, so check the length of a pattern that comes from outside the
+  have at most 11 characters. A longer one is cut to 12, but its
+  terminating null character is stored one byte past the end of the
+  field, so check the length of a pattern that comes from outside the
   program.
 - *A job that disappears.* #cmd("jesjob()") returns #cmd("NULL") when no job
   matches, and also when it fails. A job whose output was purged right after

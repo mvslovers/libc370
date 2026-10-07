@@ -35,7 +35,8 @@ are in @std-float. The consequences for a program are these:
   infinity instead.
 - *#cmd("HUGE_VAL") is a finite number*: 9.999999999999999999999E72, which is
   less than #cmd("DBL_MAX"). #cmd("acos()"), #cmd("asin()") and #cmd("log()")
-  return it on a domain error, and #cmd("strtod()") on overflow.
+  return it on a domain error (#cmd("asin()") of a value below -1 returns
+  #cmd("-HUGE_VAL")), and #cmd("strtod()") on overflow.
 #idx("HUGE_VAL")#idx("S0CC")#idx("S0CF")
 
 == Error Reporting <std-math-errors>
@@ -100,7 +101,9 @@ double asin(double x);
 
 #cmd("acos()") returns a value in the range 0 to #sym.pi radians,
 #cmd("asin()") a value in the range -#sym.pi/2 to +#sym.pi/2. If #var("x") is
-outside the range -1 to +1, both return #cmd("HUGE_VAL").
+outside the range -1 to +1, #cmd("acos()") returns #cmd("HUGE_VAL"), and
+#cmd("asin()") returns #cmd("HUGE_VAL") above +1 and #cmd("-HUGE_VAL")
+below -1.
 
 === Errors
 

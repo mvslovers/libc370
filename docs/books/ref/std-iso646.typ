@@ -44,5 +44,5 @@ used in #cmd("#if") directives:
 The characters #cmd("[") #cmd("]") #cmd("{") #cmd("}") #cmd("#"), which the
 header does not cover, have digraphs of their own in the language:
 #cmd("<:") #cmd(":>") #cmd("<%") #cmd("%>") #cmd("%:"). cc370 accepts them
-in its default mode, #cmd("-std=gnu99"), and in every C99 mode, but not
-with #cmd("-std=c89").
+in its default mode, #cmd("-std=gnu89"), and in every other mode except
+#cmd("-std=c89").

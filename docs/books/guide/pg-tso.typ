@@ -70,8 +70,10 @@ The start-up records what it found in the run-time anchors (see
 #deflist(width: 1.6in,
   [#cmd("PPAFLAG_TSOFG")], [in #cmd("ppaflag") of the #cmd("CLIBPPA"): the
     program runs in a TSO session at a terminal.],
-  [#cmd("PPAFLAG_TSOBG")], [in #cmd("ppaflag"): the program runs under TSO
-    in a batch job.],
+  [#cmd("PPAFLAG_TSOBG")], [in #cmd("ppaflag"): the program runs under TSO,
+    at a terminal or in a batch job (the TSO environment has a PSCB). In a
+    batch job it is set without #cmd("PPAFLAG_TSOFG"), at a terminal with
+    it, so test #cmd("PPAFLAG_TSOFG") first.],
   [#cmd("ppacppl")], [in the #cmd("CLIBPPA"): the address of the CPPL when
     the program was started as a command, otherwise #cmd("NULL").],
   [#cmd("GRTFLAG1_TSO")], [in #cmd("grtflag1") of the #cmd("CLIBGRT"): the
@@ -176,8 +178,11 @@ newline.
 
 The terminal stream is allocated with #cmd("RECFM=V") and
 #cmd("LRECL=4000"). The environment variables #cmd("TERMINAL_RECFM"),
-#cmd("TERMINAL_LRECL") and #cmd("TERMINAL_BLKSIZE") change that (see
-@pg-io).
+#cmd("TERMINAL_LRECL") and #cmd("TERMINAL_BLKSIZE") change that for a
+terminal stream the program opens itself. The standard streams are opened
+before the #cmd("SYSENV") DD is read, so a value from there does not reach
+them\; one set with #cmd("setenv()") in #cmd("__premain()") does
+(@pg-startup-premain).
 
 #note[When a program abends, records that are still in the buffers of its
 streams are lost. Under TSO a line has normally reached the terminal once it

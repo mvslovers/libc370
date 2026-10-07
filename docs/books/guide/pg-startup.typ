@@ -88,8 +88,8 @@ Two things can stop a program before #cmd("main()"):
   ```
   and ends the program with return code 12 without calling #cmd("main()").
   A missing DD is not a reason: a missing #cmd("SYSPRINT") or
-  #cmd("SYSTERM") is replaced by a SYSOUT data set, a missing #cmd("SYSIN")
-  by an empty input.
+  #cmd("SYSTERM") is replaced by a SYSOUT data set, or by the terminal in a
+  TSO session, a missing #cmd("SYSIN") by an empty input.
 
 == The Start-Up Routines <pg-startup-variants>
 
@@ -330,7 +330,9 @@ is divided into arguments by these rules:
 - Nothing else is interpreted: there is no escape character, and lowercase
   letters are not changed.
 - At most 49 arguments are taken; the rest of the parameter is ignored. A
-  parameter longer than 307 characters is cut to 307.
+  parameter longer than 307 characters is cut to 307. For a TSO command
+  the 307 include the four-byte prefix of the command buffer, so at most
+  303 characters of command text remain.
 
 Without a parameter, #cmd("argc") is 1. #cmd("argv[argc]") is always a
 null pointer. The strings are in storage of the start-up that lasts until
@@ -446,7 +448,7 @@ source.
 ] <pg-startup-frame-fig>
 
 #cmd("fill") needs 32,856 bytes for each call and calls itself ten times,
-so eleven frames, about 360 KB, are on the stack at the deepest point --
+so eleven frames, about 353 KB, are on the stack at the deepest point --
 more than the default 256 KB.
 
 To give a program a larger stack:

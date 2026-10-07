@@ -62,7 +62,10 @@ is no test of these functions in the library's test suites.
       #cmd("osdread()") and #cmd("osdwrite()") when they are given a length.],
     [#cmd("dcblrecl")], [X'52'], [The logical record length.],
     [#cmd("dcbuser")], [X'60'], [A word for the program. It follows the
-      DCB proper and the library never uses it.],
+      DCB proper and the library never uses it -- except on a DCB from
+      #cmd("osddcb()"), whose BDAM DCB is X'68' bytes long and includes
+      #cmd("dcbuser") and #cmd("dcbpriv"): do not store into
+      #cmd("dcbuser") there.],
     [#cmd("dcbpriv")], [X'64'], [Private to the library (the exit list). Do
       not change it.],
   )

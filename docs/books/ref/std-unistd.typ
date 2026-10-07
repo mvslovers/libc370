@@ -58,8 +58,10 @@ Both functions always return 0.
   system is short of storage, #cmd("sleep()") returns at once without
   waiting, still with 0. The library writes one console message per task
   the first time this happens.
-- The #cmd("usleep()") interval is truncated, not rounded, to whole timer
-  units, so the wait can be up to 26 microseconds shorter than requested.
+- The #cmd("usleep()") interval is converted to timer units of 26.04
+  microseconds by dividing by 26, truncated. A short wait can therefore be
+  up to 26 microseconds shorter than requested, and a long one comes out
+  longer: #cmd("usleep(1000000)") waits about 1.0016 seconds.
   The actual end of the wait also depends on the dispatching of the task.
 - A value of #var("seconds") greater than 42,949,672 (about 497 days)
   overflows the interval in hundredths of a second.

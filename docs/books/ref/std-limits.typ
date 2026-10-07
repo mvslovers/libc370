@@ -49,7 +49,8 @@ and #cmd("long") are both 32 bits, and #cmd("long long") is 64 bits.
 A suffix in parentheses shows the type of the constant: #cmd("U") is
 #cmd("unsigned int"), #cmd("L") is #cmd("long"), and so on. The minimum
 values are written as expressions, for example #cmd("(-INT_MAX-1)"), so that
-they have the type of the limit they describe.
+they have the type of the limit they describe\; #cmd("SCHAR_MIN") is the
+literal #cmd("-128").
 
 #note[#cmd("<limits.h>") also defines #cmd("UINT16_MAX") and
 #cmd("INT32_MAX"), which belong to #cmd("<stdint.h>"). Their values are the

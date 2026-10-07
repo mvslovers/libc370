@@ -221,7 +221,8 @@ storage.
 
 === Notes
 
-Require supervisor state and key 0. The first SSCT of the chain cannot be
+Require supervisor state\; the functions switch to key 0 themselves. The
+first SSCT of the chain cannot be
 removed: the search looks for the SSCT that points to #var("ssct"), and
 the first one has none. #cmd("ssct_remove_by_name(NULL)") therefore always
 returns 4.
@@ -917,8 +918,9 @@ After the open, the handle holds the checkpoint control table of JES2
 #cmd("<ibm/jes2/jot.h>"). #cmd("pddb1") is the offset of the first
 peripheral data definition block in an input/output table of the spool.
 
-#cmd("__cpclos()") closes the data set, frees a dynamic allocation, and
-frees the handle. #cmd("NULL") is ignored.
+#cmd("__cpclos()") closes the data set, unallocates its DD, however it was
+allocated -- whether MVS refuses that for a DD from the JCL has not been
+measured -- and frees the handle. #cmd("NULL") is ignored.
 
 === Returns
 
@@ -1008,8 +1010,8 @@ allocated dynamically with #cmd("DISP=SHR"). The handle records the number
 of tracks per cylinder of the spool device in #cmd("trkcyl"), which
 #cmd("__jsrd4()") needs to convert a spool address.
 
-#cmd("__jsclos()") closes the data set, frees a dynamic allocation and frees
-the handle. #cmd("NULL") is ignored.
+#cmd("__jsclos()") closes the data set, unallocates its DD as
+#cmd("__cpclos()") does, and frees the handle. #cmd("NULL") is ignored.
 
 === Returns
 

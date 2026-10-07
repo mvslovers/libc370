@@ -50,7 +50,7 @@ A program defines the record as a structure that begins with an
     [#cmd("sysiflags")], [X'04'], [System indicator flags.],
     [#cmd("rectype")], [X'05'], [The record type, 128 to 255 for a user
       record.],
-    [#cmd("time()")], [X'06'], [The time of day in hundredths of a second
+    [#cmd("time")], [X'06'], [The time of day in hundredths of a second
       since midnight, a 4-byte binary number.],
     [#cmd("dtepref")], [X'0A'], [The century: 0 for the years 1900 to 1999, 1 for
       2000 to 2099.],
@@ -76,7 +76,7 @@ void smf_init(void *record, unsigned short reclen, unsigned char rectype);
 
 - #cmd("reclen") is set to #var("reclen"), #cmd("segdesc") to 0,
   #cmd("rectype") to #var("rectype"), and #cmd("sysiflags") to X'02'.
-- #cmd("time()"), #cmd("dtepref") and #cmd("date") are set to the current
+- #cmd("time"), #cmd("dtepref") and #cmd("date") are set to the current
   local time and date.
 - #cmd("sysid") is set to the SMF system identifier, when SMF is present.
 
@@ -144,8 +144,9 @@ value is the return code of SVC 83.
 === Notes
 - The program must be APF-authorized, unless it runs in supervisor state
   already. An unauthorized program abends in MODESET.
-- The task runs in supervisor state and key 0 for the duration of SVC 83
-  only.
+- A program in problem state is switched to supervisor state and key 0
+  for the duration of SVC 83 only\; one in supervisor state already is
+  left as it is.
 
 === Example
 #fig(caption: [Writing a user SMF record])[

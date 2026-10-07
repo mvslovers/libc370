@@ -107,7 +107,8 @@ storage from #cmd("calloc()"), and adds that.
 
 #deflist(width: 1.35in,
   [#cmd("EINVAL")], [#var("varray") is NULL, or its pointer does not
-    point to an array made by these functions.],
+    point to an array made by these functions. #cmd("arrayaddf()") with a
+    NULL #var("varray") returns -1 without setting #cmd("errno").],
   [#cmd("ENOMEM")], [there is no storage for the array.],
 )
 
@@ -820,7 +821,9 @@ task's storage.
 
 === Returns
 
-A pointer to the #cmd("struct tm").
+A pointer to the #cmd("struct tm"). #cmd("gmtime64_r()") returns #cmd("NULL")
+with #cmd("errno") #cmd("EOVERFLOW") when the year does not fit an
+#cmd("int").
 
 === Notes
 

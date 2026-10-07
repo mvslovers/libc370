@@ -110,8 +110,9 @@ library:
 #idx("TSO", "detecting")
 A program may also read the environment flags: #cmd("GRTFLAG1_TSO") in
 #cmd("grtflag1") is set when the program was started as a TSO command
-processor, and #cmd("PPAFLAG_TSOFG") and #cmd("PPAFLAG_TSOBG") in
-#cmd("ppaflag") tell a TSO foreground session from a TSO background job.
+processor. In #cmd("ppaflag"), #cmd("PPAFLAG_TSOBG") is set whenever the
+program runs under TSO, and #cmd("PPAFLAG_TSOFG") in addition at a terminal:
+a TSO background job has #cmd("PPAFLAG_TSOBG") alone.
 
 == \_\_ppaget <mvs-program-__ppaget>
 #idx("__ppaget")
@@ -133,7 +134,8 @@ The search looks first at the save area chained to the first save area of
 the current TCB, then at the same place in each owning task up to the job
 step task, and finally runs the save area chain of the caller backwards. A
 candidate is accepted only when it lies below 16 MB and carries the
-eyecatcher #cmd("@PPA").
+eyecatcher #cmd("@PPA")\; in the last step only the eyecatcher is
+checked.
 
 === Returns
 The address of the #cmd("CLIBPPA"), or #cmd("NULL") when no C program is
@@ -362,7 +364,11 @@ read, from the DD #cmd("ENVIRON"), with #cmd("loadenv()"), which reads
 environment starts empty. #cmd("setenv()"), #cmd("putenv()") and further
 calls of #cmd("loadenv()") change it. The
 variables belong to the process anchor, so all threads of a program see the
-same set. Names are compared with case, except by #cmd("getenvi()").
+same set. Names are compared with case by #cmd("getenv()") and
+#cmd("unsetenv()"). #cmd("getenvi()") ignores case, and so does
+#cmd("setenv()") -- and with it #cmd("putenv()") and #cmd("loadenv()") --
+when no name matches exactly: it then replaces, or with #var("rewrite") 0
+keeps, a variable whose name differs only in case (libc370 issue 475).
 
 #cmd("<mvs/env.h>") also declares #cmd("getenv()"), which is described with
 #cmd("setenv()"), #cmd("putenv()") and #cmd("unsetenv()") in @std-stdlib.
@@ -620,7 +626,8 @@ is stored in #var("prc") when that is not #cmd("NULL").
 === Returns
 0 when the program returned, the abend code in the form #cmd("X'00sssuuu'")
 when it ended abnormally (see @mvs-program-try), or a negative value when
-the ESTAE could not be created. No dump is taken.
+the ESTAE could not be created -- or +1, as for #cmd("try()"), when the
+library could not set it up (libc370 issue 476). No dump is taken.
 
 === Notes
 When a called C program ends abnormally, its own termination code does not
@@ -1057,7 +1064,10 @@ The code is also kept for #cmd("tryrc()").
 === Returns
 0 when #var("func") returned normally\; the abend code when it ended
 abnormally\; a negative value, the ESTAE return code negated, when the
-recovery routine could not be established.
+ESTAE macro failed. When the library could not even begin to set up the
+recovery routine -- no task anchor, or ten routines established already --
+the value is +1, which cannot be told from a user abend U0001 (a defect,
+libc370 issue 476).
 
 === Notes
 The return value of #var("func") is lost. A function called with
@@ -1095,7 +1105,7 @@ that follow it under a recovery routine, in the same way.
 === Returns
 0 when #var("func") returned normally, the abend code when it ended
 abnormally, and a negative value when the recovery routine could not be
-established.
+established -- or +1, as for #cmd("try()") (libc370 issue 476).
 
 === Notes
 The comment in the header says that #cmd("__try()") returns 0 unless the

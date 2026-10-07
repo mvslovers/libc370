@@ -28,16 +28,20 @@ is no handle yet. #cmd("__vsmdfy()") and #cmd("__vsshwc()") exist only in the
 #cmd("__") form.
 
 *Errors.* VSAM reports a failed request through the exit routines that
-#cmd("__vsopen()") installs (LERAD, SYNAD and EODAD). The exits record the
-return, component and reason codes of the RPL feedback word in the handle, set
-the error or end-of-file flag, and make the request return 8 (logical error),
-12 (physical error) or 4 (end of data). *The flags stay set* until
+#cmd("__vsopen()") installs (LERAD, SYNAD and EODAD). LERAD and SYNAD
+record the return, component and reason codes of the RPL feedback word in
+the handle and set the error flag\; EODAD only sets the end-of-file flag.
+The request returns 8 (logical error), 12 (physical error) or 4 (end of
+data). *The flags stay set* until
 #cmd("vsclear()") resets them, as the end-of-file and error indicators of a
 stream do, and #cmd("vseof()") and #cmd("vserror()") test them. The value
 #cmd("vsread()") returns reflects only its own GET. The #cmd("errno") values of
 @mvs-vsam-errno are set by #cmd("vsopen()") and #cmd("vsread()").
 
-There is no test of these functions in the library's test suites.
+The library's tests cover #cmd("vsopen()"), #cmd("vsread()"),
+#cmd("vseof()"), #cmd("vserror()") and #cmd("vsclear()") on an
+entry-sequenced cluster on MVS. The other functions and cluster types are
+not tested.
 
 #tab(caption: [VSAM errno values])[
   #table(columns: (1.1in, 0.6in, 1fr),
@@ -67,7 +71,8 @@ error, and changes none of them.
     [#cmd("zero")], [X'10'], [Zero, so that #cmd("ddname") can be printed
       as a string when it is eight characters long.],
     [#cmd("flags")], [X'11'], [#cmd("VSFILE_FLAG_OPEN") (X'80') open;
-      #cmd("VSFILE_FLAG_WRITE") (X'20') the last request was a write;
+      #cmd("VSFILE_FLAG_WRITE") (X'20') a #cmd("vswrite()") since the
+      last #cmd("vsread()");
       #cmd("VSFILE_FLAG_ERROR") (X'02') an error occurred;
       #cmd("VSFILE_FLAG_EOF") (X'01') end of data was reached.
       #cmd("VSFILE_FLAG_STARTGE") (X'40') is defined and never set.],

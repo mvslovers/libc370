@@ -46,8 +46,9 @@ void wto(char *buf);
 #cmd("wto()") writes the string #var("buf") to the operator with one or
 more WTO macro calls (SVC 35). A string of up to 124 characters is written
 as one message. A longer string is split: each message ends after the last
-blank at or before column 124, and a run of 124 characters that holds no
-blank is cut at column 124. The next message continues with the rest.
+blank at or before column 125 -- so a message can be 125 characters long
+when the blank is in column 125 -- and a run of 124 characters that holds
+no blank is cut at column 124. The next message continues with the rest.
 
 A newline in #var("buf") is not interpreted\; use #cmd("wtof()") to write
 several lines.
@@ -192,7 +193,8 @@ follow it, as #cmd("printf()") does.
 === Notes
 - #var("chunk") must be between 1 and 35. The hexadecimal and the character
   part of a message are built in 80-byte buffers on the stack, and a larger
-  value overruns them.
+  value overruns them. Use a multiple of 4: with any other value the last
+  hexadecimal digit of each line is cut off (a defect, libc370 issue 404).
 - The title formatted by #cmd("wtodumpf()") must not be longer than 79
   characters. It is formatted with #cmd("vsprintf()") into an 80-byte
   buffer, and a longer title overruns it.
@@ -232,7 +234,8 @@ name, entry point and offset of the calling function:
 ```
 
 The trace starts at the save area #var("sa"). When #var("sa") is
-#cmd("NULL"), it starts at the function that called #cmd("wto_traceback()").
+#cmd("NULL"), it starts at #cmd("wto_traceback()") itself: its first line
+names the function that called it (#cmd("returns to=")).
 It ends at the first save area of the program, or after 256 save areas.
 
 The #cmd("SAVEAREA") type is declared in #cmd("<s370/savearea.h>"), which
@@ -417,8 +420,10 @@ handle to it. The master trace table is the wrap-around table in which MVS
 records the messages and commands that pass through the consoles\; it is
 found through the CVT and the master scheduler resident data area.
 
-The copy is taken in one step, in supervisor state and key 0, so that it is
-consistent. It is made in the program's own storage, in key 8, and the
+The copy is taken in key 0, without serialization: the size is read before
+the copy, and the pointers of the copy are adjusted from the live table
+afterwards, so a table that MVS changes meanwhile can give an inconsistent
+copy (a defect, libc370 issue 476). It is made in the program's own storage, in key 8, and the
 pointers in its header are adjusted to point into the copy. The table on
 the system is not changed.
 

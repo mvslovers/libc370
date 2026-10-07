@@ -78,7 +78,7 @@ program closes its sockets, every socket program includes
 
 The program must run in the C run-time environment that the start-up module
 builds (see @pg-startup): the library keeps its table of the program's
-sockets there, one for each address space. The usual start-up,
+sockets there, one for each C program. The usual start-up,
 #cmd("@@CRT0"), builds it.
 
 == Text on the Line: EBCDIC and ASCII <pg-sockets-text>
@@ -159,8 +159,8 @@ The steps, with what is particular to MVS:
   is neither read nor changed.
 + *Convert the peer address* with #cmd("inet_ntop()") into a buffer of the
   program's own (line 65). #cmd("inet_ntoa()") would do as well in this
-  program, but its result is one buffer for the whole address space,
-  overwritten by the next call from any task.
+  program, but its result is one buffer for the whole C program,
+  overwritten by the next call from any of its tasks.
 + *Format, translate and send* (lines 68--73). #cmd("send()") may send
   fewer bytes than asked when the buffer on the workstation is nearly
   full\; #cmd("send_all()") sends the rest. A blocking #cmd("send()") gives
@@ -187,8 +187,8 @@ to #cmd("selectex()") together with the listening socket. When
 the ECB: a posted ECB and a timeout both return 0.
 
 To serve several clients at the same time, give each connection to a
-thread of its own (@pg-tasks). The socket table belongs to the address
-space, so a thread can use a socket that another thread accepted.
+thread of its own (@pg-tasks). The socket table belongs to the C program,
+so a thread can use a socket that another thread accepted.
 
 == Writing a Client <pg-sockets-client>
 
@@ -201,7 +201,7 @@ port as an optional second one.
   #code(read("../ex/pg-sockets/timecli.c"), numbers: true)
 ] <pg-sockets-cli-fig>
 
-+ *Find the address* (lines 24--34). #cmd("inet_aton()") converts an
++ *Find the address* (lines 25--35). #cmd("inet_aton()") converts an
   address written as text and returns 1 for success and 0 for failure, as
   on BSD systems. When the argument is not an address, the program asks the
   resolver of the workstation with #cmd("getaddrbyname()"), which returns
@@ -299,7 +299,7 @@ Library Reference give the complete list.
       non-blocking, even one that points at 0\; pass #cmd("NULL") to make it
       blocking again. A socket returned by #cmd("accept()") is always
       blocking.],
-    [#cmd("inet_ntoa()")], [One buffer for the address space, shared by all
+    [#cmd("inet_ntoa()")], [One buffer for the C program, shared by all its
       tasks\; NULL without a C run-time environment. Use #cmd("inet_ntop()")
       with a buffer of your own.],
     [#cmd("inet_aton()"), #cmd("in_addr_t")], [Return 1 and 0, and
