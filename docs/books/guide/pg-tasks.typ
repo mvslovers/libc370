@@ -49,12 +49,13 @@ program as a whole and what each task has for itself.
 ] <pg-tasks-share-tab>
 
 Each stream carries a lock, held for the length of every call that reads or
-writes it once the program has created its first thread, so a line written
-by one #cmd("printf()") is never split by another task's output. Before the
-first #cmd("cthread_create()") the lock is not taken, because no other task
-can reach the stream: a subtask that the program attaches itself, without
-#cmd("cthread_create()"), is not protected, and a stream it shares must be
-serialized by the program. Everything else that two tasks change must be
+writes it, so a line written by one #cmd("printf()") is never split by
+another task's output. The lock is taken whenever another task can reach
+the stream -- the task has a subtask, or a task above it runs C code -- and
+skipped otherwise, so a program costs nothing for it before its first
+thread and after its last. A subtask that the program attaches itself
+takes the lock as well\; this follows from the library source and has not
+been verified on MVS. Everything else that two tasks change must be
 serialized by the program (@pg-tasks-serial).
 
 *Wait for every thread before the program ends.* MVS ends a task that still

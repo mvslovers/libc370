@@ -29,14 +29,17 @@ program sees. How it does so depends on the record format of the data set
 and on whether the stream is a text stream, a binary stream or a record
 stream; see @std-stdio-records.
 
-Each stream carries a lock. Once the program has created a thread with
-#cmd("cthread_create()"), every function that reads or writes a stream
+Each stream carries a lock. Every function that reads or writes a stream
 holds it for the length of the call, so a line written by one
 #cmd("printf()") or #cmd("puts()") is not split by a write from another task
-on the same stream. Before the first thread, no other task can use the
-stream, and the lock is not taken. A program that attaches subtasks of its
-own, without #cmd("cthread_create()"), and shares a stream with them must
-serialize the stream itself.
+on the same stream. The lock is skipped only when no other task can reach
+the stream: when the calling task has no subtask, and no task above it in
+the job step runs C code. A program without threads therefore takes no
+lock, and neither does one whose threads have all ended and been deleted.
+A thread, a subtask that the program attaches itself, and a C module with a
+start-up of its own that is linked to on a thread all take it. (For a
+subtask that the program attaches itself this follows from the library
+source and has not been verified on MVS.)
 
 At normal program end -- return from #cmd("main()"), #cmd("exit()") or
 #cmd("_Exit()") -- every stream that is still open is closed. When the

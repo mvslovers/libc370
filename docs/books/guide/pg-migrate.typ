@@ -315,8 +315,9 @@ What later 2.x releases ask of a program or a build:
       of the record was lost.], [Nothing, unless a program relied on the
       cut: it now receives the bytes after an X'00' as well.],
     [2.5.0], [A stream takes its lock only after the first
-      #cmd("cthread_create()").], [A program that attaches subtasks of its
-      own and shares a stream with them serializes the stream itself.],
+      #cmd("cthread_create()").], [Up to 2.6.0: a program that attaches
+      subtasks of its own and shares a stream with them serializes the
+      stream itself. From 2.6.1 on: nothing.],
     [2.5.0], [#cmd("printf()"), #cmd("fprintf()") and #cmd("vfprintf()")
       return a negative value on an output error, and #cmd("fprintf()")
       writes results of 8192 characters and more in full.], [Test the
@@ -327,5 +328,10 @@ What later 2.x releases ask of a program or a build:
     [2.6.0], [#cmd("fopen(\"*GETLINE\", \"r\")") reads through the TSO
       GETLINE.], [Nothing\; a file name #cmd("*GETLINE") no longer opens a
       DD called #cmd("GETLINE").],
+    [2.6.1], [A stream skips its lock only when the task has no subtask and
+      no task above it runs C code. A C module with a start-up of its own,
+      linked to on a thread, takes the lock again, and so, from the library
+      source and not verified on MVS, does a subtask the program attaches
+      itself.], [Nothing.],
   )
 ] <pg-migrate-since-tab>
