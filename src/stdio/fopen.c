@@ -19,6 +19,7 @@ extern int  __fpold(FILE *fp);
 extern int  __fpnew(FILE *fp);
 
 static int  appmem(FILE *fp);
+static int  is_putline(const char *fn);
 
 FILE *
 fopen(const char *fn, const char *mode)
@@ -60,6 +61,12 @@ fopen(const char *fn, const char *mode)
             }
         }
         goto doopen;
+    }
+
+    if (is_putline(fn)) {
+        /* "*PUTLINE": through the TMP's PUTLINE, no DD (#463) */
+        err = __fpput(fp);
+        goto quit;
     }
 
     if (fn[0]=='*') {
@@ -233,4 +240,18 @@ appmem(FILE *fp)
     fp->flags &= ~(_FILE_FLAG_APPEND | _FILE_FLAG_POSEND | _FILE_FLAG_EXTEND);
     errno = 0;
     return 0;
+}
+
+/* is_putline() - fn is "*PUTLINE", in any case (#463).  The name is
+   reserved: it never opens a DD called PUTLINE. */
+static int
+is_putline(const char *fn)
+{
+    static const char name[] = "*PUTLINE";
+    int     i;
+
+    for (i = 0; name[i]; i++) {
+        if (toupper((unsigned char)fn[i]) != name[i]) return 0;
+    }
+    return fn[i] == '\0';
 }

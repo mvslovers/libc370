@@ -55,7 +55,7 @@ __fgetc(FILE *fp)
     if (fp->upto < fp->endbuf) goto dogetc;
 
 	/* This is new code to support TSO terminals */
-	if (dcb->dcbdevt == DCBDVTRM) {
+	if (!(fp->xflags & _FILE_XFLAG_PUTLINE) && dcb->dcbdevt == DCBDVTRM) {
 		dptr = tso_getline(fp->asmbuf, fp->lrecl-1);
 		
 		read = strlen(dptr);

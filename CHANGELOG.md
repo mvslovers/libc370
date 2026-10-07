@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- **`fopen("*PUTLINE", "w")`: a stream that writes through the TSO TMP's
+  PUTLINE (#463).** In a batch TMP the lines land in SYSTSPRT in order with
+  the TMP's own messages, in the foreground on the terminal. Without a TMP
+  the open fails with `ENODEV`. Set `stdout` to it in `__premain()` to send
+  all of a program's output there. Measured on MVS under a batch TMP: TSO
+  `CALL`, a command and the `__premain()` route each write into SYSTSPRT.
+
 ### Changed
 - **`fgetc()`, `fputc()` and the other stdio calls no longer take the
   stream's ENQ while the program has no threads (#453).** Each call took an
@@ -22,6 +30,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   eight hex digits; a stdio call that takes the lock costs about 30 percent less.
 
 ### Fixed
+- **The terminal mode of the dataset layer finds the TMP's ECT and UPT
+  through the LWA (#463).** It read them from a command processor parameter
+  list at the first save area, which exists only when the program was
+  invoked as a command.
 - **`tmpfile()` can read back what was written to it (#395).** It opened
   the temporary data set `"wb"` instead of `"wb+"`, so a read after
   `rewind()` returned nothing. Measured on MVS: 11 and 20000 bytes read

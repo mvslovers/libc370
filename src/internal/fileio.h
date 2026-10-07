@@ -42,6 +42,10 @@ extern int      __fpfree(FILE *fp);
  * pair is 99% of a fgetc()/fputc() call. */
 extern int      __flock(FILE *fp);
 extern int      __fptmp(FILE *fp);
+/* __fpput() - open fp as "*PUTLINE": a stream that writes each line through
+ * PUTLINE to the TSO terminal monitor program, ECT and UPT found through
+ * the LWA (#463).  1 with errno ENODEV when there is no TMP. */
+extern int      __fpput(FILE *fp);
 
 /* the formatting engines behind the printf and scanf families: output goes
  * to fq, or to s when fq is NULL; input comes from fp, or from s when fp is NULL */
