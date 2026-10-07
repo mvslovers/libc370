@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.6.0] - 2026-10-07
+
+A minor release: one new interface, `fopen("*GETLINE")`, the reading side
+of `"*PUTLINE"`. The cc370 range is unchanged: `>=1.4.0 <2`.
+
 ### Added
 - **`fopen("*GETLINE", "r")`: a stream that reads through the TSO TMP's
   GETLINE (#467).** The reading side of `"*PUTLINE"`: in a batch TMP each
