@@ -81,9 +81,9 @@ characters, a data set name to 44.
       otherwise the same as #cmd("*").],
     [#cmd("*PUTLINE")], [The output of the TSO terminal monitor program,
       written with PUTLINE: under #cmd("IKJEFT01") in batch into
-      #cmd("SYSTSPRT")\; in a TSO session it is meant for the terminal,
-      but it has been measured only under #cmd("IKJEFT01") in batch. For
-      writing only.
+      #cmd("SYSTSPRT"), in a TSO session to the terminal\; whether TSO/E
+      #cmd("OUTTRAP") traps it there has not been measured. For writing
+      only.
       The name is reserved and never opens a DD called #cmd("PUTLINE").],
   )
 ] <std-stdio-names-tab>

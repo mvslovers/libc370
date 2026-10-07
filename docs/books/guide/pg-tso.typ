@@ -192,9 +192,9 @@ messages and the output of commands to #cmd("SYSTSPRT"), while
 #cmd("stdout") goes to #cmd("SYSPRINT") or to a SYSOUT data set of its own.
 To put a program's output into #cmd("SYSTSPRT"), in order with everything
 else, open the file name #cmd("*PUTLINE") for writing. Each line goes out
-as a PUTLINE into #cmd("SYSTSPRT"). In a TSO session the stream is meant
-for the terminal, but it has been measured only under #cmd("IKJEFT01") in
-batch. A line of more than 252 characters is written as several lines.
+as a PUTLINE: in batch into #cmd("SYSTSPRT"), in a TSO session to the
+terminal, without a DD. Whether TSO/E #cmd("OUTTRAP") traps it at the
+terminal has not been measured. A line of more than 252 characters is written as several lines.
 
 Without the terminal monitor program -- a program run with
 #cmd("EXEC PGM=") -- #cmd("fopen(\"*PUTLINE\", \"w\")") returns
