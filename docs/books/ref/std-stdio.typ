@@ -82,9 +82,14 @@ characters, a data set name to 44.
     [#cmd("*PUTLINE")], [The output of the TSO terminal monitor program,
       written with PUTLINE: under #cmd("IKJEFT01") in batch into
       #cmd("SYSTSPRT"), in a TSO session to the terminal\; whether TSO/E
-      #cmd("OUTTRAP") traps it there has not been measured. For writing
-      only.
-      The name is reserved and never opens a DD called #cmd("PUTLINE").],
+      #cmd("OUTTRAP") traps it there has not been measured. For writing\;
+      #cmd("*GETLINE") reads. The name is reserved and never opens a DD
+      called #cmd("PUTLINE").],
+    [#cmd("*GETLINE")], [The input of the TSO terminal monitor program,
+      read with GETLINE: under #cmd("IKJEFT01") in batch the next line of
+      #cmd("SYSTSIN"), in a TSO session the terminal (not yet measured).
+      For reading only. The name is reserved and never opens a DD called
+      #cmd("GETLINE").],
   )
 ] <std-stdio-names-tab>
 
@@ -830,10 +835,11 @@ opened.
     #cmd("DD *")) that is already open. JES2 allows one open at a time, and
     a second one would end the program with an abend.],
   [#cmd("EINVAL")], [A #cmd("+") mode on a device other than direct access,
-    or #cmd("*PUTLINE") opened for reading: with #cmd("\"r\"") or a
-    #cmd("+") mode.],
-  [#cmd("ENODEV")], [#cmd("*PUTLINE") in a program that does not run under
-    the TSO terminal monitor program.],
+    #cmd("*PUTLINE") opened for reading: with #cmd("\"r\"") or a
+    #cmd("+") mode, or #cmd("*GETLINE") opened for writing: with
+    #cmd("\"w\""), #cmd("\"a\"") or a #cmd("+") mode.],
+  [#cmd("ENODEV")], [#cmd("*PUTLINE") or #cmd("*GETLINE") in a program that
+    does not run under the TSO terminal monitor program.],
   [#cmd("ENOMEM")], [Not enough storage for the buffers. Raise the
     #cmd("REGION").],
   [#cmd("EOPNOTSUPP")], [#cmd("\"a\"") for a member that exists.],
@@ -856,6 +862,11 @@ cataloged, a mode that is not valid, a refused allocation -- the value of
   more than 252 characters goes out as several lines. The return code of
   PUTLINE is not checked, so a failed write is not reported: neither
   #cmd("ferror()") nor a negative return value shows it.
+- A stream on #cmd("*GETLINE") reads one line per GETLINE. Leading blanks
+  are kept\; TSO removes the trailing ones, so a line is not padded to the
+  record length of #cmd("SYSTSIN"). A line of more than 1020 characters is
+  cut to 1020 (from the library source, not measured). At the end of
+  #cmd("SYSTSIN") the stream reaches end of file.
 
 === Example
 

@@ -324,5 +324,8 @@ What later 2.x releases ask of a program or a build:
     [2.5.0], [#cmd("tmpfile()") opens #cmd("\"wb+\"").], [Nothing\; a
       program that opened a #cmd("tmpnam()") name to read its data back can
       use #cmd("tmpfile()").],
+    [2.6.0], [#cmd("fopen(\"*GETLINE\", \"r\")") reads through the TSO
+      GETLINE.], [Nothing\; a file name #cmd("*GETLINE") no longer opens a
+      DD called #cmd("GETLINE").],
   )
 ] <pg-migrate-since-tab>

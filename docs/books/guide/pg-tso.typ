@@ -184,7 +184,7 @@ streams are lost. Under TSO a line has normally reached the terminal once it
 is ended, but output to a data set or to SYSOUT is lost up to the last full
 block (see @pg-errors).]
 
-=== Output Beside the TMP's Messages: \*PUTLINE <pg-tso-putline>
+=== The TMP's Input and Output: \*PUTLINE and \*GETLINE <pg-tso-putline>
 
 #idx("*PUTLINE")#idx("PUTLINE")#idx("SYSTSPRT")
 Under #cmd("IKJEFT01") in batch, the terminal monitor program writes its
@@ -200,9 +200,21 @@ Without the terminal monitor program -- a program run with
 #cmd("EXEC PGM=") -- #cmd("fopen(\"*PUTLINE\", \"w\")") returns
 #cmd("NULL") with #cmd("errno") #cmd("ENODEV"). The stream cannot be read.
 
-To send all of a program's standard output there, set #cmd("stdout") in
-#cmd("__premain()") (@pg-startup-premain), and keep the usual
-#cmd("stdout") where there is no terminal monitor program:
+#idx("*GETLINE")#idx("GETLINE")#idx("SYSTSIN")
+The reading side is the file name #cmd("*GETLINE"), opened #cmd("\"r\"").
+Each line comes from GETLINE: under #cmd("IKJEFT01") in batch, the next
+line of #cmd("SYSTSIN"). A line the program reads is not run by the
+terminal monitor program as a command\; the commands go on after the last
+line read. At the end of #cmd("SYSTSIN") the stream reaches end of file,
+and the terminal monitor program still ends normally. In a TSO session the
+line comes from the terminal\; that has not been measured yet. Leading
+blanks are kept and trailing blanks removed. Without the terminal monitor
+program the open fails with #cmd("ENODEV").
+
+To send all of a program's standard output there and read its standard
+input from there, set #cmd("stdout") and #cmd("stdin") in
+#cmd("__premain()") (@pg-startup-premain). Where there is no terminal
+monitor program both opens fail, and the usual streams are opened:
 
 ```
 #include <stdio.h>
@@ -210,10 +222,13 @@ To send all of a program's standard output there, set #cmd("stdout") in
 
 int __premain(char *parm, char *pgmname, void **pgmr1)
 {
-    FILE *fp = fopen("*PUTLINE", "w");
+    FILE *out = fopen("*PUTLINE", "w");
+    FILE *in  = fopen("*GETLINE", "r");
 
-    if (fp)
-        stdout = fp;
+    if (out)
+        stdout = out;
+    if (in)
+        stdin = in;
     return 0;
 }
 ```
