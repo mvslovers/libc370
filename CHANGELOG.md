@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.6.2] - 2026-10-07
+
+A patch release with one fix, a drop-in for 2.6.1. The cc370 range is
+unchanged: `>=1.4.0 <2`.
+
 ### Fixed
 - **`fseek()` to a position inside the current record of an `"r"` stream
   lands there, and `ftell()` follows (#473).** The library reaches such a

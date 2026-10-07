@@ -336,5 +336,10 @@ What later 2.x releases ask of a program or a build:
       linked to on a thread, takes the lock again, and so, from the library
       source and not verified on MVS, does a subtask the program attaches
       itself.], [Nothing.],
+    [2.6.2], [#cmd("fseek()") to a position inside the current record of a
+      stream opened #cmd("\"r\"") lands there, and #cmd("ftell()")
+      reports it. Up to 2.6.1 the stream was placed wrongly within the
+      record or in front of it, and #cmd("ftell()") kept the old
+      position.], [Nothing.],
   )
 ] <pg-migrate-since-tab>

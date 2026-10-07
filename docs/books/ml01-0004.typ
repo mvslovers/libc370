@@ -11,7 +11,7 @@
     #text(font: head-font, weight: "bold", size: 11pt)[First Edition (October 2026)]
 
     This edition applies to Version 2 Release 4 of libc370
-    (libc370 2.6.1), as built with cc370 1.4.0, and to all subsequent
+    (libc370 2.6.2), as built with cc370 1.4.0, and to all subsequent
     releases and modifications until otherwise indicated in new editions.
 
     Comments on this book may be addressed to the issue tracker of
