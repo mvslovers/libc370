@@ -18,10 +18,11 @@ on `ecfb39f`, PR #442: cc370 >= 1.4.0, no crt0.o/crt1.o #441, __premain #440), 2
 read cut at X'00' PR #456, short TSO-shaped parameter PR #446; assets, `pair`, tap checked), 2.5.0 on 2026-10-07 (tag `v2.5.0` on `5578cfb`, PR #466:
 *PUTLINE #463, no FILE lock without threads #453, fprintf #385, tmpfile #395; assets, `pair`, tap checked), 2.6.0 on 2026-10-07 (tag `v2.6.0` on `5388287`, PR #469:
 *GETLINE #467; assets, `pair`, tap checked), 2.6.1 on 2026-10-07 (tag `v2.6.1` on `ba0e7ef`,
-PR #472: lock skip from the task tree #470; assets, `pair`, tap checked)
+PR #472: lock skip from the task tree #470; assets, `pair`, tap checked), 2.6.2 on 2026-10-07 (tag `v2.6.2` on `c452269`,
+PR #480: fseek() inside the buffer of an "r" stream #473 PR #479; assets incl. the manuals, `pair`, tap checked)
 (tag `v2.2.0` on `0ba452a`, cc370 `>=1.1.0 <2`, built with cc370 1.1.0;
 assets, `pair` and the Homebrew tap checked; cc370's `install.sh` with cc370
-1.2.0 picks 2.2.0). `main` is 2.6.2-dev. Releases are tagged after the go of
+1.2.0 picks 2.2.0). `main` is 2.6.3-dev. Releases are tagged after the go of
 the coordinating mbt session and the maintainer's approval. Tier 0 (the 2.0 critical path) is done
 but for the consumer ports still pinned to 1.0.8 (step 7). 1.0.8 is the last
 1.x; a serious defect there gets an emergency 1.0.9 from the tag `v1.0.8` (D8
@@ -378,11 +379,12 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 
 On `main` since PR #381 (Draft-marked), built on every PR by build.yml's
 `books` job and attached to each release with SHA256SUMS since PR #477. The
-release path of release.yml (download `books`, append to SHA256SUMS) runs
-for the first time at the next release: check the two PDFs there. The 2.6.1
-release carries them already, attached by hand on 2026-10-07 (Draft edition,
-`ml01-000N-0.pdf`, lines appended to its SHA256SUMS); that did not exercise
-release.yml. Rules:
+release path of release.yml (download `books`, append to SHA256SUMS) ran
+for the first time with 2.6.2 and worked: both PDFs attached and in
+SHA256SUMS, edition notice "Version 2 Release 6 ... (libc370 2.6.2)". The
+2.6.1 release carries them too, attached by hand on 2026-10-07 and replaced
+the same day (the first build said "Release 4"). At every release the edition
+notice moves with it, the release word included. Rules:
 internals/releasing.md step 6. Open: the MVS captures that lift "Draft"
 (then edition 1, file suffix -1).
 
@@ -638,6 +640,10 @@ metadata and links a program against it (checked end to end on macOS).
       `flockfile`/`getc_unlocked`), #462 (`research`: a lock without an SVC
       under contention). #465: one S43E in `tstctwd` during the
       regression runs, not pinned on #460.
+   3d. ~~**#473**~~ — PR #479, 2026-10-07 (mvsdev JOB01675), released in 2.6.2:
+      fseek() inside the buffer of an "r" stream counted from the current
+      position and left ftell() stale; a rewind after one line read from in
+      front of the buffer (brexx370 LINEIN, brexx370#380).
    3c. ~~**#470**~~ — PR #471, 2026-10-07 (mvsdev JOB01642), released in 2.6.1: the
       #453 lock skip asks the task tree, not the caller's GRT; a module with
       its own `@@CRT0` LINKed on a thread (a server's trace FILE) locks again.
