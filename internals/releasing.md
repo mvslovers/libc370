@@ -58,13 +58,21 @@ of it — and then the one it needs is released first.
 5. **An incompatible API change** is libc370 3.0.0; consumers move their
    `[toolchain]` pin.
 6. **Release commit** on a `release/X.Y.Z` branch: `VERSION` and the dated
-   `CHANGELOG.md` section, through a PR. After the merge, an annotated tag
-   `vX.Y.Z` ("libc370 X.Y.Z") on the merge commit -- only after checking with
-   the coordinating mbt session.
+   `CHANGELOG.md` section, through a PR. Before it, the manuals (ML01-0003,
+   ML01-0004, `docs/books/`): the edition notice of both (`ml01-000N.typ`,
+   "This edition applies to ...") names the release whose behaviour the text
+   describes, and `guide/pg-migrate.typ` has the release's row when it changes
+   what a caller notices. A PR that changed documented behaviour has already
+   updated the books or named the stale section in its body; a release that
+   changes no documented behaviour needs no book change. After the merge, an
+   annotated tag `vX.Y.Z` ("libc370 X.Y.Z") on the merge commit -- only after
+   checking with the coordinating mbt session.
 7. **Check what `release.yml` attached** before announcing:
    `libc370-<v>-sysroot.tar.gz`, `libc370-dev_<v>_all.deb`,
    `libc370-devel-<v>.noarch.rpm`, `libc370-<v>-metadata.json` (its
-   `"requires"` range) and `SHA256SUMS` (`sha256sum -c`); the build log names
+   `"requires"` range), the two manuals `ml01-0003-E.pdf` and
+   `ml01-0004-E.pdf` (built from the tag by build.yml's `books` job) and
+   `SHA256SUMS` (`sha256sum -c`, the PDFs included); the build log names
    the cc370 tag it built with. The release's `pair` job must be green: it
    installs the new packages beside cc370's under apt and dnf and links a
    program with the pair (`.github/workflows/pair.yml`, `sdk/pairtest.sh`).
@@ -84,4 +92,4 @@ of it — and then the one it needs is released first.
 ## Releasing cc370
 
 cc370's own checklist, the other half of these rules:
-[cc370 `docs/releasing.md`](https://github.com/mvslovers/cc370/blob/main/docs/releasing.md#releasing-cc370).
+[cc370 `internals/releasing.md`](https://github.com/mvslovers/cc370/blob/main/internals/releasing.md#releasing-cc370).
