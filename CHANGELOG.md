@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.5.0] - 2026-10-07
+
+A minor release: one new interface, `fopen("*PUTLINE")`, and fixes. The
+cc370 range is unchanged: `>=1.4.0 <2`.
+
 ### Added
 - **`fopen("*PUTLINE", "w")`: a stream that writes through the TSO TMP's
   PUTLINE (#463).** In a batch TMP the lines land in SYSTSPRT in order with
