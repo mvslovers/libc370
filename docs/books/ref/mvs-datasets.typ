@@ -621,7 +621,8 @@ The list, or #cmd("NULL") for an empty result or a failure
 - #cmd("alloc_trks") counts the extents in the format-1 DSCB only. A data
   set with more than three extents on the volume shows fewer tracks than it
   has. The device name is guessed from the number of tracks per cylinder:
-  19 gives #cmd("\"3380\""), 15 #cmd("\"3390\""), 30 #cmd("\"3350\""), which
+  19 gives #cmd("\"3380\""), 15 #cmd("\"3390\""), 12 #cmd("\"3375\""),
+  30 #cmd("\"3350\""), which
   is also shown when the device cannot be read, and a number the function
   does not know gives #cmd("\"3390\""). A 3330 is therefore shown as
   #cmd("\"3380\"").
