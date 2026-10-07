@@ -617,9 +617,15 @@ metadata and links a program against it (checked end to end on macOS).
    2. ~~**#385**~~ — fixed, PR #458, 2026-10-06 (mvsdev JOB01544, 8/8;
       installed 2.4.1 2/8). `fprintf()` goes through `vfprintf()`; the
       printf family returns -1 on an output error. Unreleased.
-   3. **#453** — `fgetc()`/`fputc()` take an ENQ and a DEQ per byte (plus a
-      `sprintf()` of the resource name): 6.0 s against 0.34 s for a 44,000-byte
-      file, measured. Every `getc()` loop pays it.
+   3. ~~**#453**~~ (steps 1+2) — PR #460, 2026-10-07: no stream lock while no
+      thread exists (fgetc/fputc 2.5 us, was 127; mvsdev JOB01598), lock name
+      without `sprintf()`. Unreleased. Follow-ups: #461 (POSIX
+      `flockfile`/`getc_unlocked`), #462 (`research`: a lock without an SVC
+      under contention). #465: one S43E in `tstctwd` during the
+      regression runs, not pinned on #460.
+   3a. ~~**#463**~~ — PR #464, 2026-10-07: `fopen("*PUTLINE")` through the TMP's
+      PUTLINE, ECT/UPT via the LWA (mvsdev JOB01607). Unreleased; for
+      brexx370's `__premain()`.
    4. **#396** — `select()` turns 0.5 s into 625 s, `FD_ZERO` clears 129 bytes,
       `FIONBIO` cannot go back to blocking. No current caller sets `tv_usec`.
    5. **#403** — `mtxfree()` dequeues the wrong resource and frees a
