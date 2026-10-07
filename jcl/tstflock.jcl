@@ -11,7 +11,7 @@
 //* Before #470: mvsdev JOB01598, 2026-10-07: GREEN CC 0000, 11/11; RED CC 0001,
 //*          9/11.
 //*
-//* Run:     mvsdev JOB01639, 2026-10-07 (#470): GREEN and TSO CC 0000,
+//* Run:     mvsdev JOB01642, 2026-10-07 (#470): GREEN and TSO CC 0000,
 //*          17/17; RED CC 0001, 14/17.
 //*
 //* RC 0 = every check passed, 1 = a check failed (it is the COND CODE).

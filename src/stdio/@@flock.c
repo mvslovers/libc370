@@ -32,19 +32,19 @@ c_task(const unsigned char *tcb)
 static int
 shared(void)
 {
-    unsigned            *psa    = (unsigned *)0;
-    const unsigned char *tcb    = (const unsigned char *)psa[0x21C / 4];
+    const unsigned      *psatold = (const unsigned *)0x21C; /* PSATOLD */
+    const unsigned char *tcb     = (const unsigned char *)*psatold;
     const unsigned char *t;
     unsigned            js;
-    int                 n;
 
     if (TCBLTC(tcb)) return 1;
     js = TCBJSTCB(tcb);
     if ((unsigned)tcb == js) return 0;  /* the job step task itself */
     t = (const unsigned char *)TCBOTC(tcb);
-    for (n = 0; t && n < 64; n++) {
+    for (int n = 0; n < 64; n++) {
+        if (!t) return 0;
         if (c_task(t)) return 1;
-        if ((unsigned)t == js) break;
+        if ((unsigned)t == js) return 0;
         t = (const unsigned char *)TCBOTC(t);
     }
     return 0;

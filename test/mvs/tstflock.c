@@ -40,11 +40,12 @@
  *                -o tstflock -xmit --dsn IBMUSER.LIBC370.FLKSCR
  * Install: jcl/recvflk.jcl.   Run: jcl/tstflock.jcl.
  *
- * mvsdev JOB01639, 2026-10-07 (RECEIVE JOB01638), #470: GREEN 17/17, also
+ * mvsdev JOB01642, 2026-10-07 (RECEIVE JOB01641), #470: GREEN 17/17, also
  * CALLed under a batch TMP 17/17 (fgetc/fputc about 3 us without a thread,
  * 81-89 us with one, about 2-4 us after it ended); RED (installed 2.6.0)
  * 14/17: AFTER stays at 80-90 us and the module's BLOCK returns at once
- * (rc 1).  JOB01637 the same without the TSO step.
+ * (rc 1).  JOB01639 and JOB01637 (without the TSO step) the same, from an
+ * earlier form of the same check.
  *
  * Before #470: mvsdev JOB01598, 2026-10-07 (RECEIVE JOB01597): GREEN CC 0000, 11/11,
  * fgetc/fputc 2.46/2.47 us without a thread, 87/78 us after one; RED
