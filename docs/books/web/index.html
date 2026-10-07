@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>libc370 manuals</title>
+<link rel="stylesheet" href="bookmaster.css">
+<style>
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 1.5rem; margin: 2rem 0; }
+.card { border-top: 6px solid var(--ink); padding: 1rem 0 0; }
+.card h3 { border: 0; margin: 0 0 .5rem; padding: 0; font-size: 1.35rem; }
+.card .num { color: var(--muted); font-family: 'IBM Plex Sans', sans-serif; font-size: .85rem; }
+.card ul { list-style: none; padding: 0; font-family: 'IBM Plex Sans', sans-serif; }
+main.landing { max-width: 60rem; margin: 0 auto; }
+</style>
+</head>
+<body>
+<header class="bm-top"><a href="index.html">libc370</a><span class="num">mvslovers manuals</span></header>
+<main class="landing">
+<h2>libc370 for MVS 3.8j</h2>
+<p>The C library for programs that run on MVS 3.8j and are built with the cc370 cross-toolchain. Two books describe it: the guide shows how the library is used, the reference describes every function.</p>
+<div class="cards">
+  <section class="card">
+    <h3>Programmer's Guide</h3>
+    <p class="num">ML01-0003</p>
+    <p>How a program starts and ends, reads and writes data sets, deals with EBCDIC and 24-bit storage, and uses MVS services, TCP/IP, TSO and assembler.</p>
+    <ul><li><a href="guide/index.html">Read online</a></li><li><a href="ml01-0003-0.pdf">Download PDF</a></li></ul>
+  </section>
+  <section class="card">
+    <h3>Library Reference</h3>
+    <p class="num">ML01-0004</p>
+    <p>Every header, function, macro and type: the C standard library, POSIX interfaces, sockets and the MVS extensions.</p>
+    <ul><li><a href="reference/index.html">Read online</a></li><li><a href="ml01-0004-0.pdf">Download PDF</a></li></ul>
+  </section>
+</div>
+</main>
+</body>
+</html>

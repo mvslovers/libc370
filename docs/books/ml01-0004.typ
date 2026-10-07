@@ -21,6 +21,8 @@
   ],
 )
 
+#part("index.html", title: [libc370 Library Reference])[
+#titlepage()
 #contents(depth: 2)
 #figures()
 
@@ -86,46 +88,49 @@ A part that has nothing to say is left out.
 )
 
 #mainmatter()
+]
 #set page(numbering: "1")
 
-#include "ref/std-assert.typ"
-#include "ref/std-ctype.typ"
-#include "ref/std-errno.typ"
-#include "ref/std-float.typ"
-#include "ref/std-inttypes.typ"
-#include "ref/std-iso646.typ"
-#include "ref/std-limits.typ"
-#include "ref/std-locale.typ"
-#include "ref/std-math.typ"
-#include "ref/std-setjmp.typ"
-#include "ref/std-signal.typ"
-#include "ref/std-stdarg.typ"
-#include "ref/std-stdbool.typ"
-#include "ref/std-stddef.typ"
-#include "ref/std-stdint.typ"
-#include "ref/std-stdio.typ"
-#include "ref/std-stdlib.typ"
-#include "ref/std-string.typ"
-#include "ref/std-strings.typ"
-#include "ref/std-time.typ"
-#include "ref/std-unistd.typ"
-#include "ref/std-wchar.typ"
-#include "ref/sockets.typ"
-#include "ref/mvs-datasets.typ"
-#include "ref/mvs-dynalloc.typ"
-#include "ref/mvs-osio.typ"
-#include "ref/mvs-vsam.typ"
-#include "ref/mvs-smf.typ"
-#include "ref/mvs-program.typ"
-#include "ref/mvs-sync.typ"
-#include "ref/mvs-console.typ"
-#include "ref/mvs-security.typ"
-#include "ref/mvs-subsys.typ"
-#include "ref/ext.typ"
-#include "ref/s370.typ"
+#part("std-assert.html", include "ref/std-assert.typ")
+#part("std-ctype.html", include "ref/std-ctype.typ")
+#part("std-errno.html", include "ref/std-errno.typ")
+#part("std-float.html", include "ref/std-float.typ")
+#part("std-inttypes.html", include "ref/std-inttypes.typ")
+#part("std-iso646.html", include "ref/std-iso646.typ")
+#part("std-limits.html", include "ref/std-limits.typ")
+#part("std-locale.html", include "ref/std-locale.typ")
+#part("std-math.html", include "ref/std-math.typ")
+#part("std-setjmp.html", include "ref/std-setjmp.typ")
+#part("std-signal.html", include "ref/std-signal.typ")
+#part("std-stdarg.html", include "ref/std-stdarg.typ")
+#part("std-stdbool.html", include "ref/std-stdbool.typ")
+#part("std-stddef.html", include "ref/std-stddef.typ")
+#part("std-stdint.html", include "ref/std-stdint.typ")
+#part("std-stdio.html", include "ref/std-stdio.typ")
+#part("std-stdlib.html", include "ref/std-stdlib.typ")
+#part("std-string.html", include "ref/std-string.typ")
+#part("std-strings.html", include "ref/std-strings.typ")
+#part("std-time.html", include "ref/std-time.typ")
+#part("std-unistd.html", include "ref/std-unistd.typ")
+#part("std-wchar.html", include "ref/std-wchar.typ")
+#part("sockets.html", include "ref/sockets.typ")
+#part("mvs-datasets.html", include "ref/mvs-datasets.typ")
+#part("mvs-dynalloc.html", include "ref/mvs-dynalloc.typ")
+#part("mvs-osio.html", include "ref/mvs-osio.typ")
+#part("mvs-vsam.html", include "ref/mvs-vsam.typ")
+#part("mvs-smf.html", include "ref/mvs-smf.typ")
+#part("mvs-program.html", include "ref/mvs-program.typ")
+#part("mvs-sync.html", include "ref/mvs-sync.typ")
+#part("mvs-console.html", include "ref/mvs-console.typ")
+#part("mvs-security.html", include "ref/mvs-security.typ")
+#part("mvs-subsys.html", include "ref/mvs-subsys.typ")
+#part("ext.html", include "ref/ext.typ")
+#part("s370.html", include "ref/s370.typ")
 
 #show: appendices
-#include "ref/apx-cblocks.typ"
+#part("apx-cblocks.html", include "ref/apx-cblocks.typ")
 
+#part("index-terms.html", title: [Index])[
 #heading(numbering: none)[Index]
 #make-index()
+]
