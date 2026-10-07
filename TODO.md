@@ -638,7 +638,8 @@ metadata and links a program against it (checked end to end on macOS).
        `__dsalc` UNCATLG, `__dscbav`, `__listc`, the rest of #411 (OPEN rc 4,
        DD name case, `__vsclos`), osio DCBs, `tsocmd`.
    11. **#389-#392, #387, #395, #397-#401, #404, #423** — math, time,
-       `rand()`, stdio edge cases, int64, `arrayaddf`, ctype brackets,
+       `rand()`, stdio edge cases (#395 item 3, `tmpfile()` "wb+", fixed by PR #459,
+       unreleased), int64, `arrayaddf`, ctype brackets,
        `__enq`/`__deq`, `getmain()` wrap, console, `%a`.
 
 ### Tier 1 before — empty since #182 (PR #227, 2026-09-29)
