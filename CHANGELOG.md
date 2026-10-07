@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.6.1] - 2026-10-07
+
+A patch release with one fix, a drop-in for 2.6.0. The cc370 range is
+unchanged: `>=1.4.0 <2`.
+
 ### Fixed
 - **A module with a startup of its own, LINKed into a thread, takes the
   stream lock again (#470).** Since 2.5.0 the stdio calls skipped the lock
