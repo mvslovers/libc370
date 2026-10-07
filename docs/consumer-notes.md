@@ -319,7 +319,13 @@ keeps its leading blanks; TSO drops the trailing ones, so an FB 80 SYSTSIN
 line does not come back padded. A line longer than 1020 bytes is cut (from
 the source; no such line was measured).
 Without a TMP: `NULL` and `ENODEV`; `"w"` gives `EINVAL`. Measured under a
-batch TMP; the foreground is not measured yet.
+batch TMP and in the foreground (the typed line arrives, with no DD for
+`stdin`).
+
+At the end of SYSTSIN, GETLINE hands back the `END` the TMP supplies for
+itself, and `@@aread` takes it as end of file. The read consumes it, so
+SYSTSPRT shows no closing `END` line; the TMP still ends with condition
+code 0.
 
 To send all of a program's output there, open it in `__premain()` and set
 `stdout` (and `stderr`), and `stdin` to `"*GETLINE"`. The streams the
