@@ -35,11 +35,11 @@ extern size_t   __fwrite(const void *vptr, size_t size, size_t nmemb, FILE *fp);
 extern int      __fpterm(FILE *fp, int unlk);
 extern int      __fpfree(FILE *fp);
 
-/* __flock() - take the FILE lock for one stdio call (#453).  Returns 1 when
- * it took the lock, so the caller releases it with unlock(fp, 0); 0 when
- * the caller already holds it, or when no thread was ever created through
- * cthread_create() - no other task can then use the stream, and the ENQ/DEQ
- * pair is 99% of a fgetc()/fputc() call. */
+/* __flock() - take the FILE lock for one stdio call (#453, #470).  Returns 1
+ * when it took the lock, so the caller releases it with unlock(fp, 0); 0 when
+ * the caller already holds it, or when no other task of the job step can run
+ * C code on the stream - this task has no subtask and no task above it is a
+ * C task.  The ENQ/DEQ pair is 99% of a fgetc()/fputc() call. */
 extern int      __flock(FILE *fp);
 extern int      __fptmp(FILE *fp);
 /* __fpput() - open fp as "*PUTLINE": a stream that writes each line through
