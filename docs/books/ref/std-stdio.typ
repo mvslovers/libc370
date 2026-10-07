@@ -1270,8 +1270,8 @@ failure.
   On a record stream it returns 0 and sets no indicator (a defect,
   libc370 issue 474).
 - Moving backward, or forward over a long distance, reads the data set and
-  takes time in proportion. A backward move within the current record does
-  not, and lands in the wrong place (@std-stdio-position).
+  takes time in proportion; a move within the current record does not
+  (@std-stdio-position).
 - On a record stream the position is a record number.
 
 === Related
