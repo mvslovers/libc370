@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Fixed
+- **`tmpfile()` can read back what was written to it (#395).** It opened
+  the temporary data set `"wb"` instead of `"wb+"`, so a read after
+  `rewind()` returned nothing. Measured on MVS: 11 and 20000 bytes read
+  back, and two temporary files at once keep their own data.
 - **`fprintf()` writes results of 8192 characters and more in full (#385).**
   It formatted into an 8 KB buffer on the stack and wrote that: a longer
   result was cut to 8192 bytes, the last of them X'00', and the return
