@@ -379,7 +379,10 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 On `main` since PR #381 (Draft-marked), built on every PR by build.yml's
 `books` job and attached to each release with SHA256SUMS since PR #477. The
 release path of release.yml (download `books`, append to SHA256SUMS) runs
-for the first time at the next release: check the two PDFs there. Rules:
+for the first time at the next release: check the two PDFs there. The 2.6.1
+release carries them already, attached by hand on 2026-10-07 (Draft edition,
+`ml01-000N-0.pdf`, lines appended to its SHA256SUMS); that did not exercise
+release.yml. Rules:
 internals/releasing.md step 6. Open: the MVS captures that lift "Draft"
 (then edition 1, file suffix -1).
 
