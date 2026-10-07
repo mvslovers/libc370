@@ -1,24 +1,62 @@
-/* @@FLOCK.C - the FILE lock for one stdio call (#453) */
+/* @@FLOCK.C - the FILE lock for one stdio call (#453, #470) */
 #include "src/internal/fileio.h"
+#include <string.h>
 #include "mvs/crt.h"
 #include "mvs/lock.h"
+
+#define TCBFSAB(t)  ((unsigned)(t)[0x71] << 16 | (unsigned)(t)[0x72] << 8 \
+                     | (unsigned)(t)[0x73])         /* first save area   */
+#define TCBJSTCB(t) (*(unsigned *)((t) + 0x7C) & 0x00FFFFFF)
+#define TCBOTC(t)   (*(unsigned *)((t) + 0x84) & 0x00FFFFFF)  /* mother  */
+#define TCBLTC(t)   (*(unsigned *)((t) + 0x88) & 0x00FFFFFF)  /* daughter*/
+
+/* Does task tcb run C code: is the "next" of its first save area a
+   CLIBPPA, the way @@PPAGET recognizes one? */
+static int
+c_task(const unsigned char *tcb)
+{
+    unsigned    sa  = TCBFSAB(tcb);
+    unsigned    ppa;
+
+    if (!sa) return 0;
+    ppa = *(unsigned *)(sa + 8);
+    if (!ppa || ppa > 0x00FFFFFF) return 0;
+    return memcmp((const void *)ppa, PPAEYE, 4) == 0;
+}
+
+/* Can another task of this job step run C code on a stream of ours?
+   Yes when this task has a subtask, or when a task above it, up to the
+   job step task, is a C task: a thread, or a module LINKed into one.
+   Not the caller's GRT: a module with a startup of its own has a GRT
+   without threads, and still writes to its caller's streams (#470). */
+static int
+shared(void)
+{
+    unsigned            *psa    = (unsigned *)0;
+    const unsigned char *tcb    = (const unsigned char *)psa[0x21C / 4];
+    const unsigned char *t;
+    unsigned            js;
+    int                 n;
+
+    if (TCBLTC(tcb)) return 1;
+    js = TCBJSTCB(tcb);
+    if ((unsigned)tcb == js) return 0;  /* the job step task itself */
+    t = (const unsigned char *)TCBOTC(tcb);
+    for (n = 0; t && n < 64; n++) {
+        if (c_task(t)) return 1;
+        if ((unsigned)t == js) break;
+        t = (const unsigned char *)TCBOTC(t);
+    }
+    return 0;
+}
 
 int
 __flock(FILE *fp)
 {
-    /* The GRT through the PPA, not __grtget(): that one looks the task's
-       CRT up under an ENQ of its own and would cost what it saves.  The
-       PPA's GRT is the one __grtget() finds, __grtset() sets both. */
-    CLIBPPA     *ppa    = __PPAGET();
-    CLIBGRT     *grt    = ppa ? ppa->ppagrt : 0;
-
-    /* grtcthrd stays NULL until cthread_create() records its first
-       thread, and the creating task records it before the ATTACH.  Until
-       then only this task runs C code on this environment's streams, and
-       the ENQ/DEQ pair would cost about 120 microseconds a call for
-       nothing.  Not the number of CRTs: cthread_create() returns before
-       the subtask has registered its own. */
-    if (grt && !grt->grtcthrd) return 0;
+    /* Without another task that can reach the stream, the ENQ/DEQ pair
+       would cost about 120 microseconds a call for nothing (#453).  Read
+       from the TCB tree: no SVC, and right after a DETACH as well. */
+    if (!shared()) return 0;
 
     return lock(fp, 0) == 0;    /* rc=8 = caller already holds it (#145) */
 }

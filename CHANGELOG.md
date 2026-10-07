@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- **A module with a startup of its own, LINKed into a thread, takes the
+  stream lock again (#470).** Since 2.5.0 the stdio calls skipped the lock
+  when the caller's runtime had created no thread. A module with its own
+  startup has such a runtime even when it runs on a thread of a threaded
+  program, so its writes to that program's streams were not serialized.
+  The test now reads the task tree: the lock is skipped only when this
+  task has no subtask and no task above it in the job step runs C code.
+  This also covers subtasks a program ATTACHes itself, and a program
+  whose threads have all ended takes no lock again. Measured on MVS: the
+  module's write waits for the program's lock (it did not); without a
+  thread a call still costs about 2.5 microseconds, in batch and under a
+  TSO TMP.
+
 ## [2.6.0] - 2026-10-07
 
 A minor release: one new interface, `fopen("*GETLINE")`, the reading side
