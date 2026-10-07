@@ -90,8 +90,13 @@ __fseek(FILE *fp, long int offset, int whence)
 
             /* is newpos within the current buffer? */
             if ((newpos >= start) && (newpos < end)) {
-                /* yes, reposition and we're done */
-                fp->upto = fp->buf + (size_t)(newpos - oldpos);
+                /* yes, reposition and we're done.  The offset into the
+                   buffer counts from its start, not from where we are:
+                   newpos - oldpos put fseek(0) after one 81-byte text
+                   record at buf - 81, and filepos must follow or ftell()
+                   keeps the old position (#473) */
+                fp->upto    = fp->buf + (size_t)(newpos - start);
+                fp->filepos = newpos;
                 goto quit;
             }
         }

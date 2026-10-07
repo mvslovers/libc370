@@ -387,11 +387,10 @@ by reading:
 - Forward, it reads up to the position.
 - Backward on an input stream, it closes and opens the data set again and
   reads from the beginning. The time this takes grows with the position.
-  A target inside the record in the buffer is reached without reopening,
-  but that shortcut is defective (libc370 issue 473): the stream is placed wrongly within the
-  record and #cmd("ftell()") keeps the old position. Even
-  #cmd("fseek(fp, ftell(fp), SEEK_SET)") in the middle of a record moves to
-  the start of the record. Seek to the start of a record.
+- A target inside the record in the buffer, forward or backward, is
+  reached without reading or reopening. Before 2.6.2 that shortcut placed
+  the stream wrongly within the record and left #cmd("ftell()") at the old
+  position (libc370 issue 473).
 - An output stream (#cmd("\"w\""), #cmd("\"a\"")) is always at its end and
   cannot move. #cmd("fseek()") to the current position succeeds; any other
   position fails with #cmd("ESPIPE").
