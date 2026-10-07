@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- **`fseek()` to a position inside the current record of an `"r"` stream
+  lands there, and `ftell()` follows (#473).** The library reaches such a
+  position without reading, by moving within its buffer, but counted the
+  offset from the current position instead of the start of the record and
+  left the position it reports unchanged. So `fseek(fp, 0, SEEK_SET)`
+  after one 80-byte text record returned 0, `ftell()` still said 81, and
+  the next read came from the storage in front of the buffer: what it
+  returned depended on the program's layout. `fseek(fp, ftell(fp),
+  SEEK_SET)` in the middle of a record moved to its start, and
+  `fseek(fp, -1, SEEK_CUR)` to before it. Measured on MVS: the rewind,
+  `fseek(ftell())`, one byte back and forward within the record are all
+  correct; 2.6.1 gets all four wrong.
+
 ## [2.6.1] - 2026-10-07
 
 A patch release with one fix, a drop-in for 2.6.0. The cc370 range is
