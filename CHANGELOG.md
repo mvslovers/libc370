@@ -45,8 +45,9 @@ unchanged: `>=1.4.0 <2`.
   TSO TMP.
 
 The manuals ML01-0003 and ML01-0004 (Draft edition) and their `SHA256SUMS`
-lines were added to the 2.6.1 release on 2026-10-07; no other file of the
-release changed.
+lines were added to the 2.6.1 release on 2026-10-07, and replaced the same
+day because their edition notice read "Version 2 Release 4" instead of
+"Release 6"; no other file of the release changed.
 
 ## [2.6.0] - 2026-10-07
 
