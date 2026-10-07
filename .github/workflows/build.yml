@@ -1,6 +1,6 @@
 # Build libc370 on every PR and every push to main (#249).
 #
-# Two jobs:
+# Four jobs:
 #
 # build (Linux)  builds cc370 from its main and caches the install, keyed on
 #   the cc370 commit alone: a libc370 change must not invalidate a compiler
@@ -29,6 +29,12 @@
 #   the architecture, the file tree under /usr/lib/cc370/cc370 and the
 #   checksums.  Outside a release the version is VERSION+g<sha>, so a stray
 #   package cannot pass for a release.
+#
+# books (Linux)  the manuals ML01-0003 and ML01-0004 (docs/books), with typst
+#   pinned by version AND sha256 rather than through a setup action, so a
+#   broken reference, label or syntax diagram fails the PR.  The PDFs go up as
+#   the artifact `books`; release.yml attaches them.  The fonts come from the
+#   bookmaster submodule.  The same job as cc370's (cc370#893).
 #
 # Also called by release.yml, so a release is built the same way; it passes
 # the cc370 release the minimum names (cc370_ref) and the tag's version.
@@ -226,3 +232,32 @@ jobs:
 
       - name: Host tests
         run: make test-host
+
+  books:
+    name: manuals (typst)
+    runs-on: ubuntu-latest
+    env:
+      TYPST_VERSION: 0.15.1
+      TYPST_SHA256: a6d077d0a95eed5a2eba715b2dae06be954f624ccbf85758a03f389ded33118c
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+
+      - name: Install typst (pinned)
+        run: |
+          f=typst-x86_64-unknown-linux-musl.tar.xz
+          curl -fsSL --proto "=https" --tlsv1.2 -O "https://github.com/typst/typst/releases/download/v$TYPST_VERSION/$f"
+          echo "$TYPST_SHA256  $f" | sha256sum -c -
+          tar xf "$f"
+          sudo install -m 755 typst-x86_64-unknown-linux-musl/typst /usr/local/bin/typst
+          typst --version
+
+      - name: Build the manuals
+        run: make -C docs/books
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: books
+          path: docs/books/*.pdf
+          if-no-files-found: error
