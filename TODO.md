@@ -15,10 +15,11 @@ some cheap items high and some expensive ones low.
 #425-#427; built with cc370 v1.1.0; assets, `pair`, tap and `install.sh` checked), 2.3.1 on
 2026-10-05 too (tag `v2.3.1` on `cfa5afd`, PR #437: #431, #427, #415, #414, #436), 2.4.0 on 2026-10-05 too (tag `v2.4.0`
 on `ecfb39f`, PR #442: cc370 >= 1.4.0, no crt0.o/crt1.o #441, __premain #440), 2.4.1 on 2026-10-06 (tag `v2.4.1` on `f062bfc`, PR #457: #454 text
-read cut at X'00' PR #456, short TSO-shaped parameter PR #446; assets, `pair`, tap checked)
+read cut at X'00' PR #456, short TSO-shaped parameter PR #446; assets, `pair`, tap checked), 2.5.0 on 2026-10-07 (tag `v2.5.0` on `5578cfb`, PR #466:
+*PUTLINE #463, no FILE lock without threads #453, fprintf #385, tmpfile #395; assets, `pair`, tap checked)
 (tag `v2.2.0` on `0ba452a`, cc370 `>=1.1.0 <2`, built with cc370 1.1.0;
 assets, `pair` and the Homebrew tap checked; cc370's `install.sh` with cc370
-1.2.0 picks 2.2.0). `main` is 2.4.2-dev. Releases are tagged after the go of
+1.2.0 picks 2.2.0). `main` is 2.5.1-dev. Releases are tagged after the go of
 the coordinating mbt session and the maintainer's approval. Tier 0 (the 2.0 critical path) is done
 but for the consumer ports still pinned to 1.0.8 (step 7). 1.0.8 is the last
 1.x; a serious defect there gets an emergency 1.0.9 from the tag `v1.0.8` (D8
@@ -616,15 +617,15 @@ metadata and links a program against it (checked end to end on macOS).
       first X'00'; now only trailing X'00' bytes go. Released in 2.4.1.
    2. ~~**#385**~~ — fixed, PR #458, 2026-10-06 (mvsdev JOB01544, 8/8;
       installed 2.4.1 2/8). `fprintf()` goes through `vfprintf()`; the
-      printf family returns -1 on an output error. Unreleased.
+      printf family returns -1 on an output error. Released in 2.5.0.
    3. ~~**#453**~~ (steps 1+2) — PR #460, 2026-10-07: no stream lock while no
       thread exists (fgetc/fputc 2.5 us, was 127; mvsdev JOB01598), lock name
-      without `sprintf()`. Unreleased. Follow-ups: #461 (POSIX
+      without `sprintf()`. Released in 2.5.0. Follow-ups: #461 (POSIX
       `flockfile`/`getc_unlocked`), #462 (`research`: a lock without an SVC
       under contention). #465: one S43E in `tstctwd` during the
       regression runs, not pinned on #460.
    3a. ~~**#463**~~ — PR #464, 2026-10-07: `fopen("*PUTLINE")` through the TMP's
-      PUTLINE, ECT/UPT via the LWA (mvsdev JOB01607). Unreleased; for
+      PUTLINE, ECT/UPT via the LWA (mvsdev JOB01607). Released in 2.5.0; for
       brexx370's `__premain()`.
    4. **#396** — `select()` turns 0.5 s into 625 s, `FD_ZERO` clears 129 bytes,
       `FIONBIO` cannot go back to blocking. No current caller sets `tv_usec`.
@@ -645,7 +646,7 @@ metadata and links a program against it (checked end to end on macOS).
        DD name case, `__vsclos`), osio DCBs, `tsocmd`.
    11. **#389-#392, #387, #395, #397-#401, #404, #423** — math, time,
        `rand()`, stdio edge cases (#395 item 3, `tmpfile()` "wb+", fixed by PR #459,
-       unreleased), int64, `arrayaddf`, ctype brackets,
+       released in 2.5.0), int64, `arrayaddf`, ctype brackets,
        `__enq`/`__deq`, `getmain()` wrap, console, `%a`.
 
 ### Tier 1 before — empty since #182 (PR #227, 2026-09-29)
