@@ -41,7 +41,14 @@ vvprintf(const char *format, va_list arg, FILE *fq, char *s)
 
     /* lock file handle (required for __fputc() call); rc=8 means the
        caller already holds it, and then it is not ours to release (#145) */
-    if (fq) owned = (lock(fq,0) == 0);
+    if (fq) owned = __flock(fq);
+
+    /* a stream not open for writing takes nothing (#385) */
+    if (fq && !(fq->flags & _FILE_FLAG_WRITE)) {
+        errno = EBADF;
+        chcount = -1;
+        goto quit;
+    }
 
     while (!fin) {
         if (*format == '\0') {
@@ -139,6 +146,13 @@ vvprintf(const char *format, va_list arg, FILE *fq, char *s)
         format++;
     }
 
+    /* an output error is a negative result, not the count (#385).  A
+       failed flush sets the error indicator, also one inside __examin(),
+       and a stream that had it already refused every byte.  A write that
+       is still in the buffer fails only at a later flush. */
+    if (fq && (fq->flags & _FILE_FLAG_ERROR)) chcount = -1;
+
+quit:
     if (owned) unlock(fq,0);
 
     return (chcount);

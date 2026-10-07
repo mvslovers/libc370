@@ -34,7 +34,22 @@ extern size_t   __fwrite(const void *vptr, size_t size, size_t nmemb, FILE *fp);
  * Returns __fpfree()'s rc, 0 when there was no DD to free. */
 extern int      __fpterm(FILE *fp, int unlk);
 extern int      __fpfree(FILE *fp);
+
+/* __flock() - take the FILE lock for one stdio call (#453, #470).  Returns 1
+ * when it took the lock, so the caller releases it with unlock(fp, 0); 0 when
+ * the caller already holds it, or when no other task of the job step can run
+ * C code on the stream - this task has no subtask and no task above it is a
+ * C task.  The ENQ/DEQ pair is 99% of a fgetc()/fputc() call. */
+extern int      __flock(FILE *fp);
 extern int      __fptmp(FILE *fp);
+/* __fpput() - open fp as "*PUTLINE": a stream that writes each line through
+ * PUTLINE to the TSO terminal monitor program, ECT and UPT found through
+ * the LWA (#463).  1 with errno ENODEV when there is no TMP. */
+extern int      __fpput(FILE *fp);
+/* __fpget() - open fp as "*GETLINE": a stream that reads each line through
+ * GETLINE from the TMP - SYSTSIN in a batch TMP, the terminal in the
+ * foreground (#467).  1 with errno ENODEV when there is no TMP. */
+extern int      __fpget(FILE *fp);
 
 /* the formatting engines behind the printf and scanf families: output goes
  * to fq, or to s when fq is NULL; input comes from fp, or from s when fp is NULL */

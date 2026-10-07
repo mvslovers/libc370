@@ -186,7 +186,8 @@ void __ppahrv(CLIBPPA *ppa);
    before main():
        parm     the raw parameter: two length bytes, then the text (a TSO
                 command buffer has a 4-byte prefix instead)
-       pgmname  the program name, 8 bytes, blank padded
+       pgmname  the program name, 8 characters, blank padded, followed
+                by a null byte
        pgmr1    the caller's R1 parameter list
    A stream it sets (stdin, stdout, stderr) is used as it is; one it
    leaves NULL is opened as usual.  Return 0 to go on to main(), nonzero to

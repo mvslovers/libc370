@@ -174,6 +174,13 @@ static void tst_free(void *p)
 }
 
 #define free tst_free
+/* __flock() as in a program with threads: the lock is taken (#453).  The
+   real one reads the PPA, which a host does not have. */
+int __flock(FILE *fp)
+{
+    return lock(fp, 0) == 0;
+}
+
 #include "../../src/stdio/fclose.c"
 #include "../../src/stdio/@@fpterm.c"
 #undef free

@@ -170,6 +170,13 @@ static void init_tolow(void)
 
 /* ---- the real thing ---------------------------------------------------- */
 
+/* __flock() as in a program with threads: the lock is taken (#453).  The
+   real one reads the PPA, which a host does not have. */
+int __flock(FILE *fp)
+{
+    return lock(fp, 0) == 0;
+}
+
 #include "../../src/stdio/@@isbuf.c"   /* isspace() is a table macro */
 #include "../../src/stdio/@@fpmode.c"
 #include "../../src/stdio/@@fpopen.c"

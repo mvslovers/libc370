@@ -14,16 +14,28 @@ some cheap items high and some expensive ones low.
 2026-10-05** (tag `v2.3.0` on `27f1d73`, PR #429: one CRT #424, #377, #382, #383,
 #425-#427; built with cc370 v1.1.0; assets, `pair`, tap and `install.sh` checked), 2.3.1 on
 2026-10-05 too (tag `v2.3.1` on `cfa5afd`, PR #437: #431, #427, #415, #414, #436), 2.4.0 on 2026-10-05 too (tag `v2.4.0`
-on `ecfb39f`, PR #442: cc370 >= 1.4.0, no crt0.o/crt1.o #441, __premain #440)
+on `ecfb39f`, PR #442: cc370 >= 1.4.0, no crt0.o/crt1.o #441, __premain #440), 2.4.1 on 2026-10-06 (tag `v2.4.1` on `f062bfc`, PR #457: #454 text
+read cut at X'00' PR #456, short TSO-shaped parameter PR #446; assets, `pair`, tap checked), 2.5.0 on 2026-10-07 (tag `v2.5.0` on `5578cfb`, PR #466:
+*PUTLINE #463, no FILE lock without threads #453, fprintf #385, tmpfile #395; assets, `pair`, tap checked), 2.6.0 on 2026-10-07 (tag `v2.6.0` on `5388287`, PR #469:
+*GETLINE #467; assets, `pair`, tap checked), 2.6.1 on 2026-10-07 (tag `v2.6.1` on `ba0e7ef`,
+PR #472: lock skip from the task tree #470; assets, `pair`, tap checked)
 (tag `v2.2.0` on `0ba452a`, cc370 `>=1.1.0 <2`, built with cc370 1.1.0;
 assets, `pair` and the Homebrew tap checked; cc370's `install.sh` with cc370
-1.2.0 picks 2.2.0). `main` is 2.4.1-dev. Releases are tagged after the go of
+1.2.0 picks 2.2.0). `main` is 2.6.2-dev. Releases are tagged after the go of
 the coordinating mbt session and the maintainer's approval. Tier 0 (the 2.0 critical path) is done
 but for the consumer ports still pinned to 1.0.8 (step 7). 1.0.8 is the last
 1.x; a serious defect there gets an emergency 1.0.9 from the tag `v1.0.8` (D8
 in `internals/design-2.0.md`).
 
-*Last reconciled against the tracker: **2026-10-04, evening**, 44 issues
+*Last reconciled against the tracker: **2026-10-06**, 83 issues open: the
+44 below, plus #384-#420 less #414/#415 (closed), #423, #448 (the doc
+rewrite for #159), #453 and #454, all placed in Tier 1 item 4. Closed since
+2026-10-04: #382, #383, #414, #415, #425-#427, #431 (released in 2.3.x).
+PR #446 (a short parameter taken for TSO-shaped) and PR #456 (#454) were
+released in 2.4.1. PR #381 (the Library
+Reference) is open as a draft.*
+
+*The pass before: **2026-10-04, evening**, 44 issues
 open, all placed below - closed since the morning pass: #181, #273, #308,
 #61, #157, #158, #301, #240, #277, #254, all fixed (54 - 10 = 44). Filed and
 closed the same evening, so in no rank: #377 (the unused PDPCLIB macros left
@@ -598,6 +610,53 @@ metadata and links a program against it (checked end to end on macOS).
       affected; lua370 passes the caller's option through.
 
    **Tier 1 item 3 is empty.**
+4. **The Library Reference defects** (#384-#420, filed 2026-10-05, plus
+   #423, #453, #454; ranked 2026-10-06). Most are read from source and not
+   measured on MVS, so each fix starts with a test that shows the failure.
+   Ordered by what a running program loses:
+   1. ~~**#454**~~ — fixed, PR #456, 2026-10-06 (mvsdev JOB01542, 13/13;
+      installed 2.4.0 fails R1/R3). A text-mode read cut a record at its
+      first X'00'; now only trailing X'00' bytes go. Released in 2.4.1.
+   2. ~~**#385**~~ — fixed, PR #458, 2026-10-06 (mvsdev JOB01544, 8/8;
+      installed 2.4.1 2/8). `fprintf()` goes through `vfprintf()`; the
+      printf family returns -1 on an output error. Released in 2.5.0.
+   3. ~~**#453**~~ (steps 1+2) — PR #460, 2026-10-07: no stream lock while no
+      thread exists (fgetc/fputc 2.5 us, was 127; mvsdev JOB01598), lock name
+      without `sprintf()`. Released in 2.5.0. Follow-ups: #461 (POSIX
+      `flockfile`/`getc_unlocked`), #462 (`research`: a lock without an SVC
+      under contention). #465: one S43E in `tstctwd` during the
+      regression runs, not pinned on #460.
+   3c. ~~**#470**~~ — PR #471, 2026-10-07 (mvsdev JOB01642), released in 2.6.1: the
+      #453 lock skip asks the task tree, not the caller's GRT; a module with
+      its own `@@CRT0` LINKed on a thread (a server's trace FILE) locks again.
+   3a. ~~**#463**~~ — PR #464, 2026-10-07: `fopen("*PUTLINE")` through the TMP's
+      PUTLINE, ECT/UPT via the LWA (mvsdev JOB01607). Released in 2.5.0; for
+      brexx370's `__premain()`.
+   3b. ~~**#467**~~ — PR #468, 2026-10-07 (mvsdev JOB01626), released in 2.6.0: `fopen("*GETLINE", "r")`, the read side (SYSTSIN in a batch
+      TMP, the terminal in the foreground; SA32-0972 PARSE PULL/PULLEXTR).
+      Measure first: consumed line, EOF rc and TMP end, foreground TIOT,
+      record shape (an FB 80 DD pads to 80 today). Consumer: brexx370.
+   4. **#396** — `select()` turns 0.5 s into 625 s, `FD_ZERO` clears 129 bytes,
+      `FIONBIO` cannot go back to blocking. No current caller sets `tv_usec`.
+   5. **#403** — `mtxfree()` dequeues the wrong resource and frees a
+      registered mutex.
+   6. **#402, #405, #407** — authorized paths: unconditional MODESET (S047),
+      `racf_logout(NULL)` deletes the resting ACEE (fail-open), `ssvt_set()`
+      can overwrite key-0 CSA.
+   7. **#394** — `malloc(0)` reports ENOMEM with a console message and a
+      traceback.
+   8. **#386, #384, #393, #388** — `scanf` widths, `printf` integer flags,
+      `strstr(s, "")`, `bsearch()` argument order: wrong answers from ISO
+      functions.
+   9. **#416, #417** — `<ctype.h>` and the socket calls fail a consumer's
+      `-Werror` build; #418-#420 the remaining header defects.
+   10. **#406, #408-#413** — the MVS services: JES2 SSI return codes,
+       `__dsalc` UNCATLG, `__dscbav`, `__listc`, the rest of #411 (OPEN rc 4,
+       DD name case, `__vsclos`), osio DCBs, `tsocmd`.
+   11. **#389-#392, #387, #395, #397-#401, #404, #423** — math, time,
+       `rand()`, stdio edge cases (#395 item 3, `tmpfile()` "wb+", fixed by PR #459,
+       released in 2.5.0), int64, `arrayaddf`, ctype brackets,
+       `__enq`/`__deq`, `getmain()` wrap, console, `%a`.
 
 ### Tier 1 before — empty since #182 (PR #227, 2026-09-29)
 

@@ -522,19 +522,23 @@ TERMOPEN MVC   IOMFLAGS,WWORK     Save for duration
          MVC   ZIODDNM,0(R3)      DDNAME FOR DEBUGGING, ETC.
          LTR   R9,R9              See if an address for the member name
          BNZ   FAILDCB            Yes; fail
-         L     R14,PSATOLD-PSA    GET MY TCB
-         USING TCB,R14
-         ICM   R15,15,TCBJSCB  LOOK FOR THE JSCB
-         BZ    FAILDCB       HUH ?
-         USING IEZJSCB,R15
-         ICM   R15,15,JSCBPSCB  PSCB PRESENT ?
-         BZ    FAILDCB       NO; NOT TSO
-         L     R1,TCBFSA     GET FIRST SAVE AREA
-         N     R1,=X'00FFFFFF'    IN CASE AM31
-         L     R1,24(,R1)         LOAD INVOCATION R1
-         USING CPPL,R1       DECLARE IT
-         MVC   ZIOECT,CPPLECT
-         MVC   ZIOUPT,CPPLUPT
+*   ECT and UPT are the TMP's, found through the LWA (#463).  The CPPL
+*   at TCBFSA+24 was right only for a command processor; TSO CALL and a
+*   PARM-style call under a batch TMP have none there.  No LWA, ECT or
+*   UPT means no TMP in the address space: the open fails.  Offsets
+*   from IHAASCB, IHAASXB, IKJEFLWA and IKJPSCB.
+         L     R14,PSAAOLD-PSA    ASCB of this address space
+         L     R14,X'6C'(,R14)    ASCBASXB
+         ICM   R14,15,X'14'(R14)  ASXBLWA
+         BZ    FAILDCB            No LWA: no TMP
+         ICM   R15,15,X'20'(R14)  LWAPECT
+         BZ    FAILDCB            No ECT
+         ST    R15,ZIOECT
+         ICM   R15,15,X'18'(R14)  LWAPSCB
+         BZ    FAILDCB            No PSCB
+         ICM   R15,15,X'34'(R15)  PSCBUPT
+         BZ    FAILDCB            No UPT
+         ST    R15,ZIOUPT
          SPACE 1
          ICM   R6,15,BLKSIZE      Load the input blocksize
          BP    *+12               Use it

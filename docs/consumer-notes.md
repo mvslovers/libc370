@@ -289,6 +289,64 @@ against your own data set before relying on it. The same caveat applies to
 `setjmp`/`longjmp` (`include/setjmp.h`, `src/setjmp/longjmp.c`,
 `src/setjmp/@@longj.asm`): shipped and built, untested.
 
+## Writing to a TSO TMP: `fopen("*PUTLINE", "w")`
+
+Under the TSO terminal monitor program, PUTLINE is the one correct way to
+write a line. In a batch TMP (`PGM=IKJEFT01`) it writes through the TMP's own
+SYSTSPRT, in order with the TMP's messages. In the foreground it reaches the
+terminal (measured with TSO `CALL` and no DD for the output); whether TSO/E
+`OUTTRAP` traps it there is not measured yet. A second DCB on SYSTSPRT has no ordering against the TMP, and TPUT
+does nothing in a batch TMP.
+
+`fopen("*PUTLINE", "w")` (or `"a"`, the name in any case) opens such a stream
+(#463):
+
+- Each line is one PUTLINE (`DATA`, `TERMPUT=EDIT`). A line longer than 252
+  bytes goes out as several PUTLINE lines.
+- The TMP's ECT and UPT come from the LWA, so the stream works for TSO
+  `CALL`, for a command processor, and for a program the TMP started any
+  other way. No CPPL is needed.
+- Without a TMP the open returns `NULL` with `errno` `ENODEV`, so a caller
+  can fall back to its DD.
+- The name is reserved: it never opens a DD called `PUTLINE`. It is for
+  writing only, `"r"` gives `EINVAL`.
+
+`fopen("*GETLINE", "r")` is the reading side (#467): each `fgets()` line is
+one GETLINE. In a batch TMP that is the next line of SYSTSIN, which the TMP
+then does not run as a command; in the foreground it is the terminal. At
+the end of SYSTSIN `feof()` is set, and the TMP still ends normally. A line
+keeps its leading blanks; TSO drops the trailing ones, so an FB 80 SYSTSIN
+line does not come back padded. A line longer than 1020 bytes is cut (from
+the source; no such line was measured).
+Without a TMP: `NULL` and `ENODEV`; `"w"` gives `EINVAL`. Measured under a
+batch TMP and in the foreground (the typed line arrives, with no DD for
+`stdin`).
+
+At the end of SYSTSIN, GETLINE hands back the `END` the TMP supplies for
+itself, and `@@aread` takes it as end of file. The read consumes it, so
+SYSTSPRT shows no closing `END` line; the TMP still ends with condition
+code 0.
+
+To send all of a program's output there, open it in `__premain()` and set
+`stdout` (and `stderr`), and `stdin` to `"*GETLINE"`. The streams the
+startup would open are then left alone:
+
+```c
+int __premain(char *parm, char *pgmname, void **pgmr1)
+{
+    FILE *fp = fopen("*PUTLINE", "w");
+
+    if (fp) stdout = fp;        /* no TMP: stdout stays SYSPRINT */
+    fp = fopen("*GETLINE", "r");
+    if (fp) stdin = fp;         /* no TMP: stdin stays SYSIN */
+    return 0;
+}
+```
+
+Measured on MVS: TSO `CALL`, a command and the `__premain()` route each put
+their lines into SYSTSPRT between the TMP's prompts; a 300-byte line arrives
+whole, wrapped by TSO; plain batch gets `NULL` and `ENODEV`.
+
 ## 64-bit arithmetic is software
 
 The target has no native 64-bit integer (`clib64.h`: "our target machine has 32
@@ -385,14 +443,23 @@ libc370 1.x they are in `libc.a`.
 
 ## Linking a server module for httpd
 
-The libc-facing part of the contract (httpd 4.0.0, its `project.toml`):
+The libc-facing part of the contract (httpd with mbt 2.2.0 and libc370 2.4.0,
+its `project.toml`):
 
-* Each module links `startup = "crt1"` plus `src/cgistart.c`. `crt1` is the full
-  runtime with thread creation disabled — a module builds its own C runtime and
-  does not attach threads of its own.
+* A module names no startup object: `@@CRT0` comes out of `libc.a` (#159). It
+  lists `src/cgistart.c` in its `sources`. `cgistart` defines its own `@@START`,
+  which wins over libc370's as an explicit object. A CGI or display module
+  calls no thread function, so the thread driver `CTHREAD` is not linked and
+  its startup issues no IDENTIFY.
+* mbt 2.2.0 searches libc370 ahead of a project's dependencies. A module that
+  takes its `@@START` from a dependency's archive instead of naming the object
+  (mvsMF's module from httpd's library, for example) sets `dep_startup = true`;
+  otherwise mbt stops the build.
 * `cgistart` opens `HTTPDOUT` / `HTTPDERR` / `HTTPDIN` as `stdout` / `stderr` /
   `stdin` — never `SYSPRINT` / `SYSTERM` / `SYSIN`, which the server needs free
-  for the utilities it drives. httpd's own `httpstrt.c` enforces this: if any of
-  the three is allocated to the STC it WTOs and exits before starting.
-* httpd `__load()`s the modules at startup and calls them through the HTTPX
-  function vector; a module never links against server code directly.
+  for the utilities it drives. httpd's own startup enforces this from its
+  `__premain()` hook (`src/httpstrt.c`, libc370 2.4.0 and later): if any of the
+  three is allocated to the STC it WTOs and ends before `main()`.
+* httpd runs a module with LINK (`__linkds()`, `src/httplink.c`) and hands it
+  the server through the HTTPX function vector; a module never links against
+  server code directly.

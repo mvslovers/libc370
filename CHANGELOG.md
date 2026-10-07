@@ -6,6 +6,112 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.6.1] - 2026-10-07
+
+A patch release with one fix, a drop-in for 2.6.0. The cc370 range is
+unchanged: `>=1.4.0 <2`.
+
+### Fixed
+- **A module with a startup of its own, LINKed into a thread, takes the
+  stream lock again (#470).** Since 2.5.0 the stdio calls skipped the lock
+  when the caller's runtime had created no thread. A module with its own
+  startup has such a runtime even when it runs on a thread of a threaded
+  program, so its writes to that program's streams were not serialized.
+  The test now reads the task tree: the lock is skipped only when this
+  task has no subtask and no task above it in the job step runs C code.
+  This also covers subtasks a program ATTACHes itself, and a program
+  whose threads have all ended takes no lock again. Measured on MVS: the
+  module's write waits for the program's lock (it did not); without a
+  thread a call still costs about 2.5 microseconds, in batch and under a
+  TSO TMP.
+
+## [2.6.0] - 2026-10-07
+
+A minor release: one new interface, `fopen("*GETLINE")`, the reading side
+of `"*PUTLINE"`. The cc370 range is unchanged: `>=1.4.0 <2`.
+
+### Added
+- **`fopen("*GETLINE", "r")`: a stream that reads through the TSO TMP's
+  GETLINE (#467).** The reading side of `"*PUTLINE"`: in a batch TMP each
+  line is the next line of SYSTSIN, which the TMP then does not run as a
+  command, and `feof()` is set at its end. Without a TMP the open fails with
+  `ENODEV`. Measured on MVS under a batch TMP.
+
+### Fixed
+- **A GETLINE line longer than the buffer is cut instead of overrunning it
+  (#467).** The terminal mode of the dataset layer copied a variable-length
+  line by its own length into a buffer of the stream's block size. Read
+  from the source; no line that long was measured.
+
+## [2.5.0] - 2026-10-07
+
+A minor release: one new interface, `fopen("*PUTLINE")`, and fixes. The
+cc370 range is unchanged: `>=1.4.0 <2`.
+
+### Added
+- **`fopen("*PUTLINE", "w")`: a stream that writes through the TSO TMP's
+  PUTLINE (#463).** In a batch TMP the lines land in SYSTSPRT in order with
+  the TMP's own messages, in the foreground on the terminal. Without a TMP
+  the open fails with `ENODEV`. Set `stdout` to it in `__premain()` to send
+  all of a program's output there. Measured on MVS under a batch TMP: TSO
+  `CALL`, a command and the `__premain()` route each write into SYSTSPRT.
+
+### Changed
+- **`fgetc()`, `fputc()` and the other stdio calls no longer take the
+  stream's ENQ while the program has no threads (#453).** Each call took an
+  ENQ and a DEQ to serialize the stream against other tasks, about 120
+  microseconds against 1 for the work itself. Until `cthread_create()` has
+  created a thread, no other task can use the stream, and the lock is now
+  skipped. Measured on MVS: a `fgetc()`/`fputc()` call costs 2.5
+  microseconds without a thread (was about 127). A program with threads
+  locks as before, from its first `cthread_create()` to its end. A program that ATTACHes subtasks of its own, outside
+  `cthread_create()`, and shares a stream with them must serialize it
+  itself.
+- **`lock()`, `unlock()`, `trylock()` and `testlock()` build their resource
+  name without `sprintf()` (#453).** The name is unchanged, `LOCK.` and
+  eight hex digits; a stdio call that takes the lock costs about 30 percent less.
+
+### Fixed
+- **The terminal mode of the dataset layer finds the TMP's ECT and UPT
+  through the LWA (#463).** It read them from a command processor parameter
+  list at the first save area, which exists only when the program was
+  invoked as a command.
+- **`tmpfile()` can read back what was written to it (#395).** It opened
+  the temporary data set `"wb"` instead of `"wb+"`, so a read after
+  `rewind()` returned nothing. Measured on MVS: 11 and 20000 bytes read
+  back, and two temporary files at once keep their own data.
+- **`fprintf()` writes results of 8192 characters and more in full (#385).**
+  It formatted into an 8 KB buffer on the stack and wrote that: a longer
+  result was cut to 8192 bytes, the last of them X'00', and the return
+  value was the number of bytes written, not the formatted length. It now
+  goes through `vfprintf()`, as `printf()` always did, and needs no buffer.
+  Measured on MVS: 9000 characters are written and counted in full, and so
+  is a `%*d` of width 9000.
+- **`printf()`, `fprintf()` and `vfprintf()` return a negative value on an
+  output error (#385).** They returned the count even when the stream
+  refused the output; a stream not open for writing now gives -1 and
+  `errno` `EBADF`, and a stream whose error indicator is set gives -1.
+
+## [2.4.1] - 2026-10-06
+
+A patch release with two fixes, a drop-in for 2.4.0. The cc370 range is
+unchanged: `>=1.4.0 <2`.
+
+### Fixed
+- **A text-mode read no longer cuts a record at its first X'00' (#454).**
+  Every text read dropped what it took for trailing NULs, but
+  looked for the first X'00' anywhere in the record, so the rest of the
+  record was lost to `fgetc()`, `fgets()` and `fread()` on a text stream.
+  Only trailing X'00' bytes are dropped now; one inside a record is data.
+  Binary streams were not affected. Measured on MVS: a record `A`, X'00',
+  `B` followed by blanks reads back whole (80 bytes, was 1).
+- **A parameter of 1 to 3 bytes whose third byte is zero is no longer taken
+  for a TSO command buffer.** The startup then copied length - 4 bytes,
+  which is negative; the copy only failed to overrun because the move
+  instruction refuses overlapping operands, and the program lost its name
+  in `argv[0]`. The TSO shape now needs a length of at least 4. Measured on
+  MVS: `argv[0]` is the program name again.
+
 ## [2.4.0] - 2026-10-05
 
 **Requires cc370 1.4.0 or later** (`sdk/cc370.json`: `>=1.4.0 <2`): cc370
