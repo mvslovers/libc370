@@ -374,6 +374,15 @@ deliberate API decision. Nothing in Tier 1 or below moved: **#154 is still item
 
 ---
 
+## The manuals (ML01-0003, ML01-0004)
+
+On `main` since PR #381 (Draft-marked), built on every PR by build.yml's
+`books` job and attached to each release with SHA256SUMS since PR #477. The
+release path of release.yml (download `books`, append to SHA256SUMS) runs
+for the first time at the next release: check the two PDFs there. Rules:
+internals/releasing.md step 6. Open: the MVS captures that lift "Draft"
+(then edition 1, file suffix -1).
+
 ## Tier 0 — the 2.0 critical path (decided 2026-09-30, D8)
 
 **libc370 2.0.0 is released (2026-10-01):** `2.0` merged into `main` (#312,
