@@ -289,6 +289,45 @@ against your own data set before relying on it. The same caveat applies to
 `setjmp`/`longjmp` (`include/setjmp.h`, `src/setjmp/longjmp.c`,
 `src/setjmp/@@longj.asm`): shipped and built, untested.
 
+## Writing to a TSO TMP: `fopen("*PUTLINE", "w")`
+
+Under the TSO terminal monitor program, PUTLINE is the one correct way to
+write a line. In a batch TMP (`PGM=IKJEFT01`) it writes through the TMP's own
+SYSTSPRT, in order with the TMP's messages. In the foreground it reaches the
+terminal. A second DCB on SYSTSPRT has no ordering against the TMP, and TPUT
+does nothing in a batch TMP.
+
+`fopen("*PUTLINE", "w")` (or `"a"`, the name in any case) opens such a stream
+(#463):
+
+- Each line is one PUTLINE (`DATA`, `TERMPUT=EDIT`). A line longer than 252
+  bytes goes out as several PUTLINE lines.
+- The TMP's ECT and UPT come from the LWA, so the stream works for TSO
+  `CALL`, for a command processor, and for a program the TMP started any
+  other way. No CPPL is needed.
+- Without a TMP the open returns `NULL` with `errno` `ENODEV`, so a caller
+  can fall back to its DD.
+- The name is reserved: it never opens a DD called `PUTLINE`. Reading
+  (GETLINE) is not offered yet, `"r"` gives `EINVAL`.
+
+To send all of a program's output there, open it in `__premain()` and set
+`stdout` (and `stderr`). The streams the startup would open are then left
+alone:
+
+```c
+int __premain(char *parm, char *pgmname, void **pgmr1)
+{
+    FILE *fp = fopen("*PUTLINE", "w");
+
+    if (fp) stdout = fp;        /* no TMP: stdout stays SYSPRINT */
+    return 0;
+}
+```
+
+Measured on MVS: TSO `CALL`, a command and the `__premain()` route each put
+their lines into SYSTSPRT between the TMP's prompts; a 300-byte line arrives
+whole, wrapped by TSO; plain batch gets `NULL` and `ENODEV`.
+
 ## 64-bit arithmetic is software
 
 The target has no native 64-bit integer (`clib64.h`: "our target machine has 32
