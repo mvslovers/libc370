@@ -625,6 +625,9 @@ metadata and links a program against it (checked end to end on macOS).
       `flockfile`/`getc_unlocked`), #462 (`research`: a lock without an SVC
       under contention). #465: one S43E in `tstctwd` during the
       regression runs, not pinned on #460.
+   3c. ~~**#470**~~ — PR #471, 2026-10-07 (mvsdev JOB01642), unreleased: the
+      #453 lock skip asks the task tree, not the caller's GRT; a module with
+      its own `@@CRT0` LINKed on a thread (a server's trace FILE) locks again.
    3a. ~~**#463**~~ — PR #464, 2026-10-07: `fopen("*PUTLINE")` through the TMP's
       PUTLINE, ECT/UPT via the LWA (mvsdev JOB01607). Released in 2.5.0; for
       brexx370's `__premain()`.
