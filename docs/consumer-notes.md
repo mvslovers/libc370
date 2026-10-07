@@ -308,12 +308,22 @@ does nothing in a batch TMP.
   other way. No CPPL is needed.
 - Without a TMP the open returns `NULL` with `errno` `ENODEV`, so a caller
   can fall back to its DD.
-- The name is reserved: it never opens a DD called `PUTLINE`. Reading
-  (GETLINE) is not offered yet, `"r"` gives `EINVAL`.
+- The name is reserved: it never opens a DD called `PUTLINE`. It is for
+  writing only, `"r"` gives `EINVAL`.
+
+`fopen("*GETLINE", "r")` is the reading side (#467): each `fgets()` line is
+one GETLINE. In a batch TMP that is the next line of SYSTSIN, which the TMP
+then does not run as a command; in the foreground it is the terminal. At
+the end of SYSTSIN `feof()` is set, and the TMP still ends normally. A line
+keeps its leading blanks; TSO drops the trailing ones, so an FB 80 SYSTSIN
+line does not come back padded. A line longer than 1020 bytes is cut (from
+the source; no such line was measured).
+Without a TMP: `NULL` and `ENODEV`; `"w"` gives `EINVAL`. Measured under a
+batch TMP; the foreground is not measured yet.
 
 To send all of a program's output there, open it in `__premain()` and set
-`stdout` (and `stderr`). The streams the startup would open are then left
-alone:
+`stdout` (and `stderr`), and `stdin` to `"*GETLINE"`. The streams the
+startup would open are then left alone:
 
 ```c
 int __premain(char *parm, char *pgmname, void **pgmr1)
@@ -321,6 +331,8 @@ int __premain(char *parm, char *pgmname, void **pgmr1)
     FILE *fp = fopen("*PUTLINE", "w");
 
     if (fp) stdout = fp;        /* no TMP: stdout stays SYSPRINT */
+    fp = fopen("*GETLINE", "r");
+    if (fp) stdin = fp;         /* no TMP: stdin stays SYSIN */
     return 0;
 }
 ```

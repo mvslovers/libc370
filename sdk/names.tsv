@@ -3665,6 +3665,7 @@ _FILE_RECFM_TYPE	stdio.h
 _FILE_RECFM_U	stdio.h
 _FILE_RECFM_V	stdio.h
 _FILE_XFLAG_DIRTY	stdio.h
+_FILE_XFLAG_GETLINE	stdio.h
 _FILE_XFLAG_PUTLINE	stdio.h
 _FILE_XFLAG_UPDAT	stdio.h
 _FREE	ibm/jes2/jqe.h

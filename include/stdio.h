@@ -96,6 +96,8 @@ struct _file {
                                     /*     and not yet handed to __awrite() */
 #define _FILE_XFLAG_PUTLINE 0x04    /* ... "*PUTLINE": written through      */
                                     /*     the TMP's PUTLINE (#463)         */
+#define _FILE_XFLAG_GETLINE 0x08    /* ... "*GETLINE": read through the     */
+                                    /*     TMP's GETLINE (#467)             */
 };                                  /* C0 (192 bytes)                       */
 
 typedef unsigned long fpos_t;

@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- **`fopen("*GETLINE", "r")`: a stream that reads through the TSO TMP's
+  GETLINE (#467).** The reading side of `"*PUTLINE"`: in a batch TMP each
+  line is the next line of SYSTSIN, which the TMP then does not run as a
+  command, and `feof()` is set at its end. Without a TMP the open fails with
+  `ENODEV`. Measured on MVS under a batch TMP.
+
+### Fixed
+- **A GETLINE line longer than the buffer is cut instead of overrunning it
+  (#467).** The terminal mode of the dataset layer copied a variable-length
+  line by its own length into a buffer of the stream's block size. Read
+  from the source; no line that long was measured.
+
 ## [2.5.0] - 2026-10-07
 
 A minor release: one new interface, `fopen("*PUTLINE")`, and fixes. The

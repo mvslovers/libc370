@@ -76,7 +76,8 @@ flushrec(FILE *fp, int newline)
     }
 
 	/* This is new code to support TSO terminals */
-	if (!(fp->xflags & _FILE_XFLAG_PUTLINE) && dcb->dcbdevt == DCBDVTRM) {
+	if (!(fp->xflags & (_FILE_XFLAG_PUTLINE | _FILE_XFLAG_GETLINE))
+        && dcb->dcbdevt == DCBDVTRM) {
 		/* DCB refers to terminal */
 		DECB	decb = {0};
 		size_t  len;

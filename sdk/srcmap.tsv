@@ -784,3 +784,4 @@ src/time64/tm64utim.c	src/ext/time64/tm64utim.c	declared in <ext/time64.h>
 src/internal/lkname.h	src/internal/lkname.h	new after 2.0.0 (#453), the CLIBLOCK resource name without sprintf()
 src/stdio/@@flock.c	src/stdio/@@flock.c	new after 2.0.0 (#453): the FILE lock for one stdio call, skipped without threads
 src/stdio/@@fpput.c	src/stdio/@@fpput.c	new after 2.0.0 (#463): fopen("*PUTLINE"), a stream through the TMP's PUTLINE
+src/stdio/@@fpget.c	src/stdio/@@fpget.c	new after 2.0.0 (#467): fopen("*GETLINE"), a stream through the TMP's GETLINE
