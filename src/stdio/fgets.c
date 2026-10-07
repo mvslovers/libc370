@@ -8,7 +8,7 @@ fgets(char *s, int n, FILE *fp)
 {
     int owned;
 
-    owned = (lock(fp, 0) == 0); /* rc=8 = caller already holds it (#145) */
+    owned = __flock(fp); /* rc=8 = caller already holds it (#145) */
 
     s = __fgets(s,n,fp);
 

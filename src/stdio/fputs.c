@@ -9,7 +9,7 @@ fputs(const char *s, FILE *fp)
     int rc;
     int owned;
 
-    owned = (lock(fp,0) == 0);  /* rc=8 = caller already holds it (#145) */
+    owned = __flock(fp);  /* rc=8 = caller already holds it (#145) */
 
     rc = __fputs(s,fp);
 

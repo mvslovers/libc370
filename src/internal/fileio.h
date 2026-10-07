@@ -34,6 +34,13 @@ extern size_t   __fwrite(const void *vptr, size_t size, size_t nmemb, FILE *fp);
  * Returns __fpfree()'s rc, 0 when there was no DD to free. */
 extern int      __fpterm(FILE *fp, int unlk);
 extern int      __fpfree(FILE *fp);
+
+/* __flock() - take the FILE lock for one stdio call (#453).  Returns 1 when
+ * it took the lock, so the caller releases it with unlock(fp, 0); 0 when
+ * the caller already holds it, or when no thread was ever created through
+ * cthread_create() - no other task can then use the stream, and the ENQ/DEQ
+ * pair is 99% of a fgetc()/fputc() call. */
+extern int      __flock(FILE *fp);
 extern int      __fptmp(FILE *fp);
 
 /* the formatting engines behind the printf and scanf families: output goes

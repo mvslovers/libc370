@@ -1,6 +1,8 @@
 #include "src/internal/fileio.h"
 #include "mvs/enq.h"
 #include "mvs/lock.h"
+#include <string.h>
+#include "src/internal/lkname.h"
 #include "stdio.h"
 
 __asm__("\n&FUNC    SETC 'lock'");
@@ -15,7 +17,7 @@ lock(void *thing, int read)
 #endif
     if (read) opts |= ENQ_SHR;
 
-    sprintf(rname, LOCKRNAME, thing);
+    __lkname(rname, thing);
 
     return ENQ(LOCKQNAME, rname, opts);
 }

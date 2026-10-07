@@ -1,4 +1,5 @@
 /* UNGETC.C */
+#include "src/internal/fileio.h"
 #include "stdio.h"
 #include "mvs/lock.h"
 
@@ -7,7 +8,7 @@ ungetc(int c, FILE *fp)
 {
     int owned;
 
-    owned = (lock(fp,0) == 0);  /* rc=8 = caller already holds it (#145) */
+    owned = __flock(fp);  /* rc=8 = caller already holds it (#145) */
 
     if ((fp->ungetch != -1) || (c == EOF)) {
         c = EOF;
