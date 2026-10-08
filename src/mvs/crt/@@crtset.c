@@ -46,6 +46,7 @@ __CRTSET(void)
         memcpy(crt->crteye, "CLIBCRT ", 8);
         crt->crttcb     = tcb;
         crt->crtgrt     = grt;
+        crt->crtseed    = 1;    /* rand() before srand() is srand(1) (#387) */
 #if 0 /* GETTZOFF() is not working, replaced with CVTTZ value */
         crt->crttzoff   = GETTZOFF();
 #else

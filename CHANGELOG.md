@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- **`rand()` returns values from 0 to `RAND_MAX`, and without `srand()`
+  its sequence is the one `srand(1)` starts (#387).** The result was
+  masked with `0x8fff` instead of `0x7fff`, so `rand()` returned only
+  0..4095 and 32768..36863: never 4096..32767, and half the time above
+  `RAND_MAX` (32767). A program scaling the result with `RAND_MAX` got a
+  skewed or out-of-range number. And the seed started at 0, so the first
+  call returned 0; C99 wants the sequence of `srand(1)`, which now begins
+  16838, 5758, 10113. Measured on MVS: 100000 draws all within 0..32767
+  and spread over the whole range; 2.6.2 put half of them above 32767 and
+  none in 4096..32767.
+
 ## [2.6.2] - 2026-10-07
 
 A patch release with one fix, a drop-in for 2.6.1. The cc370 range is

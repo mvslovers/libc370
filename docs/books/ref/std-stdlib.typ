@@ -708,19 +708,18 @@ The generator is the linear congruential one of the C standard's example,
 
 === Returns
 
-#cmd("rand()") returns the next number of the sequence.
+#cmd("rand()") returns the next number of the sequence, from 0 to
+#cmd("RAND_MAX") (32767).
 
 === Notes
 
-- *The results do not lie in the range 0 to #cmd("RAND_MAX").* The result is
-  masked with #cmd("X'8FFF'") instead of #cmd("X'7FFF'"): bits 12 to 14 are
-  always 0 and bit 15 is set about half the time. #cmd("rand()") returns
-  only the values 0 to 4095 and 32768 to 36863, 8192 different values in
-  all. A program that scales the result with #cmd("RAND_MAX") gets results
-  outside its intended range. Until this is corrected, use
-  #cmd("rand() & 0xFFF") for an evenly distributed value from 0 to 4095.
-- Without #cmd("srand()") the sequence starts from the seed 0, not 1 as C99
-  specifies: the first call returns 0.
+- Without #cmd("srand()") the sequence is the one #cmd("srand(1)")
+  starts, as C99 specifies: 16838, 5758, 10113, ...
+- Up to 2.6.2 the result was masked with #cmd("X'8FFF'") instead of
+  #cmd("X'7FFF'"), so #cmd("rand()") returned only the values 0 to 4095
+  and 32768 to 36863, half of them above #cmd("RAND_MAX"), and without
+  #cmd("srand()") the sequence started from the seed 0 (libc370 issue
+  387).
 
 === Related
 
