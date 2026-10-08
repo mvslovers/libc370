@@ -671,8 +671,9 @@ metadata and links a program against it (checked end to end on macOS).
    10. **#406, #408-#413** — the MVS services: JES2 SSI return codes,
        `__dsalc` UNCATLG, `__dscbav`, `__listc`, the rest of #411 (OPEN rc 4,
        DD name case, `__vsclos`), osio DCBs, `tsocmd`.
-   11. **#389-#392, #387, #395, #397-#401, #404, #423** — math, time,
-       `rand()`, stdio edge cases (#395 item 3, `tmpfile()` "wb+", fixed by PR #459,
+   11. **#389-#392, ~~#387~~, #395, #397-#401, #404, #423** — math, time,
+       ~~`rand()`~~ (#387: mask and default seed, PR #482, 2026-10-08, mvsdev
+       JOB01712, unreleased), stdio edge cases (#395 item 3, `tmpfile()` "wb+", fixed by PR #459,
        released in 2.5.0), int64, `arrayaddf`, ctype brackets,
        `__enq`/`__deq`, `getmain()` wrap, console, `%a`.
 
