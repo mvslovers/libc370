@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.6.3] - 2026-10-08
+
+A patch release with one fix, a drop-in for 2.6.2: no interface changed,
+but every `rand()` sequence differs from 2.6.2's. The cc370 range is
+unchanged: `>=1.4.0 <2`.
+
 ### Fixed
 - **`rand()` returns values from 0 to `RAND_MAX`, and without `srand()`
   its sequence is the one `srand(1)` starts (#387).** The result was

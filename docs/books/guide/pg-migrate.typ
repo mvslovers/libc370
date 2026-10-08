@@ -341,5 +341,11 @@ What later 2.x releases ask of a program or a build:
       reports it. Up to 2.6.1 the stream was placed wrongly within the
       record or in front of it, and #cmd("ftell()") kept the old
       position.], [Nothing.],
+    [2.6.3], [#cmd("rand()") returns values from 0 to #cmd("RAND_MAX"), and
+      without #cmd("srand()") its sequence is the one #cmd("srand(1)")
+      starts. Up to 2.6.2 it returned only 0 to 4095 and 32768 to 36863,
+      and the first call without #cmd("srand()") returned 0.], [Nothing,
+      unless a program depends on the exact numbers: every sequence
+      differs from 2.6.2's.],
   )
 ] <pg-migrate-since-tab>
