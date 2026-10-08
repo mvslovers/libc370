@@ -19,10 +19,11 @@ read cut at X'00' PR #456, short TSO-shaped parameter PR #446; assets, `pair`, t
 *PUTLINE #463, no FILE lock without threads #453, fprintf #385, tmpfile #395; assets, `pair`, tap checked), 2.6.0 on 2026-10-07 (tag `v2.6.0` on `5388287`, PR #469:
 *GETLINE #467; assets, `pair`, tap checked), 2.6.1 on 2026-10-07 (tag `v2.6.1` on `ba0e7ef`,
 PR #472: lock skip from the task tree #470; assets, `pair`, tap checked), 2.6.2 on 2026-10-07 (tag `v2.6.2` on `c452269`,
-PR #480: fseek() inside the buffer of an "r" stream #473 PR #479; assets incl. the manuals, `pair`, tap checked)
+PR #480: fseek() inside the buffer of an "r" stream #473 PR #479; assets incl. the manuals, `pair`, tap checked), 2.6.3 on 2026-10-08 (tag `v2.6.3` on `186fe88`,
+PR #484: rand() mask and default seed #387 PR #482; assets incl. the manuals, `pair`, tap checked)
 (tag `v2.2.0` on `0ba452a`, cc370 `>=1.1.0 <2`, built with cc370 1.1.0;
 assets, `pair` and the Homebrew tap checked; cc370's `install.sh` with cc370
-1.2.0 picks 2.2.0). `main` is 2.6.3-dev. Releases are tagged after the go of
+1.2.0 picks 2.2.0). `main` is 2.6.4-dev. Releases are tagged after the go of
 the coordinating mbt session and the maintainer's approval. Tier 0 (the 2.0 critical path) is done
 but for the consumer ports still pinned to 1.0.8 (step 7). 1.0.8 is the last
 1.x; a serious defect there gets an emergency 1.0.9 from the tag `v1.0.8` (D8
@@ -673,7 +674,7 @@ metadata and links a program against it (checked end to end on macOS).
        DD name case, `__vsclos`), osio DCBs, `tsocmd`.
    11. **#389-#392, ~~#387~~, #395, #397-#401, #404, #423** — math, time,
        ~~`rand()`~~ (#387: mask and default seed, PR #482, 2026-10-08, mvsdev
-       JOB01712, unreleased), stdio edge cases (#395 item 3, `tmpfile()` "wb+", fixed by PR #459,
+       JOB01712, released in 2.6.3), stdio edge cases (#395 item 3, `tmpfile()` "wb+", fixed by PR #459,
        released in 2.5.0), int64, `arrayaddf`, ctype brackets,
        `__enq`/`__deq`, `getmain()` wrap, console, `%a`.
 
