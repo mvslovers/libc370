@@ -9,7 +9,7 @@ The header #cmd("<locale.h>") declares the functions that select and
 describe a locale: the conventions for the character set, numbers, money
 and dates.
 
-libc370 provides one locale, the C locale, in which a program starts. The
+LIBC/370 provides one locale, the C locale, in which a program starts. The
 characters are those of EBCDIC code page 037 as described in @std-ctype,
 the decimal point is #cmd("."), and nothing is grouped. No other locale can
 be selected.
@@ -122,7 +122,7 @@ The C99 standard adds six #cmd("char") members for international currency
 formatting -- #cmd("int_p_cs_precedes"), #cmd("int_n_cs_precedes"),
 #cmd("int_p_sep_by_space"), #cmd("int_n_sep_by_space"),
 #cmd("int_p_sign_posn") and #cmd("int_n_sign_posn"). The structure of
-libc370 does not have them, and a program that refers to them does not
+LIBC/370 does not have them, and a program that refers to them does not
 compile.
 
 === Related

@@ -7,15 +7,15 @@
 This chapter shows how a C program on MVS 3.8j talks to other hosts over
 TCP/IP: what has to be in place before the first socket call can work, how
 a small server and a small client are written, how text crosses the line
-between EBCDIC and ASCII, and where the socket functions of libc370 differ
+between EBCDIC and ASCII, and where the socket functions of LIBC/370 differ
 from those of a POSIX system. Each function is described in full in the
-_libc370 Library Reference_, Chapter 23, “Sockets”.
+_LIBC/370 Library Reference_, Chapter 23, “Sockets”.
 
 == How a Socket Reaches the Network <pg-sockets-how>
 
 #idx("X'75' instruction")
 #idx("Hercules", "TCPIP instruction")
-MVS 3.8j has no TCP/IP of its own, and libc370 does not bring one. The
+MVS 3.8j has no TCP/IP of its own, and LIBC/370 does not bring one. The
 socket functions hand each call to the Hercules emulator through the
 _TCPIP instruction_, operation code #cmd("X'75'"). The emulator performs
 the call with the socket layer of the workstation it runs on, and returns
@@ -95,7 +95,7 @@ in network byte order already. Use #cmd("htonl()") and #cmd("htons()")
 anyway, so that the source stays portable\; here they return their argument
 unchanged.
 
-libc370 has no translation function for socket data, so the program brings
+LIBC/370 has no translation function for socket data, so the program brings
 its own table. The code page behind it, and why the newline is
 #cmd("X'15'"), are described in @pg-charset. The module in
 @pg-sockets-asc-fig builds both directions from the compiler's own mapping:
@@ -169,7 +169,7 @@ The steps, with what is particular to MVS:
 
 The date is formatted with #cmd("%Y-%m-%d %H:%M:%S") rather than with
 #cmd("%x") or #cmd("%T"), which #cmd("strftime()") of this library does not
-support (see the _libc370 Library Reference_, Chapter 20, “\<time.h\> — Date
+support (see the _LIBC/370 Library Reference_, Chapter 20, “\<time.h\> — Date
 and Time”).
 
 === Waiting for More Than the Network
@@ -233,7 +233,7 @@ translation module is linked into each:
   #screen(raw(read("../ex/pg-sockets/build.txt")))
 ] <pg-sockets-build-fig>
 
-Transfer the load modules to a load library on MVS as the _cc370 User's
+Transfer the load modules to a load library on MVS as the _CC/370 User's
 Guide_ describes, and run the server as a batch job:
 
 ```

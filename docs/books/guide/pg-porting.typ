@@ -272,6 +272,6 @@ into. The ones that most often matter:
   in an MVS service may return the service's code. Check each function's
   description.
 
-Each function's entry in the _libc370 Library Reference_ lists its
+Each function's entry in the _LIBC/370 Library Reference_ lists its
 deviations under _Notes_. Read them for the functions a ported program
 relies on most.

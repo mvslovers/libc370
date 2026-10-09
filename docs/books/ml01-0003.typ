@@ -1,17 +1,17 @@
 #import "bookmaster/bookmaster.typ": *
 
 #show: book.with(
-  title: "libc370 for MVS 3.8j",
+  title: "LIBC/370 for MVS 3.8j",
   subtitle: "Programmer's Guide",
-  short-title: "libc370 Programmer's Guide",
+  short-title: "LIBC/370 Programmer's Guide",
   number: "ML01-0003-0",
   date: "October 2026",
   authors: ("Mike Großmann",),
   edition: [
     #text(font: head-font, weight: "bold", size: 11pt)[First Edition (October 2026)]
 
-    This edition applies to Version 2 Release 6 of libc370
-    (libc370 2.6.3), as built with cc370 1.4.0, and to all subsequent
+    This edition applies to Version 2 Release 6 of LIBC/370
+    (libc370 2.6.3), as built with CC/370 1.4.0, and to all subsequent
     releases and modifications until otherwise indicated in new editions.
 
     *Draft.* The output of the examples that run on MVS has still to be
@@ -24,24 +24,24 @@
   ],
 )
 
-#part("index.html", title: [libc370 Programmer's Guide])[
+#part("index.html", title: [LIBC/370 Programmer's Guide])[
 #titlepage()
 #contents()
 #figures()
 
 #heading(numbering: none)[About This Book] <about>
 
-This book explains how to write C programs for MVS 3.8j with libc370: how a
+This book explains how to write C programs for MVS 3.8j with LIBC/370: how a
 program starts and ends, how it reads and writes data sets, what the
 EBCDIC character set and the 24-bit address space mean for C code, and how
 a program uses MVS services such as dynamic allocation, the console,
 multitasking and TCP/IP.
 
-Each function is described in full in the companion volume, the _libc370
+Each function is described in full in the companion volume, the _LIBC/370
 Library Reference_\; this book shows how the functions are used together.
 
-libc370 is built with, and only with, the cc370 toolchain. Every header
-checks the compiler: compiled with a cc370 older than 1.4.0 it stops with
+LIBC/370 is built with, and only with, the CC/370 toolchain. Every header
+checks the compiler: compiled with a CC/370 older than 1.4.0 it stops with
 #cmd("#error \"libc370 needs cc370 1.4.0 or later\"").
 
 == Who Should Use This Book
@@ -53,7 +53,7 @@ data sets, DD statements, job steps and load modules.
 == How This Book Is Organized
 
 #deflist(width: 1.35in,
-  [Chapter 1], [“Introducing libc370”.],
+  [Chapter 1], [“Introducing LIBC/370”.],
   [Chapter 2], [“Program Structure and Start-Up”.],
   [Chapter 3], [“Files and I/O”.],
   [Chapter 4], [“Character Sets”.],
@@ -66,15 +66,15 @@ data sets, DD statements, job steps and load modules.
   [Chapter 11], [“Programs under TSO and ISPF”.],
   [Chapter 12], [“Calling Between C and Assembler”.],
   [Chapter 13], [“Porting Programs to MVS”.],
-  [Appendix A], [“Migrating from crent370 and libc370 1.x”.],
+  [Appendix A], [“Migrating from crent370 and LIBC/370 1.x”.],
 )
 
 == Related Publications
 
 #deflist(width: 1.35in,
-  [ML01-0001], [_cc370 User's Guide_],
-  [ML01-0002], [_cc370 Command Reference_],
-  [ML01-0004], [_libc370 Library Reference_],
+  [ML01-0001], [_CC/370 User's Guide_],
+  [ML01-0002], [_CC/370 Command Reference_],
+  [ML01-0004], [_LIBC/370 Library Reference_],
 )
 
 #mainmatter()

@@ -6,7 +6,7 @@
 On a POSIX system #cmd("<unistd.h>") declares the process, file-descriptor
 and directory interfaces. MVS has none of them in that form: there is no
 #cmd("fork()") or #cmd("exec()"), no file descriptors below the C streams, no
-current directory and no process identifier in the POSIX sense. libc370's
+current directory and no process identifier in the POSIX sense. LIBC/370's
 #cmd("<unistd.h>") therefore declares only the two functions that have an MVS
 equivalent, #cmd("sleep()") and #cmd("usleep()"). The header defines no
 macros or types.

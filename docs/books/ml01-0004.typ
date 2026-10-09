@@ -1,17 +1,17 @@
 #import "bookmaster/bookmaster.typ": *
 
 #show: book.with(
-  title: "libc370 for MVS 3.8j",
+  title: "LIBC/370 for MVS 3.8j",
   subtitle: "Library Reference",
-  short-title: "libc370 Library Reference",
+  short-title: "LIBC/370 Library Reference",
   number: "ML01-0004-0",
   date: "October 2026",
   authors: ("Mike Großmann",),
   edition: [
     #text(font: head-font, weight: "bold", size: 11pt)[First Edition (October 2026)]
 
-    This edition applies to Version 2 Release 6 of libc370
-    (libc370 2.6.3), as built with cc370 1.4.0, and to all subsequent
+    This edition applies to Version 2 Release 6 of LIBC/370
+    (libc370 2.6.3), as built with CC/370 1.4.0, and to all subsequent
     releases and modifications until otherwise indicated in new editions.
 
     Comments on this book may be addressed to the issue tracker of
@@ -21,14 +21,14 @@
   ],
 )
 
-#part("index.html", title: [libc370 Library Reference])[
+#part("index.html", title: [LIBC/370 Library Reference])[
 #titlepage()
 #contents(depth: 2)
 #figures()
 
 #heading(numbering: none)[About This Book] <about>
 
-This book describes the functions, macros and types of libc370, the C
+This book describes the functions, macros and types of LIBC/370, the C
 library for programs that run on MVS 3.8j and are built with the cc370
 cross-toolchain. For each function it gives the header that declares it,
 its prototype, what it does, what it returns and how it reports an error.
@@ -38,12 +38,12 @@ POSIX, and a large group of extensions that give a C program access to MVS
 services: data sets and DD statements, dynamic allocation, VSAM, the console,
 tasks and synchronization, subsystems and JES2.
 
-How to write, build and run a program with libc370 -- start-up, the
+How to write, build and run a program with LIBC/370 -- start-up, the
 different kinds of files, the run-time environment -- is the subject of the
-companion volume, the _libc370 Programmer's Guide_.
+companion volume, the _LIBC/370 Programmer's Guide_.
 
-libc370 is built with, and only with, the cc370 toolchain. Every header
-checks the compiler: compiled with a cc370 older than 1.4.0 it stops with
+LIBC/370 is built with, and only with, the CC/370 toolchain. Every header
+checks the compiler: compiled with a CC/370 older than 1.4.0 it stops with
 #cmd("#error \"libc370 needs cc370 1.4.0 or later\"").
 
 == Who Should Use This Book
@@ -82,9 +82,9 @@ A part that has nothing to say is left out.
 == Related Publications
 
 #deflist(width: 1.35in,
-  [ML01-0001], [_cc370 User's Guide_],
-  [ML01-0002], [_cc370 Command Reference_],
-  [ML01-0003], [_libc370 Programmer's Guide_],
+  [ML01-0001], [_CC/370 User's Guide_],
+  [ML01-0002], [_CC/370 Command Reference_],
+  [ML01-0003], [_LIBC/370 Programmer's Guide_],
 )
 
 #mainmatter()

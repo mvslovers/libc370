@@ -50,7 +50,7 @@ not begin with it.
 #cmd("libc.a") that #cmd("cthread_create()") links, and the C start-up makes
 the name known to MVS with #cmd("IDENTIFY"); a program without threads
 carries no driver and identifies nothing. The same holds for the timer
-service and the worker pool. The start-up is described in the _libc370
+service and the worker pool. The start-up is described in the _LIBC/370
 Programmer's Guide_.
 
 #idx("interval", "units of 0.01 second")
@@ -862,7 +862,7 @@ the handle does not carry the eye-catcher #cmd("CTHDTASK").
   or #cmd("cthread_wait(&task->termecb)"), and save #cmd("task->rc") if you
   need it. Both waits are recognized: the second clears #cmd("termecb"), and
   the delete then finds the end of the thread in its TCB.
-- In libc370 2.3.0 and earlier, the delete looked at #cmd("termecb") only. A
+- In LIBC/370 2.3.0 and earlier, the delete looked at #cmd("termecb") only. A
   delete after #cmd("cthread_wait(&task->termecb)") was refused, the subtask
   stayed attached, and the step ended with abend #cmd("SA03"). With those
   releases, wait with #cmd("ecb_wait()").

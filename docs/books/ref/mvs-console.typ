@@ -29,7 +29,7 @@ SVC 244 that #cmd("__autask()") uses (see @mvs-program)\; see
 A single WTO message holds at most 124 characters, and the text of a WTOR
 message at most 122. The functions issue the messages without routing or
 descriptor codes, so the installation defaults apply. The text is EBCDIC,
-as every string in a libc370 program is.
+as every string in a LIBC/370 program is.
 
 == wto <mvs-console-wto>
 #idx("wto")

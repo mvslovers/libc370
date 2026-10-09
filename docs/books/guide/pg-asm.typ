@@ -292,7 +292,7 @@ names they define. To build one and link against it:
 
 ld370 searches the index only: a symbol that is in a member but not in the
 index -- because the library was built by another archiver -- is not found.
-An mbt project builds its library this way when it declares one, and
+An MBT project builds its library this way when it declares one, and
 publishes it with its header files for other projects to depend on. ar370
-and ld370 are described in the _cc370 Command Reference_, Chapter 4, “The
+and ld370 are described in the _CC/370 Command Reference_, Chapter 4, “The
 ar370 Command”, and Chapter 3, “The ld370 Command”.

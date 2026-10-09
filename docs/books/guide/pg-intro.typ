@@ -3,13 +3,13 @@
 // Narrow cells: ragged right.
 #show table: set par(justify: false)
 
-= Introducing libc370 <pg-intro>
+= Introducing LIBC/370 <pg-intro>
 
 #idx("libc370")
-libc370 is the C library for programs that run on MVS 3.8j. It is the
-run-time library of the cc370 cross-toolchain: a program is compiled and
+LIBC/370 (libc370) is the C library for programs that run on MVS 3.8j. It is the
+run-time library of the CC/370 cross-toolchain: a program is compiled and
 linked on a workstation with cc370, and the load module that results
-carries, linked into it, every part of libc370 that it uses. Nothing of the
+carries, linked into it, every part of LIBC/370 that it uses. Nothing of the
 library is installed on MVS.
 
 The library gives a C program three things: the C standard library, a set
@@ -20,7 +20,7 @@ it obtains for each program, not in the load module, so a program built with
 it can be reentrant too (@pg-rent).
 
 This chapter describes what the library covers, how it relates to the
-version of cc370, where it is installed, and how a program finds its
+version of CC/370, where it is installed, and how a program finds its
 headers and its functions.
 
 == What the Library Covers <pg-intro-cover>
@@ -28,7 +28,7 @@ headers and its functions.
 === The C Standard Library
 
 #idx("C99", "library")#idx("standard library")
-libc370 implements the library of the C standard as cc370 compiles it,
+LIBC/370 implements the library of the C standard as cc370 compiles it,
 C99 in the GNU dialect, with these headers:
 
 #tab(caption: [Standard headers])[
@@ -63,13 +63,13 @@ point of System/370, which has no infinity, no NaN and no rounding modes for
 #idx("long long")
 #cmd("long long") is a 64-bit type. System/370 has no 64-bit arithmetic,
 so cc370 calls routines of its own for multiplication, division and
-conversions; they are in #cmd("libcc370rt.a"), which belongs to cc370 and
+conversions; they are in #cmd("libcc370rt.a"), which belongs to CC/370 and
 is linked together with libc370.
 
 === Interfaces from POSIX
 
 #idx("POSIX")
-MVS is not a POSIX system, and libc370 takes from POSIX only what has a
+MVS is not a POSIX system, and LIBC/370 takes from POSIX only what has a
 meaning on MVS:
 
 - #cmd("<strings.h>"): #cmd("strcasecmp()") and its relatives.
@@ -114,25 +114,25 @@ that their names cannot collide with those of other programs:
   )
 ] <pg-intro-dirs-tab>
 
-The _libc370 Library Reference_ describes every function of every header.
+The _LIBC/370 Library Reference_ describes every function of every header.
 This book shows how they are used together: @pg-services for the MVS
 services, @pg-tasks for multitasking, @pg-tso for TSO.
 
-== libc370 and cc370 <pg-intro-cc370>
+== LIBC/370 and CC/370 <pg-intro-cc370>
 
 #idx("cc370", "version required")#idx("__CC370__")
-libc370 is built with cc370 and only with cc370, and the two are released
-as a pair. cc370 provides the compiler, the routines the compiler calls
+LIBC/370 is built with CC/370 and only with CC/370, and the two are released
+as a pair. CC/370 provides the compiler, the routines the compiler calls
 (#cmd("libcc370rt.a")) and the assembler macros of the function prologue
-and epilogue; libc370 provides the headers, #cmd("libc.a") with the start-up
+and epilogue; LIBC/370 provides the headers, #cmd("libc.a") with the start-up
 routine, the start-up object #cmd("crtm.o") and the other macros. Each
 depends on the other's version:
 
-- This release of libc370 needs cc370 1.4.0 or later, below 2.0.
-- cc370 1.4 needs libc370 2.3.0 or later: its link step names no start-up
+- This release of LIBC/370 needs CC/370 1.4.0 or later, below 2.0.
+- CC/370 1.4 needs LIBC/370 2.3.0 or later: its link step names no start-up
   object and takes #cmd("@@CRT0") from #cmd("libc.a").
 
-The library checks the first rule itself. Every libc370 header includes
+The library checks the first rule itself. Every LIBC/370 header includes
 #cmd("<sys/_cc370.h>"), which compares the macro #cmd("__CC370__") that cc370
 predefines -- the version as #var("major")#cmd(" * 10000 + ")#var("minor")#cmd(" * 100 + ")#var("patch"),
 10400 for 1.4.0 -- with the minimum, and stops the compilation of a program
@@ -143,7 +143,7 @@ built with an older compiler:
 ```
 
 The installation procedures of the toolchain install a matching pair; the
-_cc370 User's Guide_, Chapter 2, “Installing the Toolchain”, describes them.
+_CC/370 User's Guide_, Chapter 2, “Installing the Toolchain”, describes them.
 
 == Where the Library Is Installed <pg-intro-install>
 
@@ -158,8 +158,8 @@ was chosen:
   [#cmd("cc370/lib")], [#cmd("libc.a"), the library itself, which also holds
     the start-up routine #cmd("@@CRT0")\; #cmd("crtm.o"), the start-up
     object for a module called by a C program (@pg-startup-variants)\; and
-    cc370's #cmd("libcc370rt.a").],
-  [#cmd("cc370/macros")], [the assembler macros: libc370's own and the MVS
+    CC/370's #cmd("libcc370rt.a").],
+  [#cmd("cc370/macros")], [the assembler macros: LIBC/370's own and the MVS
     system macros that the library needs, for programs that include
     assembler source (@pg-asm).],
 )
@@ -198,7 +198,7 @@ the object module that defines it -- and then the ones that module needs,
 and so on. This is the automatic library call of the MVS linkage editor,
 done on the workstation.
 
-The unit that ld370 takes is the whole object module. libc370 therefore
+The unit that ld370 takes is the whole object module. LIBC/370 therefore
 puts nearly every function in a source file of its own, so that a program
 that calls #cmd("strlen()") gets #cmd("strlen()") and not a group of
 string functions with it. A program that is small on MVS follows the same
@@ -218,7 +218,7 @@ only what it needs.
 The program writes the version of the library it was linked with. A load
 module keeps the library it was linked with, whatever is installed later, so
 a program that writes this line when it starts records in its output which
-library it runs. @pg-intro-hello-jcl runs it; the _cc370 User's Guide_,
+library it runs. @pg-intro-hello-jcl runs it; the _CC/370 User's Guide_,
 Chapter 7, “Getting Programs onto MVS”, describes how the load module
 reaches #cmd("MYUSER.LOADLIB").
 
@@ -243,7 +243,7 @@ also give a function an external name of its own with #cmd("asm"):
 CTHDTASK *cthread_create(void *func, void *arg1, void *arg2) asm("@@CTCRTE");
 ```
 
-The libc370 headers do this for many of their functions. The external
+The LIBC/370 headers do this for many of their functions. The external
 name is the one that a link map, a message about an unresolved reference
 and an abend report show; to find the C function behind such a name,
 search the headers for it.

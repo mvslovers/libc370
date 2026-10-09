@@ -50,12 +50,12 @@ driver, pass them through #cmd("-Wl"), as in @pg-rent-attr-fig.
 ] <pg-rent-attr-fig>
 
 #idx("mbt", "rent and reus keys")
-In an mbt project, declare the attributes of each module in
+In an MBT project, declare the attributes of each module in
 #cmd("project.toml") with the keys #cmd("rent"), #cmd("reus") and
 #cmd("refr") of its #cmd("[[module]]") table. A key that is declared is
 passed to ld370 in both directions (#cmd("rent = false") becomes
 #cmd("--norent")), so the module does not depend on the default of the
-linker. The options of ld370 are described in the _cc370 Command
+linker. The options of ld370 are described in the _CC/370 Command
 Reference_, Chapter 3, “The ld370 Command”.
 
 *An attribute is a promise, not a protection.* ld370 sets the bit you ask
@@ -195,7 +195,7 @@ follow:
   from that library, or keep it reentrant from the start.
 
 Programs that are deployed into a library of their own and named on a
-#cmd("STEPLIB"), which is what mbt's #cmd("make deploy") produces, are not
+#cmd("STEPLIB"), which is what MBT's #cmd("make deploy") produces, are not
 affected. But they may be installed elsewhere later, and the cheapest time
 to keep data out of the module is when the program is written.
 
@@ -284,13 +284,13 @@ The area is freed when the program ends.
 Since the assembler output cannot tell constants from variables, the check
 belongs in the source:
 
-- mbt scans the sources of every module before it links them. Writable
+- MBT scans the sources of every module before it links them. Writable
   static data in a module declared #cmd("rent = true") stops the build. In
   a module that is authorized (#cmd("ac = 1")) it is a warning, because an
   authorized module fetched from an APF-authorized library may be loaded
   into storage of protection key 0, which the program cannot change either.
   #cmd("make module-data") runs the scan on its own.
-- Without mbt, look for the definitions outside functions and the
+- Without MBT, look for the definitions outside functions and the
   #cmd("static") definitions inside them, and ask of each whether anything
   stores into it. A #cmd("const") qualifier on the object itself -- not
   only on what a pointer points to -- is the answer that needs no further

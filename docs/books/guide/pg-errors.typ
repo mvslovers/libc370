@@ -20,7 +20,7 @@ signals of the C standard do -- and do not do -- on MVS.
 #idx("errno")#idx("errno", "per task")
 The return value of a function says whether it failed: #cmd("NULL") from
 #cmd("fopen()") and #cmd("malloc()"), #cmd("EOF") from #cmd("fclose()"), a
-nonzero value from most others. Each function entry of the _libc370 Library
+nonzero value from most others. Each function entry of the _LIBC/370 Library
 Reference_ gives the value. #cmd("errno") says why, and only after a
 failure: a function that succeeds may leave an earlier value in it.
 
@@ -194,7 +194,7 @@ Some related services cover particular cases:
     code, after the program has recovered (@pg-io-errors).],
 )
 
-All of them are described in the _libc370 Library Reference_, Chapter
+All of them are described in the _LIBC/370 Library Reference_, Chapter
 “Program Management and Storage”. Each task can have at most ten recovery
 routines established at a time, and #cmd("try()") uses one for the
 duration of the call.
@@ -202,7 +202,7 @@ duration of the call.
 == Signals <pg-errors-signals>
 
 #idx("signals")#idx("SIGABRT")#idx("abort")
-MVS has no signals. libc370 provides #cmd("signal()") and #cmd("raise()")
+MVS has no signals. LIBC/370 provides #cmd("signal()") and #cmd("raise()")
 so that programs written to the C standard compile and run, but a signal
 occurs only when the program calls #cmd("raise()"), or #cmd("abort()"),
 which raises #cmd("SIGABRT"). Nothing else raises one:

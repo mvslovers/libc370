@@ -53,7 +53,7 @@ checks from a production build.
   value of #cmd("EXIT_FAILURE") on MVS. No dump is taken. In batch the
   return code is the condition code of the job step. See @std-signal for
   how a program can catch #cmd("SIGABRT").
-- The message goes to #cmd("stderr"); the _libc370 Programmer's Guide_
+- The message goes to #cmd("stderr"); the _LIBC/370 Programmer's Guide_
   describes where #cmd("stderr") is written in batch and under TSO.
 - The message does not contain the name of the function in which the
   assertion failed, which the C99 standard asks for.

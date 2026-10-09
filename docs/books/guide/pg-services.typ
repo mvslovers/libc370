@@ -10,7 +10,7 @@
 A C program on MVS does much of its work through services that have no
 counterpart in standard C: it allocates data sets while it runs, asks the
 catalog what exists, reads VSAM clusters, talks to the operator, writes
-accounting records and hands jobs to JES2. libc370 gives each of these a C
+accounting records and hands jobs to JES2. LIBC/370 gives each of these a C
 interface. This chapter takes one typical task for each and walks through
 it:
 
@@ -30,7 +30,7 @@ it:
     (@pg-services-jes2).],
 )
 
-Every function used here is described in full in the _libc370 Library
+Every function used here is described in full in the _LIBC/370 Library
 Reference_. That book also lists, in the notes of each entry, the cases in
 which a function does not do what its name suggests\; the examples in this
 chapter keep clear of them, and the text says why where it matters.
@@ -78,7 +78,7 @@ APF-authorized program.
 
 The program management functions that need authorization -- changing the
 PSW key or the state, #cmd("GETMAIN") from a protected subpool -- are listed
-in the _libc370 Library Reference_, Chapter 29, “Program Management and
+in the _LIBC/370 Library Reference_, Chapter 29, “Program Management and
 Storage”.
 
 #idx("S047 abend")
@@ -89,7 +89,7 @@ the key itself, so its caller must already run in supervisor state with
 key 0. To run authorized:
 
 + Link the program with authorization code 1. With the cc370 driver, pass
-  #cmd("-Wl,--ac,1")\; with ld370, #cmd("--ac 1")\; in an mbt project, set
+  #cmd("-Wl,--ac,1")\; with ld370, #cmd("--ac 1")\; in an MBT project, set
   #cmd("ac = 1") for the module in #cmd("project.toml").
 + Put the load module into a library that is APF-authorized, that is, named
   in the APF list of the system (#cmd("IEAAPF00") in #cmd("SYS1.PARMLIB")).
@@ -177,7 +177,7 @@ Points to watch:
   could not build the request from the keywords, and otherwise the return
   code of SVC 99. It does not return the error and information reason codes
   that explain a failure. When you need them, build the request with the
-  text unit functions and issue it with #cmd("__svc99()"), as the _libc370
+  text unit functions and issue it with #cmd("__svc99()"), as the _LIBC/370
   Library Reference_ shows in Chapter 25, “Dynamic Allocation and IDCAMS”.
 - *DD names.* An allocation under a DD name that the step already has
   fails. To let MVS choose a free name, leave out #cmd("DD=") and pass a
@@ -282,7 +282,7 @@ To read the VTOC entry of one data set directly, use #cmd("__dscbdv()")
 from #cmd("<mvs/dscb.h>"): it reads the format-1 DSCB of a data set on a
 named volume. Its companions #cmd("__dscbav()"), which reads a DSCB by its
 disk address, and #cmd("__dscbv()"), which reads the format-4 DSCB, have
-restrictions that the _libc370 Library Reference_ describes in Chapter 24,
+restrictions that the _LIBC/370 Library Reference_ describes in Chapter 24,
 “Data Sets and DD Statements”\; read them before you use either.
 
 === Reading a PDS Directory <pg-services-pds>
@@ -557,7 +557,7 @@ Points to watch:
 - *Reading the output.* #cmd("jesprint()") passes the lines of one output
   data set of the job to a function of yours. Its return value does not say
   whether the data set was read in full: pass a #cmd("JESPRST") and look at
-  its #cmd("reason"). The _libc370 Library Reference_ lists the reasons in
+  its #cmd("reason"). The _LIBC/370 Library Reference_ lists the reasons in
   Chapter 33, “Subsystems, JES2 and ISPF”.
 - *The pause.* The example waits two seconds between looks, with a timed
   wait on an ECB that nothing else posts (line 67), and stops waiting if
