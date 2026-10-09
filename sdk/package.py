@@ -59,7 +59,7 @@ def derived(kind):
         "range": f">={lo} <{hi}",
         # the value cc370 predefines as __CC370__ (cc370#704)
         "number": a * 10000 + b * 100 + c,
-        "notes": f"Requires cc370 >= {lo}, < {hi}.",
+        "notes": f"Requires CC/370 >= {lo}, < {hi}.",
     }[kind]
 
 
