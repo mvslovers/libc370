@@ -4,6 +4,7 @@
   title: "LIBC/370 for MVS 3.8j",
   subtitle: "Programmer's Guide",
   short-title: "LIBC/370 Programmer's Guide",
+  product: "LIBC/370",
   number: "ML01-0003-0",
   date: "October 2026",
   authors: ("Mike Großmann",),
