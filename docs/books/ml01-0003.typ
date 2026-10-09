@@ -24,6 +24,8 @@
   ],
 )
 
+#part("index.html", title: [libc370 Programmer's Guide])[
+#titlepage()
 #contents()
 #figures()
 
@@ -76,24 +78,27 @@ data sets, DD statements, job steps and load modules.
 )
 
 #mainmatter()
+]
 #set page(numbering: "1")
 
-#include "guide/pg-intro.typ"
-#include "guide/pg-startup.typ"
-#include "guide/pg-io.typ"
-#include "guide/pg-charset.typ"
-#include "guide/pg-storage.typ"
-#include "guide/pg-errors.typ"
-#include "guide/pg-rent.typ"
-#include "guide/pg-tasks.typ"
-#include "guide/pg-services.typ"
-#include "guide/pg-sockets.typ"
-#include "guide/pg-tso.typ"
-#include "guide/pg-asm.typ"
-#include "guide/pg-porting.typ"
+#part("pg-intro.html", include "guide/pg-intro.typ")
+#part("pg-startup.html", include "guide/pg-startup.typ")
+#part("pg-io.html", include "guide/pg-io.typ")
+#part("pg-charset.html", include "guide/pg-charset.typ")
+#part("pg-storage.html", include "guide/pg-storage.typ")
+#part("pg-errors.html", include "guide/pg-errors.typ")
+#part("pg-rent.html", include "guide/pg-rent.typ")
+#part("pg-tasks.html", include "guide/pg-tasks.typ")
+#part("pg-services.html", include "guide/pg-services.typ")
+#part("pg-sockets.html", include "guide/pg-sockets.typ")
+#part("pg-tso.html", include "guide/pg-tso.typ")
+#part("pg-asm.html", include "guide/pg-asm.typ")
+#part("pg-porting.html", include "guide/pg-porting.typ")
 
 #show: appendices
-#include "guide/pg-migrate.typ"
+#part("pg-migrate.html", include "guide/pg-migrate.typ")
 
+#part("index-terms.html", title: [Index])[
 #heading(numbering: none)[Index]
 #make-index()
+]
