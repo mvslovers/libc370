@@ -4,6 +4,7 @@
   title: "LIBC/370 for MVS 3.8j",
   subtitle: "Library Reference",
   short-title: "LIBC/370 Library Reference",
+  product: "LIBC/370",
   number: "ML01-0004-0",
   date: "October 2026",
   authors: ("Mike Großmann",),
