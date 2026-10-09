@@ -51,7 +51,7 @@ afterwards. The C99 macro #cmd("math_errhandling") is not defined.
 
 == What Is Not Provided <std-math-missing>
 
-libc370 provides only the 22 functions described in this chapter. None of
+LIBC/370 provides only the 22 functions described in this chapter. None of
 the functions that C99 added to #cmd("<math.h>") exists: there are no
 #cmd("float") and #cmd("long double") variants (#cmd("sinf()"),
 #cmd("sqrtl()") ...), and no #cmd("round()"), #cmd("trunc()"),

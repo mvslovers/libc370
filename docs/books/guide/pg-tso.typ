@@ -4,13 +4,13 @@
 
 #idx("TSO")
 #idx("ISPF")
-A C program built with libc370 runs under TSO without any change: the same
+A C program built with LIBC/370 runs under TSO without any change: the same
 load module can be a batch job step, a program called from a terminal and a
 TSO command. This chapter shows what differs between those ways of running
 it -- how the program receives its arguments, where its standard streams
 go, how it reads from the terminal -- and how a program issues TSO commands
 and uses the dialog services of ISPF. The functions are described in the
-_libc370 Library Reference_, Chapter 29, “Program Management and Storage”
+_LIBC/370 Library Reference_, Chapter 29, “Program Management and Storage”
 (TSO commands), and Chapter 33, “Subsystems, JES2 and ISPF” (ISPF
 services).
 
@@ -369,7 +369,7 @@ them is wrong: #cmd("ISP_LMMDEL") is #cmd("\"LMDDEL  \""). To delete a
 member, write #cmd("\"LMMDEL  \"") yourself.
 
 #idx("ISPLINK", "resolving at link time")
-*Linking.* #cmd("ISPLINK") is a routine of ISPF, not of libc370, and the
+*Linking.* #cmd("ISPLINK") is a routine of ISPF, not of LIBC/370, and the
 linker on the workstation cannot find it: @pg-tso-zuser-link-fig shows the
 first link failing, as it should, because the module would end with an
 abend at its first call. The same holds for #cmd("ispf_available()"), which
@@ -384,7 +384,7 @@ resolved on MVS before the program runs, by link-editing the module once
 more with the ISPF load library as the automatic call library:
 
 + Link with #cmd("-Wl,--allow-unresolved"), as above, and transfer the
-  module to a load library on MVS (see the _cc370 User's Guide_).
+  module to a load library on MVS (see the _CC/370 User's Guide_).
 + Link-edit it again on MVS, with the library that contains #cmd("ISPLINK")
   as #cmd("SYSLIB"):
   ```

@@ -68,7 +68,7 @@ None of these functions ends the program with an abend.
 == Environment Variables <std-stdlib-env>
 
 #idx("environment variables")#idx("SYSENV DD statement")#idx("ENVIRON DD statement")
-MVS has no environment in the POSIX sense. libc370 keeps a list of
+MVS has no environment in the POSIX sense. LIBC/370 keeps a list of
 environment variables for each program, shared by all its tasks, and fills
 it at start-up from a data set: the one allocated to the DD name
 #cmd("SYSENV"), or, if there is no #cmd("SYSENV") DD statement, the one
@@ -295,7 +295,7 @@ several elements match, any of them may be returned.
 === Notes
 
 *The arguments of #var("compar") are in the opposite order to C99.*
-libc370 calls #cmd("compar(element, key)"), where C99 specifies
+LIBC/370 calls #cmd("compar(element, key)"), where C99 specifies
 #cmd("compar(key, element)"). A comparison function whose two arguments have
 the same type, as with #cmd("qsort()"), works either way. A function that
 expects a key of another type as its first argument -- a string key, say,
@@ -826,7 +826,7 @@ always returns 0.
   #cmd("getenv()") compare exactly.
 - #cmd("putenv()") copies the string. POSIX makes the string itself part of
   the environment, so that a later change to it changes the variable\; in
-  libc370 it does not.
+  LIBC/370 it does not.
 - #cmd("putenv()") temporarily overwrites the #cmd("=") in #var("str") with a
   null character and restores it before it returns. #var("str") must
   therefore be in modifiable storage, not a string constant of a reentrant
@@ -1022,7 +1022,7 @@ The completion code of the subtask, as follows:
 === Notes
 
 - #var("string") must not be #cmd("NULL"). C99 lets a program call
-  #cmd("system(NULL)") to ask whether a command processor exists\; libc370
+  #cmd("system(NULL)") to ask whether a command processor exists\; LIBC/370
   does not check for it and takes the contents of low storage as the
   program name.
 - The value is a completion code, not a status in the POSIX sense: test

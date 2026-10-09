@@ -12,7 +12,7 @@ the program.
 
 #idx("signals", "on MVS")
 #idx("abend", "and signals")
-MVS has no signals. libc370 implements the interface of the C standard
+MVS has no signals. LIBC/370 implements the interface of the C standard
 with a table of handlers and nothing more: *a signal occurs only when the
 program calls #cmd("raise()")*, or #cmd("abort()"), which raises
 #cmd("SIGABRT"). No event of the system is turned into a signal:
@@ -98,7 +98,7 @@ signal; it is not reset to #cmd("SIG_DFL") when the signal occurs.
 
 - *The previous handler is not returned.* The C standard requires
   #cmd("signal()") to return the handler that was in force before the call,
-  so that a program can restore it later. libc370 returns #var("func")
+  so that a program can restore it later. LIBC/370 returns #var("func")
   instead. A program that wants to restore an earlier handler must keep
   it itself.
 - *An invalid signal number is not reported.* For a #var("sig") outside 1

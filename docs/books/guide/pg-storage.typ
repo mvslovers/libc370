@@ -156,7 +156,7 @@ comes from:
   #cmd("freemain()") only, never with #cmd("free()"), and the blocks of
   #cmd("malloc()") never with #cmd("freemain()").
 
-Both are described in the _libc370 Library Reference_, Chapter “Program
+Both are described in the _LIBC/370 Library Reference_, Chapter “Program
 Management and Storage”. A problem-state program may use the subpools 1 to
 127.
 

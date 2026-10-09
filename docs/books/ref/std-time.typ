@@ -40,7 +40,7 @@ of #cmd("<ext/time64.h>") (@ext).
 === The Time Zone <std-time-tz>
 
 #idx("time zone")#idx("TZ environment variable")#idx("CVTTZ")
-libc370 keeps one time-zone offset for each MVS task: the number of seconds
+LIBC/370 keeps one time-zone offset for each MVS task: the number of seconds
 by which local time is ahead of UTC (negative west of Greenwich).
 #cmd("localtime()"), #cmd("localtime_r()") and #cmd("ctime()") add it to the
 calendar time. There are no daylight saving time rules: the offset stays the
@@ -283,7 +283,7 @@ or greater than 205 (the years 1970 to 2105).
 === Notes
 
 - *The fields are taken as UTC, not as local time.* C99 says that
-  #cmd("mktime()") interprets them as local time\; libc370 applies no
+  #cmd("mktime()") interprets them as local time\; LIBC/370 applies no
   time-zone offset. #cmd("mktime()") is therefore the inverse of
   #cmd("gmtime()"), not of #cmd("localtime()"). To convert local time,
   subtract #cmd("__tzget()") from the result.
@@ -480,7 +480,7 @@ run-time environment.
 === Notes
 
 - *The sign is the opposite of POSIX.* A POSIX #cmd("TZ") such as
-  #cmd("EST5EDT") gives the hours #emph[behind] UTC and names the zone. libc370
+  #cmd("EST5EDT") gives the hours #emph[behind] UTC and names the zone. LIBC/370
   does not accept it: a value that does not begin with a digit or a minus
   sign is reported with three console messages, and the offset is taken
   from #cmd("CVTTZ"). A leading #cmd("+") is not accepted either.

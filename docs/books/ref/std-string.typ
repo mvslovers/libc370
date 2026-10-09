@@ -311,7 +311,7 @@ into #var("s1") so that #cmd("strcmp()") of two transformed strings gives the
 same result as #cmd("strcoll()") of the originals. At most #var("n") bytes,
 including the null character, are written.
 
-libc370 supports only the #cmd("\"C\"") locale, whose collating sequence is
+LIBC/370 supports only the #cmd("\"C\"") locale, whose collating sequence is
 the EBCDIC code order. #cmd("strcoll()") is therefore #cmd("strcmp()"), and
 #cmd("strxfrm()") copies the string unchanged.
 
@@ -517,7 +517,7 @@ not occur in #var("s1").
 === Notes
 
 If #var("s2") is the empty string, C99 requires the result #var("s1").
-libc370 returns #cmd("NULL") instead.
+LIBC/370 returns #cmd("NULL") instead.
 
 === Related
 
@@ -558,7 +558,7 @@ A pointer to the next token, or #cmd("NULL") when no token is left.
   program can tokenize different strings at the same time. Within one task
   there is one position: a routine of the program that calls
   #cmd("strtok()") itself disturbs a caller that is in the middle of a
-  sequence. The functions of libc370 itself do not disturb it.
+  sequence. The functions of LIBC/370 itself do not disturb it.
 - Several adjacent delimiters count as one, so an empty field between two
   delimiters produces no token.
 

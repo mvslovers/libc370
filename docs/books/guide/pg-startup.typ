@@ -117,11 +117,11 @@ link line at all. An object module named before the libraries that defines
 (@pg-startup-link).
 
 #idx("crt0.o", "no longer installed")#idx("crt1.o", "no longer installed")
-#note[Releases of libc370 up to 2.3 also installed #cmd("@@CRT0") as the
+#note[Releases of LIBC/370 up to 2.3 also installed #cmd("@@CRT0") as the
 files #cmd("crt0.o") and #cmd("crt1.o"), and earlier compilers named
 #cmd("crt0.o") on every link. They are gone. A build that still names one
 of them fails -- cc370 reports #cmd("crt0.o: No such file or directory")
--- so drop the name from the link line. An mbt build needs mbt 2.2.0 or later. Up to libc370 2.2 the
+-- so drop the name from the link line. An MBT (mbt) build needs MBT 2.2.0 or later. Up to LIBC/370 2.2 the
 two files also differed: #cmd("crt0.o") identified #cmd("CTHREAD") in every
 program, and a program linked with #cmd("crt1.o") could not create threads.
 A load module keeps the start-up it was linked with until it is linked
@@ -199,9 +199,9 @@ and the entry point, which #cmd("crtm.o"), named first, puts at offset 0.
 ] <pg-startup-crtm-fig>
 
 #idx("mbt", "start-up module")
-With mbt, a C program leaves out the key #cmd("startup") of its
+With MBT, a C program leaves out the key #cmd("startup") of its
 #cmd("[[module]]") in #cmd("project.toml")\; #cmd("startup = \"crtm\"")
-links #cmd("crtm.o"). The _cc370 Command Reference_, Chapter 1, “The cc370
+links #cmd("crtm.o"). The _CC/370 Command Reference_, Chapter 1, “The cc370
 Command”, describes the link options.
 
 == Running Code Before main() <pg-startup-premain>
@@ -298,7 +298,7 @@ To replace a private #cmd("@@START") with #cmd("__premain()"):
   there, and leave the others #cmd("NULL") for the start-up to open.
 + Return 0 to go on, or a return code to stop before #cmd("main()").
 + Delete the private #cmd("@@START") from the program and from every
-  library on its link line. With mbt, remove the key #cmd("dep_startup")
+  library on its link line. With MBT, remove the key #cmd("dep_startup")
   that chose it.
 + Link again and check with file370 that #cmd("@@PREMAI") is resolved, as
   in @pg-startup-premain-link-fig.

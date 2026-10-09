@@ -14,7 +14,7 @@ serialize access to shared data, how to hand work to a pool of threads, how
 to have something happen after an interval, and how to end a program that
 has threads.
 
-Every function is described in the _libc370 Library Reference_, Chapter 30,
+Every function is described in the _LIBC/370 Library Reference_, Chapter 30,
 “Tasks, Synchronization and Timers”.
 
 == Before You Start <pg-tasks-start>
@@ -109,7 +109,7 @@ Some rules follow from how the handle works:
   operator and leaves the handle as it was. Wait first, then delete.
 - *Either wait will do.* #cmd("cthread_wait(&task->termecb)") clears the
   ECB it waited on, but #cmd("cthread_delete()") then finds the end of the
-  thread in its TCB. (Up to libc370 2.3.0 it did not: the delete was
+  thread in its TCB. (Up to LIBC/370 2.3.0 it did not: the delete was
   refused and the step ended with abend #cmd("SA03"). With those releases,
   wait for #cmd("termecb") with #cmd("ecb_wait()").)
 - *A thread ends itself* by returning from its function or by calling

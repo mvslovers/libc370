@@ -30,7 +30,7 @@ TSO commands. The headers are:
 #idx("start-up", "of a C program")
 How a C program is started -- the start-up routine #cmd("@@CRT0"), the
 start-up module #cmd("crtm"), the stack, and the parameters a program
-receives -- is described in the _libc370 Programmer's Guide_. This chapter
+receives -- is described in the _LIBC/370 Programmer's Guide_. This chapter
 describes only the interfaces of #cmd("<mvs/crt.h>") that a program may call.
 
 #idx("authorization", "program management functions")

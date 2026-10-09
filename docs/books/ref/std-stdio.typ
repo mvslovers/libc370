@@ -1537,7 +1537,7 @@ A pointer to the stream, or #cmd("NULL").
 
 === Notes
 
-Up to libc370 2.4 the stream was opened #cmd("\"wb\"") and could only be
+Up to LIBC/370 2.4 the stream was opened #cmd("\"wb\"") and could only be
 written.
 
 === Related

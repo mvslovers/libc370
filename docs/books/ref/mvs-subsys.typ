@@ -1422,10 +1422,10 @@ The header #cmd("<mvs/ispf.h>") gives a C program access to the dialog
 services of ISPF. ISPF provides two interfaces: #cmd("ISPLINK"), called
 with one parameter per operand, and #cmd("ISPEXEC"), which takes the
 service request as a character string. Both are routines of ISPF itself and
-are not part of libc370; the header declares them, together with
+are not part of LIBC/370; the header declares them, together with
 #cmd("ISPQRY"), under their own names. #cmd("ISPLINK") and #cmd("ISPEXEC")
 need a parameter list in which the last address has its high-order bit set,
-which a C call does not build; call the libc370 functions
+which a C call does not build; call the LIBC/370 functions
 #cmd("isplink()"), #cmd("ispexec()") and #cmd("isp_select()") instead.
 
 The program must run as a TSO command processor under ISPF.

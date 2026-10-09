@@ -14,7 +14,7 @@ that the C program does not choose. This chapter shows how to read and
 write data sets, members of partitioned data sets and SYSOUT with the
 standard functions, how lines become records and records become lines, how
 to create a new data set, and what to do when a data set runs out of space.
-The _libc370 Library Reference_ describes each function and lists every
+The _LIBC/370 Library Reference_ describes each function and lists every
 option; this chapter shows which ones to use for a task.
 
 == How a Stream Reaches a Data Set <pg-io-model>
@@ -438,7 +438,7 @@ abend; a stream that reported #cmd("ENOSPC") is closed with
 
 #idx("record input and output")#idx("ropen")
 Streams cover most work with sequential data. For the rest, the library has
-interfaces of its own, described in the _libc370 Library Reference_:
+interfaces of its own, described in the _LIBC/370 Library Reference_:
 
 #deflist(width: 1.6in,
   [Record I/O], [#cmd("ropen()"), #cmd("rread()"), #cmd("rwrite()") and

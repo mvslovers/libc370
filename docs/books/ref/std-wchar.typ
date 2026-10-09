@@ -3,12 +3,12 @@
 = \<wchar.h\> — Wide Characters <std-wchar>
 
 #idx("wchar.h")#idx("wide characters")
-In libc370, #cmd("<wchar.h>") provides the wide-character types and their
+In LIBC/370, #cmd("<wchar.h>") provides the wide-character types and their
 limits, and nothing else. The C standard also places about sixty functions in
 this header -- wide-character input and output (#cmd("fgetwc()"),
 #cmd("wprintf()") ...), wide-string handling (#cmd("wcslen()"),
 #cmd("wcscpy()") ...), numeric conversions (#cmd("wcstol()") ...) and the
-restartable conversions (#cmd("mbrtowc()") ...). libc370 implements none of
+restartable conversions (#cmd("mbrtowc()") ...). LIBC/370 implements none of
 them, and the header does not declare them, so a call fails at compile time
 rather than at link time. The type #cmd("mbstate_t") is not defined either.
 
