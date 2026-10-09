@@ -121,7 +121,7 @@ link line at all. An object module named before the libraries that defines
 files #cmd("crt0.o") and #cmd("crt1.o"), and earlier compilers named
 #cmd("crt0.o") on every link. They are gone. A build that still names one
 of them fails -- cc370 reports #cmd("crt0.o: No such file or directory")
--- so drop the name from the link line. An MBT build needs MBT 2.2.0 or later. Up to LIBC/370 2.2 the
+-- so drop the name from the link line. An MBT (mbt) build needs MBT 2.2.0 or later. Up to LIBC/370 2.2 the
 two files also differed: #cmd("crt0.o") identified #cmd("CTHREAD") in every
 program, and a program linked with #cmd("crt1.o") could not create threads.
 A load module keeps the start-up it was linked with until it is linked

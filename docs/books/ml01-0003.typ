@@ -31,7 +31,7 @@
 
 #heading(numbering: none)[About This Book] <about>
 
-This book explains how to write C programs for MVS 3.8j with LIBC/370: how a
+This book explains how to write C programs for MVS 3.8j with LIBC/370 (libc370): how a
 program starts and ends, how it reads and writes data sets, what the
 EBCDIC character set and the 24-bit address space mean for C code, and how
 a program uses MVS services such as dynamic allocation, the console,
@@ -40,7 +40,7 @@ multitasking and TCP/IP.
 Each function is described in full in the companion volume, the _LIBC/370
 Library Reference_\; this book shows how the functions are used together.
 
-LIBC/370 is built with, and only with, the CC/370 toolchain. Every header
+LIBC/370 is built with, and only with, the CC/370 (cc370) toolchain. Every header
 checks the compiler: compiled with a CC/370 older than 1.4.0 it stops with
 #cmd("#error \"libc370 needs cc370 1.4.0 or later\"").
 

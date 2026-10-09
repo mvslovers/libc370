@@ -28,8 +28,8 @@
 
 #heading(numbering: none)[About This Book] <about>
 
-This book describes the functions, macros and types of LIBC/370, the C
-library for programs that run on MVS 3.8j and are built with the cc370
+This book describes the functions, macros and types of LIBC/370 (libc370), the C
+library for programs that run on MVS 3.8j and are built with the CC/370
 cross-toolchain. For each function it gives the header that declares it,
 its prototype, what it does, what it returns and how it reports an error.
 
@@ -42,7 +42,7 @@ How to write, build and run a program with LIBC/370 -- start-up, the
 different kinds of files, the run-time environment -- is the subject of the
 companion volume, the _LIBC/370 Programmer's Guide_.
 
-LIBC/370 is built with, and only with, the CC/370 toolchain. Every header
+LIBC/370 is built with, and only with, the CC/370 (cc370) toolchain. Every header
 checks the compiler: compiled with a CC/370 older than 1.4.0 it stops with
 #cmd("#error \"libc370 needs cc370 1.4.0 or later\"").
 
