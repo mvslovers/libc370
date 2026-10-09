@@ -1,16 +1,16 @@
-# libc370
+# LIBC/370 (libc370)
 
-The C runtime / **libc for MVS 3.8j** (TK4-, TK5, MVS/CE) — the target library
-of the [cc370](https://github.com/mvslovers/cc370) cross-toolchain.
+LIBC/370 is the C runtime / **libc for MVS 3.8j** (TK4-, TK5, MVS/CE) — the target
+library of the [CC/370 (cc370)](https://github.com/mvslovers/cc370) cross-toolchain.
 
 A reentrant C runtime: the standard C library (`stdio`, `stdlib`, `string`,
 `time`, …) plus the MVS runtime it is built on (the C startup, GETMAIN-based
 storage, dataset I/O) and MVS extras (JES2, ISPF, RACF, SMF, a thread manager).
-Since 2.1 the compiler-support routines (cc370's *libgcc*) and the
-prologue macros ship with cc370 itself (`libcc370rt.a`), so libc370 needs
-**cc370 1.1.0 or later**; every header checks it (`<sys/_cc370.h>`).
+Since 2.1 the compiler-support routines (CC/370's *libgcc*) and the
+prologue macros ship with CC/370 itself (`libcc370rt.a`); since 2.4 LIBC/370
+needs **CC/370 1.4.0 or later**, and every header checks it (`<sys/_cc370.h>`).
 
-Originally created as **crent370** by Michael Dean Rayborn; now the cc370 target
+Originally created as **crent370** by Michael Dean Rayborn; now the CC/370 target
 libc, maintained by the [mvslovers](https://github.com/mvslovers) community.
 
 **2.0 reorganised the public headers.** Coming from 1.x, read
@@ -18,18 +18,25 @@ libc, maintained by the [mvslovers](https://github.com/mvslovers) community.
 is the last 1.x release. Crypto (SHA-256, Blowfish, base64) is
 [crypto370](https://github.com/mvslovers/crypto370) since 2.0.
 
-## Compatibility with cc370
+## Compatibility with CC/370
 
-libc370 2.1.x needs **cc370 1.1.0 or later, below 2**. The compiler helpers
-(`libcc370rt.a`) and the prologue macros belong to cc370; headers, `libc.a`,
-the startup objects and the other macros to libc370. Every libc370 header
-checks the compiler (`#error "libc370 needs cc370 1.1.0 or later"`), and
-cc370 1.1.x in turn needs libc370 2.1.0 or later.
+LIBC/370 2.4 and later needs **CC/370 1.4.0 or later, below 2**. The compiler
+helpers (`libcc370rt.a`) and the prologue macros belong to CC/370; headers,
+`libc.a` (with the startup `@@CRT0`), `crtm.o` and the other macros to
+LIBC/370. Every header checks the compiler
+(`#error "libc370 needs cc370 1.4.0 or later"`), and CC/370 in turn needs a
+LIBC/370 recent enough for its link line.
 
-| libc370 | cc370 |
+| LIBC/370 | needs CC/370 |
 |---|---|
-| 2.1.x | `>= 1.1.0, < 2` |
+| 2.4.x and later | `>= 1.4.0, < 2` |
+| 2.1.x - 2.3.x | `>= 1.1.0, < 2` |
 | 2.0.x and older | 1.0.0 |
+
+| CC/370 | needs LIBC/370 |
+|---|---|
+| 1.4.x and later | `>= 2.3.0` |
+| 1.1.x - 1.3.x | `>= 2.1.0` |
 
 The requirement is written once, in `sdk/cc370.json`. Who owns what, why, and
 the checklist for cutting a release:
@@ -38,7 +45,7 @@ the checklist for cutting a release:
 ## C99 coverage
 
 [docs/c99-audit.md](docs/c99-audit.md) lists every function, macro and type of
-the C99 library (clauses 7.2-7.24) with what libc370 provides: declared or
+the C99 library (clauses 7.2-7.24) with what LIBC/370 provides: declared or
 not, as C99 declares it or not, in `libc.a` or not. `sdk/c99audit.py`
 regenerates it. The open gaps have issues (#336-#341). `<complex.h>`,
 `<fenv.h>` and `<tgmath.h>` are left out on purpose (#342): no project uses
@@ -47,9 +54,9 @@ counterpart in S/370 hexadecimal floating point.
 
 ## Installing a release
 
-The easy way is cc370's `install.sh` from its
+The easy way is CC/370's `install.sh` from its
 [latest release](https://github.com/mvslovers/cc370/releases/latest): it
-installs cc370 and the newest libc370 that fits it into `$PREFIX` (default
+installs CC/370 and the newest LIBC/370 that fits it into `$PREFIX` (default
 `~/.local`), checksums verified.
 
 With Homebrew (macOS, Linux), from the
@@ -58,35 +65,35 @@ With Homebrew (macOS, Linux), from the
 ```sh
 brew trust mvslovers/tap            # once: Homebrew 7 loads a dependency only
                                     # from a trusted tap
-brew install mvslovers/tap/cc370    # cc370 and, as its dependency, libc370
-brew install mvslovers/tap/libc370  # libc370 alone
+brew install mvslovers/tap/cc370    # CC/370 and, as its dependency, LIBC/370
+brew install mvslovers/tap/libc370  # LIBC/370 alone
 ```
 
 Naming a formula trusts it, so `brew install mvslovers/tap/libc370` works
-without `brew trust`; only dependencies from the tap need it, and libc370
-has none (measured on macOS and Linux: cc370's `homebrew.yml`, run
+without `brew trust`; only dependencies from the tap need it, and LIBC/370
+has none (measured on macOS and Linux: CC/370's `homebrew.yml`, run
 37109391271, job "brew libc370 alone, untrusted tap", which runs on every
-cc370 Homebrew check since cc370#730).
+CC/370 Homebrew check since cc370#730).
 
 The formula installs the sysroot under its `libexec` (`include/`, `lib/`,
 `macros/`), which Homebrew does not link beside the host's own C library;
-cc370 links it into its own tree. The formula is rendered by this
+CC/370 links it into its own tree. The formula is rendered by this
 repository's release workflow (`sdk/homebrew/libc370.rb.in`).
 
-Each libc370 release (from 2.1.0) also carries the pieces on their own:
-`libc370-<v>-sysroot.tar.gz` (unpack into the cc370 sysroot,
+Each LIBC/370 release (from 2.1.0) also carries the pieces on their own:
+`libc370-<v>-sysroot.tar.gz` (unpack into the CC/370 sysroot,
 `<prefix>/cc370`), `libc370-dev_<v>_all.deb` and
 `libc370-devel-<v>.noarch.rpm` (into `/usr/lib/cc370/cc370`, depending on
-cc370's packages), `libc370-<v>-metadata.json` and `SHA256SUMS`.
+CC/370's packages), `libc370-<v>-metadata.json` and `SHA256SUMS`.
 
 ## Build & install
 
-Host-native — pure `cc370 -S → as370 → ar370`, **no mbt and no MVS round-trip**.
-You need the [cc370](https://github.com/mvslovers/cc370) toolchain built and
+Host-native — pure `cc370 -S → as370 → ar370`, **no MBT (mbt) and no MVS round-trip**.
+You need the [CC/370](https://github.com/mvslovers/cc370) toolchain built and
 installed first (`cc370`, `as370`, `ld370`, `ar370` on `PATH`).
 
 ```sh
-make install     # build + install into the cc370 sysroot
+make install     # build + install into the CC/370 sysroot
 make             # build only (into build/sdk)
 make clean
 ```
@@ -95,7 +102,7 @@ The library is compiled with `-Os`: 2.9% smaller than `-O1`, and the MVS
 test series runs identically with either (#344). `LIBC370_OPT=-O1 make`
 builds the `-O1` variant for a comparison.
 
-`make install` produces and drops the four things cc370 looks for — all into the
+`make install` produces and drops the four things CC/370 looks for — all into the
 one sysroot it derives from the driver itself (`cc370 -dumpmachine` is `cc370`, so
 the sysroot is `<prefix>/cc370/`, default `~/.local/cc370/`):
 
@@ -104,7 +111,7 @@ the sysroot is `<prefix>/cc370/`, default `~/.local/cc370/`):
 | headers (`stdio.h` …, `mvs/`, `ext/`, `ibm/`, `s370/`) | `<sysroot>/include` | `cc370 -c foo.c` finds them with no `-I` |
 | `libc.a` (the runtime) | `<sysroot>/lib` | `-lc` pulls it |
 | `crtm.o` | `<sysroot>/lib` | the nested startup (a startfile); the C startup `@@CRT0` is inside `libc.a` |
-| macros (vendored SYS1.MACLIB + libc370's `maclib/`; the prologue macros are cc370's) | `<sysroot>/macros` | `as370` (real binary in `<sysroot>/bin`) finds them via `<exedir>/../macros`, no `-I` |
+| macros (vendored SYS1.MACLIB + LIBC/370's `maclib/`; the prologue macros are CC/370's) | `<sysroot>/macros` | `as370` (real binary in `<sysroot>/bin`) finds them via `<exedir>/../macros`, no `-I` |
 
 After that the toolchain is self-contained:
 
@@ -123,7 +130,7 @@ src/          the implementation, mirroring include/ -- src/stdio/, src/ext/time
               DYN75 provider; src/s370/ the 64-bit arithmetic the compiler calls;
               src/internal/ shared private headers, never installed
 attic/        code kept but never built
-maclib/       libc370 assembler macros
+maclib/       LIBC/370 assembler macros
 sysmac/       vendored SYS1.MACLIB members
 sdk/          mklibc.py — the build-and-install engine (driven by the Makefile)
 ```

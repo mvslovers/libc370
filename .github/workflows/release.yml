@@ -114,7 +114,7 @@ jobs:
             echo "Release $GITHUB_REF_NAME exists; its notes are left as they are."
           else
             gh release create "$GITHUB_REF_NAME" \
-              --title "libc370 $GITHUB_REF_NAME" --notes-file notes.md
+              --title "LIBC/370 $GITHUB_REF_NAME" --notes-file notes.md
           fi
           gh release upload "$GITHUB_REF_NAME" --clobber dist/*
 
