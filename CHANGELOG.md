@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.7.0] - 2026-10-11
+
+A minor release with no change to the library: headers, `libc.a` and the
+macros it installs are what 2.6.3 had. What changes is how it is packaged.
+The `.deb`, the `.rpm` and the Homebrew formula now depend on maclib370,
+the system macro libraries of MVS 3.8j as a package of their own. Whoever
+installs with `apt`, `dnf` or Homebrew has one more package to name or
+trust. The cc370 range is unchanged: `>=1.4.0 <2`.
+
 ### Changed
 - **The packages depend on maclib370 >= 1.0.0, < 2 (#490).** maclib370 is
   SYS1.MACLIB and SYS1.AMODGEN of MVS 3.8j as a package of its own,

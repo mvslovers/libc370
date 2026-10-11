@@ -73,7 +73,7 @@ Naming a formula trusts it, but only that formula: its dependencies from the
 tap need `brew trust`. Up to 2.6.3 LIBC/370 had none, so
 `brew install mvslovers/tap/libc370` worked without it (measured on macOS and
 Linux: CC/370's `homebrew.yml`, run 37109391271, job "brew libc370 alone,
-untrusted tap"). Since it depends on maclib370 (#490), it needs
+untrusted tap"). Since 2.7.0 it depends on maclib370 (#490) and needs
 `brew trust mvslovers/tap` as well.
 
 The formula installs the sysroot under its `libexec` (`include/`, `lib/`,
@@ -87,7 +87,7 @@ Each LIBC/370 release (from 2.1.0) also carries the pieces on their own:
 `libc370-devel-<v>.noarch.rpm` (into `/usr/lib/cc370/cc370`, depending on
 CC/370's packages), `libc370-<v>-metadata.json` and `SHA256SUMS`.
 
-The packages and the formula also depend on
+From 2.7.0 the packages and the formula also depend on
 [maclib370](https://github.com/mvslovers/maclib370) (#490), the SYS1.MACLIB and
 SYS1.AMODGEN of MVS 3.8j, which installs into
 `<sysroot>/maclib370/macros`. Its `.deb`/`.rpm` come from its own release
