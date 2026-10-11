@@ -17,7 +17,7 @@ maclib370 its packages depend on once, in sdk/maclib370.json (#490); every
 field below is derived from them (the Debian and RPM dependencies, the
 metadata, the release notes line, the __CC370__ number #315 checks).
 
-Usage:  python3 sdk/package.py requires {deb|rpm|range|number|notes}
+Usage:  python3 sdk/package.py requires {deb|rpm|range|maclib370-range|number|notes}
         python3 sdk/package.py build --version V --built-with "1.0.0 (sha)"
                                      [--out dist] [--no-nfpm]
 

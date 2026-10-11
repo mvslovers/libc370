@@ -91,7 +91,8 @@ The packages and the formula also depend on
 [maclib370](https://github.com/mvslovers/maclib370) (#490), the SYS1.MACLIB and
 SYS1.AMODGEN of MVS 3.8j, which installs into
 `<sysroot>/maclib370/macros`. Its `.deb`/`.rpm` come from its own release
-page; `apt`/`dnf` install it together with LIBC/370 when both files are named.
+page; `apt`/`dnf` install it together with LIBC/370 when the files are named
+in one command (with CC/370's package, if CC/370 is not installed yet).
 The tarball does not check dependencies: unpack maclib370's tarball into
 `<prefix>/cc370/maclib370` yourself.
 

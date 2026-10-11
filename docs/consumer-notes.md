@@ -440,7 +440,9 @@ SYS1.MACLIB and 288 of SYS1.AMODGEN at the TK5 level, installed into
 on it (#490). An `as370` that searches that directory by itself (after
 `<sysroot>/macros`, so libc370's copies win a name collision) assembles
 `SPIE`, `TIME`, `WTOR` and the rest with no `-I`. With an `as370` that does
-not search it yet, add `-I <sysroot>/maclib370/macros`. `sysmac/` keeps its
+not search it yet, add `-I` with that directory -- under Homebrew it is
+`$(brew --prefix maclib370)/libexec/macros` until CC/370's formula links
+maclib370 into its sysroot. `sysmac/` keeps its
 members for now; dropping the copies maclib370 also carries is a decision of
 its own.
 
