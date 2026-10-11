@@ -24,10 +24,11 @@ PR #484: rand() mask and default seed #387 PR #482; assets incl. the manuals, `p
 depend on maclib370 #490 PR #491, library unchanged but for date stamps and the version string;
 assets incl. the manuals, `pair` with the new maclib370 control, tap checked), 2.8.0 on 2026-10-11 (tag `v2.8.0` on `c86a32e`, PR #496: sysmac/ gone, IBM macros from
 maclib370, cc370 >= 1.6.0, #494 PR #495; gates: libc.a objects, 11-project ecosystem build by cc370, MVS
-close-path probes; assets incl. the manuals, `pair`, tap checked)
+close-path probes; assets incl. the manuals, `pair`, tap checked), 2.8.1 on 2026-10-11 (tag `v2.8.1` on `77b3b0f`, PR #500:
+share/libc370/sysmac-removed.txt in the sysroot #498 PR #499; assets, `pair`, tap checked)
 (tag `v2.2.0` on `0ba452a`, cc370 `>=1.1.0 <2`, built with cc370 1.1.0;
 assets, `pair` and the Homebrew tap checked; cc370's `install.sh` with cc370
-1.2.0 picks 2.2.0). `main` is 2.8.1-dev. Releases are tagged after the go of
+1.2.0 picks 2.2.0). `main` is 2.8.2-dev. Releases are tagged after the go of
 the coordinating mbt session and the maintainer's approval. Tier 0 (the 2.0 critical path) is done
 but for the consumer ports still pinned to 1.0.8 (step 7). 1.0.8 is the last
 1.x; a serious defect there gets an emergency 1.0.9 from the tag `v1.0.8` (D8
