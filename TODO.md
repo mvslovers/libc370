@@ -22,10 +22,12 @@ PR #472: lock skip from the task tree #470; assets, `pair`, tap checked), 2.6.2 
 PR #480: fseek() inside the buffer of an "r" stream #473 PR #479; assets incl. the manuals, `pair`, tap checked), 2.6.3 on 2026-10-08 (tag `v2.6.3` on `186fe88`,
 PR #484: rand() mask and default seed #387 PR #482; assets incl. the manuals, `pair`, tap checked), 2.7.0 on 2026-10-11 (tag `v2.7.0` on `347ef6c`, PR #492: the packages
 depend on maclib370 #490 PR #491, library unchanged but for date stamps and the version string;
-assets incl. the manuals, `pair` with the new maclib370 control, tap checked)
+assets incl. the manuals, `pair` with the new maclib370 control, tap checked), 2.8.0 on 2026-10-11 (tag `v2.8.0` on `c86a32e`, PR #496: sysmac/ gone, IBM macros from
+maclib370, cc370 >= 1.6.0, #494 PR #495; gates: libc.a objects, 11-project ecosystem build by cc370, MVS
+close-path probes; assets incl. the manuals, `pair`, tap checked)
 (tag `v2.2.0` on `0ba452a`, cc370 `>=1.1.0 <2`, built with cc370 1.1.0;
 assets, `pair` and the Homebrew tap checked; cc370's `install.sh` with cc370
-1.2.0 picks 2.2.0). `main` is 2.7.1-dev. Releases are tagged after the go of
+1.2.0 picks 2.2.0). `main` is 2.8.1-dev. Releases are tagged after the go of
 the coordinating mbt session and the maintainer's approval. Tier 0 (the 2.0 critical path) is done
 but for the consumer ports still pinned to 1.0.8 (step 7). 1.0.8 is the last
 1.x; a serious defect there gets an emergency 1.0.9 from the tag `v1.0.8` (D8
@@ -357,14 +359,9 @@ decision, not a tidy-up.
 **Update 2026-10-11: the rest of SYS1.MACLIB has a home, maclib370.** The
 #155 rule stands, and its open end is closed: SYS1.MACLIB and SYS1.AMODGEN (TK5
 level) are released as the package maclib370 1.0.0 (mvslovers/mbt#234), and
-since #490 libc370's packages and formula depend on it. **#494** (2.8.0,
-the maintainer's call) drops the IBM copies: `sysmac/` becomes `hasp/` with the
-five JES2 members, the build takes maclib370. Branch `feat/494-hasp`, draft PR;
-object gate measured: only `@@aclose` differs (FREEPOOL, +8). Merge waits on a
-released cc370 1.6.0 (its as370 searches `<sysroot>/maclib370/macros`), with
-`sdk/cc370.json` `min` raised to it in the same PR; mbt's workflows install
-maclib370 already (mbt#248). Before the release: an MVS run over `fclose()`,
-and the ecosystem gate (12 projects) cc370 runs.
+since #490 libc370's packages and formula depend on it, and since **2.8.0**
+(#494) the build takes the IBM macros from it: `sysmac/` is gone, its five JES2
+members are `hasp/`, and the library needs cc370 1.6.0. Done.
 
 **Update 2026-08-30: the Tier 2 convention is decided, and the campaign is four
 functions rather than two.** The sweep that settled it found the same shape in
