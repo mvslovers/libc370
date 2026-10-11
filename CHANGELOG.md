@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Changed
+- **Needs cc370 1.6.0 or later (#494).** Every public header stops with
+  `#error` with an older one: from 1.6.0 on, `as370` searches
+  `<sysroot>/maclib370/macros` by itself, where the IBM macros are now.
 - **The IBM macros come from maclib370; `sysmac/` is gone (#494).** libc370
   assembles against SYS1.MACLIB and SYS1.AMODGEN from maclib370 (`-I maclib
   -I hasp -I <maclib370>`) and installs only its own macros and the five JES2

@@ -7,8 +7,8 @@ A reentrant C runtime: the standard C library (`stdio`, `stdlib`, `string`,
 `time`, …) plus the MVS runtime it is built on (the C startup, GETMAIN-based
 storage, dataset I/O) and MVS extras (JES2, ISPF, RACF, SMF, a thread manager).
 Since 2.1 the compiler-support routines (CC/370's *libgcc*) and the
-prologue macros ship with CC/370 itself (`libcc370rt.a`); since 2.4 LIBC/370
-needs **CC/370 1.4.0 or later**, and every header checks it (`<sys/_cc370.h>`).
+prologue macros ship with CC/370 itself (`libcc370rt.a`); since 2.8 LIBC/370
+needs **CC/370 1.6.0 or later**, and every header checks it (`<sys/_cc370.h>`).
 
 Originally created as **crent370** by Michael Dean Rayborn; now the CC/370 target
 libc, maintained by the [mvslovers](https://github.com/mvslovers) community.
@@ -20,16 +20,18 @@ is the last 1.x release. Crypto (SHA-256, Blowfish, base64) is
 
 ## Compatibility with CC/370
 
-LIBC/370 2.4 and later needs **CC/370 1.4.0 or later, below 2**. The compiler
+LIBC/370 2.8 and later needs **CC/370 1.6.0 or later, below 2**. The compiler
 helpers (`libcc370rt.a`) and the prologue macros belong to CC/370; headers,
-`libc.a` (with the startup `@@CRT0`), `crtm.o` and the other macros to
-LIBC/370. Every header checks the compiler
-(`#error "libc370 needs cc370 1.4.0 or later"`), and CC/370 in turn needs a
+`libc.a` (with the startup `@@CRT0`), `crtm.o` and LIBC/370's own macros to
+LIBC/370; SYS1.MACLIB and SYS1.AMODGEN to maclib370, which only an `as370` from
+CC/370 1.6.0 finds by itself. Every header checks the compiler
+(`#error "libc370 needs cc370 1.6.0 or later"`), and CC/370 in turn needs a
 LIBC/370 recent enough for its link line.
 
 | LIBC/370 | needs CC/370 |
 |---|---|
-| 2.4.x and later | `>= 1.4.0, < 2` |
+| 2.8.x and later | `>= 1.6.0, < 2` |
+| 2.4.x - 2.7.x | `>= 1.4.0, < 2` |
 | 2.1.x - 2.3.x | `>= 1.1.0, < 2` |
 | 2.0.x and older | 1.0.0 |
 
