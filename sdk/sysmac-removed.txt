@@ -1,7 +1,10 @@
 # The IBM macros libc370 installed into <sysroot>/macros up to 2.7.x, from its
-# vendored sysmac/ (#494). They come from maclib370 now; `sdk/mklibc.py install`
-# removes these names from <sysroot>/macros, where a stale copy would win over
-# maclib370 in as370's search order. One file name per line.
+# vendored sysmac/ (#494). They come from maclib370 now; a copy left in
+# <sysroot>/macros would win over maclib370's member in as370's search order.
+# `sdk/mklibc.py install` removes these names there. The file is installed as
+# <sysroot>/share/libc370/sysmac-removed.txt (#498), for an installer that
+# unpacks the sysroot tarball. One file name per line; lines starting with #
+# are comments.
 abend.macro
 acb.macro
 acbvs.macro

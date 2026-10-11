@@ -343,6 +343,13 @@ def stage(inc, lib, mac):
         for f in sorted(glob.glob(f"{srcdir}/*")):
             if os.path.isfile(f):
                 shutil.copy(f, mac); m += 1
+    # the IBM macros earlier releases put into <sysroot>/macros (#494), as
+    # <sysroot>/share/libc370/sysmac-removed.txt: whatever installs a
+    # sysroot without `make install` (cc370's install.sh, an unpacked
+    # tarball) can delete them from there (#498)
+    share = os.path.join(os.path.dirname(mac), "share", "libc370")
+    os.makedirs(share, exist_ok=True)
+    shutil.copy(SYSMAC_REMOVED, share)
     return n, m
 
 

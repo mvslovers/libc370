@@ -82,7 +82,8 @@ check "files outside the sysroot (deb)" \
     "$(dpkg-deb -c "$DEB" | awk '{print $NF}' | grep -v '/$' \
        | grep -vc "^\./$SYS/")" "0"
 for f in lib/libc.a lib/crtm.o include/stdio.h \
-         include/mvs/crt.h 'macros/$pso.macro' macros/clibregs.macro; do
+         include/mvs/crt.h 'macros/$pso.macro' macros/clibregs.macro \
+         share/libc370/sysmac-removed.txt; do
     check "tarball has $f" "$(echo "$t" | grep -Fcx "$f")" "1"
 done
 # the IBM macros are maclib370's since #494, never this package's
