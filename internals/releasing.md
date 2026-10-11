@@ -38,6 +38,30 @@ fails when `include/sys/_cc370.h` disagrees or a header does not include it.
 A release waits for the other project only when it needs a *higher* minimum
 of it — and then the one it needs is released first.
 
+## maclib370
+
+Not part of the sections above, which cc370 keeps word for word in its own
+copy. [maclib370](https://github.com/mvslovers/maclib370) is SYS1.MACLIB and
+SYS1.AMODGEN of MVS 3.8j as a package of its own (mvslovers/mbt#234),
+installed into `<sysroot>/maclib370/macros`; `as370` searches that
+directory after `<sysroot>/macros` and `<sysroot>/libc370/macros` from the
+first cc370 release after 1.5.0 (cc370 4d1fca9).
+
+- libc370's packages and Homebrew formula **depend** on it, with the range
+  written once, in **`sdk/maclib370.json`** (`"min"`, `"below"`).
+  `sdk/package.py requires {deb,rpm,maclib370-range,notes}` derives the
+  `.deb` Depends, the `.rpm` Requires, `metadata.json`
+  (`requires.maclib370`) and the notes line from it; `sdk/checkpkg.sh`
+  checks them, and `sdk/pairtest.sh` installs maclib370's package beside the
+  pair and checks that libc370 without it is refused (#490).
+- The build does not use it yet. `sysmac/` keeps its IBM copies, and
+  libc370's `maclib/` and `sysmac/` still win over maclib370 on a name.
+  Dropping the copies is a release of its own, checked by comparing the
+  objects of `libc.a` assembled with and without `sysmac/` (`FREEPOOL` is
+  known to differ).
+- maclib370 is released first when libc370 needs a higher minimum of it,
+  as with cc370 (*The rule*).
+
 ## Releasing libc370
 
 1. **The cc370 named as the minimum is released.** `release.yml` builds with
@@ -70,12 +94,12 @@ of it — and then the one it needs is released first.
 7. **Check what `release.yml` attached** before announcing:
    `libc370-<v>-sysroot.tar.gz`, `libc370-dev_<v>_all.deb`,
    `libc370-devel-<v>.noarch.rpm`, `libc370-<v>-metadata.json` (its
-   `"requires"` range), the two manuals `ml01-0003-E.pdf` and
+   `"requires"` ranges, cc370 and maclib370), the two manuals `ml01-0003-E.pdf` and
    `ml01-0004-E.pdf` (built from the tag by build.yml's `books` job) and
    `SHA256SUMS` (`sha256sum -c`, the PDFs included); the build log names
    the cc370 tag it built with. The release's `pair` job must be green: it
-   installs the new packages beside cc370's under apt and dnf and links a
-   program with the pair (`.github/workflows/pair.yml`, `sdk/pairtest.sh`).
+   installs the new packages beside cc370's and maclib370's under apt and
+   dnf, and links a program with the pair (`.github/workflows/pair.yml`, `sdk/pairtest.sh`).
    The `homebrew` job renders `sdk/homebrew/libc370.rb.in` with the new
    version and the tarball's sha256 and pushes it to `mvslovers/homebrew-tap`
    (commit `libc370 <version>`); edit the template there, never the tap's copy.

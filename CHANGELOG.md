@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+- **The packages depend on maclib370 >= 1.0.0, < 2 (#490).** maclib370 is
+  SYS1.MACLIB and SYS1.AMODGEN of MVS 3.8j as a package of its own,
+  installed into `<sysroot>/maclib370/macros`. It brings the IBM macros
+  that libc370's own assembler macros call (`DCB`, `DCBD`, `CAMLST`, `READ`,
+  `GETLINE`, `PUTLINE`, `GETMAIN`, `FREEMAIN`), and every other system macro a
+  program may want. The `.deb` Depends, the `.rpm` Requires and
+  `metadata.json` (`requires.maclib370`) are derived from
+  `sdk/maclib370.json`; the Homebrew formula has `depends_on
+  "mvslovers/tap/maclib370"`, so installing it alone now needs `brew trust
+  mvslovers/tap`. The macros libc370 installs into `<sysroot>/macros` are
+  unchanged.
+
 ## [2.6.3] - 2026-10-08
 
 A patch release with one fix, a drop-in for 2.6.2: no interface changed,

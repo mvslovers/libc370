@@ -66,14 +66,15 @@ With Homebrew (macOS, Linux), from the
 brew trust mvslovers/tap            # once: Homebrew 7 loads a dependency only
                                     # from a trusted tap
 brew install mvslovers/tap/cc370    # CC/370 and, as its dependency, LIBC/370
-brew install mvslovers/tap/libc370  # LIBC/370 alone
+brew install mvslovers/tap/libc370  # LIBC/370 (and maclib370) without CC/370
 ```
 
-Naming a formula trusts it, so `brew install mvslovers/tap/libc370` works
-without `brew trust`; only dependencies from the tap need it, and LIBC/370
-has none (measured on macOS and Linux: CC/370's `homebrew.yml`, run
-37109391271, job "brew libc370 alone, untrusted tap", which runs on every
-CC/370 Homebrew check since cc370#730).
+Naming a formula trusts it, but only that formula: its dependencies from the
+tap need `brew trust`. Up to 2.6.3 LIBC/370 had none, so
+`brew install mvslovers/tap/libc370` worked without it (measured on macOS and
+Linux: CC/370's `homebrew.yml`, run 37109391271, job "brew libc370 alone,
+untrusted tap"). Since it depends on maclib370 (#490), it needs
+`brew trust mvslovers/tap` as well.
 
 The formula installs the sysroot under its `libexec` (`include/`, `lib/`,
 `macros/`), which Homebrew does not link beside the host's own C library;
@@ -85,6 +86,15 @@ Each LIBC/370 release (from 2.1.0) also carries the pieces on their own:
 `<prefix>/cc370`), `libc370-dev_<v>_all.deb` and
 `libc370-devel-<v>.noarch.rpm` (into `/usr/lib/cc370/cc370`, depending on
 CC/370's packages), `libc370-<v>-metadata.json` and `SHA256SUMS`.
+
+The packages and the formula also depend on
+[maclib370](https://github.com/mvslovers/maclib370) (#490), the SYS1.MACLIB and
+SYS1.AMODGEN of MVS 3.8j, which installs into
+`<sysroot>/maclib370/macros`. Its `.deb`/`.rpm` come from its own release
+page; `apt`/`dnf` install it together with LIBC/370 when the files are named
+in one command (with CC/370's package, if CC/370 is not installed yet).
+The tarball does not check dependencies: unpack maclib370's tarball into
+`<prefix>/cc370/maclib370` yourself.
 
 ## Build & install
 

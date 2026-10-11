@@ -1,0 +1,5 @@
+{
+  "_comment": "The maclib370 this tree's packages depend on: min <= version < below. The one place it is written; sdk/package.py derives the .deb Depends, the .rpm Requires, metadata.json and the release notes line from it (#490). maclib370 installs SYS1.MACLIB and SYS1.AMODGEN into <sysroot>/maclib370/macros, which as370 searches after libc370's macros.",
+  "min": "1.0.0",
+  "below": "2"
+}

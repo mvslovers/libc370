@@ -8,14 +8,16 @@ whatever the host, so there is one artifact per channel, not one per host:
                                      unpack it INTO a sysroot (<prefix>/cc370)
     libc370-dev_<v>_all.deb          /usr/lib/cc370/cc370/{include,lib,macros}
     libc370-devel-<v>.noarch.rpm     the same tree
-    libc370-<v>-metadata.json        version, commit, the cc370 range
+    libc370-<v>-metadata.json        version, commit, the cc370 and maclib370
+                                     ranges
     SHA256SUMS                       over all of the above
 
-The cc370 this tree needs is written once, in sdk/cc370.json; every field
-below is derived from it (the Debian and RPM dependencies, the metadata, the
-release notes line, the __CC370__ number #315 checks).
+The cc370 this tree needs is written once, in sdk/cc370.json, and the
+maclib370 its packages depend on once, in sdk/maclib370.json (#490); every
+field below is derived from them (the Debian and RPM dependencies, the
+metadata, the release notes line, the __CC370__ number #315 checks).
 
-Usage:  python3 sdk/package.py requires {deb|rpm|range|number|notes}
+Usage:  python3 sdk/package.py requires {deb|rpm|range|maclib370-range|number|notes}
         python3 sdk/package.py build --version V --built-with "1.0.0 (sha)"
                                      [--out dist] [--no-nfpm]
 
@@ -27,6 +29,8 @@ import argparse, gzip, json, os, re, shutil, subprocess, sys, tarfile, hashlib
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REQ = os.path.join(ROOT, "sdk", "cc370.json")
+# the package with SYS1.MACLIB and SYS1.AMODGEN (mvslovers/mbt#234, #490)
+MACREQ = os.path.join(ROOT, "sdk", "maclib370.json")
 SYSROOT = "/usr/lib/cc370/cc370"
 # cc370 1.1.0 installs these itself (cc370#688); a package that also ships
 # them cannot be installed beside it (#313 removes them from maclib/)
@@ -35,31 +39,35 @@ MOVED_TO_CC370 = ("pdptop.copy", "pdpprlg.macro", "pdpepil.macro")
 sys.path.insert(0, os.path.join(ROOT, "sdk"))
 
 
-def vtuple(v):
+def vtuple(v, src=REQ):
     m = re.fullmatch(r"(\d+)(?:\.(\d+))?(?:\.(\d+))?", v)
     if not m:
-        sys.exit(f"{REQ}: '{v}' is not MAJOR[.MINOR[.PATCH]]")
+        sys.exit(f"{src}: '{v}' is not MAJOR[.MINOR[.PATCH]]")
     return tuple(int(x or 0) for x in m.groups())
 
 
-def requires():
-    r = json.load(open(REQ))
+def requires(src=REQ):
+    r = json.load(open(src))
     lo, hi = r["min"], r["below"]
-    if vtuple(lo) >= vtuple(hi):
-        sys.exit(f"{REQ}: min {lo} is not below {hi}")
+    if vtuple(lo, src) >= vtuple(hi, src):
+        sys.exit(f"{src}: min {lo} is not below {hi}")
     return lo, hi
 
 
 def derived(kind):
     lo, hi = requires()
+    mlo, mhi = requires(MACREQ)
     a, b, c = vtuple(lo)
     return {
-        "deb": [f"cc370 (>= {lo})", f"cc370 (<< {hi})"],
-        "rpm": [f"cc370 >= {lo}", f"cc370 < {hi}"],
+        "deb": [f"cc370 (>= {lo})", f"cc370 (<< {hi})",
+                f"maclib370 (>= {mlo})", f"maclib370 (<< {mhi})"],
+        "rpm": [f"cc370 >= {lo}", f"cc370 < {hi}",
+                f"maclib370 >= {mlo}", f"maclib370 < {mhi}"],
         "range": f">={lo} <{hi}",
+        "maclib370-range": f">={mlo} <{mhi}",
         # the value cc370 predefines as __CC370__ (cc370#704)
         "number": a * 10000 + b * 100 + c,
-        "notes": f"Requires CC/370 >= {lo}, < {hi}.",
+        "notes": f"Requires CC/370 >= {lo}, < {hi}, and maclib370 >= {mlo}, < {mhi}.",
     }[kind]
 
 
@@ -200,7 +208,8 @@ def cmd_build(a):
         "version": v,
         "commit": gitrev(),
         "built_with": {"cc370": m.group(1) if m else a.built_with},
-        "requires": {"cc370": derived("range")},
+        "requires": {"cc370": derived("range"),
+                     "maclib370": derived("maclib370-range")},
     }
     if m and m.group(2):
         meta["built_with"]["cc370_commit"] = m.group(2)
@@ -237,7 +246,8 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
     r = sub.add_parser("requires")
-    r.add_argument("kind", choices=("deb", "rpm", "range", "number", "notes"))
+    r.add_argument("kind", choices=("deb", "rpm", "range", "maclib370-range",
+                                    "number", "notes"))
     b = sub.add_parser("build")
     b.add_argument("--version", required=True)
     b.add_argument("--built-with", required=True,

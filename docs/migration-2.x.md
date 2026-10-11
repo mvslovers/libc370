@@ -209,6 +209,7 @@ CHANGELOG has everything else.
 
 | Release | Change | What to do |
 |---|---|---|
+| Unreleased | The packages and the Homebrew formula depend on maclib370 >= 1.0.0, < 2 (SYS1.MACLIB and SYS1.AMODGEN, #490) | `apt`/`dnf`: download maclib370's package from its release page and name it beside libc370's. Homebrew: `brew trust mvslovers/tap` before `brew install mvslovers/tap/libc370`. Tarball: unpack maclib370's tarball into `<sysroot>/maclib370` |
 | 2.1.0 | Needs cc370 1.1.0 or later. Every public header stops with `#error` otherwise (#315) | Update cc370 |
 | 2.1.0 | The compiler helpers (`@@DIVDI3`, ...) moved to cc370's `libcc370rt.a` (#313) | A build that runs the linker itself adds `-lcc370rt` |
 | 2.2.0 | `setbuf()` returns `void` (#339) | Stop using its return value |

@@ -3,14 +3,18 @@
 # under the real package manager, and build a program with the pair (#326).
 #
 # Runs as root inside a clean container: debian:bookworm for deb,
-# fedora for rpm.  DIR holds cc370's package for this machine and
-# libc370's (libc370-dev_*_all.deb / libc370-devel-*.noarch.rpm).
+# fedora for rpm.  DIR holds cc370's package for this machine, libc370's
+# (libc370-dev_*_all.deb / libc370-devel-*.noarch.rpm) and maclib370's
+# (maclib370_*_all.deb / maclib370-*.noarch.rpm, #490).
 #
 # Checks, in order:
 #   1. control: libc370 alone is refused - it needs cc370
+#   1b. control: cc370 and libc370 without maclib370 are refused, when the
+#      libc370 under test depends on it (a release before #490 does not)
 #   2. control: cc370 beside a libc370 2.0.0 (a stand-in package that owns
 #      the prologue macro files, as 2.0.x did) is refused
-#   3. the pair installs; the macro files belong to the right package
+#   3. the pair installs with maclib370; the macro files belong to the right
+#      package
 #   4. cc370 predefines __CC370__ as its own version's number
 #   5. a printf("%lld")/strtoll program compiles and links, and the load
 #      map shows the 64-bit helpers from libcc370rt.a, strtoll from libc.a
@@ -31,6 +35,8 @@ deb)
     apt-get update -qq >/dev/null
     CC=$(ls "$DIR"/cc370_*.deb)
     LC=$(ls "$DIR"/libc370-dev_*_all.deb)
+    ML=$(ls "$DIR"/maclib370_*_all.deb)
+    needs_ml() { dpkg-deb -f "$LC" Depends | grep -q maclib370; }
     install()   { apt-get install -y -q --no-install-recommends "$@"; }
     remove()    { apt-get remove -y -q "$@" >/dev/null 2>&1; }
     owner()     { dpkg -S "$1" 2>/dev/null | cut -d: -f1; }
@@ -45,6 +51,8 @@ deb)
 rpm)
     CC=$(ls "$DIR"/cc370-*.rpm | grep -v noarch)
     LC=$(ls "$DIR"/libc370-devel-*.noarch.rpm)
+    ML=$(ls "$DIR"/maclib370-*.noarch.rpm)
+    needs_ml() { rpm -qpR "$LC" 2>/dev/null | grep -q '^maclib370'; }
     install()   { dnf install -y -q "$@"; }
     remove()    { dnf remove -y -q "$@" >/dev/null 2>&1; }
     owner()     { rpm -qf --qf '%{NAME}\n' "$1" 2>/dev/null; }
@@ -72,6 +80,7 @@ SPEC
 esac
 echo "cc370:   $(basename "$CC")"
 echo "libc370: $(basename "$LC")"
+echo "maclib370: $(basename "$ML")"
 
 # 1. libc370 alone
 if install "$LC" > "$W/log1" 2>&1; then
@@ -79,6 +88,20 @@ if install "$LC" > "$W/log1" 2>&1; then
 else
     grep -q cc370 "$W/log1" && ok "libc370 alone is refused (needs cc370)" \
         || { bad "libc370 alone failed, but not over cc370"; tail -5 "$W/log1"; }
+fi
+
+# 1b. cc370 and libc370 without maclib370
+if needs_ml; then
+    if install "$CC" "$LC" > "$W/log1b" 2>&1; then
+        bad "cc370 and libc370 without maclib370 were accepted"
+        remove cc370 libc370-dev libc370-devel
+    else
+        grep -q maclib370 "$W/log1b" \
+            && ok "cc370 and libc370 without maclib370 are refused" \
+            || { bad "cc370 and libc370 failed, but not over maclib370"; tail -5 "$W/log1b"; }
+    fi
+else
+    echo "skip  libc370 under test does not depend on maclib370 (before #490)"
 fi
 
 # 2. cc370 with a libc370 2.0.0
@@ -93,7 +116,7 @@ else
 fi
 
 # 3. the pair
-if install "$CC" "$LC" > "$W/log3" 2>&1; then
+if install "$CC" "$LC" "$ML" > "$W/log3" 2>&1; then
     ok "the pair installs"
 else
     bad "the pair does not install"; tail -20 "$W/log3"; exit 1
@@ -104,6 +127,9 @@ M=/usr/lib/cc370/cc370/macros
 o=$(owner $M/getmain.macro)
 case $o in libc370-dev|libc370-devel) ok "getmain.macro belongs to $o" ;;
     *) bad "getmain.macro belongs to '$o'" ;; esac
+o=$(owner /usr/lib/cc370/cc370/maclib370/macros/SPIE.macro)
+[ "$o" = maclib370 ] && ok "maclib370/macros/SPIE.macro belongs to maclib370" \
+    || bad "maclib370/macros/SPIE.macro belongs to '$o'"
 
 # 4. __CC370__
 v=$(cc370 --version | head -1 | sed 's/^cc370 \([0-9.]*\).*/\1/')

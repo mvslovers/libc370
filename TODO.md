@@ -352,6 +352,15 @@ with no macro directory of its own. All three stay: `<sysroot>/macros` is a
 published surface, so removing a member is a breaking change and needs its own
 decision, not a tidy-up.
 
+**Update 2026-10-11: the rest of SYS1.MACLIB has a home, maclib370.** The
+#155 rule stands, and its open end is closed: SYS1.MACLIB and SYS1.AMODGEN (TK5
+level) are released as the package maclib370 1.0.0 (mvslovers/mbt#234), and
+since #490 libc370's packages and formula depend on it. Still open, as a
+decision of its own: dropping the IBM copies from `sysmac/` -- a breaking
+change for `<sysroot>/macros`, checked by an object comparison of `libc.a`
+with and without them (`FREEPOOL` known to differ), and only once a released
+cc370 searches `<sysroot>/maclib370/macros`.
+
 **Update 2026-08-30: the Tier 2 convention is decided, and the campaign is four
 functions rather than two.** The sweep that settled it found the same shape in
 `__listds()` and `__listal()`, both unfiled until now — **#157** and **#158**.
