@@ -20,10 +20,12 @@ read cut at X'00' PR #456, short TSO-shaped parameter PR #446; assets, `pair`, t
 *GETLINE #467; assets, `pair`, tap checked), 2.6.1 on 2026-10-07 (tag `v2.6.1` on `ba0e7ef`,
 PR #472: lock skip from the task tree #470; assets, `pair`, tap checked), 2.6.2 on 2026-10-07 (tag `v2.6.2` on `c452269`,
 PR #480: fseek() inside the buffer of an "r" stream #473 PR #479; assets incl. the manuals, `pair`, tap checked), 2.6.3 on 2026-10-08 (tag `v2.6.3` on `186fe88`,
-PR #484: rand() mask and default seed #387 PR #482; assets incl. the manuals, `pair`, tap checked)
+PR #484: rand() mask and default seed #387 PR #482; assets incl. the manuals, `pair`, tap checked), 2.7.0 on 2026-10-11 (tag `v2.7.0` on `347ef6c`, PR #492: the packages
+depend on maclib370 #490 PR #491, library unchanged but for date stamps and the version string;
+assets incl. the manuals, `pair` with the new maclib370 control, tap checked)
 (tag `v2.2.0` on `0ba452a`, cc370 `>=1.1.0 <2`, built with cc370 1.1.0;
 assets, `pair` and the Homebrew tap checked; cc370's `install.sh` with cc370
-1.2.0 picks 2.2.0). `main` is 2.6.4-dev. Releases are tagged after the go of
+1.2.0 picks 2.2.0). `main` is 2.7.1-dev. Releases are tagged after the go of
 the coordinating mbt session and the maintainer's approval. Tier 0 (the 2.0 critical path) is done
 but for the consumer ports still pinned to 1.0.8 (step 7). 1.0.8 is the last
 1.x; a serious defect there gets an emergency 1.0.9 from the tag `v1.0.8` (D8
