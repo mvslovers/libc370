@@ -141,7 +141,7 @@ src/          the implementation, mirroring include/ -- src/stdio/, src/ext/time
               src/internal/ shared private headers, never installed
 attic/        code kept but never built
 maclib/       LIBC/370 assembler macros
-sysmac/       vendored SYS1.MACLIB members
+hasp/         JES2 mapping macros from HASPSRC (SYS1.MACLIB is maclib370's)
 sdk/          mklibc.py — the build-and-install engine (driven by the Makefile)
 ```
 

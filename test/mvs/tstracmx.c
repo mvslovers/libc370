@@ -4,7 +4,7 @@
  *
  * ISSUE #63: racf_auth() sets flag1 = 0x10 under the name
  * RACHECK_FLAG1_LOG_NONE.  0x10 is DSTYPE=V - "the entity is a VSAM data set"
- * (sysmac/racheck.macro:562).  LOG=NONE is 0x02.  So the audit suppression the
+ * (RACHECK in SYS1.MACLIB, line 562; maclib370, sysmac/ until 2.7.x).  LOG=NONE is 0x02.  So the audit suppression the
  * library asks for never happens, and every CLASS=DATASET check it issues
  * tells RACF something untrue about the resource.
  *

@@ -18,7 +18,7 @@ fails when `include/sys/_cc370.h` disagrees or a header does not include it.
 | cc370 | libc370 |
 |---|---|
 | `libcc370rt.a` — every helper the compiler emits (`@@MULDI3` … `@@FFSSI2`, the `-ftrapv` helpers) | headers, `libc.a` (with the startup `@@CRT0` since 2.3.0), `crtm.o` |
-| the prologue macros `PDPTOP`, `PDPPRLG`, `PDPEPIL` (`<sysroot>/macros`) | every other macro: `maclib/` and the vendored `sysmac/` |
+| the prologue macros `PDPTOP`, `PDPPRLG`, `PDPEPIL` (`<sysroot>/macros`) | every other macro of its own: `maclib/`, and `hasp/` (JES2, from HASPSRC); SYS1.MACLIB and SYS1.AMODGEN are maclib370's (since 2.8.0) |
 | `__CC370__` = MAJOR·10000 + MINOR·100 + PATCH (a `-dev` suffix is dropped) | the check of it in every header (`<sys/_cc370.h>`) |
 | the link line: `-lcc370rt -lc -lcc370rt`, `--entry @@CRT0`, no startfile (since 1.4.0); for `main` the compiler emits `EXTRN @@CRT0` | the startup `@@CRT0`, a member of `libc.a` since 2.3.0 (libc370#159); libc370 2.4.0 installs no startfile copies |
 
@@ -54,11 +54,16 @@ first cc370 release after 1.5.0 (cc370 4d1fca9).
   (`requires.maclib370`) and the notes line from it (since 2.7.0); `sdk/checkpkg.sh`
   checks them, and `sdk/pairtest.sh` installs maclib370's package beside the
   pair and checks that libc370 without it is refused (#490).
-- The build does not use it yet. `sysmac/` keeps its IBM copies, and
-  libc370's `maclib/` and `sysmac/` still win over maclib370 on a name.
-  Dropping the copies is a release of its own, checked by comparing the
-  objects of `libc.a` assembled with and without `sysmac/` (`FREEPOOL` is
-  known to differ).
+- **The build depends on it** (since 2.8.0, #494): `sdk/mklibc.py`
+  assembles with `-I maclib -I hasp -I <maclib370>`, maclib370 from
+  `MACLIB370=` or beside `as370`, and stops without it. CI and `release.yml`
+  fetch the release `sdk/maclib370.json` names as `"min"`. Up to 2.7.x
+  `sysmac/` vendored the 118 IBM members libc370 uses; `make install`
+  removes those names from `<sysroot>/macros` (`sdk/sysmac-removed.txt`).
+- A change of maclib370's level can change `libc.a`. Before raising
+  `"min"`, compare the objects of `libc.a` built against both levels, member
+  by member, with the as370 date stamps set aside; the 2.8.0 baseline is one
+  difference, `@@aclose` (FREEPOOL, UZ39662, 8 bytes).
 - maclib370 is released first when libc370 needs a higher minimum of it,
   as with cc370 (*The rule*).
 

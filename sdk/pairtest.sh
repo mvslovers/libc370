@@ -124,9 +124,13 @@ fi
 M=/usr/lib/cc370/cc370/macros
 [ "$(owner $M/pdpprlg.macro)" = cc370 ] && ok "pdpprlg.macro belongs to cc370" \
     || bad "pdpprlg.macro belongs to '$(owner $M/pdpprlg.macro)'"
-o=$(owner $M/getmain.macro)
-case $o in libc370-dev|libc370-devel) ok "getmain.macro belongs to $o" ;;
-    *) bad "getmain.macro belongs to '$o'" ;; esac
+# hasp/, libc370's own; the IBM macros are maclib370's since #494
+o=$(owner "$M/\$pso.macro")
+case $o in libc370-dev|libc370-devel) ok "\$pso.macro belongs to $o" ;;
+    *) bad "\$pso.macro belongs to '$o'" ;; esac
+o=$(owner /usr/lib/cc370/cc370/maclib370/macros/GETMAIN.macro)
+[ "$o" = maclib370 ] && ok "maclib370/macros/GETMAIN.macro belongs to maclib370" \
+    || bad "maclib370/macros/GETMAIN.macro belongs to '$o'"
 o=$(owner /usr/lib/cc370/cc370/maclib370/macros/SPIE.macro)
 [ "$o" = maclib370 ] && ok "maclib370/macros/SPIE.macro belongs to maclib370" \
     || bad "maclib370/macros/SPIE.macro belongs to '$o'"

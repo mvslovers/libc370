@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+- **The IBM macros come from maclib370; `sysmac/` is gone (#494).** libc370
+  assembles against SYS1.MACLIB and SYS1.AMODGEN from maclib370 (`-I maclib
+  -I hasp -I <maclib370>`) and installs only its own macros and the five JES2
+  mappings (`$pso`, `$pddb`, `$sjb`, `$cmb`, `$tqe`, now in `hasp/`) into
+  `<sysroot>/macros`. The build finds maclib370 through `MACLIB370=` or beside
+  `as370`, and stops without it. `make install` removes the 118 IBM members
+  an earlier libc370 left in `<sysroot>/macros`, since a copy there would
+  come before maclib370's in the search order. `libc.a` is the same but for
+  `fclose()`'s `@@aclose`, which is 8 bytes longer: TK5's `FREEPOOL` carries
+  UZ39662. A build that names `<sysroot>/macros` itself adds
+  `<sysroot>/maclib370/macros`.
+
 ## [2.7.0] - 2026-10-11
 
 A minor release with no change to the library: headers, `libc.a` and the
