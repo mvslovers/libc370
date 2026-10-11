@@ -125,21 +125,24 @@ LIBC/370 is built with CC/370 and only with CC/370, and the two are released
 as a pair. CC/370 provides the compiler, the routines the compiler calls
 (#cmd("libcc370rt.a")) and the assembler macros of the function prologue
 and epilogue; LIBC/370 provides the headers, #cmd("libc.a") with the start-up
-routine, the start-up object #cmd("crtm.o") and the other macros. Each
-depends on the other's version:
+routine, the start-up object #cmd("crtm.o") and its own macros\; the MVS
+system macros, SYS1.MACLIB and SYS1.AMODGEN, come from a package of their
+own, maclib370, which the toolchain installs beside them. Each depends on the
+other's version:
 
-- This release of LIBC/370 needs CC/370 1.4.0 or later, below 2.0.
+- This release of LIBC/370 needs CC/370 1.6.0 or later, below 2.0: from
+  1.6.0 on, the assembler finds maclib370's macros without #cmd("-I").
 - CC/370 1.4 needs LIBC/370 2.3.0 or later: its link step names no start-up
   object and takes #cmd("@@CRT0") from #cmd("libc.a").
 
 The library checks the first rule itself. Every LIBC/370 header includes
 #cmd("<sys/_cc370.h>"), which compares the macro #cmd("__CC370__") that cc370
 predefines -- the version as #var("major")#cmd(" * 10000 + ")#var("minor")#cmd(" * 100 + ")#var("patch"),
-10400 for 1.4.0 -- with the minimum, and stops the compilation of a program
+10600 for 1.6.0 -- with the minimum, and stops the compilation of a program
 built with an older compiler:
 
 ```
-#error "libc370 needs cc370 1.4.0 or later"
+#error "libc370 needs cc370 1.6.0 or later"
 ```
 
 The installation procedures of the toolchain install a matching pair; the
@@ -159,9 +162,14 @@ was chosen:
     the start-up routine #cmd("@@CRT0")\; #cmd("crtm.o"), the start-up
     object for a module called by a C program (@pg-startup-variants)\; and
     CC/370's #cmd("libcc370rt.a").],
-  [#cmd("cc370/macros")], [the assembler macros: LIBC/370's own and the MVS
-    system macros that the library needs, for programs that include
-    assembler source (@pg-asm).],
+  [#cmd("cc370/macros")], [the assembler macros of LIBC/370 and CC/370,
+    with five JES2 mapping macros, for programs that include assembler
+    source (@pg-asm).],
+  [#cmd("cc370/maclib370/macros")], [the MVS system macros: every member of
+    SYS1.MACLIB and SYS1.AMODGEN, from maclib370. The assembler searches
+    this directory after #cmd("cc370/macros"). Up to LIBC/370 2.7 the
+    library carried copies of the members it used in #cmd("cc370/macros")
+    instead.],
 )
 
 #idx("-I option", "and libc370 headers")

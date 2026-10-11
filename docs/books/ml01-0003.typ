@@ -11,8 +11,8 @@
   edition: [
     #text(font: head-font, weight: "bold", size: 11pt)[First Edition (October 2026)]
 
-    This edition applies to Version 2 Release 7 of LIBC/370
-    (libc370 2.7.0), as built with CC/370 1.4.0, and to all subsequent
+    This edition applies to Version 2 Release 8 of LIBC/370
+    (libc370 2.8.0), as built with CC/370 1.6.0, and to all subsequent
     releases and modifications until otherwise indicated in new editions.
 
     *Draft.* The output of the examples that run on MVS has still to be
@@ -42,8 +42,8 @@ Each function is described in full in the companion volume, the _LIBC/370
 Library Reference_\; this book shows how the functions are used together.
 
 LIBC/370 is built with, and only with, the CC/370 (cc370) toolchain. Every header
-checks the compiler: compiled with a CC/370 older than 1.4.0 it stops with
-#cmd("#error \"libc370 needs cc370 1.4.0 or later\"").
+checks the compiler: compiled with a CC/370 older than 1.6.0 it stops with
+#cmd("#error \"libc370 needs cc370 1.6.0 or later\"").
 
 == Who Should Use This Book
 
