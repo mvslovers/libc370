@@ -18,15 +18,16 @@ fails when `include/sys/_cc370.h` disagrees or a header does not include it.
 | cc370 | libc370 |
 |---|---|
 | `libcc370rt.a` — every helper the compiler emits (`@@MULDI3` … `@@FFSSI2`, the `-ftrapv` helpers) | headers, `libc.a` (with the startup `@@CRT0` since 2.3.0), `crtm.o` |
-| the prologue macros `PDPTOP`, `PDPPRLG`, `PDPEPIL` (`<sysroot>/macros`) | every other macro: `maclib/` and the vendored `sysmac/` |
+| the prologue macros `PDPTOP`, `PDPPRLG`, `PDPEPIL` (`<sysroot>/macros`) | every other macro of its own: `maclib/`, and `hasp/` (JES2, from HASPSRC); SYS1.MACLIB and SYS1.AMODGEN are maclib370's (since 2.8.0) |
 | `__CC370__` = MAJOR·10000 + MINOR·100 + PATCH (a `-dev` suffix is dropped) | the check of it in every header (`<sys/_cc370.h>`) |
 | the link line: `-lcc370rt -lc -lcc370rt`, `--entry @@CRT0`, no startfile (since 1.4.0); for `main` the compiler emits `EXTRN @@CRT0` | the startup `@@CRT0`, a member of `libc.a` since 2.3.0 (libc370#159); libc370 2.4.0 installs no startfile copies |
 
-## Who needs which version (2026-10-05)
+## Who needs which version (2026-10-11)
 
 | | needs | enforced by |
 |---|---|---|
-| libc370 2.4.x | cc370 >= 1.4.0, < 2 | `#error` in every header (`__CC370__ < 10400`), `.deb` Depends / `.rpm` Requires, `metadata.json` — all derived from libc370's `sdk/cc370.json` |
+| libc370 2.8.x | cc370 >= 1.6.0, < 2 | `#error` in every header (`__CC370__ < 10600`), `.deb` Depends / `.rpm` Requires, `metadata.json` — all derived from libc370's `sdk/cc370.json`; the IBM macros are maclib370's, and only an `as370` from 1.6.0 searches `<sysroot>/maclib370/macros` (libc370#494) |
+| libc370 2.4.x - 2.7.x | cc370 >= 1.4.0, < 2 | `#error` in every header (`__CC370__ < 10400`), `.deb` Depends / `.rpm` Requires, `metadata.json` — all derived from libc370's `sdk/cc370.json` |
 | libc370 2.1.x - 2.3.x | cc370 >= 1.1.0, < 2 | `#error` in every header (`__CC370__ < 10100`), `.deb` Depends / `.rpm` Requires, `metadata.json` — all derived from libc370's `sdk/cc370.json` |
 | cc370 1.4.x | libc370 >= 2.3.0 | the packages: `LIBC_MIN` 2.3.0 -- the link no longer names `crt0.o`, and an older `libc.a` has no `@@CRT0` member (libc370#159) |
 | cc370 1.1.x - 1.3.x | libc370 >= 2.1.0 | the packages only: `Depends: libc370-dev (>= 2.1.0)`, `Breaks`/`Replaces: libc370-dev (<< 2.1.0)` (RPM: `Requires`/`Conflicts` on `libc370-devel`), because libc370 2.0 still shipped the three macro files |
@@ -54,11 +55,16 @@ first cc370 release after 1.5.0 (cc370 4d1fca9).
   (`requires.maclib370`) and the notes line from it (since 2.7.0); `sdk/checkpkg.sh`
   checks them, and `sdk/pairtest.sh` installs maclib370's package beside the
   pair and checks that libc370 without it is refused (#490).
-- The build does not use it yet. `sysmac/` keeps its IBM copies, and
-  libc370's `maclib/` and `sysmac/` still win over maclib370 on a name.
-  Dropping the copies is a release of its own, checked by comparing the
-  objects of `libc.a` assembled with and without `sysmac/` (`FREEPOOL` is
-  known to differ).
+- **The build depends on it** (since 2.8.0, #494): `sdk/mklibc.py`
+  assembles with `-I maclib -I hasp -I <maclib370>`, maclib370 from
+  `MACLIB370=` or beside `as370`, and stops without it. CI and `release.yml`
+  fetch the release `sdk/maclib370.json` names as `"min"`. Up to 2.7.x
+  `sysmac/` vendored the 118 IBM members libc370 uses; `make install`
+  removes those names from `<sysroot>/macros` (`sdk/sysmac-removed.txt`).
+- A change of maclib370's level can change `libc.a`. Before raising
+  `"min"`, compare the objects of `libc.a` built against both levels, member
+  by member, with the as370 date stamps set aside; the 2.8.0 baseline is one
+  difference, `@@aclose` (FREEPOOL, UZ39662, 8 bytes).
 - maclib370 is released first when libc370 needs a higher minimum of it,
   as with cc370 (*The rule*).
 

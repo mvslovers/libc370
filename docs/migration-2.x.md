@@ -209,6 +209,7 @@ CHANGELOG has everything else.
 
 | Release | Change | What to do |
 |---|---|---|
+| Unreleased | Needs **cc370 1.6.0** or later; every public header stops with `#error` otherwise. `sysmac/` is gone (#494). libc370 no longer installs SYS1.MACLIB or SYS1.AMODGEN members into `<sysroot>/macros`, only its own macros and the five JES2 mappings (`hasp/`). The IBM members come from maclib370, `<sysroot>/maclib370/macros`, which `as370` searches by itself. `fclose()` changes by 8 bytes (FREEPOOL at the TK5 level) | Update cc370 to 1.6.0. Then nothing, with `as370`'s default search. A build that names `<sysroot>/macros` with `-I` or `AS370_MACLIB` adds `<sysroot>/maclib370/macros`. A sysroot filled by an unpacked tarball still holds the old copies; `make install` and the packages remove them |
 | 2.7.0 | The packages and the Homebrew formula depend on maclib370 >= 1.0.0, < 2 (SYS1.MACLIB and SYS1.AMODGEN, #490) | `apt`/`dnf`: download maclib370's package from its release page and name it beside libc370's. Homebrew: `brew trust mvslovers/tap` before `brew install mvslovers/tap/libc370`. Tarball: unpack maclib370's tarball into `<sysroot>/maclib370` |
 | 2.1.0 | Needs cc370 1.1.0 or later. Every public header stops with `#error` otherwise (#315) | Update cc370 |
 | 2.1.0 | The compiler helpers (`@@DIVDI3`, ...) moved to cc370's `libcc370rt.a` (#313) | A build that runs the linker itself adds `-lcc370rt` |

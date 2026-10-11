@@ -55,7 +55,14 @@ if not re.fullmatch(r"-O[0123s]", OPT):
 # turns them off again, but @@estae.c spells || as ??!??! and headers do too.
 CFLAGS = [OPT, "-std=gnu99", "-trigraphs", "-Wuninitialized", f'-DVERSION="{VERSION}"',
           f"-I{ROOT}/include", f"-I{ROOT}"]   # private headers: "src/internal/x.h" (D10)
-ASMINC = ["-I", f"{ROOT}/maclib", "-I", f"{ROOT}/sysmac"]   # sysmac vendors SYS1.MACLIB
+# assembler macros, in search order: libc370's own (maclib/), the five JES2
+# mappings from HASPSRC (hasp/), then SYS1.MACLIB and SYS1.AMODGEN from
+# maclib370 (#494; maclib370_dirs()).  Up to 2.7.x libc370 vendored the IBM
+# members it uses in sysmac/.
+OWN_MACLIBS = (f"{ROOT}/maclib", f"{ROOT}/hasp")
+# the IBM members that sysmac/ installed into <sysroot>/macros up to 2.7.x;
+# install removes them there, where a stale copy would win over maclib370
+SYSMAC_REMOVED = f"{ROOT}/sdk/sysmac-removed.txt"
 STARTUPS = ("@@crtm",)              # -> separate startfile, never archived
 # the startfiles installed beside libc.a.  crt0.o and crt1.o were copies of
 # the archived @@CRT0 for cc370 before 1.4.0 (#159); 2.4.0 needs 1.4.0
@@ -65,6 +72,51 @@ STALE_STARTFILES = ("crt0.o", "crt1.o")   # an earlier install left them
 
 def run(cmd, cwd=None):
     return subprocess.run(cmd, capture_output=True, text=True, cwd=cwd)
+
+
+def maclib370_dirs():
+    """The directories holding maclib370's members (#494).
+
+    MACLIB370 names a maclib370 tree: an installed or unpacked one (with
+    macros/), or a checkout (with maclib/ and amodgen/).  Without it, the one
+    an installed as370 searches by itself: <exedir>/../maclib370/macros.
+
+    Passed with -I in every case, so it comes before the as370 defaults: a
+    <sysroot>/macros an older libc370 left behind still holds IBM copies, and
+    those must not stand in for maclib370 unnoticed.  Fails when none is
+    found, rather than leaving as370 to find whatever its defaults hold.
+    """
+    env = os.environ.get("MACLIB370")
+    if env:
+        if os.path.isdir(os.path.join(env, "macros")):
+            return [os.path.join(env, "macros")]
+        if os.path.isdir(os.path.join(env, "maclib")) and \
+                os.path.isdir(os.path.join(env, "amodgen")):
+            return [os.path.join(env, "maclib"), os.path.join(env, "amodgen")]
+        if glob.glob(os.path.join(env, "*.macro")):
+            return [env]
+        sys.exit(f"MACLIB370={env}: neither macros/, nor maclib/ + amodgen/, "
+                 f"nor *.macro there")
+    exe = shutil.which(AS370)
+    if exe:
+        d = os.path.join(os.path.dirname(os.path.realpath(exe)), "..",
+                         "maclib370", "macros")
+        if os.path.isdir(d):
+            return [os.path.normpath(d)]
+    sys.exit("maclib370 not found: install it beside cc370 "
+             "(<sysroot>/maclib370/macros) or set MACLIB370 to a maclib370 "
+             "tree or checkout (#494)")
+
+
+_asminc = None
+
+
+def asminc():
+    global _asminc
+    if _asminc is None:
+        _asminc = [a for d in OWN_MACLIBS + tuple(maclib370_dirs())
+                   for a in ("-I", d)]
+    return _asminc
 
 
 VER_C = "@@ver.c"       # build-stamp TU, found by name wherever it sits (see gitrev)
@@ -145,7 +197,7 @@ def compile_c(cfile, sfile, extra=(), warnings=None):
 
 
 def assemble(src, ofile):
-    r = run([AS370] + ASMINC + ["-o", ofile, src])
+    r = run([AS370] + asminc() + ["-o", ofile, src])
     # as370 writes an object file even when it flagged statements (rc=8 for an
     # undefined operation code), so "the .o exists" is NOT success: a missing
     # macro silently drops the instruction and ships a wrong object.  That is
@@ -283,11 +335,11 @@ def stage(inc, lib, mac):
     shutil.copy(libc, f"{lib}/libc.a")
     for crt, _ in STARTFILES:
         shutil.copy(f"{BUILD}/{crt}", f"{lib}/{crt}")
-    # assembler macros: sysmac (vendored SYS1.MACLIB) THEN maclib (libc370's
-    # PDPTOP/PDPPRLG/... override any collision) -> one dir as370 finds by
-    # default (<exedir>/../macros); needed for hand-asm + the cc370 one-shot.
+    # assembler macros: hasp/ (the JES2 mappings) and maclib/ (libc370's own)
+    # -> one dir as370 finds by default (<exedir>/../macros).  The IBM macros
+    # are maclib370's, in <sysroot>/maclib370/macros (#494).
     m = 0
-    for srcdir in (f"{ROOT}/sysmac", f"{ROOT}/maclib"):
+    for srcdir in (f"{ROOT}/hasp", f"{ROOT}/maclib"):
         for f in sorted(glob.glob(f"{srcdir}/*")):
             if os.path.isfile(f):
                 shutil.copy(f, mac); m += 1
@@ -338,6 +390,19 @@ def cmd_install():
         if os.path.isfile(old):
             os.remove(old)
             print(f"[install] removed the old startfile {old}")
+    # the IBM macros sysmac/ installed up to 2.7.x (#494): as370 searches
+    # <sysroot>/macros before <sysroot>/maclib370/macros, so a copy left here
+    # would stand in for maclib370's member.  Only these names, only here.
+    gone = 0
+    for line in open(SYSMAC_REMOVED, encoding="utf-8"):
+        name = line.strip()
+        if not name or name.startswith("#"):
+            continue
+        old = os.path.join(mac, name)
+        if os.path.isfile(old):
+            os.remove(old); gone += 1
+    if gone:
+        print(f"[install] removed {gone} IBM macro(s) an earlier libc370 left in {mac}")
     print(f"[install] target {triple}")
     print(f"[install] {n} headers -> {inc} ({stale} files there before, cleared)")
     print(f"[install] libc.a + crtm.o -> {lib}")

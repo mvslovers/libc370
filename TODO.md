@@ -357,11 +357,14 @@ decision, not a tidy-up.
 **Update 2026-10-11: the rest of SYS1.MACLIB has a home, maclib370.** The
 #155 rule stands, and its open end is closed: SYS1.MACLIB and SYS1.AMODGEN (TK5
 level) are released as the package maclib370 1.0.0 (mvslovers/mbt#234), and
-since #490 libc370's packages and formula depend on it. Still open, as a
-decision of its own: dropping the IBM copies from `sysmac/` -- a breaking
-change for `<sysroot>/macros`, checked by an object comparison of `libc.a`
-with and without them (`FREEPOOL` known to differ), and only once a released
-cc370 searches `<sysroot>/maclib370/macros`.
+since #490 libc370's packages and formula depend on it. **#494** (2.8.0,
+the maintainer's call) drops the IBM copies: `sysmac/` becomes `hasp/` with the
+five JES2 members, the build takes maclib370. Branch `feat/494-hasp`, draft PR;
+object gate measured: only `@@aclose` differs (FREEPOOL, +8). Merge waits on a
+released cc370 1.6.0 (its as370 searches `<sysroot>/maclib370/macros`), with
+`sdk/cc370.json` `min` raised to it in the same PR; mbt's workflows install
+maclib370 already (mbt#248). Before the release: an MVS run over `fclose()`,
+and the ecosystem gate (12 projects) cc370 runs.
 
 **Update 2026-08-30: the Tier 2 convention is decided, and the campaign is four
 functions rather than two.** The sweep that settled it found the same shape in

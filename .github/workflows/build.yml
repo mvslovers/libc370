@@ -125,6 +125,23 @@ jobs:
           v=$(cc370 --version | head -1 | sed 's/^cc370 //; s/, based on.*//')
           echo "version=$v" >> "$GITHUB_OUTPUT"
 
+      # SYS1.MACLIB and SYS1.AMODGEN for the hand-written assembler (#494):
+      # the maclib370 release sdk/maclib370.json names as the minimum, so the
+      # build uses the oldest level the packages accept.  sdk/mklibc.py fails
+      # without it rather than fall back to as370's defaults.
+      - name: maclib370 (the minimum)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v=$(python3 -c 'import json; print(json.load(open("sdk/maclib370.json"))["min"])')
+          gh release download "v$v" -R mvslovers/maclib370 -D /tmp/m \
+            -p "maclib370-$v.tar.gz" -p SHA256SUMS
+          (cd /tmp/m && sha256sum -c --ignore-missing SHA256SUMS)
+          mkdir -p "$HOME/maclib370"
+          tar xzf "/tmp/m/maclib370-$v.tar.gz" -C "$HOME/maclib370"
+          echo "MACLIB370=$HOME/maclib370" >> "$GITHUB_ENV"
+          echo "- maclib370: $v" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Build libc370
         run: |
           set -o pipefail

@@ -10,7 +10,8 @@ struct racheck {
     char    len;                    /* 00 length of racheck struct (plist)  */
     char    instdata[3];            /* 01 AL3(address of installation data) */
 /* The three flag bytes and the ATTR byte below were checked against the
-** RACHECK macro itself -- sysmac/racheck.macro, which is the primary source
+** RACHECK macro itself -- RACHECK in SYS1.MACLIB (maclib370; sysmac/ until
+** 2.7.x, identical), which is the primary source
 ** and the only one -- on 2026-08-07 for #63.  Each DC there names its bits
 ** high-order first, so BIT0 is 0x80:
 **
