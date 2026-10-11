@@ -432,6 +432,18 @@ and rexx370 carries no macro directory of its own, so it takes it from
 standing reminder that `<sysroot>/macros` is a published surface: what goes in
 is a decision, and what comes back out is a breaking change.
 
+**The rest of SYS1.MACLIB and SYS1.AMODGEN: maclib370.** The system macros
+libc370 does not use now have a home of their own,
+[maclib370](https://github.com/mvslovers/maclib370): all 747 members of
+SYS1.MACLIB and 288 of SYS1.AMODGEN at the TK5 level, installed into
+`<sysroot>/maclib370/macros`. libc370's packages and Homebrew formula depend
+on it (#490). An `as370` that searches that directory by itself (after
+`<sysroot>/macros`, so libc370's copies win a name collision) assembles
+`SPIE`, `TIME`, `WTOR` and the rest with no `-I`. With an `as370` that does
+not search it yet, add `-I <sysroot>/maclib370/macros`. `sysmac/` keeps its
+members for now; dropping the copies maclib370 also carries is a decision of
+its own.
+
 ## Crypto
 
 Blowfish, SHA-256 and base64 left libc370 in 2.0 for

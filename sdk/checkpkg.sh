@@ -1,9 +1,10 @@
 #!/bin/sh
 # checkpkg.sh DIST VERSION - check the artifacts sdk/package.py made (#326).
 #
-# Every expected value is derived again from sdk/cc370.json through
+# Every expected value is derived again from sdk/cc370.json and
+# sdk/maclib370.json through
 # sdk/package.py requires, not copied: the packages are checked against the
-# one place the cc370 range is written.  Needs dpkg-deb and rpm (CI: Ubuntu).
+# one place each range is written.  Needs dpkg-deb and rpm (CI: Ubuntu).
 #
 # RC: 0 when every check passed, 1 otherwise; each check prints one line.
 
@@ -44,12 +45,15 @@ check "deb Depends"      "$(dpkg-deb -f "$DEB" Depends)"      "$want_deb"
 check "rpm Name"    "$(rpm -qp --qf '%{NAME}' "$RPM" 2>/dev/null)" "libc370-devel"
 check "rpm Arch"    "$(rpm -qp --qf '%{ARCH}' "$RPM" 2>/dev/null)" "noarch"
 check "rpm Requires" \
-    "$(rpm -qpR "$RPM" 2>/dev/null | grep '^cc370' | sort | paste -sd'|' -)" \
+    "$(rpm -qpR "$RPM" 2>/dev/null | grep -E '^(cc370|maclib370) ' | sort | paste -sd'|' -)" \
     "$want_rpm"
 
 check "metadata requires" \
     "$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["requires"]["cc370"])' "$META")" \
     "$want_range"
+check "metadata requires maclib370" \
+    "$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["requires"]["maclib370"])' "$META")" \
+    "$(python3 "$ROOT/sdk/package.py" requires maclib370-range)"
 check "metadata version" \
     "$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$META")" \
     "$V"

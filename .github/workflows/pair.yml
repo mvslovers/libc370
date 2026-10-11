@@ -1,11 +1,13 @@
 # Install cc370 and libc370 as packages, together, under the real package
 # manager, and build a program with the pair (#326).  sdk/pairtest.sh does
-# the checks: libc370 alone is refused, cc370 beside a libc370 2.0.0 is
-# refused, the pair installs, __CC370__ matches, and a printf/strtoll
+# the checks: libc370 alone is refused, libc370 without maclib370 is refused
+# (once it depends on it, #490), cc370 beside a libc370 2.0.0 is refused, the
+# pair installs with maclib370, __CC370__ matches, and a printf/strtoll
 # program links its 64-bit helpers from libcc370rt.a.
 #
 # The packages are the released ones: libc370 at `libc370` (default: the
-# latest release), cc370 at `cc370` (default: its latest release).  Runs
+# latest release), cc370 at `cc370`, maclib370 at `maclib370` (default:
+# their latest releases).  Runs
 #   - from release.yml, after the assets are attached (the new release),
 #   - by hand (workflow_dispatch),
 #   - on a PR that changes the test itself.
@@ -25,12 +27,19 @@ on:
         description: "cc370 release (X.Y.Z); empty = latest"
         type: string
         default: ""
+      maclib370:
+        description: "maclib370 release (X.Y.Z); empty = latest"
+        type: string
+        default: ""
   workflow_call:
     inputs:
       libc370:
         type: string
         default: ""
       cc370:
+        type: string
+        default: ""
+      maclib370:
         type: string
         default: ""
   pull_request:
@@ -61,18 +70,23 @@ jobs:
           [ -n "$lv" ] || lv=$(gh release view -R mvslovers/libc370 --json tagName -q .tagName | sed 's/^v//')
           cv="${{ inputs.cc370 }}"
           [ -n "$cv" ] || cv=$(gh release view -R mvslovers/cc370 --json tagName -q .tagName | sed 's/^v//')
-          echo "libc370 $lv, cc370 $cv" | tee -a "$GITHUB_STEP_SUMMARY"
-          mkdir -p pkgs/l pkgs/c
+          mv="${{ inputs.maclib370 }}"
+          [ -n "$mv" ] || mv=$(gh release view -R mvslovers/maclib370 --json tagName -q .tagName | sed 's/^v//')
+          echo "libc370 $lv, cc370 $cv, maclib370 $mv" | tee -a "$GITHUB_STEP_SUMMARY"
+          mkdir -p pkgs/l pkgs/c pkgs/m
           if [ "${{ matrix.mode }}" = deb ]; then
             gh release download "v$lv" -R mvslovers/libc370 -D pkgs/l -p "libc370-dev_${lv}_all.deb" -p SHA256SUMS
             gh release download "v$cv" -R mvslovers/cc370   -D pkgs/c -p "cc370_${cv}_${{ matrix.deb }}.deb" -p SHA256SUMS
+            gh release download "v$mv" -R mvslovers/maclib370 -D pkgs/m -p "maclib370_${mv}_all.deb" -p SHA256SUMS
           else
             gh release download "v$lv" -R mvslovers/libc370 -D pkgs/l -p "libc370-devel-${lv}.noarch.rpm" -p SHA256SUMS
             gh release download "v$cv" -R mvslovers/cc370   -D pkgs/c -p "cc370-${cv}.${{ matrix.rpm }}.rpm" -p SHA256SUMS
+            gh release download "v$mv" -R mvslovers/maclib370 -D pkgs/m -p "maclib370-${mv}.noarch.rpm" -p SHA256SUMS
           fi
           (cd pkgs/l && sha256sum -c --ignore-missing SHA256SUMS)
           (cd pkgs/c && sha256sum -c --ignore-missing SHA256SUMS)
-          mkdir -p pkgs/all && cp pkgs/l/*.deb pkgs/l/*.rpm pkgs/c/*.deb pkgs/c/*.rpm pkgs/all/ 2>/dev/null || true
+          (cd pkgs/m && sha256sum -c --ignore-missing SHA256SUMS)
+          mkdir -p pkgs/all && cp pkgs/l/*.deb pkgs/l/*.rpm pkgs/c/*.deb pkgs/c/*.rpm pkgs/m/*.deb pkgs/m/*.rpm pkgs/all/ 2>/dev/null || true
           ls -l pkgs/all
 
       - name: Install the pair in a clean ${{ matrix.image }}
