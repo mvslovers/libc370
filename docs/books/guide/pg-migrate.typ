@@ -363,5 +363,10 @@ What later 2.x releases ask of a program or a build:
       1.6.0 or later. A build that names #cmd("<sysroot>/macros") with
       #cmd("-I") or #cmd("AS370_MACLIB") adds
       #cmd("<sysroot>/maclib370/macros").],
+    [2.8.1], [The sysroot carries #cmd("share/libc370/sysmac-removed.txt"),
+      the names of the MVS system macros earlier releases installed in
+      #cmd("<sysroot>/macros").], [After an upgrade that unpacked the
+      tarball, delete those names from #cmd("<sysroot>/macros"): a copy
+      left there comes before maclib370's member.],
   )
 ] <pg-migrate-since-tab>
