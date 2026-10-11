@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.8.0] - 2026-10-11
+
+A minor release that hands the IBM system macros to maclib370. LIBC/370 no
+longer carries copies of SYS1.MACLIB and SYS1.AMODGEN members; it assembles
+against maclib370 and installs only its own macros and five JES2 mappings.
+It needs CC/370 1.6.0 or later, whose `as370` finds maclib370 by itself.
+`libc.a` is the same as 2.7.0's except `fclose()`'s close routine, which is 8
+bytes longer at the TK5 maintenance level of `FREEPOOL`; nothing else a
+program links changes. The CC/370 range is `>=1.6.0 <2`.
+
 ### Changed
 - **Needs cc370 1.6.0 or later (#494).** Every public header stops with
   `#error` with an older one: from 1.6.0 on, `as370` searches
