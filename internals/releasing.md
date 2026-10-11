@@ -51,7 +51,7 @@ first cc370 release after 1.5.0 (cc370 4d1fca9).
   written once, in **`sdk/maclib370.json`** (`"min"`, `"below"`).
   `sdk/package.py requires {deb,rpm,maclib370-range,notes}` derives the
   `.deb` Depends, the `.rpm` Requires, `metadata.json`
-  (`requires.maclib370`) and the notes line from it; `sdk/checkpkg.sh`
+  (`requires.maclib370`) and the notes line from it (since 2.7.0); `sdk/checkpkg.sh`
   checks them, and `sdk/pairtest.sh` installs maclib370's package beside the
   pair and checks that libc370 without it is refused (#490).
 - The build does not use it yet. `sysmac/` keeps its IBM copies, and

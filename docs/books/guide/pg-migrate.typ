@@ -347,5 +347,12 @@ What later 2.x releases ask of a program or a build:
       and the first call without #cmd("srand()") returned 0.], [Nothing,
       unless a program depends on the exact numbers: every sequence
       differs from 2.6.2's.],
+    [2.7.0], [The packages and the Homebrew formula depend on maclib370
+      1.0.0 or later, below 2: SYS1.MACLIB and SYS1.AMODGEN of MVS 3.8j,
+      installed into #cmd("<sysroot>/maclib370/macros"). The library
+      itself is unchanged.], [#cmd("apt") or #cmd("dnf"): name maclib370's
+      package beside LIBC/370's. Homebrew: #cmd("brew trust mvslovers/tap")
+      first. Tarball: unpack maclib370's tarball into
+      #cmd("<sysroot>/maclib370").],
   )
 ] <pg-migrate-since-tab>
