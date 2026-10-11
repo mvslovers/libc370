@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.8.1] - 2026-10-11
+
+A patch release for installers, a drop-in for 2.8.0: the library is
+unchanged. The sysroot now carries the list of the IBM macros 2.8.0 stopped
+installing, so an upgrade that unpacks the tarball can remove the copies
+that would otherwise shadow maclib370. The CC/370 range is unchanged:
+`>=1.6.0 <2`.
+
 ### Fixed
 - **The sysroot carries the list of the IBM macros 2.8.0 no longer installs
   (#498): `share/libc370/sysmac-removed.txt`.** An upgrade that unpacks the
