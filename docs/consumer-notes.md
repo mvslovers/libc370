@@ -435,8 +435,11 @@ UZ39662) changes code that libc370 generates: `fclose()`'s `@@aclose` grows by
 2.8.0 needs a cc370 whose `as370` has that directory in its search order. A
 build that names `<sysroot>/macros` itself, with `-I` or `AS370_MACLIB`, adds
 `<sysroot>/maclib370/macros` beside it. `make install` removes the old IBM
-copies from `<sysroot>/macros` (the names in `sdk/sysmac-removed.txt`): a
-copy left there would come before maclib370's member in the search order.
+copies from `<sysroot>/macros` (the names in `sdk/sysmac-removed.txt`, installed
+as `<sysroot>/share/libc370/sysmac-removed.txt` since 2.8.1): a copy left there
+would come before maclib370's member in the search order. An unpacked tarball
+removes nothing; delete them with
+`cd <sysroot>/macros && grep -v '^#' ../share/libc370/sysmac-removed.txt | xargs rm -f`.
 
 ## Crypto
 

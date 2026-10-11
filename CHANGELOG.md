@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- **The sysroot carries the list of the IBM macros 2.8.0 no longer installs
+  (#498): `share/libc370/sysmac-removed.txt`.** An upgrade that unpacks the
+  sysroot tarball (by hand, or through an installer that does) left the 118
+  members earlier releases put into `<sysroot>/macros`, and there they come
+  before maclib370's members in the assembler's search order, at the old
+  level. `make install`, `apt`/`dnf` and Homebrew were not affected. With the
+  list in the sysroot an installer can delete them; by hand:
+  `cd <sysroot>/macros && grep -v '^#' ../share/libc370/sysmac-removed.txt | xargs rm -f`.
+
 ## [2.8.0] - 2026-10-11
 
 A minor release that hands the IBM system macros to maclib370. LIBC/370 no

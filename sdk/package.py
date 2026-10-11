@@ -4,9 +4,9 @@
 libc370 is MVS target code: headers, libc.a, crt*.o, macros.  It is the same
 whatever the host, so there is one artifact per channel, not one per host:
 
-    libc370-<v>-sysroot.tar.gz       include/ lib/ macros/, no top directory:
+    libc370-<v>-sysroot.tar.gz       include/ lib/ macros/ share/, no top directory:
                                      unpack it INTO a sysroot (<prefix>/cc370)
-    libc370-dev_<v>_all.deb          /usr/lib/cc370/cc370/{include,lib,macros}
+    libc370-dev_<v>_all.deb          /usr/lib/cc370/cc370/{include,lib,macros,share}
     libc370-devel-<v>.noarch.rpm     the same tree
     libc370-<v>-metadata.json        version, commit, the cc370 and maclib370
                                      ranges
@@ -135,7 +135,7 @@ def tarball(stage, path):
     with open(path, "wb") as raw, \
             gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0) as gz, \
             tarfile.open(fileobj=gz, mode="w", format=tarfile.PAX_FORMAT) as t:
-        for top in ("include", "lib", "macros"):
+        for top in ("include", "lib", "macros", "share"):
             base = os.path.join(stage, top)
             entries = [base]
             for d, dirs, files in os.walk(base):
@@ -165,7 +165,7 @@ def nfpm_yaml(stage, version, name):
         "section: devel",
         "contents:",
     ]
-    for top in ("include", "lib", "macros"):
+    for top in ("include", "lib", "macros", "share"):
         lines += [f"  - src: {stage}/{top}/",
                   f"    dst: {SYSROOT}/{top}",
                   "    type: tree"]
