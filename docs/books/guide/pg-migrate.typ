@@ -372,5 +372,11 @@ What later 2.x releases ask of a program or a build:
       C function through #cmd("@@CCALL") and a stub made by the macro
       #cmd("CCALL") (@pg-asm-ccall).], [Nothing. Code that called C
       directly from COBOL failed and can use the stub.],
+    [2.10.0], [A COBOL main program, or any program that is not C, can
+      call C functions through #cmd("@@CCALL"): the first call builds the
+      C environment, #cmd("CCTERM") releases it
+      (@pg-asm-ccall-main). U3101 now means a C thread or a subtask of a
+      C program.], [Call #cmd("CCTERM") before #cmd("STOP RUN"), or
+      buffered C output and #cmd("atexit()") functions are lost.],
   )
 ] <pg-migrate-since-tab>

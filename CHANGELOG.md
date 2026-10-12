@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.10.0] - 2026-10-12
+
+A minor release with one new function: a COBOL main program, or any
+program that is not C, can call C functions. The first call through a
+`CCALL` stub builds the C environment and `CCTERM` releases it. Programs
+that are C are unaffected; `libc.a` changes in the routine that makes the
+call and in the start-up, which now keeps its runtime part in a routine of
+its own. The CC/370 range is unchanged: `>=1.6.0 <2`.
+
 ### Added
 - **A COBOL main program, or any program that is not C, can call C
   functions (#507).** Until now `@@CCALL` needed a C program running on
