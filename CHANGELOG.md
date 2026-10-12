@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.10.2] - 2026-10-12
+
+A patch release with one fix, a drop-in for 2.10.1: `__listds()` returns a
+data set or catalog name that contains `-` whole. Only `__listds()`
+changes. The CC/370 range is unchanged: `>=1.6.0 <2`.
+
 ### Fixed
 - **`__listds()` keeps a `-` inside a data set or catalog name (#519).**
   It read the name after `NONVSAM`, `CLUSTER` and `IN-CAT` with the same

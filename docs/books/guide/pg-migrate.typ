@@ -383,5 +383,8 @@ What later 2.x releases ask of a program or a build:
       duplicate fails with reason code 8 instead of 12.
       #cmd("vsread()") of a key that is not there reports reason code 16
       instead of 88.], [Nothing. A direct-#cmd("PUT") workaround can go.],
+    [2.10.2], [#cmd("__listds()") returns a data set or catalog name that
+      contains #cmd("-") whole, and its filter sees the whole name. Up to
+      2.10.1 the name ended at the first #cmd("-").], [Nothing.],
   )
 ] <pg-migrate-since-tab>
