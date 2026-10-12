@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.10.1] - 2026-10-12
+
+A patch release with two VSAM fixes for key-sequenced clusters, a drop-in
+for 2.10.0. Only `vswrite()` and `vsread()` change. The CC/370 range is
+unchanged: `>=1.6.0 <2`.
+
 ### Fixed
 - **`vswrite()` on a KSDS opened with `VSACCESS_DYNAM` puts direct (#514).**
   The RPL stayed sequential, so after a record with a higher key every lower

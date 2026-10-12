@@ -378,5 +378,10 @@ What later 2.x releases ask of a program or a build:
       (@pg-asm-ccall-main). U3101 now means a C thread or a subtask of a
       C program.], [Call #cmd("CCTERM") before #cmd("STOP RUN"), or
       buffered C output and #cmd("atexit()") functions are lost.],
+    [2.10.1], [On a KSDS opened with #cmd("VSACCESS_DYNAM"),
+      #cmd("vswrite()") writes direct: a lower key is inserted, and a
+      duplicate fails with reason code 8 instead of 12.
+      #cmd("vsread()") of a key that is not there reports reason code 16
+      instead of 88.], [Nothing. A direct-#cmd("PUT") workaround can go.],
   )
 ] <pg-migrate-since-tab>
