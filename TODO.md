@@ -28,7 +28,7 @@ close-path probes; assets incl. the manuals, `pair`, tap checked), 2.8.1 on 2026
 share/libc370/sysmac-removed.txt in the sysroot #498 PR #499; assets, `pair`, tap checked)
 (tag `v2.2.0` on `0ba452a`, cc370 `>=1.1.0 <2`, built with cc370 1.1.0;
 assets, `pair` and the Homebrew tap checked; cc370's `install.sh` with cc370
-1.2.0 picks 2.2.0). `main` is 2.8.2-dev. Releases are tagged after the go of
+1.2.0 picks 2.2.0). `main` is 2.8.2-dev. **Unreleased on `main`: `@@CCALL` (#502, PR #503)**, C called from COBOL and other OS-linkage code; it is new function, so the next release is 2.9.0 (mbt-example waits on it). Releases are tagged after the go of
 the coordinating mbt session and the maintainer's approval. Tier 0 (the 2.0 critical path) is done
 but for the consumer ports still pinned to 1.0.8 (step 7). 1.0.8 is the last
 1.x; a serious defect there gets an emergency 1.0.9 from the tag `v1.0.8` (D8
