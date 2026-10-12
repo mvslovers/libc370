@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.9.0] - 2026-10-12
+
+A minor release with one new function: COBOL and other code that calls
+with the OS linkage can call a C function while a C program runs on the
+task, through `@@CCALL` and a stub the new macro `CCALL` makes. It is a
+drop-in for 2.8.1: nothing else in `libc.a` changes. The CC/370 range is
+unchanged: `>=1.6.0 <2`.
+
 ### Added
 - **`@@CCALL`: COBOL and other OS-linkage code can call a C function while a
   C program runs on the task (#502).** Such code calls with an 18-word save
