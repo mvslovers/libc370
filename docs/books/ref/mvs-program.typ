@@ -86,7 +86,10 @@ without any global variable, so that a program is reentrant:
   [#cmd("CLIBPPA")], [the _program properties area_, one for each
     invocation of a C program. The start-up module builds it in front of the
     stack and chains it into the first save area of the task, where
-    #cmd("__ppaget()") finds it.],
+    #cmd("__ppaget()") finds it. Under a program that is not C,
+    #cmd("@@CCALL") builds it on the first call to a C function, the same
+    way (_LIBC/370 Programmer's Guide_, "Calling C from a COBOL Main
+    Program").],
   [#cmd("CLIBCRT")], [the _task_ anchor, one for each task (TCB) that runs
     C code: the value of #cmd("errno"), the state of #cmd("strtok()"),
     #cmd("rand()") and the time functions, and the ESTAE stack.],
@@ -112,7 +115,9 @@ A program may also read the environment flags: #cmd("GRTFLAG1_TSO") in
 #cmd("grtflag1") is set when the program was started as a TSO command
 processor. In #cmd("ppaflag"), #cmd("PPAFLAG_TSOBG") is set whenever the
 program runs under TSO, and #cmd("PPAFLAG_TSOFG") in addition at a terminal:
-a TSO background job has #cmd("PPAFLAG_TSOBG") alone.
+a TSO background job has #cmd("PPAFLAG_TSOBG") alone. #cmd("PPAFLAG_CCALL")
+is set when #cmd("@@CCALL") built the environment for a caller that is not C
+rather than a C start-up.
 
 == \_\_ppaget <mvs-program-__ppaget>
 #idx("__ppaget")
@@ -138,8 +143,9 @@ eyecatcher #cmd("@PPA")\; in the last step only the eyecatcher is
 checked.
 
 === Returns
-The address of the #cmd("CLIBPPA"), or #cmd("NULL") when no C program is
-active on the task.
+The address of the #cmd("CLIBPPA"), or #cmd("NULL") when no C environment
+is active on the task: neither a C program nor one that #cmd("@@CCALL")
+built.
 
 === Notes
 A thread created with #cmd("cthread_create()") has no program properties area

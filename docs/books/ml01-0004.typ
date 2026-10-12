@@ -44,8 +44,8 @@ different kinds of files, the run-time environment -- is the subject of the
 companion volume, the _LIBC/370 Programmer's Guide_.
 
 LIBC/370 is built with, and only with, the CC/370 toolchain. Every header
-checks the compiler: compiled with a CC/370 older than 1.4.0 it stops with
-#cmd("#error \"libc370 needs cc370 1.4.0 or later\"").
+checks the compiler: compiled with a CC/370 older than 1.6.0 it stops with
+#cmd("#error \"libc370 needs cc370 1.6.0 or later\"").
 
 == Who Should Use This Book
 
