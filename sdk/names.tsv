@@ -2105,6 +2105,7 @@ PDS_WALK	mvs/dslist.h
 PGMEK	ibm/mvs/iefvkeys.h
 PNONDISP	ibm/mvs/ikjtcb.h
 PPAEYE	mvs/crt.h
+PPAFLAG_CCALL	mvs/crt.h
 PPAFLAG_TERR	mvs/crt.h
 PPAFLAG_TIN	mvs/crt.h
 PPAFLAG_TOUT	mvs/crt.h

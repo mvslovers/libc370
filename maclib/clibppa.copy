@@ -14,6 +14,7 @@ PPATSOBG EQU    X'40'             ... TSO background environment
 PPATIN   EQU    X'08'             ... STDIN is terminal
 PPATOUT  EQU    X'04'             ... STDOUT is terminal
 PPATERR  EQU    X'02'             ... STDERR is terminal
+PPACCALL EQU    X'01'             ... built by @@CCALL (#507)
 PPASUBPL DS     X                 21 save area subpool number
 PPAHEAPS DS     X                 22 heap (malloc) subpool number
          DS     X                 23 unused / available

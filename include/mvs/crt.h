@@ -161,6 +161,7 @@ struct clibppa {
 #define PPAFLAG_TIN		0x08	/* ... STDIN is terminal				*/
 #define PPAFLAG_TOUT	0x04	/* ... STDOUT is terminal				*/
 #define PPAFLAG_TERR	0x02	/* ... STDERR is terminal				*/
+#define PPAFLAG_CCALL	0x01	/* ... built by @@CCALL (#507)			*/
     char    ppasubpl;			/* 21 save area subpool number          */
 	char 	ppaheaps;			/* 22 heap (malloc) subpool number		*/
 	char 	unused[1];			/* 23 unused/available					*/

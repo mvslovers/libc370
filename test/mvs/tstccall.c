@@ -19,8 +19,9 @@
  *       after the call OSSPIE finds its own SPIE in force again
  *   (4) no SPIE in force once OSSPIE is done
  *
- * A second module, TSTCCNOC (an assembler main, test/mvs/tstccnoc.asm),
- * calls through @@CCALL with no C program on the task: U3101.
+ * TSTCCNOC and TSTCCNOT (test/mvs/tstccnoc.asm, .c) are the other case,
+ * an assembler main with no C program on the task (#507): the first call
+ * builds the C environment, exit() and CCTERM release it.
  *
  * RED CONTROL: TSTCCALR is this source with -DRED: (1) calls CADD
  * directly, without @@CCALL, as COBOL code does today.  The C prologue
@@ -36,11 +37,16 @@
  *                test/mvs/tstccall.c tstccala.o -o TSTCCALR \
  *                -flinker-output=iebcopy
  *          as370 -I maclib test/mvs/tstccnoc.asm -o tstccnoc.o
- *          cc370 tstccnoc.o -L build/sdk -o TSTCCNOC \
+ *          cc370 -c -Os -Wall -Werror -Iinclude test/mvs/tstccnoc.c \
+ *                -o tstccnoc_c.o
+ *          cc370 tstccnoc.o tstccnoc_c.o -L build/sdk -o TSTCCNOC \
  *                -Wl,--entry,TSTCCNOC -flinker-output=iebcopy
+ *          cc370 tstccnoc.o tstccnoc_c.o -L build/sdk -o TSTCCNOT \
+ *                -Wl,--entry,TSTCCNOT -flinker-output=iebcopy
  *          ld370 --pack TSTCCALL=TSTCCALL.iebcopy \
  *                --pack TSTCCALR=TSTCCALR.iebcopy \
  *                --pack TSTCCNOC=TSTCCNOC.iebcopy \
+ *                --pack TSTCCNOT=TSTCCNOT.iebcopy \
  *                -o tstccall -xmit --dsn IBMUSER.LIBC370.CCSCR
  * Install: jcl/recvccal.jcl.   Run: jcl/tstccall.jcl.
  *

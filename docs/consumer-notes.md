@@ -445,11 +445,14 @@ removes nothing; delete them with
 
 A C function cannot be called directly from COBOL (or from assembler with a
 save area of its own): the C prologue takes its frame from offset 76 of the
-caller's save area, which such a caller does not have. While a C program
-runs on the task, call it through `@@CCALL` with a stub per function made by
+caller's save area, which such a caller does not have. Call it through `@@CCALL` with a stub per function made by
 the macro `CCALL` (`CCFUNC CCALL CFUNC`, then `CALL 'CCFUNC' USING ...`).
 The Programmer's Guide, "Calling C from COBOL and Other OS-Linkage Code",
 has the details and the limits (#502).
+
+Under a COBOL main program, with no C program on the task, the first such
+call builds the C environment, and `CALL 'CCTERM'` before `STOP RUN`
+releases it, writing the buffered output (#507).
 
 ## Crypto
 

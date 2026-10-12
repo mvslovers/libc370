@@ -109,6 +109,12 @@ There are two start-up routines, and both define the entry point
   )
 ] <pg-startup-variants-tab>
 
+A third way exists for code that is not C: a COBOL or assembler main
+program that calls C functions through #cmd("@@CCALL") gets the same
+environment, built on its first call and released by #cmd("CCTERM")
+(@pg-asm-ccall-main). It has no #cmd("main()") and no parameter to parse,
+and the start-up hook #cmd("__premain()") is not called.
+
 #cmd("@@CRT0") is a member of #cmd("libc.a"). A source file that defines
 #cmd("main()") refers to it, so the linker takes it from the library like
 any other function, and the cc370 driver names no start-up object on the
