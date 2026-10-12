@@ -45,20 +45,7 @@
 
 extern int main(int argc, char **argv);
 
-/* A standard stream @@start cannot open.  Never a missing DD: "*SYSPRINT"
-   and "*SYSTERM" allocate SYSOUT when the DD is not there, and stdin falls
-   back to 'NULLFILE'.  So say what failed, with errno, in the job log - it
-   used to be "SYSTERM DD not defined" / "SYSIN DD not defined" in a
-   dynamic SYSOUT, or nothing at all for stdout, while the cause was
-   storage (#254, #277). */
-static void startfail(const char *what)
-{
-    int err = errno;
-
-    wtof("@@START: %s could not be opened: errno %d%s", what, err,
-         err == ENOMEM ? ", out of storage - raise REGION" : "");
-    errno = err;
-}
+extern int __rtinit(void);
 extern void __exita(int status);
 
 /* __premain() - the startup hook (cc370#10).  A program that needs to act
@@ -126,38 +113,10 @@ __start(char *p, char *pgmname, int tsojbid, void **pgmr1)
         if (rc) __exit(rc);
     }
 
-    if (!stdout) stdout = fopen("*SYSPRINT", "w");
-    if (!stdout) {
-        startfail("stdout (SYSPRINT)");
-        __exita(EXIT_FAILURE);
-    }
-
-    if (!stderr) stderr = fopen("*SYSTERM", "w");
-    if (!stderr) {
-        startfail("stderr (SYSTERM)");
-        printf("stderr could not be opened, errno %d\n", errno);
-        fclose(stdout);
-        __exita(EXIT_FAILURE);
-    }
-
-    if (!stdin) stdin = fopen("dd:SYSIN", "r");
-    if (!stdin) stdin = fopen("'NULLFILE'", "r");
-    if (!stdin) {
-        startfail("stdin (SYSIN, then NULLFILE)");
-        fprintf(stderr, "stdin could not be opened, errno %d\n", errno);
-        fclose(stdout);
-        fclose(stderr);
-        __exita(EXIT_FAILURE);
-    }
-
-    /* load any environment variables */
-    if (loadenv("dd:SYSENV")) {
-        /* no SYSENV DD, try ENVIRON DD */
-        loadenv("dd:ENVIRON");
-    }
-
-    /* initialize time zone offset for this thread */
-    tzset();
+    /* the standard streams, the environment variables and the time zone:
+       the part of the startup that does not depend on main(), shared with
+       @@CCALL's environment for a caller that is not C (#507) */
+    if (__rtinit()) __exita(EXIT_FAILURE);
 
     if (parmLen >= sizeof(parmbuf) - 2) {
         parmLen = sizeof(parmbuf) - 1 - 2;

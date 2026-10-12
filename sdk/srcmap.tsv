@@ -786,3 +786,4 @@ src/stdio/@@flock.c	src/stdio/@@flock.c	new after 2.0.0 (#453): the FILE lock fo
 src/stdio/@@fpput.c	src/stdio/@@fpput.c	new after 2.0.0 (#463): fopen("*PUTLINE"), a stream through the TMP's PUTLINE
 src/stdio/@@fpget.c	src/stdio/@@fpget.c	new after 2.0.0 (#467): fopen("*GETLINE"), a stream through the TMP's GETLINE
 src/mvs/crt/@@ccall.asm	src/mvs/crt/@@ccall.asm	new after 2.0.0 (#502): @@CCALL, a C function called from COBOL and other OS-linkage code
+src/mvs/crt/@@rtinit.c	src/mvs/crt/@@rtinit.c	new after 2.0.0 (#507): the runtime part of the startup, shared by @@START and @@CCALL
