@@ -441,6 +441,16 @@ would come before maclib370's member in the search order. An unpacked tarball
 removes nothing; delete them with
 `cd <sysroot>/macros && grep -v '^#' ../share/libc370/sysmac-removed.txt | xargs rm -f`.
 
+## Calling C from COBOL
+
+A C function cannot be called directly from COBOL (or from assembler with a
+save area of its own): the C prologue takes its frame from offset 76 of the
+caller's save area, which such a caller does not have. While a C program
+runs on the task, call it through `@@CCALL` with a stub per function made by
+the macro `CCALL` (`CCFUNC CCALL CFUNC`, then `CALL 'CCFUNC' USING ...`).
+The Programmer's Guide, "Calling C from COBOL and Other OS-Linkage Code",
+has the details and the limits (#502).
+
 ## Crypto
 
 Blowfish, SHA-256 and base64 left libc370 in 2.0 for
