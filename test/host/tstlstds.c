@@ -53,6 +53,8 @@
  *   (11) #157: the n-th calloc fails, for every n -> the full list, or NULL
  *        with errno ENOMEM; never a short list, nothing left allocated.
  *   (12) #61: an empty result -> NULL with errno 0, a stale errno cleared.
+ *   (14) #519: a '-' inside a data set, cluster or catalog name -> the
+ *        whole name, for the record and for the filter.
  *   after every case: no allocation left once __freeds() has run.
  *
  * Before the fix this does not build: struct dslist has no catnm.
@@ -528,6 +530,34 @@ int main(void)
         l = run(fx, NULL);
         t = strtok(NULL, ",");
         CHECK(t && strcmp(t, "TWO") == 0, "the next token is TWO");
+        done(l);
+    }
+
+    /* ---------------------------------------------------------------- */
+    printf("\n(14) #519: a '-' inside a data set or catalog name\n");
+    {
+        static const char *fx[] = {
+            ENTRY("IBMUSER.OFTPIN.NOT-CATE"), INCAT("UC-PUB01"), HISTORY,
+            VOLS("WORK01"),
+            "CLUSTER ------- IBMUSER.A-B.KSDS", INCAT("UC-PUB01"), HISTORY,
+            VOLS("WORK02"),
+            ENTRY("IBMUSER.OFTPIN.NOTCATE"), INCAT(MASTER), HISTORY,
+            VOLS("WORK03"),
+            NULL };
+        l = run(fx, NULL);
+        CHECK_EQ(arraycount(&l), 3, "three records");
+        CHECK_STR(l[0]->dsn, "IBMUSER.OFTPIN.NOT-CATE", "record 1 dsn, whole");
+        CHECK_STR(l[0]->catnm, "UC-PUB01", "record 1 catnm, whole");
+        CHECK_STR(l[1]->dsn, "IBMUSER.A-B.KSDS", "a cluster name, whole");
+        CHECK_STR(l[1]->volser, "WORK02", "its volser");
+        CHECK_STR(l[2]->dsn, "IBMUSER.OFTPIN.NOTCATE", "a name without '-'");
+        done(l);
+
+        /* the filter sees the whole name */
+        l = run(fx, "IBMUSER.OFTPIN.NOT-*");
+        CHECK_EQ(arraycount(&l), 1, "the filter matches the name with its '-'");
+        if (arraycount(&l) == 1)
+            CHECK_STR(l[0]->dsn, "IBMUSER.OFTPIN.NOT-CATE", "and only that one");
         done(l);
     }
 
