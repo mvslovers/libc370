@@ -209,7 +209,7 @@ CHANGELOG has everything else.
 
 | Release | Change | What to do |
 |---|---|---|
-| Unreleased | `vswrite()` on a KSDS opened with `VSACCESS_DYNAM` puts direct; `vsread()` of a missing key reports reason code 16 (#514) | Nothing. Code that treated reason code 12 as "duplicate" on such a handle checks for 8 now; a local direct-`PUT` workaround can go |
+| 2.10.1 | `vswrite()` on a KSDS opened with `VSACCESS_DYNAM` puts direct; `vsread()` of a missing key reports reason code 16 (#514) | Nothing. Code that treated reason code 12 as "duplicate" on such a handle checks for 8 now; a local direct-`PUT` workaround can go |
 | 2.10.0 | A COBOL main program calling C through `@@CCALL` gets a C environment instead of U3101 (#507) | Call `CCTERM` before `STOP RUN`, or buffered C output and `atexit()` functions are lost. Code that relied on U3101 to detect a missing C program: it is now raised only on a C thread or a subtask of a C program |
 | 2.9.0 | COBOL and other OS-linkage code can call a C function through `@@CCALL` and a stub made by the macro `CCALL` (#502) | Nothing. Code that called C directly from COBOL failed; it can use the stub |
 | 2.8.1 | The sysroot carries `share/libc370/sysmac-removed.txt`, the 118 IBM macros releases before 2.8.0 put into `<sysroot>/macros` (#498) | After an upgrade that unpacked the tarball: `cd <sysroot>/macros && grep -v '^#' ../share/libc370/sysmac-removed.txt \| xargs rm -f`. `make install`, `apt`/`dnf` and Homebrew need nothing |
