@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- **`@@CCALL`: COBOL and other OS-linkage code can call a C function while a
+  C program runs on the task (#502).** Such code calls with an 18-word save
+  area in register 13, which has no NAB at offset 76 for the C prologue, so
+  a C function called directly placed its frame at a random address: a
+  program check, measured on MVS. A stub per C function, made by the new
+  macro `CCALL` (`CCFUNC CCALL CFUNC`), passes the call to `@@CCALL`, which
+  finds the C frame that called out on the save area chain, builds a frame
+  of its own at that frame's NAB and calls the C function with the
+  parameter list's last address cleared of its high-order bit. The
+  caller's SPIE (COBOL establishes one for the job step) is cancelled for
+  the call and established again afterwards, so a program check in the C
+  function reaches `try()` with its own code rather than as COBOL's U3001.
+  Without a C program on the task the call ends with U3101; U3102 to U3104
+  name a broken save area chain, a full C stack and more than 16
+  parameters. Measured on MVS: C to an OS-linkage routine to C, also
+  nested (C, OS routine, C, OS routine, C), and a 0C1 under `try()` with the caller's SPIE in force before and
+  after the call.
+
 ## [2.8.1] - 2026-10-11
 
 A patch release for installers, a drop-in for 2.8.0: the library is

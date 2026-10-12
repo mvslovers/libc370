@@ -206,14 +206,87 @@ address, and no external name is needed.
 
 The program should print an amount of 1234 and report six digits.
 
-*An assembler program that is not called from C has no C environment*, and
-cannot call a C function directly: there is no C stack and no run-time
-anchor. Let it call a C _program_ instead -- a load module with the usual C
-start-up, #cmd("@@CRT0") -- with #cmd("LINK"), #cmd("ATTACH") or
-#cmd("CALL"). The C start-up then builds the environment, and releases it
-when #cmd("main()") returns. @pg-startup describes the start-up modules,
-including #cmd("crtm") for the special case of a C module called on a task
-where a C program is already running.
+The rules above are those of a caller that runs _in_ C: an assembler
+function called from C, whose own frame is on the C stack. Code that is not
+C -- COBOL, or assembler that saves its registers in a save area of its own
+-- calls C through #cmd("@@CCALL") instead (@pg-asm-ccall).
+
+*Where no C program runs on the task at all*, there is no C stack and no
+run-time anchor, and no C function can be called. Let such code call a C
+_program_ instead -- a load module with the usual C start-up,
+#cmd("@@CRT0") -- with #cmd("LINK"), #cmd("ATTACH") or #cmd("CALL"). The C
+start-up then builds the environment, and releases it when #cmd("main()")
+returns. @pg-startup describes the start-up modules, including
+#cmd("crtm") for the special case of a C module called on a task where a C
+program is already running.
+
+== Calling C from COBOL and Other OS-Linkage Code <pg-asm-ccall>
+
+#idx("@@CCALL")#idx("CCALL macro")#idx("COBOL", "calling C")
+COBOL code, and assembler code with a save area of its own, calls with the
+OS convention: register 13 addresses an 18-word save area, and register 1 a
+list of addresses whose last has the high-order bit set. A C function cannot
+be called that way. It takes its frame from the word at offset 76 of the
+caller's register 13, the NAB of the C stack, and such a save area has no
+NAB. A C function called that way places its frame wherever that word
+happens to point, and the program fails, usually with a program check.
+
+#cmd("@@CCALL") makes the call possible while a C program is running on
+the task, for example a C #cmd("main()") that calls COBOL, which calls C
+again. It is reached through a _stub_, one for each C function, which the
+macro #cmd("CCALL") generates. The stub carries the name the other language
+calls, and the C function keeps its own:
+
+```
+CCFUNC   CCALL CFUNC
+```
+
+```
+           CALL 'CCFUNC' USING N.
+```
+
+The first line makes a control section #cmd("CCFUNC") whose entry point
+passes the address of #cmd("CFUNC") to #cmd("@@CCALL"). Assemble it and link
+it into the load module with the COBOL and C code; the COBOL program then
+calls #cmd("CCFUNC") as it calls any program, and the C function receives the
+argument as declared, here #cmd("int cfunc(int *n)"). #cmd("@@CCALL") itself
+comes from #cmd("libc.a").
+
+#cmd("@@CCALL") follows the save area chain back from the caller's register
+13 to the C stack, takes the frame of the C function that called out, and
+builds a frame of its own at that frame's NAB. Save areas outside the C
+stack, such as the static ones of COBOL programs, are passed over. From that
+frame it calls the C function:
+
+- *Parameters.* The C function receives a copy of the list with the
+  high-order bit cleared on the last address, at most 16 entries.
+- *Return value.* The C function's return value comes back in register 15,
+  and COBOL takes it as #cmd("RETURN-CODE"). Only an #cmd("int") or a
+  pointer is returned this way.
+- *Program checks.* COBOL establishes a SPIE when its first program starts,
+  and it stays for the job step. With it in force, a program check in C
+  code reaches COBOL's exit, which reports a COBOL line and ends with
+  U30xx, and #cmd("try()") (@pg-errors) receives COBOL's abend code instead
+  of the program check. #cmd("@@CCALL") therefore cancels the caller's SPIE
+  for the call and establishes it again afterwards, so the C function runs
+  as it would in a C program. A #cmd("try()") outside the call that resumes
+  past it leaves the caller's SPIE cancelled.
+
+#cmd("@@CCALL") ends the step with a user abend and a message when it cannot
+make the call:
+
+#deflist(width: 0.8in,
+  [U3101], [No C program on the task, for example under a COBOL main
+    program, or code running on a thread started by
+    #cmd("cthread_create()"), whose stack #cmd("@@CCALL") does not find.],
+  [U3102], [No C frame on the save area chain.],
+  [U3103], [No room on the C stack for the frame.],
+  [U3104], [More than 16 parameters.],
+)
+
+A COBOL program that is not reentrant must not be entered again before it
+has returned. The sequence C, COBOL program A, C, COBOL program A overwrites
+A's save area.
 
 == Calling a Routine That Expects the OS Convention <pg-asm-oslink>
 

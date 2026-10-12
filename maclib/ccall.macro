@@ -1,0 +1,26 @@
+         MACRO
+&NAME    CCALL &FUNC
+.*
+.* CCALL - a stub through which code that is not C calls the C
+.*         function FUNC, through @@CCALL (#502):
+.*
+.*             CCFUNC   CCALL CFUNC
+.*
+.*         makes a CSECT CCFUNC; COBOL calls CALL 'CCFUNC' USING ...,
+.*         assembler L 15,=V(CCFUNC) / BALR 14,15 with R1 and R13 as
+.*         for any OS routine.  FUNC is the C function's external name.
+.*
+         AIF   ('&NAME' EQ '').NONAME
+         AIF   ('&FUNC' EQ '').NOFUNC
+&NAME    CSECT
+         USING &NAME,15
+         L     0,=V(&FUNC)        R0  = the C function
+         L     15,=V(@@CCALL)     R15 = the glue
+         BR    15                 R1, R13, R14 as the caller left them
+         LTORG
+         DROP  15
+         MEXIT
+.NONAME  MNOTE 12,'CCALL: the stub needs a name in the label field'
+         MEXIT
+.NOFUNC  MNOTE 12,'CCALL: name the C function, e.g. CCFUNC CCALL CFUNC'
+         MEND
