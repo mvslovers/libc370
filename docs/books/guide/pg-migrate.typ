@@ -368,5 +368,9 @@ What later 2.x releases ask of a program or a build:
       #cmd("<sysroot>/macros").], [After an upgrade that unpacked the
       tarball, delete those names from #cmd("<sysroot>/macros"): a copy
       left there comes before maclib370's member.],
+    [2.9.0], [COBOL and other code that calls with the OS linkage can call a
+      C function through #cmd("@@CCALL") and a stub made by the macro
+      #cmd("CCALL") (@pg-asm-ccall).], [Nothing. Code that called C
+      directly from COBOL failed and can use the stub.],
   )
 ] <pg-migrate-since-tab>
