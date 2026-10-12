@@ -15,6 +15,19 @@
 
 static int  parse(void *vdata, const char *fmt, ...);
 
+/* The name after an entry type or IN-CAT: past the blanks and the run of
+   dashes LISTCAT prints in between, then up to a blank or the end of the
+   line.  A name may contain '-' itself (IBMUSER.OFTPIN.NOT-CATE); the
+   " -\n" tokens elsewhere cut it at the first one (#519).  A data set or
+   catalog name never starts with '-'. */
+static char *
+nametok(char **save)
+{
+    if (!*save) return NULL;
+    *save += strspn(*save, " -");
+    return __tok(NULL, " \n", save);
+}
+
 typedef struct {
     const char  *level;     /* "HLQ.TEST" */
     const char  *option;    /* NULL or "NONVSAM VOLUME" */
@@ -110,8 +123,8 @@ parse(void *vdata, const char *fmt, ...)
         udata->volser[0] = 0;
         udata->entcat = NULL;
 
-        /* get next parm */
-        p = __tok(NULL, " -\n", &tok_save);
+        /* the data set name, '-' and all (#519) */
+        p = nametok(&tok_save);
         if (!p) goto quit;
 
         /* make sure name does not start with a number */
@@ -139,7 +152,7 @@ check_vol:
            the tokeniser splits it at the '-'. */
         p = __tok(NULL, " -\n", &tok_save);
         if (!p || strcasecmp(p, "CAT")) goto quit;
-        p = __tok(NULL, " -\n", &tok_save);
+        p = nametok(&tok_save);         /* '-' and all (#519) */
         if (!p) goto quit;
 
         if (udata->catnm && strcmp(udata->catnm, p)==0) {

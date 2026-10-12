@@ -1,0 +1,38 @@
+//TSTLSTHY JOB (SYS),'LIBC370 519',CLASS=A,MSGCLASS=H,
+//             MSGLEVEL=(1,1)
+//*
+//* libc370 #519 - __listds() keeps a '-' in a data set name.  See
+//* test/mvs/tstlsthy.c.  STEPLIB is the scratch PDS recvlsth.jcl
+//* restores into.  TSTLSTHY links this tree's libc.a, TSTLSTHR
+//* 2.10.1's - the red control.
+//*
+//* Run:     dev1 JOB02148, 2026-10-12: GREEN 3/3; RED 1/3.
+//*
+//* RC 0 = every check passed, 1 = a check failed (the COND CODE).
+//*
+//ALLOC    EXEC PGM=IEFBR14
+//D1       DD  DSN=IBMUSER.LIBC370.LST-519,DISP=(NEW,CATLG),
+//             UNIT=SYSDA,SPACE=(TRK,(1,1)),
+//             DCB=(RECFM=FB,LRECL=80,BLKSIZE=800)
+//D2       DD  DSN=IBMUSER.LIBC370.LSTX519,DISP=(NEW,CATLG),
+//             UNIT=SYSDA,SPACE=(TRK,(1,1)),
+//             DCB=(RECFM=FB,LRECL=80,BLKSIZE=800)
+//*
+//GREEN    EXEC PGM=TSTLSTHY,REGION=4M,COND=(0,NE,ALLOC)
+//STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.LHSCR
+//SYSPRINT DD  SYSOUT=*
+//SYSTERM  DD  SYSOUT=*
+//SYSUDUMP DD  SYSOUT=*
+//*
+//RED      EXEC PGM=TSTLSTHR,REGION=4M,COND=EVEN
+//STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.LHSCR
+//SYSPRINT DD  SYSOUT=*
+//SYSTERM  DD  SYSOUT=*
+//SYSUDUMP DD  SYSOUT=*
+//*
+//CLEANUP  EXEC PGM=IDCAMS,COND=EVEN
+//SYSPRINT DD  SYSOUT=*
+//SYSIN    DD  *
+  DELETE IBMUSER.LIBC370.LST-519 NONVSAM
+  DELETE IBMUSER.LIBC370.LSTX519 NONVSAM
+/*

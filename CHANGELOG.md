@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- **`__listds()` keeps a `-` inside a data set or catalog name (#519).**
+  It read the name after `NONVSAM`, `CLUSTER` and `IN-CAT` with the same
+  delimiters that step over LISTCAT's run of dashes, so
+  `IBMUSER.OFTPIN.NOT-CATE` came back as `IBMUSER.OFTPIN.NOT`, and the
+  filter pattern was matched against that. The name now runs to the next
+  blank.
+
 ## [2.10.1] - 2026-10-12
 
 A patch release with two VSAM fixes for key-sequenced clusters, a drop-in
