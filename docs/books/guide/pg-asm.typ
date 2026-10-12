@@ -211,14 +211,14 @@ function called from C, whose own frame is on the C stack. Code that is not
 C -- COBOL, or assembler that saves its registers in a save area of its own
 -- calls C through #cmd("@@CCALL") instead (@pg-asm-ccall).
 
-*Where no C program runs on the task at all*, there is no C stack and no
-run-time anchor, and no C function can be called. Let such code call a C
-_program_ instead -- a load module with the usual C start-up,
-#cmd("@@CRT0") -- with #cmd("LINK"), #cmd("ATTACH") or #cmd("CALL"). The C
-start-up then builds the environment, and releases it when #cmd("main()")
-returns. @pg-startup describes the start-up modules, including
-#cmd("crtm") for the special case of a C module called on a task where a C
-program is already running.
+Where no C program runs on the task at all -- under a COBOL main program,
+for example -- #cmd("@@CCALL") builds the C environment on the first call
+(@pg-asm-ccall-main). Code can also call a C _program_ -- a load module with
+the usual C start-up, #cmd("@@CRT0") -- with #cmd("LINK"), #cmd("ATTACH")
+or #cmd("CALL"); the C start-up then builds the environment, and releases it
+when #cmd("main()") returns. @pg-startup describes the start-up modules,
+including #cmd("crtm") for the special case of a C module called on a task
+where a C program is already running.
 
 == Calling C from COBOL and Other OS-Linkage Code <pg-asm-ccall>
 
@@ -231,9 +231,9 @@ caller's register 13, the NAB of the C stack, and such a save area has no
 NAB. A C function called that way places its frame wherever that word
 happens to point, and the program fails, usually with a program check.
 
-#cmd("@@CCALL") makes the call possible while a C program is running on
-the task, for example a C #cmd("main()") that calls COBOL, which calls C
-again. It is reached through a _stub_, one for each C function, which the
+#cmd("@@CCALL") makes the call possible: under a C program, for example a C
+#cmd("main()") that calls COBOL, which calls C again, and under a COBOL
+main program with no C program at all (@pg-asm-ccall-main). It is reached through a _stub_, one for each C function, which the
 macro #cmd("CCALL") generates. The stub carries the name the other language
 calls, and the C function keeps its own:
 
@@ -276,17 +276,62 @@ frame it calls the C function:
 make the call:
 
 #deflist(width: 0.8in,
-  [U3101], [No C program on the task, for example under a COBOL main
-    program, or code running on a thread started by
-    #cmd("cthread_create()"), whose stack #cmd("@@CCALL") does not find.],
+  [U3101], [No C environment to use or to build: code running on a thread
+    started by #cmd("cthread_create()"), whose stack #cmd("@@CCALL") does
+    not find, or a subtask of a C program.],
   [U3102], [No C frame on the save area chain.],
   [U3103], [No room on the C stack for the frame.],
   [U3104], [More than 16 parameters.],
+  [U3105], [The C environment for a caller that is not C could not be
+    built: no storage for the stack, or a standard stream could not be
+    opened. The job log names the cause.],
 )
 
 A COBOL program that is not reentrant must not be entered again before it
 has returned. The sequence C, COBOL program A, C, COBOL program A overwrites
 A's save area.
+
+=== Calling C from a COBOL Main Program <pg-asm-ccall-main>
+
+#idx("COBOL", "main program calling C")#idx("CCTERM")
+Under a COBOL main program -- or any program that is not C -- no C start-up
+has run, so there is no C stack and no run-time anchor. The first call
+through a #cmd("CCALL") stub builds them, the way #cmd("@@CRT0") does for a
+C program: the stack (#cmd("@@STKLEN") applies, 256 KB by default), the
+run-time anchors, the standard streams (#cmd("SYSPRINT"), #cmd("SYSTERM"),
+#cmd("SYSIN")), the environment variables from #cmd("SYSENV") and the time
+zone. Every later call on the task uses the same environment, so files
+opened, memory allocated and #cmd("atexit()") functions registered in one
+call are there in the next.
+
+It stays until the program releases it. The COBOL program does that with
+
+```
+           CALL 'CCTERM'.
+```
+
+before #cmd("STOP RUN"). #cmd("CCTERM") does what #cmd("exit(0)") does at
+the end of a C program: it calls the #cmd("atexit()") functions, writes the
+buffered output and closes every file, and frees the environment. Its return
+code is 0, or 4 when there is no environment of this kind to release. A
+program that ends without #cmd("CCTERM") loses the output still in the
+buffers: measured on MVS, a line written with #cmd("printf()") never
+reached #cmd("SYSPRINT"). The storage goes with the task.
+
+#cmd("exit()") in a C function called this way ends the C side the same
+way, and the call returns to the COBOL statement that started the outermost
+C call, with the exit status as #cmd("RETURN-CODE"). The next call builds a
+new environment. Two consequences:
+
+- After #cmd("exit()") the caller's SPIE is not established again, so a
+  later program check in COBOL code is not reported by COBOL.
+- Statics of the C code belong to the load module and keep their values
+  across a new environment; files, memory and #cmd("atexit()") functions do
+  not.
+
+The environment belongs to the task that built it. A subtask that runs
+COBOL code builds its own; code on a C thread, or on a subtask of a C
+program, is refused with U3101.
 
 == Calling a Routine That Expects the OS Convention <pg-asm-oslink>
 

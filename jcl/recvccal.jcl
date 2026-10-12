@@ -1,7 +1,8 @@
 //TSTRCVCC JOB (SYS),'RECV TSTCCALL',CLASS=A,MSGCLASS=H,
 //             MSGLEVEL=(1,1)
 //*
-//* RECEIVE the #502 probes (TSTCCALL, TSTCCALR, TSTCCNOC) into a
+//* RECEIVE the #502/#507 probes (TSTCCALL, TSTCCALR, TSTCCNOC,
+//* TSTCCNOT) into a
 //* scratch PDS.  RECEIVE cannot merge into an existing PDS, so the old
 //* copy goes first; tstccall.jcl STEPLIBs straight at the result.
 //*

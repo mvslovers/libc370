@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- **A COBOL main program, or any program that is not C, can call C
+  functions (#507).** Until now `@@CCALL` needed a C program running on
+  the task and ended the call with U3101 otherwise. The first call through a
+  `CCALL` stub now builds the C environment the way the C start-up does:
+  stack (`@@STKLEN`, 256 KB by default), run-time anchors, the standard
+  streams, `SYSENV` and the time zone. Later calls use it, so files, memory
+  and `atexit()` functions carry over from one call to the next. The new
+  entry `CCTERM` (`CALL 'CCTERM'` before `STOP RUN`) releases it as `exit(0)`
+  does; without it, output still in the buffers is lost (measured: a
+  `printf()` line never reached SYSPRINT). `exit()` in a C function called
+  this way releases the environment and returns to the outermost caller with
+  the status as return code; the next call builds a new one. U3101 now means
+  a C thread or a subtask of a C program, and U3105 an environment that
+  could not be built. The runtime part of the start-up (streams, environment,
+  time zone) is its own routine, `@@RTINIT`, so such a program does not link
+  `@@START` or need a `main()`.
+
 ## [2.9.0] - 2026-10-12
 
 A minor release with one new function: COBOL and other code that calls
