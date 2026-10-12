@@ -1,4 +1,4 @@
-# C startup: `@@crt0` and `@@crtm`
+# C startup: `@@crt0`, `@@crtm` and `@@CCALL`
 
 This note explains the C startup ("crt") modules in `src/mvs/crt/`, what they
 actually do (not just what their comments claim), and **when to use which**.
@@ -16,6 +16,7 @@ startfile copies `crt0.o`/`crt1.o` (2.3.x still shipped them, identical).
 |--------|------------|:-------:|---------------------|
 | `@@CRT0` in `libc.a` | every standalone C program | when it calls `cthread_create*()` | yes (full) |
 | `crtm.o` (a startfile) | a C module entered **inside an already-running C runtime on the same TCB** (LINK/XCTL/LOAD+BALR from a C program) | no | no — it **reuses** the caller's runtime |
+| none: `@@CCALL` (since 2.10.0) | C functions called from a **COBOL or assembler main program**, through `CCALL` stubs | no | yes, on the first call; `CCTERM` releases it |
 
 Rules of thumb:
 
@@ -30,6 +31,10 @@ Rules of thumb:
 * **Never use `crtm` as the top-level startfile.** Without a prior `@@CRT0`
   on the same TCB its unchecked `@@CRTGET` dereferences a NULL CLIBCRT and
   abends.
+* **A program that is not C** (a COBOL main program) links no startup at all.
+  The first call through a `CCALL` stub builds the runtime the way `@@CRT0`
+  does, and `CALL 'CCTERM'` before `STOP RUN` releases it (#507); see
+  "`@@CCALL` — the runtime for a caller that is not C" below.
 * **Startup work of your own goes into `__premain()`**, not into a private
   `@@START` (cc370#10): define
   `int __premain(char *parm, char *pgmname, void **pgmr1)` (`<mvs/crt.h>`) and
@@ -172,12 +177,31 @@ streams included —** and frees the environment. (Read from `@@exit.c` and
 `@@start.c`; not measured on MVS.) crtm fits where the nested module's end may
 end the caller's C I/O as well, not for "call one C function and carry on".
 
+## `@@CCALL` — the runtime for a caller that is not C
+
+`@@CCALL` (`src/mvs/crt/@@ccall.asm`) calls a C function from code with an
+OS save area (#502). With no C runtime on the task it builds one on the first
+call (#507), the `@@CRT0` way: PPA + stack (`@@STKLEN`), the PPA as the
+"next" of the TCB's first save area (old value in `PPASAVE`), `@@CRTSET`,
+`@@GRTSET`, the TSO `EXTRACT`, then `@@RTINIT` — the runtime part of
+`@@START` (streams, `SYSENV`/`ENVIRON`, `tzset()`), a member of its own so
+that no `@@START` and no `main()` are linked. `__premain()` is not called and
+there is no parameter to parse. The PPA carries `PPAFLAG_CCALL`, by which
+later calls, `CCTERM` and readers of `ppaflag` tell it from a C program's.
+
+It ends through the same `@@EXITA` as `@@CRT0`: the outermost call records
+its caller's save area at 4 of the PPA, so `exit()` in a C function, and
+`CCTERM`, return to that caller with the environment released. Not built
+when a TCB above has a C runtime (a C thread, a subtask of a C program):
+U3101.
+
 ## Exit paths at a glance
 
 | | Teardown module | GRT freed | CRT freed | PPA out of TCBFSA | FREEMAIN |
 |---|---|:--:|:--:|:--:|:--:|
 | `@@CRT0` | `@@exita.o` (from `libc.a`) | yes (`@@GRTRES`) | yes (`@@CRTRES`) | yes | PPA + stack |
 | crtm | inline `@@EXITA` | no | no | no | own stack only |
+| `@@CCALL` environment (`exit()`, `CCTERM`) | `@@exita.o` (from `libc.a`) | yes | yes | yes | PPA + stack |
 
 `@@exita.asm` finds the PPA directly via `8(TCBFSAB)` (not through `@@PPAGET`),
 relying on `@@CRT0` having put it there — consistent with crtm not doing so and thus
