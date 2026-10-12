@@ -40,8 +40,10 @@ stream do, and #cmd("vseof()") and #cmd("vserror()") test them. The value
 
 The library's tests cover #cmd("vsopen()"), #cmd("vsread()"),
 #cmd("vseof()"), #cmd("vserror()") and #cmd("vsclear()") on an
-entry-sequenced cluster on MVS. The other functions and cluster types are
-not tested.
+entry-sequenced cluster on MVS, and on a key-sequenced cluster the
+sequential load, #cmd("vswrite()") and #cmd("vsread()") by key with dynamic
+access, and #cmd("vsupdate()"). The other functions and the relative-record
+type are not tested.
 
 #tab(caption: [VSAM errno values])[
   #table(columns: (1.1in, 0.6in, 1fr),
@@ -267,7 +269,9 @@ data. -2 when the GET failed.
   #cmd("vsclear()"), like #cmd("feof()") and #cmd("ferror()") of a stream,
   but they do not make a later read fail.
 - A key that is not found is a logical error (reason code 16), so the read
-  returns -2, not -1.
+  returns -2, not -1. The positioning fails, and no #cmd("GET") is issued;
+  up to 2.10.0 the #cmd("GET") ran anyway and the handle reported its
+  reason code, 88.
 === Related
 @mvs-vsam-vssteq, @mvs-vsam-vsclear
 
@@ -290,9 +294,22 @@ KSDS the key is taken from the record itself. On a handle opened with
 #cmd("VSMODE_UPD") the RPL is switched to #cmd("NUP") for the write and back
 to #cmd("UPD") afterwards.
 
+On a KSDS opened with #cmd("VSACCESS_DYNAM") the write is a direct
+#cmd("PUT") (#cmd("OPTCD=DIR")), so a record goes in at its key wherever
+the handle is positioned, and the RPL returns to sequential processing
+afterwards. A KSDS opened with #cmd("VSACCESS_DIR") writes direct anyway,
+and one opened with #cmd("VSACCESS_SEQ") is loaded in key order.
+
 === Returns
-0 when the record was written; 8 for a logical error (for example a
-duplicate key) or 12 for a physical error, with the VSAM codes in the handle.
+0 when the record was written; 8 for a logical error or 12 for a physical
+error, with the VSAM codes in the handle. On a KSDS a key that is there
+already is reason code 8.
+
+=== Notes
+- Up to 2.10.0 a KSDS opened with #cmd("VSACCESS_DYNAM") wrote
+  keyed-sequentially: after a record with a higher key, a lower key and a
+  duplicate both failed with reason code 12 (out of sequence), and the two
+  could not be told apart.
 
 === Related
 @mvs-vsam-vsupdate
