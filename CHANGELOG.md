@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- **`vswrite()` on a KSDS opened with `VSACCESS_DYNAM` puts direct (#514).**
+  The RPL stayed sequential, so after a record with a higher key every lower
+  key failed with reason code 12 (out of sequence), and so did a duplicate:
+  the two could not be told apart. The `PUT` now goes with `OPTCD=DIR` and
+  the RPL returns to sequential processing afterwards: a lower key is
+  inserted, a duplicate fails with reason code 8. Measured on MVS against
+  2.10.0: lower key, key in between and duplicate all 12 before, 0, 0 and
+  8 now.
+- **`vsread()` with a key that is not there reports reason code 16
+  (#514).** It issued the `GET` even after the positioning had failed, and
+  the handle carried the `GET`'s reason code, 88. It now returns -2 with
+  the positioning's code, as the reference says.
+
 ## [2.10.0] - 2026-10-12
 
 A minor release with one new function: a COBOL main program, or any

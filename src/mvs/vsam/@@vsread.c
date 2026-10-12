@@ -14,8 +14,13 @@ __vsread(VSFILE *vs, void *rec, int reclen, void *key, int keylen)
     unsigned char got;
 
     if (key && keylen) {
-        /* position to desired record */
-        __vssteq(vs, rec, reclen, key, keylen);
+        /* position to desired record.  When the POINT fails (a key that
+           is not there: feedback 16) its feedback is the answer; a GET
+           after it only replaced that with its own, 88 (#514) */
+        if (__vssteq(vs, rec, reclen, key, keylen)) {
+            errno = EVSERROR;
+            return -2;
+        }
     }
     else {
         /* modify common RPL parameters */
