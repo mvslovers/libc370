@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.10.3] - 2026-10-13
+
+A patch release with one fix, a drop-in for 2.10.2: a member of a
+partitioned data set whose write failed is no longer put into the
+directory when it is closed, so a failed overwrite no longer destroys the
+old member. Only the close and the write of a data set change. The CC/370
+range is unchanged: `>=1.6.0 <2`.
+
 ### Fixed
 - **A member whose write failed is not STOWed (#524).** `fclose()` reported
   an out-of-space or I/O error on a member's last block, and then closed the
