@@ -209,6 +209,7 @@ CHANGELOG has everything else.
 
 | Release | Change | What to do |
 |---|---|---|
+| Unreleased | A member whose write failed (out of space, I/O error) is not put into the directory when the stream is closed (#524) | Nothing. A program that relied on the empty member appearing after a failed write - none should - no longer finds it; the old member keeps its content |
 | 2.10.2 | `__listds()` returns a data set or catalog name that contains `-` whole, and its filter sees the whole name (#519) | Nothing. A caller that matched the cut names (`IBMUSER.OFTPIN.NOT` for `IBMUSER.OFTPIN.NOT-CATE`) gets the real ones |
 | 2.10.1 | `vswrite()` on a KSDS opened with `VSACCESS_DYNAM` puts direct; `vsread()` of a missing key reports reason code 16 (#514) | Nothing. Code that treated reason code 12 as "duplicate" on such a handle checks for 8 now; a local direct-`PUT` workaround can go |
 | 2.10.0 | A COBOL main program calling C through `@@CCALL` gets a C environment instead of U3101 (#507) | Call `CCTERM` before `STOP RUN`, or buffered C output and `atexit()` functions are lost. Code that relied on U3101 to detect a missing C program: it is now raised only on a C thread or a subtask of a C program |

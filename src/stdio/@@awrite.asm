@@ -164,6 +164,7 @@ WRITEEX  TM    IOPFLAGS,IOFCURSE  RECURSION REQUESTED?
          FUNEXIT RC=0
          SPACE 1
 WRITEIOE NI    IOSFLAGS,255-IOFSYNAD  Reset; error goes to the caller
+         OI    IOSFLAGS,IOFWFAIL  ... and no STOW at CLOSE (#524)
          FUNEXIT RC=8
          SPACE 1
 *  The x37 exit ran and asked IFG0554T for RC=1, so SYNAD was driven
@@ -172,6 +173,7 @@ WRITEIOE NI    IOSFLAGS,255-IOFSYNAD  Reset; error goes to the caller
 *  EIO: out of space is the caller's problem to solve, a bad track is
 *  not, and #149 needs the difference (#176).
 WRITENOS NI    IOSFLAGS,255-IOFSYNAD-IOFX37  Reset both
+         OI    IOSFLAGS,IOFWFAIL  ... and no STOW at CLOSE (#524)
          FUNEXIT RC=12
 *
          LTORG ,

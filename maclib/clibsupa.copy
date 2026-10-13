@@ -139,4 +139,5 @@ SYNAD24  DS    CL8           SYNAD stub code (SYNADCD in @@AOPEN)
 IOSFLAGS DS    X             I/O error status (#147 item 3)
 IOFSYNAD EQU   X'80'           the stub recorded an uncorrectable error
 IOFX37   EQU   X'40'           the x37 exit took a no-space condition
+IOFWFAIL EQU   X'20'           a write failed: no STOW (#524)
 ZDCBLEN  EQU   *-ZDCBAREA

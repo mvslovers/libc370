@@ -388,7 +388,7 @@ length, read the data set and write a new one.
 A stream has a buffer of one record. A record goes to BSAM when the line
 ends; BSAM collects records into blocks and writes a block when it is full.
 The last block of a data set, usually a short one, is written when the data
-set is closed. Three rules follow:
+set is closed. Four rules follow:
 
 + *Test the result of #cmd("fclose()")* on every output stream whose
   contents matter. A data set that runs out of space on its last block
@@ -402,6 +402,13 @@ set is closed. Three rules follow:
   #cmd("EIO"). Every later write on the stream fails at once in the same
   way, and every later read with #cmd("EIO"), until the program calls
   #cmd("clearerr()").
++ *A member whose write failed is not stored.* When a write to a member of
+  a partitioned data set fails -- on the last block at #cmd("fclose()"), or
+  earlier -- the close leaves the directory alone: a new member does not
+  appear, and an existing one keeps its old content. The space written
+  stays in the data set unused until it is compressed. Up to LIBC/370
+  2.10.2 the close wrote the directory entry anyway, so a failed new member
+  appeared with no records and a failed overwrite emptied the old one.
 + *The return value of #cmd("printf()") reports an error only when it is
   already known.* It is negative when the stream is not open for writing or
   its error indicator is set\; output that is still in the buffer fails only
