@@ -386,5 +386,10 @@ What later 2.x releases ask of a program or a build:
     [2.10.2], [#cmd("__listds()") returns a data set or catalog name that
       contains #cmd("-") whole, and its filter sees the whole name. Up to
       2.10.1 the name ended at the first #cmd("-").], [Nothing.],
+    [2.10.3], [A member whose write failed -- out of space, or an I/O
+      error -- is not put into the directory when the stream is closed: a
+      new member does not appear, an existing one keeps its old content.
+      Up to 2.10.2 a failed new member appeared with no records and a
+      failed overwrite emptied the old one.], [Nothing.],
   )
 ] <pg-migrate-since-tab>
