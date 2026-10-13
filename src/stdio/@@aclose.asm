@@ -51,7 +51,21 @@ FREEDBF1 LM    R1,R2,ZBUFF2       Look at first buffer
          FREEMAIN RC,LV=(0),A=(1),SP=SUBPOOL  Free RECRD buffer
 FREEDBF2 TM    IOMFLAGS,IOFTERM   TERMINAL I/O MODE?
          BNZ   NOPOOL             YES; SKIP CLOSE/FREEPOOL
-         CLOSE MF=(E,OPENCLOS)
+*
+*  A member whose write failed - the final block here (R9), or an
+*  earlier one @@AWRITE reported (IOFWFAIL) - must not be STOWed:
+*  CLOSE would put a new member with what reached DASD into the
+*  directory, or replace an existing one with it, its old content
+*  lost (#524, measured).  DCBCNSTO says the STOW is done; the DASD
+*  close executor IGG0201Z then skips its own.  The space written
+*  stays in the PDS unused, as for any replaced member.
+*
+         LTR   R9,R9              The final block failed?
+         BNZ   NOSTOW             Yes
+         TM    IOSFLAGS,IOFWFAIL  An earlier write failed?
+         BZ    DOCLOSE            No; CLOSE as always
+NOSTOW   OI    DCBCIND2,DCBCNSTO  No STOW by CLOSE (#524)
+DOCLOSE  CLOSE MF=(E,OPENCLOS)
          TM    DCBBUFCA+L'DCBBUFCA-1,1      BUFFER POOL?
          BNZ   NOPOOL             NO, INVALIDATED
          SR    R15,R15

@@ -1,0 +1,45 @@
+//TSTPDX37 JOB (SYS),'LIBC370 524',CLASS=A,MSGCLASS=H,
+//             MSGLEVEL=(1,1)
+//*
+//* libc370 #524 - a member whose write failed (x37, I/O error) is not
+//* STOWed.  See test/mvs/tstpdx37.c.  STEPLIB is the scratch PDS
+//* recvpdx3.jcl restores into.  TSTPDX37 links this tree's libc.a,
+//* TSTPDX3R 2.10.2's - the red control.  Each step gets a fresh, small
+//* PDS (mvsMF's shape), deleted at the end.
+//*
+//* Run:     dev1 JOB02161, 2026-10-13: GREEN 7/7; RED 4/7.
+//*
+//* RC 0 = every check passed, 1 = a check failed (the COND CODE).
+//*
+//ALLOC1   EXEC PGM=IEFBR14
+//PDS      DD  DSN=IBMUSER.LIBC370.PDX37,DISP=(NEW,CATLG),
+//             UNIT=SYSDA,SPACE=(TRK,(2,0,1)),
+//             DCB=(DSORG=PO,RECFM=FB,LRECL=80,BLKSIZE=19040)
+//*
+//GREEN    EXEC PGM=TSTPDX37,REGION=4M,COND=(0,NE,ALLOC1)
+//STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.PXSCR
+//SYSPRINT DD  SYSOUT=*
+//SYSTERM  DD  SYSOUT=*
+//SYSUDUMP DD  SYSOUT=*
+//*
+//SCRATCH1 EXEC PGM=IDCAMS,COND=EVEN
+//SYSPRINT DD  SYSOUT=*
+//SYSIN    DD  *
+  DELETE IBMUSER.LIBC370.PDX37 NONVSAM
+/*
+//ALLOC2   EXEC PGM=IEFBR14,COND=EVEN
+//PDS      DD  DSN=IBMUSER.LIBC370.PDX37,DISP=(NEW,CATLG),
+//             UNIT=SYSDA,SPACE=(TRK,(2,0,1)),
+//             DCB=(DSORG=PO,RECFM=FB,LRECL=80,BLKSIZE=19040)
+//*
+//RED      EXEC PGM=TSTPDX3R,REGION=4M,COND=EVEN
+//STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.PXSCR
+//SYSPRINT DD  SYSOUT=*
+//SYSTERM  DD  SYSOUT=*
+//SYSUDUMP DD  SYSOUT=*
+//*
+//SCRATCH2 EXEC PGM=IDCAMS,COND=EVEN
+//SYSPRINT DD  SYSOUT=*
+//SYSIN    DD  *
+  DELETE IBMUSER.LIBC370.PDX37 NONVSAM
+/*

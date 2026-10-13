@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- **A member whose write failed is not STOWed (#524).** `fclose()` reported
+  an out-of-space or I/O error on a member's last block, and then closed the
+  data set anyway, and that close wrote the directory entry: a new member
+  stayed in the PDS with 0 records, and an existing one was replaced by what
+  had reached the disk, its old content lost. The same happened after a
+  failed `fwrite()` once the stream was closed. Now a failed write makes the
+  close skip the directory entry: a new member does not appear, an existing
+  one keeps its old content. Measured on MVS, filling a small PDS until a
+  member fails, with 2.10.2 as the control: the failed member and an
+  overwritten one now stay as they were.
+
 ## [2.10.2] - 2026-10-12
 
 A patch release with one fix, a drop-in for 2.10.1: `__listds()` returns a
