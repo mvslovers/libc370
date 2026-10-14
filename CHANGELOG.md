@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.11.0] - 2026-10-14
+
+A minor release with one addition, a drop-in for 2.10.3: `tryinfo()` says
+where an abend happened that `try()` caught. A program that does not use it
+sees no change. The CC/370 range is unchanged: `>=1.6.0 <2`.
+
 ### Added
 - **`tryinfo()`: where the abend happened that `try()` caught (#530).**
   Until now only the abend code survived, through `tryrc()`; the PSW and
