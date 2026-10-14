@@ -17,6 +17,9 @@ failed(SDWA *sdwa, void *udata)
 {
     PARAM       *param  = (PARAM*)udata;
     REGS        *regs   = (REGS*)param->u[1];
+    /* SDWACTL1: 8 bytes at SDWA+8, word aligned (the struct names its
+       first byte only, SDWACMKA) */
+    const unsigned *ctl1 = (const unsigned *)((const char *)sdwa + 8);
     unsigned    abcode  = (*(unsigned*)&sdwa->SDWACMPF) & 0x00FFFFFF;
     unsigned    retry   = 0;
 
@@ -45,12 +48,11 @@ failed(SDWA *sdwa, void *udata)
     }
 
     /* #530: keep where it happened.  SDWACTL1 is the BC-mode PSW at the
-     * time of error, the 8 bytes from SDWACMKA (SDWA+8, word aligned);
-     * for a program check its address is the instruction after the
-     * failing one and its ILC says how far back that one starts.  Plain
-     * word copies: no C runtime in a recovery exit. */
-    regs->psw[0] = ((const unsigned *)&sdwa->SDWACMKA)[0];
-    regs->psw[1] = ((const unsigned *)&sdwa->SDWACMKA)[1];
+     * time of error; for a program check its address is the instruction
+     * after the failing one and its ILC says how far back that one
+     * starts.  Plain word copies: no C runtime in a recovery exit. */
+    regs->psw[0] = ctl1[0];
+    regs->psw[1] = ctl1[1];
     regs->r14    = sdwa->SDWAGR14;
 
     /* get the retry address */
@@ -101,7 +103,9 @@ call(void *func, void *plist)
     /* populate the retry registers */
     __asm__("STM\t0,14,0(%0)" : : "r" (&regs) : "memory");
     regs.r[15] = (unsigned) (-1);
-    regs.psw[0] = regs.psw[1] = regs.r14 = 0;
+    regs.psw[0] = 0;
+    regs.psw[1] = 0;
+    regs.r14    = 0;
 
 	if (crt) {
 		crt->crttryrc    = 0;
@@ -194,7 +198,7 @@ call(void *func, void *plist)
        wrote regs behind the compiler's back, so read it through a
        volatile pointer rather than trust a copy held in a register. */
 	if (crt) {
-		volatile REGS	*vr = &regs;
+		const volatile REGS	*vr = &regs;
 
 		crt->crttryrc    = rc;
 		crt->crttrpsw[0] = vr->psw[0];
@@ -245,7 +249,7 @@ ___try(void *func, ...)
 const TRYINFO *__tryinf(void)
 {
 	static const TRYINFO	none = {{0, 0}, 0};
-	CLIBCRT 	*crt = __crtget();
+	const CLIBCRT	*crt = __crtget();
 
 	if (!crt) return &none;
 

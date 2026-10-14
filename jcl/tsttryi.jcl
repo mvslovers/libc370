@@ -6,7 +6,7 @@
 //* restores into.  No red control: tryinfo() is new, a program using
 //* it does not link against an older libc.a.
 //*
-//* Run:     mvsdev JOB02236, 2026-10-14: CC 0000, 6/6 PASS.
+//* Run:     mvsdev JOB02238, 2026-10-14: CC 0000, 6/6 PASS.
 //*
 //* RC 0 = every check passed, 8 = a check failed (it is the COND CODE).
 //*
