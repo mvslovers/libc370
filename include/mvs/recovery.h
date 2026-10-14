@@ -58,8 +58,10 @@ unsigned __tryrc(void);
 
 /* where the last ___try() abend happened (#530): the BC-mode PSW at the
 ** time of error (SDWACTL1 -- instruction address, ILC, interruption code)
-** and GPR 14 then (SDWAGR14, normally the return address into whoever
-** called the abending code).  Cleared and set exactly when tryrc() is:
+** and GPR 14 then (SDWAGR14: the return point of the last call the
+** failing code made -- the return address into its caller only when it
+** had made none, i.e. a fault in a prologue or a leaf function).
+** Cleared and set exactly when tryrc() is:
 ** zero after a try() that did not abend, but after a try() whose function
 ** itself caught an abend in a nested try(), the nested one's values.
 ** __try() leaves them zero.  The pointer is into the CRT and stays valid;

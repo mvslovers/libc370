@@ -152,8 +152,11 @@ To call a function under #cmd("try()"):
 + To find out where the abend happened, call #cmd("tryinfo()"). It returns
   the PSW at the time of error and register 14 then, which the dump would
   have shown: for a program check the PSW address is that of the
-  instruction after the failing one, and register 14 is normally the
-  return address into the caller of the function that abended.
+  instruction after the failing one. Register 14 is the return point of
+  the last call the failing function made, an address inside that
+  function\; only when it had made no call yet -- a fault in its prologue
+  or in a function that calls nothing -- is it the return address into
+  its caller.
 
 @pg-errors-guard-fig calls the same function twice, once with a valid
 pointer and once with a null pointer, through which the store abends with

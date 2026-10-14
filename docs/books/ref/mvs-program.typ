@@ -1180,8 +1180,11 @@ low-order 24 bits\; for a program check the address is that of the next
 instruction, and the failing one starts the length code times 2 bytes
 before it. The low-order halfword of the first word is the interruption
 code: 1 for an operation exception (S0C1), 4 for a protection exception
-(S0C4), 7 for a data exception (S0C7). Register 14 is normally the return
-address into the caller of the function that abended.
+(S0C4), 7 for a data exception (S0C7). Register 14 is the return point of
+the last call the failing code made, an address inside the function that
+abended\; it is the return address into that function's caller only when
+the function had made no call yet: a fault in its prologue, or in a
+function that calls nothing.
 
 === Returns
 A pointer to the values. All three are 0 when the most recent #cmd("try()")
