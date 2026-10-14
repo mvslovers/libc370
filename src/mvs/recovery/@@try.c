@@ -161,7 +161,14 @@ __try(void *func, ...)
 
     rc = call(func, r1);
 
-	if (crt) crt->crttryrc = rc;
+	/* #530: this copy keeps no PSW or R14; clear ___try()'s words so
+	   tryinfo() never describes an older abend than tryrc() does */
+	if (crt) {
+		crt->crttryrc    = rc;
+		crt->crttrpsw[0] = 0;
+		crt->crttrpsw[1] = 0;
+		crt->crttrr14    = 0;
+	}
 
     return rc;
 }

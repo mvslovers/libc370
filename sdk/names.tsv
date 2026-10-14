@@ -3976,6 +3976,7 @@ __tab	ibm/jes2/tab.h
 __tgm	ibm/jes2/tgm.h
 __tiot	mvs/dd.h
 __try	mvs/recovery.h
+__tryinf	mvs/recovery.h
 __tryrc	mvs/recovery.h
 __txacat	mvs/dynalloc.h
 __txadel	mvs/dynalloc.h
@@ -4713,6 +4714,7 @@ tqe_reset	mvs/timer.h
 trkcalc	mvs/dasd.h
 true	stdbool.h
 try	mvs/recovery.h
+tryinfo	mvs/recovery.h
 trylock	mvs/lock.h
 trylock_res	mvs/lock.h
 trylock_resf	mvs/lock.h

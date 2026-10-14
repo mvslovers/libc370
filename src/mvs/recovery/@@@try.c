@@ -3,7 +3,9 @@
 #include <mvs/wto.h>
 
 typedef struct {
-    unsigned    r[16];
+    unsigned    r[16];      /* retry registers: failed() hands them to RTM */
+    unsigned    psw[2];     /* #530: PSW at the time of error (SDWACTL1)   */
+    unsigned    r14;        /* #530: GPR 14 at the time of error           */
 } REGS;
 typedef struct {
     unsigned    u[2];
@@ -15,6 +17,9 @@ failed(SDWA *sdwa, void *udata)
 {
     PARAM       *param  = (PARAM*)udata;
     REGS        *regs   = (REGS*)param->u[1];
+    /* SDWACTL1: 8 bytes at SDWA+8, word aligned (the struct names its
+       first byte only, SDWACMKA) */
+    const unsigned *ctl1 = (const unsigned *)((const char *)sdwa + 8);
     unsigned    abcode  = (*(unsigned*)&sdwa->SDWACMPF) & 0x00FFFFFF;
     unsigned    retry   = 0;
 
@@ -41,6 +46,14 @@ failed(SDWA *sdwa, void *udata)
         /* return abend code in R15 */
         regs->r[15] = abcode;
     }
+
+    /* #530: keep where it happened.  SDWACTL1 is the BC-mode PSW at the
+     * time of error; for a program check its address is the instruction
+     * after the failing one and its ILC says how far back that one
+     * starts.  Plain word copies: no C runtime in a recovery exit. */
+    regs->psw[0] = ctl1[0];
+    regs->psw[1] = ctl1[1];
+    regs->r14    = sdwa->SDWAGR14;
 
     /* get the retry address */
     __asm__("L\t%0,=A(RETRY)" : "=r" (retry) : : "memory");
@@ -90,8 +103,16 @@ call(void *func, void *plist)
     /* populate the retry registers */
     __asm__("STM\t0,14,0(%0)" : : "r" (&regs) : "memory");
     regs.r[15] = (unsigned) (-1);
+    regs.psw[0] = 0;
+    regs.psw[1] = 0;
+    regs.r14    = 0;
 
-	if (crt) crt->crttryrc = 0;
+	if (crt) {
+		crt->crttryrc    = 0;
+		crt->crttrpsw[0] = 0;
+		crt->crttrpsw[1] = 0;
+		crt->crttrr14    = 0;
+	}
 
     /* create ESTAE with failed() as the recovery routine */
     rc = estae(ESTAE_CREATE, failed, &regs);
@@ -173,8 +194,17 @@ call(void *func, void *plist)
 	/* isolate the system and user abend codes */
     rc &= 0xFFFFFF;
     
-    /* save abend code in crt */
-	if (crt) crt->crttryrc = rc;
+    /* save abend code in crt, and where it happened (#530).  failed()
+       wrote regs behind the compiler's back, so read it through a
+       volatile pointer rather than trust a copy held in a register. */
+	if (crt) {
+		const volatile REGS	*vr = &regs;
+
+		crt->crttryrc    = rc;
+		crt->crttrpsw[0] = vr->psw[0];
+		crt->crttrpsw[1] = vr->psw[1];
+		crt->crttrr14    = vr->r14;
+	}
 
 cleanup:
     /* remove the estae */
@@ -212,6 +242,18 @@ ___try(void *func, ...)
 #endif
 
     return rc;
+}
+
+/* where the last ___try() abend happened (#530); all zero when the last
+   try() completed.  The CRT words are laid out as TRYINFO. */
+const TRYINFO *__tryinf(void)
+{
+	static const TRYINFO	none = {{0, 0}, 0};
+	const CLIBCRT	*crt = __crtget();
+
+	if (!crt) return &none;
+
+	return (const TRYINFO *)crt->crttrpsw;
 }
 
 unsigned ___tryrc(void)

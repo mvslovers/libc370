@@ -32,6 +32,7 @@ CRTUFS   DS    A                     Unix "like" File System
          DS    F                     unused/available
 CRTNTOA  DS    CL16                  "nnn.nnn.nnn.nnn" xxxx_ntoa()
 CRTTRYRC DS    F                     return/abend code from try()
-CRTAVAIL DS    3F                    unused/available
+CRTTRPSW DS    2F                    PSW of the last try() abend
+CRTTRR14 DS    F                     GPR 14 of the last try() abend
          DS    0D                    align to double word
 CLIBCRT  EQU   @CLIBCRT,*-@CLIBCRT
