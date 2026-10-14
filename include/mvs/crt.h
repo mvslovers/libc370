@@ -128,7 +128,8 @@ struct clibcrt {
     unsigned    unused2;			/* 164 unused/available					*/
     char        crtntoa[16];        /* 168 "nnn.nnn.nnn.nnn" xxxx_ntoa()    */
     unsigned    crttryrc;			/* 178 return/abend code from try()     */
-    unsigned    crtavail[3];		/* 17C unused/available					*/
+    unsigned    crttrpsw[2];		/* 17C PSW of the last try() abend      */
+    unsigned    crttrr14;			/* 184 GPR 14 of the last try() abend   */
 };                                  /* 188 (392 bytes)                      */
 
 extern CLIBCRT  *__crtget(void);

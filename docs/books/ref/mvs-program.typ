@@ -1065,7 +1065,8 @@ retries in #cmd("try()"), and #cmd("try()") returns the abend code.
 The abend code has the form #cmd("X'00sssuuu'"): #cmd("sss") is the system
 completion code, #cmd("uuu") the user completion code. A system abend S0C4
 gives #cmd("X'000C4000'"), a user abend U0100 gives #cmd("X'00000064'").
-The code is also kept for #cmd("tryrc()").
+The code is also kept for #cmd("tryrc()"), and where the abend happened
+for #cmd("tryinfo()").
 
 === Returns
 0 when #var("func") returned normally\; the abend code when it ended
@@ -1092,7 +1093,8 @@ returns.
 #code(read("../ex/mvs-program/try.c"))
 
 === Related
-@mvs-program-tryrc, @mvs-program-__linkt, @mvs-program-estae
+@mvs-program-tryrc, @mvs-program-tryinfo, @mvs-program-__linkt,
+@mvs-program-estae
 
 == \_\_try <mvs-program-__try>
 #idx("__try")
@@ -1148,6 +1150,62 @@ The result, or #cmd("X'FFFFFFFF'") when the task has no task anchor.
 when the function ends abnormally\; it leaves it 0 when the recovery
 routine cannot be established. #cmd("__try()") stores its return value,
 negative values included.
+
+== tryinfo, \_\_tryinf <mvs-program-tryinfo>
+#idx("tryinfo")
+#idx("__tryinf")
+
+=== Format
+```
+#include <mvs/recovery.h>
+
+typedef struct tryinfo {
+    unsigned    psw[2];     /* BC-mode PSW at the time of error */
+    unsigned    r14;        /* GPR 14 at the time of error      */
+} TRYINFO;
+
+const TRYINFO *__tryinf(void);
+#define tryinfo() __tryinf()
+```
+
+=== Description
+Return where the abend happened that the most recent #cmd("try()") on the
+current task caught: the PSW at the time of error and register 14 then, as
+the recovery routine found them in the SDWA (#cmd("SDWACTL1"),
+#cmd("SDWAGR14")).
+
+The PSW is in basic-control mode. Its second word holds the instruction
+length code in the two high-order bits and the instruction address in the
+low-order 24 bits\; for a program check the address is that of the next
+instruction, and the failing one starts the length code times 2 bytes
+before it. The low-order halfword of the first word is the interruption
+code: 1 for an operation exception (S0C1), 4 for a protection exception
+(S0C4), 7 for a data exception (S0C7). Register 14 is normally the return
+address into the caller of the function that abended.
+
+=== Returns
+A pointer to the values. All three are 0 when the most recent #cmd("try()")
+did not end in an abend. The pointer stays valid\; the values change with
+the next #cmd("try()"). When the task has no task anchor, a pointer to
+zeros.
+
+=== Notes
+The values are set and cleared exactly when #cmd("tryrc()") is: when the
+function given to #cmd("try()") itself caught an abend with a nested
+#cmd("try()") and then returned, they describe that nested abend.
+#cmd("__try()") sets them to 0.
+
+```
+if (try(work, arg)) {
+    const TRYINFO *ti = tryinfo();
+
+    wtof("ABEND %06X AT %06X R14 %06X", tryrc(),
+         ti->psw[1] & 0xFFFFFF, ti->r14 & 0xFFFFFF);
+}
+```
+
+=== Related
+@mvs-program-try, @mvs-program-tryrc
 
 == abendrpt, \_\_abrpt <mvs-program-abendrpt>
 #idx("abendrpt")

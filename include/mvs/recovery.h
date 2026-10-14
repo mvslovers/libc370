@@ -56,4 +56,20 @@ unsigned ___tryrc(void);
 /* return last ___try() or __try() rc/abend code */
 unsigned __tryrc(void);
 
+/* where the last ___try() abend happened (#530): the BC-mode PSW at the
+** time of error (SDWACTL1 -- instruction address, ILC, interruption code)
+** and GPR 14 then (SDWAGR14, normally the return address into whoever
+** called the abending code).  Cleared and set exactly when tryrc() is:
+** zero after a try() that did not abend, but after a try() whose function
+** itself caught an abend in a nested try(), the nested one's values.
+** __try() leaves them zero.  The pointer is into the CRT and stays valid;
+** the values are overwritten by the next try(). */
+typedef struct tryinfo {
+    unsigned    psw[2];     /* BC-mode PSW at the time of error         */
+    unsigned    r14;        /* GPR 14 at the time of error              */
+} TRYINFO;
+
+extern const TRYINFO *__tryinf(void);
+#define tryinfo() __tryinf()
+
 #endif /* MVS_RECOVERY_H */

@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- **`tryinfo()`: where the abend happened that `try()` caught (#530).**
+  Until now only the abend code survived, through `tryrc()`; the PSW and
+  the registers were gone with the suppressed dump, so finding the failing
+  instruction meant reproducing the abend with a dump. `tryinfo()` in
+  `<mvs/recovery.h>` returns the PSW at the time of error and register 14
+  then, as the recovery routine found them in the SDWA. Like `tryrc()`
+  they are cleared by every `try()` and set when it catches an abend; they
+  live in the CRT words that were unused at +17C (`crttrpsw`, `crttrr14`),
+  so the CRT keeps its size. Measured on MVS: an S0C1 at a known label is
+  reported at label + 2 with length code 1 and interruption code 1.
+
 ## [2.10.3] - 2026-10-13
 
 A patch release with one fix, a drop-in for 2.10.2: a member of a
