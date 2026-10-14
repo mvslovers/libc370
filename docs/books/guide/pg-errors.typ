@@ -149,6 +149,11 @@ To call a function under #cmd("try()"):
   function; pass #cmd("0") to a function that takes none.
 + Test the result: negative, zero, or a completion code. The system code
   is #cmd("(rc >> 12) & 0xFFF"), the user code #cmd("rc & 0xFFF").
++ To find out where the abend happened, call #cmd("tryinfo()"). It returns
+  the PSW at the time of error and register 14 then, which the dump would
+  have shown: for a program check the PSW address is that of the
+  instruction after the failing one, and register 14 is normally the
+  return address into the caller of the function that abended.
 
 @pg-errors-guard-fig calls the same function twice, once with a valid
 pointer and once with a null pointer, through which the store abends with

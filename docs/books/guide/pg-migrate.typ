@@ -391,5 +391,10 @@ What later 2.x releases ask of a program or a build:
       new member does not appear, an existing one keeps its old content.
       Up to 2.10.2 a failed new member appeared with no records and a
       failed overwrite emptied the old one.], [Nothing.],
+    [2.11.0], [#cmd("tryinfo()") returns the PSW and register 14 of the
+      abend the last #cmd("try()") caught (@pg-errors-try). The CRT words
+      #cmd("crtavail") at +17C are now #cmd("crttrpsw") and
+      #cmd("crttrr14").], [Nothing. Code that used #cmd("crtavail")
+      renames it.],
   )
 ] <pg-migrate-since-tab>

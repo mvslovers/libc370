@@ -11,8 +11,8 @@
   edition: [
     #text(font: head-font, weight: "bold", size: 11pt)[First Edition (October 2026)]
 
-    This edition applies to Version 2 Release 10 of LIBC/370
-    (libc370 2.10.3), as built with CC/370 1.6.0, and to all subsequent
+    This edition applies to Version 2 Release 11 of LIBC/370
+    (libc370 2.11.0), as built with CC/370 1.6.0, and to all subsequent
     releases and modifications until otherwise indicated in new editions.
 
     Comments on this book may be addressed to the issue tracker of
