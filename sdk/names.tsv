@@ -3881,6 +3881,7 @@ __frtx99	mvs/dynalloc.h
 __frtx9a	mvs/dynalloc.h
 __fsin	math.h
 __fsqrt	math.h
+__fx37	mvs/file.h
 __getclk	mvs/clock.h
 __getm	mvs/storage.h
 __getmsp	mvs/storage.h

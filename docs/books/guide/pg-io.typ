@@ -401,7 +401,9 @@ set is closed. Four rules follow:
   #cmd("errno") is #cmd("ENOSPC")\; any other permanent I/O error gives
   #cmd("EIO"). Every later write on the stream fails at once in the same
   way, and every later read with #cmd("EIO"), until the program calls
-  #cmd("clearerr()").
+  #cmd("clearerr()"). To learn which abend the write stood for -- D37 or
+  B37 -- call #cmd("__fx37()") of #cmd("<mvs/file.h>") before closing the
+  stream.
 + *A member whose write failed is not stored.* When a write to a member of
   a partitioned data set fails -- on the last block at #cmd("fclose()"), or
   earlier -- the close leaves the directory alone: a new member does not
