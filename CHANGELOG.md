@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- **A C module entered by LINK no longer leaves 128 bytes behind at every
+  run (#546).** Every C program builds a run-time anchor of its own and
+  records its task in a small table there. At a normal end the table was
+  emptied but not freed, and the anchor's storage went back to the system
+  with the only pointer to it: 128 bytes per run stayed allocated in the
+  caller's heap subpool. A server that LINKs a C module for each request
+  lost them on every request, about one page per 32. The table is now
+  freed with its last entry, as it already was after an abend. Measured on
+  MVS: 2000 LINKs of an empty C module lost 128 bytes each with 2.12.0 and
+  nothing now.
+
 ## [2.12.0] - 2026-10-15
 
 A minor release, a drop-in for 2.11.0, about data sets that run out of

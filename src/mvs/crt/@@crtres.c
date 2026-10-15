@@ -37,6 +37,16 @@ __CRTRES(void)
         }
     }
 
+    /* #546: the last CRT is gone, so free the array as well.  Otherwise
+       @@EXITA FREEMAINs the PPA - the only pointer to it - and the block
+       (arraynew, 128 bytes after rounding) stays in the heap subpool:
+       one per run of every LINKed C module.  __ppahrv() frees it on the
+       abend path; this is the normal one.  arrayadd() builds a new array
+       if a CRT is added to this PPA again. */
+    if (ppa->ppacrt && arraycou(&ppa->ppacrt) == 0) {
+        arrayfree(&ppa->ppacrt);
+    }
+
     if (locked==0) {
         unlock(ppa,0);
     }
