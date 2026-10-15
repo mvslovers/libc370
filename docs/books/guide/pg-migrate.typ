@@ -402,5 +402,9 @@ What later 2.x releases ask of a program or a build:
       or B37-04 -- that a write which failed with #cmd("ENOSPC") stood for
       (@pg-io-errors).], [Nothing. Code that treated #cmd("EIO") on a write
       as a possibly full data set can test #cmd("ENOSPC") alone.],
+    [2.12.1], [A C module entered by #cmd("LINK") no longer leaves 128
+      bytes of heap storage behind at every normal run.], [Nothing. Rebuild
+      the LINKed modules to get the fix: it is in their own run-time
+      teardown.],
   )
 ] <pg-migrate-since-tab>
