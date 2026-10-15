@@ -404,6 +404,14 @@ set is closed. Four rules follow:
   #cmd("clearerr()"). To learn which abend the write stood for -- D37 or
   B37 -- call #cmd("__fx37()") of #cmd("<mvs/file.h>") before closing the
   stream.
+
+  One case is an abend all the same: a member of a partitioned data set
+  whose secondary space is used up. MVS ends the program with E37-04
+  before the library is called, as it does without the library. A program
+  that must survive it writes the member under #cmd("try()") and closes the
+  stream with #cmd("__fabandon()"). A partitioned data set without
+  secondary space ends with D37 instead, which the library does turn into
+  #cmd("ENOSPC").
 + *A member whose write failed is not stored.* When a write to a member of
   a partitioned data set fails -- on the last block at #cmd("fclose()"), or
   earlier -- the close leaves the directory alone: a new member does not

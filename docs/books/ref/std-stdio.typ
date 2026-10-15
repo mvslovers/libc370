@@ -366,7 +366,10 @@ out of space does not end the program with an x37 abend: the write fails,
 the error indicator is set and #cmd("errno") is #cmd("ENOSPC")\; any
 other permanent I/O error sets #cmd("EIO"). Every later write on the
 stream fails at once with the same #cmd("errno"), every later read with
-#cmd("EIO"), and nothing more is written, until #cmd("clearerr()") is called. Because the last block is
+#cmd("EIO"), and nothing more is written, until #cmd("clearerr()") is called.
+The exception is a member of a partitioned data set whose secondary space
+is used up: MVS ends the program with E37-04 before the library is called
+(see #cmd("__fx37()")). Because the last block is
 written at close, running out of space on it is reported by
 #cmd("fclose()") and by nothing earlier.
 
