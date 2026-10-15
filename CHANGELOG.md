@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- **`recfm=`, `lrecl=` and `blksize=` in the mode of a `DD:` open take
+  precedence over the DD statement and the data set (#554).** Until now
+  these options applied only when `fopen()` created a data set by name; for
+  a `DD:` name they were ignored, and the DD statement and the data set
+  decided. Now they are placed in the DCB before it is opened, which is
+  MVS's order for a program's DCB: the program, then the DD statement, then
+  the data set. `fopen("DD:OUT", "wb,record,recfm=fb,lrecl=80,blksize=800")`
+  writes FB 80 in blocks of 800, whatever the DD says. Input and output
+  alike; an option that is not given changes nothing; an invalid value
+  fails with `EINVAL`. Measured on MVS against DD statements with no DCB,
+  with a different block size, and with a complete DCB.
+
 ## [2.12.1] - 2026-10-15
 
 A patch release with one fix, a drop-in for 2.12.0: a C module entered by

@@ -34,6 +34,63 @@ static int is_dummy(const char *ddname)
     return 1;
 }
 
+/* The DCB attributes a "DD:" open names in its mode (#554): recfm=, lrecl=
+   and blksize=, as "=v" or "(v)".  The values go to __aopen() marked as
+   forced - the RECFM byte in bits 8-15 of the recfm word, X'80000000' on
+   lrecl and blksize - and __aopen() puts them into the DCB before OPEN.
+   OPEN merges the JFCB and then the DSCB into fields that are still zero,
+   so the program's values take precedence, MVS's DCB merge order.  A field
+   the mode does not name is left as it was.  -1 for a value that is not
+   valid.  The mode is lower case already (__fpmode). */
+static const char *dcbopt(const char *mode, const char *name)
+{
+    const char  *p = strstr(mode, name);
+    size_t      n  = strlen(name);
+
+    if (!p || (p[n] != '=' && p[n] != '(')) return 0;
+    return p + n + 1;
+}
+
+static int dcbforce(const char *mode, int *recfm, int *lrecl, int *blksize)
+{
+    const char      *p;
+    unsigned char   bits = 0;
+    int             index = 0;
+    long            v;
+
+    if ((p = dcbopt(mode, "recfm")) != 0) {
+        switch (*p) {
+        case 'f': bits = 0x80; index = 0; break;
+        case 'v': bits = 0x40; index = 1; break;
+        case 'u': bits = 0xC0; index = 2; break;
+        default:  return -1;
+        }
+        for (p++; *p && *p != ',' && *p != ')' && *p != ' '; p++) {
+            switch (*p) {
+            case 't': bits |= 0x20; break;  /* track overflow             */
+            case 'b': bits |= 0x10; break;  /* blocked                    */
+            case 's': bits |= 0x08; break;  /* standard (F) / spanned (V) */
+            case 'a': bits |= 0x04; break;  /* ASA control characters     */
+            case 'm': bits |= 0x02; break;  /* machine control characters */
+            default:  return -1;
+            }
+        }
+        if ((bits & 0x06) == 0x06) return -1;  /* not both A and M */
+        *recfm = index | (int)bits << 8;
+    }
+    if ((p = dcbopt(mode, "lrecl")) != 0) {
+        v = strtol(p, 0, 10);
+        if (v < 1 || v > 32760) return -1;
+        *lrecl = (int)(0x80000000u | (unsigned)v);
+    }
+    if ((p = dcbopt(mode, "blksize")) != 0) {
+        v = strtol(p, 0, 10);
+        if (v < 1 || v > 32760) return -1;
+        *blksize = (int)(0x80000000u | (unsigned)v);
+    }
+    return 0;
+}
+
 __asm__("\n&FUNC    SETC '__fpopen'");
 int
 __fpopen(FILE *fp)
@@ -125,6 +182,12 @@ __fpopen(FILE *fp)
         recfm   = 0;
         lrecl   = 80;
         blksize = 80;
+    }
+
+    if ((fp->xflags & _FILE_XFLAG_DDDCB)
+        && dcbforce(fp->mode, &recfm, &lrecl, &blksize) != 0) {
+        errno = EINVAL;
+        goto quit;
     }
 
     /* open dataset */

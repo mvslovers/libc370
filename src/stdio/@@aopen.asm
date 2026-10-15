@@ -119,14 +119,30 @@ HAVEDCB  LR    R10,R1             Addr.of storage obtained to its base
 *---------------------------------------------------------------------*
 *   GET USER'S DEFAULTS HERE, BECAUSE THEY MAY GET CHANGED
 *---------------------------------------------------------------------*
+*   A value the caller forces (#554, a "DD:" fopen() naming recfm=,
+*   lrecl= or blksize= in its mode) goes into the DCB before OPEN, so
+*   that the JFCB and DSCB merge, which fills zero fields only, leaves
+*   it alone: the RECFM byte in bits 16-23 of the RECFM word, X'80'
+*   in the high byte of LRECL and BLKSIZE.  The default the OPEN exit
+*   uses for a field nobody set is the plain value either way.
          L     R5,PARM3    HAS RECFM code (0-FB 1-VB 2-U)
          L     R14,0(,R5)         LOAD RECFM VALUE
          STC   R14,FILEMODE       PASS TO OPEN
+         SRL   R14,8              Forced RECFM byte, or zero
+         STC   R14,FRCRECFM       Keep for the DCB (#554)
          L     R14,0(,R8)         GET LRECL VALUE
-         ST    R14,LRECL          PASS TO OPEN
+         LTR   R14,R14            Forced ?
+         BNM   OPLRECL            No
+         N     R14,=X'7FFFFFFF'   Yes; the value
+         STH   R14,FRCLRECL       Keep for the DCB (#554)
+OPLRECL  ST    R14,LRECL          PASS TO OPEN
          L     R14,PARM5          R14 POINTS TO BLKSIZE
          L     R14,0(,R14)        GET BLOCK SIZE
-         ST    R14,BLKSIZE        PASS TO OPEN
+         LTR   R14,R14            Forced ?
+         BNM   OPBLKSI            No
+         N     R14,=X'7FFFFFFF'   Yes; the value
+         STH   R14,FRCBLKSI       Keep for the DCB (#554)
+OPBLKSI  ST    R14,BLKSIZE        PASS TO OPEN
          SPACE 1
 *---------------------------------------------------------------------*
 *   DO THE DEVICE TYPE NOW TO CHECK WHETHER EXCP IS POSSIBLE
@@ -224,6 +240,19 @@ OPREPBSM MVC   ZDCBAREA(BSAMDCBL),BSAMDCB  Move DCB template to work
          SPACE 1
 OPREPQSM MVC   ZDCBAREA(QSAMDCBL),QSAMDCB
 OPREPCOM MVC   DCBDDNAM,0(R3)
+*   The caller's forced DCB attributes (#554), not for EXCP tape
+         TM    WWORK,IOFEXCP      EXCP mode ?
+         BNZ   OPNOFRC            Yes; its DCB is fixed
+         CLI   FRCRECFM,0         RECFM forced ?
+         BE    *+10               No
+         MVC   DCBRECFM,FRCRECFM  Yes; before the JFCB merge
+         OC    FRCLRECL,FRCLRECL  LRECL forced ?
+         BZ    *+10               No
+         MVC   DCBLRECL,FRCLRECL  Yes
+         OC    FRCBLKSI,FRCBLKSI  BLKSIZE forced ?
+         BZ    *+10               No
+         MVC   DCBBLKSI,FRCBLKSI  Yes
+OPNOFRC  DS    0H
          MVC   DEVINFO(8),DWORK   Check device type
          ICM   R0,15,DEVINFO+4    Any ?
          BZ    FAILDCB            No DD card or ?

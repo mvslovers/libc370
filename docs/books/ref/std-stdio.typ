@@ -220,11 +220,13 @@ A value that is a list is written in parentheses, for example
       closed (#cmd("SPACE=(,,RLSE)")). It applies when the library
       allocates the data set by name, and not to a member.],
     [#cmd("recfm=")#var("f")], [Record format of a data set that is
-      created, for example #cmd("fb") or #cmd("vb").],
+      created, for example #cmd("fb") or #cmd("vb"), or of a #cmd("DD:")
+      name (see below).],
     [#cmd("lrecl=")#var("n")], [Record length of a data set that is
-      created.],
-    [#cmd("blksize=")#var("n")], [Block size of a data set that is created;
-      used only with a blocked record format.],
+      created, or of a #cmd("DD:") name.],
+    [#cmd("blksize=")#var("n")], [Block size of a data set that is created
+      (used only with a blocked record format), or of a #cmd("DD:")
+      name.],
     [#cmd("space=")#var("unit")#cmd("(")#var("p")#cmd(",")#var("s")#cmd(")")],
       [Primary and secondary space of a data set that is created.
       #var("unit") is #cmd("trk"), #cmd("cyl") or a block length.],
@@ -236,6 +238,22 @@ A value that is a list is written in parentheses, for example
       waiting for the operator.],
   )
 ] <std-stdio-options-tab>
+
+#idx("DCB attributes", "in the mode string")
+For a #cmd("DD:") name, #cmd("recfm="), #cmd("lrecl=") and #cmd("blksize=")
+are placed in the DCB before it is opened, and take precedence over the
+DD statement and over the data set's own attributes, in MVS's order for
+a program's DCB: the program, then the DD statement, then the data set.
+That holds for input and output alike\; on output the new attributes are
+recorded for the data set when it is closed. #cmd("recfm=") takes
+#cmd("f"), #cmd("v") or #cmd("u"), followed by any of #cmd("b") (blocked),
+#cmd("s") (standard or spanned), #cmd("t") (track overflow), and #cmd("a")
+or #cmd("m") (ASA or machine control characters)\; #cmd("lrecl=") and
+#cmd("blksize=") take 1 to 32760. An option that is not given leaves the
+attribute to the DD statement and the data set, as without options. An
+invalid value makes #cmd("fopen()") fail with #cmd("errno")
+#cmd("EINVAL"). Opens by data set name use the options only when the data
+set is created.
 
 #cmd("unit="), #cmd("volser=") and #cmd("mount") apply to a new cataloged
 data set only. A SYSOUT data set (#cmd("*")) takes #cmd("recfm="),

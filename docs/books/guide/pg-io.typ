@@ -219,7 +219,12 @@ which can be set in the #cmd("SYSENV") DD (@pg-startup-env), and without
 one from the defaults of the library: #cmd("RECFM=V") with
 #cmd("LRECL=255"), and the installation's default space, unit and volume.
 The attributes apply only when the data set is created. An existing data
-set keeps its own, whatever the mode string says.
+set keeps its own, whatever the mode string says -- with one exception:
+for a #cmd("DD:") name, #cmd("recfm="), #cmd("lrecl=") and #cmd("blksize=")
+in the mode take precedence over the DD statement and the data set, as
+the DCB of an assembler program does. #cmd("fopen(\"DD:OUT\",
+\"wb,record,recfm=fb,lrecl=80,blksize=800\")") writes FB 80 with blocks of
+800 whatever the DD statement says.
 
 To create a data set:
 

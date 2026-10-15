@@ -140,4 +140,7 @@ IOSFLAGS DS    X             I/O error status (#147 item 3)
 IOFSYNAD EQU   X'80'           the stub recorded an uncorrectable error
 IOFX37   EQU   X'40'           the x37 exit took a no-space condition
 IOFWFAIL EQU   X'20'           a write failed: no STOW (#524)
+FRCRECFM DS    X             RECFM the caller forces, or 0 (#554)
+FRCLRECL DS    H             LRECL the caller forces, or 0 (#554)
+FRCBLKSI DS    H             BLKSIZE the caller forces, or 0 (#554)
 ZDCBLEN  EQU   *-ZDCBAREA
