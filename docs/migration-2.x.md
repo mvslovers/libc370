@@ -209,6 +209,7 @@ CHANGELOG has everything else.
 
 | Release | Change | What to do |
 |---|---|---|
+| Unreleased | A data set that runs out of space at its 16th extent, or on VIO, reports `ENOSPC` instead of `EIO` (#538) | Nothing. Code that treated `EIO` on a write as "maybe full" can test `ENOSPC` alone |
 | 2.11.0 | New: `tryinfo()` (`<mvs/recovery.h>`) returns the PSW and register 14 of the abend the last `try()` caught (#530). The CRT words `crtavail[3]` at +17C are now `crttrpsw[2]` and `crttrr14` | Nothing. Code that used `crtavail` or `CRTAVAIL` (unused space) renames it - nothing in libc370 did |
 | 2.10.3 | A member whose write failed (out of space, I/O error) is not put into the directory when the stream is closed (#524) | Nothing. A program that relied on the empty member appearing after a failed write - none should - no longer finds it; the old member keeps its content |
 | 2.10.2 | `__listds()` returns a data set or catalog name that contains `-` whole, and its filter sees the whole name (#519) | Nothing. A caller that matched the cut names (`IBMUSER.OFTPIN.NOT` for `IBMUSER.OFTPIN.NOT-CATE`) gets the real ones |
