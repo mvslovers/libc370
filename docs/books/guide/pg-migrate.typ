@@ -406,5 +406,11 @@ What later 2.x releases ask of a program or a build:
       bytes of heap storage behind at every normal run.], [Nothing. Rebuild
       the LINKed modules to get the fix: it is in their own run-time
       teardown.],
+    [2.13.0], [#cmd("recfm="), #cmd("lrecl=") and #cmd("blksize=") in the
+      mode of a #cmd("DD:") open take precedence over the DD statement and
+      the data set, where up to 2.12.1 they were ignored for #cmd("DD:")
+      (@pg-io-new). An invalid value fails with #cmd("EINVAL").],
+      [Code that passed these options with a #cmd("DD:") name and relied
+      on the DD's attributes drops them.],
   )
 ] <pg-migrate-since-tab>

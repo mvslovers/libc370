@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.13.0] - 2026-10-15
+
+A minor release, a drop-in for 2.12.1 unless a program passes record
+attributes with a `DD:` name: `recfm=`, `lrecl=` and `blksize=` in the
+mode of a `DD:` open now take precedence over the DD statement and the
+data set, where they were ignored. The CC/370 range is unchanged:
+`>=1.6.0 <2`.
+
 ### Added
 - **`recfm=`, `lrecl=` and `blksize=` in the mode of a `DD:` open take
   precedence over the DD statement and the data set (#554).** Until now
