@@ -396,5 +396,11 @@ What later 2.x releases ask of a program or a build:
       #cmd("crtavail") at +17C are now #cmd("crttrpsw") and
       #cmd("crttrr14").], [Nothing. Code that used #cmd("crtavail")
       renames it.],
+    [2.12.0], [A data set that runs out of space at its 16th extent, or on
+      a VIO unit, reports #cmd("ENOSPC"), where up to 2.11.0 it reported
+      #cmd("EIO"). New: #cmd("__fx37()") returns the x37 abend code -- D37-04
+      or B37-04 -- that a write which failed with #cmd("ENOSPC") stood for
+      (@pg-io-errors).], [Nothing. Code that treated #cmd("EIO") on a write
+      as a possibly full data set can test #cmd("ENOSPC") alone.],
   )
 ] <pg-migrate-since-tab>
