@@ -1,6 +1,6 @@
 # Ein "Language Environment light" für MVS 3.8j? Studie zu Nutzen, Umfang und Kosten
 
-> Kopie aus pl1c370 `internals/research/le-light-study.md` (Stand `e053469`, 2026-10-15), die libc370-Teile von libc370 durchgesehen. Ein Rechercheergebnis, kein Plan: kein Issue, keine Umsetzung.
+> Kopie aus pl1c370 `internals/research/le-light-study.md` (Stand `e053469`, 2026-10-15), die libc370-Teile von libc370 durchgesehen; Abschnitt 7 steht nur hier. Ein Rechercheergebnis, kein Plan: kein Issue, keine Umsetzung.
 
 Stand: 2026-10-15. Reine Studie: kein Repository geändert, nichts auf MVS
 gestartet. Jede Aussage ist markiert als **gelesen** (Quelle/Datei genannt),
@@ -658,6 +658,115 @@ gebaut, bevor jemand ihn ausdrücklich will.
    fort370 als Angebot.
 
 ---
+
+## 7. Bewertung aus libc370-Sicht (2026-10-15)
+
+Dieser Abschnitt steht nur in der libc370-Kopie. Er hält fest, wie libc370
+die Studie liest, was bei der Durchsicht herauskam und wie libc370 vorgehen
+würde, wenn das Thema aufgenommen wird. Er ist kein Beschluss: Die
+Entscheidung des Maintainers aus Abschnitt 6 gilt weiter.
+
+### 7.1 Ergebnis der Durchsicht
+
+Die libc370-Teile (2.1, 3.1, 3.2, 4.1) wurden gegen libc370 `main`
+(2.11.1-dev) und die Map `pl1c370/build/tz77.map` geprüft; die Korrekturen
+sind in pl1c370 #195–#197 eingegangen und in dieser Kopie enthalten:
+
+- **SPIE und ESTAE sind verschieden knapp.** Einen SPIE gibt es einmal pro
+  Task, ein neuer ersetzt den alten, und er bekommt eine
+  Programmunterbrechung vor jedem ESTAE. ESTAEs stapeln sich (LIFO). Die
+  Kollision aus libc370#502 (`try()` sah U3001 statt S0C1) ist eine des
+  Vorrangs, nicht eines einzigen ESTAE-Platzes.
+- **Der GRT ist nicht je Adressraum**, wie `docs/startup.md` sagt, sondern
+  je `@@CRT0`-Lauf (`__grtset()` legt jedes Mal einen neuen an); Threads und
+  crtm-Module teilen ihn. PPA+GRT entsprechen damit der LE-Enclave, der CRT
+  dem Thread; eine Prozess-Ebene gibt es nicht. `docs/startup.md` ist an
+  dieser Stelle noch zu berichtigen.
+- `PDPPRLG` gehört cc370, `try()`/`tryinfo()` liegen in `@@@try.c`.
+- Die Reihenfolgefalle 3.2 und die Footprint-Zahlen 4.1 stimmen
+  (nachgezählt: libc370 74 520, pl1rt 76 364, Programm 5 812 + libcc370rt
+  2 452 Byte).
+
+### 7.2 Wir haben schon ein LE – ohne Vertrag
+
+Alle Sprachen dieses Ökosystems außer cobc370 setzen auf libc370 und
+Assembler auf. Damit gibt es heute schon eine gemeinsame Laufzeit; sie heißt
+nur nicht so, und sie trägt, weil alle dasselbe benutzen, nicht weil eine
+Schnittstelle abgemacht ist.
+
+| LE | libc370 / cc370 heute |
+|---|---|
+| Enclave | PPA + GRT, je `@@CRT0`-Lauf |
+| Thread | CRT je TCB |
+| Prozess | – (nicht nötig) |
+| CEEPIPI | `@@CCALL` + `CCTERM` |
+| DSA mit NAB bei +76 | gleich (`PDPPRLG`) |
+| `STACK`-Option | `@@STKLEN`/`__stklen`, nur zur Bindezeit |
+| Condition-Management | `try()`/`tryinfo()`, `__estae()`, opt-in |
+
+Zwei Grenzen bleiben:
+- **cobc370** hat eine eigene 848-Byte-Laufzeit ohne libc370. Es gehört nur
+  dazu, wenn es sich freiwillig anmeldet, falls libc370 ohnehin im Programm
+  ist (schwache Referenz); ein Zwang würde sein Profil zerstören.
+- **R12 = CAA** bekommen wir nie, weil R12 bei cc370 Basisregister ist.
+  Unsere Anker findet man vom TCB aus (`8(TCBFSAB)`); fremden LE-Code, zu
+  dem wir kompatibel sein müssten, gibt es auf MVS 3.8j nicht.
+
+Ob rexx370 so auf libc370 aufsetzt wie pl1c370, ist nicht geprüft
+(**gefolgert** aus dem Bau mit cc370).
+
+### 7.3 Was nachzubessern wäre, nach Gewicht
+
+1. **Wem der SPIE gehört.** Der einzige gemessene Schaden (#502). Ein SPIE
+   je Task, bei dem sich die Sprachen mit Handlern anmelden, statt dass
+   jede einen eigenen setzt; dazu eine feste Reihenfolge der ESTAE-Exits
+   der Sprachen.
+2. **Ein Ende für alle.** Reihenfolge von `atexit`, PL/I-FINISH und
+   Dateischluss über Sprachen hinweg, und eine Rückgabecode-Regel
+   (`exit()`, PLIRETC, COBOL RETURN-CODE).
+3. **Verschachtelte Module.** `crtm` schließt beim Ende die Dateien des
+   Aufrufers (`docs/startup.md`, "Caveat"). Für PL/I-FETCH und für
+   rexx370-Funktionen in einer TSO-Sitzung darf es nur abbauen, was ihm
+   gehört.
+4. **Laufzeitoptionen**, zuerst `STACK(n)` zur Laufzeit (3.2).
+5. Als Nebenprodukt von 1: Hardware-Ausnahmen als `SIGFPE`/`SIGSEGV`.
+
+Dazu kommen kleine Lücken, die eine Sprachlaufzeit an libc370 heute schon
+merkt und die ohne Kern lösbar sind. Beispiel aus pl1c370 (2026-10-15):
+PL/I (F) endet bei vollem Data Set mit SD37, libc370s x37-Exit macht daraus
+`ENOSPC`. Welcher Code es war, sieht der Exit nicht: IFG019RA übergibt ihm
+nur R1 = DCB, IFG0554T hält den internen Code (184/185/186 = E37-4/B37-4/
+D37-4) in seinem eigenen R12 (**gelesen**, mvs38src). Bei 16 Extents und
+bei VIO ruft IFG0554T den Exit gar nicht, sondern treibt SYNAD mit X'42'
+im höchsten Byte von R1 – libc370 meldet dann `EIO` statt `ENOSPC`.
+Beides geht als eigene Issues an libc370.
+
+### 7.4 Vorgehen, wenn das Thema aufgenommen wird
+
+1. **Erst den Vertrag aufschreiben, dann Code.** Eine Design-Note in
+   `internals/`: welche Anker eine Sprachlaufzeit lesen und schreiben darf
+   (PPA, CRT, GRT, WSA), wie sie sich für Recovery und Ende anmeldet, was
+   sie nie tun darf (eigenen SPIE setzen, `8(TCBFSAB)` verändern). Das
+   macht den heutigen stillen Konsens prüfbar.
+2. **Messplan für den SPIE-Besitzer, bevor er gebaut wird.** Fälle:
+   Programmunterbrechung mit und ohne angemeldeten Handler; `try()` darin;
+   verschachtelte Handler zweier Sprachen; Retry und Programmmaske;
+   `@@CCALL` aus COBOL mit aktivem COBOL-SPIE (#502 als Prüfstein). Jeder
+   Fall mit roter Kontrolle auf dem heutigen Stand.
+3. **pl1c370 als erster Abnehmer.** pl1c370 setzt ab jetzt ein
+   programmweites ESTAE (PL/I (F) setzt STAE). Weil ESTAEs sich stapeln,
+   liegt es unter jedem `try()` und stört es nicht. Zu prüfen ist nur, dass
+   ein Retry dieses ESTAE `8(TCBFSAB)` nicht auf eine abgebaute PPA
+   zurücksetzt – `try()` stellt das Wort nach einem Abend selbst wieder
+   her (libc370#89, #93).
+4. **Stufe 0 (Optionen) unabhängig davon**, sobald ein Abnehmer sie
+   braucht; die einzige heikle Stelle ist `@@CRT0` zwischen dem Laden von
+   `@@STKLEN` und dem GETMAIN.
+5. **Kleine Lücken sofort, ohne Kern** (wie x37), damit sich keine
+   Sprachlaufzeit um libc370 herumbaut.
+
+Das Ziel ist kein "LE light" als Produkt, sondern ein dokumentierter
+Laufzeitvertrag, den libc370 schon fast erfüllt.
 
 ## Anhang: Quellen
 
