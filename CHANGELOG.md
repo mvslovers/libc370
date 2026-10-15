@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- **`__fx37()`: which x37 abend a write that ran out of space stood for
+  (#539).** A write that runs out of space fails with `ENOSPC` instead of
+  letting MVS end the program with an x37 abend. A program or language run
+  time that wants to end with that abend after all can now ask
+  `__fx37(fp)` in `<mvs/file.h>`, before closing the stream: `0x00D37004`
+  for a data set without secondary space, `0x00B37004` for a sequential one
+  whose secondary space is used up, 0 when the stream has not run out of
+  space. MVS does not report the code, so it is derived from the data
+  set's space and organisation the way end-of-volume processing decides
+  it. Measured on MVS against the abends MVS issues for the same data sets
+  without the library: D37-04 and B37-04 for sequential data sets, D37-04
+  for a member of a partitioned one.
+
 ### Fixed
 - **A data set that fills its 16th extent reports `ENOSPC`, not `EIO`
   (#538).** Out of space has been an error instead of an x37 abend since

@@ -12,8 +12,8 @@ A C program on MVS reaches its files through DD statements and data sets,
 not through a directory tree. The functions in this chapter look at both:
 the DD statements allocated to a task, the catalog, the volume table of
 contents (VTOC) of a disk, the directory of a partitioned data set (PDS),
-and the volumes that are online. Two of them, #cmd("__fabandon()") and the
-#cmd("ropen()") family, complete the input and output functions of
+and the volumes that are online. Three of them, #cmd("__fabandon()"),
+#cmd("__fx37()") and the #cmd("ropen()") family, complete the input and output functions of
 #cmd("<stdio.h>") for cases that a stream does not handle. The headers are:
 
 #deflist(width: 1.35in,
@@ -32,7 +32,8 @@ and the volumes that are online. Two of them, #cmd("__fabandon()") and the
   [#cmd("<mvs/pds.h>")], [the PDS directory: the BLDL macro and STOW
     (SVC 21), and the renaming and deleting of members.],
   [#cmd("<mvs/file.h>")], [#cmd("__fabandon()"), which closes a stream that
-    a failed write has left unusable.],
+    a failed write has left unusable, and #cmd("__fx37()"), which tells
+    which x37 abend a write that ran out of space stood for.],
   [#cmd("<mvs/rfile.h>")], [sequential record input and output through
     BSAM, one logical record at a time.],
 )
@@ -1185,7 +1186,72 @@ be deleted.
   when a write did abend.
 
 === Related
-@mvs-datasets-ropen
+@mvs-datasets-fx37, @mvs-datasets-ropen
+
+== \_\_fx37 <mvs-datasets-fx37>
+#idx("__fx37")#idx("x37 abend", "code of an ENOSPC write")#idx("D37 abend")
+#idx("E37 abend")#idx("ENOSPC")
+
+=== Format
+```
+#include <mvs/file.h>
+
+unsigned __fx37(FILE *fp);
+```
+
+=== Description
+When a write to the stream #var("fp") runs out of space, the library does
+not let MVS end the program with an x37 abend: the write fails with
+#cmd("errno") #cmd("ENOSPC"). #cmd("__fx37()") returns the completion code
+MVS would have issued, for a program that wants to end with that abend
+after all, as a language run time with x37 semantics does.
+
+MVS does not report the code to the library. #cmd("__fx37()") derives it
+the way end-of-volume processing decides it, and the result matches the
+abends MVS issues for the same data sets without the library: a data set
+without a secondary space quantity ends with D37-04\; a sequential data
+set whose secondary space is used up -- 16 extents, or a full volume --
+with B37-04. The secondary quantity is taken from the DD statement when it
+gives one, and from the data set's format-1 DSCB otherwise.
+
+=== Returns
+#deflist(width: 1in,
+  [0], [The stream has not run out of space, or #var("fp") is
+    #cmd("NULL") or not a stream.],
+  [#cmd("0x00D37004")], [D37-04: the data set has no secondary space.],
+  [#cmd("0x00B37004")], [B37-04: the secondary space of a sequential data
+    set is used up.],
+  [#cmd("0x00E37004")], [E37-04: the secondary space of a partitioned data
+    set is used up. In practice not returned, see the notes.],
+)
+
+The value has the form #cmd("0x00sssrrr") of #cmd("try()"), with the system
+completion code in #cmd("sss") and the reason code in the last three digits.
+
+=== Notes
+- Call it while the stream is open, after the write that failed and before
+  #cmd("fclose()") or #cmd("clearerr()"), which clear the condition.
+- A member of a partitioned data set whose secondary space is used up is
+  not turned into #cmd("ENOSPC"): MVS ends the program with E37-04 before
+  the library is called, as it would without the library. A program that
+  must survive that calls the write through #cmd("try()").
+- A data set that spans volumes can end with codes that are not derived
+  here, such as E37-08.
+- When the JFCB cannot be read, the result is D37-04.
+
+=== Example
+```
+if (fwrite(rec, 1, len, fp) != len && errno == ENOSPC) {
+    unsigned code = __fx37(fp);
+
+    wtof("DATA SET FULL, ABEND S%03X-%02X", code >> 12 & 0xFFF,
+         code & 0xFFF);
+    fclose(fp);
+}
+```
+
+=== Related
+@mvs-datasets-fabandon, @std-stdio-fclose
 
 == ropen, rclose, rread, rwrite <mvs-datasets-ropen>
 #idx("ropen")#idx("rclose")#idx("rread")#idx("rwrite")#idx("RFILE")
