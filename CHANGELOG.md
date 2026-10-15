@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.12.1] - 2026-10-15
+
+A patch release with one fix, a drop-in for 2.12.0: a C module entered by
+LINK no longer leaves 128 bytes of heap behind at every normal run.
+Rebuild the modules that are LINKed - a server's request handlers, for
+example - not only the program that LINKs them. The CC/370 range is
+unchanged: `>=1.6.0 <2`.
+
 ### Fixed
 - **A C module entered by LINK no longer leaves 128 bytes behind at every
   run (#546).** Every C program builds a run-time anchor of its own and
