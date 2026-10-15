@@ -98,6 +98,9 @@ struct _file {
                                     /*     the TMP's PUTLINE (#463)         */
 #define _FILE_XFLAG_GETLINE 0x08    /* ... "*GETLINE": read through the     */
                                     /*     TMP's GETLINE (#467)             */
+#define _FILE_XFLAG_DDDCB   0x10    /* ... "DD:" name: recfm=, lrecl=,      */
+                                    /*     blksize= in the mode go into the */
+                                    /*     DCB before OPEN (#554)           */
 };                                  /* C0 (192 bytes)                       */
 
 typedef unsigned long fpos_t;

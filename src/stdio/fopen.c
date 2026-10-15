@@ -60,6 +60,9 @@ fopen(const char *fn, const char *mode)
                 fp->member[i] = toupper(*fn);
             }
         }
+        /* the program's DCB attributes, if the mode names any, take
+           precedence over the DD and the DSCB (#554) */
+        fp->xflags |= _FILE_XFLAG_DDDCB;
         goto doopen;
     }
 
