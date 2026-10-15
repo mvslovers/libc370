@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.12.0] - 2026-10-15
+
+A minor release, a drop-in for 2.11.0, about data sets that run out of
+space. A data set that fills its 16th extent now reports `ENOSPC` like any
+other full data set, where it reported `EIO`, and the new `__fx37()` says
+which x37 abend such a write stood for. The CC/370 range is unchanged:
+`>=1.6.0 <2`.
+
 ### Added
 - **`__fx37()`: which x37 abend a write that ran out of space stood for
   (#539).** A write that runs out of space fails with `ENOSPC` instead of
