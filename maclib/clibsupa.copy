@@ -135,7 +135,7 @@ SAVEADCB DS    18F                Register save area for PUT
 * Per-FILE SYNAD stub, copied here by @@AOPEN (#147 item 3).  Entered
 * with R15 = its own address, so it reaches IOSFLAGS relative to
 * itself - no assumption about what R0/R1 carry on SYNAD entry.
-SYNAD24  DS    CL8           SYNAD stub code (SYNADCD in @@AOPEN)
+SYNAD24  DS    CL20          SYNAD stub code (SYNADCD in @@AOPEN)
 IOSFLAGS DS    X             I/O error status (#147 item 3)
 IOFSYNAD EQU   X'80'           the stub recorded an uncorrectable error
 IOFX37   EQU   X'40'           the x37 exit took a no-space condition

@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- **A data set that fills its 16th extent reports `ENOSPC`, not `EIO`
+  (#538).** Out of space has been an error instead of an x37 abend since
+  2.0, through a recovery exit the system calls before it abends. When the
+  data set already holds 16 extents, or is on a VIO unit, the system does
+  not call that exit and passes the error to the stream's I/O error routine
+  directly, marked as "no space on volume"; the library took it for an I/O
+  error. It now reads the mark, so the write fails with `ENOSPC`, as the
+  manuals say. Measured on MVS: a data set with secondary space, filled
+  until it fails after 16 extents, gave `EIO` with 2.11.0 and gives
+  `ENOSPC` now; a data set without secondary space gives `ENOSPC` with
+  both.
+
 ## [2.11.0] - 2026-10-14
 
 A minor release with one addition, a drop-in for 2.10.3: `tryinfo()` says

@@ -608,8 +608,21 @@ EOFRLEN  EQU   *-ENDFILE
 * register assumption.  Returning tells CHECK the error is handled:
 * no ABEND S001; @@AREAD/@@AWRITE test IOSFLAGS and turn the event
 * into an error return, which the C layer maps to ferror() + EIO.
+*
+* Out of space that never passed through X37EXIT (#538): IFG0554T
+* skips the x37 exit when the DEB already holds 16 extents, and for
+* VIO, and drives SYNAD itself with X'42' ("put error, no space on
+* volume", X'40'+X'02') in the high byte of R1 - the same SYNAD entry
+* it makes after X37EXIT returned 1 (EDO08900).  That byte marks the
+* error as out of space, so IOFX37 is set here too and the write
+* reports ENOSPC, not EIO.  Everything is addressed off R15 (the
+* constant included), no register is changed but the condition code.
 SYNADCD  OI    IOSFLAGS-SYNAD24(R15),IOFSYNAD  Note the I/O error
-         BR    R14                Handled; no abend
+         CLM   R1,B'1000',SYNADX42-SYNADCD(R15)  No space on volume?
+         BC    7,SYNADRET-SYNADCD(,R15)          No; an I/O error
+         OI    IOSFLAGS-SYNAD24(R15),IOFX37  Out of space (#538)
+SYNADRET BR    R14                Handled; no abend
+SYNADX42 DC    X'42'              SYNAD flags: output, no space
 SYNADLEN EQU   *-SYNADCD
 *
 * x37 exit (#176), EXLST type 08.  Entered by IFG019RA's UEXIT routine
