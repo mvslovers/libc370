@@ -47,8 +47,10 @@ __fseek(FILE *fp, long int offset, int whence)
         newpos = oldpos + offset;
     }
     else if (whence == SEEK_END) {
-        /* read until end of file or error */
-        while (__fread(buf, sizeof(buf), 1, fp) == 1) {
+        /* read until end of file or error.  Elements of one byte: on a
+           record stream __fread() returns the record's length (#559),
+           so a record shorter than buf must not stop the loop */
+        while (__fread(buf, 1, sizeof(buf), fp) > 0) {
             /* do nothing */
         }
         goto quit;
