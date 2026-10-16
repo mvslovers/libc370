@@ -419,5 +419,15 @@ What later 2.x releases ask of a program or a build:
       greater than 1 gets 0 for a record shorter than one element: test
       #cmd("feof()") for the end of the data set, or read with element
       size 1.],
+    [2.15.0], [The standard streams are opened on first use, not before
+      #cmd("main()") (@pg-startup-sequence): #cmd("SYSTERM") and
+      #cmd("SYSIN") are allocated or opened only when used. A stream that
+      cannot be opened is reported and replaced by #cmd("NULLFILE")
+      instead of ending the program with return code 12. #cmd("SYSENV")
+      is loaded first, so its #cmd("SYSOUT_") variables apply to the
+      standard streams too.], [Nothing for most programs. Code that relied
+      on #cmd("SYSTERM") being allocated or on the return code 12 checks
+      the stream itself. Replace a standard stream in #cmd("__premain()")
+      to avoid opening the default first.],
   )
 ] <pg-migrate-since-tab>
