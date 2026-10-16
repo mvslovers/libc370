@@ -18,14 +18,23 @@ edge; one left unresolved (WX in the map's symbol list) pulls nothing and is
 not one.  Sizes are section lengths.  A cut models a change that removes that reference, not the code
 that would replace it.
 """
+import os
 import re
 import sys
 from collections import deque
 
+ROOTS = ("@@crt0", "main")       # the entry point and the program itself
+
 
 def load(path):
+    """Members and references of the map at path (a file the caller names)."""
+    path = os.path.realpath(path)
+    if not os.path.isfile(path):
+        raise SystemExit(f"{path}: not a file")
     secs, cur = [], None
-    for line in open(path):
+    with open(path, encoding="utf-8", errors="replace") as fh:
+        lines = fh.readlines()
+    for line in lines:
         m = re.match(r"^\S*\s+(PC|SD)\s+[0-9A-F]{6}\s+([0-9A-F]{6})\s+(\S+)", line)
         if m:
             k = re.search(r"\(([^)]+)\.o\)", m.group(3))
@@ -37,7 +46,7 @@ def load(path):
         if m and cur:
             cur["refs"].add(m.group(1))
             continue
-        m = re.match(r"^  (\S+)\s+[0-9A-F]{6}\s*$", line)
+        m = re.match(r"^ {2}(\S+)\s+[0-9A-F]{6}\s*$", line)
         if m and cur:
             cur["defs"].add(m.group(1))
     mem = {}
@@ -53,7 +62,7 @@ def load(path):
 
 
 def reach(graph, cuts=frozenset()):
-    seen, stack = set(), ["@@crt0", "main"]
+    seen, stack = set(), list(ROOTS)
     while stack:
         n = stack.pop()
         if n in seen or n not in graph:
@@ -67,6 +76,35 @@ def size(mem, members):
     return sum(mem[x]["len"] for x in members)
 
 
+def path_to(graph, target):
+    """One chain from the entry to target, or None."""
+    par, q, seen = {}, deque(ROOTS), set(ROOTS)
+    while q:
+        n = q.popleft()
+        for m in graph.get(n, ()):
+            if m not in seen:
+                seen.add(m)
+                par[m] = n
+                q.append(m)
+    if target not in seen:
+        return None
+    chain = [target]
+    while chain[-1] in par:
+        chain.append(par[chain[-1]])
+    return chain
+
+
+def gains(mem, graph, base, total, floor=1000):
+    """(bytes saved, from, to) for every single reference worth floor."""
+    found = []
+    for n in base:
+        for m in graph[n]:
+            saved = total - size(mem, reach(graph, frozenset({(n, m)})))
+            if saved >= floor:
+                found.append((saved, n, m))
+    return sorted(found, reverse=True)
+
+
 def main(argv):
     if len(argv) < 2:
         print(__doc__)
@@ -75,36 +113,16 @@ def main(argv):
     base = reach(graph)
     total = size(mem, base)
     if "--path" in argv:
-        target = argv[argv.index("--path") + 1]
-        par, q, seen = {}, deque(["@@crt0", "main"]), {"@@crt0", "main"}
-        while q:
-            n = q.popleft()
-            for m in graph.get(n, ()):
-                if m not in seen:
-                    seen.add(m)
-                    par[m] = n
-                    q.append(m)
-        if target not in seen:
-            print(f"{target} is not linked")
-            return 1
-        chain = [target]
-        while chain[-1] in par:
-            chain.append(par[chain[-1]])
-        print(" <- ".join(chain))
-        return 0
+        chain = path_to(graph, argv[argv.index("--path") + 1])
+        print(" <- ".join(chain) if chain else "not linked")
+        return 0 if chain else 1
     if "--cut" in argv:
         cuts = frozenset(tuple(c.split(":", 1)) for c in argv[argv.index("--cut") + 1:])
         left = reach(graph, cuts)
         print(f"{len(base)} members {total} B -> {len(left)} members {size(mem, left)} B")
         return 0
     print(f"{len(base)} members, {total} bytes")
-    gains = []
-    for n in base:
-        for m in graph[n]:
-            saved = total - size(mem, reach(graph, frozenset({(n, m)})))
-            if saved >= 1000:
-                gains.append((saved, n, m))
-    for saved, n, m in sorted(gains, reverse=True)[:15]:
+    for saved, n, m in gains(mem, graph, base, total)[:15]:
         print(f"  {saved:7d}  {n} -> {m}")
     return 0
 
