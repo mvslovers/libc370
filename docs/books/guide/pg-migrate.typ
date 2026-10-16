@@ -412,5 +412,12 @@ What later 2.x releases ask of a program or a build:
       (@pg-io-new). An invalid value fails with #cmd("EINVAL").],
       [Code that passed these options with a #cmd("DD:") name and relied
       on the DD's attributes drops them.],
+    [2.14.0], [#cmd("fread()") on a record stream returns the number of
+      complete elements read -- with element size 1 the record's length --
+      where up to 2.13.0 it returned #var("nmemb") for every record
+      (@pg-io-records).], [Code that reads records with an element size
+      greater than 1 gets 0 for a record shorter than one element: test
+      #cmd("feof()") for the end of the data set, or read with element
+      size 1.],
   )
 ] <pg-migrate-since-tab>
