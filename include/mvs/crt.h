@@ -46,7 +46,11 @@ struct clibgrt {
 #define GRTFLAG1_OUTTRY     0x04    /* ... stdout was tried                 */
 #define GRTFLAG1_ERRTRY     0x02    /* ... stderr was tried                 */
 
-    char        unused1;            /* 0B unused                            */
+    char        grtflag2;           /* 0B flags                             */
+#define GRTFLAG2_ENVLAZY    0x80    /* ... SYSENV loads on first use: the   */
+                                    /*     start-up is done (#564)          */
+#define GRTFLAG2_ENVTRY     0x40    /* ... SYSENV load was started          */
+#define GRTFLAG2_ENVDONE    0x20    /* ... SYSENV load has finished         */
     unsigned    grttmpnm;           /* 0C tmpnam() counter                  */
     void        **grtexit;          /* 10 atexit() array of functions       */
     void        **grtexita;         /* 14 on_exit() array of args           */
@@ -116,6 +120,8 @@ struct clibcrt {
 #define CRTFLAG_TSO			0x80	/* ... TSO environment					*/
 #define CRTFLAG_TSOB		0x40	/* ... TSO background environment		*/
 #define CRTFLAG_TMRFAIL		0x20	/* ... STIMER failure reported (#94)	*/
+#define CRTFLAG_TZSET		0x10	/* ... tzset() has run for this task:	*/
+									/*     on first use since #564			*/
 #define CRTFLAG_TIN			0x08	/* ... STDIN is terminal				*/
 #define CRTFLAG_TOUT		0x04	/* ... STDOUT is terminal				*/
 #define CRTFLAG_TERR		0x02	/* ... STDERR is terminal				*/

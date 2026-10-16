@@ -46,8 +46,9 @@ by which local time is ahead of UTC (negative west of Greenwich).
 calendar time. There are no daylight saving time rules: the offset stays the
 same all year, and #cmd("tm_isdst") is never set to 0 or 1.
 
-At program start-up the library calls #cmd("tzset()"), which takes the
-offset from the environment variable #cmd("TZ") if it is set and otherwise
+The first time a task needs the offset, the library calls #cmd("tzset()")
+for it, which takes the offset from the environment variable #cmd("TZ") if it
+is set and otherwise
 from the system's own time-zone value, #cmd("CVTTZ") in the communications
 vector table. The format of #cmd("TZ") is described under #cmd("tzset()")
 (@std-time-tzset)\; it is not the POSIX format. Environment variables are
@@ -469,7 +470,11 @@ If neither variable is set, #cmd("tzset()") takes the offset from
 rounds it to a multiple of 10 seconds.
 
 #cmd("__tzset()") sets the offset of the task directly, to #var("tzoffset")
-seconds ahead of UTC. #cmd("__tzget()") returns the current offset.
+seconds ahead of UTC. #cmd("__tzget()") returns the current offset\; if
+#cmd("tzset()") has not run for the task yet, it calls it first, so the
+offset of #cmd("TZ") applies without the program calling #cmd("tzset()").
+Up to LIBC/370 2.15.0 the start-up called #cmd("tzset()") for the main
+task.
 
 === Returns
 

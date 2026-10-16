@@ -32,6 +32,11 @@
 #include "stdlib.h"
 #include "string.h"
 #include "mvs/crt.h"
+
+/* weak (#564): files are open only if fopen() is linked, and fopen()
+   links fclose().  A program that never opens one does not link the
+   stream layer for closing nothing. */
+extern int fclose(FILE *stream) __attribute__((weak));
 #include "ext/array.h"
 
 void
@@ -62,7 +67,7 @@ __ppahrv(CLIBPPA *ppa)
                 count--;
                 fp = grt->grtfile[count];
                 grt->grtfile[count] = 0;
-                if (fp && (unsigned)fp <= 0x00FFFFFF) {
+                if (fp && (unsigned)fp <= 0x00FFFFFF && fclose) {
                     fclose(fp);
                 }
             }

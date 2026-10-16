@@ -47,6 +47,15 @@ Rules of thumb:
   `__exit()` sets `GRTFLAG1_STDEND` before it closes the files, so closing
   never opens one. Library code must read `grt->grtin/grtout/grterr`
   directly wherever touching a stream would be wrong.
+* **So do SYSENV and the time zone** (#564 steps 3/4): `__rtinit()` sets
+  `GRTFLAG2_ENVLAZY`; `getenv()`, `getenvi()`, `setenv()`, `putenv()` and
+  `unsetenv()` call `__envlz()` (`src/mvs/env/@@envlz.c`), which loads the DD
+  once under a lock of its own (`&grt->grtflag2`, not `&grt->grtenv`, which
+  `setenv()` releases unconditionally). `__tzget()` calls `tzset()` once per
+  task (`CRTFLAG_TZSET`). Library diagnostics on the always-linked paths use
+  `src/internal/wtofmt.h` + `wto()`, never `wtof()`/`fprintf()`: one `wtof()`
+  there links all of printf and, through `vsprintf -> @@fputc -> @@fpswt`,
+  half of stdio. Check with `ld370 --map ... --xref` on an empty `main()`.
 
 ## The runtime model you need first
 
@@ -191,8 +200,9 @@ OS save area (#502). With no C runtime on the task it builds one on the first
 call (#507), the `@@CRT0` way: PPA + stack (`@@STKLEN`), the PPA as the
 "next" of the TCB's first save area (old value in `PPASAVE`), `@@CRTSET`,
 `@@GRTSET`, the TSO `EXTRACT`, then `@@RTINIT` — the runtime part of
-`@@START` (`SYSENV`/`ENVIRON`, `tzset()`, and since #564 only the flag that
-lets the standard streams open on first use), a member of its own so
+`@@START` (since #564 only the flags that let the standard streams, the
+`SYSENV`/`ENVIRON` environment and the time zone be set up on first use), a
+member of its own so
 that no `@@START` and no `main()` are linked. `__premain()` is not called and
 there is no parameter to parse. The PPA carries `PPAFLAG_CCALL`, by which
 later calls, `CCTERM` and readers of `ppaflag` tell it from a C program's.

@@ -5,7 +5,7 @@
 GRTEYE   DS    CL8                   Eye catcher for dumps 'CLIBGRT'
 GRTCLIBL DS    H                     Length of CLIBGRT
 GRTFLAG1 DS    X                     flags
-         DS    X                     unused
+GRTFLAG2 DS    X                     flags: SYSENV on first use (#564)
 GRTTMPNM DS    F                     tmpnam() counter
 GRTEXIT  DS    A                     array of atexit() functions
 GRTEXITA DS    A                     array of on_exit() args

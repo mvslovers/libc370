@@ -28,6 +28,7 @@ setenv(const char *name, const char *value, int rewrite)
 	__ENVVAR    *envvar;
 
     if (!grt) return -1;        /* no GRT: no environment (#85) */
+    __envlz();                  /* SYSENV first, or it would overwrite this (#564) */
 
     lock(&grt->grtenv,0);
 

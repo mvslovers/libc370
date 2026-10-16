@@ -285,6 +285,7 @@ CRTFLAG_TMRFAIL	mvs/crt.h
 CRTFLAG_TOUT	mvs/crt.h
 CRTFLAG_TSO	mvs/crt.h
 CRTFLAG_TSOB	mvs/crt.h
+CRTFLAG_TZSET	mvs/crt.h
 CRTOPTS_AUTH	mvs/crt.h
 CTHDMGR	mvs/thread.h
 CTHDMGR_EYE	mvs/thread.h
@@ -1325,6 +1326,9 @@ GRTFLAG1_SOCKINIT	mvs/crt.h
 GRTFLAG1_STDEND	mvs/crt.h
 GRTFLAG1_STDLAZY	mvs/crt.h
 GRTFLAG1_TSO	mvs/crt.h
+GRTFLAG2_ENVDONE	mvs/crt.h
+GRTFLAG2_ENVLAZY	mvs/crt.h
+GRTFLAG2_ENVTRY	mvs/crt.h
 HASPCMB	ibm/jes2/cmb.h
 HASPCP	mvs/jes2ckpt.h
 HASPCP_EYE	mvs/jes2ckpt.h
@@ -3863,6 +3867,7 @@ __dsfree	mvs/dynalloc.h
 __dynal	mvs/dynalloc.h
 __enq	mvs/enq.h
 __enqdeq	mvs/enq.h
+__envlz	mvs/env.h
 __envvar	mvs/env.h
 __errno	errno.h
 __estae	mvs/recovery.h

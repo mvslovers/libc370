@@ -298,9 +298,9 @@ Under a COBOL main program -- or any program that is not C -- no C start-up
 has run, so there is no C stack and no run-time anchor. The first call
 through a #cmd("CCALL") stub builds them, the way #cmd("@@CRT0") does for a
 C program: the stack (#cmd("@@STKLEN") applies, 256 KB by default), the
-run-time anchors, the standard streams (#cmd("SYSPRINT"), #cmd("SYSTERM"),
-#cmd("SYSIN")), the environment variables from #cmd("SYSENV") and the time
-zone. Every later call on the task uses the same environment, so files
+run-time anchors and the rest of the C environment\; the standard streams,
+the environment variables from #cmd("SYSENV") and the time zone are set up
+the first time a C function uses them, as in a C program. Every later call on the task uses the same environment, so files
 opened, memory allocated and #cmd("atexit()") functions registered in one
 call are there in the next.
 

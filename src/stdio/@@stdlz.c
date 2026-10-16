@@ -13,7 +13,9 @@
 **   gets NULL rather than recursing, and a stream the program closed is
 **   not opened again.
 ** - The GRT is locked around the attempt, so two threads' first use opens
-**   it once; the thread that comes second waits and finds it open.
+**   it once; the thread that comes second waits and finds it open.  (In
+**   2.15.0 the TRY bit was tested before the lock, and the second thread
+**   could get NULL - fixed in 2.16.0.)
 ** - Once __exit() closes the files (GRTFLAG1_STDEND) nothing is opened.
 ** - What is opened is what __rtinit() opened: "*SYSPRINT" and "*SYSTERM"
 **   (the DD, else a SYSOUT data set), "dd:SYSIN" else 'NULLFILE'.  An
@@ -53,8 +55,14 @@ __stdlz(int which)
     case 1:  slot = &grt->grtout; bit = GRTFLAG1_OUTTRY; break;
     default: slot = &grt->grterr; bit = GRTFLAG1_ERRTRY; break;
     }
-    if (*slot || (grt->grtflag1 & bit)) return;
+    if (*slot) return;
 
+    /* The TRY bit is tested under the lock only.  Tested before it, a
+       second task arriving while the first is still in fopen() saw the
+       bit, skipped the lock and got NULL (fixed in 2.16.0); now it waits
+       for the lock and finds the stream open.  The same task, re-entering
+       from inside its own fopen(), gets rc 8 here, sees the bit and
+       returns NULL without recursing. */
     owned = (lock(grt, 0) == 0);    /* 8: this task holds it already */
     if (!*slot && !(grt->grtflag1 & bit)) {
         grt->grtflag1 |= bit;

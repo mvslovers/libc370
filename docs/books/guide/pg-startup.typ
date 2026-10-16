@@ -37,7 +37,6 @@ every C program is linked with it and enters there;
   v
 @@START        C start-up routine in libc.a
   |              - calls __premain(), if the program has one
-  |              - reads the SYSENV (or ENVIRON) DD
   |              - splits the parameter into argc and argv
   v
 main(argc, argv)
@@ -65,9 +64,8 @@ In detail, #cmd("@@CRT0"):
 + calls #cmd("@@START").
 
 #cmd("@@START") then calls the program's #cmd("__premain()") function, if
-it has one (@pg-startup-premain), loads the environment variables, sets the
-time zone, divides the parameter into #cmd("argv") (@pg-startup-parm) and
-calls #cmd("main()"). When #cmd("main()") returns, it calls #cmd("exit()")
+it has one (@pg-startup-premain), divides the parameter into #cmd("argv")
+(@pg-startup-parm) and calls #cmd("main()"). When #cmd("main()") returns, it calls #cmd("exit()")
 with the value #cmd("main()") returned.
 
 #idx("standard streams", "opened on first use")
@@ -80,6 +78,17 @@ opens #cmd("stderr") or #cmd("stdin"), and a step without a
 allocations a step without those DDs needed, took most of the start-up's
 processor time: measured on MVS 20 ms before LIBC/370 2.15.0 and 2.4 ms
 since, for a step without #cmd("SYSTERM") and #cmd("SYSIN").
+
+#idx("environment variables", "loaded on first use")#idx("time zone", "set on first use")
+In the same way the environment variables of the #cmd("SYSENV") DD
+(@pg-startup-env) are loaded the first time the program calls
+#cmd("getenv()"), #cmd("setenv()"), #cmd("putenv()") or
+#cmd("unsetenv()"), and the time zone is set from #cmd("TZ") the first time
+a time function needs it. A program that uses none of them reads no
+#cmd("SYSENV") and links neither the stream functions nor
+#cmd("printf()") for the start-up: since LIBC/370 2.16.0 an empty
+#cmd("main()") is 14.8 KB, against 72.7 KB before. The start-up itself
+then takes 0.2 ms of processor time.
 
 #idx("U0801 abend")
 One thing can stop a program before #cmd("main()"):
@@ -263,7 +272,8 @@ While #cmd("__premain()") runs, the C environment is built -- storage,
 open: #cmd("printf()") and #cmd("perror()") must not be called before the
 function has set #cmd("stdout") or #cmd("stderr") itself. Write to the
 console with #cmd("wtof()") instead. The environment variables of the
-#cmd("SYSENV") DD are not loaded yet either.
+#cmd("SYSENV") DD are not loaded yet either: #cmd("getenv()") in
+#cmd("__premain()") finds none of them.
 
 A program that does not define #cmd("__premain()") links nothing for it:
 the start-up refers to it weakly, under the external name #cmd("@@PREMAI").
@@ -495,8 +505,9 @@ space, such as a server module, holds its whole stack for every call.
 #idx("environment variables", "SYSENV")#idx("SYSENV DD statement")
 #idx("ENVIRON DD statement")
 MVS passes no environment to a program. The library keeps a list of
-environment variables for each program, shared by all its tasks, and the
-start-up fills it from a data set: the one allocated to the DD
+environment variables for each program, shared by all its tasks, and fills
+it, the first time the program uses it, from a data set: the one allocated
+to the DD
 #cmd("SYSENV"), or, if the step has none, to #cmd("ENVIRON"). Without
 either, the list starts empty. #cmd("getenv()") reads a variable,
 #cmd("setenv()") changes one.
@@ -526,9 +537,9 @@ without the #cmd("SYSENV") DD, #cmd("limit is 100").
 Some variables are read by the library itself: #cmd("TZ") sets the time
 zone, and the variables that begin with #cmd("DATASET_"), #cmd("TEMP_"),
 #cmd("SYSOUT_") and #cmd("TERMINAL_") give the attributes of data sets that
-#cmd("fopen()") creates (@pg-io-new). The start-up opens the standard streams
-_before_ it reads #cmd("SYSENV"), so these variables do not apply to
-#cmd("stdout"), #cmd("stderr") and #cmd("stdin").
+#cmd("fopen()") creates (@pg-io-new). Since LIBC/370 2.15.0 they apply to the
+SYSOUT data sets of #cmd("stdout") and #cmd("stderr") as well, which are
+opened only when they are first used, after #cmd("SYSENV") has been read.
 
 The variables are kept in the program's storage. A program that changes
 one changes it for all its tasks, and for no other program.

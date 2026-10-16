@@ -28,4 +28,9 @@ extern int      setenvi(const char *name, int value, int rewrite);
    non-zero = the data set could not be opened. */
 extern int      loadenv(const char *fn);
 
+/* __envlz() - load DD SYSENV (or ENVIRON) once, on the first use of the
+   environment after the start-up (#564).  getenv(), getenvi(), setenv(),
+   putenv() and unsetenv() call it; nothing else needs to. */
+extern void     __envlz(void);
+
 #endif

@@ -1,6 +1,7 @@
 #include <mvs/wto.h>
 #include <mvs/crt.h>
 #include <mvs/recovery.h>
+#include "src/internal/wtofmt.h"
 
 static void try_traceback(SAVEAREA *sa);
 
@@ -35,7 +36,13 @@ static void try_traceback(SAVEAREA *sa)
 #endif
     }
 
-    wtof("Save area trace back");
+    /* without the printf family (#564): malloc() reports a shortage
+       through here, so every program linked printf() for it */
+    {
+        char    title[] = "Save area trace back";
+
+        wto(title);
+    }
 
     for(i=0, prev = (SAVEAREA*) sa->prev;i < 256 && sa != (SAVEAREA*)crt->crtsave; i++, sa = prev, prev = (SAVEAREA*) sa->prev) {
         next = sa_next(sa);
@@ -47,8 +54,34 @@ static void try_traceback(SAVEAREA *sa)
 
         retto = (sa->r14 & 0x0FFFFFFF); /* strip out BALR bits in R14 */
         offset = retto - prev->r15;
-        wtof("  \"%s\" ep=%06X frame=%u bytes", thisname, thisep, frame);
-        wtof("    returns to=%06X \"%s\" ep=%06X+%X", retto, prevname, prevep, offset);
+        {
+            char    msg[126];
+            int     k = 0;
+
+            wtofmt_str(msg, &k, sizeof(msg), "  \"");
+            wtofmt_str(msg, &k, sizeof(msg), thisname);
+            wtofmt_str(msg, &k, sizeof(msg), "\" ep=");
+            wtofmt_hex(msg, &k, sizeof(msg), (unsigned)thisep, 6);
+            wtofmt_str(msg, &k, sizeof(msg), " frame=");
+            wtofmt_dec(msg, &k, sizeof(msg), frame);
+            wtofmt_str(msg, &k, sizeof(msg), " bytes");
+            wto(msg);
+            k = 0;
+            wtofmt_str(msg, &k, sizeof(msg), "    returns to=");
+            wtofmt_hex(msg, &k, sizeof(msg), retto, 6);
+            wtofmt_str(msg, &k, sizeof(msg), " \"");
+            wtofmt_str(msg, &k, sizeof(msg), prevname);
+            wtofmt_str(msg, &k, sizeof(msg), "\" ep=");
+            wtofmt_hex(msg, &k, sizeof(msg), (unsigned)prevep, 6);
+            wtofmt_str(msg, &k, sizeof(msg), "+");
+            /* %X: no leading zeros */
+            {
+                int d = 1;
+                while (d < 8 && (offset >> (d * 4))) d++;
+                wtofmt_hex(msg, &k, sizeof(msg), offset, d);
+            }
+            wto(msg);
+        }
     }
 }
 
