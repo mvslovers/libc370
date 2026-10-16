@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.15.0] - 2026-10-16
+
+A minor release that changes the start-up: the standard streams are opened
+the first time a program uses them, no longer before `main()`. A program
+that writes only to `stdout` opens neither `stderr` nor `stdin`, and a
+step without `SYSTERM` and `SYSIN` DDs gets no SYSOUT data set and no
+`NULLFILE` allocation for them; the start-up's processor time falls by
+about seven eighths there. Read the changes below before upgrading a
+program that relies on the start-up having opened a stream. The CC/370
+range is unchanged: `>=1.6.0 <2`.
+
 ### Changed
 - **The standard streams are opened on first use (#564).** The start-up
   opened `stdout`, `stderr` and `stdin` before `main()`, with an OPEN and a
