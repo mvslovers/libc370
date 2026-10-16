@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.16.0] - 2026-10-16
+
+A minor release that makes the C start-up small: it no longer links the
+stream functions and `printf()` into every program. An empty `main()`
+links 14.8 KB instead of 72.7 KB, and the start-up's processor time falls
+from 2.8 ms to 0.2 ms. The `SYSENV` environment and the time zone are now
+set up the first time a program uses them. A program that writes to
+`stdout` keeps the stream functions and does not shrink yet. The CC/370
+range is unchanged: `>=1.6.0 <2`.
+
 ### Changed
 - **The start-up no longer links the stream functions and `printf()` into
   every program (#564).** An empty `main()` was 72.7 KB, because the

@@ -429,5 +429,11 @@ What later 2.x releases ask of a program or a build:
       on #cmd("SYSTERM") being allocated or on the return code 12 checks
       the stream itself. Replace a standard stream in #cmd("__premain()")
       to avoid opening the default first.],
+    [2.16.0], [The #cmd("SYSENV") environment is loaded on the first call
+      of #cmd("getenv()"), #cmd("setenv()"), #cmd("putenv()") or
+      #cmd("unsetenv()"), and the time zone is set on first need
+      (@pg-startup-sequence). An empty #cmd("main()") links 14.8 KB
+      instead of 72.7 KB. #cmd("estae()") without a routine reports on
+      the console instead of #cmd("stderr").], [Nothing.],
   )
 ] <pg-migrate-since-tab>
