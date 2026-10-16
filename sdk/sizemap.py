@@ -5,10 +5,10 @@ Reads a map written by `ld370 --map FILE --xref` (cc370 ... -Wl,--map,FILE,--xre
 and builds the reference graph between the members (and `main`).  It answers
 the questions of #564's size work without guessing:
 
-  sizemap.py MAP                  size, member count, and the single
+  sizemap.py < MAP                size, member count, and the single
                                   references whose removal saves the most
-  sizemap.py MAP --path MEMBER    one chain from the entry to MEMBER
-  sizemap.py MAP --cut A:B ...    the size with those references removed
+  sizemap.py --path MEMBER < MAP  one chain from the entry to MEMBER
+  sizemap.py --cut A:B ... < MAP  the size with those references removed
                                   (A references B; members by object name,
                                   e.g. fopen:sprintf)
 
@@ -17,11 +17,7 @@ reference that some other member resolved is listed as V too and counts as an
 edge; one left unresolved (WX in the map's symbol list) pulls nothing and is
 not one.  Sizes are section lengths.  A cut models a change that removes that reference, not the code
 that would replace it.
-
-MAP is read only below the current directory, or below SIZEMAP_ROOT when
-that is set.
 """
-import os
 import re
 import sys
 from collections import deque
@@ -29,17 +25,9 @@ from collections import deque
 ROOTS = ("@@crt0", "main")       # the entry point and the program itself
 
 
-def load(path):
-    """Members and references of the map at path (a file the caller names)."""
-    base = os.path.realpath(os.environ.get("SIZEMAP_ROOT", os.getcwd()))
-    path = os.path.realpath(os.path.join(base, path))
-    if os.path.commonpath([base, path]) != base:
-        raise SystemExit(f"{path}: outside {base} (set SIZEMAP_ROOT)")
-    if not os.path.isfile(path):
-        raise SystemExit(f"{path}: not a file")
+def load(lines):
+    """Members and references of a map, given as its lines."""
     secs, cur = [], None
-    with open(path, encoding="utf-8", errors="replace") as fh:
-        lines = fh.readlines()
     for line in lines:
         m = re.match(r"^\S*\s+(PC|SD)\s+[0-9A-F]{6}\s+([0-9A-F]{6})\s+(\S+)", line)
         if m:
@@ -112,10 +100,10 @@ def gains(mem, graph, base, total, floor=1000):
 
 
 def main(argv):
-    if len(argv) < 2:
+    if sys.stdin.isatty():
         print(__doc__)
         return 2
-    mem, graph = load(argv[1])
+    mem, graph = load(sys.stdin.readlines())
     base = reach(graph)
     total = size(mem, base)
     if "--path" in argv:
