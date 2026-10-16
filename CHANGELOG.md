@@ -6,6 +6,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+- **The start-up no longer links the stream functions and `printf()` into
+  every program (#564).** An empty `main()` was 72.7 KB, because the
+  start-up loaded the `SYSENV` DD through `fopen()`, called `tzset()`, and
+  diagnostics on paths every program links - `malloc()` out of storage,
+  the task anchor not found, `estae()` without a routine - wrote through
+  `wtof()` and `fprintf()`. Now an empty `main()` is 14.8 KB (36 members
+  instead of 143), and the start-up takes 0.2 ms of processor time instead
+  of 2.8 ms, measured on MVS.
+  - The `SYSENV` (or `ENVIRON`) environment is loaded the first time the
+    program calls `getenv()`, `setenv()`, `putenv()` or `unsetenv()`. A
+    `setenv()` before any other call is kept, not overwritten by `SYSENV`.
+    In `__premain()` the environment is still empty, as before.
+  - The time zone is set from `TZ` the first time a task needs the offset
+    (`localtime()` and the other time functions, through `__tzget()`). A
+    program still does not have to call `tzset()` itself.
+  - The library's own messages for these cases go to the console without
+    `printf()`, with the same text. `estae()` without a routine now
+    reports on the console; it wrote to `stderr`.
+  - A program that uses `stdout` still links `fopen()` and the stream
+    functions; it does not shrink in this release.
+
+### Fixed
+- **A second thread could get a NULL `stdout` (or `stderr`, `stdin`) on
+  its first use (#564).** When two threads used a standard stream for the
+  first time together, the second one could be handed the stream before it
+  was open. It now waits for the first. Found by reading the code of
+  2.15.0; not observed.
+
 ## [2.15.0] - 2026-10-16
 
 A minor release that changes the start-up: the standard streams are opened

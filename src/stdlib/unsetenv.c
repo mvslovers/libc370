@@ -16,6 +16,7 @@ unsetenv(const char *name)
     int         i;
 
     if (!grt) return 0;         /* no GRT: nothing to unset (#85) */
+    __envlz();                  /* SYSENV first, or it would bring it back (#564) */
 
     lock(&grt->grtenv,0);
     if (name && grt->grtenv) {

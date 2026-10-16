@@ -14,6 +14,7 @@ getenv(const char *name)
 	char    *result;
 
     if (!grt) return NULL;      /* no GRT: no environment (#85) */
+    __envlz();                  /* SYSENV on first use (#564) */
 
     lock(&grt->grtenv,0);
 	result = __findenv(name, &index, 0);    /* same case */

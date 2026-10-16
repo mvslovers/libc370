@@ -64,7 +64,16 @@ static __inline void sa_get_epname(SAVEAREA *sa, char *epname)
         epname[*p] = 0;
     }
     else {
-        sprintf(epname, "%08X (unknown)", (unsigned) ep);
+        /* "%08X (unknown)" without sprintf (#564): a traceback is on the
+           out-of-storage path of malloc(), which every program links */
+        static const char hx[] = "0123456789ABCDEF";
+        static const char tail[] = " (unknown)";
+        unsigned    v = (unsigned) ep;
+        int         i;
+
+        for (i = 0; i < 8; i++) epname[i] = hx[(v >> ((7 - i) * 4)) & 15];
+        for (i = 0; tail[i]; i++) epname[8 + i] = tail[i];
+        epname[8 + i] = 0;
     }
 }
 

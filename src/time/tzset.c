@@ -6,6 +6,7 @@
 #include <time.h>       /* our own prototype, so the definition is checked */
 #include "mvs/env.h"
 #include "mvs/crt.h"
+#include "src/internal/wtofmt.h"
 
 void
 tzset(void)
@@ -64,9 +65,26 @@ tzset(void)
 			goto done;
 		}
 
-		wtof("%s: Invalid time zone format in TZ variable \"%s\"", __func__, tz);
-		wtof("%s: Expected format is TZ=[-]HH[:MM][:SS]", __func__);
-		wtof("%s: Defaulting to time zone offset calculated from CVTTZ", __func__);
+		{
+			/* without the printf family (#564): tzset() is linked by
+			   every program that uses a time function */
+			char	msg[120];
+			int		i = 0;
+
+			wtofmt_str(msg, &i, sizeof(msg),
+				"tzset: Invalid time zone format in TZ variable \"");
+			wtofmt_str(msg, &i, sizeof(msg), tz);
+			wtofmt_str(msg, &i, sizeof(msg), "\"");
+			wto(msg);
+			i = 0;
+			wtofmt_str(msg, &i, sizeof(msg),
+				"tzset: Expected format is TZ=[-]HH[:MM][:SS]");
+			wto(msg);
+			i = 0;
+			wtofmt_str(msg, &i, sizeof(msg),
+				"tzset: Defaulting to time zone offset calculated from CVTTZ");
+			wto(msg);
+		}
     }
 
 	/* calculate time zone offset from system CVTTZ value */
@@ -92,4 +110,6 @@ tzset(void)
 
 done:
     __tzset(tzoffset);
+    crt = __crtget();                       /* once per task (#564) */
+    if (crt) crt->crtflag |= CRTFLAG_TZSET;
 }

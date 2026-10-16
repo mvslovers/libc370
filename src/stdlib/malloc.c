@@ -9,6 +9,7 @@
 #include "mvs/storage.h"
 #include "stdio.h"
 #include "mvs/wto.h"
+#include "src/internal/wtofmt.h"
 
 extern void (*__userex[__NATEXIT])(void);
 
@@ -26,7 +27,16 @@ __PDPCLIB_API__ void *malloc(size_t size)
 	
     if (!ptr) {
         errno = ENOMEM;
-        wtof("Out of memory, bytes needed=%u", size);
+        {
+            /* without the printf family (#564): every program links
+               malloc(), and wtof() made it link printf() too */
+            char    msg[48];
+            int     i = 0;
+
+            wtofmt_str(msg, &i, sizeof(msg), "Out of memory, bytes needed=");
+            wtofmt_dec(msg, &i, sizeof(msg), (unsigned)size);
+            wto(msg);
+        }
         wto_traceback(0);
     }
     return ptr;

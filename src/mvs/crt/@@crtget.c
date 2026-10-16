@@ -8,6 +8,7 @@
 #include "mvs/crt.h"
 #include "ext/array.h"
 #include "mvs/lock.h"
+#include "src/internal/wtofmt.h"
 
 CLIBCRT *
 __CRTGET(void)
@@ -40,9 +41,27 @@ __CRTGET(void)
 
 quit:
     if (!crt) {
-        wtof("%s CRT for TCB(%08X) was not found in PPA(%08X)", __func__, tcb, ppa);
+        /* without the printf family (#564): every program links
+           __crtget(), and wtof()/wtodumpf() made it link printf and
+           half of stdio.  The same message; the dump of PPACRT is now
+           its first entries in hex on a second line. */
+        char    msg[120];
+        int     i = 0;
+
+        wtofmt_str(msg, &i, sizeof(msg), "__CRTGET CRT for TCB(");
+        wtofmt_hex(msg, &i, sizeof(msg), (unsigned)tcb, 8);
+        wtofmt_str(msg, &i, sizeof(msg), ") was not found in PPA(");
+        wtofmt_hex(msg, &i, sizeof(msg), (unsigned)ppa, 8);
+        wtofmt_str(msg, &i, sizeof(msg), ")");
+        wto(msg);
         if (ppa && count) {
-            wtodumpf(ppa->ppacrt, count * 4, "PPACRT");
+            i = 0;
+            wtofmt_str(msg, &i, sizeof(msg), "PPACRT");
+            for (n = 0; n < count && n < 8; n++) {
+                wtofmt_str(msg, &i, sizeof(msg), " ");
+                wtofmt_hex(msg, &i, sizeof(msg), (unsigned)ppa->ppacrt[n], 8);
+            }
+            wto(msg);
         }
     }
     return crt;

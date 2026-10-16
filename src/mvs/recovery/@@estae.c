@@ -14,6 +14,7 @@
 #include "stdio.h"
 #include "mvs/recovery.h"
 #include "mvs/crt.h"
+#include "mvs/wto.h"
 
 typedef struct {
     unsigned u[2];
@@ -26,9 +27,12 @@ required(void *fp)
     unsigned    np = (unsigned) fp;
 
     if (!np) {
-        fprintf(stderr,
-            "estae() a function pointer is required for "
-            "ESTAE CREATE or OVERLAY\n");
+        /* a WTO, not fprintf(stderr) (#564): try() links __estae(), and
+           this was what linked stdio and printf into every program */
+        char    msg[] = "estae() a function pointer is required for "
+                        "ESTAE CREATE or OVERLAY";
+
+        wto(msg);
     }
 
     return np;
