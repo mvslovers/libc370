@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+- **`fread()` on a record stream returns the number of elements read
+  (#559).** It returned `nmemb` for every record, whatever its length, so a
+  caller could not learn the length of an undefined-length record
+  (RECFM=U). It now returns the number of complete elements stored, as ISO
+  C has it: with `size` 1 the record's length, or `nmemb` when the record
+  is longer than the buffer. A caller that reads with `size` greater than
+  1 gets 0 for a record shorter than one element and should test `feof()`
+  for the end of the data set. Measured on MVS: RECFM=U records of 30 and
+  100 bytes read with `size` 1 returned 32760 each with 2.13.0, and 30 and
+  100 now.
+
 ## [2.13.0] - 2026-10-15
 
 A minor release, a drop-in for 2.12.1 unless a program passes record

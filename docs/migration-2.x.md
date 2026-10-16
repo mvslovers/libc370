@@ -209,6 +209,7 @@ CHANGELOG has everything else.
 
 | Release | Change | What to do |
 |---|---|---|
+| Unreleased | `fread()` on a record stream returns the number of complete elements read - with `size` 1 the record length - instead of `nmemb` (#559) | Code that read records with `size` greater than 1 and stopped on a return of 0: a record shorter than one element now returns 0, so test `feof()` for the end. Code with `size` 1 can use the return as the record length |
 | 2.13.0 | `recfm=`, `lrecl=`, `blksize=` in the mode of a `DD:` open take precedence over the DD statement and the data set (#554); before, they were ignored for `DD:` | Code that passed these options with a `DD:` name and relied on the DD's attributes winning drops them. An invalid value now fails with `EINVAL` |
 | 2.12.1 | A C module entered by LINK no longer leaves 128 bytes of heap behind at each normal run (#546) | Nothing. Rebuild the LINKed module (not the caller) to get the fix: the leak is in the module's own run-time teardown |
 | 2.12.0 | New: `__fx37()` (`<mvs/file.h>`) returns the x37 code (D37-04, B37-04) a write that failed with `ENOSPC` stood for (#539) | Nothing |

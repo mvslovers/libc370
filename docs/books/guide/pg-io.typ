@@ -141,7 +141,8 @@ summarizes what each combination does.
       block size (U). The rest goes out at #cmd("fclose()") as a short
       record; a fixed-length one is filled with X'00'.],
     [record], [One #cmd("fread()") returns one record. A variable-length
-      record begins with its RDW.], [One #cmd("fwrite()") writes one
+      record begins with its RDW. Read with element size 1, the return
+      value is the record's length.], [One #cmd("fwrite()") writes one
       record. A variable-length record must begin with a correct RDW.],
   )
 ] <pg-io-records-tab>

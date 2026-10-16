@@ -40,7 +40,6 @@ __fread(void *ptr, size_t size, size_t nmemb, FILE *fp)
 
     if (fp->flags & _FILE_FLAG_RECORD) {
         int rc;
-        size *= nmemb;
         rc = __aread(fp->dcb, &dptr, &lenread);
         if (rc != 0) {
             if (rc > 0) {
@@ -56,10 +55,13 @@ __fread(void *ptr, size_t size, size_t nmemb, FILE *fp)
             i = 0;
             goto quit;
         }
-        /* success, return data */
-        i = nmemb;
-        if (size > lenread) size = lenread;
-        memcpy(ptr, dptr, size);
+        /* success, return data: the number of whole elements copied, as
+           ISO C has it (#559).  With size 1 that is the length of the
+           record - for RECFM=U the only way to learn it.  A record longer
+           than the buffer is cut to it and returns nmemb, as before. */
+        if (lenread > size * nmemb) lenread = size * nmemb;
+        memcpy(ptr, dptr, lenread);
+        i = size ? lenread / size : 0;
         fp->filepos += 1;   /* count records read */
         goto quit;
     }

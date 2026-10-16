@@ -1098,8 +1098,10 @@ On a record stream it reads one record. It stores at most
 === Returns
 
 The number of complete elements read; less than #var("nmemb") at the end
-of the data set or on an error. On a record stream #var("nmemb") if a
-record was read, 0 at the end of the data set or on an error.
+of the data set or on an error. On a record stream the number of complete
+elements stored from the record: with #var("size") 1 the length of the
+record, or #var("nmemb") when the record is longer than the buffer\; 0 at
+the end of the data set or on an error.
 
 === Errors
 
@@ -1110,11 +1112,13 @@ record was read, 0 at the end of the data set or on an error.
 
 === Notes
 
-- On a record stream the return value does not tell the length of the
-  record. On variable-length records the record descriptor word in bytes 0
-  and 1 holds it; on fixed-length records it is the #cmd("LRECL"). On
-  undefined records the length cannot be learned: clear the buffer before
-  each call if it matters.
+- On a record stream, read with #var("size") 1 to learn the length of each
+  record, which is the only way for undefined records (RECFM=U). On
+  variable-length records the length includes the record descriptor word.
+  With #var("size") greater than 1 a record shorter than one element
+  returns 0, as for a short read, so test #cmd("feof()") rather than the
+  return value for the end of the data set. Up to LIBC/370 2.13.0 a record
+  stream returned #var("nmemb") for every record.
 - On a text stream every record ends with #cmd("'\\n'"), which is counted
   among the bytes read.
 
