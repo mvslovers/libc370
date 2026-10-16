@@ -7,7 +7,7 @@
 //* for stdin.  EMPTY/EMPTYS (an empty main, the second with __stklen
 //* 16K) give the step CPU and storage in the IEFACTRT lines, 3 each.
 //*
-//* Run:     mvsdev JOB02385/86/87, 2026-10-16 (2.14.0); the numbers are
+//* Run:     mvsdev JOB02385/86/87, 2026-10-16 (2.14.0); numbers
 //*          in issue #564.
 //*
 //FULL     EXEC PGM=TSTSTART,REGION=4M
