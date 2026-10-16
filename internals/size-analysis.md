@@ -130,7 +130,7 @@ Each with a red/green MVS run of the behaviour it touches, as for #564.
 make build
 cc370 -O1 -L build/sdk -Iinclude prog.c -o P -Wl,--map,prog.map,--xref \
       -flinker-output=iebcopy
-python3 sdk/sizemap.py prog.map              # size and the costliest references
-python3 sdk/sizemap.py prog.map --path @@fpopen
-python3 sdk/sizemap.py prog.map --cut fopen:sprintf vvprintf:@@fputc
+python3 sdk/sizemap.py < prog.map              # size and the costliest references
+python3 sdk/sizemap.py --path @@fpopen < prog.map
+python3 sdk/sizemap.py --cut fopen:sprintf vvprintf:@@fputc < prog.map
 ```
