@@ -131,6 +131,7 @@ make build
 cc370 -O1 -L build/sdk -Iinclude prog.c -o P -Wl,--map,prog.map,--xref \
       -flinker-output=iebcopy
 python3 sdk/sizemap.py prog.map              # size and the costliest references
+#   (the map is read below the current directory, or below $SIZEMAP_ROOT)
 python3 sdk/sizemap.py prog.map --path @@fpopen
 python3 sdk/sizemap.py prog.map --cut fopen:sprintf vvprintf:@@fputc
 ```

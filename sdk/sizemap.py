@@ -17,6 +17,9 @@ reference that some other member resolved is listed as V too and counts as an
 edge; one left unresolved (WX in the map's symbol list) pulls nothing and is
 not one.  Sizes are section lengths.  A cut models a change that removes that reference, not the code
 that would replace it.
+
+MAP is read only below the current directory, or below SIZEMAP_ROOT when
+that is set.
 """
 import os
 import re
@@ -28,7 +31,10 @@ ROOTS = ("@@crt0", "main")       # the entry point and the program itself
 
 def load(path):
     """Members and references of the map at path (a file the caller names)."""
-    path = os.path.realpath(path)
+    base = os.path.realpath(os.environ.get("SIZEMAP_ROOT", os.getcwd()))
+    path = os.path.realpath(os.path.join(base, path))
+    if os.path.commonpath([base, path]) != base:
+        raise SystemExit(f"{path}: outside {base} (set SIZEMAP_ROOT)")
     if not os.path.isfile(path):
         raise SystemExit(f"{path}: not a file")
     secs, cur = [], None
