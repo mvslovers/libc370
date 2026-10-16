@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.14.0] - 2026-10-16
+
+A minor release with one change in behaviour: `fread()` on a record
+stream returns the number of elements read, as ISO C has it, instead of
+`nmemb` for every record. Read with `size` 1, the return value is the
+record's length. Programs that do not use record streams see no change.
+The CC/370 range is unchanged: `>=1.6.0 <2`.
+
 ### Changed
 - **`fread()` on a record stream returns the number of elements read
   (#559).** It returned `nmemb` for every record, whatever its length, so a
