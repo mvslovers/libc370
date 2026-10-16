@@ -1318,7 +1318,12 @@ FreeTXT99Array	mvs/dynalloc.h
 GDSORGMK	ibm/mvs/iefvkeys.h
 GNCPMK	ibm/mvs/iefvkeys.h
 GROUPK	ibm/mvs/iefvkeys.h
+GRTFLAG1_ERRTRY	mvs/crt.h
+GRTFLAG1_INTRY	mvs/crt.h
+GRTFLAG1_OUTTRY	mvs/crt.h
 GRTFLAG1_SOCKINIT	mvs/crt.h
+GRTFLAG1_STDEND	mvs/crt.h
+GRTFLAG1_STDLAZY	mvs/crt.h
 GRTFLAG1_TSO	mvs/crt.h
 HASPCMB	ibm/jes2/cmb.h
 HASPCP	mvs/jes2ckpt.h

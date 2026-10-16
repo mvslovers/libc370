@@ -309,7 +309,8 @@ could not be allocated or opened.
 
 #idx("stdout")#idx("stderr")#idx("stdin")
 #idx("SYSPRINT")#idx("SYSTERM")#idx("SYSIN")
-The start-up opens three streams before #cmd("main()") is called:
+Three streams are opened for every program, each the first time the
+program uses it:
 
 #tab(caption: [The standard streams])[
   #table(columns: (0.75in, 0.95in, 1fr),

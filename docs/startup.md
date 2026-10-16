@@ -38,8 +38,15 @@ Rules of thumb:
 * **Startup work of your own goes into `__premain()`**, not into a private
   `@@START` (cc370#10): define
   `int __premain(char *parm, char *pgmname, void **pgmr1)` (`<mvs/crt.h>`) and
-  `__start()` calls it first, before it opens the standard streams. A stream
-  it sets is kept, a nonzero return ends the program before `main()`.
+  `__start()` calls it first. A stream it sets is kept, a nonzero return ends
+  the program before `main()`.
+* **The standard streams open on first use** (#564): `__rtinit()` only sets
+  `GRTFLAG1_STDLAZY`; `__gtin()`/`__gtout()`/`__gterr()` call `__stdlz()`
+  (`src/stdio/@@stdlz.c`) the first time a slot is still NULL. Each stream is
+  tried once (a TRY bit, set before `fopen()`, under a lock on the GRT);
+  `__exit()` sets `GRTFLAG1_STDEND` before it closes the files, so closing
+  never opens one. Library code must read `grt->grtin/grtout/grterr`
+  directly wherever touching a stream would be wrong.
 
 ## The runtime model you need first
 
@@ -169,8 +176,8 @@ Default stack: `MAINSTK DS 16384F` = **64 KB** (a quarter of `@@CRT0`'s).
 
 **Caveat:** crtm shares the parent's GRT, and the GRT holds the standard
 streams, the list of open files, the `atexit()` table and the environment.
-Since 2.4.0 `__start` opens a standard stream only when it is `NULL`, so a crtm
-module starts with the parent's streams instead of opening new ones over them.
+A crtm module uses the parent's streams (since 2.15.0 they open on first use,
+#564; since 2.4.0 a stream that is already set is never opened over).
 But it still ends through `__exit()`, which works on that same GRT: it runs the
 parent's `atexit()` functions, **closes every open file — the parent's standard
 streams included —** and frees the environment. (Read from `@@exit.c` and
@@ -184,7 +191,8 @@ OS save area (#502). With no C runtime on the task it builds one on the first
 call (#507), the `@@CRT0` way: PPA + stack (`@@STKLEN`), the PPA as the
 "next" of the TCB's first save area (old value in `PPASAVE`), `@@CRTSET`,
 `@@GRTSET`, the TSO `EXTRACT`, then `@@RTINIT` — the runtime part of
-`@@START` (streams, `SYSENV`/`ENVIRON`, `tzset()`), a member of its own so
+`@@START` (`SYSENV`/`ENVIRON`, `tzset()`, and since #564 only the flag that
+lets the standard streams open on first use), a member of its own so
 that no `@@START` and no `main()` are linked. `__premain()` is not called and
 there is no parameter to parse. The PPA carries `PPAFLAG_CCALL`, by which
 later calls, `CCTERM` and readers of `ppaflag` tell it from a C program's.

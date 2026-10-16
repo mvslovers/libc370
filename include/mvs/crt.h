@@ -39,6 +39,12 @@ struct clibgrt {
     char        grtflag1;           /* 0A flags                             */
 #define GRTFLAG1_SOCKINIT   0x80    /* ... sockets initialized              */
 #define GRTFLAG1_TSO        0x40    /* ... TSO environment                  */
+#define GRTFLAG1_STDLAZY    0x20    /* ... standard streams open on first   */
+                                    /*     use: __rtinit() is done (#564)   */
+#define GRTFLAG1_STDEND     0x10    /* ... __exit() is closing: no more     */
+#define GRTFLAG1_INTRY      0x08    /* ... stdin was tried                  */
+#define GRTFLAG1_OUTTRY     0x04    /* ... stdout was tried                 */
+#define GRTFLAG1_ERRTRY     0x02    /* ... stderr was tried                 */
 
     char        unused1;            /* 0B unused                            */
     unsigned    grttmpnm;           /* 0C tmpnam() counter                  */
@@ -184,15 +190,17 @@ CLIBPPA * __ppaget(void);
 void __ppahrv(CLIBPPA *ppa);
 
 /* __premain() - a program's own startup step (cc370#10).  Define it and
-   libc370's startup calls it before it opens the standard streams and
-   before main():
+   libc370's startup calls it before main(), before it reads SYSENV and
+   before any standard stream is opened (they open on first use, #564):
        parm     the raw parameter: two length bytes, then the text (a TSO
                 command buffer has a 4-byte prefix instead)
        pgmname  the program name, 8 characters, blank padded, followed
                 by a null byte
        pgmr1    the caller's R1 parameter list
    A stream it sets (stdin, stdout, stderr) is used as it is; one it
-   leaves NULL is opened as usual.  Return 0 to go on to main(), nonzero to
+   leaves NULL is opened on first use, as usual.  This is the place to
+   assign one: in main(), "stdout = fp" first opens SYSPRINT through the
+   macro (a use) and then replaces it.  Return 0 to go on to main(), nonzero to
    end the program with that return code.  A program that does not define
    it is unaffected: the startup refers to it weakly. */
 int __premain(char *parm, char *pgmname, void **pgmr1);

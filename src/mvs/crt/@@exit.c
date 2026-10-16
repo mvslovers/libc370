@@ -35,6 +35,12 @@ __exit(int status)
         arrayfree(&grt->grtexita);
     }
 
+    /* from here on a standard stream that is still closed stays closed:
+       stdin, stdout and stderr open on first use (#564), and closing the
+       files must not open one.  The slots are read directly for the same
+       reason - the stdin/stdout/stderr macros would open them. */
+    grt->grtflag1 |= GRTFLAG1_STDEND;
+
     if (grt->grtfile) {
         /* close all open files */
         count = arraycount(&grt->grtfile);
@@ -44,18 +50,9 @@ __exit(int status)
             if (!fp) continue;
 
             fclose(fp);
-            if (fp == stdin) {
-                stdin = 0;
-                continue;
-            }
-            if (fp == stdout) {
-                stdout = 0;
-                continue;
-            }
-            if (fp == stderr) {
-                stderr = 0;
-                continue;
-            }
+            if (fp == grt->grtin)  grt->grtin  = 0;
+            if (fp == grt->grtout) grt->grtout = 0;
+            if (fp == grt->grterr) grt->grterr = 0;
         }
         arrayfree(&grt->grtfile);
     }

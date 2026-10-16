@@ -328,8 +328,9 @@ SYSTSPRT shows no closing `END` line; the TMP still ends with condition
 code 0.
 
 To send all of a program's output there, open it in `__premain()` and set
-`stdout` (and `stderr`), and `stdin` to `"*GETLINE"`. The streams the
-startup would open are then left alone:
+`stdout` (and `stderr`), and `stdin` to `"*GETLINE"`. The default streams
+are then never opened (they open on first use, #564, and these are set
+before any use):
 
 ```c
 int __premain(char *parm, char *pgmname, void **pgmr1)

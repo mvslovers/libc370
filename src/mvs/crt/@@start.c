@@ -49,12 +49,12 @@ extern int __rtinit(void);
 extern void __exita(int status);
 
 /* __premain() - the startup hook (cc370#10).  A program that needs to act
-   before libc370 opens the standard streams - set stdin/stdout/stderr to
+   before a standard stream is opened (first use, #564) - set stdin/stdout/stderr to
    files of its own, check its environment, look at the caller's parameter
    list - defines
        int __premain(char *parm, char *pgmname, void **pgmr1);
    and __start() calls it first.  Nothing else changes: a stream the hook
-   leaves NULL is opened as always, and a nonzero return ends the program
+   leaves NULL is opened on first use, and a nonzero return ends the program
    with that code before main().  The reference is weak, so a program that
    does not define the hook links nothing and runs as before; nobody needs
    to replace @@START any more.  parm is the raw parameter (two length
