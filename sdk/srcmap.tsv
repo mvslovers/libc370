@@ -788,3 +788,4 @@ src/stdio/@@fpget.c	src/stdio/@@fpget.c	new after 2.0.0 (#467): fopen("*GETLINE"
 src/mvs/crt/@@ccall.asm	src/mvs/crt/@@ccall.asm	new after 2.0.0 (#502): @@CCALL, a C function called from COBOL and other OS-linkage code
 src/mvs/crt/@@rtinit.c	src/mvs/crt/@@rtinit.c	new after 2.0.0 (#507): the runtime part of the startup, shared by @@START and @@CCALL
 src/mvs/file/@@fx37.c	src/mvs/file/@@fx37.c	new after 2.11.0 (#539): __fx37(), the x37 code an ENOSPC write stood for
+src/stdio/@@stdlz.c	src/stdio/@@stdlz.c	new after 2.14.0 (#564): the standard streams opened on first use

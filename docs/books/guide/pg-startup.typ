@@ -37,7 +37,6 @@ every C program is linked with it and enters there;
   v
 @@START        C start-up routine in libc.a
   |              - calls __premain(), if the program has one
-  |              - opens stdout, stderr, stdin
   |              - reads the SYSENV (or ENVIRON) DD
   |              - splits the parameter into argc and argv
   v
@@ -66,30 +65,40 @@ In detail, #cmd("@@CRT0"):
 + calls #cmd("@@START").
 
 #cmd("@@START") then calls the program's #cmd("__premain()") function, if
-it has one (@pg-startup-premain), opens #cmd("stdout"), #cmd("stderr") and
-#cmd("stdin") (@pg-io describes them), loads the environment variables, sets the time
-zone, divides the parameter into #cmd("argv") (@pg-startup-parm) and calls
-#cmd("main()"). When #cmd("main()") returns, it calls #cmd("exit()") with
-the value #cmd("main()") returned.
+it has one (@pg-startup-premain), loads the environment variables, sets the
+time zone, divides the parameter into #cmd("argv") (@pg-startup-parm) and
+calls #cmd("main()"). When #cmd("main()") returns, it calls #cmd("exit()")
+with the value #cmd("main()") returned.
+
+#idx("standard streams", "opened on first use")
+The start-up does not open #cmd("stdout"), #cmd("stderr") and
+#cmd("stdin") (@pg-io describes them): each one is opened the first time
+the program uses it. A program that writes only to #cmd("stdout") never
+opens #cmd("stderr") or #cmd("stdin"), and a step without a
+#cmd("SYSTERM") or #cmd("SYSIN") DD gets no SYSOUT data set and no
+#cmd("NULLFILE") allocation for them. Opening the three streams, with the
+allocations a step without those DDs needed, took most of the start-up's
+processor time: measured on MVS 20 ms before LIBC/370 2.15.0 and 2.4 ms
+since, for a step without #cmd("SYSTERM") and #cmd("SYSIN").
 
 #idx("U0801 abend")
-Two things can stop a program before #cmd("main()"):
+One thing can stop a program before #cmd("main()"):
 
 - *No storage for the stack or the anchors.* The start-up writes the console
   message #cmd("@@CRT0 - No storage for C stack") (or #cmd("CLIBGRT") or
   #cmd("CLIBCRT") in place of #cmd("C stack")) and ends with abend
   #cmd("U0801") and a dump. The region of the step is too small for the
   stack; raise #cmd("REGION") or ask for a smaller stack.
-- *A standard stream cannot be opened.* The start-up writes a console
-  message that begins #cmd("@@START:") and names the stream and the
-  #cmd("errno") value, for example
-  ```
-  @@START: stdout (SYSPRINT) could not be opened: errno 12, out of storage - raise REGION
-  ```
-  and ends the program with return code 12 without calling #cmd("main()").
-  A missing DD is not a reason: a missing #cmd("SYSPRINT") or
-  #cmd("SYSTERM") is replaced by a SYSOUT data set, or by the terminal in a
-  TSO session, a missing #cmd("SYSIN") by an empty input.
+A standard stream that cannot be opened no longer stops the program, since
+it is opened only when it is used: #cmd("stdout") or #cmd("stderr") that
+fails writes the console message
+```
+libc370: stdout (SYSPRINT) could not be opened, output discarded
+```
+and is opened on #cmd("'NULLFILE'") instead, so the program runs and its
+output is lost. A missing DD is not a reason: a missing #cmd("SYSPRINT")
+or #cmd("SYSTERM") is replaced by a SYSOUT data set, or by the terminal in
+a TSO session, a missing #cmd("SYSIN") by an empty input.
 
 == The Start-Up Routines <pg-startup-variants>
 
@@ -213,7 +222,7 @@ Command”, describes the link options.
 == Running Code Before main() <pg-startup-premain>
 
 #idx("__premain")#idx("@@PREMAI")
-Some programs must act before the start-up opens the standard streams: a
+Some programs must act before the standard streams are opened: a
 program that writes its output to a DD of its own choosing rather than
 #cmd("SYSPRINT"), a module whose caller has its own claim on
 #cmd("SYSPRINT"), #cmd("SYSTERM") and #cmd("SYSIN"), or a program that
@@ -224,8 +233,8 @@ a function the program may define, declared in #cmd("<mvs/crt.h>"):
 int __premain(char *parm, char *pgmname, void **pgmr1);
 ```
 
-#cmd("@@START") calls it first, before it opens the standard streams, reads
-the #cmd("SYSENV") DD and calls #cmd("main()"). Its arguments are:
+#cmd("@@START") calls it first, before it reads the #cmd("SYSENV") DD and
+calls #cmd("main()"), and before any standard stream is opened. Its arguments are:
 
 #deflist(width: 0.9in,
   [#var("parm")], [the parameter as the program received it: two bytes
@@ -240,7 +249,10 @@ the #cmd("SYSENV") DD and calls #cmd("main()"). Its arguments are:
 What the function does decides how the start-up goes on:
 
 - A standard stream it sets -- #cmd("stdout = fopen(...)") -- is kept. One
-  it leaves #cmd("NULL") is opened as usual.
+  it leaves #cmd("NULL") is opened on first use, as usual. This is the
+  place to replace a standard stream without opening it: in #cmd("main()")
+  the assignment #cmd("stdout = fp") is itself a use of #cmd("stdout"),
+  which opens #cmd("SYSPRINT") before it is replaced.
 - It returns 0, and the start-up goes on to #cmd("main()"). It returns
   any other value, and the program ends with that value as its return code
   through #cmd("exit()"): the #cmd("atexit()") functions run, open streams

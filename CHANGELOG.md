@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+- **The standard streams are opened on first use (#564).** The start-up
+  opened `stdout`, `stderr` and `stdin` before `main()`, with an OPEN and a
+  CLOSE each and, in a step without a `SYSTERM` or `SYSIN` DD, a dynamic
+  SYSOUT allocation and a `NULLFILE` allocation besides - for streams many
+  programs never touch. Now each one is opened the first time it is used.
+  A program that writes only to `stdout` opens neither `stderr` nor `stdin`,
+  and its step gets no SYSOUT data set and no `NULLFILE` allocation for
+  them. Measured on MVS: the start-up's processor time in a step without
+  `SYSTERM` and `SYSIN` fell from 20.3 ms to 2.4 ms.
+  - A stream that cannot be opened no longer stops the program before
+    `main()`: `stdout` or `stderr` writes a console message and is opened
+    on `NULLFILE`, so the program runs and its output is lost.
+  - The environment variables of the `SYSENV` DD are now loaded before a
+    standard stream opens, so `SYSOUT_CLASS`, `SYSOUT_RECFM` and
+    `SYSOUT_LRECL` there apply to the dynamic SYSOUT of `stderr` and
+    `stdout` as well (measured: `SYSOUT_LRECL=99` gave `stderr` LRECL 99,
+    255 before).
+  - A stream is opened once: one the program has closed is not opened
+    again. `__premain()` is still the place to set one without opening the
+    default first.
+
 ## [2.14.0] - 2026-10-16
 
 A minor release with one change in behaviour: `fread()` on a record

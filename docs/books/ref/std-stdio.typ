@@ -336,7 +336,10 @@ opened with #cmd("+").
 
 #idx("stdin")#idx("stdout")#idx("stderr")
 #idx("SYSPRINT")#idx("SYSTERM")#idx("SYSIN")
-The C start-up opens three streams before it calls #cmd("main()"):
+Three streams are opened for every C program, each the first time it is
+used -- by #cmd("printf()"), #cmd("fprintf(stderr, ...)"), #cmd("getchar()"),
+or any other reference to #cmd("stdout"), #cmd("stderr") or
+#cmd("stdin"):
 
 #tab(caption: [The standard streams])[
   #table(columns: (0.75in, 1.6in, 1fr),
@@ -353,9 +356,13 @@ The C start-up opens three streams before it calls #cmd("main()"):
   )
 ] <std-stdio-std-tab>
 
-If one of them cannot be opened, the program ends before #cmd("main()")
-with return code 12 and a console message that names the stream and the
-#cmd("errno") value.
+If #cmd("stdout") or #cmd("stderr") cannot be opened, a console message
+names it, #cmd("libc370: stdout (SYSPRINT) could not be opened, output
+discarded"), and the stream is opened on #cmd("'NULLFILE'"), so the
+program runs and loses that output. Each stream is opened once: one that
+the program has closed is not opened again. Up to LIBC/370 2.14.0 the
+start-up opened all three before #cmd("main()") and ended the program
+with return code 12 if one of them failed.
 
 The three are macros that call a function, not variables. A program can
 replace one with #cmd("freopen()").
