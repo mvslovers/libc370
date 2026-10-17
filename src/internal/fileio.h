@@ -52,8 +52,16 @@ extern int      __fpput(FILE *fp);
 extern int      __fpget(FILE *fp);
 
 /* the formatting engines behind the printf and scanf families: output goes
- * to fq, or to s when fq is NULL; input comes from fp, or from s when fp is NULL */
-extern int      vvprintf(const char *format, va_list arg, FILE *fq, char *s);
+ * to fq, or to s when fq is NULL; input comes from fp, or from s when fp is NULL.
+ * vvprintf() writes to fq through putcf and putsf, which the FILE entry
+ * points pass as __fputc and __fputs: a caller that formats into a string
+ * passes NULL and so does not link the stream layer (size analysis F2).
+ * __examin() converts one % specification the same way. */
+extern int      vvprintf(const char *format, va_list arg, FILE *fq, char *s,
+                         int (*putcf)(int c, FILE *fp),
+                         int (*putsf)(const char *s, FILE *fp));
+extern int      __examin(const char **formt, FILE *fq, char *s, va_list *arg,
+                         int smax, int done, int (*putcf)(int c, FILE *fp));
 extern int      vvscanf(const char *format, va_list arg, FILE *fp, const char *s);
 
 /* __ddbusy() - would this OPEN be the second concurrent DCB on a spool

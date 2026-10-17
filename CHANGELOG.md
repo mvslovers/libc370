@@ -33,6 +33,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   - A `SYSENV` DD that is a TSO terminal is not read; it used to prompt
     for lines at the first `getenv()`.
   - `loadenv()` itself is unchanged and still reads through `fopen()`.
+- **Formatting into a string no longer links the stream functions.**
+  `sprintf()`, `vsprintf()` and `snprintf()` share the formatter of
+  `fprintf()`, which named the stream output functions directly, so a
+  program that only formats into a buffer - or only writes console
+  messages through `wtof()` - carried the stream layer. The formatter now
+  gets its output functions from `vfprintf()`. A program using
+  `sprintf()` links 30.4 KB instead of 47.3 KB; `printf()` output is
+  unchanged, measured on MVS byte for byte.
 
 ## [2.16.0] - 2026-10-16
 
