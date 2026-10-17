@@ -445,8 +445,9 @@ modifier, and then the conversion character. The flags are #cmd("-"),
       #cmd("x") and of #cmd("X") alike, and has no effect on #cmd("o").],
     [#cmd("c")], [One character. A width pads it with blanks, on the
       left or, with the flag #cmd("-"), on the right.],
-    [#cmd("s")], [A string. A null pointer is printed as #cmd("(null)") by
-      #cmd("%s") without width and precision only.],
+    [#cmd("s")], [A string. A null pointer is printed as #cmd("(null)"),
+      with a width or a precision as well since LIBC/370 2.18.0; before,
+      only a plain #cmd("%s") checked for it.],
     [#cmd("p")], [A pointer, as eight uppercase hexadecimal digits, without
       #cmd("0x").],
     [#cmd("f"), #cmd("F")], [A floating-point value in fixed notation, 6
@@ -485,20 +486,20 @@ These rules differ from C99:
   together with its flags, width and precision, and consumes no argument:
   #cmd("printf(\"%y|%d\", 5)") prints #cmd("%y|5"). A #cmd("%") at the
   end of the format is printed as #cmd("%").
-- The flag #cmd("0") on a negative number, or together with #cmd("+") or
-  space, puts the zeros in front of the sign: #cmd("printf(\"%05d\", -3)")
-  prints #cmd("000-3"). The width does not include the #cmd("0x") of the
-  flag #cmd("#"), which is placed after the padding:
-  #cmd("printf(\"%#08x\", 1)") prints #cmd("00000000x1"). The flag
-  #cmd("0") is not ignored when a precision is given.
+- The flag #cmd("0") is not ignored when a precision is given. (Up to
+  LIBC/370 2.17.0 it also put the zeros in front of the sign,
+  #cmd("printf(\"%05d\", -3)") printed #cmd("000-3"), and the width did not
+  count the #cmd("0x") of the flag #cmd("#").)
 - #cmd("%e") with precision 0 keeps the decimal point:
   #cmd("printf(\"%.0e\", 2.5)") prints #cmd("3.E+00"). The flag #cmd("#")
   has no effect on floating-point conversions.
-- In fixed notation #cmd("%g") takes the precision as the number of
-  decimal places, as #cmd("%f") does, not as the number of significant
-  digits, and then removes trailing zeros. In exponent notation it keeps
-  them. @std-stdio-printf-ex shows the effect.
-- The precision of an integer conversion must not exceed 126.
+- #cmd("%e"), #cmd("%g") write the exponent with an uppercase #cmd("E").
+  @std-stdio-printf-ex shows the effect. (Up to LIBC/370 2.17.0
+  #cmd("%g") also took the precision as the number of decimal places, not
+  significant digits, and kept trailing zeros in exponent notation, and
+  #cmd("%f") of a value below the last decimal place printed showed
+  digits past the precision: #cmd("printf(\"%.3f\", 0.000123)") printed
+  #cmd("0.0006"). An integer precision above 126 overran a work area.)
 - An output error is reported only when it is already known: the return
   value is negative when the stream is not open for writing or its error
   indicator is set. Output that is still in the buffer fails only when the
@@ -512,12 +513,12 @@ about 15 significant decimal digits and no infinity and no NaN.
     [Call], [Output], [C99 would print],
     [#cmd("printf(\"%e\", 1.5)")], [#cmd("1.500000E+00")], [#cmd("1.500000e+00")],
     [#cmd("printf(\"%g\", 1.5)")], [#cmd("1.5")], [#cmd("1.5")],
-    [#cmd("printf(\"%g\", 123.456789)")], [#cmd("123.456789")], [#cmd("123.457")],
-    [#cmd("printf(\"%g\", 1234567.0)")], [#cmd("1.234567E+06")], [#cmd("1.23457e+06")],
-    [#cmd("printf(\"%g\", 1e10)")], [#cmd("1.000000E+10")], [#cmd("1e+10")],
-    [#cmd("printf(\"%g\", 0.000123456)")], [#cmd("0.000123")], [#cmd("0.000123456")],
+    [#cmd("printf(\"%g\", 123.456789)")], [#cmd("123.457")], [#cmd("123.457")],
+    [#cmd("printf(\"%g\", 1234567.0)")], [#cmd("1.23457E+06")], [#cmd("1.23457e+06")],
+    [#cmd("printf(\"%g\", 1e10)")], [#cmd("1E+10")], [#cmd("1e+10")],
+    [#cmd("printf(\"%g\", 0.000123456)")], [#cmd("0.000123456")], [#cmd("0.000123456")],
     [#cmd("printf(\"%010.2f\", -3.14159)")], [#cmd("-000003.14")], [#cmd("-000003.14")],
-    [#cmd("printf(\"%05d\", -3)")], [#cmd("000-3")], [#cmd("-0003")],
+    [#cmd("printf(\"%05d\", -3)")], [#cmd("-0003")], [#cmd("-0003")],
     [#cmd("printf(\"%a\", 1.0)")], [#cmd("%a")], [#cmd("0x1p+0")],
     [#cmd("printf(\"%p\", p)")], [#cmd("00001234")], [an implementation-defined form],
   )

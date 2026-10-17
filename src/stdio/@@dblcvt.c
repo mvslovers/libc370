@@ -21,6 +21,7 @@ __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
     double b,round;
     int i,j,exp,pdigits,format;
     char sign;
+    char style;     /* 'e' or 'f': what %g resolves to (#578) */
     size_t n,lim,dlim,pad;
 
 /* append one character while there is room below dlim */
@@ -69,48 +70,52 @@ __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
     }
 
     /*
+      %g, C99 7.19.6.1: the precision P counts significant digits (0 is
+      taken as 1).  With X the exponent the e style would have, after
+      rounding to P digits, it is %f with precision P-1-X when
+      P > X >= -4, else %e with precision P-1.  It used to take P as
+      the number of decimals, decide on the unrounded exponent and keep
+      P decimals in the e style: %.3g of 123.456 printed 123.456 (#578).
+    */
+#define DBLCVT_MAXRND 17
+    style = (cnvtype == 'e' || cnvtype == 'E') ? 'e' : 'f';
+    if (cnvtype == 'g' || cnvtype == 'G') {
+        int p = (nprecision > 0) ? nprecision : 1;
+        int x = exp;
+
+        if (b != 0.0) {
+            round = 0.5;
+            for (i = 0; i < p - 1 && i < DBLCVT_MAXRND; i++) {
+                round = round / 10.0;
+            }
+            if (b + round >= 10.0) {
+                x++;
+            }
+        }
+        if (x < p && x >= -4) {
+            style = 'f';
+            nprecision = p - 1 - x;
+        }
+        else {
+            style = 'e';
+            nprecision = p - 1;
+        }
+    }
+
+    /*
       now decide how to print and save in FORMAT.
          -1 => we need leading digits
           0 => print in exp
          +1 => we have digits before dp.
     */
-    switch (cnvtype) {
-        case 'E':
-        case 'e':
-            format = 0;
-            break;
-        case 'f':
-        case 'F':
-            if ( exp >= 0 ) {
-                format = 1;
-            }
-            else {
-                format = -1;
-            }
-            break;
-        default:
-            /* Style e is used if the exponent from its
-               conversion is less than -4 or greater than
-               or equal to the precision.
-            */
-            if ( exp >= 0 ) {
-                if ( nprecision > exp ) {
-                    format=1;
-                }
-                else {
-                    format=0;
-                }
-            }
-            else {
-                /*  if ( nprecision > (-(exp+1) ) ) { */
-                if ( exp >= -4) {
-                    format=-1;
-                }
-                else {
-                    format=0;
-                }
-            }
-            break;
+    if (style == 'e') {
+        format = 0;
+    }
+    else if ( exp >= 0 ) {
+        format = 1;
+    }
+    else {
+        format = -1;
     }
 
     /*
@@ -124,7 +129,6 @@ __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
     Zero is not rounded: no ulp absorbs the addend there, and it would
     print as a stray 5 (#209).
     */
-#define DBLCVT_MAXRND 17
     switch (format) {
         case 0:    /* we are printing in standard form */
             j = nprecision;
@@ -133,8 +137,6 @@ __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
             j = exp + nprecision;
             break;
         default:   /* we have a number that starts 0.xxxx */
-            /* j = -1: the first digit printed is the one before b's
-               first, e.g. %.2f of 0.006 must round up to 0.01 */
             j = nprecision + exp;
             break;
     }
@@ -142,8 +144,8 @@ __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
         j = DBLCVT_MAXRND;
     }
 
-    if (j >= -1 && b != 0.0) {
-        round = (j < 0) ? 5.0 : 0.5;
+    if (j >= 0 && b != 0.0) {
+        round = 0.5;
         i = 0;
         while (i++ < j) {
             round = round/10.0;
@@ -152,6 +154,23 @@ __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
         if (b >= 10.0) {
             b = b/10.0;
             exp = exp + 1;
+        }
+    }
+    else if (j < 0) {
+        /* %f of a number below 1 whose first digit lies past the last
+           one printed: it rounds to one unit of the last place when the
+           digit after it, b's first, is 5 or more (j == -1), else to
+           zero.  This added 5 to b whatever its first digit, so %.3f of
+           0.000123 printed 0.0006, and j < -1 printed digits past the
+           precision: %.1f of 0.001 gave 0.001 (#578) */
+        if (j == -1 && b >= 5.0) {
+            b = 1.0;
+            exp = exp + 1;
+        }
+        else {
+            b = 0.0;
+            exp = 0;
+            format = 1;
         }
     }
 
@@ -234,6 +253,24 @@ __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
     }
     result[n] = '\0';
 
+    /* %g drops the trailing zeros of the fraction, and the point with
+       them, in either style - before the exponent (#578) */
+    if (cnvtype == 'G' || cnvtype == 'g') {
+        char *p = strchr(result, '.');
+
+        if (p != NULL) {
+            char *q = result + strlen(result) - 1;
+
+            while (q > p && *q == '0') {
+                *q-- = '\0';
+            }
+            if (q == p) {
+                *q = '\0';
+            }
+        }
+        n = strlen(result);
+    }
+
     if (format==0) { /* exp format - put exp on end */
         dlim = lim;
         DBLCVT_PUT('E');
@@ -247,26 +284,6 @@ __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
         DBLCVT_PUT((char)('0' + (exp/10) % 10));
         DBLCVT_PUT((char)('0' + exp % 10));
         result[n] = '\0';
-    }
-    else {
-        /* get rid of trailing zeros for g specifier */
-        if (cnvtype == 'G' || cnvtype == 'g') {
-            char *p;
-
-            p = strchr(result, '.');
-            if (p != NULL) {
-                p++;
-                p = p + strlen(p) - 1;
-                while (*p != '.' && *p == '0') {
-                    *p = '\0';
-                    p--;
-                }
-                if (*p == '.') {
-                    *p = '\0';
-                }
-            }
-            n = strlen(result);
-        }
     }
 
     /* printf(" Final Answer = <%s> fprintf gives=%g\n",

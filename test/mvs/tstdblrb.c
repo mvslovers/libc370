@@ -125,12 +125,14 @@ main(void)
     snprintf(buf, sizeof(buf), "%90f", one);
     expect("%90f 1.0", buf, 90, "          ", " 1.000000", -1);
     snprintf(buf, sizeof(buf), "%200f", one);
-    expect("%200f 1.0 (padding cut at 126)", buf, 126, "          ",
-           " 1.000000", -1);
+    /* 200 wide: since #355 __examin() pads, not __dblcvt() into its 126
+       bytes, so the width is no longer cut (#220 found the stale 126) */
+    expect("%200f 1.0", buf, 200, "          ", " 1.000000", -1);
 
-    /* (4) - how far past the precision it prints is #220 */
+    /* (4) - it printed past the precision until the buffer stopped it;
+       since #220 a value below the last place printed is zero */
     snprintf(buf, sizeof(buf), "%f", tiny);
-    expect("%f 1e-60", buf, -1, "0.0000000000", NULL, 1);
+    expect("%f 1e-60", buf, 8, "0.000000", NULL, 1);
     check(strlen(buf) < 96, "%f 1e-60 inside numbuf", buf);
 
     /* (5) what fitted before, unchanged */

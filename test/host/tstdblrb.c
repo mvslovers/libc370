@@ -133,12 +133,13 @@ int main(void)
     cvt("%10f 1.0 into 80 (fitted before)", 1.0, 'f', 10, 6, 80,
         10, "  1.000000", NULL, -1);
 
-    /* (3) the 0.xxx leading-zero loop is unbounded too (its count past the
-           precision is #220; here only the bound is checked) */
+    /* (3) the 0.xxx leading-zero loop: it ran past the precision until
+           the buffer stopped it (49 characters here) - since #220 a value
+           below the last place printed is zero to that precision */
     cvt("%f 1e-60 into 50", 1e-60, 'f', 0, 6, 50,
-        49, "0.000000000", NULL, 1);
+        8, "0.000000", NULL, 1);
     cvt("%f -1e-60 into 50", -1e-60, 'f', 0, 6, 50,
-        49, "-0.000000000", NULL, 2);
+        9, "-0.000000", NULL, 2);
 
     /* (4) e-style keeps its exponent when the fraction is cut */
     cvt("%.100e 1.0 into 80", 1.0, 'e', 0, 100, 80,
@@ -153,8 +154,10 @@ int main(void)
     /* (5) %g, both styles */
     cvt("%.100g 1e40 into 80", 1e40, 'g', 0, 100, 80,
         -1, "100000000000000", NULL, -1);
+    /* %.6g of 1e40 is 1e+40 in C99: 6 significant digits, trailing zeros
+       dropped (#220, #221; the E is #221's other half) */
     cvt("%.6g 1e40 into 80 (e-style, fitted before)", 1e40, 'g', 0, 6, 80,
-        12, "1.000000E+40", NULL, 1);
+        5, "1E+40", NULL, -1);
 
     /* (6) the sizes the callers use after the fix: the plain path's
            numbuf[96] takes every value HFP can hold (about 7.2e75) */
