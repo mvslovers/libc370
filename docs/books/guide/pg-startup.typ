@@ -522,6 +522,15 @@ Each record of the data set sets one variable:
   are all digits, they are taken for a sequence number and removed. A value
   that ends in eight digits therefore loses them; set such a value with
   #cmd("setenv()") instead.
+- A record is read up to its first 1023 bytes; the rest of a longer record
+  is ignored. Up to LIBC/370 2.16.0 the rest was read as a record of its
+  own.
+- The data set is read record by record, without the stream functions, so
+  a #cmd("SYSENV") DD that is a TSO terminal is not read. Up to LIBC/370
+  2.16.0 the first #cmd("getenv()") asked for lines at the terminal. A
+  program that wants that calls #cmd("loadenv(\"DD:SYSENV\")") itself,
+  which reads through #cmd("fopen()") (_LIBC/370 Library Reference_,
+  Chapter “Program Management and Storage”).
 
 #fig(caption: [Reading a setting with getenv()])[
   #code(read("../ex/pg-startup/env.c"), numbers: true)

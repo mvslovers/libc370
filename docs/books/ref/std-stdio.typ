@@ -148,7 +148,8 @@ into a partitioned data set that already exists.
 A block size is passed only when the record format contains #cmd("B").
 The environment variables are read with #cmd("getenv()"), so they can be
 set in the #cmd("SYSENV") DD of the step (see @std-stdlib). The standard
-streams are opened before #cmd("SYSENV") is read, and do not see them.
+streams are opened on first use, after #cmd("SYSENV") has been read, so
+the #cmd("SYSOUT_") variables apply to them as well.
 
 #note[A DD named in #cmd("DD:") form is not allocated by the library and
 is not freed when the stream is closed. A DD that #cmd("fopen()")
