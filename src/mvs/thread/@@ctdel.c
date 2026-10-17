@@ -2,7 +2,8 @@
 ** delete a CTHDTASK handle
 */
 #include "mvs/thread.h"
-#include "mvs/wto.h"     /* wtof(): a prototype decides linkage here (#39) */
+#include "mvs/wto.h"     /* wto(): a prototype decides linkage here (#39) */
+#include "src/internal/wtofmt.h"
 
 /* Has the subtask ended?  MVS posts the ATTACH ECB (termecb) at task end,
 ** but cthread_wait() clears the ECB it waited on, so after
@@ -38,8 +39,16 @@ cthread_delete(CTHDTASK **task)
     ** *task is left non-NULL so the caller keeps the handle it must retain.
     */
     if ((*task)->tcb && !ended(*task)) {
-        wtof("cthread_delete(%08X): TCB(%06X) has not ended, "
-            "task and stack retained", *task, (*task)->tcb);
+        /* without printf (size analysis F4) */
+        char    msg[100];
+        int     k = 0;
+
+        wtofmt_str(msg, &k, sizeof(msg), "cthread_delete(");
+        wtofmt_hex(msg, &k, sizeof(msg), (unsigned)*task, 8);
+        wtofmt_str(msg, &k, sizeof(msg), "): TCB(");
+        wtofmt_hex(msg, &k, sizeof(msg), (unsigned)(*task)->tcb, 6);
+        wtofmt_str(msg, &k, sizeof(msg), ") has not ended, task and stack retained");
+        wto(msg);
         goto quit;
     }
 

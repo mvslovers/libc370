@@ -232,11 +232,17 @@ appmem(FILE *fp)
     FILE    *in;
     int     dl;
     int     ml;
+    int     i = 0;
 
-    /* the names may be blank padded */
-    for (dl = 0; dl < 8 && fp->ddname[dl] > ' '; dl++);
-    for (ml = 0; ml < 8 && fp->member[ml] > ' '; ml++);
-    sprintf(fn, "DD:%.*s(%.*s)", dl, fp->ddname, ml, fp->member);
+    /* the names may be blank padded.  "DD:dd(mem)" built by hand: one
+       sprintf() here linked all of printf into every program that opens
+       a stream (size analysis F1) */
+    fn[i++] = 'D'; fn[i++] = 'D'; fn[i++] = ':';
+    for (dl = 0; dl < 8 && fp->ddname[dl] > ' '; dl++) fn[i++] = fp->ddname[dl];
+    fn[i++] = '(';
+    for (ml = 0; ml < 8 && fp->member[ml] > ' '; ml++) fn[i++] = fp->member[ml];
+    fn[i++] = ')';
+    fn[i] = 0;
     in = fopen(fn, "r");
     if (in) {
         fclose(in);

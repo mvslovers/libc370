@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ext/int64.h>
+#include "src/internal/wtofmt.h"
 
 __asm__("\n&FUNC    SETC '__64_mul'");
 #if 1
@@ -27,11 +28,43 @@ void __64_mul(__64* a, __64* b, __64* c)
 					if (intermediate) {
 						x = ((__64_ARRAY_SIZE - 1) * 2) - k;
 						if (x < 0 || x > __64_ARRAY_SIZE -1) {
-							wtof("%s: *** x=%d is out of range ***", __func__, x);
-							wtodumpf(a, sizeof(__64), "%s: a", __func__);
-							wtodumpf(b, sizeof(__64), "%s: b", __func__);
-							wtof("%s: i=%d, j=%d, k=%d, 0x%04X * 0x%04X intermediate=%u", 
-								__func__, i, j, k, a->array[i], b->array[j], intermediate);
+							/* without printf (size analysis F4): every long
+							   long multiply links this */
+							char	msg[120];
+							int		m = 0;
+							int		w;
+
+							wtofmt_str(msg, &m, sizeof(msg), "__64_mul: *** x=");
+							if (x < 0) wtofmt_str(msg, &m, sizeof(msg), "-");
+							wtofmt_dec(msg, &m, sizeof(msg), (unsigned)(x < 0 ? -x : x));
+							wtofmt_str(msg, &m, sizeof(msg), " is out of range ***");
+							wto(msg);
+							m = 0;
+							wtofmt_str(msg, &m, sizeof(msg), "__64_mul: a");
+							for (w = 0; w < __64_ARRAY_SIZE; w++) {
+								wtofmt_str(msg, &m, sizeof(msg), " ");
+								wtofmt_hex(msg, &m, sizeof(msg), a->array[w], 4);
+							}
+							wtofmt_str(msg, &m, sizeof(msg), " b");
+							for (w = 0; w < __64_ARRAY_SIZE; w++) {
+								wtofmt_str(msg, &m, sizeof(msg), " ");
+								wtofmt_hex(msg, &m, sizeof(msg), b->array[w], 4);
+							}
+							wto(msg);
+							m = 0;
+							wtofmt_str(msg, &m, sizeof(msg), "__64_mul: i=");
+							wtofmt_dec(msg, &m, sizeof(msg), (unsigned)i);
+							wtofmt_str(msg, &m, sizeof(msg), ", j=");
+							wtofmt_dec(msg, &m, sizeof(msg), (unsigned)j);
+							wtofmt_str(msg, &m, sizeof(msg), ", k=");
+							wtofmt_dec(msg, &m, sizeof(msg), (unsigned)k);
+							wtofmt_str(msg, &m, sizeof(msg), ", 0x");
+							wtofmt_hex(msg, &m, sizeof(msg), a->array[i], 4);
+							wtofmt_str(msg, &m, sizeof(msg), " * 0x");
+							wtofmt_hex(msg, &m, sizeof(msg), b->array[j], 4);
+							wtofmt_str(msg, &m, sizeof(msg), " intermediate=");
+							wtofmt_dec(msg, &m, sizeof(msg), (unsigned)intermediate);
+							wto(msg);
 						}
 
 						__64_from_u32(&tmp, intermediate);
