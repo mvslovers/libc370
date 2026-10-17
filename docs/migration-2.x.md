@@ -209,6 +209,7 @@ CHANGELOG has everything else.
 
 | Release | Change | What to do |
 |---|---|---|
+| Unreleased | The standard streams open without `fopen()`'s handlers for new and temporary data sets and the TSO streams: `puts()` programs link 50.2 KB instead of 59.0 KB | Nothing |
 | Unreleased | `sprintf()`/`snprintf()` no longer link the stream functions: a program using `sprintf()` links 30.4 KB instead of 47.3 KB. The internal `vvprintf()` and `__examin()` take the output functions as arguments | Nothing |
 | Unreleased | `SYSENV`/`ENVIRON` are read without `fopen()`: a program using `getenv()` links 25.0 KB instead of 57.0 KB. A record over 1023 bytes is cut there instead of continuing as a line of its own, and a `SYSENV` allocated to a TSO terminal is not read | Nothing, unless `SYSENV` has such records or is the terminal: then call `loadenv("DD:SYSENV")` yourself |
 | Unreleased | `fopen()`, the mutex functions, the abend report, the thread functions and the 64-bit multiply and shift no longer link `printf()` for their names and messages; a program using threads links 27.7 KB instead of 58.5 KB. The dummy-thread report drops its decimal `(n)` values | Nothing |

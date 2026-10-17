@@ -69,6 +69,15 @@ extern int      vvscanf(const char *format, va_list arg, FILE *fp, const char *s
  * lets fopen() answer NULL + EBUSY instead of dying inside OPEN. */
 extern int __ddbusy(FILE *fp);
 
+/* __fpopn() - fopen() without the handlers it does not need (size analysis
+ * F5): "dd:" names, SYSOUT ("*dd") and existing data sets always; the
+ * "*PUTLINE"/"*GETLINE" names through tsoname and the allocation of a data
+ * set by name through dsalloc, when not NULL.  fopen() passes both, the
+ * standard streams neither.  See src/stdio/@@fpopn.c. */
+extern FILE *__fpopn(const char *fn, const char *mode,
+                     int (*tsoname)(FILE *fp, const char *fn),
+                     int (*dsalloc)(FILE *fp));
+
 /* __dddum() - is DD ddname (8 characters, blank padded) a DUMMY, a JCL DD
  * DUMMY or 'NULLFILE'?  Known before the OPEN, from the JFCB in the SWA
  * (#277). */

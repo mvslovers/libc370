@@ -166,7 +166,30 @@ arguments, 344 for splitting `vvprintf()` into one function per job
 `snprintf()` of the same set of conversions give byte-identical SYSPRINT
 and OUT against 2.16.0, with %n, truncation and EBADF checked.
 
-## Proposed order
+**F5** (branch `feature/size-f5`, 2026-10-17). `fopen()`'s body is
+`__fpopn()` in `@@fpopn.c`, with two hooks: `tsoname` for `*PUTLINE` and
+`*GETLINE`, `dsalloc` for the allocation of a data set by name (temporary,
+member, OLD, NEW). `fopen()` passes both; `__stdlz()` and `appmem()` pass
+NULL, and then an existing data set is allocated SHR to read and OLD to
+write, which `'NULLFILE'` needs. Against F2:
+
+| program | F2 | F5 |
+|---|---|---|
+| p02puts | 59,012 | 50,164 |
+| p03printf | 72,696 | 63,848 |
+| p05fread | 57,468 | 58,108 |
+| p06fwrite | 58,560 | 59,200 |
+
+The estimate was 48,680 for p02puts; the difference is `__fpold` and
+`__fpshr`, kept for the `'NULLFILE'` fallback. The fopen programs grow by
+640 bytes for the extra function and the hooks.
+On MVS (mvsdev JOB02412/02414, `test/mvs/tstfopn.c`): the standard
+streams with their DDs and without them (SYSOUT allocated on the fly,
+stdin `'NULLFILE'`), a &temp data set, a new data set by name, "a" on a
+PDS member, and `'NULLFILE'` through `fopen()` and through `__fpopn()`
+alone all behave as with 2.16.0; the SYSOUT is identical.
+
+
 
 1. **F1 and F4.** Mechanical and low risk, the same technique as 2.16.0. F1
    alone takes 15 KB off every stdio program.

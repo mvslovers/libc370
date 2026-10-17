@@ -41,6 +41,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   gets its output functions from `vfprintf()`. A program using
   `sprintf()` links 30.4 KB instead of 47.3 KB; `printf()` output is
   unchanged, measured on MVS byte for byte.
+- **The standard streams no longer link the handlers of every kind of
+  file name.** `stdin`, `stdout` and `stderr` were opened through
+  `fopen()`, which named the code that allocates new and temporary data
+  sets and the TSO `*PUTLINE`/`*GETLINE` streams. They now open through
+  `fopen()`'s core without them; `fopen()` itself still takes every name.
+  A program that writes with `puts()` links 50.2 KB instead of 59.0 KB, one
+  with `printf()` 63.8 KB instead of 72.7 KB. A program that calls
+  `fopen()` itself links 640 bytes more.
 
 ## [2.16.0] - 2026-10-16
 
