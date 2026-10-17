@@ -6,49 +6,56 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.17.0] - 2026-10-17
+
+A minor release that makes programs smaller: the functions most programs
+use no longer link the stream functions, `printf()` or file-name handlers
+they never call. Measured against 2.16.0, in bytes linked from the
+library: a program using `getenv()` falls from 72.5 KB to 25.0 KB, one
+using `localtime()` from 78.8 KB to 33.0 KB, one using threads from
+58.5 KB to 27.4 KB, `sprintf()` from 48.6 KB to 30.4 KB, `puts()` from
+73.9 KB to 50.2 KB and `printf()` from 73.9 KB to 63.8 KB. What a
+program writes is unchanged; two rare cases of reading `SYSENV` behave
+differently, and two of the library's diagnostics read slightly
+differently (below).
+The CC/370 range is unchanged: `>=1.6.0 <2`.
+
 ### Changed
-- **Common functions no longer link `printf()` through a message they
-  rarely print.** `fopen()` built the name it uses to refuse `"a"` on an
-  existing member with `sprintf()`; the mutex functions built their ENQ
-  name with `sprintf()`; and the abend report, the thread functions and
-  the 64-bit multiply and shift wrote their diagnostics through `wtof()`.
-  All of them now format by hand, with the same text. A program that
-  uses `puts()`, `fread()`, `fwrite()`, `time()` or `getenv()` links about
-  15 KB less; one that uses threads links 27.7 KB instead of 58.5 KB.
+- **Reading the `SYSENV` environment no longer links the stream
+  functions.** The first `getenv()`, `setenv()`, `putenv()` or
+  `unsetenv()` loaded `SYSENV` (or `ENVIRON`) through `fopen()` and
+  `fgets()`, so every program that read one variable - and, through `TZ`,
+  every program using a time function - carried the stream layer and
+  `printf()`. The DD is now read record by record, with the same rules:
+  comments, sequence numbers in columns 73-80 and trailing blanks, a busy
+  spool `SYSIN` and a DUMMY are handled as before. Two differences:
+  - A record longer than 1023 bytes is cut there; it used to go on as a
+    line of its own.
+  - A `SYSENV` DD that is a TSO terminal is not read; it used to prompt
+    for lines at the first `getenv()`. `loadenv("DD:SYSENV")`, which
+    still reads through `fopen()`, does.
+- **Formatting into a string no longer links the stream functions.**
+  `sprintf()`, `vsprintf()` and `snprintf()` share the formatter of
+  `fprintf()`, which named the stream output functions directly; so did
+  every program writing console messages through `wtof()`. The formatter
+  now gets its output functions from `vfprintf()`. Output is unchanged,
+  compared on MVS byte for byte.
+- **The standard streams no longer link the handlers of every kind of
+  file name.** `stdin`, `stdout` and `stderr` were opened through
+  `fopen()`, which names the code that allocates new and temporary data
+  sets and the TSO `*PUTLINE`/`*GETLINE` streams. They now open through
+  `fopen()`'s core without them. `fopen()` itself still takes every name;
+  a program that calls it links 640 bytes more.
+- **Common functions no longer link `printf()` for a message they rarely
+  print.** `fopen()` built the name it uses to refuse `"a"` on an existing
+  member with `sprintf()`, the mutex functions built their ENQ name with
+  `sprintf()`, and the abend report, the thread functions and the 64-bit
+  multiply and shift wrote their diagnostics through `wtof()`. All of them
+  now format by hand, with the same text, except:
   - The report of a thread started without a function no longer shows
     `rc` and `stacksize` in decimal as well as in hex.
   - The 64-bit multiply's internal-error message shows its operands as
     halfwords on one line instead of a storage dump.
-- **Reading the `SYSENV` environment no longer links the stream functions.**
-  The first `getenv()`, `setenv()`, `putenv()` or `unsetenv()` loaded
-  `SYSENV` (or `ENVIRON`) through `fopen()` and `fgets()`, so every program
-  that read one variable carried the stream layer and `printf()`, and every
-  program using a time function did, through `TZ`. The DD is now read
-  record by record, with the same rules: comments, sequence numbers in
-  columns 73-80 and trailing blanks, a busy spool `SYSIN` and a DUMMY are
-  handled as before. A program that uses `getenv()` links 25.0 KB instead
-  of 57.0 KB, one that uses `localtime()` 33.0 KB instead of 63.3 KB.
-  - A record longer than 1023 bytes is cut there; it used to go on as a
-    line of its own.
-  - A `SYSENV` DD that is a TSO terminal is not read; it used to prompt
-    for lines at the first `getenv()`.
-  - `loadenv()` itself is unchanged and still reads through `fopen()`.
-- **Formatting into a string no longer links the stream functions.**
-  `sprintf()`, `vsprintf()` and `snprintf()` share the formatter of
-  `fprintf()`, which named the stream output functions directly, so a
-  program that only formats into a buffer - or only writes console
-  messages through `wtof()` - carried the stream layer. The formatter now
-  gets its output functions from `vfprintf()`. A program using
-  `sprintf()` links 30.4 KB instead of 47.3 KB; `printf()` output is
-  unchanged, measured on MVS byte for byte.
-- **The standard streams no longer link the handlers of every kind of
-  file name.** `stdin`, `stdout` and `stderr` were opened through
-  `fopen()`, which named the code that allocates new and temporary data
-  sets and the TSO `*PUTLINE`/`*GETLINE` streams. They now open through
-  `fopen()`'s core without them; `fopen()` itself still takes every name.
-  A program that writes with `puts()` links 50.2 KB instead of 59.0 KB, one
-  with `printf()` 63.8 KB instead of 72.7 KB. A program that calls
-  `fopen()` itself links 640 bytes more.
 
 ## [2.16.0] - 2026-10-16
 
