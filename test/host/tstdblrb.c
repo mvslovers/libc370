@@ -143,13 +143,13 @@ int main(void)
 
     /* (4) e-style keeps its exponent when the fraction is cut */
     cvt("%.100e 1.0 into 80", 1.0, 'e', 0, 100, 80,
-        79, "1.0000000", "E+00", 1);
+        79, "1.0000000", "e+00", 1);
     cvt("%.60e -1.5 into 50", -1.5, 'e', 0, 60, 50,
-        49, "-1.5000000", "E+00", 2);
+        49, "-1.5000000", "e+00", 2);
     cvt("%.100e 1e-30 into 80", 1e-30, 'e', 0, 100, 80,
-        79, "1.0000000", "E-30", 1);
+        79, "1.0000000", "e-30", 1);
     cvt("%.6e 1e-30 into 80 (fitted before)", 1e-30, 'e', 0, 6, 80,
-        12, "1.000000E-30", NULL, 1);
+        12, "1.000000e-30", NULL, 1);
 
     /* (5) %g, both styles */
     cvt("%.100g 1e40 into 80", 1e40, 'g', 0, 100, 80,
@@ -157,7 +157,7 @@ int main(void)
     /* %.6g of 1e40 is 1e+40 in C99: 6 significant digits, trailing zeros
        dropped (#220, #221; the E is #221's other half) */
     cvt("%.6g 1e40 into 80 (e-style, fitted before)", 1e40, 'g', 0, 6, 80,
-        5, "1E+40", NULL, -1);
+        5, "1e+40", NULL, -1);
 
     /* (6) the sizes the callers use after the fix: the plain path's
            numbuf[96] takes every value HFP can hold (about 7.2e75) */

@@ -1,6 +1,7 @@
 /*
  * tstpfvalcase.h - the cases of test/host/tstpfval.c and
- * test/mvs/tstpfval.c: printf values that were wrong (#220, #384).
+ * test/mvs/tstpfval.c: printf values that were wrong (#220, #384), and
+ * conversions whose form differed from C99 (#221, #384, #578).
  *
  * #220: %f of a value below the last place printed, and %g's precision
  * as significant digits.  #384: the 0 flag, + and space before the
@@ -8,8 +9,7 @@
  * a precision of 128 or more (it ran past __examin()'s work[128]), and
  * %s of NULL with a width or a precision.
  *
- * The e style still prints 'E' (#221 has that half); the expected strings
- * say so.  Values are chosen so that hexadecimal floating point and IEEE
+ * Values are chosen so that hexadecimal floating point and IEEE
  * give the same digits.
  *
  * The includer supplies CHECK(cond, msg), <stdio.h>, <string.h> and
@@ -51,6 +51,7 @@ static volatile double v0006 = 0.006, v6 = 0.6, v3 = 0.3, v001 = 0.001,
                        v12345 = 12345.678, v1234567 = 1234567.0,
                        v123456 = 1234.56789, v05 = 0.5, v1e5 = 1e-5;
 static char * volatile nullp;
+static volatile double v15 = 1.5, v1 = 1.0, v12 = 12.0;
 
 static void pfval_cases(void)
 {
@@ -72,7 +73,7 @@ static void pfval_cases(void)
     pf("1234.57", "%.6g", v123456);
     pf("0.000123456", "%.6g", vsmall);
     pf("0.5", "%.0g", v05);
-    pf("1E-05", "%g", v1e5);                /* e style, zeros dropped */
+    pf("1e-05", "%g", v1e5);                /* e style, zeros dropped, e (#221) */
 
     /* #384: zeros after the sign, 0x in the width */
     pf("-0001", "%05d", -1);
@@ -85,6 +86,34 @@ static void pfval_cases(void)
     pf("  00042", "%7.5d", 42);
     pf("-00042", "%.5d", -42);
     pf("00ff", "%04x", 255);
+
+    /* form: e for %e and %g, E for %E and %G (#221) */
+    pf("1.500000e+00", "%e", v15);
+    pf("1.500000E+00", "%E", v15);
+    pf("1E-05", "%G", v1e5);
+    /* form: no point with precision 0, unless # (#578) */
+    pf("1e+00", "%.0e", v1);
+    pf("1.e+00", "%#.0e", v1);
+    pf("1.", "%#.0f", v1);
+    pf("12.", "%#.0f", v12);
+    pf("1.00000", "%#g", v1);               /* # keeps %g's zeros */
+    pf("1.50", "%#.3g", v15);
+    /* form: # on integers (#384, #578) */
+    pf("010", "%#o", 8);
+    pf("0", "%#o", 0);
+    pf("0", "%#.0o", 0);
+    pf("0", "%#x", 0);                      /* no 0x in front of 0 */
+    pf("0XFF", "%#X", 255);
+    pf("00000000", "%#08x", 0);
+    /* form: the 0 flag is ignored with a precision (#578) */
+    pf("     001", "%08.3d", 1);
+    pf("     ", "%05.0d", 0);
+    /* form: h and hh narrow the value (#384) */
+    pf("65535", "%hu", -1);
+    pf("-1", "%hhd", 255);
+    pf("-16657", "%hd", 48879);
+    pf("ff", "%hhx", 0x1ff);
+    pf("1", "%hhu", 257);
 
 #ifndef PFVAL_NO_MEM   /* the red run counts the rest without them */
     /* #384: a precision past work[128] */

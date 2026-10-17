@@ -441,8 +441,9 @@ modifier, and then the conversion character. The flags are #cmd("-"),
     [#cmd("d"), #cmd("i")], [A signed decimal integer.],
     [#cmd("u"), #cmd("o"), #cmd("x"), #cmd("X")], [An unsigned integer in
       decimal, octal or hexadecimal. #cmd("x") uses lowercase digits,
-      #cmd("X") uppercase. The flag #cmd("#") puts #cmd("0x") in front of
-      #cmd("x") and of #cmd("X") alike, and has no effect on #cmd("o").],
+      #cmd("X") uppercase. The flag #cmd("#") puts #cmd("0x") or
+      #cmd("0X") in front of a value other than 0, and makes the first
+      digit of #cmd("o") a 0.],
     [#cmd("c")], [One character. A width pads it with blanks, on the
       left or, with the flag #cmd("-"), on the right.],
     [#cmd("s")], [A string. A null pointer is printed as #cmd("(null)"),
@@ -453,8 +454,9 @@ modifier, and then the conversion character. The flags are #cmd("-"),
     [#cmd("f"), #cmd("F")], [A floating-point value in fixed notation, 6
       decimal places by default.],
     [#cmd("e"), #cmd("E")], [A floating-point value in exponent notation.
-      The exponent is introduced by an uppercase #cmd("E") for both, and
-      has a sign and two digits: #cmd("1.500000E+00").],
+      The exponent is introduced by #cmd("e") or #cmd("E"), as the
+      conversion is written, and has a sign and two digits:
+      #cmd("1.500000e+00"). Up to LIBC/370 2.17.0 both wrote #cmd("E").],
     [#cmd("g"), #cmd("G")], [Exponent notation if the exponent is below
       -4 or not below the precision, otherwise fixed notation; see
       below.],
@@ -476,30 +478,23 @@ and #cmd("int") are both 32 bits. #cmd("long double") is the same type as
 #cmd("double"), so #cmd("L") with a floating-point conversion reads a
 #cmd("double").
 
-These rules differ from C99:
+These rules differ from C99. Up to LIBC/370 2.17.0 the list was longer:
+#cmd("%f") of a value below the last decimal place showed digits past the
+precision, #cmd("%g") counted decimal places instead of significant
+digits, #cmd("%e") and #cmd("%g") wrote #cmd("E"), the flag #cmd("0") put
+the zeros in front of the sign and was not ignored with a precision,
+#cmd("#") did not work on #cmd("o") and the floating-point conversions,
+#cmd("h") and #cmd("hh") did not narrow the value, and an integer
+precision above 126 overran a work area.
 
-- On the integer conversions #cmd("h") and #cmd("hh") are accepted and
-  ignored: the value is printed as the #cmd("int") it was passed as, and #cmd("printf(\"%hhd\", 300)")
-  prints #cmd("300").
 - #cmd("%a") and #cmd("%A") are not implemented; see the table.
 - A conversion character that has no meaning is printed as written,
   together with its flags, width and precision, and consumes no argument:
   #cmd("printf(\"%y|%d\", 5)") prints #cmd("%y|5"). A #cmd("%") at the
   end of the format is printed as #cmd("%").
-- The flag #cmd("0") is not ignored when a precision is given. (Up to
-  LIBC/370 2.17.0 it also put the zeros in front of the sign,
-  #cmd("printf(\"%05d\", -3)") printed #cmd("000-3"), and the width did not
-  count the #cmd("0x") of the flag #cmd("#").)
-- #cmd("%e") with precision 0 keeps the decimal point:
-  #cmd("printf(\"%.0e\", 2.5)") prints #cmd("3.E+00"). The flag #cmd("#")
-  has no effect on floating-point conversions.
-- #cmd("%e"), #cmd("%g") write the exponent with an uppercase #cmd("E").
-  @std-stdio-printf-ex shows the effect. (Up to LIBC/370 2.17.0
-  #cmd("%g") also took the precision as the number of decimal places, not
-  significant digits, and kept trailing zeros in exponent notation, and
-  #cmd("%f") of a value below the last decimal place printed showed
-  digits past the precision: #cmd("printf(\"%.3f\", 0.000123)") printed
-  #cmd("0.0006"). An integer precision above 126 overran a work area.)
+- A value exactly halfway between two results rounds away from zero:
+  #cmd("printf(\"%.0f\", 2.5)") prints #cmd("3"). System/370 floating
+  point has no rounding mode to follow. @std-stdio-printf-ex shows more.
 - An output error is reported only when it is already known: the return
   value is negative when the stream is not open for writing or its error
   indicator is set. Output that is still in the buffer fails only when the
@@ -511,11 +506,11 @@ about 15 significant decimal digits and no infinity and no NaN.
 #tab(caption: [Output of some conversions])[
   #table(columns: (2.2in, 1.15in, 1fr),
     [Call], [Output], [C99 would print],
-    [#cmd("printf(\"%e\", 1.5)")], [#cmd("1.500000E+00")], [#cmd("1.500000e+00")],
+    [#cmd("printf(\"%e\", 1.5)")], [#cmd("1.500000e+00")], [#cmd("1.500000e+00")],
     [#cmd("printf(\"%g\", 1.5)")], [#cmd("1.5")], [#cmd("1.5")],
     [#cmd("printf(\"%g\", 123.456789)")], [#cmd("123.457")], [#cmd("123.457")],
-    [#cmd("printf(\"%g\", 1234567.0)")], [#cmd("1.23457E+06")], [#cmd("1.23457e+06")],
-    [#cmd("printf(\"%g\", 1e10)")], [#cmd("1E+10")], [#cmd("1e+10")],
+    [#cmd("printf(\"%g\", 1234567.0)")], [#cmd("1.23457e+06")], [#cmd("1.23457e+06")],
+    [#cmd("printf(\"%g\", 1e10)")], [#cmd("1e+10")], [#cmd("1e+10")],
     [#cmd("printf(\"%g\", 0.000123456)")], [#cmd("0.000123456")], [#cmd("0.000123456")],
     [#cmd("printf(\"%010.2f\", -3.14159)")], [#cmd("-000003.14")], [#cmd("-000003.14")],
     [#cmd("printf(\"%05d\", -3)")], [#cmd("-0003")], [#cmd("-0003")],

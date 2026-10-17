@@ -82,6 +82,15 @@ void __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
     }
 }
 
+/* __examin() calls __dblcvx(), __dblcvt() with printf's # flag (#578);
+   the stand-in ignores the flag */
+void __dblcvx(double num, char cnvtype, size_t nwidth, int nprecision,
+              int alt, char *result, size_t rsize)
+{
+    (void)alt;
+    __dblcvt(num, cnvtype, nwidth, nprecision, result, rsize);
+}
+
 void    __64_from_i32(__64 *n, int32_t i32) { (void)i32; n->u32[0] = n->u32[1] = 0; }
 void    __64_from_u32(__64 *n, uint32_t u32) { (void)u32; n->u32[0] = n->u32[1] = 0; }
 int32_t __64_to_i32(__64 *n) { (void)n; return 0; }

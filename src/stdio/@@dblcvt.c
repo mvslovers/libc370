@@ -13,9 +13,13 @@
    result has rsize bytes, and nothing is written past them (#222).
    What does not fit is cut off: the NUL always stays, an exponent
    before any fraction digit, digits before padding.
+
+   alt is printf's # flag: %e and %f keep the decimal point with
+   precision 0, %g keeps its trailing zeros (#578).  __dblcvt() is
+   __dblcvx() without it.
 */
 void
-__dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
+__dblcvx(double num, char cnvtype, size_t nwidth, int nprecision, int alt,
          char *result, size_t rsize)
 {
     double b,round;
@@ -221,6 +225,9 @@ __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
     else if (format==+1) {
         i = b;
         DBLCVT_PUT((char)('0' + i % 10));
+        if (alt && exp == 0 && nprecision == 0) {
+            DBLCVT_PUT('.');            /* %#.0f keeps its point */
+        }
         nprecision = nprecision + exp;
         pdigits = nprecision ;
 
@@ -233,6 +240,9 @@ __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
             i = b;
             DBLCVT_PUT((char)('0' + i % 10));
         }
+        if (alt && exp > 0 && nprecision == exp) {
+            DBLCVT_PUT('.');            /* %#.0f of 10 and up */
+        }
     }
     /*
        printing in standard form
@@ -240,7 +250,11 @@ __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
     else {
         i = b;
         DBLCVT_PUT((char)('0' + i % 10));
-        DBLCVT_PUT('.');
+        if (nprecision > 0 || alt) {
+            /* no point with precision 0, C99 7.19.6.1: %.0e of 1 is
+               1e+00, it printed 1.E+00 (#578) */
+            DBLCVT_PUT('.');
+        }
 
         pdigits = nprecision;
 
@@ -254,8 +268,8 @@ __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
     result[n] = '\0';
 
     /* %g drops the trailing zeros of the fraction, and the point with
-       them, in either style - before the exponent (#578) */
-    if (cnvtype == 'G' || cnvtype == 'g') {
+       them, in either style - before the exponent (#578); not with # */
+    if ((cnvtype == 'G' || cnvtype == 'g') && !alt) {
         char *p = strchr(result, '.');
 
         if (p != NULL) {
@@ -273,7 +287,8 @@ __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
 
     if (format==0) { /* exp format - put exp on end */
         dlim = lim;
-        DBLCVT_PUT('E');
+        /* e for %e and %g, E for %E and %G (#221) */
+        DBLCVT_PUT((cnvtype == 'e' || cnvtype == 'g') ? 'e' : 'E');
         if ( exp < 0 ) {
             exp = -exp;
             DBLCVT_PUT('-');
@@ -303,4 +318,11 @@ __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
     }
     return;
 #undef DBLCVT_PUT
+}
+
+void
+__dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
+         char *result, size_t rsize)
+{
+    __dblcvx(num, cnvtype, nwidth, nprecision, 0, result, rsize);
 }
