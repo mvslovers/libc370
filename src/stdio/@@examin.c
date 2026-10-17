@@ -52,6 +52,9 @@ __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax,
     int         hmod        = 0;    /* %n: 1 = h, 2 = hh (#383)          */
     int         specifier   = 0;
     int         fin;
+    int         pfx;            /* length of the 0x of %#x */
+    int         sgn;            /* the sign character, or 0 */
+    int         nz;             /* leading zeros to print */
     long        lvalue;
     short       hvalue;
     int         ivalue;
@@ -277,53 +280,48 @@ __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax,
 			}
 		}
 
-        while (x < precision) {
-            work[x] = '0';
-            x++;
+        /* work holds the x digits, last first.  The leading zeros - the
+           precision's and the 0 flag's - are counted, not stored: a
+           precision of 128 or more ran past work[128] (#384).  C99
+           7.19.6.1 order: blanks, sign, 0x, zeros, digits, and with the
+           - flag the blanks last.  The 0 flag's zeros went in front of
+           the sign (%05d of -1 printed 000-1), and the 0x of %#x was
+           not counted in the width (#384) */
+        pfx = (flagHash && toupper((unsigned char)specifier) == 'X') ? 2 : 0;
+        sgn = neg ? '-' : flagPlus ? '+' : flagSpace ? ' ' : 0;
+        nz = (precision > x) ? precision - x : 0;
+        if (flagZero && x + nz + (sgn != 0) + pfx < width) {
+            nz = width - (sgn != 0) - pfx - x;
         }
 
-        if (neg) {
-            work[x++] = '-';
-        }
-        else if (flagPlus) {
-            work[x++] = '+';
-        }
-        else if (flagSpace) {
-            work[x++] = ' ';
-        }
-
-        if (flagZero) {
-            fillCh = '0';
-        }
-        else {
-            fillCh = ' ';
-        }
-
-        y = x;
+        y = x + nz + (sgn != 0) + pfx;
         if (!flagMinus) {
             while (y < width) {
-                outch(fillCh);
+                outch(' ');
                 extraCh++;
                 y++;
             }
         }
-
-        if (flagHash && (toupper((unsigned char)specifier) == 'X')) {
+        if (sgn) {
+            outch(sgn);
+            extraCh++;
+        }
+        if (pfx) {
             outch('0');
             outch('x');
             extraCh += 2;
         }
-
-        x--;
-        while (x >= 0) {
+        while (nz-- > 0) {
+            outch('0');
+            extraCh++;
+        }
+        while (x-- > 0) {
             outch(work[x]);
             extraCh++;
-            x--;
         }
-
         if (flagMinus) {
             while (y < width) {
-                outch(fillCh);
+                outch(' ');
                 extraCh++;
                 y++;
             }
@@ -383,6 +381,11 @@ __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax,
     }
     else if (specifier == 's') {
         svalue = va_arg(*arg, char *);
+        /* NULL prints "(null)", as a plain %s does; with a width or a
+           precision it reached strlen()/memchr() (#384) */
+        if (svalue == NULL) {
+            svalue = "(null)";
+        }
         fillCh = ' ';
         if (precision > 0) {
             char *p;

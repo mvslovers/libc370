@@ -7,6 +7,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Fixed
+- **`printf()` printed wrong values for `%f` of small numbers, `%g` and
+  zero-padded integers (#220, #384).** What programs print changes:
+  - `%f` of a value below the last decimal place printed showed digits
+    past the precision, and rounded at the wrong digit:
+    `printf("%.3f", 0.000123456)` printed `0.0006`, now `0.000`.
+  - `%g` took the precision as decimal places instead of significant
+    digits: `printf("%.3g", 123.456)` printed `123.456`, now `123`; in
+    exponent notation it now drops trailing zeros too, `%g` of 1e-5
+    prints `1E-05` (the `E` is unchanged).
+  - The `0` flag put the zeros in front of the sign:
+    `printf("%05d", -1)` printed `000-1`, now `-0001`. The `0x` of `%#x`
+    now counts in the width: `printf("%#08x", 1)` prints `0x000001`.
+- **`printf()` no longer overruns its work area or reads a null string
+  (#384).** An integer precision of 128 or more wrote past a 128-byte
+  area on the stack, and `%s` of a null pointer with a width or a
+  precision read through it. Both now print correctly: the precision's
+  zeros, and `(null)`.
 - **`arraydel()` no longer reads past a full array (#583).** Deleting an
   item shifted the rest left up to and including the element after the
   last one, which for an array filled to its size is the word past its
