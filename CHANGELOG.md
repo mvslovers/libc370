@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- **`<ibm/mvs/ihaacee.h>` names the parts of the ACEE's userid and group
+  (#581).** Each is a length byte and an 8-byte, blank-padded name, IBM's
+  `ACEEUSRL`/`ACEEUSRI` and `ACEEGRPL`/`ACEEGRPN`. The header now has
+  `aceeusrl`, `aceeusri`, `aceegrpl` and `aceegrpn` beside `aceeuser[9]`
+  and `aceegrp[9]`, which stay. Size and offsets are unchanged. An
+  8-byte copy of `aceeuser` takes the length byte for the first
+  character; the named members make that visible where the field is read.
+
 ## [2.17.0] - 2026-10-17
 
 A minor release that makes programs smaller: the functions most programs

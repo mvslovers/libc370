@@ -22,6 +22,16 @@ space. The address space also has a default ACEE, in the field
 ACEE is given, and #cmd("racf_get_acee()") and #cmd("racf_set_acee()") read
 and replace it.
 
+#idx("ACEE", "userid and group")
+The userid and the group in an ACEE are each a length byte followed by an
+8-byte name, padded with blanks: IBM's #cmd("ACEEUSRL") and
+#cmd("ACEEUSRI"), #cmd("ACEEGRPL") and #cmd("ACEEGRPN"). The header names
+them #cmd("aceeusrl"), #cmd("aceeusri"), #cmd("aceegrpl") and
+#cmd("aceegrpn"), beside the 9-byte arrays #cmd("aceeuser") and
+#cmd("aceegrp") that hold both. The name starts at #cmd("aceeuser + 1"):
+copying eight bytes from #cmd("aceeuser") takes the length for the first
+character.
+
 #idx("authorization", "security functions")
 #tab(caption: [Authorization needed by the security functions])[
   #table(columns: (1.6in, 1fr),
