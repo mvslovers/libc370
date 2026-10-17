@@ -19,6 +19,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
     `rc` and `stacksize` in decimal as well as in hex.
   - The 64-bit multiply's internal-error message shows its operands as
     halfwords on one line instead of a storage dump.
+- **Reading the `SYSENV` environment no longer links the stream functions.**
+  The first `getenv()`, `setenv()`, `putenv()` or `unsetenv()` loaded
+  `SYSENV` (or `ENVIRON`) through `fopen()` and `fgets()`, so every program
+  that read one variable carried the stream layer and `printf()`, and every
+  program using a time function did, through `TZ`. The DD is now read
+  record by record, with the same rules: comments, sequence numbers in
+  columns 73-80 and trailing blanks, a busy spool `SYSIN` and a DUMMY are
+  handled as before. A program that uses `getenv()` links 25.0 KB instead
+  of 57.0 KB, one that uses `localtime()` 33.0 KB instead of 63.3 KB.
+  - A record longer than 1023 bytes is cut there; it used to go on as a
+    line of its own.
+  - A `SYSENV` DD that is a TSO terminal is not read; it used to prompt
+    for lines at the first `getenv()`.
+  - `loadenv()` itself is unchanged and still reads through `fopen()`.
 
 ## [2.16.0] - 2026-10-16
 

@@ -98,7 +98,8 @@ static void init_tolow(void)
 
 #include "../../src/stdio/@@fpmode.c"
 #include "../../src/stdio/@@fpopen.c"
-/* no DUMMY DD on the host: @@fpopen.c's is_dummy() answers 0 (#277) */
+#include "../../src/stdio/@@dddum.c"
+/* no DUMMY DD on the host: __dddum() answers 0 (#277) */
 DSAB *get_dsab(void *tcbptr, const char *ddname) { (void)tcbptr; (void)ddname; return 0; }
 
 static int modeof(const char *m)

@@ -70,7 +70,9 @@ None of these functions ends the program with an abend.
 #idx("environment variables")#idx("SYSENV DD statement")#idx("ENVIRON DD statement")
 MVS has no environment in the POSIX sense. LIBC/370 keeps a list of
 environment variables for each program, shared by all its tasks, and fills
-it at start-up from a data set: the one allocated to the DD name
+it the first time the program uses it (#cmd("getenv()"), #cmd("setenv()"),
+#cmd("putenv()"), #cmd("unsetenv()")) from a data set: the one allocated
+to the DD name
 #cmd("SYSENV"), or, if there is no #cmd("SYSENV") DD statement, the one
 allocated to #cmd("ENVIRON"). Without either, the list starts empty.
 
@@ -87,7 +89,13 @@ Each record of the data set that contains an equal sign sets one variable:
   all digits, they are taken for a sequence number and removed. A variable
   whose value ends in eight digits, such as #cmd("ACCT=12345678"), can
   therefore lose them.
-- Records of up to 1023 characters are read.
+- Only the first 1023 characters of a record are read\; the rest is
+  ignored. Up to LIBC/370 2.16.0 it was read as a record of its own.
+- The data set is read record by record, without the stream functions. A
+  #cmd("SYSENV") DD that is a TSO terminal is therefore not read\; up to
+  LIBC/370 2.16.0 the first #cmd("getenv()") asked for lines at the
+  terminal. #cmd("loadenv(\"DD:SYSENV\")") still reads it (see
+  @mvs-program-loadenv).
 
 The variable #cmd("TZ") from this data set sets the time zone (see
 @std-time). @std-stdlib-env-fig shows the JCL that runs the program of the

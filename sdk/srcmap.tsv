@@ -793,3 +793,7 @@ src/mvs/env/@@envlz.c	src/mvs/env/@@envlz.c	new after 2.15.0 (#564): SYSENV load
 src/internal/wtofmt.h	src/internal/wtofmt.h	shared private header, new after 2.15.0 (#564): WTO text without printf
 src/mvs/wto/@@wtofmt.c	src/mvs/wto/@@wtofmt.c	new after 2.15.0 (#564): WTO text without printf
 src/internal/mtxname.h	src/internal/mtxname.h	shared private header, new after 2.16.0: the mutex ENQ name without printf
+src/mvs/env/@@envdd.c	src/mvs/env/@@envdd.c	new after 2.16.0 (size analysis F3): SYSENV read through BSAM, without fopen()
+src/mvs/env/@@envln.c	src/mvs/env/@@envln.c	new after 2.16.0 (size analysis F3): one SYSENV line, out of loadenv.c
+src/stdio/@@dddum.c	src/stdio/@@dddum.c	new after 2.16.0 (size analysis F3): the DUMMY check, out of @@fpopen.c
+src/internal/envld.h	src/internal/envld.h	shared private header, new after 2.16.0: loading the environment from a DD
