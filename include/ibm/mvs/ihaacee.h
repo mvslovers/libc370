@@ -19,8 +19,25 @@ struct acee {                   /* ACCESSOR ENVIRONMENT ELEMENT             */
     void    *aceeiep;           /* 0C RESERVED FOR INSTALLATION             */
     void    *aceeinst;          /* 10 ADDRESS OF INSTALLATION SUPPLIED
                                       USER DATA - FROM USER ENTRY           */
-    char    aceeuser[9];        /* 14 USERID INFORMATION                    */
-    char    aceegrp[9];         /* 1D GROUP NAME INFORMATION                */
+    /* The userid and the group are each a length byte and an 8-byte
+       name, blank padded - IBM's ACEEUSRL/ACEEUSRI and ACEEGRPL/ACEEGRPN.
+       aceeuser[0] is the length, the name starts at aceeuser + 1: an
+       8-byte copy of aceeuser takes the length for the first character
+       (#581).  The named members say so at the point of use. */
+    union {
+        char    aceeuser[9];    /* 14 USERID INFORMATION                    */
+        struct {
+            unsigned char aceeusrl; /* 14 USERID LENGTH                     */
+            char    aceeusri[8];    /* 15 USERID, BLANK PADDED              */
+        };
+    };
+    union {
+        char    aceegrp[9];     /* 1D GROUP NAME INFORMATION                */
+        struct {
+            unsigned char aceegrpl; /* 1D GROUP NAME LENGTH                 */
+            char    aceegrpn[8];    /* 1E CONNECT GROUP NAME, BLANK PADDED  */
+        };
+    };
     char    aceeflg1;           /* 26 USER FLAGS                            */
 #define ACEESPEC    0x80        /* ... 1 - SPECIAL ATTRIBUTE                */
 #define ACEEADSP    0x40        /* ... 1 - AUTOMATIC DATA SECURITY
