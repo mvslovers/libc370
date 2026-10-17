@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ext/int64.h>
+#include "src/internal/wtofmt.h"
 
 __asm__("\n&FUNC    SETC '__64_lshift_word'");
 void __64_lshift_word(__64* a, int nwords)
@@ -15,7 +16,20 @@ void __64_lshift_word(__64* a, int nwords)
 #if 1
 		if (shift < 0) shift = 0;
 		if (shift > __64_ARRAY_SIZE) shift = __64_ARRAY_SIZE;	/* range 0 through 4 */
-		if (shift != nwords) wtof("%s: *** shift corrected from %d to %d ***", __func__, nwords, shift);
+		if (shift != nwords) {
+			/* without printf (size analysis F4): every long long shift
+			   links this */
+			char	msg[80];
+			int		k = 0;
+
+			wtofmt_str(msg, &k, sizeof(msg), "__64_lshift_word: *** shift corrected from ");
+			if (nwords < 0) wtofmt_str(msg, &k, sizeof(msg), "-");
+			wtofmt_dec(msg, &k, sizeof(msg), (unsigned)(nwords < 0 ? -nwords : nwords));
+			wtofmt_str(msg, &k, sizeof(msg), " to ");
+			wtofmt_dec(msg, &k, sizeof(msg), (unsigned)shift);
+			wtofmt_str(msg, &k, sizeof(msg), " ***");
+			wto(msg);
+		}
 
 		/* if shift is 0 then do nothing */
 		for (i=0; i < shift; i++) {

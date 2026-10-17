@@ -4,6 +4,40 @@
 #include "mvs/recovery.h"
 #include "mvs/crt.h"
 #include "mvs/wto.h"
+#include "src/internal/wtofmt.h"
+
+/* The report is written without the printf family (size analysis F4):
+   every threaded program links __abrpt() through cthread's cleanup, and
+   one wtof() here linked all of printf and half of stdio with it.  The
+   lines read as before. */
+
+/* "<label>:XXXXXXXX:<text>" */
+__asm__("\n&FUNC    SETC 'regline'");
+static void
+regline(const char *label, unsigned v, const char *text)
+{
+    char    msg[126];
+    int     k = 0;
+
+    wtofmt_str(msg, &k, sizeof(msg), label);
+    wtofmt_str(msg, &k, sizeof(msg), ":");
+    wtofmt_hex(msg, &k, sizeof(msg), v, 8);
+    wtofmt_str(msg, &k, sizeof(msg), ":");
+    wtofmt_str(msg, &k, sizeof(msg), text);
+    wto(msg);
+}
+
+/* a fixed text; wto() wants a writable buffer */
+__asm__("\n&FUNC    SETC 'say'");
+static void
+say(const char *text)
+{
+    char    msg[126];
+    int     k = 0;
+
+    wtofmt_str(msg, &k, sizeof(msg), text);
+    wto(msg);
+}
 
 typedef struct {
     unsigned u[2];
@@ -39,8 +73,16 @@ get_offset(SDWA *sdwa, char *buf)
         len = cp[4];
         if (len > 40) len = 40;         /* keep it reasonable */
 
-        sprintf(buf, "epname %-*.*s offset %08X",
-            len, len, &cp[5], offset);
+        {
+            int k = 0;
+            unsigned n;
+
+            wtofmt_str(buf, &k, 80, "epname ");
+            for (n = 0; n < len; n++) buf[k++] = (char)cp[5 + n];
+            buf[k] = 0;
+            wtofmt_str(buf, &k, 80, " offset ");
+            wtofmt_hex(buf, &k, 80, offset, 8);
+        }
     }
 
 quit:
@@ -83,7 +125,11 @@ get_addr(unsigned addr, char *buf)
     cp = (char*)addr;       /* character pointer to mem */
 
     for(i=0; i < 4; i++, np++, pos+=9) {
-        sprintf(hex, "%08X", *np);
+        {
+            int k = 0;
+
+            wtofmt_hex(hex, &k, sizeof(hex), *np, 8);
+        }
         memcpy(&buf[pos], hex, 8);
 
         for(j=0; j < 4; j++, cp++, pos2++) {
@@ -112,7 +158,12 @@ get_epname(unsigned addr, char *buf)
         len = cp[4];
         if (len > 40) len = 40;         /* keep it reasonable */
 
-        sprintf(buf, "%-*.*s", len, len, &cp[5]);
+        {
+            unsigned n;
+
+            for (n = 0; n < len; n++) buf[n] = (char)cp[5 + n];
+            buf[len] = 0;
+        }
     }
 
 quit:
@@ -130,7 +181,15 @@ dump_regs(SDWA *sdwa)
     for(i=0, n=&sdwa->SDWAGR00; i<16; i++, n++) {
         try(get_addr, *n, buf);
 
-        wtof("R%02d:%08X:%s", i, *n, buf);
+        {
+            char lab[4];
+
+            lab[0] = 'R';
+            lab[1] = (char)('0' + i / 10);
+            lab[2] = (char)('0' + i % 10);
+            lab[3] = 0;
+            regline(lab, *n, buf);
+        }
     }
 
     return 0;
@@ -160,6 +219,26 @@ get_sa_next(unsigned *n, unsigned **next)
     return 0;
 }
 
+/* one save area of the trace back: its entry point name, then the
+   save area and R14, R15, R0 and R1 with the storage they point at */
+__asm__("\n&FUNC    SETC 'frame'");
+static void
+frame(unsigned *n, char *buf)
+{
+    static const char   reg[4][4] = {"R14", "R15", "R00", "R01"};
+    int                 r;
+
+    say("------------------------------------------------");
+    try(get_epname, n[4], buf);
+    if (buf[0]) say(buf);
+    try(get_addr, n, buf);
+    regline("DSA", (unsigned)n, buf);
+    for (r = 0; r < 4; r++) {
+        try(get_addr, n[3 + r], buf);
+        regline(reg[r], n[3 + r], buf);
+    }
+}
+
 __asm__("\n&FUNC    SETC 'dump_sa'");
 static int
 dump_sa(SDWA *sdwa)
@@ -184,41 +263,24 @@ dump_sa(SDWA *sdwa)
 
     for(prev=0, try(get_sa_prev, n, &prev); prev ; prev=0, try(get_sa_prev, n, &prev)) {
         n = prev;
-        wtof("------------------------------------------------");
-        try(get_epname, n[4], buf);
-        if (buf[0]) wtof("%s", buf);
-        try(get_addr, n, buf);
-        wtof("DSA:%08X:%s", n, buf);
-        try(get_addr, n[3], buf);
-        wtof("R14:%08X:%s", n[3], buf);
-        try(get_addr, n[4], buf);
-        wtof("R15:%08X:%s", n[4], buf);
-        try(get_addr, n[5], buf);
-        wtof("R00:%08X:%s", n[5], buf);
-        try(get_addr, n[6], buf);
-        wtof("R01:%08X:%s", n[6], buf);
+        frame(n, buf);
         if (n == ppa) goto quit;        /* stop at A(@PPA) */
     }
 
-    wtof("------------------------------------------------");
-    wtof("Traceback interrupted, Forward from PPA %08X", ppa);
-    wtof("------------------------------------------------");
+    say("------------------------------------------------");
+    {
+        char    msg[60];
+        int     k = 0;
+
+        wtofmt_str(msg, &k, sizeof(msg), "Traceback interrupted, Forward from PPA ");
+        wtofmt_hex(msg, &k, sizeof(msg), (unsigned)ppa, 8);
+        wto(msg);
+    }
+    say("------------------------------------------------");
 
     for(next=ppa; next ; next=0, try(get_sa_next, n, &next)) {
         n = next;
-        wtof("------------------------------------------------");
-        try(get_epname, n[4], buf);
-        if (buf[0]) wtof("%s", buf);
-        try(get_addr, n, buf);
-        wtof("DSA:%08X:%s", n, buf);
-        try(get_addr, n[3], buf);
-        wtof("R14:%08X:%s", n[3], buf);
-        try(get_addr, n[4], buf);
-        wtof("R15:%08X:%s", n[4], buf);
-        try(get_addr, n[5], buf);
-        wtof("R00:%08X:%s", n[5], buf);
-        try(get_addr, n[6], buf);
-        wtof("R01:%08X:%s", n[6], buf);
+        frame(n, buf);
     }
 
 quit:
@@ -229,7 +291,7 @@ __asm__("\n&FUNC    SETC 'suppress_dump'");
 static int
 suppress_dump(SDWA *sdwa)
 {
-    wtof("suppress dump requested");
+    say("suppress dump requested");
     sdwa->SDWACMPF &= (0XFF - SDWAREQ); /* turn off dump flag */
     return 0;
 }
@@ -240,13 +302,19 @@ snap_dump(SDWA *sdwa)
 {
     int     rc;
 
-    wtof("snap dump requested");
+    say("snap dump requested");
 
     /* open SNAP DCB for output */
     __asm__( "OPEN  (SNAPDCB,(OUTPUT))         Open SNAP DCB\n\t"
 "         LR\t%0,15" : "=r" (rc) : : "0", "1", "14", "15", "memory");
     if (rc) {
-        wtof("OPEN for SNAP DD failed, rc=%d", rc);
+        char    msg[48];
+        int     k = 0;
+
+        wtofmt_str(msg, &k, sizeof(msg), "OPEN for SNAP DD failed, rc=");
+        if (rc < 0) wtofmt_str(msg, &k, sizeof(msg), "-");
+        wtofmt_dec(msg, &k, sizeof(msg), (unsigned)(rc < 0 ? -rc : rc));
+        wto(msg);
         goto quit;
     }
 
@@ -269,7 +337,7 @@ __asm__("\n&FUNC    SETC 'system_dump'");
 static int
 system_dump(SDWA *sdwa)
 {
-    wtof("system_dump requested");
+    say("system_dump requested");
     goto quit;
 
     sdwa->SDWACMPF &= (0XFF - SDWAREQ); /* turn off dump flag */
@@ -329,20 +397,36 @@ recovery(SDWA *sdwa, void *udata)
     if (abcode & 0x00FFF000) {
         /* system abend */
         abcode = (abcode & 0x00FFF000) >> 12;
-        sprintf(abend, "S%03X", abcode);
+        {
+            int k = 0;
+
+            wtofmt_str(abend, &k, sizeof(abend), "S");
+            wtofmt_hex(abend, &k, sizeof(abend), abcode, 3);
+        }
     }
     else {
         abcode = (abcode & 0x00000FFF);
-        sprintf(abend, "U%04d", abcode);
+        {
+            int k = 0;
+
+            wtofmt_str(abend, &k, sizeof(abend), "U");
+            if (abcode < 1000) wtofmt_str(abend, &k, sizeof(abend), "0");
+            if (abcode < 100)  wtofmt_str(abend, &k, sizeof(abend), "0");
+            if (abcode < 10)   wtofmt_str(abend, &k, sizeof(abend), "0");
+            wtofmt_dec(abend, &k, sizeof(abend), abcode);
+        }
     }
 
     __asm__("MVC\t0(8,%0),0(%1)" : : "r" (psw), "r" (&sdwa->SDWAEMK1) : "memory");
     epa = sdwa->SDWAEPA;
     if (sdwa->SDWANAME[0] <= ' ') {
-        sprintf(epname, "%08X", sdwa->SDWAEPA);
+        int k = 0;
+
+        wtofmt_hex(epname, &k, sizeof(epname), (unsigned)sdwa->SDWAEPA, 8);
     }
     else {
-        sprintf(epname, "%-8.8s", sdwa->SDWANAME);
+        memcpy(epname, sdwa->SDWANAME, 8);
+        epname[8] = 0;
         for(i=0; i < 8; i++) {
             if (epname[i]==' ') {
                 epname[i]=0;
@@ -352,19 +436,47 @@ recovery(SDWA *sdwa, void *udata)
     }
 
     try(get_offset, sdwa, buf);
-    wtof("ABEND %s detected for module %s %s TCB=%08X",
-        abend, epname, buf, tcb);
+    {
+        char    msg[126];
+        int     k = 0;
+
+        wtofmt_str(msg, &k, sizeof(msg), "ABEND ");
+        wtofmt_str(msg, &k, sizeof(msg), abend);
+        wtofmt_str(msg, &k, sizeof(msg), " detected for module ");
+        wtofmt_str(msg, &k, sizeof(msg), epname);
+        wtofmt_str(msg, &k, sizeof(msg), " ");
+        wtofmt_str(msg, &k, sizeof(msg), buf);
+        wtofmt_str(msg, &k, sizeof(msg), " TCB=");
+        wtofmt_hex(msg, &k, sizeof(msg), (unsigned)tcb, 8);
+        wto(msg);
+    }
 
     ilc = (sdwa->SDWAPMKP & SDWAILP) >> 5;
     cc  = (sdwa->SDWAINT1 & SDWACC1) >> 4;
-    wtof("PSW:%08X %08X KEY(%u) MODE(%s) ILC(%u) CC(%u)",
-        psw[0], psw[1], (sdwa->SDWAMWP1 & SDWAKEY1) >> 4,
-        (sdwa->SDWAMWP1 & SDWAPGM1) ? "PROB" : "SUP", ilc, cc);
+    {
+        char    msg[80];
+        int     k = 0;
+
+        wtofmt_str(msg, &k, sizeof(msg), "PSW:");
+        wtofmt_hex(msg, &k, sizeof(msg), psw[0], 8);
+        wtofmt_str(msg, &k, sizeof(msg), " ");
+        wtofmt_hex(msg, &k, sizeof(msg), psw[1], 8);
+        wtofmt_str(msg, &k, sizeof(msg), " KEY(");
+        wtofmt_dec(msg, &k, sizeof(msg), (unsigned)((sdwa->SDWAMWP1 & SDWAKEY1) >> 4));
+        wtofmt_str(msg, &k, sizeof(msg), ") MODE(");
+        wtofmt_str(msg, &k, sizeof(msg), (sdwa->SDWAMWP1 & SDWAPGM1) ? "PROB" : "SUP");
+        wtofmt_str(msg, &k, sizeof(msg), ") ILC(");
+        wtofmt_dec(msg, &k, sizeof(msg), ilc);
+        wtofmt_str(msg, &k, sizeof(msg), ") CC(");
+        wtofmt_dec(msg, &k, sizeof(msg), cc);
+        wtofmt_str(msg, &k, sizeof(msg), ")");
+        wto(msg);
+    }
 
     psw[1] &= 0x00FFFFFF;           /* remove high byte noise */
     if (psw[1] > ilc) psw[1]-=ilc;  /* back up instruction length */
     try(get_addr, psw[1], buf);
-    wtof(">>>:%08X:%s", psw[1], buf);
+    regline(">>>", psw[1], buf);
 
     /* Guard the register/save-area walk against a missing CRT.  Even with
      * SDWACLUP off, a late fault can arrive after this task's runtime was

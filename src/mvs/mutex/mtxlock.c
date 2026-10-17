@@ -1,6 +1,7 @@
 /* MTXLOCK.C */
 #include "mvs/mutex.h"
 #include "mvs/lock.h"
+#include "src/internal/mtxname.h"
 #include "mvs/crt.h"
 #include "ext/array.h"
 
@@ -10,9 +11,12 @@ mtxlock(CLIBMUTX *mutex)
     unsigned    *psa    = (unsigned*)0;         /* MVS prefixed save area */
     unsigned    tcb     = psa[0x21C/4];         /* get our TCB address */
     int         rc;
+    char        rname[16];
 
-    /* get exclusive control of resource */
-    rc = lock_resf(CLIB_MUTEX_RNAME, 0, mutex);
+    /* get exclusive control of resource; the name built without printf,
+       not with lock_resf() (size analysis F4) */
+    mtxname(rname, mutex);
+    rc = lock_res(rname, 0);
 
     mutex->owner = tcb; /* set owner id */
     mutex->count++;     /* increment lock count */

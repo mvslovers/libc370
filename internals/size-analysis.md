@@ -112,6 +112,30 @@ Bytes linked from libc.a, now and with each fix (cut model, upper bound):
 The columns don't add up: the fixes overlap, because several of them
 cut paths to the same members.
 
+## Done
+
+**F1 and F4** (branch `feature/size-f1-f4`, 2026-10-17). The mutex functions
+build their ENQ name through `src/internal/mtxname.h` and no longer call
+`lock_resf()` and the other `_resf` functions, so `@@lkrnuf` drops out with
+them. Measured against 2.16.0, in bytes linked from libc.a:
+
+| program | 2.16.0 | F1+F4 |
+|---|---|---|
+| p02puts | 73,856 | 59,036 |
+| p03printf | 73,888 | 72,264 |
+| p04sprintf | 48,616 | 47,260 |
+| p05fread | 72,604 | 57,068 |
+| p06fwrite | 73,608 | 58,584 |
+| p08time | 78,808 | 63,272 |
+| p10thread | 58,548 | 27,666 |
+| p12getenv | 72,512 | 56,976 |
+
+p01empty, p07string, p09ll and p11sock are unchanged. On MVS (mvsdev
+JOB02398/02400/02402, `test/mvs/tstf14.c`): the member refusal, the mutex between
+two tasks, the dummy-thread report and the abend report behave and read the
+same as with 2.16.0. The abend report is identical line for line once the
+addresses are masked.
+
 ## Proposed order
 
 1. **F1 and F4.** Mechanical and low risk, the same technique as 2.16.0. F1

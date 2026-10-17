@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+- **Common functions no longer link `printf()` through a message they
+  rarely print.** `fopen()` built the name it uses to refuse `"a"` on an
+  existing member with `sprintf()`; the mutex functions built their ENQ
+  name with `sprintf()`; and the abend report, the thread functions and
+  the 64-bit multiply and shift wrote their diagnostics through `wtof()`.
+  All of them now format by hand, with the same text. A program that
+  uses `puts()`, `fread()`, `fwrite()`, `time()` or `getenv()` links about
+  15 KB less; one that uses threads links 27.7 KB instead of 58.5 KB.
+  - The report of a thread started without a function no longer shows
+    `rc` and `stacksize` in decimal as well as in hex.
+  - The 64-bit multiply's internal-error message shows its operands as
+    halfwords on one line instead of a storage dump.
+
 ## [2.16.0] - 2026-10-16
 
 A minor release that makes the C start-up small: it no longer links the

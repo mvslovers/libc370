@@ -10,6 +10,7 @@
 #include "mvs/crt.h"
 #include "ext/array.h"
 #include "mvs/mutex.h"
+#include "src/internal/wtofmt.h"
 
 static CTHDTASK *newthread(unsigned tcb, unsigned owntcb, unsigned stacksize);
 static int attach(CTHDTASK *task);
@@ -135,24 +136,51 @@ newthread(unsigned tcb, unsigned owntcb, unsigned stacksize)
     return task;
 }
 
+/* "<a>XXXXXXXX<b>XXXXXXXX<c>"; the second value only when c is not NULL */
+__asm__("\n&FUNC    SETC 'hexline'");
+static void
+hexline(const char *a, unsigned v1, const char *b, unsigned v2, const char *c)
+{
+    char    msg[80];
+    int     k = 0;
+
+    wtofmt_str(msg, &k, sizeof(msg), a);
+    wtofmt_hex(msg, &k, sizeof(msg), v1, 8);
+    if (c) {
+        wtofmt_str(msg, &k, sizeof(msg), b);
+        wtofmt_hex(msg, &k, sizeof(msg), v2, 8);
+        wtofmt_str(msg, &k, sizeof(msg), c);
+    }
+    wto(msg);
+}
+
 __asm__("\n&FUNC    SETC 'dummy'");
 static int
 dummy(void *arg1, void *arg2)
 {
     CTHDTASK    *task   = cthread_self();
 
-    wtof("dummy(arg1=%08X, arg2=%08X)\n", arg1, arg2);
-    wtof("CTHDTASK handle=%08X\n", task);
+    /* without printf (size analysis F4): every threaded program links
+       cthread_create_ex(), and with it this report */
+    hexline("dummy(arg1=", (unsigned)arg1, ", arg2=", (unsigned)arg2, ")");
+    hexline("CTHDTASK handle=", (unsigned)task, "", 0, NULL);
     if (task) {
-        wtof("task->eye         %-8.8s\n", task->eye);
-        wtof("task->tcb         %08X\n", task->tcb);
-        wtof("task->owntcb      %08X\n", task->owntcb);
-        wtof("task->termecb     %08X\n", task->termecb);
-        wtof("task->rc          %08X (%d)\n", task->rc, task->rc);
-        wtof("task->stacksize   %08X (%d)\n", task->stacksize, task->stacksize);
-        wtof("task->func        %08X\n", task->func);
-        wtof("task->arg1        %08X\n", task->arg1);
-        wtof("task->arg2        %08X\n", task->arg2);
+        char    eye[40];
+        int     k = 0;
+        int     n;
+
+        wtofmt_str(eye, &k, sizeof(eye), "task->eye         ");
+        for (n = 0; n < 8; n++) eye[k++] = task->eye[n];
+        eye[k] = 0;
+        wto(eye);
+        hexline("task->tcb         ", (unsigned)task->tcb, "", 0, NULL);
+        hexline("task->owntcb      ", (unsigned)task->owntcb, "", 0, NULL);
+        hexline("task->termecb     ", (unsigned)task->termecb, "", 0, NULL);
+        hexline("task->rc          ", (unsigned)task->rc, "", 0, NULL);
+        hexline("task->stacksize   ", (unsigned)task->stacksize, "", 0, NULL);
+        hexline("task->func        ", (unsigned)task->func, "", 0, NULL);
+        hexline("task->arg1        ", (unsigned)task->arg1, "", 0, NULL);
+        hexline("task->arg2        ", (unsigned)task->arg2, "", 0, NULL);
     }
 
     return -1;

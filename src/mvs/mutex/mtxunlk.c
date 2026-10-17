@@ -1,6 +1,7 @@
 /* MTXUNLK.C */
 #include "mvs/mutex.h"
 #include "mvs/lock.h"
+#include "src/internal/mtxname.h"
 #include "mvs/crt.h"
 #include "ext/array.h"
 
@@ -27,7 +28,12 @@ mtxunlk(CLIBMUTX *mutex)
                 }
             }
             mutex->owner = 0;
-            unlock_resf(CLIB_MUTEX_RNAME, 0, mutex);
+            {
+                char    rname[16];
+
+                mtxname(rname, mutex);  /* not unlock_resf(): no printf (F4) */
+                unlock_res(rname, 0);
+            }
         }
     }
 }
