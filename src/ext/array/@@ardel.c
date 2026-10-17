@@ -18,8 +18,10 @@ arraydel( void * varray, unsigned index )
                 if ((index > 0) && (index <= array->count)) {
                     index--;
                     vitem = (*carray)[index];
-                    /* now shift everything left */
-                    for( ; index < array->count; index++ ) {
+                    /* now shift everything left.  Up to the last item,
+                       not past it: [count] is the word after a full
+                       array's allocation (#583) */
+                    for( ; index + 1 < array->count; index++ ) {
                         (*carray)[index] = (*carray)[index+1];
                     }
                     array->count--;

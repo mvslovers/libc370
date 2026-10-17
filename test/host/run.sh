@@ -43,6 +43,12 @@ tstacee() {
     "$CC" -std=gnu99 -Wall -Wextra -Werror -idirafter $R/include \
        -o "$B/t" tstacee.c && "$B/t"
 }
+tstardel() {
+    "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address \
+       -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
+       -I $R/include -I $R -o "$B/t" tstardel.c \
+       "$R/src/ext/array/@@ardel.c" && "$B/t"
+}
 tstblank() {
     "$CC" -std=gnu99 -Wall -Wextra -Werror -o "$B/t" tstblank.c && "$B/t"
 }
@@ -252,7 +258,7 @@ tstwpos() {
 
 # The tests a plain run covers: all of them.  A test that stops building is
 # not dropped from here - fix it, or say which issue it waits on.
-ALL="tst75snd tstacee tstblank tstcmtt tstdblcv tstdblrb tstdirck tstdsnmt tstemptl
+ALL="tst75snd tstacee tstardel tstblank tstcmtt tstdblcv tstdblrb tstdirck tstdsnmt tstemptl
      tstenqdq tsterrfl tstfabnd tstfcls tstfloor tstfpapp tstfprls tstfpunit tstidcam tstinet tstiolk tstjesop
      tstjesprb tstjestx tstl tstll tstlspd tstlstds tstpfarg tstpfflt tstplus tstrand tstrldwk tstrseek tstscnll tstssvt tsttm64vec tsttxdsn tstvsnp
      tstwchar tstwpos"
