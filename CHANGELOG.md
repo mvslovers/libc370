@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- **`arraydel()` no longer reads past a full array (#583).** Deleting an
+  item shifted the rest left up to and including the element after the
+  last one, which for an array filled to its size is the word past its
+  storage. The value read was overwritten at once; the read itself could
+  fault if that word lay on a page the program cannot address.
+
 ### Added
 - **`<ibm/mvs/ihaacee.h>` names the parts of the ACEE's userid and group
   (#581).** Each is a length byte and an 8-byte, blank-padded name, IBM's
