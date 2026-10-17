@@ -435,5 +435,14 @@ What later 2.x releases ask of a program or a build:
       (@pg-startup-sequence). An empty #cmd("main()") links 14.8 KB
       instead of 72.7 KB. #cmd("estae()") without a routine reports on
       the console instead of #cmd("stderr").], [Nothing.],
+    [2.17.0], [Programs link less: #cmd("SYSENV") is read without
+      #cmd("fopen()"), and #cmd("sprintf()"), the standard streams and the
+      library's own messages no longer pull in the stream functions or
+      #cmd("printf()"). A program using #cmd("getenv()") links 25.0 KB
+      instead of 72.5 KB. Only the first 1023 bytes of a #cmd("SYSENV")
+      record are read, and a #cmd("SYSENV") that is a TSO terminal is not
+      read (@pg-startup-env).], [Nothing, unless #cmd("SYSENV") has such
+      records or is the terminal: then call
+      #cmd("loadenv(\"DD:SYSENV\")") yourself.],
   )
 ] <pg-migrate-since-tab>
