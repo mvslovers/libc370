@@ -219,6 +219,26 @@ get_sa_next(unsigned *n, unsigned **next)
     return 0;
 }
 
+/* one save area of the trace back: its entry point name, then the
+   save area and R14, R15, R0 and R1 with the storage they point at */
+__asm__("\n&FUNC    SETC 'frame'");
+static void
+frame(unsigned *n, char *buf)
+{
+    static const char   reg[4][4] = {"R14", "R15", "R00", "R01"};
+    int                 r;
+
+    say("------------------------------------------------");
+    try(get_epname, n[4], buf);
+    if (buf[0]) say(buf);
+    try(get_addr, n, buf);
+    regline("DSA", (unsigned)n, buf);
+    for (r = 0; r < 4; r++) {
+        try(get_addr, n[3 + r], buf);
+        regline(reg[r], n[3 + r], buf);
+    }
+}
+
 __asm__("\n&FUNC    SETC 'dump_sa'");
 static int
 dump_sa(SDWA *sdwa)
@@ -243,19 +263,7 @@ dump_sa(SDWA *sdwa)
 
     for(prev=0, try(get_sa_prev, n, &prev); prev ; prev=0, try(get_sa_prev, n, &prev)) {
         n = prev;
-        say("------------------------------------------------");
-        try(get_epname, n[4], buf);
-        if (buf[0]) say(buf);
-        try(get_addr, n, buf);
-        regline("DSA", (unsigned)n, buf);
-        try(get_addr, n[3], buf);
-        regline("R14", (unsigned)n[3], buf);
-        try(get_addr, n[4], buf);
-        regline("R15", (unsigned)n[4], buf);
-        try(get_addr, n[5], buf);
-        regline("R00", (unsigned)n[5], buf);
-        try(get_addr, n[6], buf);
-        regline("R01", (unsigned)n[6], buf);
+        frame(n, buf);
         if (n == ppa) goto quit;        /* stop at A(@PPA) */
     }
 
@@ -272,19 +280,7 @@ dump_sa(SDWA *sdwa)
 
     for(next=ppa; next ; next=0, try(get_sa_next, n, &next)) {
         n = next;
-        say("------------------------------------------------");
-        try(get_epname, n[4], buf);
-        if (buf[0]) say(buf);
-        try(get_addr, n, buf);
-        regline("DSA", (unsigned)n, buf);
-        try(get_addr, n[3], buf);
-        regline("R14", (unsigned)n[3], buf);
-        try(get_addr, n[4], buf);
-        regline("R15", (unsigned)n[4], buf);
-        try(get_addr, n[5], buf);
-        regline("R00", (unsigned)n[5], buf);
-        try(get_addr, n[6], buf);
-        regline("R01", (unsigned)n[6], buf);
+        frame(n, buf);
     }
 
 quit:

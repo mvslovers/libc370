@@ -131,7 +131,7 @@ them. Measured against 2.16.0, in bytes linked from libc.a:
 | p12getenv | 72,512 | 56,976 |
 
 p01empty, p07string, p09ll and p11sock are unchanged. On MVS (mvsdev
-JOB02398/02400, `test/mvs/tstf14.c`): the member refusal, the mutex between
+JOB02398/02400/02402, `test/mvs/tstf14.c`): the member refusal, the mutex between
 two tasks, the dummy-thread report and the abend report behave and read the
 same as with 2.16.0. The abend report is identical line for line once the
 addresses are masked.

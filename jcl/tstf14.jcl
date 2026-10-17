@@ -5,7 +5,7 @@
 //* printf.  See test/mvs/tstf14.c.  F14xxx: this tree's libc.a;
 //* F1Rxxx: the installed one - verdicts and console lines must agree.
 //* The ABR steps end S0C1 by design.
-//* Run:     mvsdev JOB02398/02400, 2026-10-17: every case alike
+//* Run:     mvsdev JOB02398/02400/02402, 2026-10-17: all alike
 //*          F14/F1R; abend report identical with addresses masked;
 //*          the dummy thread report loses the decimal "(n)".
 //*
