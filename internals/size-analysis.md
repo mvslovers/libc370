@@ -158,8 +158,10 @@ with 2.16.0.
 **F2** (branch `feature/size-f2`, 2026-10-17). `vvprintf()` and
 `__examin()` take the output functions as arguments: `vfprintf()` passes
 `__fputc` and `__fputs`, `vsprintf()` and `vsnprintf()` pass NULL. Against
-F3: p04sprintf 47,272 -> 30,042, p03printf 72,240 -> 72,352 (the two
-arguments), the rest unchanged. On MVS (mvsdev JOB02408,
+F3: p04sprintf 47,272 -> 30,386, p03printf 72,240 -> 72,696, the rest
+unchanged. The printf programs grow by 456 bytes: 112 for the two
+arguments, 344 for splitting `vvprintf()` into one function per job
+(#577, cognitive complexity 55 -> under 25). On MVS (mvsdev JOB02408/02410,
 `test/mvs/tstfmt.c`): `printf()`, `fprintf()`, `sprintf()` and
 `snprintf()` of the same set of conversions give byte-identical SYSPRINT
 and OUT against 2.16.0, with %n, truncation and EBADF checked.

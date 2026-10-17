@@ -39,7 +39,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   program that only formats into a buffer - or only writes console
   messages through `wtof()` - carried the stream layer. The formatter now
   gets its output functions from `vfprintf()`. A program using
-  `sprintf()` links 30.0 KB instead of 47.3 KB; `printf()` output is
+  `sprintf()` links 30.4 KB instead of 47.3 KB; `printf()` output is
   unchanged, measured on MVS byte for byte.
 
 ## [2.16.0] - 2026-10-16
