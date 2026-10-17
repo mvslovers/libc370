@@ -61,4 +61,9 @@ extern int      vvscanf(const char *format, va_list arg, FILE *fp, const char *s
  * lets fopen() answer NULL + EBUSY instead of dying inside OPEN. */
 extern int __ddbusy(FILE *fp);
 
+/* __dddum() - is DD ddname (8 characters, blank padded) a DUMMY, a JCL DD
+ * DUMMY or 'NULLFILE'?  Known before the OPEN, from the JFCB in the SWA
+ * (#277). */
+extern int __dddum(const char *ddname);
+
 #endif /* SRC_INTERNAL_FILEIO_H */

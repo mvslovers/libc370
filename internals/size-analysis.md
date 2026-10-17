@@ -136,6 +136,25 @@ two tasks, the dummy-thread report and the abend report behave and read the
 same as with 2.16.0. The abend report is identical line for line once the
 addresses are masked.
 
+**F3** (branch `feature/size-f3`, 2026-10-17). `__envlz()` reads the DD
+through `__envdd()` (`__aopen()`/`__aread()`), and the line rules moved
+from `loadenv()` to `__envln()`, which both use; `@@fpopen.c`'s DUMMY
+check became `__dddum()` for both. Against F1+F4:
+
+| program | F1+F4 | F3 |
+|---|---|---|
+| p08time | 63,272 | 32,957 |
+| p12getenv | 56,976 | 25,025 |
+| p05fread | 57,068 | 57,468 |
+
+p05fread grows by 400 bytes: it still links `getenv()` through `fopen()`
+(`@@fpstar`), and `@@envdd` plus `@@envln` take the place of `loadenv`.
+The rest move by less than 300 bytes. On MVS (mvsdev JOB02404,
+`test/mvs/tstenvdd.c`): FB with comments, sequence numbers and trailing
+blanks, the fallback to ENVIRON, a DUMMY SYSENV, a VB SYSENV, a SYSENV
+held open by `fopen()` (#184), and no DD all give the same environment as
+with 2.16.0.
+
 ## Proposed order
 
 1. **F1 and F4.** Mechanical and low risk, the same technique as 2.16.0. F1

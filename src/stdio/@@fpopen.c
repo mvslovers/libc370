@@ -12,28 +12,6 @@
 #include <mvs/dd.h>
 #include "ibm/mvs/ieftiot1.h"
 
-/* Is DD ddname a DUMMY?  Its JFCB names NULLFILE, whether the DD is a JCL
-   DD DUMMY or 'NULLFILE' allocated by name.  Read through the TIOT entry's
-   SWA pointer, as __listal() reads it, so it is known BEFORE the OPEN -
-   __rdjfcb() needs an open DCB (#277). */
-static int is_dummy(const char *ddname)
-{
-    static const char nullfile[9] = "NULLFILE ";
-    DSAB    *dsab   = get_dsab(0, ddname);
-    TIOTDD  *tiotdd;
-    JFCB    *jfcb;
-    int     i;
-
-    if (!dsab || !(tiotdd = dsab->dsabtiot)) return 0;
-    jfcb = (JFCB *)(((unsigned char)tiotdd->TIOEJFCB[0] << 16
-                     | (unsigned char)tiotdd->TIOEJFCB[1] << 8
-                     | (unsigned char)tiotdd->TIOEJFCB[2]) + 16);
-    for (i = 0; i < 9; i++) {
-        if (jfcb->jfcbdsnm[i] != nullfile[i]) return 0;
-    }
-    return 1;
-}
-
 /* The DCB attributes a "DD:" open names in its mode (#554): recfm=, lrecl=
    and blksize=, as "=v" or "(v)".  The values go to __aopen() marked as
    forced - the RECFM byte in bits 8-15 of the recfm word, X'80000000' on
@@ -178,7 +156,7 @@ __fpopen(FILE *fp)
        Ask for 80-byte records; the DCB open exit takes them where the DD
        has none. */
     if (!(fp->flags & _FILE_FLAG_WRITE) && !lrecl && !blksize
-        && is_dummy(fp->ddname)) {
+        && __dddum(fp->ddname)) {
         recfm   = 0;
         lrecl   = 80;
         blksize = 80;
