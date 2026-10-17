@@ -11,7 +11,7 @@
 #include <mvs/lock.h>
 
 #define unused(x) ((void)(x))
-#define outch(ch) ((fq == NULL) ? *s++ = (char)ch : __fputc(ch,fq))
+#define outch(ch) ((fq == NULL) ? *s++ = (char)ch : putcf(ch,fq))
 #if 0
 #define inch() ((fp == NULL) ? \
     (ch = (unsigned char)*s++) : (ch = getc(fp)))
@@ -20,12 +20,10 @@
 extern void
 __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
          char *result, size_t rsize);
-extern int
-__examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax,
-         int done);
 
 int
-vvprintf(const char *format, va_list arg, FILE *fq, char *s)
+vvprintf(const char *format, va_list arg, FILE *fq, char *s,
+         int (*putcf)(int c, FILE *fp), int (*putsf)(const char *s, FILE *fp))
 {
     int         fin = 0;
     int         vint;
@@ -92,7 +90,7 @@ vvprintf(const char *format, va_list arg, FILE *fq, char *s)
                 }
                 else {
                     /* __fputs, not fputs: we hold the FILE lock (#145) */
-                    __fputs(numbuf, fq);
+                    putsf(numbuf, fq);
                 }
                 chcount += len;
             }
@@ -109,7 +107,7 @@ vvprintf(const char *format, va_list arg, FILE *fq, char *s)
                 }
                 else {
                     /* __fputs, not fputs: we hold the FILE lock (#145) */
-                    __fputs(vcptr, fq);
+                    putsf(vcptr, fq);
                     chcount += strlen(vcptr);
                 }
             }
@@ -132,7 +130,7 @@ vvprintf(const char *format, va_list arg, FILE *fq, char *s)
                 /* the string sink here is vsprintf()'s, which is unbounded
                    by definition - INT_MAX says so explicitly now that
                    __examin honours its budget (#128) */
-                extraCh = __examin(&format, fq, s, &arg, INT_MAX, chcount);
+                extraCh = __examin(&format, fq, s, &arg, INT_MAX, chcount, putcf);
                 chcount += extraCh;
                 if (s != NULL) {
                     s += extraCh;

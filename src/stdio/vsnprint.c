@@ -1,5 +1,6 @@
 /* VSNPRINT.C */
 #define STDIO_C
+#include "src/internal/fileio.h"
 #include "stdio.h"
 #include "string.h"
 #include "stdlib.h"
@@ -22,10 +23,8 @@ extern void
 __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
          char *result, size_t rsize);
 
-/* smax = space left in s (fq == NULL); the budget is honoured since #128 */
-extern int
-__examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax,
-         int done);
+/* __examin(): smax = space left in s (fq == NULL); the budget is honoured
+   since #128.  No FILE, so no output function either (size analysis F2) */
 
 int
 vsnprintf(char *s, size_t n, const char *format, va_list arg)
@@ -135,7 +134,7 @@ vsnprintf(char *s, size_t n, const char *format, va_list arg)
 #if 0
                 extraCh = examine(s, extraCh, &format, &arg);
 #else
-                extraCh = __examin(&format, NULL, s, &arg, extraCh, chcount);
+                extraCh = __examin(&format, NULL, s, &arg, extraCh, chcount, NULL);
 #endif
                 if (s!=NULL) {
                     for(i=0; i < extraCh; i++) {

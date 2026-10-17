@@ -16,10 +16,12 @@
    bounded by smax, the space the caller says is left in s; extraCh keeps
    counting the LOGICAL length regardless, so the caller still learns what
    the full conversion would have needed (#128).  The FILE sink writes
-   through __fputc, not putc: vvprintf already holds the FILE lock, and
-   the public wrapper's unlock would give that hold away (#145). */
+   through putcf, which vfprintf() passes as __fputc, not putc: vvprintf
+   already holds the FILE lock, and the public wrapper's unlock would give
+   that hold away (#145).  The string sinks pass NULL and so do not link
+   the stream layer (size analysis F2). */
 #define outch(ch) do { \
-        if (fq != NULL) __fputc(ch, fq); \
+        if (fq != NULL) putcf(ch, fq); \
         else if (sput < smax) { *s++ = (char)ch; sput++; } \
     } while (0)
 #define inch() ((fp == NULL) ? \
@@ -34,7 +36,7 @@ __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
 
 int
 __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax,
-         int done)
+         int done, int (*putcf)(int c, FILE *fp))
 {
     int         extraCh     = 0;
     int         sput        = 0;    /* bytes actually written to s (#128)  */

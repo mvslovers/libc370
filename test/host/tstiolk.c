@@ -235,7 +235,7 @@ static void run(FILE *fp, const char *fmt, ...)
 
     reset();
     va_start(ap, fmt);
-    vvprintf(fmt, ap, fp, NULL);
+    vvprintf(fmt, ap, fp, NULL, __fputc, __fputs);   /* as vfprintf() */
     va_end(ap);
     out[outn < OUTMAX ? outn : OUTMAX - 1] = 0;
 }

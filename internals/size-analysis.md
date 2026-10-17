@@ -155,6 +155,15 @@ blanks, the fallback to ENVIRON, a DUMMY SYSENV, a VB SYSENV, a SYSENV
 held open by `fopen()` (#184), and no DD all give the same environment as
 with 2.16.0.
 
+**F2** (branch `feature/size-f2`, 2026-10-17). `vvprintf()` and
+`__examin()` take the output functions as arguments: `vfprintf()` passes
+`__fputc` and `__fputs`, `vsprintf()` and `vsnprintf()` pass NULL. Against
+F3: p04sprintf 47,272 -> 30,042, p03printf 72,240 -> 72,352 (the two
+arguments), the rest unchanged. On MVS (mvsdev JOB02408,
+`test/mvs/tstfmt.c`): `printf()`, `fprintf()`, `sprintf()` and
+`snprintf()` of the same set of conversions give byte-identical SYSPRINT
+and OUT against 2.16.0, with %n, truncation and EBADF checked.
+
 ## Proposed order
 
 1. **F1 and F4.** Mechanical and low risk, the same technique as 2.16.0. F1

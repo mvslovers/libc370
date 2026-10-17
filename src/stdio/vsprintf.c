@@ -8,7 +8,7 @@ vsprintf(char *s, const char *format, va_list arg)
 {
     int ret;
 
-    ret = vvprintf(format, arg, NULL, s);
+    ret = vvprintf(format, arg, NULL, s, NULL, NULL);
     if (ret >= 0)
     {
         *(s + ret) = '\0';
