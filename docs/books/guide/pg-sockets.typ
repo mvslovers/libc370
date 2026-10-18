@@ -289,16 +289,12 @@ Library Reference give the complete list.
       without progress. #var("flags") is ignored.],
     [#cmd("connect()")], [A blocking connect gives up after about one
       second, with #cmd("ECONNREFUSED").],
-    [#cmd("select()")], [Give the time in whole seconds, with
-      #cmd("tv_usec") 0: a non-zero #cmd("tv_usec") makes half a second last
-      minutes. The socket #var("msock")#cmd("-1") must be open.],
-    [#cmd("FD_ZERO")], [Clears one byte beyond the #cmd("fd_set"). Clear a
-      set with #cmd("memset(&set, 0, sizeof(set))") instead.],
+    [#cmd("select()")], [The time is rounded up to a multiple of 0.08
+      seconds. The socket #var("msock")#cmd("-1") must be open.],
     [#cmd("ioctlsocket()")], [Takes the place of #cmd("fcntl()") for
-      #cmd("FIONBIO"). Any non-NULL #var("argp") makes the socket
-      non-blocking, even one that points at 0\; pass #cmd("NULL") to make it
-      blocking again. A socket returned by #cmd("accept()") is always
-      blocking.],
+      #cmd("FIONBIO"): a pointer to a nonzero word makes the socket
+      non-blocking, a pointer to 0 blocking again. A socket returned by
+      #cmd("accept()") is always blocking.],
     [#cmd("inet_ntoa()")], [One buffer for the C program, shared by all its
       tasks\; NULL without a C run-time environment. Use #cmd("inet_ntop()")
       with a buffer of your own.],
@@ -306,12 +302,11 @@ Library Reference give the complete list.
       #cmd("in_addr_t") is the address itself, as on BSD. Earlier versions of
       the library differed\; see @pg-migrate.],
     [#cmd("gethostbyaddr()")], [Takes the address alone, without length and
-      type, and writes a trace line to #cmd("stdout") on every call.],
+      type.],
     [#cmd("gethostbyname()")], [Returns only the first address. There is no
       #cmd("h_errno").],
-    [#cmd("bind()") with port 0], [The library chooses a port, and calls
-      #cmd("srand()") on the way, which restarts the sequence of
-      #cmd("rand()").],
+    [#cmd("bind()") with port 0], [The library chooses a port of 10000 or
+      above and stores it in #cmd("sin_port").],
     [Not provided], [#cmd("shutdown"), #cmd("setsockopt"),
       #cmd("getsockopt"), #cmd("sendto"), #cmd("recvfrom"), #cmd("sendmsg"),
       #cmd("recvmsg"), #cmd("poll"), #cmd("getaddrinfo"),

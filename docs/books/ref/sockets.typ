@@ -303,8 +303,10 @@ leaves the port it used in #cmd("add->sin_port").
 - The port is a port of the host, not of MVS. It must be free on the host,
   and on most hosts a port below 1024 can be bound only when Hercules runs
   with the privileges for it.
-- Choosing a port for #cmd("sin_port") 0 calls #cmd("srand()") with the time
-  of day, which restarts the sequence #cmd("rand()") returns to the program.
+- A port for #cmd("sin_port") 0 is chosen by a generator of the
+  function's own\; the sequence #cmd("rand()") returns to the program is not
+  touched. (Up to libc370 2.18.1 the function called #cmd("srand()") with
+  the time of day.)
 - If all 100 attempts fail, #cmd("sin_port") is set back to 0 and the
   request is passed to the host unchanged.
 
@@ -417,10 +419,9 @@ it.
 === Notes
 
 - #cmd("FD_ZERO") is inline assembler that clears the set with an executed
-  #cmd("XC") whose length is the size of the set. Because #cmd("XC") clears
-  one byte more than its length operand, #cmd("FD_ZERO") also clears the
-  byte that follows the 128-byte #cmd("fd_set"). Clear a set with
-  #cmd("memset(p, 0, sizeof(*p))") instead.
+  #cmd("XC"). (Up to libc370 2.18.1 it also cleared the byte that follows
+  the #cmd("fd_set")\; a program built with those headers keeps that
+  behaviour until it is compiled again.)
 - Socket #var("n") is bit #var("n")#cmd("%32"), counted from the low-order
   end, of word #var("n")#cmd("/32"), as on other systems.
 - #cmd("FD_SETSIZE") may be defined smaller before the header is
@@ -493,8 +494,8 @@ name or the C run-time environment is not set up.
 - The result is in the same storage as that of #cmd("gethostbyname()") and is
   overwritten by the next call of either function in the same task.
 - #cmd("h_name") holds at most 79 characters.
-- The function writes a line beginning #cmd("__75ghba()"), with the address,
-  to #cmd("stdout") on every call.
+- Up to libc370 2.18.1 the function wrote a line beginning
+  #cmd("__75ghba()") to #cmd("stdout") on every call.
 
 === Related
 
@@ -790,8 +791,9 @@ int ioctlsocket(int ss, int cmd, void *argp);
 supported:
 
 #deflist(width: 1.35in,
-  [#cmd("FIONBIO")], [makes the socket non-blocking when #var("argp") is
-    not NULL, and blocking when #var("argp") is NULL.],
+  [#cmd("FIONBIO")], [makes the socket non-blocking when the
+    #cmd("unsigned") word at #var("argp") is nonzero, and blocking when it
+    is 0 or #var("argp") is NULL. The word is not changed.],
   [#cmd("FIONREAD")], [stores in the #cmd("unsigned") word at #var("argp")
     the number of bytes that have arrived for the socket and can be read
     without waiting.],
@@ -799,17 +801,15 @@ supported:
 
 === Returns
 
-0, or -1 for an error. #cmd("FIONBIO") does not fail.
+0, or -1 for an error, also with #cmd("FIONBIO") on a number that is not
+an open socket.
 
 === Notes
 
-- For #cmd("FIONBIO") the library passes the pointer #var("argp") to the
-  emulator, not the value it points to. A pointer to a word holding 0
-  therefore makes the socket non-blocking, just as a pointer to a word
-  holding 1 does\; to make a socket blocking again, pass NULL.
-- After #cmd("FIONBIO") the word at #var("argp") is set to 0. When #var("s")
-  is not an open socket, the call still returns 0 and stores
-  #cmd("0xFFFFFFFF") there.
+- Up to libc370 2.18.1 the library passed the pointer #var("argp") to the
+  emulator instead of the value, so a pointer to 0 made the socket
+  non-blocking as well. It then set the word to 0, and on a number that is
+  not an open socket it returned 0 and stored #cmd("0xFFFFFFFF") there.
 - #cmd("FIONREAD") counts what has reached the host. A program that asks
   #cmd("recv()") for exactly that many bytes does not wait, on a blocking
   socket either.
@@ -933,11 +933,10 @@ The number of ready sockets\; 0 when the time ran out\; -1 for an error.
 
 === Notes
 
-- #cmd("select()") tests the sockets every 0.08 seconds. #var("t") is
-  converted to a number of such tests: twelve for each second of
-  #cmd("tv_sec"). A nonzero #cmd("tv_usec") adds one test for every 64
-  microseconds, so that half a second becomes more than ten minutes. Give
-  the time in whole seconds, with #cmd("tv_usec") 0.
+- #cmd("select()") tests the sockets every 0.08 seconds, so #var("t") is
+  rounded up to a multiple of 0.08 seconds: half a second waits 0.56
+  seconds. (Up to libc370 2.18.1 #cmd("tv_usec") counted one test for every
+  64 microseconds, and half a second became more than ten minutes.)
 - When #var("msock") is less than 2 -- no socket can be in the sets --
   #cmd("select()") returns 0 at once and does not change the sets.
 - The socket #var("msock")#cmd("-1") must be open\; the emulator keeps

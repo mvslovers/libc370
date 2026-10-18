@@ -1,7 +1,6 @@
 /* @@75GHBA.C
 ** Get host by address
 */
-#include <stdio.h>
 #include "src/net/dyn75/x75.h"
 #include "sys/socket.h"
 #include "netdb.h"
@@ -49,8 +48,6 @@ gethostbyaddr(void *addr)
     crt->crthostn[0] = 0;
 
     crt->crthoste[1] = *(unsigned*)addr;
-    printf("__75ghba() addr=%08X, *addr=%08X\n",
-        addr, *(unsigned*)addr);
 
     /* get host name for address */
     pl.r6   = (unsigned) name;              /* A(name) */

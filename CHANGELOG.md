@@ -55,6 +55,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   lost the carry of a decimal digit (`"65539"` gave 3) and read nothing
   after `0b`.
 
+- **Sockets (#396).** `FD_ZERO` cleared one byte past the `fd_set`; a
+  program has to be compiled again to get the corrected macro. `select()`
+  counted `tv_usec` in units of 64 microseconds, so a timeout of 0.1
+  seconds waited about 125 seconds (measured on MVS); the timeout is now
+  rounded up to the 0.08-second polling interval. `ioctlsocket(FIONBIO)`
+  passed the pointer instead of the value, so a pointer to 0 also made a
+  socket non-blocking; it stored 0 over the caller's word, and returned 0
+  for a number that is not a socket. `gethostbyaddr()` no longer writes a
+  trace line to `stdout`, and `bind()` to port 0 no longer reseeds
+  `rand()`.
+
 ## [2.18.1] - 2026-10-18
 
 A patch release of fixes, two of them in key 0 and one that renamed data

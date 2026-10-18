@@ -24,15 +24,19 @@ ioctlsocket(int ss, int cmd, void *argp)
     pl.r7   = (unsigned) 15;        /* function code for ioctlsocket() */
     pl.r7   = (unsigned) pl.r7 BOR (ss << 16);  /* socket in high half */
     pl.r8   = (unsigned) cmd;       /* command code */
-    pl.r9   = (unsigned) argp;      /* args pointer */
+    /* FIONBIO takes the value argp points to: the emulator tests the
+       register for nonzero, and the pointer was always nonzero, so
+       &zero switched to non-blocking too.  NULL stays blocking (#396) */
+    if (cmd==FIONBIO) {
+        pl.r9   = (unsigned) (argp ? *(unsigned*)argp : 0);
+    }
+    else {
+        pl.r9   = (unsigned) argp;      /* args pointer */
+    }
 
     __75(&pl);
 
-    if (cmd==FIONBIO) {
-        /* FIONBIO can't produce an error */
-        goto success;
-    }
-
+    /* FIONBIO fails too, on a socket that is not one (#396) */
     rc = (int) pl.r4;
     if (rc==-1) {
         /* get error */
@@ -50,9 +54,9 @@ ioctlsocket(int ss, int cmd, void *argp)
         goto quit;
     }
 
-success:
-    /* success, return result */
-    if (argp) {
+    /* success, return result - FIONBIO has none, and *argp is the
+       caller's setting */
+    if (argp && cmd!=FIONBIO) {
         *(unsigned*)argp = pl.r4;
     }
     rc = 0;
