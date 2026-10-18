@@ -22,6 +22,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   interface and returned 0 when JES2 was not active or did not take the
   request. They now return a negative value: minus that return code, or
   -1 with `errno` `EPERM` for a caller that is not authorized.
+- **The console functions no longer write outside their buffers or into
+  the caller's text (#404).** `wto()` moved the rest of a text longer than
+  124 characters to the front of the caller's buffer after each message,
+  which ended S0C4 for a literal in protected storage; it takes
+  `const char *` now and changes nothing. `wtodump()` overran its stack
+  for a chunk above 35, 0 or less, and cut the last hexadecimal digit
+  off a chunk that is not a multiple of 4; `chunk` is now 1 to 32, and 0
+  or less means 16. `wtodumpf()` overran its stack for a title longer
+  than 79 characters and truncates it now. `wtof()`/`wtorf()` copied
+  overlapping strings.
+- **`wtor()` terminates the reply (#404).** The reply is stored with a
+  null character within `replymax` bytes, so `replymax` is the size of the
+  buffer and the reply is at most `replymax` - 1 characters long; before,
+  nothing was terminated and `replymax` counted the characters. A text
+  given to `wtorf()` or `vwtorf()` that ends with a newline issues the
+  WTOR now, where it wrote every line as an ordinary message and returned
+  without a reply.
 
 ## [2.18.1] - 2026-10-18
 

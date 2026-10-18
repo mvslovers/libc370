@@ -408,12 +408,11 @@ abnormally: output of #cmd("printf()") still in a buffer is lost in an abend
   #code(read("../ex/pg-services/confirm.c"), numbers: true)
 ] <pg-services-confirm-fig>
 
-Three rules apply. The reply is not terminated with a null character, so
-clear the buffer and pass a maximum one less than its size (lines 9 and
-10). End the format string without a newline: a text that ends with one is
-written as ordinary messages, and no reply is requested. And the task waits
-for as long as the operator takes\; there is no time limit, so do not ask
-for a reply in a task that something else is waiting for.
+Two rules apply. Pass the size of the reply buffer (line 9): the reply is
+terminated with a null character within it, so it is at most one character
+shorter than the buffer. And the task waits for as long as the operator
+takes\; there is no time limit, so do not ask for a reply in a task that
+something else is waiting for.
 
 === Accepting MODIFY and STOP Commands <pg-services-modify>
 

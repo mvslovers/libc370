@@ -33,11 +33,19 @@ wtor(char *reply, unsigned replymax, const char *text)
         if (len > sizeof(msg.text)) len = sizeof(msg.text);
     }
 
+    /* replymax is the size of the reply buffer.  The reply always ends
+       with a null character inside it: the buffer is cleared, and MVS is
+       asked for one character less than its size, at most 119.  The
+       reply was not terminated, and the caller had to clear a buffer one
+       byte longer than replymax (#404). */
     if (reply && replymax) {
-		if (replymax > 119) replymax = 119;
-        msg.reply = (unsigned)reply;
-        msg.reply_len = replymax;
-        msg.ecb = &ecb;
+        if (replymax > 120) replymax = 120;
+        memset(reply, 0, replymax);
+        if (replymax > 1) {
+            msg.reply = (unsigned)reply;
+            msg.reply_len = replymax - 1;
+            msg.ecb = &ecb;
+        }
     }
 
     if (len) {

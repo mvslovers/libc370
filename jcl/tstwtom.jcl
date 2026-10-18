@@ -1,0 +1,23 @@
+//TSTWTOM  JOB (SYS),'LIBC370 404',CLASS=A,MSGCLASS=H,
+//             MSGLEVEL=(1,1)
+//*
+//* libc370 #404 - wto() leaves the caller's text alone, wtodump() and
+//* wtodumpf() stay inside their buffers.  See test/mvs/tstwtom.c.
+//* GREEN (this tree) runs all three cases; RED1-RED3 (the installed
+//* library) one case each.
+//* Run:     dev1 JOB02460, 2026-10-18: GREEN CC 0000, 3 of 3; RED1
+//*          CC 0008 (text changed), RED2 and RED3 S0C4.
+//*
+//GREEN    EXEC PGM=TSTWTOM,REGION=4M,COND=EVEN
+//STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.WTSCR
+//SYSPRINT DD  SYSOUT=*
+//RED1     EXEC PGM=TSTWTOR1,REGION=4M,COND=EVEN
+//STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.WTSCR
+//SYSPRINT DD  SYSOUT=*
+//RED2     EXEC PGM=TSTWTOR2,REGION=4M,COND=EVEN
+//STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.WTSCR
+//SYSPRINT DD  SYSOUT=*
+//RED3     EXEC PGM=TSTWTOR3,REGION=4M,COND=EVEN
+//STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.WTSCR
+//SYSPRINT DD  SYSOUT=*
+//
