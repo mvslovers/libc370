@@ -53,12 +53,13 @@ Two consequences of this design affect every socket program:
   first socket is not necessarily number 1, and a number is not a file
   descriptor: the functions of #cmd("<stdio.h>") cannot use it, and there is
   no #cmd("close()") or #cmd("read()") for it.
-- *Sockets are not closed when the program ends.* A socket left open keeps
-  its number, and a listening socket keeps its port, until some program
-  closes that number or Hercules is restarted. Close every socket with
-  #cmd("closesocket()") before the program ends, on the error paths too.
-  An abend skips the program's own cleanup\; how a program recovers from
-  one is described in @pg-errors.
+- *The library closes a program's sockets when it ends* -- the ones its
+  #cmd("socket()") and #cmd("accept()") returned -- but not after an abend
+  that nothing in the program recovers. A socket left open then keeps its
+  number, and a listening socket keeps its port, until some program closes
+  that number or Hercules is restarted. Close every socket with
+  #cmd("closesocket()") when you are done with it\; how a program recovers
+  from an abend is described in @pg-errors.
 
 #note[Every program that uses the TCPIP instruction has the network access
 of the Hercules process on the workstation, and can use or close any socket
@@ -275,8 +276,8 @@ Library Reference give the complete list.
   #table(columns: (1.55in, 1fr),
     [*Call or area*], [*What to do on MVS*],
     [#cmd("close()")], [Does not exist for sockets. Use
-      #cmd("closesocket()"), and call it on every path: the library does not
-      close sockets when the program ends.],
+      #cmd("closesocket()"). The library closes what is left when the
+      program ends, but not after an abend nothing recovers.],
     [#cmd("bind()"), #cmd("connect()"), #cmd("accept()")], [Take a
       #cmd("struct sockaddr_in *"): pass it without a cast. The length
       arguments are not used\; #cmd("accept()")'s is an #cmd("int *").],

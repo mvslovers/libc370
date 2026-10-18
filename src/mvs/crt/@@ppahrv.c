@@ -37,6 +37,8 @@
    links fclose().  A program that never opens one does not link the
    stream layer for closing nothing. */
 extern int fclose(FILE *stream) __attribute__((weak));
+/* weak (#601): linked with the socket layer */
+extern void __soend(CLIBGRT *grt) __attribute__((weak));
 #include "ext/array.h"
 
 void
@@ -76,6 +78,9 @@ __ppahrv(CLIBPPA *ppa)
         grt->grtin  = 0;
         grt->grtout = 0;
         grt->grterr = 0;
+
+        /* the dead program's sockets, as __exit() closes them (#601) */
+        if (grt->grtsock && __soend) __soend(grt);
 
         if (grt->grtenv) {
             count = arraycount(&grt->grtenv);
