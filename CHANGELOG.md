@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- **`getmain()` refuses a size it cannot round into 24 bits (#401).**
+  The request is rounded, with its 8-byte header, to 64 bytes, and the
+  rounding dropped the carry: a size from X'FFFFB9' to X'FFFFFF' asked
+  GETMAIN for 0 or 64 bytes, and the program failed with S0C4 (measured
+  on MVS). Such a size now returns `NULL`.
+
+### Changed
+- **`getmain()` and `freemain()` no longer link the formatting functions
+  (#283).** Their failure messages went through `wtof()` and
+  `wtodumpf()`, which brought `printf()`'s engine into every module that
+  only wants storage: about 21 KB. Now they cost about 1.7 KB. The
+  `getmain()` message reads as before; `freemain()` reports an invalid
+  header in one line with its address and its two words instead of a
+  64-byte dump.
+
 ## [2.18.0] - 2026-10-18
 
 A minor release that makes the `printf()` family print what C99 says.
