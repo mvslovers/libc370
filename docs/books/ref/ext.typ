@@ -116,8 +116,11 @@ storage from #cmd("calloc()"), and adds that.
 
 - Because the array may move, a pointer to one of its slots, kept from
   before the call, is no longer valid after it.
-- #cmd("arrayaddf()") formats into a 1024-byte buffer on the stack. A string
-  longer than 1023 characters overruns it.
+- #cmd("arrayaddf()") measures the string first and formats it straight
+  into its own storage, so it has no length limit. When the item cannot be
+  added, the copy is freed again. (Up to libc370 2.18.1 the string went
+  through a 1024-byte buffer on the stack, which a longer string overran,
+  and the copy was not freed after a failure.)
 - The string added by #cmd("arrayaddf()") belongs to the program, which frees
   it with #cmd("free()") before it frees the array.
 
