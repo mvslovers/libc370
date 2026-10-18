@@ -133,6 +133,9 @@ message with #cmd("wto()"), and the last line is the WTOR message.
 - #cmd("wtor()") clears #var("replymax") bytes of #var("reply") before
   the WTOR, so the reply is always terminated within the buffer. The
   length of the reply is not returned\; use #cmd("strlen()").
+- MVS does not accept a reply longer than the WTOR asked for: the
+  operator's #cmd("R") command is refused and the WTOR stays outstanding
+  until a reply that fits arrives.
 - A #var("replymax") larger than 120 is treated as 120: the longest reply
   that MVS accepts is 119 characters. A #var("replymax") of 1 requests no
   reply characters and stores only the null character.

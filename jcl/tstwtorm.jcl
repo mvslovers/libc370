@@ -1,0 +1,17 @@
+//TSTWTORM JOB (SYS),'LIBC370 404',CLASS=A,MSGCLASS=H,
+//             MSGLEVEL=(1,1)
+//*
+//* libc370 #404 - wtor() terminates the reply, wtorf() with a trailing
+//* newline issues the WTOR.  See test/mvs/tstwtorm.c.  The steps wait
+//* for operator replies: answer TSTWTORM A with ABC, B with OK,
+//* C with Z.  GREEN/GREENC this tree, RED/REDC the installed library.
+//*
+//GREEN    EXEC PGM=TSTWRG,REGION=4M,COND=EVEN
+//STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.WRSCR
+//GREENC   EXEC PGM=TSTWRGC,REGION=4M,COND=EVEN
+//STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.WRSCR
+//RED      EXEC PGM=TSTWRR,REGION=4M,COND=EVEN
+//STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.WRSCR
+//REDC     EXEC PGM=TSTWRRC,REGION=4M,COND=EVEN
+//STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.WRSCR
+//
