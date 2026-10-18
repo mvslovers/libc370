@@ -471,5 +471,12 @@ What later 2.x releases ask of a program or a build:
       #cmd("sizeof(reply)") to #cmd("wtor()"). Pass a nonzero value for a
       non-blocking socket. Test the return values that were always 0.
       Compile again for the corrected #cmd("FD_ZERO").],
+    [2.20.0], [A program's sockets are closed when it ends, also by an
+      abend, a time limit or a CANCEL: a server that abends gives its
+      listening port back. Only sockets the program's #cmd("socket()") and
+      #cmd("accept()") returned are its own. A program that links the
+      socket functions uses one of the ten #cmd("estae()") levels for
+      this.], [Nothing, unless a program left a socket open on purpose
+      for a later one: it has to keep running instead.],
   )
 ] <pg-migrate-since-tab>
