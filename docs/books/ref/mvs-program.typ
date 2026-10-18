@@ -51,12 +51,14 @@ fetched from an APF-authorized library.
   [#cmd("__loadhi()")], [APF-authorized and PSW key 0],
   [#cmd("__super()"), #cmd("__prob()"), #cmd("__pswkey()")], [APF-authorized\;
     otherwise they return #cmd("EPERM")],
-  [#cmd("super_do()"), #cmd("super_key_do()")], [APF-authorized\; otherwise
-    abend S047],
+  [#cmd("super_do()"), #cmd("super_key_do()")], [APF-authorized, or
+    supervisor state\; otherwise they return #cmd("EPERM") (abend S047 up to
+    LIBC/370 2.18.1)],
   [#cmd("__austep()"), #cmd("__uastep()")], [APF-authorized\; otherwise they
     return 4],
-  [#cmd("clib_auth_cde()"), #cmd("clib_auth_name()")], [APF-authorized\;
-    otherwise abend S047],
+  [#cmd("clib_auth_cde()"), #cmd("clib_auth_name()")], [APF-authorized, or
+    supervisor state\; otherwise they return #cmd("EPERM") (abend S047 up
+    to LIBC/370 2.18.1)],
   [#cmd("__autask()")], [an authorization SVC 244 on the system (see
     @mvs-program-__autask)],
 )
@@ -1373,8 +1375,9 @@ it.
 
 === Notes
 Both functions switch to key 0 and supervisor state for the change, and
-return in problem state with the key of the task, whatever the state of the
-caller was.
+return in the state and with the key the caller had. Up to LIBC/370 2.18.1
+they returned in problem state with the key of the task, whatever the state
+of the caller was.
 
 === Related
 @mvs-program-__autask, @mvs-program-__steplb
@@ -1445,12 +1448,15 @@ the entry with #cmd("clib_find_cde()").
 
 === Returns
 0, or 4 from #cmd("clib_auth_name()") when the module is not in the job pack
-queue. #cmd("clib_auth_cde()") does nothing for a #cmd("NULL") #var("cde").
+queue. #cmd("EPERM") when the caller is in problem state and not
+APF-authorized\; nothing is changed then. #cmd("clib_auth_cde()") does
+nothing for a #cmd("NULL") #var("cde").
 
 === Notes
-Both switch to key 0 and supervisor state with #cmd("MODESET"), and return
-in problem state. The caller must be APF-authorized, or the program ends
-with abend S047.
+Both switch to key 0 and supervisor state for the change, and return in the
+state and with the key the caller had. Up to LIBC/370 2.18.1 they returned
+in problem state, and a caller that was not APF-authorized ended with abend
+S047.
 
 The external names are #cmd("@@AUTCDE") and #cmd("@@AUTNAM").
 
@@ -1541,12 +1547,14 @@ unless it is #cmd("PSWKEYNONE"), and restores the caller's key afterwards.
 #cmd("@@SUKYDO").
 
 === Returns
-The return value of #var("func"), or the nonzero return code of
-#cmd("MODESET") when the switch failed.
+The return value of #var("func"). #cmd("EPERM") when the caller is in
+problem state and not APF-authorized\; #var("func") is not called then.
 
 === Notes
-Neither function checks the authorization of the caller. A program that is
-not APF-authorized ends with abend S047.
+Up to LIBC/370 2.18.1 neither function checked the authorization of the
+caller, and a program that was not APF-authorized ended with abend S047.
+#cmd("EPERM") cannot be told from a #var("func") that returns the same
+value\; test #cmd("__isauth()") first where that matters.
 
 === Related
 @mvs-program-__super, @mvs-program-__loadhi

@@ -1,6 +1,7 @@
 /* @@AUSTEP.C - APF authorized the STEPLIB dataset */
 #include "mvs/crt.h"
 #include "mvs/apf.h"
+#include "src/internal/svkey0.h"
 
 __asm__("\n&FUNC    SETC '__austep'");
 int
@@ -9,14 +10,17 @@ __austep(void)
     CLIBCRT         *crt    = __crtget();
     volatile int    rc      = 0;
     volatile int    steplib = 0;
+    unsigned        st;
 
     /* check for APF authorization */
     __asm__("TESTAUTH\tFCTN=1\n\tST\t15,%0" : "=m" (rc) : : "memory");
     if (rc!=0) goto quit;
 
-    /* we're APF authorized, fixup the STEPLIB DEB if needed */
+    /* we're APF authorized, fixup the STEPLIB DEB if needed: in
+       supervisor state and key 0, and back to the caller's own state and
+       key after it - not always problem state (#402) */
+    st = svkey0();
     __asm__("\n"
-"         MODESET KEY=ZERO,MODE=SUP\n"
 "         ICM   1,15,PSATOLD-PSA(0) Get our TCB address\n"
 "         ICM   1,15,TCBJLB-TCB(1)  Get STEPLIB DCB\n"
 "         LA    1,0(,1)             Purify DCB address\n"
@@ -43,9 +47,9 @@ __austep(void)
 "         BE    SETAPF              Yes, set the APF bit in this DEB\n"
 #endif
 "         DROP  1\n"
-"QUITON   DS    0H\n"
-"         MODESET KEY=NZERO,MODE=PROB" : "=m"(steplib)
+"QUITON   DS    0H" : "=m"(steplib)
     : : "0", "1", "14", "15", "memory");
+    svrestore(st);
 
     if (steplib) {
         if (crt) {

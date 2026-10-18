@@ -1,12 +1,14 @@
 /* @@UASTEP.C */
 #include "mvs/crt.h"
 #include "mvs/apf.h"
+#include "src/internal/svkey0.h"
 
 int
 __uastep(void)
 {
     CLIBCRT         *crt    = __crtget();
     volatile int    rc      = 0;
+    unsigned        st;
 
     /* check for APF authorization */
     __asm__("TESTAUTH\tFCTN=1\n\tST\t15,%0" : "=m" (rc) : : "memory");
@@ -16,9 +18,11 @@ __uastep(void)
         if (!(crt->crtauth & CRTAUTH_STEPLIB)) goto quit;
     }
 
-    /* we're APF authorized, reset the STEPLIB DEB authorization */
+    /* we're APF authorized, reset the STEPLIB DEB authorization: in
+       supervisor state and key 0, and back to the caller's own state and
+       key after it (#402) */
+    st = svkey0();
     __asm__("\n"
-"         MODESET KEY=ZERO,MODE=SUP\n"
 "         ICM   1,15,PSATOLD-PSA(0) Get our TCB address\n"
 "         ICM   1,15,TCBJLB-TCB(1)  Get STEPLIB DCB\n"
 "         LA    1,0(,1)             Purify DCB address\n"
@@ -39,8 +43,8 @@ __uastep(void)
 "         BE    RESETAPF            Yes, reset the APF bit in this DEB\n"
 #endif
 "         DROP  1\n"
-"QUITOFF  DS    0H\n"
-"         MODESET KEY=NZERO,MODE=PROB" : : : "0", "1", "14", "15", "memory");
+"QUITOFF  DS    0H" : : : "0", "1", "14", "15", "memory");
+    svrestore(st);
 
     if (crt) {
         crt->crtauth &= 0xFF - CRTAUTH_STEPLIB;

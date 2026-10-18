@@ -2,6 +2,7 @@
 #include <ibm/mvs/ihacde.h>
 #include <mvs/wto.h>
 #include <mvs/apf.h>
+#include <errno.h>
 
 __asm__("\n&FUNC    SETC 'super_key_do'");
 int super_key_do(unsigned char pswkey, void *func, ...)
@@ -13,6 +14,11 @@ int super_key_do(unsigned char pswkey, void *func, ...)
 
     /* are we already in supervisor mode? */
     sup = __issup();
+    if (!sup && !__isauth()) {
+        /* MODESET is SVC 107: it abended S047 here, and the rc test
+           below never ran.  EPERM, as __super() answers (#402) */
+        return EPERM;
+    }
     if (!sup) {
         /* no, switch to supervisor mode */
         __asm__("MODESET\tMODE=SUP      switch to supervisor state\n\t"

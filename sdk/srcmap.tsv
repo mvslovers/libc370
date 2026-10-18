@@ -800,3 +800,4 @@ src/internal/envld.h	src/internal/envld.h	shared private header, new after 2.16.
 src/stdio/@@fpopn.c	src/stdio/@@fpopn.c	new after 2.16.0 (size analysis F5): fopen()'s core, the standard streams open through it
 src/mvs/idcams/@@idcrec.c	src/mvs/idcams/@@idcrec.c	new after 2.18.0 (#590): IDCAMS input records within column 72
 src/internal/idcrec.h	src/internal/idcrec.h	shared private header, new after 2.18.0: IDCAMS input records
+src/internal/svkey0.h	src/internal/svkey0.h	shared private header, new after 2.18.1 (#402): supervisor key 0 and back to the caller's state

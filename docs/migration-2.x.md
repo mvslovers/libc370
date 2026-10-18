@@ -209,6 +209,7 @@ CHANGELOG has everything else.
 
 | Release | Change | What to do |
 |---|---|---|
+| Unreleased | `super_do()`, `super_key_do()`, `clib_auth_cde()`/`clib_auth_name()` return `EPERM` and `iefssreq()` -1 (`errno` `EPERM`) to an unauthorized caller, which ended S047 (#402); the state functions return the caller in its own state and key. `jescanj()`, `jesdelj()`, `jesreque()`, `jesxwrtr()`, `jesxdone()` return a negative value when the request did not reach JES - minus the SSI return code, or -1/`EPERM` - where they returned 0 (#406) | Code that tested these JES2 functions for `== 0` keeps working; code that tests `!= 0` for failure now sees the failures that were hidden. A negative value is new |
 | 2.18.1 | `idcams()` passes its command record by record within column 72, and `rename()` of a data set to a long name renames it to that name (#590; it was cut at column 72 with condition code 0). A command line that cannot be broken there returns -1 with `errno` `EINVAL` | Nothing. A data set renamed by 2.18.0 or earlier may sit under a shortened name: look for one |
 | 2.18.1 | `ssvt_set()`/`ssvt_funcmap()` return `EPERM` for a slot above `ssvtfnum` (`ssvt_funcmap()` also above 255); `ssct_remove(NULL)` returns 4 (#407) | A caller that used slots beyond the `funcmax` it gave `ssvt_new()` creates the SSVT with enough slots |
 | 2.18.1 | `racf_logout()` returns -1 with `errno` `EINVAL` for a `NULL` `acee` or `*acee` and deletes nothing (#405); it deleted the address space's resting ACEE | Nothing for a caller that checks the ACEE first, as the ones known do |
