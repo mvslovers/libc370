@@ -450,5 +450,13 @@ What later 2.x releases ask of a program or a build:
       #cmd("%e"), #cmd("%g") (#cmd("e"), not #cmd("E")), the #cmd("#")
       flag, #cmd("h") and #cmd("hh") is C99's.], [Output compared byte for
       byte changes. Code that parses an exponent accepts #cmd("e").],
+    [2.18.1], [#cmd("rename()") of a data set to a long name renames it
+      to that name: up to 2.18.0 the name was cut at column 72 of the
+      IDCAMS command, with condition code 0. #cmd("idcams()") refuses a
+      command line it cannot fit (-1, #cmd("EINVAL")).
+      #cmd("racf_logout()") of #cmd("NULL"), the subsystem helpers out of
+      range and #cmd("getmain()") above X'FFFFB8' fail with an error
+      instead of doing damage.], [Nothing. A data set renamed by an older
+      library may sit under a shortened name: look for one.],
   )
 ] <pg-migrate-since-tab>
