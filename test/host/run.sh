@@ -122,6 +122,7 @@ tstgmain() {
     "$CC" -std=gnu99 -Wall -Wextra \
        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
        -I $R/include -I $R -o "$B/t" tstgmain.c && "$B/t"
+    return
 }
 tstidcam() {
     "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address -Wno-unknown-pragmas \
@@ -214,6 +215,7 @@ tstraclo() {
     "$CC" -std=gnu99 -Wall -Wextra \
        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
        -I $R/include -I $R -o "$B/t" tstraclo.c && "$B/t"
+    return
 }
 tstrand() {
     "$CC" -std=gnu99 -Wall \
@@ -234,6 +236,7 @@ tstsubsy() {
     "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address \
        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
        -I $R/include -I $R -o "$B/t" tstsubsy.c && "$B/t"
+    return
 }
 tsttm64vec() {
     "$CC" -std=gnu99 -Wall -Wextra -o "$B/t" tsttm64vec.c && "$B/t"

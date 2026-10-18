@@ -7,6 +7,7 @@
 #include "ibm/mvs/ihacde.h"
 #include "mvs/wto.h"
 #include "s370/atomic.h"
+#include <mvs/xmem.h>
 
 __asm__("\n&FUNC    SETC 'racf_logout'");
 int
@@ -15,7 +16,6 @@ racf_logout(ACEE **acee)
     volatile int    rc          = 0;
     int             sup         = 0;
     int             key         = 0;
-    unsigned        *psa        = (unsigned *)0;
     unsigned        *ascb;
     unsigned        *asxb;
     ACEE            **asxbsenv;
@@ -34,7 +34,7 @@ racf_logout(ACEE **acee)
         return -1;
     }
     delacee  = *acee;
-    ascb     = (unsigned *)psa[0x224/4];    /* A(ASCB)      */
+    ascb     = (unsigned *)__ascb(0);       /* this address space's ASCB */
     asxb     = (unsigned *)ascb[0x6C/4];    /* A(ASXB)      */
     asxbsenv = (ACEE **)&asxb[0xC8/4];      /* A(ASXBSENV)  */
 

@@ -30,6 +30,7 @@
 
 int *__errno(void) { static int e; return &e; }
 /* reached only past the guard, which no case here passes */
+void *__ascb(unsigned asid) { (void)asid; return NULL; }
 int __cas(unsigned *mem, unsigned *expect, unsigned new_value)
 { (void)mem; (void)expect; (void)new_value; return 0; }
 
