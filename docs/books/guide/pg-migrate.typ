@@ -458,5 +458,18 @@ What later 2.x releases ask of a program or a build:
       range and #cmd("getmain()") above X'FFFFB8' fail with an error
       instead of doing damage.], [Nothing. A data set renamed by an older
       library may sit under a shortened name: look for one.],
+    [2.19.0], [#cmd("wtor()") terminates the reply within
+      #var("replymax"), which is now the size of the buffer.
+      #cmd("ioctlsocket()") with #cmd("FIONBIO") uses the value
+      #var("argp") points to, so a pointer to 0 makes a socket blocking.
+      #cmd("select()") waits the time it is given. Functions that reported
+      success without doing the work -- the JES2 requests,
+      #cmd("cthread_queue_add()") -- and functions that abended --
+      #cmd("__64_div()") by zero, #cmd("__cpread()") at the end of the data
+      set, #cmd("mtxfree(NULL)") -- return an error. #cmd("FD_ZERO") no
+      longer clears the byte behind the set.], [Pass
+      #cmd("sizeof(reply)") to #cmd("wtor()"). Pass a nonzero value for a
+      non-blocking socket. Test the return values that were always 0.
+      Compile again for the corrected #cmd("FD_ZERO").],
   )
 ] <pg-migrate-since-tab>

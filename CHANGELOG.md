@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.19.0] - 2026-10-18
+
+A release of fixes from a review of the library against its reference
+manual. Several functions reported success for work that never happened
+(the JES2 requests, `cthread_queue_add()`), several wrote outside their
+buffers (the console helpers, `arrayaddf()`, `FD_ZERO`, the JES2 spool
+helpers), and some looped or abended where they should return (`__64_div()`
+by zero, `__cpread()` at the end of the data set, `mtxfree(NULL)`). A minor
+release because callers notice it: `wtor()` now treats `replymax` as the
+size of the buffer, `ioctlsocket(FIONBIO)` uses the value `argp` points
+to, `select()` waits the time it is given, and the functions that failed
+silently now return an error (below). The CC/370 range is unchanged:
+`>=1.6.0 <2`.
+
 ### Fixed
 - **Functions that switch to supervisor state return an error to an
   unauthorized caller instead of abending S047, and leave an authorized
