@@ -40,6 +40,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   WTOR now, where it wrote every line as an ordinary message and returned
   without a reply.
 
+- **`arrayaddf()` takes a string of any length (#398).** It formatted
+  into a 1024-byte buffer on the stack, and a longer string overran it
+  (measured on MVS: the program ended S0C1). It measures the string now and
+  formats it into its own storage. When the item cannot be added, that
+  storage is freed; it leaked before.
+
 ## [2.18.1] - 2026-10-18
 
 A patch release of fixes, two of them in key 0 and one that renamed data
