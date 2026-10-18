@@ -209,6 +209,7 @@ CHANGELOG has everything else.
 
 | Release | Change | What to do |
 |---|---|---|
+| Unreleased | `idcams()` passes its command record by record within column 72, and `rename()` of a data set to a long name renames it to that name (#590; it was cut at column 72 with condition code 0). A command line that cannot be broken there returns -1 with `errno` `EINVAL` | Nothing. A data set renamed by 2.18.0 or earlier may sit under a shortened name: look for one |
 | Unreleased | `ssvt_set()`/`ssvt_funcmap()` return `EPERM` for a slot above `ssvtfnum` (`ssvt_funcmap()` also above 255); `ssct_remove(NULL)` returns 4 (#407) | A caller that used slots beyond the `funcmax` it gave `ssvt_new()` creates the SSVT with enough slots |
 | Unreleased | `racf_logout()` returns -1 with `errno` `EINVAL` for a `NULL` `acee` or `*acee` and deletes nothing (#405); it deleted the address space's resting ACEE | Nothing for a caller that checks the ACEE first, as the ones known do |
 | Unreleased | `getmain()` returns `NULL` for a size above X'FFFFB8' (#401; it asked for 0 or 64 bytes and the program ended S0C4). `getmain()`/`freemain()` no longer link the printf engine (#283); `freemain()`'s message for an invalid header is one line instead of a dump | Nothing. A tool that parsed `freemain()`'s dump reads the one line |

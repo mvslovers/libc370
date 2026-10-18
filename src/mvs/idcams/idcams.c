@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <errno.h>
+#include "src/internal/idcrec.h"
 
 static int link_idcams(const char *cmds, IDCAMS_SYSPRINT fn, void *arg);
 
@@ -115,6 +117,8 @@ typedef struct {
     const char      *cmds;
     IDCAMS_SYSPRINT fn;         /* idcams_sysprint(): each SYSPRINT line */
     void            *arg;       /* ... passed to fn */
+    IDCREC          in;         /* the input records of cmds (#590) */
+    char            rec[IDCREC_MAX + 1];
 } UDATA;
 
 static const short none = 0;
@@ -129,7 +133,7 @@ static int link_idcams(const char *cmds, IDCAMS_SYSPRINT fn, void *arg)
     char        ddname2[10] = "DDSYSPRINT";
     void        *iofunc     = __idcex;
     unsigned    stack[2000] = {0};
-    UDATA       udata       = {(void*)stack, cmds, fn, arg};
+    UDATA       udata       = {(void*)stack, cmds, fn, arg, {cmds, 0}, {0}};
     IODD        sysin       = {ddname1, iofunc, &udata};
     IODD        sysprint    = {ddname2, iofunc, &udata};
     IOLIST      iolist      = {2, sysin, sysprint};
@@ -151,6 +155,14 @@ static int link_idcams(const char *cmds, IDCAMS_SYSPRINT fn, void *arg)
     wtof("iofunc=%08X", iofunc);
 */
 #endif
+
+    /* every record must fit columns 2-72: what IDCAMS does not read it
+       does not get, and a command cut there can still be valid - a
+       rename to a shortened name (#590) */
+    if (__idcchk(cmds) != 0) {
+        errno = EINVAL;
+        return -1;
+    }
 
     plist[0]    = (unsigned)&none;      /* options list */
     plist[1]    = (unsigned)&none;      /* ddnames list */
@@ -214,7 +226,7 @@ __asm__("\n&FUNC    SETC '__idcexc'");
 int __idcexc(UDATA *udata, IOFLAGS *ioflags, IOINFO *ioinfo)
 {
     int         rc      = 0;
-    const char  *cmds   = udata->cmds;
+    int         n;
 
 #if 0
     wtof("In %s", __func__);
@@ -233,11 +245,18 @@ int __idcexc(UDATA *udata, IOFLAGS *ioflags, IOINFO *ioinfo)
         /* nothing to do */
         break;
     case OP_GET:
-        /* wtof("OP_GET"); */
-        ioinfo->get.rec = (char*)udata->cmds;
-        ioinfo->get.reclen = udata->cmds ? strlen(udata->cmds) : 0;
-        if (!udata->cmds) rc = 4; /* indicate end-of-data */
-        udata->cmds = 0;
+        /* one record at a time, each within column 72 (#590); it handed
+           the whole command over as one record */
+        n = __idcrec(&udata->in, udata->rec);
+        if (n < 0) {
+            ioinfo->get.rec = udata->rec;
+            ioinfo->get.reclen = 0;
+            rc = 4;             /* end-of-data */
+        }
+        else {
+            ioinfo->get.rec = udata->rec;
+            ioinfo->get.reclen = n;
+        }
         break;
     case OP_PUT:
         /* wtof("OP_PUT %*.*s", ioinfo->put.reclen, ioinfo->put.reclen, ioinfo->put.rec); */

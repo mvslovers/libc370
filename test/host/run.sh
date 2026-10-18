@@ -129,6 +129,10 @@ tstidcam() {
        -D'__asm__(...)=' -D'__asm(...)=' -D'asm(...)=' -D__volatile__= -D__32BIT__ \
        -I $R/include -I $R -o "$B/t" tstidcam.c && "$B/t"
 }
+tstidcrec() {
+    "$CC" -std=gnu99 -Wall -Wextra -Werror -I $R -o "$B/t" tstidcrec.c && "$B/t"
+    return
+}
 tstinet() {
     "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address -Wno-trigraphs \
        -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
@@ -282,7 +286,7 @@ tstwpos() {
 # The tests a plain run covers: all of them.  A test that stops building is
 # not dropped from here - fix it, or say which issue it waits on.
 ALL="tst75snd tstacee tstardel tstblank tstcmtt tstdblcv tstdblrb tstdirck tstdsnmt tstemptl
-     tstenqdq tsterrfl tstfabnd tstfcls tstfloor tstfpapp tstfprls tstfpunit tstgmain tstidcam tstinet tstiolk tstjesop
+     tstenqdq tsterrfl tstfabnd tstfcls tstfloor tstfpapp tstfprls tstfpunit tstgmain tstidcam tstidcrec tstinet tstiolk tstjesop
      tstjesprb tstjestx tstl tstll tstlspd tstlstds tstpfarg tstpfflt tstpfval tstplus tstraclo tstrand tstrldwk tstrseek tstscnll tstssvt tstsubsy tsttm64vec tsttxdsn tstvsnp
      tstwchar tstwpos"
 

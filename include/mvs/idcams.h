@@ -11,6 +11,10 @@
 int __idcams(size_t len, char *data);   /* non-reentrant assembler subroutine, Yick! */
 
 int idcams(const char *fmt, ...);   /* reentrant C function, LINKs to IDCAMS external program */
+/* idcams() passes the command to IDCAMS record by record, within column 72:
+** a '\n' ends a record, and a longer line is broken at a blank outside
+** quotes with IDCAMS's '-' continuation.  A line that cannot be broken is
+** refused: -1 with errno EINVAL, and IDCAMS is not called (#590). */
 
 /* idcams_sysprint() - idcams(), and every line IDCAMS prints handed to fn.
 **

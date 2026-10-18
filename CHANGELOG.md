@@ -7,6 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Fixed
+- **`rename()` of a data set to a long name no longer renames it to the
+  name cut short (#590).** `idcams()` gave IDCAMS its command as a single
+  input record, and IDCAMS reads only columns 2 to 72: `rename()`'s
+  `ALTER old NEWNAME(new)` with long names lost the end of the new name,
+  and IDCAMS renamed the data set to what was left, with condition code
+  0 (measured on MVS: a 33-character name catalogued with 32, and two
+  44-character names leaving `IBMUSER.LIBC`). `idcams()` now passes the
+  command record by record within column 72, broken at blanks with
+  IDCAMS's continuation, and refuses a line it cannot break with -1 and
+  `errno` `EINVAL`. This also covers `__listc()` with a long level, and
+  any program that calls `idcams()` with a long command.
 - **The subsystem helpers no longer store outside their target in key 0
   (#407).** `ssvt_set()` checked the slot number against 256 instead of
   the number of slots the SSVT was created with, and stored past its end
