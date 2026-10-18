@@ -92,11 +92,21 @@ its caller's #cmd("try()"). A socket a program did not open itself -- one
 its caller passed to it -- is not closed, even when the program called
 #cmd("bind()") or #cmd("connect()") on it.
 
-When a program abends and nothing in it recovers, MVS ends the task without
-running the library's end-of-program code, and its sockets stay open: a
-socket left open keeps its number, and a listening socket keeps its port,
-until some program closes that number or Hercules is restarted. (Up to
-libc370 2.19.0 that was so at every end of a program.)
+This includes an abend that nothing in the program recovers -- a program
+check, a time limit, an operator CANCEL. A program that links the socket
+functions establishes an ESTAE at its start for this, the oldest of its
+recovery routines, which closes the sockets and lets the abend go on: an
+#cmd("estae()") or #cmd("try()") of the program sees the abend first. It
+takes one of the ten levels #cmd("estae()") provides. A thread that abends
+does not close the program's sockets, since the program goes on.
+
+A socket stays open after its program in two cases only: the program was
+not started as a C program (a thread of #cmd("cthread_create()"), a
+function called through #cmd("@@CCALL")), or the task ended without
+recovery at all. A socket left open keeps its number, and a listening
+socket keeps its port, until some program closes that number or Hercules
+is restarted. (Up to libc370 2.19.0 that was so at every end of a
+program.)
 
 === Addresses and Byte Order
 
@@ -346,8 +356,8 @@ POSIX systems, which does not exist for sockets here.
 === Notes
 
 - Closing a number that is not open is not reported.
-- The sockets a program opened are closed when it ends, except after an
-  abend that nothing recovers\; see @sockets-provider.
+- The sockets a program opened are closed when it ends, also by an
+  abend\; see @sockets-provider.
 
 === Related
 

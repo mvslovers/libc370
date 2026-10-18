@@ -2,14 +2,18 @@
 //             MSGLEVEL=(1,1)
 //*
 //* libc370 #601 - a program's sockets are closed when it ends.  See
-//* test/mvs/tstsoenm.c.  G this tree (ports 24601-24603), R the
-//* installed library (24611-24613).  TSTSOAx ends with a listening
+//* test/mvs/tstsoenm.c.  G this tree (ports 24601-24606), R the
+//* installed library (24611-24616).  TSTSOAx ends with a listening
 //* socket open, TSTSOBx binds its port; TSTSOCx LINKs TSTSODx, which
 //* abends under try() holding a port, then binds it; TSTSOEx is the
-//* guard: a LINKed module binds the caller's socket.  Module build:
+//* guard: a LINKed module binds the caller's socket.  TSTSOGx abends
+//* S0C1 with nothing to recover, TSTSOIx runs into TIME= (S322); the
+//* step after each binds the port.  The CANCEL case, TSTSOKx and
+//* TSTSOLx, runs as jobs of its own: jcl/tstsoenk.jcl.  Module build:
 //*   cc370 -O1 -Wall -Werror [-Iinclude -L build/sdk | -DRED]
 //*         -DCASE=n -DPORT=p test/mvs/tstsoenm.c
-//*   A 1, B 2, C 3, D 4, E 5, F 6; p = 24600/24610 + 1, 1, 2, 2, 3, 3
+//*   A 1, B 2, C 3, D 4, E 5, F 6, G 7, H 2, I 8, J 2, K 9, L 2;
+//*   p = 24600/24610 + 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6
 //*
 //AG       EXEC PGM=TSTSOAG,REGION=4M,COND=EVEN
 //STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.SESCR
@@ -19,6 +23,14 @@
 //STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.SESCR
 //EG       EXEC PGM=TSTSOEG,REGION=4M,COND=EVEN
 //STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.SESCR
+//GG       EXEC PGM=TSTSOGG,REGION=4M,COND=EVEN
+//STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.SESCR
+//HG       EXEC PGM=TSTSOHG,REGION=4M,COND=EVEN
+//STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.SESCR
+//IG       EXEC PGM=TSTSOIG,REGION=4M,COND=EVEN,TIME=(0,2)
+//STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.SESCR
+//JG       EXEC PGM=TSTSOJG,REGION=4M,COND=EVEN
+//STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.SESCR
 //AR       EXEC PGM=TSTSOAR,REGION=4M,COND=EVEN
 //STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.SESCR
 //BR       EXEC PGM=TSTSOBR,REGION=4M,COND=EVEN
@@ -26,5 +38,13 @@
 //CR       EXEC PGM=TSTSOCR,REGION=4M,COND=EVEN
 //STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.SESCR
 //ER       EXEC PGM=TSTSOER,REGION=4M,COND=EVEN
+//STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.SESCR
+//GR       EXEC PGM=TSTSOGR,REGION=4M,COND=EVEN
+//STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.SESCR
+//HR       EXEC PGM=TSTSOHR,REGION=4M,COND=EVEN
+//STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.SESCR
+//IR       EXEC PGM=TSTSOIR,REGION=4M,COND=EVEN,TIME=(0,2)
+//STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.SESCR
+//JR       EXEC PGM=TSTSOJR,REGION=4M,COND=EVEN
 //STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.SESCR
 //

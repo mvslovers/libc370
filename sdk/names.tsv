@@ -1329,6 +1329,7 @@ GRTFLAG1_TSO	mvs/crt.h
 GRTFLAG2_ENVDONE	mvs/crt.h
 GRTFLAG2_ENVLAZY	mvs/crt.h
 GRTFLAG2_ENVTRY	mvs/crt.h
+GRTFLAG2_SOESTAE	mvs/crt.h
 HASPCMB	ibm/jes2/cmb.h
 HASPCP	mvs/jes2ckpt.h
 HASPCP_EYE	mvs/jes2ckpt.h

@@ -48,6 +48,11 @@ extern int main(int argc, char **argv);
 extern int __rtinit(void);
 extern void __exita(int status);
 
+/* weak (#601): linked with the socket layer.  Establishes the recovery
+   that closes the program's sockets when it abends and nothing in it
+   recovers. */
+extern void __soestae(void) __attribute__((weak));
+
 /* __premain() - the startup hook (cc370#10).  A program that needs to act
    before a standard stream is opened (first use, #564) - set stdin/stdout/stderr to
    files of its own, check its environment, look at the caller's parameter
@@ -106,6 +111,10 @@ __start(char *p, char *pgmname, int tsojbid, void **pgmr1)
         grt->grtflag1 |= GRTFLAG1_TSO;
         progLen = (unsigned int)p[3];
     }
+
+    /* first, so that it is the oldest recovery of the program and runs
+       last: an estae() or try() of the program sees an abend before it */
+    if (__soestae) __soestae();
 
     /* the program's own startup step, if it has one (cc370#10) */
     if (premain) {

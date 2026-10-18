@@ -51,6 +51,8 @@ struct clibgrt {
                                     /*     start-up is done (#564)          */
 #define GRTFLAG2_ENVTRY     0x40    /* ... SYSENV load was started          */
 #define GRTFLAG2_ENVDONE    0x20    /* ... SYSENV load has finished         */
+#define GRTFLAG2_SOESTAE    0x10    /* ... the socket layer's ESTAE is      */
+                                    /*     established (#601)               */
     unsigned    grttmpnm;           /* 0C tmpnam() counter                  */
     void        **grtexit;          /* 10 atexit() array of functions       */
     void        **grtexita;         /* 14 on_exit() array of args           */

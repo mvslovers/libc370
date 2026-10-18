@@ -54,12 +54,11 @@ Two consequences of this design affect every socket program:
   descriptor: the functions of #cmd("<stdio.h>") cannot use it, and there is
   no #cmd("close()") or #cmd("read()") for it.
 - *The library closes a program's sockets when it ends* -- the ones its
-  #cmd("socket()") and #cmd("accept()") returned -- but not after an abend
-  that nothing in the program recovers. A socket left open then keeps its
-  number, and a listening socket keeps its port, until some program closes
-  that number or Hercules is restarted. Close every socket with
-  #cmd("closesocket()") when you are done with it\; how a program recovers
-  from an abend is described in @pg-errors.
+  #cmd("socket()") and #cmd("accept()") returned -- also when it abends,
+  is cancelled or runs out of time. A server that abends therefore gives
+  its listening port back, and can be started again at once. Still close
+  every socket with #cmd("closesocket()") when you are done with it\; how
+  a program recovers from an abend is described in @pg-errors.
 
 #note[Every program that uses the TCPIP instruction has the network access
 of the Hercules process on the workstation, and can use or close any socket
@@ -277,7 +276,7 @@ Library Reference give the complete list.
     [*Call or area*], [*What to do on MVS*],
     [#cmd("close()")], [Does not exist for sockets. Use
       #cmd("closesocket()"). The library closes what is left when the
-      program ends, but not after an abend nothing recovers.],
+      program ends, also by an abend.],
     [#cmd("bind()"), #cmd("connect()"), #cmd("accept()")], [Take a
       #cmd("struct sockaddr_in *"): pass it without a cast. The length
       arguments are not used\; #cmd("accept()")'s is an #cmd("int *").],
