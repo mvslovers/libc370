@@ -38,6 +38,9 @@ size_t strlen(const char *s);
 void *memcpy(void *d, const void *s, size_t n);
 
 #include "../../src/mvs/idcams/idcams.c"
+#include "../../src/mvs/idcams/@@idcrec.c"
+
+int *__errno(void) { static int e; return &e; }
 
 /* the assembler glue and the LINK, which only exist on MVS */
 int __idcex(UDATA *udata, IOFLAGS *ioflags, IOINFO *ioinfo)
@@ -86,6 +89,10 @@ int main(void)
     UDATA   u       = { 0, " DELETE 'IBMUSER.NOSUCHDS'", capture, &token };
     UDATA   plain   = { 0, " LISTCAT", 0, 0 };
     IOINFO  info;
+
+    /* the input cursor link_idcams() sets up (#590) */
+    u.in.next = u.cmds;
+    plain.in.next = plain.cmds;
 
     /* 1. OP_GET: the commands once, then end-of-data */
     CHECK_EQ(op(&u, OP_OPEN, &info, 0), 0, "OP_OPEN rc");

@@ -705,7 +705,9 @@ them:
 
 === Returns
 The highest condition code of IDCAMS: 0, 4, 8, 12 or 16. A negative value
-when the LINK to IDCAMS failed.
+when the LINK to IDCAMS failed, and -1 with #cmd("errno") #cmd("EINVAL")
+when a line of the command cannot be broken to fit column 72 (see below)\;
+IDCAMS is not called then.
 
 === Notes
 - The condition code alone does not say why a command failed: 8 is
@@ -721,10 +723,20 @@ when the LINK to IDCAMS failed.
 - #var("fn") runs inside the output exit of IDCAMS, on a stack of 8000
   bytes that the library provides for the exit and everything it calls.
   Keep it short, and do not call #cmd("idcams()") from it.
-- The formatted command is limited to 255 characters and is passed to
-  IDCAMS as a single input record. Begin it with a blank, as
-  the example below does: IDCAMS does not read column 1 of its
+- The formatted command is limited to 255 characters. Begin it with a
+  blank, as the example below does: IDCAMS does not read column 1 of its
   input.
+- IDCAMS reads columns 2 to 72 of every input record, so the command is
+  passed to it record by record. A #cmd("'\\n'") in the command ends a
+  record. A line that goes past column 72 is broken at its last blank
+  before that column that is not inside quotes, and continued with IDCAMS's
+  #cmd("-") in the next record. A line that has no such blank - one word
+  longer than about 70 characters, or a quoted string with blanks that
+  reaches past column 72 - is refused. Up to LIBC/370 2.18.0 the whole
+  command was one record, and what lay past column 72 was cut off: an
+  #cmd("ALTER old NEWNAME(new)") with long names renamed the data set to
+  the new name cut short, with condition code 0. #cmd("rename()") of a
+  whole data set uses this command.
 - Both functions are reentrant\; each call has its own exit data, so
   several tasks may run IDCAMS at the same time.
 
