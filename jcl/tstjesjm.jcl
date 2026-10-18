@@ -1,0 +1,16 @@
+//TSTJESJM JOB (SYS),'LIBC370 406',CLASS=A,MSGCLASS=H,
+//             MSGLEVEL=(1,1)
+//*
+//* libc370 #406 - jesjob() with a 20-character filter.  See
+//* test/mvs/tstjesjm.c.  GREEN this tree, RED the installed library
+//* (a control: the old one-byte overrun is not expected to show).
+//*
+//GREEN    EXEC PGM=TSTJESJG,REGION=4M,COND=EVEN
+//STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.JJSCR
+//HASPCKPT DD  DISP=SHR,DSN=SYS1.HASPCKPT
+//HASPACE1 DD  DISP=SHR,DSN=SYS1.HASPACE
+//RED      EXEC PGM=TSTJESJR,REGION=4M,COND=EVEN
+//STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.JJSCR
+//HASPCKPT DD  DISP=SHR,DSN=SYS1.HASPCKPT
+//HASPACE1 DD  DISP=SHR,DSN=SYS1.HASPACE
+//
