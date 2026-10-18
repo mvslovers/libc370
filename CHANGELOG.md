@@ -7,6 +7,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Fixed
+- **The subsystem helpers no longer store outside their target in key 0
+  (#407).** `ssvt_set()` checked the slot number against 256 instead of
+  the number of slots the SSVT was created with, and stored past its end
+  into the common service area; `ssvt_funcmap()` accepted 256 and stored
+  it into a one-byte field as 0, which disabled the function;
+  `ssct_remove(NULL)` matched the last SSCT and stored 0 at absolute
+  address 4. The first two now return `EPERM`, `ssct_remove(NULL)`
+  returns 4.
+- **`racf_logout()` with no ACEE no longer deletes the address space's
+  own identity (#405).** `racf_logout(NULL)`, or a pointer to a `NULL`
+  ACEE, reached RACINIT `ENVIR=DELETE` with no ACEE address, which the
+  security product reads as "the address space's ACEE": the resting
+  identity of a started task was deleted, and with it the restriction it
+  carried, before the function stored through the null pointer. It now
+  returns -1 with `errno` `EINVAL` and calls nothing.
 - **`getmain()` refuses a size it cannot round into 24 bits (#401).**
   The request is rounded, with its 8-byte header, to 64 bytes, and the
   rounding dropped the carry: a size from X'FFFFB9' to X'FFFFFF' asked

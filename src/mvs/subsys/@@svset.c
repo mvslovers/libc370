@@ -13,9 +13,13 @@ int ssvt_set(SSVT *ssvt, unsigned index, void *func)
 
     if (!ssvt)          return EPERM;
 
-    /* index number must be 1 through 256 inclusive */
+    /* index number must be 1 through the number of slots ssvt_new()
+       allocated, ssvtfnum.  It was checked against 256, and a larger
+       index was stored past the end of the SSVT, in key 0 into CSA
+       (#407) */
     if (!index)         return EPERM;
     if (index > 256)    return EPERM;
+    if (index > (unsigned short)ssvt->ssvtfnum) return EPERM;
 
     /* make index relative to zero */
     index--;

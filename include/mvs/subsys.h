@@ -49,7 +49,7 @@ SSVT * ssvt_new(unsigned funcmax)                               asm("@@SVNEW");
 void ssvt_free(SSVT *ssvt)                                      asm("@@SVFREE");
 
 /* ssvt_set() places func into SSVT area, requires supervisor state */
-/* note: index range is 1 - funcmax inclusive */
+/* note: index range is 1 - funcmax inclusive (ssvt->ssvtfnum); EPERM outside it */
 int ssvt_set(SSVT *ssvt, unsigned index, void *func)            asm("@@SVSET");
 
 /* ssvt_reset() removes func from SSVT area, requires supervisor state */
@@ -60,7 +60,7 @@ static __inline int ssvt_reset(SSVT *ssvt, unsigned index)
 
 /* ssvt_funcmap() maps function index to subsystem function number */
 /* note: it's possible to have a function (index) that serves multiple function numbers */
-/* note: index range is 0 - ssvt->ssvtfnum inclusive (0 disables the funcnum function) */
+/* note: index range is 0 - ssvt->ssvtfnum inclusive, at most 255 (0 disables the funcnum function); EPERM outside it */
 /* note: funcnum range is 1 - 256 inclusive */
 int ssvt_funcmap(SSVT *ssvt, unsigned index, unsigned funcnum)  asm("@@SVFMAP");
 
@@ -104,6 +104,7 @@ SSCT *ssct_find(const char *name)                                   asm("@@SSFIN
 int ssct_install(SSCT *ssct, const char *after_name)                asm("@@SSINST");
 
 /* ssct_remove() remove SSCT as subsystem, requires supervisor state and key 0 */
+/* note: 0 removed, 4 not found - also for NULL and for the first subsystem, which is the system's own */
 int ssct_remove(SSCT *ssct)                                         asm("@@SSREM");
 
 /* ssct_remove_by_name() remove SSCT as subsystem, requires supervisor state and key 0 */

@@ -3,9 +3,11 @@
 */
 #include "mvs/racf.h"
 #include "stddef.h"
+#include <errno.h>
 #include "ibm/mvs/ihacde.h"
 #include "mvs/wto.h"
 #include "s370/atomic.h"
+#include <mvs/xmem.h>
 
 __asm__("\n&FUNC    SETC 'racf_logout'");
 int
@@ -14,13 +16,27 @@ racf_logout(ACEE **acee)
     volatile int    rc          = 0;
     int             sup         = 0;
     int             key         = 0;
-    unsigned        *psa        = (unsigned *)0;
-    unsigned        *ascb       = (unsigned *)psa[0x224/4]; /* A(ASCB)      */
-    unsigned        *asxb       = (unsigned *)ascb[0x6C/4]; /* A(ASXB)      */
-    ACEE            **asxbsenv  = (ACEE **)  &asxb[0xC8/4]; /* A(ASXBSENV)  */
-    ACEE            *delacee    = acee ? *acee : (ACEE *)0;
+    unsigned        *ascb;
+    unsigned        *asxb;
+    ACEE            **asxbsenv;
+    ACEE            *delacee;
     ACEE            *expect;
     RACINIT         plist;
+
+    /* No ACEE, no RACINIT.  A zero ACEE address in the parameter list tells
+    ** RACINIT ENVIR=DELETE to delete the address space's own ACEE, the one
+    ** in ASXBSENV: racf_logout(NULL) took away the started task's resting
+    ** identity, after which RAKF finds no ACEE and allows - and then the
+    ** store below went through NULL (#405).  NULL in *acee is the same
+    ** request by another route. */
+    if (!acee || !*acee) {
+        errno = EINVAL;
+        return -1;
+    }
+    delacee  = *acee;
+    ascb     = (unsigned *)__ascb(0);       /* this address space's ASCB */
+    asxb     = (unsigned *)ascb[0x6C/4];    /* A(ASXB)      */
+    asxbsenv = (ACEE **)&asxb[0xC8/4];      /* A(ASXBSENV)  */
 
     __asm__("XC\t0(0,%0),0(%0)      clear plist *** executed ***\n\t"
             "EX\t%1,*-6" : : "r"(&plist), "r"(sizeof(plist)-1) : "memory");

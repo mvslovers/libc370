@@ -13,8 +13,11 @@ int ssvt_funcmap(SSVT *ssvt, unsigned index, unsigned funcnum)
 
     if (!ssvt)          return EPERM;
 
-    /* index number must be 0 through 256 inclusive (0 disables the function) */
-    if (index > 256)                return EPERM;
+    /* index number must be 0 through ssvtfnum (0 disables the function),
+       and at most 255: ssvtfcod holds one byte, where 256 was stored as 0
+       and disabled the function (#407) */
+    if (index > 255)                return EPERM;
+    if (index > (unsigned short)ssvt->ssvtfnum) return EPERM;
 
     /* funcnum number must be 1 through 256 inclusive */
     if (!funcnum)                   return EPERM;

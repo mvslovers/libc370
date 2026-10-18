@@ -31,7 +31,10 @@ extern ACEE *   raclogin(const char *user, const char *pass,
 extern ACEE *   racf_login(const char *user, const char *pass,
                            const char *group, int *racf_rc)             asm("RACLOGIN");
 
-/* racf_logout() - release a ACEE */
+/* racf_logout() - release an ACEE and set *acee to NULL.
+** Returns RACINIT's return code, or -1 with errno EINVAL when acee or *acee
+** is NULL: nothing is deleted then.  (Up to 2.18.0 a NULL went to RACINIT,
+** which deleted the address space's own ACEE, #405.) */
 extern int      raclgout(ACEE **acee);
 extern int      racf_logout(ACEE **acee)                                asm("RACLGOUT");
 
