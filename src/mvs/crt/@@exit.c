@@ -11,8 +11,9 @@
 extern int fclose(FILE *stream) __attribute__((weak));
 #include "ext/array.h"
 
-/* weak (#601): linked with the socket layer; closes the program's sockets */
-extern void __soend(CLIBGRT *grt) __attribute__((weak));
+/* weak (#601): linked with the socket layer; deletes its ESTAE and closes
+   the program's sockets */
+extern void __soexit(CLIBGRT *grt) __attribute__((weak));
 
 extern void __exita(int status);
 
@@ -67,7 +68,7 @@ __exit(int status)
 
     /* sockets the program opened and left open: the emulator's socket
        table is global and would keep them after the program (#601) */
-    if (grt->grtsock && __soend) __soend(grt);
+    if (__soexit) __soexit(grt);
 
     if (grt->grtenv) {
         /* free environment variables */

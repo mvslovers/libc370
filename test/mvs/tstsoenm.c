@@ -12,6 +12,10 @@
  *           binds that socket - the caller's - to PORT and returns; the
  *           caller's socket must still be open: listen() works, and a
  *           second socket cannot bind PORT
+ *   CASE=7  open a listening socket on PORT and abend S0C1 with nothing
+ *           in the program to recover; CASE=2 on PORT then checks
+ *   CASE=8  the same, looping until the step's TIME= ends it (S322)
+ *   CASE=9  the same, waiting until the operator cancels the job (S222)
  *
  * Every program is built twice, against this tree and against the
  * installed library, with ports of their own (the red ones stay bound).
@@ -133,6 +137,23 @@ int main(int argc, char **argv)
     closesocket(s);
     return verdict(rc1 == 0 && rc2 != 0,
                    "5 a socket the LINKed module bound stays the caller's");
+#elif CASE == 7 || CASE == 8 || CASE == 9
+    int             s = socket(AF_INET, SOCK_STREAM, 0);
+    volatile int    spin = 1;
+    unsigned        ecb = 0;
+
+    (void)spin; (void)ecb;
+    bind_to(s, PORT);
+    listen(s, 1);
+    wtof("TSTSOENM socket %d bound to %d, now ending abnormally", s, PORT);
+#if CASE == 7
+    __asm__("DC\tH'0'          abend S0C1");
+#elif CASE == 8
+    while (spin) ;
+#else
+    __asm__("WAIT\tECB=%0" : : "m"(ecb));
+#endif
+    return 0;
 #elif CASE == 6
     int s = argc > 1 ? atoi(argv[1]) : -1;
     int rc = bind_to(s, PORT);

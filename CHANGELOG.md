@@ -16,7 +16,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   (measured on MVS: the port is free for the next step). `bind()` and
   `connect()` no longer make a socket the program did not open its own,
   so a module that binds a socket its caller passed does not close it.
-  An abend that nothing recovers still leaves the sockets open.
+  An abend that nothing in the program recovers - a program check, a time
+  limit, an operator CANCEL - closes them too: a program that links the
+  socket functions establishes an ESTAE at its start that closes its
+  sockets and lets the abend go on (measured on MVS for S0C1, S322 and
+  S222). A server that abends gives its listening port back.
 
 ## [2.19.0] - 2026-10-18
 
