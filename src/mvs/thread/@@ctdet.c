@@ -59,8 +59,6 @@ cthread_detach(CTHDTASK *task)
 
     /* we use try() to catch any DETACH failures */
     rc = try(detach, task);
-
-    if (rc==0) rc = task->rc;
     task->tcb = 0;
 
 quit:
@@ -72,17 +70,20 @@ static int
 detach(CTHDTASK *task)
 {
     void    *tcb = (void*)(task->tcb);
+    int     rc;
 #if 0
     wtof("Issuing DETACH for task=%08X, TCB=%08X", task, task->tcb);
 #endif
     __asm("DS\t0H\n\t"
         "DETACH (%1),STAE=YES   detach the subtask\n\t"
         "ST\t15,%0          save the return code"
-        : "=m"(task->rc) : "r"(&tcb) : "14","15","0","1" , "memory");
+        : "=m"(rc) : "r"(&tcb) : "14","15","0","1" , "memory");
 #if 0
     wtof("Return from DETACH for task=%08X, TCB=%08X, RC=%d", task, task->tcb, task->rc);
 #endif
     task->tcb = 0;
 
-    return task->rc;
+    /* the DETACH return code is returned, and task->rc keeps the thread's
+       own: it was stored over it (#403) */
+    return rc;
 }

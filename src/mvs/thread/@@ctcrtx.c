@@ -106,9 +106,19 @@ static CTHDTASK *
 newthread(unsigned tcb, unsigned owntcb, unsigned stacksize)
 {
     CLIBGRT     *grt    = __grtget();
-    unsigned    newstack= (stacksize > 0 && stacksize < 80) ? 80 :
-                            ((stacksize+7) & 0x000FFFF8);
-    CTHDTASK    *task   = calloc(1, sizeof(CTHDTASK) + newstack);
+    unsigned    newstack;
+    CTHDTASK    *task;
+
+    /* 0 is the owner's handle, which needs no stack.  Otherwise at least
+    ** 1 KB: the driver's save area alone is X'58' bytes.  The size was
+    ** masked to 20 bits, so 1 MB gave 0 and 1 MB + 64 KB gave 64 KB, and
+    ** sizes up to 79 were raised to 80 (#403). */
+    if (stacksize == 0)                 newstack = 0;
+    else if (stacksize < 1024)          newstack = 1024;
+    else if (stacksize > 0x00FFFFF0)    return NULL;
+    else                                newstack = (stacksize + 7) & ~7u;
+
+    task = calloc(1, sizeof(CTHDTASK) + newstack);
 
     if (!grt) {
         /* no GRT: an unregistered thread would be invisible to

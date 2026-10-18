@@ -600,11 +600,13 @@ void      mtxfree(CLIBMUTX *mutex);
 available.
 
 === Notes
-- Release a mutex with #cmd("mtxunlk()") before you free it. For a mutex that
-  is still held, #cmd("mtxfree()") issues an #cmd("unlock()") on the address of
-  the mutex, which is not the resource the mutex holds, so the ENQ remains
-  held until the task ends.
-- #cmd("mtxfree()") does not accept #cmd("NULL").
+- A mutex the calling task holds is released by #cmd("mtxfree()") before
+  it is freed, however often it was locked. A mutex that another task holds
+  must not be freed. #cmd("mtxfree(NULL)") does nothing.
+- Up to libc370 2.18.1 #cmd("mtxfree()") released the wrong resource, so
+  the ENQ of a held mutex stayed until the task ended, and the freed mutex
+  stayed in the task's list for the cleanup at its end\; #cmd("NULL")
+  ended in a program check.
 - Do not call #cmd("mtxinit()") for a mutex that is held.
 
 === Related
@@ -741,8 +743,9 @@ CTHDTASK *cthread_create_ex(void *func, void *arg1, void *arg2,
 Create a thread that calls #var("func") with the arguments #var("arg1") and
 #var("arg2"). #cmd("cthread_create()") gives the thread a stack of 64 KB,
 #cmd("cthread_create_ex()") one of #var("stacksize") bytes. A
-#var("stacksize") of 0 means 64 KB, a size below 80 is raised to 80, and
-every other size is rounded up to a multiple of 8.
+#var("stacksize") of 0 means 64 KB, a size below 1 KB is raised to 1 KB,
+and every other size is rounded up to a multiple of 8. A size of 16 MB or
+more is refused.
 
 When the calling task has no handle yet, one is created for it, so that it
 is recorded as the owner of the new thread.
@@ -757,10 +760,9 @@ failed.
   start-up identifies it (see the introduction to this chapter). A module
   started with #cmd("crtm") identifies nothing: its ATTACH works only when
   the calling C program has identified #cmd("CTHREAD").
-- #var("stacksize") must be less than 1 MB (#cmd("0x100000")). Only the
-  low-order 20 bits of the rounded size are kept, so a size of 1 MB or more
-  gives a stack of that size modulo 1 MB, and exactly 1 MB gives a stack too
-  small to run in.
+- Up to libc370 2.18.1 only the low-order 20 bits of the size were kept,
+  so exactly 1 MB gave a stack too small to run in, and sizes below 80 were
+  raised only to 80.
 - When #var("func") is #cmd("NULL"), the thread runs a library routine that
   writes the fields of its handle to the operator with WTO and returns -1.
 
@@ -828,9 +830,9 @@ handle itself remains. A thread that has not ended is not detached.
 - The thread counts as ended after either #cmd("ecb_wait(&task->termecb)")
   or #cmd("cthread_wait(&task->termecb)"), although the latter clears the
   ECB (see the introduction to this section).
-- The DETACH return code is stored in the #cmd("rc") field of the handle,
-  where it replaces the return value of the thread function. Read
-  #cmd("task->rc") before you detach the thread.
+- The #cmd("rc") field of the handle keeps the return value of the thread
+  function. (Up to libc370 2.18.1 the DETACH return code was stored over
+  it.)
 
 === Related
 @mvs-sync-cthread_delete
@@ -1142,12 +1144,15 @@ it to free the element of an item that a worker has finished\; a program
 rarely needs it.
 
 === Returns
-#cmd("cthread_queue_add()") returns 0, or -1 when no storage is available.
+#cmd("cthread_queue_add()") returns 0, or -1 when the item was not queued:
+#var("mgr") is #cmd("NULL"), the manager is shutting down or has stopped,
+or no storage is available.
 #cmd("cthread_queue_del()") returns 0.
 
 === Notes
-#cmd("cthread_queue_add()") also returns 0, without queuing anything, when
-#var("mgr") is #cmd("NULL") or the manager is shutting down or has stopped.
+When the item was not queued, #var("data") still belongs to the caller.
+(Up to libc370 2.18.1 the function returned 0 for a #cmd("NULL") manager
+and for one shutting down or stopped.)
 
 === Related
 @mvs-sync-cthread_worker_wait
@@ -1584,8 +1589,8 @@ or no address space with that identifier exists.
 === Notes
 - The ASCB is read without serialization. An address space may end, and its
   identifier be reused, right after the call.
-- The highest identifier of the system, the value of #cmd("ASVTMAXU"), is
-  treated as out of range.
+- Identifiers run from 1 to #cmd("ASVTMAXU"). (Up to libc370 2.18.1 the
+  highest one was treated as out of range.)
 
 === Related
 @mvs-sync-xmpost
