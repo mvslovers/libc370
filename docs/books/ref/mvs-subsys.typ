@@ -719,8 +719,8 @@ A job whose control table cannot be read from the spool is left out
 without a message. The caller owns the array and frees it with
 #cmd("jesjobfr()").
 
-A filter of 12 or more characters is not cut to 11: the uppercase copy is
-written past its 12-byte buffer. Keep filters to 11 characters.
+Only the first 11 characters of a filter are used. (Up to libc370 2.18.1 a
+longer filter was written past its 12-byte buffer.)
 
 === Related
 
@@ -936,6 +936,9 @@ opened. #cmd("__cpclos()") returns 0.
 
 === Notes
 
+A #cmd("DD:") name may be shorter than 8 characters. (Up to libc370
+2.18.1 such a name was not padded, and the open failed.)
+
 When the buffer for the job queue cannot be obtained, #cmd("__cpopen()")
 still returns the handle, with #cmd("buf") and #cmd("jqe") set to
 #cmd("NULL"). Check #cmd("buf") before using the queue.
@@ -969,15 +972,17 @@ the next block, at most 4096 bytes, into #var("buf4k") (#cmd("READ") and
 === Returns
 
 0, or -1 when #var("cp") is #cmd("NULL") or its data set is not open.
+#cmd("__cpread()") also returns -1 at the end of the data set and for an
+I/O error.
 
 === Notes
 
-- The return code does not report I/O errors. An error that #cmd("CHECK")
-  detects ends the program with an abend.
-- #cmd("__cpread()") gives #cmd("READ") a data event control block of 16
-  bytes on its stack, where a BSAM DECB is 20 bytes long. The access
-  method stores its record pointer word into the last four, and so
-  overwrites the 4 bytes of the stack that follow the block.
+- An error in #cmd("__cppoin()") ends the program with an abend\; POINT
+  reports none.
+- Up to libc370 2.18.1 #cmd("__cpread()") had no end-of-data or error
+  routine, so the end of the data set ended the program with S337, and its
+  data event control block was 4 bytes short, so READ overwrote 4 bytes of
+  the stack.
 
 === Related
 
@@ -1022,13 +1027,15 @@ of tracks per cylinder of the spool device in #cmd("trkcyl"), which
 === Returns
 
 #cmd("__jsopen()") returns the handle, or #cmd("NULL") when storage could
-not be obtained or the allocation failed. #cmd("__jsclos()") returns 0.
+not be obtained, the allocation failed, or the data set could not be
+opened. #cmd("__jsclos()") returns 0.
 
 === Notes
 
-When the data set is allocated but cannot be opened, #cmd("__jsopen()")
-stores through a null pointer after it has closed the handle, which
-abends. Make sure the DD statement names a spool data set before the call.
+#cmd("__jsopen()") returns #cmd("NULL") as well when the data set cannot be
+opened. A #cmd("DD:") name may be shorter than 8 characters. (Up to
+libc370 2.18.1 a failed open went on through a null pointer and abended,
+and a short #cmd("DD:") name was not padded, so its open failed.)
 
 === Related
 

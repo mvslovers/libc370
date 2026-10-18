@@ -77,6 +77,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   queuing for a NULL manager or one shutting down or stopped; it returns
   -1 now. `__ascb()` refused the highest address space identifier.
 
+- **JES2 spool and checkpoint helpers (#406).** `__jsopen()` went on
+  through a null pointer after a failed OPEN (measured: S0C4) and returns
+  NULL now. A `dd:` name shorter than 8 characters was not padded, so
+  `__jsopen()` and `__cpopen()` failed to open it. `__cpread()` had no
+  end-of-data or error routine, so the end of the data set abended S337;
+  it returns -1 now, and its DECB is the 20 bytes READ fills (it was 16).
+  `jesjob()` wrote one byte past its filter buffer.
+
 ## [2.18.1] - 2026-10-18
 
 A patch release of fixes, two of them in key 0 and one that renamed data

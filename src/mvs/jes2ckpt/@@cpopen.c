@@ -52,7 +52,9 @@ HASPCP *__cpopen(const char *dataset)
         int i;
         const char *p = &dataset[3];
 
-        for (i=0; i < 8 && *p; i++) {
+        /* p[i]: *p tested the first character only, so a name shorter
+           than 8 copied its NUL and what follows (#406) */
+        for (i=0; i < 8 && p[i]; i++) {
             cp->ddname[i] = toupper(p[i]);
         }
         while(i < 8) cp->ddname[i++]=' ';
