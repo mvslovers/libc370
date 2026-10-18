@@ -6,14 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.18.1] - 2026-10-18
+
+A patch release of fixes, two of them in key 0 and one that renamed data
+sets to names nobody asked for. `rename()` of a data set to a long name
+renamed it to that name cut at column 72 of the IDCAMS command;
+`racf_logout()` with no ACEE deleted the address space's own identity;
+the subsystem helpers stored outside the SSVT and into low core;
+`getmain()` mishandled sizes near 16 MB. Calls that did damage now fail
+with an error instead (below). A drop-in for 2.18.0; the CC/370 range is
+unchanged: `>=1.6.0 <2`.
+
 ### Fixed
 - **`rename()` of a data set to a long name no longer renames it to the
   name cut short (#590).** `idcams()` gave IDCAMS its command as a single
   input record, and IDCAMS reads only columns 2 to 72: `rename()`'s
   `ALTER old NEWNAME(new)` with long names lost the end of the new name,
   and IDCAMS renamed the data set to what was left, with condition code
-  0 (measured on MVS: a 33-character name catalogued with 32, and two
-  44-character names leaving `IBMUSER.LIBC`). `idcams()` now passes the
+  0 (measured on MVS: a 33-character name catalogued with 32, and a
+  44-character name cut to 12 when the old name was 44 characters too). `idcams()` now passes the
   command record by record within column 72, broken at blanks with
   IDCAMS's continuation, and refuses a line it cannot break with -1 and
   `errno` `EINVAL`. This also covers `__listc()` with a long level, and
