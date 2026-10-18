@@ -84,11 +84,19 @@ assigned from 1 to 1023\; 0 is never a socket. Because the table is shared
 by the whole system, the first socket a program opens is not necessarily
 number 1.
 
-A socket stays open until #cmd("closesocket()") closes it. The library does
-not close a program's sockets when the program ends: a socket left open
-keeps its number, and a listening socket keeps its port, until some
-program closes that number or Hercules is restarted. Close every socket
-before the program ends, including on its error paths.
+A socket stays open until #cmd("closesocket()") closes it, or until the
+program that opened it ends: the library then closes every socket that the
+program's #cmd("socket()") and #cmd("accept()") returned and that is still
+open. This also happens for a program called with LINK that abends under
+its caller's #cmd("try()"). A socket a program did not open itself -- one
+its caller passed to it -- is not closed, even when the program called
+#cmd("bind()") or #cmd("connect()") on it.
+
+When a program abends and nothing in it recovers, MVS ends the task without
+running the library's end-of-program code, and its sockets stay open: a
+socket left open keeps its number, and a listening socket keeps its port,
+until some program closes that number or Hercules is restarted. (Up to
+libc370 2.19.0 that was so at every end of a program.)
 
 === Addresses and Byte Order
 
@@ -338,7 +346,8 @@ POSIX systems, which does not exist for sockets here.
 === Notes
 
 - Closing a number that is not open is not reported.
-- Sockets are not closed when a program ends\; see @sockets-provider.
+- The sockets a program opened are closed when it ends, except after an
+  abend that nothing recovers\; see @sockets-provider.
 
 === Related
 

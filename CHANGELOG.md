@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- **A program's sockets are closed when it ends (#601).** The emulator's
+  socket table is shared by the whole system, so a socket a program left
+  open kept its number, and a listening socket its port, until another
+  program closed it or Hercules was restarted. At its end a program now
+  closes every socket its `socket()` and `accept()` returned, and so does
+  a program called with LINK that abends under its caller's `try()`
+  (measured on MVS: the port is free for the next step). `bind()` and
+  `connect()` no longer make a socket the program did not open its own,
+  so a module that binds a socket its caller passed does not close it.
+  An abend that nothing recovers still leaves the sockets open.
+
 ## [2.19.0] - 2026-10-18
 
 A release of fixes from a review of the library against its reference

@@ -652,7 +652,6 @@ src/dyn75/@@75acce.c	src/net/dyn75/@@75acce.c	the DYN75 provider
 src/dyn75/@@75bind.c	src/net/dyn75/@@75bind.c	the DYN75 provider
 src/dyn75/@@75clos.c	src/net/dyn75/@@75clos.c	the DYN75 provider
 src/dyn75/@@75conn.c	src/net/dyn75/@@75conn.c	the DYN75 provider
-src/dyn75/@@75exit.c	src/net/dyn75/@@75exit.c	the DYN75 provider
 src/dyn75/@@75gabn.c	src/net/dyn75/@@75gabn.c	the DYN75 provider
 src/dyn75/@@75ghba.c	src/net/dyn75/@@75ghba.c	the DYN75 provider
 src/dyn75/@@75ghbn.c	src/net/dyn75/@@75ghbn.c	the DYN75 provider

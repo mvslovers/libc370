@@ -12,12 +12,11 @@ __soupd(int ss, void *name, void *peer)
     int         rc      = 0;
     CLIBSOCK    *s      = 0;
 
-    if (!__sofind(ss,&s)) {
-        /* not found, convert to add */
-        // wtof("%s: converting to __soadd()", __func__);
-        rc = __soadd(ss, name, peer);
-        goto quit;
-    }
+    /* Only socket() and accept() make a socket the program's.  A socket
+    ** it does not list came from elsewhere - a module LINKed by a server
+    ** binds or connects one its caller created - and adopting it here
+    ** would close it at the end of this program (#601). */
+    if (!__sofind(ss,&s)) goto quit;
 
     if (name)   memcpy(s->name, name, sizeof(s->name));
     if (peer)   memcpy(s->peer, peer, sizeof(s->peer));
