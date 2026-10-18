@@ -17,31 +17,29 @@ vwtorf(char *reply, unsigned replymax, const char *text, va_list tList)
 {
     int     len;
     char    *p;
+    char    *s;
+    char    *last;
     char    buf[4096];
 
     len = vsnprintf(buf, sizeof(buf), text, tList);
     if (len >= sizeof(buf)) len = sizeof(buf) - 1;
     buf[len] = 0;
 
-    /* if the buffer is formatted with newlines */
-    p = strchr(buf, '\n');
-    if (p) {
-        while(p) {
-            /* truncate at the newline */
-            *p++ = 0;
-            /* write out the buffer */
-            wto(buf);
-            /* shift everything left */
-            strcpy(buf, p);
-            /* look for next newline */
-            p = strchr(buf, '\n');
-        }
-        /* done */
-        len = strlen(buf);
-        if (len==0) return;
+    /* every line but the last is an ordinary message, the last one is
+       the WTOR.  A text ending in a newline used to write all its lines
+       with wto() and issue no WTOR at all, and the rest of the buffer was
+       moved left with an overlapping strcpy() (#404). */
+    s = buf;
+    last = NULL;
+    while ((p = strchr(s, '\n')) != NULL) {
+        *p = 0;
+        if (last) wto(last);
+        last = s;
+        s = p + 1;
     }
-
-    /* no newlines, do normal wto processing */
-    buf[len] = 0;
-    wtor(reply, replymax, buf);
+    if (*s) {
+        if (last) wto(last);
+        last = s;
+    }
+    wtor(reply, replymax, last ? last : s);
 }

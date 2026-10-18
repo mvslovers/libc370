@@ -34,7 +34,7 @@ static void *memclr(void *s, size_t n) { (void)n; return s; }
 
 /* what the TU references and the refused sizes never reach */
 int __issup(void) { return 0; }
-void wto(char *msg) { (void)msg; }
+void wto(const char *msg) { (void)msg; }
 /* main's getmain.c before #283 reported through these */
 void wtof(const char *fmt, ...) { (void)fmt; }
 void wtodumpf(void *buf, int len, const char *fmt, ...) { (void)buf; (void)len; (void)fmt; }

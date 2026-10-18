@@ -17,31 +17,22 @@ vwtof(const char *text, va_list tList)
 {
     int     len;
     char    *p;
+    char    *s;
     char    buf[4096];
 
     len = vsnprintf(buf, sizeof(buf), text, tList);
     if (len >= sizeof(buf)) len = sizeof(buf) - 1;
     buf[len] = 0;
 
-    /* if the buffer is formatted with newlines */
-    p = strchr(buf, '\n');
-    if (p) {
-        while(p) {
-            /* truncate at the newline */
-            *p++ = 0;
-            /* write out the buffer */
-            wto(buf);
-            /* shift everything left */
-            strcpy(buf, p);
-            /* look for next newline */
-            p = strchr(buf, '\n');
-        }
-        /* done */
-        len = strlen(buf);
-        if (len==0) return;
+    /* one message per line.  The rest of the buffer used to be moved
+       left with an overlapping strcpy() after every line (#404); a
+       pointer walks it now.  A newline at the end makes no empty
+       message, a text without one is written even when empty. */
+    s = buf;
+    while ((p = strchr(s, '\n')) != NULL) {
+        *p = 0;
+        wto(s);
+        s = p + 1;
     }
-
-    /* no newlines, do normal wto processing */
-    buf[len] = 0;
-    wto(buf);
+    if (*s || s == buf) wto(s);
 }

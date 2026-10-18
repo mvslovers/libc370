@@ -13,7 +13,8 @@ wtodumpf(void *buf, int len, const char *fmt, ...)
     char    title[80];
 
     va_start(list, fmt);
-    vsprintf(title, fmt, list);
+    /* a title longer than the buffer ran past it (#404) */
+    vsnprintf(title, sizeof(title), fmt, list);
     va_end(list);
 
     wtodump(title, buf, len, 16);

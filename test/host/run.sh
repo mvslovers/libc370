@@ -271,6 +271,12 @@ tstvsnp() {
        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
        -I $R/include -I $R -o "$B/t" tstvsnp.c && "$B/t"
 }
+tstwto() {
+    "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address \
+       -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
+       -I $R/include -I $R -o "$B/t" tstwto.c && "$B/t"
+    return
+}
 tstwchar() {
     "$CC" -std=gnu99 -Wall -Wextra -Werror=incompatible-pointer-types \
        -fsanitize=address -U__LP64__ -D'__asm__(...)=' \
@@ -288,7 +294,7 @@ tstwpos() {
 ALL="tst75snd tstacee tstardel tstblank tstcmtt tstdblcv tstdblrb tstdirck tstdsnmt tstemptl
      tstenqdq tsterrfl tstfabnd tstfcls tstfloor tstfpapp tstfprls tstfpunit tstgmain tstidcam tstidcrec tstinet tstiolk tstjesop
      tstjesprb tstjestx tstl tstll tstlspd tstlstds tstpfarg tstpfflt tstpfval tstplus tstraclo tstrand tstrldwk tstrseek tstscnll tstssvt tstsubsy tsttm64vec tsttxdsn tstvsnp
-     tstwchar tstwpos"
+     tstwchar tstwpos tstwto"
 
 [ $# -gt 0 ] && ALL="$*"
 

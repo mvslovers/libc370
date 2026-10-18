@@ -4,7 +4,8 @@
 #include <stdarg.h>
 #include <s370/savearea.h>
 
-extern void wto(char *buf);
+/* wto() does not change buf (#404) */
+extern void wto(const char *buf);
 
 extern void vwtof(const char *text, va_list tList);
 

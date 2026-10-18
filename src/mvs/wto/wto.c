@@ -15,39 +15,43 @@ typedef struct wtomsg {
 
 extern void wtoline(const WTOMSG *msg);
 
+/* The text is walked with a pointer.  It used to be shifted left in the
+   caller's buffer after every 124-byte message, so the caller got its
+   string back changed, and a literal in protected storage was written to
+   (#404). */
 void
-wto(char *buf)
+wto(const char *buf)
 {
-    int     len = strlen(buf);
-    WTOMSG  msg;
+    const char  *s  = buf;
+    int         len = strlen(s);
+    WTOMSG      msg;
 
     do {
         if (len <= 124) {
             msg.len = len + 4;
             msg.mcsflags = 0;
-            if (len > 0) memcpy(msg.buf, buf, len);
+            if (len > 0) memcpy(msg.buf, s, len);
             len = 0;
         }
         else {
-            char *p = &buf[124];
+            const char *p = &s[124];
 
-            while(*p != ' ' && p > buf) p--;
+            while(*p != ' ' && p > s) p--;
 
-            if (p==buf) {
-                p = &buf[124];  /* no spaces, use 124 characters */
+            if (p==s) {
+                p = &s[124];    /* no spaces, use 124 characters */
             }
             else if (*p==' ') {
                 p++; /* include last space */
             }
 
-            msg.len = (int)(p-buf);     /* length of message segment */
+            msg.len = (int)(p-s);       /* length of message segment */
             msg.mcsflags = 0;
-            memcpy(msg.buf, buf, msg.len);
+            memcpy(msg.buf, s, msg.len);
             msg.buf[msg.len] = 0;
-            /* shift the buffer left and adjust length */
+            /* go on after the segment */
             len -= msg.len;
-            if (len > 0) memcpy(buf, p, len);
-            buf[len] = 0;
+            s = p;
             msg.len += 4;
         }
         wtoline(&msg);

@@ -39,7 +39,7 @@ as every string in a LIBC/370 program is.
 ```
 #include <mvs/wto.h>
 
-void wto(char *buf);
+void wto(const char *buf);
 ```
 
 === Description
@@ -54,12 +54,10 @@ A newline in #var("buf") is not interpreted\; use #cmd("wtof()") to write
 several lines.
 
 === Notes
-#cmd("wto()") changes #var("buf") when the string is longer than 124
-characters: after each message it moves the rest of the text to the
-beginning of the buffer, so the buffer holds only the last part when the
-function returns. That is why the parameter is not #cmd("const")\; do not
-pass a string literal that may be longer than 124 characters. A string of
-up to 124 characters is left as it is.
+#cmd("wto()") does not change #var("buf"), so a string literal of any
+length can be passed. (Up to libc370 2.18.1 the function moved the rest of
+a string longer than 124 characters to the beginning of the buffer after
+each message.)
 
 An empty string writes an empty message.
 
@@ -122,8 +120,9 @@ void vwtorf(char *reply, unsigned replymax, const char *text,
 === Description
 #cmd("wtor()") writes the message #var("text") to the operator with a WTOR
 macro call (SVC 35) and waits until the operator has replied. The reply is
-stored in the buffer #var("reply"), at most #var("replymax") characters of
-it.
+stored in the buffer #var("reply") and terminated with a null character.
+#var("replymax") is the size of that buffer: the reply is at most
+#var("replymax") - 1 characters long.
 
 #cmd("wtorf()") and #cmd("vwtorf()") format the message first, as
 #cmd("wtof()") and #cmd("vwtof()") do. When the formatted text contains
@@ -131,19 +130,22 @@ newline characters, every line but the last is written as an ordinary
 message with #cmd("wto()"), and the last line is the WTOR message.
 
 === Notes
-- The reply is not terminated with a null character. Clear the buffer
-  before the call, and make it at least one byte longer than
-  #var("replymax"), as @mvs-console-reply-ex does.
-- #var("replymax") is limited to 119, the longest reply that MVS accepts\;
-  a larger value is reduced to 119.
+- #cmd("wtor()") clears #var("replymax") bytes of #var("reply") before
+  the WTOR, so the reply is always terminated within the buffer. The
+  length of the reply is not returned\; use #cmd("strlen()").
+- A #var("replymax") larger than 120 is treated as 120: the longest reply
+  that MVS accepts is 119 characters. A #var("replymax") of 1 requests no
+  reply characters and stores only the null character.
+- Up to libc370 2.18.1 the reply was not terminated and #var("replymax")
+  counted the characters, not the buffer: a program that passed one less
+  than the buffer size now gets a reply one character shorter.
 - The text of the WTOR message is limited to 122 characters\; a longer
   text is truncated. #cmd("wtor()") does not split it.
 - If #var("reply") is #cmd("NULL") or #var("replymax") is 0, no reply is
   requested and #cmd("wtor()") does not wait.
-- If the text given to #cmd("wtorf()") or #cmd("vwtorf()") ends with a
-  newline character, no WTOR is issued: the lines are written as ordinary
-  messages, the function returns at once, and #var("reply") is not
-  changed. End the format string without a newline.
+- A newline at the end of the text given to #cmd("wtorf()") or
+  #cmd("vwtorf()") is ignored: the last line before it is the WTOR message.
+  (Up to libc370 2.18.1 no WTOR was issued in that case.)
 - The calling task waits until the reply arrives\; there is no time limit.
 
 === Example
@@ -191,13 +193,13 @@ builds the title from the format string #var("fmt") and the arguments that
 follow it, as #cmd("printf()") does.
 
 === Notes
-- #var("chunk") must be between 1 and 35. The hexadecimal and the character
-  part of a message are built in 80-byte buffers on the stack, and a larger
-  value overruns them. Use a multiple of 4: with any other value the last
-  hexadecimal digit of each line is cut off (a defect, libc370 issue 404).
-- The title formatted by #cmd("wtodumpf()") must not be longer than 79
-  characters. It is formatted with #cmd("vsprintf()") into an 80-byte
-  buffer, and a longer title overruns it.
+- #var("chunk") is between 1 and 32\; a larger value is treated as 32, and
+  0 or a negative value as 16. (Up to libc370 2.18.1 a value above 35, 0
+  or a negative value overran buffers on the stack, and with a value that
+  is not a multiple of 4 the last hexadecimal digit of each line was cut
+  off.)
+- The title formatted by #cmd("wtodumpf()") is truncated to 79 characters.
+  (Up to libc370 2.18.1 a longer title overran a buffer on the stack.)
 - Each line is a separate WTO message. A large area produces many messages
   on the console and in the system log\; dump only what is needed.
 
