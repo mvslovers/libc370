@@ -444,5 +444,11 @@ What later 2.x releases ask of a program or a build:
       read (@pg-startup-env).], [Nothing, unless #cmd("SYSENV") has such
       records or is the terminal: then call
       #cmd("loadenv(\"DD:SYSENV\")") yourself.],
+    [2.18.0], [#cmd("printf()") follows C99: #cmd("%f") of a value below
+      the last decimal place, #cmd("%g") with significant digits and the
+      #cmd("0") flag after the sign print correct values, and the form of
+      #cmd("%e"), #cmd("%g") (#cmd("e"), not #cmd("E")), the #cmd("#")
+      flag, #cmd("h") and #cmd("hh") is C99's.], [Output compared byte for
+      byte changes. Code that parses an exponent accepts #cmd("e").],
   )
 ] <pg-migrate-since-tab>

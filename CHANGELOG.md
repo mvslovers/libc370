@@ -6,9 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.18.0] - 2026-10-18
+
+A minor release that makes the `printf()` family print what C99 says.
+Up to 2.17.0 it printed wrong values in some cases - `%f` of small
+numbers, `%g`, zero padding with a sign - and its form differed in
+others: the exponent letter, the `#` flag, `h` and `hh`. Two memory
+faults in the formatter are fixed as well, and `<ibm/mvs/ihaacee.h>`
+names the parts of the ACEE's userid. **What programs print changes**
+in these cases (below); everything else is unchanged. The CC/370 range
+is unchanged: `>=1.6.0 <2`.
+
 ### Changed
 - **`printf()` writes `%e`, `%g`, `#`, `%h` and the `0` flag as C99 does
-  (#221, #384, #578).** What programs print changes:
+  (#221, #384, #578).**
   - `%e` and `%g` write the exponent with `e`; only `%E` and `%G` use
     `E`: `printf("%e", 1.5)` prints `1.500000e+00`, was `1.500000E+00`.
   - With precision 0, `%e` prints no decimal point: `%.0e` of 1 is
@@ -23,14 +34,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 - **`printf()` printed wrong values for `%f` of small numbers, `%g` and
-  zero-padded integers (#220, #384).** What programs print changes:
+  zero-padded integers (#220, #384).**
   - `%f` of a value below the last decimal place printed showed digits
     past the precision, and rounded at the wrong digit:
     `printf("%.3f", 0.000123456)` printed `0.0006`, now `0.000`.
   - `%g` took the precision as decimal places instead of significant
-    digits: `printf("%.3g", 123.456)` printed `123.456`, now `123`; in
-    exponent notation it now drops trailing zeros too, `%g` of 1e-5
-    prints `1E-05` (the `E` is unchanged).
+    digits: `printf("%.3g", 123.456)` printed `123.456`, now `123`. In
+    exponent notation it now drops trailing zeros: `%g` of 1e-5 is
+    `1e-05`, was `1.000000E-05`.
   - The `0` flag put the zeros in front of the sign:
     `printf("%05d", -1)` printed `000-1`, now `-0001`. The `0x` of `%#x`
     now counts in the width: `printf("%#08x", 1)` prints `0x000001`.
