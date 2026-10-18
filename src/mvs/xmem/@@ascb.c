@@ -18,7 +18,8 @@ void *__ascb(unsigned asid)
         goto quit;
     }
 
-    if (asid < asvt->asvtmaxu) {
+    /* ASIDs run from 1 to ASVTMAXU (#403) */
+    if (asid <= asvt->asvtmaxu) {
         ascb = (void*)((unsigned)asvt->asvtenty[asid-1] & 0x7FFFFFFF);
         if (ascb && memcmp(ascb, "ASCB", 4)!=0) ascb = 0;
     }

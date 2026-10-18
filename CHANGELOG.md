@@ -66,6 +66,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   trace line to `stdout`, and `bind()` to port 0 no longer reseeds
   `rand()`.
 
+- **Mutexes and threads (#403).** `mtxfree()` of a held mutex released
+  the wrong resource, so its ENQ stayed until the task ended, and left the
+  freed mutex in the task's list for the cleanup at task end;
+  `mtxfree(NULL)` ended S0C4. `cthread_create_ex()` kept only 20 bits of
+  the stack size, so exactly 1 MB gave no stack (measured: S0C4); sizes
+  below 1 KB are now raised to 1 KB, and 16 MB or more is refused.
+  `cthread_detach()` stored the DETACH return code over the thread's
+  return value in `task->rc`. `cthread_queue_add()` returned 0 without
+  queuing for a NULL manager or one shutting down or stopped; it returns
+  -1 now. `__ascb()` refused the highest address space identifier.
+
 ## [2.18.1] - 2026-10-18
 
 A patch release of fixes, two of them in key 0 and one that renamed data

@@ -3,19 +3,20 @@
 #include <string.h>
 #include <stddef.h>
 #include "mvs/mutex.h"
-#include "mvs/lock.h"
 
 void
 mtxfree(CLIBMUTX *mutex)
 {
-    unsigned    *psa    = (unsigned*)0;         /* MVS prefixed save area */
-    unsigned    tcb     = psa[0x21C/4];         /* get our TCB address */
+    if (!mutex) goto quit;
 
-    if (mutex->owner != 0) {
-        /* someone has this mutex locked, however we're about to free it
-        ** so we need to unlock it before we do the deed!
-        */
-        unlock(mutex,0);
+    /* Held by this task: release it completely through mtxunlk(), which
+    ** DEQs the mutex's own resource and takes it out of the task's list.
+    ** unlock() DEQed the LOCK name, not the MUTEX one, so the ENQ stayed,
+    ** and the list kept the freed mutex for the cleanup at task end (#403).
+    ** A mutex another task holds cannot be released from here. */
+    if (mtxheld(mutex)) {
+        mutex->count = 1;
+        mtxunlk(mutex);
     }
 
     memset(mutex, 0, sizeof(CLIBMUTX));

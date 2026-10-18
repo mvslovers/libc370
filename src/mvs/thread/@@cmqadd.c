@@ -12,12 +12,20 @@ cthread_queue_add(CTHDMGR *mgr, void *data)
     int         locked;
     CTHDQUE     *queue;
 
-    if (!mgr) goto quit;
+    if (!mgr) {
+        rc = -1;
+        goto quit;
+    }
 
     locked = lock(mgr,0);
 
-    if (mgr->state == CTHDMGR_STATE_QUIESCE) goto unlock;
-    if (mgr->state == CTHDMGR_STATE_STOPPED) goto unlock;
+    /* a manager that takes no more work says so: this returned 0, and the
+       caller could not tell it from a queued item (#403) */
+    if (mgr->state == CTHDMGR_STATE_QUIESCE ||
+        mgr->state == CTHDMGR_STATE_STOPPED) {
+        rc = -1;
+        goto unlock;
+    }
 
     queue = calloc(1, sizeof(CTHDQUE));
     if (!queue) {
