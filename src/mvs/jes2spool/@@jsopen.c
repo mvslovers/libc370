@@ -54,7 +54,9 @@ HASPJS *__jsopen(const char *dataset)
         int i;
         const char *p = &dataset[3];
 
-        for (i=0; i < 8 && *p; i++) {
+        /* p[i]: *p tested the first character only, so a name shorter
+           than 8 copied its NUL and what follows (#406) */
+        for (i=0; i < 8 && p[i]; i++) {
             js->ddname[i] = toupper(p[i]);
         }
         while(i < 8) js->ddname[i++]=' ';
@@ -73,8 +75,11 @@ HASPJS *__jsopen(const char *dataset)
     /* open the checkpoint dataset */
     __asm("OPEN\t((%0)),MF=(E,(%1))" : : "r"(dcb), "r"(&openpl) : "0", "1", "14", "15", "memory");
     if (!(dcb->dcboflgs & DCBOFOPN)) {
+        /* js is freed: without the goto, DEVTYPE and the store below went
+           through NULL (#406) */
         __jsclos(js);
         js = NULL;
+        goto quit;
     }
 #if 0
     wtof("DCB=%08X, dcbdevt=%02X", dcb, dcb->dcbdevt);

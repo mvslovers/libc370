@@ -108,7 +108,8 @@ JESJOB **jesjob(JES *jes, const char *filter, JESFILT type, int dd)
 
     /* if the caller supplied a filter we want to make an UPPERCASE copy */
     if (type != FILTER_NONE && filter) {
-        for(i=0; filter[i] && i < sizeof(filt); i++) {
+        /* one byte stays for the NUL: i reached sizeof(filt) (#406) */
+        for(i=0; filter[i] && i < (int)sizeof(filt) - 1; i++) {
             filt[i] = toupper(filter[i]);
         }
         filt[i] = 0;
