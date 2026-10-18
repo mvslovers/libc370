@@ -7,6 +7,7 @@
 #include <mvs/storage.h>
 #include <mvs/wto.h>
 #include <string.h>
+#include "src/internal/wtofmt.h"
 
 #if 0
 /* This is a map of the prefix area for the storage we obtain and free.
@@ -31,7 +32,12 @@ void *getmain(unsigned size, unsigned sp)
     unsigned char   pswkey;
 
     if (!size) return (void*)0;             /* no size, fail    */
-    if (size > 0x00FFFFFF) return (void*)0; /* too large, fail  */
+
+    /* length including the prefix area, rounded to 64 bytes.  The mask
+       keeps the carry: X'00FFFFC0' dropped it, so a size from X'FFFFB9'
+       on asked for 0 or 64 bytes and the caller wrote past them (#401) */
+    lv = (size + 8 + (64-1)) & 0xFFFFFFC0;
+    if (size > 0x00FFFFFF || lv > 0x00FFFFFF) return (void*)0; /* too large */
 
     /* are we executing in supervisor state? */
     if (__issup()) {
@@ -49,9 +55,6 @@ void *getmain(unsigned size, unsigned sp)
 
     sp &= 0x000000FF;                       /* SP range 0-255 */
 
-    /* calc length value including prefix area, rounded to 64 byte boundary */
-    lv = (size + 8 + (64-1)) & 0x00FFFFC0;
-
     /* request storage allocation for the requested subpool */
     __asm__("GETMAIN RC,LV=(%2),SP=(%3)\n\t"
             "LR\t%0,15              save the return code\n\t"
@@ -61,7 +64,22 @@ void *getmain(unsigned size, unsigned sp)
             : "0", "1", "14", "15", "memory");
 
     if (rc) {
-        wtof("%s request for %u bytes from sp=%u failed, rc=0x%02X (%d)", __func__, lv, sp, rc, rc);
+        /* the text of the wtof() it was, without printf: that linked
+           the printf engine into every module that only wants storage
+           (#283) */
+        char    msg[80];
+        int     k = 0;
+
+        wtofmt_str(msg, &k, sizeof(msg), "getmain request for ");
+        wtofmt_dec(msg, &k, sizeof(msg), lv);
+        wtofmt_str(msg, &k, sizeof(msg), " bytes from sp=");
+        wtofmt_dec(msg, &k, sizeof(msg), sp);
+        wtofmt_str(msg, &k, sizeof(msg), " failed, rc=0x");
+        wtofmt_hex(msg, &k, sizeof(msg), (unsigned)rc, 2);
+        wtofmt_str(msg, &k, sizeof(msg), " (");
+        wtofmt_dec(msg, &k, sizeof(msg), (unsigned)rc);
+        wtofmt_str(msg, &k, sizeof(msg), ")");
+        wto(msg);
         r1 = (void*)0;
     }
     else {
@@ -74,6 +92,27 @@ void *getmain(unsigned size, unsigned sp)
 
 quit:
     return (void*)r1;
+}
+
+/* a prefix freemain() cannot trust: its address and its two words on the
+   console.  It dumped 64 bytes through wtodumpf(), which linked the
+   printf engine (#283) */
+__asm__("\n&FUNC    SETC 'badprefix'");
+static void
+badprefix(void *addr, const char *what)
+{
+    char    msg[100];
+    int     k = 0;
+
+    wtofmt_str(msg, &k, sizeof(msg), "freemain ");
+    wtofmt_str(msg, &k, sizeof(msg), what);
+    wtofmt_str(msg, &k, sizeof(msg), " at ");
+    wtofmt_hex(msg, &k, sizeof(msg), (unsigned)addr, 8);
+    wtofmt_str(msg, &k, sizeof(msg), ", prefix ");
+    wtofmt_hex(msg, &k, sizeof(msg), ((unsigned *)addr)[0], 8);
+    wtofmt_str(msg, &k, sizeof(msg), " ");
+    wtofmt_hex(msg, &k, sizeof(msg), ((unsigned *)addr)[1], 8);
+    wto(msg);
 }
 
 __asm__("\n&FUNC    SETC 'freemain'");
@@ -94,12 +133,12 @@ int freemain(void *addr)
     /* sanity checks */
     if (!lv || !size) {
         /* possible duplicate freemain */
-        wtodumpf(addr, 64, "%s duplicate freemain", __func__);
+        badprefix(addr, "duplicate freemain");
         return -1;
     }
     if (lv - (size+8) > 64) {
         /* this shouldn't happen since we allocate rounded to 64 bytes */
-        wtodumpf(addr, 64, "%s check storage prefix", __func__);
+        badprefix(addr, "check storage prefix");
         return -1;
     }
 

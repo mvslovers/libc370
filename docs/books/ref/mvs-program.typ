@@ -855,13 +855,20 @@ releases it to the subpool it came from.
 
 === Returns
 #cmd("getmain()") returns the address of the storage, or #cmd("NULL") when
-#var("size") is 0 or 16 MB or more, or the GETMAIN fails.
+#var("size") is 0, when it is too large for its length - with the header,
+rounded - to fit in 24 bits (above X'FFFFB8'), or when the GETMAIN fails.
+Up to LIBC/370 2.18.0 a size from X'FFFFB9' to X'FFFFFF' asked for 0 or 64
+bytes, and the program failed with a protection exception (S0C4).
 
 #cmd("freemain()") returns the return code of FREEMAIN, 0 when #var("addr") is
 #cmd("NULL"), and -1 when the header in front of #var("addr") is not valid.
 
 === Notes
-A failed GETMAIN and an invalid header are reported to the operator.
+A failed GETMAIN and an invalid header are reported to the operator, without
+#cmd("printf()"): a module that uses only these functions links about
+1.7 KB of the library for them; up to LIBC/370 2.18.0 it linked the
+formatting functions too, about 21 KB. For an invalid header the
+message names its address and its two words.
 
 A subpool above 127 requires supervisor state or a PSW key of 0 to 7, as
 MVS prescribes for GETMAIN. Storage in subpool 241, the common service

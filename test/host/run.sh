@@ -33,7 +33,7 @@ trap 'rm -rf "$B"' EXIT
 
 tst75snd() {
     "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address -Wno-trigraphs \
-       -D'__asm__(...)=' -D'asm(...)=' -D__volatile__= -D__32BIT__ \
+       -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
        -I $R/include -I $R -o "$B/t" tst75snd.c && "$B/t"
 }
 tstcmtt() {
@@ -118,6 +118,11 @@ tstfpunit() {
        -D'__asm__(...)=' -D'asm(x)=' -D__32BIT__ \
        -I $R/include -I $R -o "$B/t" tstfpunit.c && "$B/t"
 }
+tstgmain() {
+    "$CC" -std=gnu99 -Wall -Wextra \
+       -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
+       -I $R/include -I $R -o "$B/t" tstgmain.c && "$B/t"
+}
 tstidcam() {
     "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address -Wno-unknown-pragmas \
        -D'__asm__(...)=' -D'__asm(...)=' -D'asm(...)=' -D__volatile__= -D__32BIT__ \
@@ -125,7 +130,7 @@ tstidcam() {
 }
 tstinet() {
     "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address -Wno-trigraphs \
-       -D'__asm__(...)=' -D'asm(...)=' -D__volatile__= -D__32BIT__ \
+       -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
        -I $R/include -I $R -o "$B/t" tstinet.c \
        "$R/src/net/@@inaton.c" "$R/src/net/@@inaddr.c" "$R/src/net/@@inpton.c" \
        "$R/src/net/@@inntop.c" "$R/src/net/@@inntoa.c" && "$B/t"
@@ -264,7 +269,7 @@ tstwpos() {
 # The tests a plain run covers: all of them.  A test that stops building is
 # not dropped from here - fix it, or say which issue it waits on.
 ALL="tst75snd tstacee tstardel tstblank tstcmtt tstdblcv tstdblrb tstdirck tstdsnmt tstemptl
-     tstenqdq tsterrfl tstfabnd tstfcls tstfloor tstfpapp tstfprls tstfpunit tstidcam tstinet tstiolk tstjesop
+     tstenqdq tsterrfl tstfabnd tstfcls tstfloor tstfpapp tstfprls tstfpunit tstgmain tstidcam tstinet tstiolk tstjesop
      tstjesprb tstjestx tstl tstll tstlspd tstlstds tstpfarg tstpfflt tstpfval tstplus tstrand tstrldwk tstrseek tstscnll tstssvt tsttm64vec tsttxdsn tstvsnp
      tstwchar tstwpos"
 
