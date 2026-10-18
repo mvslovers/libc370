@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.20.0] - 2026-10-18
+
+A program's sockets no longer outlive it. The emulator keeps one socket
+table for the whole system, so a socket a program did not close stayed
+open after it ended, and a server that abended held its listening port
+until Hercules was restarted. Now a program closes its sockets when it
+ends, also when it abends, runs out of time or is cancelled. A minor
+release because a program that relied on a socket staying open after it
+ended notices it, and because a program that links the socket functions
+uses one level of `estae()` for this. The CC/370 range is unchanged:
+`>=1.6.0 <2`.
+
 ### Fixed
 - **A program's sockets are closed when it ends (#601).** The emulator's
   socket table is shared by the whole system, so a socket a program left
