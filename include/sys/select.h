@@ -26,10 +26,12 @@ typedef struct fd_set {
 #define FD_ISSET(n, p) \
     ((p)->fds_bits[(n)/NFDBITS] & (1 << ((n) % NFDBITS)))
 
+/* EX adds 1 to the length in the register: sizeof - 1 clears the set
+   and nothing behind it (#396) */
 #define	FD_ZERO(p) \
     __asm__("XC\t0(0,%1),0(%1)      *** executed ***\n\t" \
     "EX\t%0,*-6            clear memory" \
-    : : "r" (sizeof(*(p))), "r" ((p)) : "memory")
+    : : "r" (sizeof(*(p)) - 1), "r" ((p)) : "memory")
 
 typedef struct timeval
 {

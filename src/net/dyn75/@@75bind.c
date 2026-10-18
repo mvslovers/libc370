@@ -21,14 +21,18 @@ bind(int ss, struct sockaddr_in * name, int length)
     int     rc;
 
     if (name->sin_port==0) {
-        /* caller wants system to assign a random port */
-        int i;
-        time_t now;
+        /* caller wants system to assign a random port.  A generator of
+           its own: srand() and rand() here reset the program's sequence
+           (#396) */
+        int         i;
+        time_t      now;
+        unsigned    seed;
 
         time(&now);
-        srand(now & 0X7FFF);
+        seed = (unsigned)now ^ (unsigned)name;
         for(i=0; i < 100; i++) {
-            name->sin_port = (unsigned short) (rand() & 0x7FFF) + 10000;
+            seed = seed * 1103515245 + 12345;
+            name->sin_port = (unsigned short) (((seed >> 16) & 0x7FFF) + 10000);
             rc = bind1(ss, name, length);
             if (rc==0) return rc;
         }

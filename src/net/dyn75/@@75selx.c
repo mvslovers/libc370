@@ -78,18 +78,14 @@ selectex(int maxsock, fd_set *r, fd_set *w, fd_set *e, timeval * t,
     }
 
     if (t) {
-        /* calculate number of 0.08 seconds we need to wait */
-        wait    = (unsigned) (t->tv_sec << 5);      /* times 32 */
-        wait    = (unsigned) ((wait << 1) + wait);  /* times 64 + */
-        wait    = (unsigned) (wait >> 3);           /* # of .08 sec waits */
-        if (t->tv_usec) {
-            if (t->tv_usec > 64) {
-                wait   = (unsigned) (wait + (t->tv_usec >> 6));
-            }
-            else {
-                wait++;    /* insure at least one .08 sec wait */
-            }
-        }
+        /* the number of 0.08-second waits, rounded up: the time in
+           hundredths, divided by 8.  tv_usec was divided by 64, as if the
+           unit were 64 microseconds, so 0.5 seconds waited 625 (#396) */
+        unsigned    centi   = 0;
+
+        if (t->tv_sec > 0) centi = (unsigned)t->tv_sec * 100;
+        if (t->tv_usec > 0) centi += ((unsigned)t->tv_usec + 9999) / 10000;
+        wait = (centi + 7) / 8;
     }
 
     for(;;) {
