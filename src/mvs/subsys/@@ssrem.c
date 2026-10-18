@@ -7,10 +7,19 @@
 __asm__("\n&FUNC    SETC 'ssct_remove'");
 int ssct_remove(SSCT *ssct)
 {
-    unsigned        *cvt        = *(unsigned**)16;      /* get CVT pointer from PSA */
-    SSCT            *inst       = ssct_find(0);         /* get first subsystem      */
+    SSCT            *inst;
     int             rc          = 4;                    /* assume not found         */
     unsigned char   prevkey;
+
+    /* NULL is not installed.  It matched the last SSCT, whose next is
+       NULL, and the unlink below then stored 0 at absolute address 4, in
+       key 0 (#407) */
+    if (!ssct) return rc;
+
+    /* the walk starts at the first subsystem, which is the system's own
+       (MSTR) and is nobody's successor: it is never removed, and
+       ssct_install() never puts an SSCT in front of it */
+    inst = ssct_find(0);
 
     /* save current PSW key */
     __asm__("IPK\t0             get psw key in R2\n\t"

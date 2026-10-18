@@ -49,6 +49,10 @@ int main(void)
     SSVT *sp = calloc(1, sizeof(SSVT) + 256 * sizeof(void *));
 #define ssvt (*sp)
 
+    /* as ssvt_new(256) sets it: since #407 the index is checked against
+       the slots allocated, not against 256 */
+    ssvt.ssvtfnum = 256;
+
     printf("=== tstssvt: ssvt_set()/ssvt_funcmap() return 0 (#240) ===\n\n");
 
     CHECK(ssvt_set(&ssvt, 1, (void *)fn) == 0, "ssvt_set(index 1): 0");

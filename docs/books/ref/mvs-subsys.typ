@@ -216,7 +216,8 @@ storage.
 
 #deflist(width: 0.6in,
   [0], [The SSCT was removed.],
-  [4], [The SSCT is not in the chain, or no subsystem has that name.],
+  [4], [The SSCT is not in the chain, #var("ssct") is #cmd("NULL"), or no
+    subsystem has that name.],
 )
 
 === Notes
@@ -224,8 +225,11 @@ storage.
 Require supervisor state\; the functions switch to key 0 themselves. The
 first SSCT of the chain cannot be
 removed: the search looks for the SSCT that points to #var("ssct"), and
-the first one has none. #cmd("ssct_remove_by_name(NULL)") therefore always
-returns 4.
+the first one has none. It is the system's own subsystem, and
+#cmd("ssct_install()") never places an SSCT in front of it.
+#cmd("ssct_remove_by_name(NULL)") therefore always returns 4. Up to
+LIBC/370 2.18.0 #cmd("ssct_remove(NULL)") matched the last SSCT and stored
+zero at absolute address 4, in key 0.
 
 === Related
 
@@ -291,16 +295,17 @@ from 1. #cmd("ssvt_reset()") is an inline function in the header that calls
 #deflist(width: 0.9in,
   [0], [The slot was set.],
   [#cmd("EPERM")], [#var("ssvt") is #cmd("NULL"), or #var("index") is 0 or
-    greater than 256.],
+    greater than #cmd("ssvtfnum"), the number of slots the SSVT was created
+    with.],
 )
 
 The error value is returned, not stored in #cmd("errno").
 
 === Notes
 
-Requires supervisor state. The function checks #var("index") against 256,
-not against the #var("funcmax") the SSVT was created with: keep the index
-within #cmd("ssvtfnum") yourself.
+Requires supervisor state. Up to LIBC/370 2.18.0 the function checked
+#var("index") against 256 instead of #cmd("ssvtfnum"), and a larger index
+was stored past the end of the SSVT, in key 0 into the common service area.
 
 === Related
 
@@ -330,7 +335,8 @@ function as not supported.
 #deflist(width: 0.9in,
   [0], [The function was mapped.],
   [#cmd("EPERM")], [#var("ssvt") is #cmd("NULL"), #var("index") is
-    greater than 256, or #var("funcnum") is 0 or greater than 256.],
+    greater than #cmd("ssvtfnum") or than 255 (the function byte holds no
+    more), or #var("funcnum") is 0 or greater than 256.],
 )
 
 === Notes
