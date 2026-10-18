@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- **Functions that switch to supervisor state return an error to an
+  unauthorized caller instead of abending S047, and leave an authorized
+  caller in the state it had (#402).** `super_do()`, `super_key_do()`,
+  `clib_auth_cde()`, `clib_auth_name()` and `iefssreq()` issued `MODESET`
+  without testing the authorization; they now return `EPERM` (`iefssreq()`
+  -1 with `errno` `EPERM`). `iefssreq()`, `clib_auth_cde()`,
+  `__austep()` and `__uastep()` returned every caller in problem state,
+  also one that came in supervisor state or key 0, whose next privileged
+  instruction then failed; they now restore the caller's state and key.
+- **The JES2 requests no longer report success for a request that never
+  reached JES (#406).** `jescanj()`, `jesdelj()`, `jesreque()`,
+  `jesxwrtr()` and `jesxdone()` ignored the return code of the subsystem
+  interface and returned 0 when JES2 was not active or did not take the
+  request. They now return a negative value: minus that return code, or
+  -1 with `errno` `EPERM` for a caller that is not authorized.
+
 ## [2.18.1] - 2026-10-18
 
 A patch release of fixes, two of them in key 0 and one that renamed data

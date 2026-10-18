@@ -49,10 +49,9 @@ they require of the caller. @mvs-subsys-auth-tab lists them.
      changed for the whole system.],
     [#cmd("iefssreq()"), and through it #cmd("jescanj()"), #cmd("jesdelj()"),
      #cmd("jesreque()"), #cmd("jesxwrtr()"), #cmd("jesxdone()")],
-    [APF authorization. #cmd("iefssreq()") issues #cmd("MODESET MODE=SUP")
-     around the call of the subsystem interface without testing the
-     authorization first, so a program that is not authorized ends with
-     abend #cmd("S047") instead of receiving a return code.],
+    [APF authorization, or supervisor state. A program that is not
+     authorized receives -1 with #cmd("errno") #cmd("EPERM")\; up to
+     LIBC/370 2.18.1 it ended with abend #cmd("S047").],
     [All other functions],
     [None. #cmd("jesopen()"), #cmd("jesjob()") and #cmd("jesprint()") read the
      checkpoint and spool data sets with ordinary #cmd("OPEN") and
@@ -406,7 +405,8 @@ subsystem, and the function's extension in #cmd("SSOBINDV").
 
 The return code of the subsystem interface, which says whether the request
 reached a subsystem. The result of the function itself is in
-#cmd("SSOBRETN").
+#cmd("SSOBRETN"). -1 with #cmd("errno") #cmd("EPERM") when the caller is in
+problem state and not APF-authorized\; the request is not made then.
 
 #tab(caption: [Return codes of the subsystem interface])[
   #table(columns: (0.5in, 0.9in, 1fr),
@@ -425,11 +425,11 @@ reached a subsystem. The result of the function itself is in
 
 === Notes
 
-- Requires APF authorization. #cmd("iefssreq()") does not test it: it
-  issues #cmd("MODESET MODE=SUP") unconditionally, and a caller that is not
-  authorized ends with abend #cmd("S047").
-- It returns in problem state with #cmd("MODESET MODE=PROB"), so a caller
-  that was already in supervisor state comes back in problem state.
+- Requires APF authorization, or supervisor state. A caller in
+  supervisor state is not switched and stays in it. Up to LIBC/370 2.18.1
+  the function issued #cmd("MODESET") unconditionally: an unauthorized
+  caller ended with abend #cmd("S047"), and one in supervisor state came
+  back in problem state.
 - The names of the return codes are defined in
   #cmd("<ibm/mvs/iefssobh.h>"), which maps the SSOB header.
 
@@ -1081,13 +1081,15 @@ subsystem interface (#cmd("IEFSSREQ")): to cancel a job, to delete or
 release its output, and to select output for a program that writes it
 elsewhere. They build an SSOB with #cmd("initssob()") and call
 #cmd("iefssreq()"), so they require APF authorization: called from a program
-that is not authorized, each of them ends with abend #cmd("S047") when it
-issues the request (@mvs-subsys-iefssreq).
+that is not authorized, each of them returns -1 with #cmd("errno")
+#cmd("EPERM") (@mvs-subsys-iefssreq).
 
-Each returns the return code that JES2 placed in #cmd("SSOBRETN"). The
-return code of the subsystem interface itself is not examined: when JES2 is
-not active or does not take the request, #cmd("SSOBRETN") stays 0 and the
-function returns 0 as if the request had been carried out.
+Each returns the return code that JES2 placed in #cmd("SSOBRETN"), or a
+negative value when the request did not reach JES: minus the return code of
+the subsystem interface (@mvs-subsys-ssrt-tab), for example -8 when JES2 is
+not active. Up to LIBC/370 2.18.1 that return code was not examined,
+#cmd("SSOBRETN") stayed 0, and a request that never ran was reported as a
+success; a program that was not authorized ended with abend #cmd("S047").
 
 == jescanj <mvs-subsys-jescanj>
 
@@ -1110,7 +1112,11 @@ well.
 
 === Returns
 
-The JES2 return code, one of the values in @mvs-subsys-canj-tab.
+The JES2 return code, one of the values in @mvs-subsys-canj-tab. A
+negative value when the request did not reach JES: -1 with #cmd("errno")
+#cmd("EPERM") for a caller that is not authorized, otherwise minus the
+return code of #cmd("iefssreq()") (@mvs-subsys-ssrt-tab). Up to LIBC/370
+2.18.1 such a request returned 0, as if it had succeeded.
 
 #tab(caption: [jescanj() return codes])[
   #table(columns: (0.4in, 1.1in, 1fr),
@@ -1158,9 +1164,11 @@ selected by #var("jobname"), #var("jobid") or both, held output included.
 
 === Returns
 
--1 when #var("jobname") and #var("jobid") are both #cmd("NULL").
-Otherwise the JES2 return code, one of the values in
-@mvs-subsys-delj-tab.
+-1 when #var("jobname") and #var("jobid") are both #cmd("NULL"), and -1
+with #cmd("errno") #cmd("EPERM") for a caller that is not authorized.
+Minus the return code of #cmd("iefssreq()") when the request did not reach
+JES (up to LIBC/370 2.18.1 that returned 0). Otherwise the JES2 return
+code, one of the values in @mvs-subsys-delj-tab.
 
 #tab(caption: [jesdelj() and jesreque() return codes])[
   #table(columns: (0.4in, 1.6in, 1fr),
@@ -1212,8 +1220,11 @@ is #cmd("NULL") or empty, class #cmd("C") is used.
 
 === Returns
 
--1 when #var("jobname") and #var("jobid") are both #cmd("NULL").
-Otherwise the JES2 return code, as in @mvs-subsys-delj-tab.
+-1 when #var("jobname") and #var("jobid") are both #cmd("NULL"), and -1
+with #cmd("errno") #cmd("EPERM") for a caller that is not authorized.
+Minus the return code of #cmd("iefssreq()") when the request did not reach
+JES (up to LIBC/370 2.18.1 that returned 0). Otherwise the JES2 return
+code, as in @mvs-subsys-delj-tab.
 
 === Notes
 
@@ -1256,7 +1267,10 @@ has finished with SYSOUT processing.
 === Returns
 
 The JES2 return code from #cmd("SSOBRETN"). #cmd("jesxwrtr()") returns -1
-when #var("ssso") is #cmd("NULL") or no selection was given.
+when #var("ssso") is #cmd("NULL") or no selection was given. Both return
+-1 with #cmd("errno") #cmd("EPERM") for a caller that is not authorized,
+and minus the return code of #cmd("iefssreq()") when the request did not
+reach JES (up to LIBC/370 2.18.1 that returned 0).
 
 === Notes
 

@@ -31,7 +31,14 @@ int jescanj(const char *jobname, const char *jobid, int purge)
 
     sscs.SSCSDIMP = SSCSELSZ;       /* size of SSCSARAY area        */
 
-    iefssreq(&ssob);                /* send request to jes          */
+    rc = iefssreq(&ssob);           /* send request to jes          */
+    if (rc) {
+        /* the request did not reach JES: -1 (errno EPERM) for an
+           unauthorized caller, else minus IEFSSREQ's return code.
+           SSOBRETN stayed 0 then, and that read as success (#406) */
+        if (rc > 0) rc = -rc;
+        goto quit;
+    }
 
     rc = ssob.SSOBRETN;
 
