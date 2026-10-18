@@ -7,6 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [Unreleased]
 
 ### Fixed
+- **`racf_logout()` with no ACEE no longer deletes the address space's
+  own identity (#405).** `racf_logout(NULL)`, or a pointer to a `NULL`
+  ACEE, reached RACINIT `ENVIR=DELETE` with no ACEE address, which the
+  security product reads as "the address space's ACEE": the resting
+  identity of a started task was deleted, and with it the restriction it
+  carried, before the function stored through the null pointer. It now
+  returns -1 with `errno` `EINVAL` and calls nothing.
 - **`getmain()` refuses a size it cannot round into 24 bits (#401).**
   The request is rounded, with its 8-byte header, to 64 bytes, and the
   rounding dropped the carry: a size from X'FFFFB9' to X'FFFFFF' asked

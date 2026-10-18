@@ -210,6 +210,11 @@ tstplus() {
        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
        -I $R/include -I $R -o "$B/t" tstplus.c && "$B/t"
 }
+tstraclo() {
+    "$CC" -std=gnu99 -Wall -Wextra \
+       -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
+       -I $R/include -I $R -o "$B/t" tstraclo.c && "$B/t"
+}
 tstrand() {
     "$CC" -std=gnu99 -Wall \
        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
@@ -270,7 +275,7 @@ tstwpos() {
 # not dropped from here - fix it, or say which issue it waits on.
 ALL="tst75snd tstacee tstardel tstblank tstcmtt tstdblcv tstdblrb tstdirck tstdsnmt tstemptl
      tstenqdq tsterrfl tstfabnd tstfcls tstfloor tstfpapp tstfprls tstfpunit tstgmain tstidcam tstinet tstiolk tstjesop
-     tstjesprb tstjestx tstl tstll tstlspd tstlstds tstpfarg tstpfflt tstpfval tstplus tstrand tstrldwk tstrseek tstscnll tstssvt tsttm64vec tsttxdsn tstvsnp
+     tstjesprb tstjestx tstl tstll tstlspd tstlstds tstpfarg tstpfflt tstpfval tstplus tstraclo tstrand tstrldwk tstrseek tstscnll tstssvt tsttm64vec tsttxdsn tstvsnp
      tstwchar tstwpos"
 
 [ $# -gt 0 ] && ALL="$*"
