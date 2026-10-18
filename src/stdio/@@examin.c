@@ -31,7 +31,7 @@ static const char DIGITS[] = "0123456789ABCDEF";
 static const char digits[] = "0123456789abcdef";
 
 extern void
-__dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
+__dblcvx(double num, char cnvtype, size_t nwidth, int nprecision, int alt,
          char *result, size_t rsize);
 
 int
@@ -47,7 +47,6 @@ __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax,
     int         flagZero    = 0;
     int         width       = 0;
     int         precision   = -1;
-    int         half        = 0;
     int         lng         = 0;
     int         hmod        = 0;    /* %n: 1 = h, 2 = hh (#383)          */
     int         specifier   = 0;
@@ -56,7 +55,6 @@ __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax,
     int         sgn;            /* the sign character, or 0 */
     int         nz;             /* leading zeros to print */
     long        lvalue;
-    short       hvalue;
     int         ivalue;
     unsigned    ulvalue;
     double      vdbl;
@@ -145,10 +143,8 @@ __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax,
 
     /* processing h/l/L */
     if (*format == 'h') {
-        /* all environments should promote shorts to ints,
-           so we should be able to ignore the 'h' specifier.
-           It will create problems otherwise. */
-        /* half = 1; */
+        /* h and hh: the argument is an int (promoted); hmod narrows
+           it again where it is printed, and %n stores the type */
         hmod = 1;
         if (*(format+1) == 'h') {
             format++;               /* hh: char promotes to int too */
@@ -186,6 +182,10 @@ __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax,
     specifier = *format;
 
     if (strchr("dxXuiop", specifier) != NULL && specifier != 0) {
+        /* with a precision the 0 flag is ignored, C99 7.19.6.1 (#578) */
+        if (precision >= 0) {
+            flagZero = 0;
+        }
         if (precision < 0) {
             precision = 1;
         }
@@ -199,14 +199,19 @@ __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax,
 			lvalue = va_arg(*arg, long);
 			value64.u32[1] = (uint32_t)lvalue;
 		}
-        else if (half) {
-            /* short is promoted to int, so use int */
-            hvalue = va_arg(*arg, int);
-            if (specifier == 'u') lvalue = (unsigned short)hvalue;
-            else lvalue = hvalue;
-        }
         else {
             ivalue = va_arg(*arg, int);
+            /* h and hh: the value was promoted to int, and is printed as
+               the short or char it was - %hu of -1 is 65535, %hhd of
+               255 is -1 (#384) */
+            if (hmod == 1) {
+                ivalue = (specifier == 'd' || specifier == 'i')
+                       ? (int)(short)ivalue : (int)(unsigned short)ivalue;
+            }
+            else if (hmod == 2) {
+                ivalue = (specifier == 'd' || specifier == 'i')
+                       ? (int)(signed char)ivalue : (int)(unsigned char)ivalue;
+            }
             if (specifier == 'u') lvalue = (unsigned int)ivalue;
             else lvalue = ivalue;
         }
@@ -287,9 +292,16 @@ __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax,
            - flag the blanks last.  The 0 flag's zeros went in front of
            the sign (%05d of -1 printed 000-1), and the 0x of %#x was
            not counted in the width (#384) */
-        pfx = (flagHash && toupper((unsigned char)specifier) == 'X') ? 2 : 0;
+        /* # (#578): 0x or 0X only in front of a value other than 0, and
+           %o's first digit a 0, by a zero more if it is not one already */
+        pfx = (flagHash && toupper((unsigned char)specifier) == 'X' && x > 0)
+            ? 2 : 0;
         sgn = neg ? '-' : flagPlus ? '+' : flagSpace ? ' ' : 0;
         nz = (precision > x) ? precision - x : 0;
+        if (flagHash && specifier == 'o' && nz == 0
+            && (x == 0 || work[x - 1] != '0')) {
+            nz = 1;
+        }
         if (flagZero && x + nz + (sgn != 0) + pfx < width) {
             nz = width - (sgn != 0) - pfx - x;
         }
@@ -308,7 +320,7 @@ __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax,
         }
         if (pfx) {
             outch('0');
-            outch('x');
+            outch(specifier == 'X' ? 'X' : 'x');
             extraCh += 2;
         }
         while (nz-- > 0) {
@@ -336,7 +348,7 @@ __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax,
         /* the digits only; width and flags are placed here, as for the
            integers: __dblcvt() pads with blanks on the left, which left the
            0 and - flags unheard and put + or space outside the width (#355) */
-        __dblcvt(vdbl, specifier, 0, precision, work,
+        __dblcvx(vdbl, specifier, 0, precision, flagHash, work,
                  sizeof(work) - 1);   /* keep a byte for the sign (#222) */
         {
             const char  *body = work;

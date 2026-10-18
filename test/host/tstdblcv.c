@@ -21,9 +21,9 @@
  * from repeated *10 and are noise on either float format (not #209).
  * test/mvs/tstdblcv.c is the gate on HFP.
  *
- * Expected strings are __dblcvt's own format: 'E' in upper case, no
- * leading blank for a positive number, %g stripping trailing zeros only
- * in f-style.
+ * Expected strings are __dblcvt's own format: no leading blank for a
+ * positive number; since #578 'e' for 'e' and 'g', and %g stripping
+ * trailing zeros in both styles.
  *
  * BUILD / RUN (host, from the repo root):
  *
@@ -105,15 +105,15 @@ int main(void)
     check_cvt(0.25,   'f', 20, "0.25000000000000000000");
     check_cvt(5000.0, 'f', 20, "5000.00000000000000000000");
     check_cvt(-2.5,   'f', 20, "-2.50000000000000000000");
-    check_cvt(1.0,    'e', 20, "1.00000000000000000000E+00");
-    check_cvt(0.25,   'e', 20, "2.50000000000000000000E-01");
-    check_cvt(5000.0, 'e', 20, "5.00000000000000000000E+03");
+    check_cvt(1.0,    'e', 20, "1.00000000000000000000e+00");
+    check_cvt(0.25,   'e', 20, "2.50000000000000000000e-01");
+    check_cvt(5000.0, 'e', 20, "5.00000000000000000000e+03");
 
     /* (4) zero: nothing to absorb the addend */
     check_cvt(0.0, 'g', 20, "0");
     check_cvt(0.0, 'g', 30, "0");
     check_cvt(0.0, 'f', 20, "0.00000000000000000000");
-    check_cvt(0.0, 'e', 20, "0.00000000000000000000E+00");
+    check_cvt(0.0, 'e', 20, "0.00000000000000000000e+00");
 
     /* (5) inexact value: the digits a double carries */
     check_prefix(1.0 / 3, 'g', 30, "0.3333333333333333");
@@ -125,11 +125,11 @@ int main(void)
     check_cvt(2.0 / 3,   'f', 2, "0.67");
     check_cvt(9.995,     'f', 1, "10.0");
     check_cvt(123.456,   'f', 2, "123.46");
-    check_cvt(2.0 / 3,   'e', 3, "6.667E-01");
+    check_cvt(2.0 / 3,   'e', 3, "6.667e-01");
     check_cvt(0.0,       'f', 6, "0.000000");
     check_cvt(0.006,     'f', 2, "0.01");   /* rounds into the digit before
                                                b's first (j = -1) */
-    check_cvt(0.000123456, 'e', 2, "1.23E-04");
+    check_cvt(0.000123456, 'e', 2, "1.23e-04");
     check_cvt(0.00096,   'f', 3, "0.001");
 
     printf("tstdblcv: %d checks, %d passed, %d failed\n",

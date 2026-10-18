@@ -103,7 +103,7 @@ main(void)
     sprintf(buf, "%f", -hfpmax);
     expect("sprintf %f -7.2e75", buf, 84, "-7", NULL, 77);
     snprintf(buf, sizeof(buf), "%e", -hfpmax);
-    expect("snprintf %e -7.2e75", buf, 13, "-7.", "E+75", 2);
+    expect("snprintf %e -7.2e75", buf, 13, "-7.", "e+75", 2);
 
     /* (2) */
     snprintf(buf, sizeof(buf), "%.30f", 3.3e50);
@@ -113,13 +113,13 @@ main(void)
     snprintf(buf, sizeof(buf), "%.150f", one);
     expect("%.150f 1.0 (cut at 126)", buf, 126, "1.0000000000", NULL, 1);
     snprintf(buf, sizeof(buf), "%.100e", one);
-    expect("%.100e 1.0 (fits)", buf, 106, "1.0000000000", "E+00", 1);
+    expect("%.100e 1.0 (fits)", buf, 106, "1.0000000000", "e+00", 1);
     snprintf(buf, sizeof(buf), "%.150e", one);
-    expect("%.150e 1.0 (cut at 126)", buf, 126, "1.0000000000", "E+00", 1);
+    expect("%.150e 1.0 (cut at 126)", buf, 126, "1.0000000000", "e+00", 1);
     snprintf(buf, sizeof(buf), "%+.150e", one);
-    expect("%+.150e 1.0 (sign byte)", buf, 127, "+1.0000000000", "E+00", 2);
+    expect("%+.150e 1.0 (sign byte)", buf, 127, "+1.0000000000", "e+00", 2);
     sprintf(buf, "%.150e", -3.3e-30);
-    expect("sprintf %.150e -3.3e-30", buf, 126, "-3.", "E-30", 2);
+    expect("sprintf %.150e -3.3e-30", buf, 126, "-3.", "e-30", 2);
 
     /* (3) */
     snprintf(buf, sizeof(buf), "%90f", one);
@@ -141,7 +141,7 @@ main(void)
     snprintf(buf, sizeof(buf), "%10.2f", -2.25);
     expect("%10.2f -2.25", buf, 10, "     -2.25", NULL, 7);
     snprintf(buf, sizeof(buf), "%.3e", 5000.0);
-    expect("%.3e 5000", buf, 9, "5.000E+03", NULL, 1);
+    expect("%.3e 5000", buf, 9, "5.000e+03", NULL, 1);
 
     /* and once through a real FILE, vvprintf with fq set */
     printf("  printf %%f of 3.3e60: %f\n", big);

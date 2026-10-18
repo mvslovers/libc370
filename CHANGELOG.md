@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+- **`printf()` writes `%e`, `%g`, `#`, `%h` and the `0` flag as C99 does
+  (#221, #384, #578).** What programs print changes:
+  - `%e` and `%g` write the exponent with `e`; only `%E` and `%G` use
+    `E`: `printf("%e", 1.5)` prints `1.500000e+00`, was `1.500000E+00`.
+  - With precision 0, `%e` prints no decimal point: `%.0e` of 1 is
+    `1e+00`, was `1.E+00`.
+  - The `#` flag: `%#o` starts with 0 (`%#o` of 8 is `010`); `%#x` puts
+    no `0x` in front of 0; `%#X` writes `0X`; `%#e`, `%#f` and `%#g` keep
+    the decimal point, and `%#g` its trailing zeros.
+  - The `0` flag is ignored when an integer conversion has a precision:
+    `%08.3d` of 1 is `     001`, was `00000001`.
+  - `h` and `hh` narrow the value: `%hu` of -1 is `65535`, `%hhd` of 255
+    is `-1`; both printed the `int` unchanged.
+
 ### Fixed
 - **`printf()` printed wrong values for `%f` of small numbers, `%g` and
   zero-padded integers (#220, #384).** What programs print changes:
