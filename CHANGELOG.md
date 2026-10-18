@@ -46,6 +46,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   formats it into its own storage. When the item cannot be added, that
   storage is freed; it leaked before.
 
+- **The `__64` helpers (#397).** `__64_div()` by 0 looped for ever, and
+  so did everything built on it (`__64_mod()`, `__64_divmod()`, the
+  `_i32`/`_u32`/`_u64` forms); the quotient is now 0, `errno` is `EDOM`,
+  and the remainder is the dividend. `__64_mul_i32()` with a negative
+  operand divided and `__64_div_i32()` multiplied; both now use it as its
+  two's complement, as the other `_i32` forms do. `__64_from_string()`
+  lost the carry of a decimal digit (`"65539"` gave 3) and read nothing
+  after `0b`.
+
 ## [2.18.1] - 2026-10-18
 
 A patch release of fixes, two of them in key 0 and one that renamed data

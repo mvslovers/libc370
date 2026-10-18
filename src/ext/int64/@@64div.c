@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 #include <ext/int64.h>
 
 __asm__("\n&FUNC    SETC '__64_div'");
@@ -12,6 +13,13 @@ void __64_div(__64* a, __64* b, __64* c)
 	int 	overflow = 0;
 
 	if (a && b && c) {
+		/* a zero divisor never gets larger than a when shifted: the loop
+		   below never ended (#397).  The quotient is 0. */
+		if (__64_is_zero(b)) {
+			__64_init(c);
+			errno = EDOM;
+			return;
+		}
 		__64_from_i32(&current, 1);               // int current = 1;
 		__64_assign(&denom, b);                   // denom = b
 		__64_assign(&tmp, a);                     // tmp   = a

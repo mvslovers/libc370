@@ -27,7 +27,7 @@ void __64_from_string(__64* n, char* str)
 	else if (memcmp(str, "0b", 2)==0) {
 		table = binary;
 		__64_from_i32(&base, 2);
-		str++;
+		str+=2;	/* str++ left the 'b' to be read as a digit (#397) */
 	}
 	else {
 		table = digits;
@@ -38,12 +38,14 @@ void __64_from_string(__64* n, char* str)
 		__64_init(n);
 
 		for(;*str;str++) {
-			c = tolower(*str);
+			c = tolower((unsigned char)*str);
 			p = strchr(table, c);
 			if (!p) break;
 			tmp = (__64_DTYPE) (p - table);
 			__64_mul(n, &base, n);
-			n->array[__64_ARRAY_SIZE-1] += tmp;
+			/* with the carry: adding to the low halfword alone lost it,
+			   "65539" gave 3 (#397) */
+			__64_add_u32(n, (uint32_t)tmp, n);
 		}
 	}
 }

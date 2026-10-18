@@ -417,8 +417,8 @@ void __64_to_string(__64 *n, char *str, int maxsize);
 
 #cmd("__64_from_string()") sets #var("n") to the number in #var("str"). It
 skips leading blanks, reads hexadecimal digits after #cmd("0x") and
-decimal digits otherwise, and stops at the first character that is not a
-digit. There is no sign.
+decimal digits after #cmd("0b"), decimal digits otherwise, and stops at the first
+character that is not a digit. There is no sign.
 
 #cmd("__64_to_string()") stores #var("n") in #var("str") as a decimal number
 with a terminating NUL. #var("maxsize") is the size of #var("str")\; 21
@@ -429,12 +429,9 @@ bytes hold any value.
 - #cmd("__64_from_string()") does not report a string without digits, or a
   number too large, which wraps around. It accepts only a lowercase
   #cmd("0x")\; with #cmd("0X") the result is 0.
-- The prefix #cmd("0b") is recognized, but no binary digits are read after
-  it, and the result is 0.
-- In decimal, a digit is added to the low-order 16 bits without a carry.
-  When those bits overflow, the result is wrong: #cmd("\"65539\"") gives 3.
-  For decimal input, #cmd("strtoull()") with #cmd("__64_from_u64()") is
-  reliable.
+- Up to libc370 2.18.1 no binary digits were read after #cmd("0b"), and a
+  digit was added to the low-order 16 bits without a carry, so
+  #cmd("\"65539\"") gave 3.
 - When #var("maxsize") is too small, #cmd("__64_to_string()") stores the
   low-order digits that fit, without the high-order ones and without a NUL.
 
@@ -506,13 +503,15 @@ discards the remainder, #cmd("__64_mod()") keeps only the remainder, and
 
 === Notes
 
-- *Division by zero does not return:* #cmd("__64_div()") and every function
-  built on it loop for ever. Test the divisor first.
-- #cmd("__64_mul_i32") with a negative #var("b") divides #var("a") by
-  #cmd("-")#var("b"), and #cmd("__64_div_i32") with a negative #var("b")
-  multiplies by it. Use the #cmd("_u32") forms.
-- #cmd("__64_mod_i32") and #cmd("__64_divmod_i32") use a negative
-  #var("b") as its two's complement, a very large divisor.
+- Division by zero gives the quotient 0 and sets #cmd("errno") to
+  #cmd("EDOM")\; #cmd("__64_mod()") and #cmd("__64_divmod()") then give
+  #var("a") as the remainder. (Up to libc370 2.18.1 #cmd("__64_div()") and
+  every function built on it looped for ever.)
+- The #cmd("_i32") forms use a negative #var("b") as its two's
+  complement: #cmd("__64_mul_i32") multiplies by #var("b") modulo
+  2#super[64], and the division functions divide by a very large number.
+  (Up to libc370 2.18.1 #cmd("__64_mul_i32") with a negative #var("b")
+  divided, and #cmd("__64_div_i32") multiplied.)
 - Division is done one bit at a time, in up to 64 steps.
 
 == \_\_64\_and, \_\_64\_or, \_\_64\_xor <ext-64-and>

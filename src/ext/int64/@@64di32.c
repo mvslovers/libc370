@@ -8,13 +8,10 @@ void __64_div_i32(__64* a, int32_t b, __64* c)
 	__64	tmp;
 
 	if (a && c) {
-		__64_from_u32(&tmp, (uint32_t) (b < 0 ? -b : b));
-		if (b < 0) {
-			__64_mul(a, &tmp, c);
-		}
-		else {
-			__64_div(a, &tmp, c);
-		}
+		/* a negative b is its two's complement, as in __64_mod_i32().
+		   A negative b multiplied (#397). */
+		__64_from_i32(&tmp, b);
+		__64_div(a, &tmp, c);
 	}
 }
 
