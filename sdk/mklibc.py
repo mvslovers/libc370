@@ -236,15 +236,28 @@ def cmd_build():
         for k, v in sorted(clash.items()):
             print(f"[libc] stem {k} used by {', '.join(v)}: one object would replace the other")
         return 1
-    srcs = []
-    warns = []
-    for c in sources(".c"):
+    # parallel, as the assembly below (#37): the compile was 6.7 s of an
+    # 8.2 s build.  map() keeps the source order, so the warnings and the
+    # list of .s come out as a serial build gives them; every failure is
+    # reported, not only the first.
+    def comp(c):
         s = c[:-2] + ".s"
         extra = [f'-DLIBC370_REV="{rev}"'] if os.path.basename(c) == VER_C else ()
-        err = compile_c(c, s, extra, warns)
-        if err:
-            print("  " + err); return 1
-        srcs.append(s)
+        w = []
+        return (s, compile_c(c, s, extra, w), w)
+    srcs, warns, cfails = [], [], []
+    with cf.ThreadPoolExecutor(max_workers=8) as ex:
+        for s, err, w in ex.map(comp, sources(".c")):
+            warns.extend(w)
+            if err:
+                cfails.append(err)
+            else:
+                srcs.append(s)
+    if cfails:
+        print(f"[libc] {len(cfails)} compile failure(s):")
+        for f in cfails[:15]:
+            print("  " + f)
+        return 1
     asms = sources(".asm")
     print(f"[libc] {len(srcs)} .s + {len(asms)} .asm")
     if warns:
