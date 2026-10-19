@@ -209,6 +209,7 @@ CHANGELOG has everything else.
 
 | Release | Change | What to do |
 |---|---|---|
+| Unreleased | `crtm.o` is no longer installed, and `make install` deletes an old copy from `<sysroot>/lib` (#608); a link line that names it fails with `crtm.o: No such file or directory`, and MBT 3 reports `startup = "crtm"` as a configuration error | Drop `crtm.o` from the link line (with MBT, the `startup = "crtm"` key). A C module that a C program calls with `LINK`, `__link()` or `system()` is linked like any program, with `@@CRT0` from `libc.a`, and builds and releases its own environment; for C code that must run on the caller's environment, see the `CCALL` stub ([startup.md](startup.md); not verified on MVS for a LINKed module) |
 | Unreleased | `timegm()` in `<ext/time64.h>`: a broken-down UTC time to `time_t`, what `mktime()` does today (#392). A later release makes `mktime()` read local time | Code that calls `mktime()` on a UTC time switches to `timegm()` now; nothing else changes |
 | Unreleased | New `__linkx()`, `__linkdsx()` and `__loadx()` in `<mvs/link.h>` return the completion code (and for LOAD the reason code) of a failed LINK or LOAD (#553) | Nothing; use them instead of `__link()`/`__linkds()`/`__load()` where the reason for a failure matters |
 | Unreleased | `malloc(0)`, `calloc(0, n)` and `calloc(n, 0)` return `NULL` without setting `ENOMEM` and without the console message (#394) | Nothing, unless a program took `errno == ENOMEM` after `malloc(0)` for a shortage |
