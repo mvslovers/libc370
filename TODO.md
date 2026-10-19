@@ -101,31 +101,34 @@ Each fix gets a red/green test in a container, then a PR and a merge.
   Hercules (heap) at ~934 slots, #164 SELECT aux2=2048 SIGSEGV (PR #657).
   Open from #161: guard `errno` after a failing socket() on our side?
   #68 (PR #654, format(printf) on the wto functions) merged after httpd#310.
-- **Waiting on a decision:**
-  - #553: `__linkx` or `__linkerr`;
-  - #461: nesting and guard;
-  - #417: sockaddr type;
-  - #418: header cleanup, MBT sweep;
-  - #178;
-  - #173: dscb4 layout with #409's view;
-  - #160: send cap;
-  - #143: SCRATCH/RENAME API;
-  - #394: malloc(0);
-  - #400: remove or implement;
-  - #142;
-  - #17: drop `__try`;
-  - #105;
-  - #52;
-  - #75;
-  - #392's zone: mvsMF `consapi.c` relies on the zone-less mktime, so a
-    release must be coordinated with mvsMF;
-  - #113/#122. **New finding:** `@@crtset.c` copies the JSCB auth byte
-    (+0xEC) into `crtauth` (+0x10D), not `crtopts` (+0x10C);
-  - %p with `0x`.
+- **Decided 2026-10-19** (decision page; each issue carries a "Decision"
+  comment with the details). Next work, by kind:
+  - Plain work in libc370: #17 drop `__try`/`__tryrc`; #72 remove
+    TIN/TOUT/TERR; #400 remove the four declarations; #394 malloc(0) quiet;
+    #413 DUMP_SDUMP = DUMP_DEFAULT; #178 fseek/rewind to C99; #173 drop
+    `key[44]` from dscb4; #417 transparent union; #340 the 22 `l` aliases;
+    #408 FREE=CLOSE, finish `__dynal()`, member names; #412 read-only mode,
+    default SYNAD/EODAD only where 0, exit list on calloc failure;
+    #246 write the naming rule into internals/.
+  - New API: #52 z/OS `<dynit.h>`; #143 `__scratch`/`__renamev` + `...v()`
+    (DALVLSER/DALUNIT measurement first; mvsmf#336 waits); #142
+    `jesopen()` fallback + `jesopen_ex()`; #553 `__linkx`/`__loadx` with
+    out-parameters; VSAM #625 -> #623 -> #624, additive, one minor each
+    (a VSAM redesign is a 3.x topic).
+  - Measure first: #160 send-side probe, then cap and return the short count.
+  - Coordinated with another project: #113 delete `crtopts` (httpd
+    `httpd.c:1391`); #608 remove `crtm.o` with #105 (MBT drops the
+    `mbt doctor` check first); #392 `timegm()` first, then a zone-aware
+    `mktime()` (an mvsMF release); #418 header leaks after an MBT sweep.
+  - Not doing: #75 closed (clock() stays -1); #461 and #607 parked; `%p`
+    keeps `00001234` (documented).
+  - Build: a CI check fails when the library build shows a warning, rather
+    than `-Werror` in sdk/mklibc.py (build.yml's report step, or gate.py
+    pointed at main).
 - **Research, parked or real stands only:**
   - #529, #465, #462;
-  - #341, #340. The `l` aliases slice of #340 would be A;
-  - #295, #246, #206, #204, #30, #27;
+  - #341;
+  - #295, #206, #204, #30, #27;
 
 *The pass before: **2026-10-06**, 83 issues open: the
 44 below, plus #384-#420 less #414/#415 (closed), #423, #448 (the doc
