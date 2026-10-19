@@ -25,27 +25,63 @@ txblk(TXT99 ***txt99, const char *s, const char *end)
     return __txblk(txt99, blk);
 }
 
-/* __fpbks() - the BLKSIZE text unit for a data set that fopen() allocates,
-** from blksize=n or blksize(n) in mode, else from the environment variable
-** env; none when neither is there.  Here, because every program that can
-** reach __fpstar() links this module too (#474). */
-int
-__fpbks(TXT99 ***txt99, const char *mode, const char *env)
+/* option() - the value of name=v or name(v) in mode, copied into buf (n
+** bytes), else the environment variable pfx followed by var, else NULL */
+__asm__("\n&FUNC    SETC 'option'");
+static const char *
+option(const char *mode, const char *name, char *buf, size_t n,
+       const char *pfx, const char *var)
 {
+    char        key[24];
+    size_t      k       = strlen(name);
     const char  *p;
-    char        *blksize    = 0;
-    char        *tok_save   = NULL;
-    char        temp[16];
+    char        *v;
+    char        *tok_save = NULL;
 
-    p = strstr(mode, "blksize=");
-    if (!p) p = strstr(mode, "blksize(");
+    memcpy(key, name, k);
+    key[k] = '=';
+    key[k + 1] = 0;
+    p = strstr(mode, key);
+    key[k] = '(';
+    if (!p) p = strstr(mode, key);
     if (p) {
-        strncpy(temp, p + 8, sizeof(temp) - 1);
-        temp[sizeof(temp) - 1] = 0;
-        blksize = __tok(temp, " ,)", &tok_save);
+        strncpy(buf, p + k + 1, n - 1);
+        buf[n - 1] = 0;
+        v = __tok(buf, " ,)", &tok_save);
+        if (v) return v;
     }
-    if (!blksize) blksize = getenv(env);
-    return blksize ? __txbksz(txt99, blksize) : 0;
+    strcpy(key, pfx);
+    strcat(key, var);
+    return getenv(key);
+}
+
+/* __fpdcb() - the RECFM, LRECL and, for a blocked format, BLKSIZE text
+** units of a data set that fopen() allocates: from the mode string, else
+** from the environment variables pfx RECFM, LRECL and BLKSIZE ("TEMP_",
+** "SYSOUT_"), else V and 255 (#474).  The mode string is in lower case,
+** the environment in upper.  Here, because every program that can reach
+** __fpstar() links this module too. */
+int
+__fpdcb(TXT99 ***txt99, const char *mode, const char *pfx)
+{
+    char        buf[16];
+    const char  *v;
+    int         err;
+    int         blocked;
+
+    v = option(mode, "recfm", buf, sizeof(buf), pfx, "RECFM");
+    if (!v) v = "V";
+    err = __txrecf(txt99, v);
+    if (err) return err;
+    blocked = strchr(v, 'B') || strchr(v, 'b');
+
+    v = option(mode, "lrecl", buf, sizeof(buf), pfx, "LRECL");
+    if (!v) v = "255";
+    err = __txlrec(txt99, v);
+    if (err || !blocked) return err;
+
+    v = option(mode, "blksize", buf, sizeof(buf), pfx, "BLKSIZE");
+    return v ? __txbksz(txt99, v) : 0;
 }
 
 int
@@ -53,15 +89,11 @@ __fptmp(FILE *fp)
 {
     int         err     = 1;
     unsigned    count   = 0;
-    char        *recfm  = 0;
-    char        *lrecl  = 0;
     char        *space  = 0;
-    int         blocked;
     char        *p      = 0;
     TXT99       **txt99 = NULL;
     RB99        rb99    = {0};
     char        temp[sizeof(fp->mode)+1];
-    char        *tok_save = NULL;
 
     /* we want the DDNAME returned to us */
     err = __txrddn(&txt99, NULL);
@@ -83,38 +115,9 @@ __fptmp(FILE *fp)
     err = __txorg(&txt99, "PS");
     if (err) goto quit;
 
-    /* get record format */
-    p = strstr(fp->mode, "recfm=");
-    if (!p) p = strstr(fp->mode,"recfm(");
-    if (p) {
-        strcpy(temp,p+6);
-        recfm = __tok(temp, " ,)", &tok_save);
-    }
-    if (!recfm) recfm = getenv("TEMP_RECFM");
-    if (!recfm) recfm = "V";
-    err = __txrecf(&txt99, recfm);
+    /* RECFM, LRECL, BLKSIZE */
+    err = __fpdcb(&txt99, fp->mode, "TEMP_");
     if (err) goto quit;
-    /* now: recfm points into temp, which the options below reuse.  The
-       mode string is in lower case, the environment in upper (#474) */
-    blocked = strchr(recfm, 'B') || strchr(recfm, 'b');
-
-    /* get logical record length */
-    p = strstr(fp->mode, "lrecl=");
-    if (!p) p = strstr(fp->mode,"lrecl(");
-    if (p) {
-        strcpy(temp,p+6);
-        lrecl = __tok(temp, " ,)", &tok_save);
-    }
-    if (!lrecl) lrecl = getenv("TEMP_LRECL");
-    if (!lrecl) lrecl = "255";
-    err = __txlrec(&txt99, lrecl);
-    if (err) goto quit;
-
-    if (blocked) {
-        /* get optional block size */
-        err = __fpbks(&txt99, fp->mode, "TEMP_BLKSIZE");
-        if (err) goto quit;
-    }
 
     /* get optional space "[CYL|TRK](pri[,sec])" or "blksize(pri[,sec])" */
     p = strstr(fp->mode, "space=");
