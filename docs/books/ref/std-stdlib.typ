@@ -799,8 +799,9 @@ int unsetenv(const char *name);
 #cmd("setenv()") sets the environment variable #var("name") to
 #var("value"). Blanks at the start of #var("value") are removed. If a
 variable of that name exists already, it is replaced when #var("rewrite")
-is not 0 and left alone otherwise\; the search for it ignores case when no
-name matches exactly. The name and value are copied.
+is not 0 and left alone otherwise. The name is compared exactly, as
+#cmd("getenv()") and #cmd("unsetenv()") compare it. The name and value are
+copied.
 
 Blanks around #var("name") are removed: #cmd("\" NAME \"") sets the
 variable #cmd("NAME"). Up to release 2.20.0 the variable was looked up
@@ -826,11 +827,11 @@ always returns 0.
 
 - *Different from POSIX:* #cmd("setenv()") and #cmd("putenv()") mostly
   return 1, not -1, on failure, and then set no #cmd("errno").
-- #cmd("setenv()") looks for an existing variable first with the exact name
-  and then regardless of case. #cmd("setenv(\"Path\", ...)") with
-  #var("rewrite") therefore replaces a variable #cmd("PATH"), and the
-  variable is afterwards called #cmd("Path"). #cmd("unsetenv()") and
-  #cmd("getenv()") compare exactly.
+- Up to release 2.20.0 #cmd("setenv()") looked for an existing variable
+  regardless of case when no name matched exactly:
+  #cmd("setenv(\"Path\", ...)") replaced a variable #cmd("PATH") and renamed
+  it, and with #var("rewrite") 0 returned 0 without setting #cmd("Path").
+  To find a name regardless of case, use #cmd("getenvi()").
 - #cmd("putenv()") copies the string. POSIX makes the string itself part of
   the environment, so that a later change to it changes the variable\; in
   LIBC/370 it does not.

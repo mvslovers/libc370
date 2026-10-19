@@ -68,6 +68,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   lost the pool (measured on MVS: 40 cycles, 40 pools at 40 addresses;
   now one, reused). A DCB without a pool is left alone, and a DCB closed
   with its storage kept opens again with a new pool.
+- **`setenv()` looks a variable up by its exact name (#475).** When no
+  name matched exactly it fell back to a search that ignored case, while
+  `getenv()` and `unsetenv()` compare exactly. `setenv("tz", v, 1)` thus
+  replaced a variable `TZ` and renamed it, so `getenv("TZ")` returned a
+  null pointer afterwards, and `setenv("tz", v, 0)` returned 0 without
+  setting anything. Names that differ in case are now separate variables,
+  as in C and POSIX (measured on MVS).
 
 ## [2.20.0] - 2026-10-18
 
