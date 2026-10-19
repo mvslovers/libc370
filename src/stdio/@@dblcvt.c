@@ -54,28 +54,58 @@ nextdigit(DBLOUT *o, double *b, int *i)
     put(o, (char)('0' + *i % 10));
 }
 
-/* scale b into [1,10) and return the decimal exponent */
+/* the powers of ten a double holds exactly: 5**22 has 52 bits, and an
+   HFP fraction keeps at least 53 */
+static const double pow10[23] = {
+    1e0,  1e1,  1e2,  1e3,  1e4,  1e5,  1e6,  1e7,  1e8,  1e9,  1e10, 1e11,
+    1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19, 1e20, 1e21, 1e22
+};
+
+/* scale b into [1,10) and return the decimal exponent.
+   The exponent is found by comparing with the exact powers, and b is then
+   divided or multiplied by them, at most four times for the whole HFP
+   range.  It was one division or multiplication by 10 per decimal
+   exponent, up to 75: each truncates, the error built up in one
+   direction, and the 15th digit of 1e60 or 1e-30 was off (#225). */
 static int
 scale(double *b)
 {
-    int exp = 0;
+    double  v   = *b;
+    int     exp = 0;
+    int     k;
 
-    if (*b > 1.0) {
-        while ((*b >= 10.0) && (exp < 120)) {
-            ++exp;
-            *b = *b / 10.0;
-        }
+    if (v == 0.0) return 0;
+
+    /* the exponent: whole steps of 22, then the rest.  HFP stays within
+       10**+-79; the bound only keeps a host's infinity out of a loop */
+    while (v >= 1e22 && exp < 330) {
+        v = v / 1e22;
+        exp += 22;
     }
-    else if (*b != 0.0) {           /* 1.0 will get exp = 0 */
-        while ((*b < 1.0) && (exp > -120)) {
-            --exp;
-            *b = *b * 10.0;
-        }
+    while (v < 1.0 && exp > -330) {
+        v = v * 1e22;
+        exp -= 22;
     }
-    if ((exp <= -120) || (exp >= 120)) {
-        exp = 0;
-        *b = 0.0;
+    for (k = 22; k > 0 && v < pow10[k]; k--) ;
+    exp += k;
+
+    /* b / 10**exp from b itself, with as few operations as there are */
+    v = *b;
+    for (k = exp; k > 22; k -= 22) v = v / 1e22;
+    if (k > 0) v = v / pow10[k];
+    for (k = -exp; k > 22; k -= 22) v = v * 1e22;
+    if (k > 0 && exp < 0) v = v * pow10[k];
+
+    /* a truncated operation can leave it just outside */
+    if (v >= 10.0) {
+        v = v / 10.0;
+        exp++;
     }
+    else if (v < 1.0) {
+        v = v * 10.0;
+        exp--;
+    }
+    *b = v;
     return exp;
 }
 
