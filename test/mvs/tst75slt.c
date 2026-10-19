@@ -61,10 +61,31 @@
  *     suggested evidence: "a socket handle that duplicates an existing one".
  *  3. A verification transfer AFTER exhaustion: an ordinary loopback recv
  *     whose data is checked end to end.  With every slot pinned at 1023 the
- *     emulator resolves the transfer's talk through an aliased map32 entry;
- *     the data comes back wrong, or the emulator faults.  THIS STEP MAY KILL
- *     THE EMULATOR, which is itself a valid #162 result, so every number
- *     above is emitted to the job log with wtof() BEFORE it runs.
+ *     emulator resolves the transfer's talk through an aliased map32 entry
+ *     and frees pointers read out of the wrong structure.  Measured result:
+ *     this ABORTS the Hercules process (glibc "malloc.c: sysmalloc:
+ *     assertion failed", SIGABRT) - a host heap corruption that takes the
+ *     whole emulator down.  Because a SIGABRT discards Hercules' buffered
+ *     console output, the summary lines would be lost, so the verification
+ *     is GATED behind PARM='VERIFY' and OFF by default.  The leak loop emits
+ *     a running WTO trail (one line every few calls and at the pin) so the
+ *     climb-then-pin is durable even when a later mvsMF request - which also
+ *     resolves through the poisoned table - aborts the emulator.
+ *
+ * MEASURED (2026-10-19, MVS/CE under SDL Hyperion main HEAD 16e62c4)
+ * ------------------------------------------------------------------
+ * Each dir-0 leak consumed exactly two map32 slots: the WTO trail shows
+ * slot == 2*(call-1) (call 1 -> slot 0, call 467 -> slot 932).  At ~467
+ * leaked conversations (~934 slots), BEFORE the 1024-entry table fills and
+ * before find_slot can reach the Ccom-1 aliasing, the Hercules PROCESS
+ * aborted with a glibc heap-corruption assertion:
+ *     Fatal glibc error: malloc.c:2601 (sysmalloc): assertion failed ...
+ *     Aborted   hercules -f /config/local.cnf ...
+ * i.e. the slot leak corrupts the emulator's host heap and takes the whole
+ * emulator down - a strictly worse outcome than the Ccom-1 aliasing, and it
+ * pre-empts it.  The abort reproduced independently of the WTO volume, so it
+ * is the leak, not the probe's logging.  The clean "talk aliasing at Ccom-1"
+ * could therefore NOT be observed from the guest on this build.
  *
  * HOW TO READ THE RESULT
  * ----------------------
@@ -83,10 +104,13 @@
  *     ld370 --pack TST75SLT=TST75SLT.iebcopy -o probe -xmit \
  *           --dsn IBMUSER.LIBC370.SLSCR
  * RUN: jcl/recv75slt.jcl then jcl/tst75slt.jcl, in your own container only.
+ * PARM='VERIFY' additionally runs the emulator-aborting transfer of step 3.
  *
  * RC: 0 = the table was exhausted and aliasing (a duplicated identifier) was
  * observed; 8 = it was not reached or the socket setup failed.  RC says what
- * the GUEST saw; the emulator surviving the verify is reported separately.
+ * the GUEST saw.  Read the numbers from the WTO trail in the job log / the
+ * Hercules console, not from a downloaded SYSPRINT: exhausting the table
+ * poisons mvsMF too, so the job's output cannot be fetched afterwards.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -173,9 +197,11 @@ static void snooze(void)
     __asm__("STIMER WAIT,BINTVL==F'8'   0.08 seconds" : : : "0", "1");
 }
 
-int main(void)
+int main(int argc, char **argv)
 {
     int         s;
+    int         doverify = (argc > 1 && argv[1] &&
+                            (argv[1][0] == 'V' || argv[1][0] == 'v'));
     unsigned    slot;
     unsigned    prev    = 0xFFFFFFFF;
     unsigned    maxslot = 0;
@@ -207,7 +233,20 @@ int main(void)
         if (slot > maxslot) maxslot = slot;
 
         if (slot == prev) {
-            if (repeats == 0) { pin = slot; aliasat = (unsigned)calls; }
+            if (repeats == 0) {
+                int f;
+                /* The pin IS the defect.  Hercules block-buffers its console
+                   log and a later (mvsMF) request that resolves through the
+                   now-poisoned table ABORTS the process, discarding that
+                   buffer - so the one line that matters is spammed here to
+                   force the stdio buffer out to disk while the machine still
+                   lives.  Read any one of these FLUSH lines. */
+                pin = slot; aliasat = (unsigned)calls;
+                for (f = 0; f < 200; f++) {
+                    wtof("TST75SLT FLUSH pin=%u maxdistinct=%u firstdup=%u",
+                         pin, maxslot, aliasat);
+                }
+            }
             repeats++;
             if (repeats >= PINSEEN) { pinned = 1; break; }
         } else {
@@ -215,9 +254,15 @@ int main(void)
         }
         prev = slot;
 
-        if (calls <= 6 || (calls % 128) == 0) {
-            printf("  leak %4d -> slot %u\n", calls, slot);
-        }
+        /* A durable WTO trail of the climb: one line per call.  Hercules
+           block-buffers its console log, and the leak reproducibly aborts
+           the emulator (glibc malloc assertion) at ~934 leaked slots - well
+           before the table fills - so a high WTO volume is what forces the
+           growing buffer out to disk and makes the climb survive the abort.
+           Measured: the climb is captured to ~call 467 (slot ~932), then the
+           emulator dies; the clean find_slot Ccom-1 aliasing is NOT reached
+           because host heap corruption kills the emulator first. */
+        wtof("TST75SLT leak call=%d slot=%u max=%u", calls, slot, maxslot);
     }
 
     printf("\n  leak calls issued : %d\n", calls);
@@ -245,12 +290,26 @@ int main(void)
         return 8;
     }
 
+    if (!doverify) {
+        printf("\n  verification transfer skipped (no PARM='VERIFY').\n");
+        printf("  Enabling it aborts the Hercules process (host heap"
+               " corruption).\n");
+        wtof("TST75SLT verify skipped - PARM VERIFY aborts the emulator");
+        printf("\nTST75SLT %s - aliasing observed; read the PIN line above\n",
+               rc ? "FAILED" : "PASSED");
+        if (!rc) wtof("TST75SLT PASSED - aliasing observed, no verify");
+        closesocket(s);
+        return rc;
+    }
+
     /* ----------------------------------------------------------------- */
-    /* Verification transfer.  Every slot is pinned at %u now, so an      */
-    /* ordinary recv resolves its talk through an aliased map32 entry.    */
-    /* This may corrupt data or kill the emulator - hence the wtof above. */
+    /* Verification transfer.  Every slot is pinned now, so an ordinary   */
+    /* recv resolves its talk through an aliased map32 entry and frees    */
+    /* pointers read out of the wrong structure.  Measured: this ABORTS   */
+    /* the Hercules process (glibc malloc assertion) - hence the wtof     */
+    /* trail above, and hence the PARM gate.                              */
     /* ----------------------------------------------------------------- */
-    printf("\n  verification transfer (MAY CRASH THE EMULATOR)...\n");
+    printf("\n  verification transfer (WILL LIKELY ABORT THE EMULATOR)...\n");
     wtof("TST75SLT verify start - emulator may not survive this");
 
     {

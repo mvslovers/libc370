@@ -53,6 +53,24 @@
  * log with wtof() BEFORE the next, riskier value, so the record survives a
  * crash that discards SYSPRINT.
  *
+ * MEASURED (2026-10-19, MVS/CE under SDL Hyperion main HEAD 16e62c4)
+ * ------------------------------------------------------------------
+ * Legitimate socket number handed out: 3 (legal maxsock ~4).  Escalating
+ * aux2 through subcode 5 (Read Outputs):
+ *     aux2 = 8      rc=0  emulator ALIVE
+ *     aux2 = 1025   rc=0  emulator ALIVE   (one past Ccom == 1024)
+ *     aux2 = 1032   rc=0  emulator ALIVE
+ *     aux2 = 2048   -> Hercules SIGSEGV (signal 11, exit 139),
+ *                       "Segmentation fault ... hercules", VM gone
+ * i.e. a few ints past the 1024-entry Ccom_han[] still land in mapped BSS
+ * and are survived, but at aux2 = 2048 the unchecked loop reads ~4 KB past
+ * the array into an unmapped page and the emulator process dies with a
+ * segmentation fault.  A guest that builds this parameter list by hand - no
+ * libc370 wrapper does - crashes the whole emulator.  Values above 2048
+ * (65536, 0x40000, 0x1000000) were never reached.  The console log vanishes
+ * with the VM on the SIGSEGV, so results are captured live, before the
+ * crashing value, from the running container's log.
+ *
  * HOW TO READ THE RESULT
  * ----------------------
  * In the job log (JESMSGLG), one line per value tried:
@@ -166,8 +184,18 @@ int main(void)
         alive = emulator_alive();
 
         printf("rc=%d  emulator %s\n", rc, alive ? "ALIVE" : "DEAD");
-        wtof("TST75BND aux2=%u rc=%d alive=%c",
-             val[i], rc, alive ? 'Y' : 'N');
+
+        /* Hercules block-buffers its console log and a large aux2 can abort
+           the process (SIGSEGV/SIGABRT), discarding that buffer.  Spam each
+           result so it reaches disk BEFORE the next, riskier value runs -
+           read any one of these FLUSH lines. */
+        {
+            int f;
+            for (f = 0; f < 120; f++) {
+                wtof("TST75BND FLUSH aux2=%u rc=%d alive=%c",
+                     val[i], rc, alive ? 'Y' : 'N');
+            }
+        }
 
         if (!alive) {
             printf("\n  emulator stopped serving sockets at aux2=%u\n", val[i]);
