@@ -20,7 +20,7 @@ typedef enum {
     DUMP_SUPPRESS,
     DUMP_DEFAULT,
     DUMP_SNAP,
-    DUMP_SDUMP
+    DUMP_SDUMP          /* the same as DUMP_DEFAULT (#413) */
 } DUMP_OP;
 
 #define SETRP(sdwa,rc,retry,regs) \

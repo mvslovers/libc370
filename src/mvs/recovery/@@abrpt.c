@@ -331,19 +331,6 @@ __asm__("\n"
 "SNAPDCB  DCB   DDNAME=SNAP,DSORG=PS,LRECL=125,BLKSIZE=1632,            @\n"
 "               RECFM=VBA,MACRF=(W)");
 
-__asm__("\n&FUNC    SETC 'system_dump'");
-static int
-system_dump(SDWA *sdwa)
-{
-    say("system_dump requested");
-    goto quit;
-
-    sdwa->SDWACMPF &= (0XFF - SDWAREQ); /* turn off dump flag */
-
-quit:
-    return 0;
-}
-
 __asm__("\n&FUNC    SETC 'recovery'");
 static int
 recovery(SDWA *sdwa, void *udata)
@@ -496,13 +483,12 @@ recovery(SDWA *sdwa, void *udata)
         suppress_dump(sdwa);
         break;
     case DUMP_DEFAULT:
-        /* nothing to do */
+    case DUMP_SDUMP:
+        /* DUMP_SDUMP is DUMP_DEFAULT: an SVC dump needs APF, and the
+           routine only wrote "system_dump requested" (#413) */
         break;
     case DUMP_SNAP:
         snap_dump(sdwa);
-        break;
-    case DUMP_SDUMP:
-        system_dump(sdwa);
         break;
     }
 

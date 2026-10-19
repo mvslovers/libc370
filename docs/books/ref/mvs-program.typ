@@ -1221,8 +1221,7 @@ save areas.
   [#cmd("DUMP_SNAP")], [a SNAP dump is written to the DD #cmd("SNAP"), and
     the system dump is suppressed. When the DD cannot be opened, the dump
     is left as for #cmd("DUMP_DEFAULT").],
-  [#cmd("DUMP_SDUMP")], [the same as #cmd("DUMP_DEFAULT")\; the routine
-    only writes a message.],
+  [#cmd("DUMP_SDUMP")], [the same as #cmd("DUMP_DEFAULT").],
 )
 
 === Returns
@@ -1232,7 +1231,10 @@ The value #cmd("estae()") returns, or -1 when #var("op") is not valid.
 When the task is being ended, the routine writes a single message and does
 nothing else.
 
-#cmd("DUMP_SDUMP") takes no SVC dump.
+#cmd("DUMP_SDUMP") takes no SVC dump, which would need APF authorization\;
+it keeps its value and behaves exactly as #cmd("DUMP_DEFAULT"). Up to
+release 2.23.0 it also wrote the message #cmd("system_dump requested") to
+the console.
 
 === Related
 @mvs-program-estae, @mvs-program-__linkt

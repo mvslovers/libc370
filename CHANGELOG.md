@@ -47,6 +47,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   traceback to the console, for a request that ran out of nothing. They
   still return `NULL`, now without changing `errno` and without the
   message (measured on MVS).
+- **`DUMP_SDUMP` behaves exactly as `DUMP_DEFAULT` (#413).** The
+  recovery report routine `__abrpt()` accepted `DUMP_SDUMP`, took no SVC
+  dump (that would need APF authorization) and only wrote
+  "system_dump requested" to the console. The value stays, the message is
+  gone, and the abend is handled as with `DUMP_DEFAULT` (measured on MVS).
 
 ## [2.23.0] - 2026-10-19
 
