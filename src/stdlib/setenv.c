@@ -56,10 +56,9 @@ setenv(const char *name, const char *value, int rewrite)
     memcpy(envvar->name, name, l_name);
     memcpy(envvar->value, value, l_value);
 
-    /* see if we have this name in the environment variables            */
-    /* note: we want to replace exact match variables if possible       */
-    found = __findenv(envvar->name, &index, 0);             /* same case    */
-    if (!found) found = __findenv(envvar->name, &index, 1); /* try caseless */
+    /* see if we have this name in the environment variables: by the
+       exact name, as getenv() and unsetenv() compare (#475) */
+    found = __findenv(envvar->name, &index, 0);
     if (found && !rewrite) {
         /* found it, but rewrite not desired */
         free(envvar);
