@@ -26,5 +26,7 @@ extern void     __stymd(long scalar,
 
 __PDPCLIB_API__ double difftime(time_t time1, time_t time0)
 {
-    return ((double)(time1 - time0));
+    /* time_t is unsigned: subtracted first, a negative difference
+       wrapped to about 4.29e9 (#392) */
+    return ((double)time1 - (double)time0);
 }
