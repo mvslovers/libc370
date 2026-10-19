@@ -135,6 +135,16 @@
  * (#39).  The fix adds the include, so the fixed file needs no such flag:
  * one more of #39's translation units off the list for free.
  *
+ * #142, cases (8)-(13): where the data sets come from.  get_dsab(),
+ * __dsalcf() and __jesvol() are shims that record what they were asked, so
+ * the cases pin the order: the DDs of the JCL when the step has them, else
+ * SYS1.HASPCKPT through the catalog, else on the volume the OBTAIN scan
+ * found; the spool as PREFIX.HASPACE on the volume the checkpoint names;
+ * jesopen_ex() with a name uses no DD.  RED, the same build with the
+ * pre-#142 jesopen.c plus a jesopen_ex() that calls jesopen(): 31/46, the
+ * 15 checks of (9)-(13) fail.  What MVS does with these requests is
+ * test/mvs/tstjsop.c's part.
+ *
  * RC: 0 = every check passed, 1 = at least one did not.
  */
 #include <stdio.h>
@@ -142,7 +152,9 @@
 #include <string.h>
 #include <stdarg.h>
 #include "mvs/jes2.h"
+#include "mvs/dd.h"
 #include "ext/array.h"
+#include "src/mvs/jes2/jesvol.h"
 
 /* --------------------------------------------------------------------------
  * Minimal mbtcheck.h-compatible harness, same inline copy as tsttxdsn.c.
@@ -195,9 +207,23 @@ static int wtos          = 0;   /* wtof() call count                        */
 static HASPCP  fake_cp;
 static HASPJS  fake_js;
 
+/* What the opens and allocations were asked for (#142).  A case checks
+ * the names, which is where the discovery order shows. */
+static char cp_arg[64];         /* last __cpopen() argument                 */
+static char js_arg[64];         /* last __jsopen() argument                 */
+static char alc[4][96];         /* __dsalcf() requests, formatted           */
+static int  nalc          = 0;
+static int  cat_fails     = 0;  /* __dsalcf() without volser= fails         */
+static int  vol_fails     = 0;  /* __dsalcf() with volser= fails            */
+static int  scans         = 0;  /* __jesvol() call count                    */
+static const char *scan_hit = NULL; /* volume __jesvol() finds, NULL none   */
+static int  dd_ckpt       = 0;  /* the step has a HASPCKPT DD               */
+static int  dd_spool      = 0;  /* the step has a HASPACE1 DD               */
+static DSAB fake_dsab;
+
 HASPCP *__cpopen(const char *dataset)
 {
-    (void)dataset;
+    snprintf(cp_arg, sizeof(cp_arg), "%s", dataset);
     if (cp_open_fails) return NULL;
     return &fake_cp;
 }
@@ -210,7 +236,7 @@ int __cpclos(HASPCP *cp)
 
 HASPJS *__jsopen(const char *dataset)
 {
-    (void)dataset;
+    snprintf(js_arg, sizeof(js_arg), "%s", dataset);
     if (js_open_fails) return NULL;
     return &fake_js;
 }
@@ -226,6 +252,42 @@ void wtof(const char *text, ...)
     (void)text;
     wtos++;
 }
+
+DSAB *get_dsab(void *tcbptr, const char *ddname)
+{
+    (void)tcbptr;
+    if (dd_ckpt  && strcmp(ddname, "HASPCKPT") == 0) return &fake_dsab;
+    if (dd_spool && strcmp(ddname, "HASPACE1") == 0) return &fake_dsab;
+    return NULL;
+}
+
+int __dsalcf(char *ddname, const char *opts, ...)
+{
+    va_list ap;
+    char   *req = alc[nalc < 4 ? nalc : 3];
+
+    va_start(ap, opts);
+    vsnprintf(req, sizeof(alc[0]), opts, ap);
+    va_end(ap);
+    nalc++;
+    if (strstr(req, "volser=") ? vol_fails : cat_fails) return 4;
+    snprintf(ddname, 9, "SYS%05d", nalc);
+    return 0;
+}
+
+int __jesvol(const char *dsn, char volser[7], unsigned *scanned)
+{
+    (void)dsn;
+    scans++;
+    if (scanned) *scanned = 3;
+    if (!scan_hit) return 1;
+    snprintf(volser, 7, "%s", scan_hit);
+    return 0;
+}
+
+/* toupper() of libc370's ctype.h indexes this table: the host one */
+static short up[257];
+short *__toup = &up[1];
 
 int *__errno(void)
 {
@@ -282,6 +344,94 @@ static void reset(void)
     cp_closes = js_closes = wtos = 0;
     fail_at = 0;
     job_frees = 0;
+    cp_arg[0] = js_arg[0] = 0;
+    nalc = cat_fails = vol_fails = scans = 0;
+    scan_hit = NULL;
+    dd_ckpt = dd_spool = 1;     /* (1)-(7): the DDs of the JCL, as before */
+    memcpy(fake_cp.hct._SPOOL, "SPOOL1", 6);
+}
+
+/* (8)-(13) - #142: where the data sets come from */
+static void discovery(void)
+{
+    JES *jes;
+    int  c;
+
+    for (c = 0; c < 256; c++)
+        up[c + 1] = (short)((c >= 'a' && c <= 'z') ? c - 'a' + 'A' : c);
+
+    printf("\n(8) both DDs in the JCL: they are used, nothing allocated:\n");
+    reset();
+    jes = jesopen();
+    CHECK(jes != NULL,                              "(8) handle returned");
+    CHECK(strcmp(cp_arg, "DD:HASPCKPT") == 0,       "(8) checkpoint from DD");
+    CHECK(strcmp(js_arg, "DD:HASPACE1") == 0,       "(8) spool from DD");
+    CHECK_EQ(nalc, 0,                               "(8) no allocation");
+    jesclose(&jes);
+
+    printf("\n(9) no DD, SYS1.HASPCKPT cataloged:\n");
+    reset();
+    dd_ckpt = dd_spool = 0;
+    jes = jesopen();
+    CHECK(jes != NULL,                              "(9) handle returned");
+    CHECK(strcmp(alc[0], "dsname=SYS1.HASPCKPT,disp=shr") == 0,
+                                                    "(9) catalog first");
+    CHECK(strcmp(cp_arg, "DD:SYS00001") == 0,       "(9) opened by its DD");
+    CHECK_EQ(scans, 0,                              "(9) no volume scan");
+    CHECK(strcmp(alc[1], "dsname=SYS1.HASPACE,disp=shr,volser=SPOOL1") == 0,
+                                                    "(9) spool on _SPOOL");
+    CHECK(strcmp(js_arg, "DD:SYS00002") == 0,       "(9) spool by its DD");
+    jesclose(&jes);
+
+    printf("\n(10) no DD, not cataloged: the OBTAIN scan finds it:\n");
+    reset();
+    dd_ckpt = dd_spool = 0;
+    cat_fails = 1;
+    scan_hit = "MVS000";
+    jes = jesopen();
+    CHECK(jes != NULL,                              "(10) handle returned");
+    CHECK_EQ(scans, 1,                              "(10) one volume scan");
+    CHECK(strcmp(alc[1], "dsname=SYS1.HASPCKPT,disp=shr,volser=MVS000") == 0,
+                                                    "(10) allocated on it");
+    CHECK(strcmp(cp_arg, "DD:SYS00002") == 0,       "(10) opened by its DD");
+    jesclose(&jes);
+
+    printf("\n(11) no DD, found nowhere: NULL and both causes said:\n");
+    reset();
+    dd_ckpt = dd_spool = 0;
+    cat_fails = 1;
+    jes = jesopen();
+    CHECK(jes == NULL,                              "(11) no handle");
+    CHECK(cp_arg[0] == 0,                           "(11) nothing opened");
+    CHECK_EQ(wtos, 3,                       "(11) not found + two causes");
+
+    printf("\n(12) jesopen_ex() with a name: the DDs are not used:\n");
+    reset();
+    jes = jesopen_ex("jes2b.haspckpt");
+    CHECK(jes != NULL,                              "(12) handle returned");
+    CHECK(strcmp(alc[0], "dsname=JES2B.HASPCKPT,disp=shr") == 0,
+                                                    "(12) the name, upper");
+    CHECK(strcmp(alc[1], "dsname=JES2B.HASPACE,disp=shr,volser=SPOOL1") == 0,
+                                                    "(12) spool, same prefix");
+    CHECK(strcmp(js_arg, "DD:SYS00002") == 0,       "(12) not DD:HASPACE1");
+    jesclose(&jes);
+    reset();
+    jes = jesopen_ex(NULL);
+    CHECK(strcmp(cp_arg, "DD:HASPCKPT") == 0,       "(12) NULL = jesopen()");
+    jesclose(&jes);
+    reset();
+    jes = jesopen_ex("");
+    CHECK(jes == NULL && cp_arg[0] == 0,            "(12) \"\" refused");
+
+    printf("\n(13) HASPCKPT DD only: spool SYS1.HASPACE on _SPOOL:\n");
+    reset();
+    dd_spool = 0;
+    jes = jesopen();
+    CHECK(jes != NULL,                              "(13) handle returned");
+    CHECK(strcmp(cp_arg, "DD:HASPCKPT") == 0,       "(13) checkpoint from DD");
+    CHECK(strcmp(alc[0], "dsname=SYS1.HASPACE,disp=shr,volser=SPOOL1") == 0,
+                                                    "(13) spool allocated");
+    jesclose(&jes);
 }
 
 int main(void)
@@ -386,6 +536,8 @@ int main(void)
         jesclose(&jes);
         CHECK_EQ(job_frees, 2,  "(7) the job and its one DD freed");
     }
+
+    discovery();
 
     return mbt_test_summary("tstjesop");
 }

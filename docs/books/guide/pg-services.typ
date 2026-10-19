@@ -547,10 +547,16 @@ twelve.
   #code(read("../ex/pg-services/submit.c"), numbers: true)
 ] <pg-services-submit-fig>
 
-The job queue is read from the checkpoint and spool data sets directly,
-and the step needs DD statements for both (@pg-services-jes2-jcl).
+The job queue is read from the checkpoint and spool data sets directly.
+The step needs no DD statement for them: #cmd("jesopen()") allocates
+#cmd("SYS1.HASPCKPT") and #cmd("SYS1.HASPACE") itself, also when they are
+not cataloged, and #cmd("jesclose()") frees them again. When JES2 names
+its data sets with another prefix than #cmd("SYS1"), name them with DD
+statements (@pg-services-jes2-jcl), which take precedence, or pass the
+checkpoint name to #cmd("jesopen_ex()"). Up to LIBC/370 2.23.0 the DD
+statements were required.
 
-#fig(caption: [DD statements for reading the job queue])[
+#fig(caption: [DD statements for JES2 data sets with another prefix])[
   #code(read("../ex/pg-services/jes2.jcl"))
 ] <pg-services-jes2-jcl>
 

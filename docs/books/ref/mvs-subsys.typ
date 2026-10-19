@@ -53,10 +53,11 @@ they require of the caller. @mvs-subsys-auth-tab lists them.
      authorized receives -1 with #cmd("errno") #cmd("EPERM")\; up to
      LIBC/370 2.18.1 it ended with abend #cmd("S047").],
     [All other functions],
-    [None. #cmd("jesopen()"), #cmd("jesjob()") and #cmd("jesprint()") read the
-     checkpoint and spool data sets with ordinary #cmd("OPEN") and
-     #cmd("READ") and need only the DD statements described in
-     @mvs-subsys-jes. The ISPF functions need a TSO environment.],
+    [None. #cmd("jesopen()"), #cmd("jesopen_ex()"), #cmd("jesjob()") and
+     #cmd("jesprint()") read the checkpoint and spool data sets with
+     ordinary #cmd("OPEN") and #cmd("READ"), and allocate them themselves
+     when the step has no DD statement for them (@mvs-subsys-jes). The ISPF
+     functions need a TSO environment.],
   )
 ] <mvs-subsys-auth-tab>
 
@@ -478,22 +479,41 @@ Declared in #cmd("<mvs/jes2.h>"), not in #cmd("<mvs/subsys.h>").
 The functions #cmd("jesopen()"), #cmd("jesjob()") and #cmd("jesprint()")
 read the JES2 job queue and spool without asking JES2: they open the JES2
 checkpoint data set and the spool data set themselves and interpret their
-records. Their caller needs no authorization, but the job step needs two DD
-statements:
+records. Their caller needs no authorization and no DD statement.
 
-#deflist(width: 1.1in,
-  [#cmd("HASPCKPT")], [the JES2 checkpoint data set, for example
-    #cmd("SYS1.HASPCKPT").],
-  [#cmd("HASPACE1")], [the JES2 spool data set, for example
-    #cmd("SYS1.HASPACE").],
-)
+#idx("DSNPRFX")
+JES2 names its data sets after one prefix, its #cmd("DSNPRFX")
+initialization parameter: #var("prefix")#cmd(".HASPCKPT") for the
+checkpoint and #var("prefix")#cmd(".HASPACE") for the spool, #cmd("SYS1")
+unless the installation chose another. #cmd("jesopen()") finds the data sets
+in this order:
+
++ The checkpoint: through the DD statement #cmd("HASPCKPT") when the job
+  step has one. Otherwise #cmd("SYS1.HASPCKPT") is allocated dynamically
+  with #cmd("DISP=SHR"): through the catalog, or, when it is not
+  cataloged, on the first online DASD volume whose VTOC has it (one OBTAIN
+  per volume, the catalog is not consulted).
++ The spool: through the DD statement #cmd("HASPACE1") when the job step
+  has one. Otherwise #cmd("SYS1.HASPACE") is allocated on the spool volume
+  that the checkpoint names; it needs no search.
+
+The data sets #cmd("jesopen()") allocates are unallocated again by
+#cmd("jesclose()"). A program that does not run under JCL of its own, for
+example a CGI program in a server's address space, names another
+checkpoint with #cmd("jesopen_ex()"). On a system whose JES2 uses another
+prefix, either call #cmd("jesopen_ex()") with the name or code the two DD
+statements:
 
 #fig(caption: [DD statements for the JES2 functions])[
 ```
-//HASPCKPT DD DISP=SHR,DSN=SYS1.HASPCKPT
-//HASPACE1 DD DISP=SHR,DSN=SYS1.HASPACE
+//HASPCKPT DD DISP=SHR,DSN=JES2.HASPCKPT
+//HASPACE1 DD DISP=SHR,DSN=JES2.HASPACE
 ```
 ] <mvs-subsys-jes-dd>
+
+The DD statements take precedence: they choose the data sets as they did
+up to LIBC/370 2.23.0, when they were required, and they stay allocated
+after #cmd("jesclose()").
 
 Only one spool volume is read: a system whose spool spans several volumes
 is read as far as the first one goes.
@@ -606,33 +626,105 @@ JES *jesopen(void);
 
 === Description
 
-#cmd("jesopen()") opens the checkpoint data set through the DD statement
-#cmd("HASPCKPT") and the spool data set through #cmd("HASPACE1"), reads the
+#cmd("jesopen()") opens the JES2 checkpoint and spool data sets, reads the
 job queue of the checkpoint into storage, and returns a handle for
-#cmd("jesjob()") and #cmd("jesprint()"). The open runs under
+#cmd("jesjob()") and #cmd("jesprint()"). The checkpoint comes from the DD
+statement #cmd("HASPCKPT") and the spool from #cmd("HASPACE1") when the job
+step has them\; otherwise #cmd("jesopen()") allocates #cmd("SYS1.HASPCKPT")
+and #cmd("SYS1.HASPACE") itself, as @mvs-subsys-jes describes.
+#cmd("jesopen()") is #cmd("jesopen_ex(NULL)"). The open runs under
 #cmd("try()"), so an abend while the checkpoint is read ends the call
 instead of the program.
 
 === Returns
 
-The handle, or #cmd("NULL") when storage could not be obtained or one of the
-data sets could not be opened.
+The handle, or #cmd("NULL") when storage could not be obtained, or one of
+the data sets could not be found, allocated or opened.
 
 === Notes
 
 When it fails, #cmd("jesopen()") writes the reason to the operator
-console, for example:
+console. When #cmd("SYS1.HASPCKPT") is neither cataloged nor on an online
+volume, it says so and names both possible causes:
 
 ```
-Unable to open checkpoint dataset DD:HASPCKPT
+SYS1.HASPCKPT is not cataloged and is on no online volume
+JES2 uses another dataset name prefix than SYS1, or there is no JES2 checkpoint
+Use a HASPCKPT DD or jesopen_ex() with the checkpoint name
 ```
+
+A data set allocated by #cmd("jesopen()") takes a DD entry of the job
+step until #cmd("jesclose()"); the step needs no #cmd("DYNAMNBR") for it.
 
 The handle owns a copy of the job queue, which can be several tens of
 kilobytes; close it when it is no longer needed.
 
+Up to LIBC/370 2.23.0 #cmd("jesopen()") used the DD statements only and
+failed without them, with the message
+#cmd("Unable to open checkpoint dataset DD:HASPCKPT") (and #cmd("IEC130I")).
+
 === Related
 
-@mvs-subsys-jesclose, @mvs-subsys-jesjob, @mvs-subsys-cpopen
+@mvs-subsys-jesopen-ex, @mvs-subsys-jesclose, @mvs-subsys-jesjob,
+@mvs-subsys-cpopen
+
+== jesopen_ex <mvs-subsys-jesopen-ex>
+
+#idx("jesopen_ex")
+=== Format
+
+```
+#include <mvs/jes2.h>
+
+JES *jesopen_ex(const char *ckptdsn);
+```
+
+=== Description
+
+#cmd("jesopen_ex()") opens the JES2 checkpoint data set #var("ckptdsn") and
+its spool, reads the job queue of the checkpoint into storage, and returns
+a handle for #cmd("jesjob()") and #cmd("jesprint()"), as
+#cmd("jesopen()") does. It is meant for a program that cannot rely on DD
+statements of its own, such as a CGI program that runs in a server's job
+step, on a system whose JES2 data sets have another prefix than
+#cmd("SYS1").
+
+#var("ckptdsn") is a fully qualified data set name without quotes, in upper
+or lower case, for example #cmd("JES2.HASPCKPT"). It is allocated with
+#cmd("DISP=SHR") through the catalog or, when it is not cataloged, on the
+first online volume whose VTOC has it. The spool data set has the same
+name with #cmd("HASPACE") as its last qualifier (#cmd("JES2.HASPACE")), as
+JES2 builds both names from one prefix, and is allocated on the spool
+volume the checkpoint names. The DD statements #cmd("HASPCKPT") and
+#cmd("HASPACE1") are not used.
+
+#cmd("NULL") for #var("ckptdsn") does what #cmd("jesopen()") does: the DD
+statements when the step has them, #cmd("SYS1.HASPCKPT") otherwise.
+
+#cmd("jesclose()") closes the handle and unallocates the data sets.
+
+=== Returns
+
+The handle, or #cmd("NULL") when #var("ckptdsn") is empty or longer than
+44 characters, storage could not be obtained, or one of the data sets
+could not be found, allocated or opened.
+
+=== Notes
+
+The reason for a failure goes to the operator console, as for
+#cmd("jesopen()"), for example:
+
+```
+JES2.HASPCKPT is not cataloged and is on no online volume
+```
+
+Only the first spool volume is read, as for #cmd("jesopen()").
+
+#cmd("jesopen_ex()") is new in LIBC/370 2.24.0.
+
+=== Related
+
+@mvs-subsys-jesopen, @mvs-subsys-jesclose, @mvs-subsys-jesjob
 
 == jesclose <mvs-subsys-jesclose>
 
@@ -648,7 +740,9 @@ int jesclose(JES **jes);
 === Description
 
 #cmd("jesclose()") closes the checkpoint and spool data sets of the handle
-#var("*jes"), frees the handle, and sets #var("*jes") to #cmd("NULL").
+#var("*jes"), unallocates those that #cmd("jesopen()") or
+#cmd("jesopen_ex()") allocated, frees the handle, and sets #var("*jes") to
+#cmd("NULL"). DD statements of the JCL stay allocated.
 #cmd("NULL") for #var("jes") or #var("*jes") is ignored.
 
 The handle also keeps track of the storage a #cmd("jesjob()") call is
@@ -924,9 +1018,10 @@ After the open, the handle holds the checkpoint control table of JES2
 #cmd("<ibm/jes2/jot.h>"). #cmd("pddb1") is the offset of the first
 peripheral data definition block in an input/output table of the spool.
 
-#cmd("__cpclos()") closes the data set, unallocates its DD, however it was
-allocated -- whether MVS refuses that for a DD from the JCL has not been
-measured -- and frees the handle. #cmd("NULL") is ignored.
+#cmd("__cpclos()") closes the data set, unallocates a DD that was allocated
+dynamically, and frees the handle. A DD statement of the JCL stays
+allocated: MVS refuses to unallocate it (measured on MVS 3.8j).
+#cmd("NULL") is ignored.
 
 === Returns
 

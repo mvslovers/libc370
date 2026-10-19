@@ -4409,6 +4409,7 @@ jesjob	mvs/jes2.h
 jesjobf1	mvs/jes2.h
 jesjobfr	mvs/jes2.h
 jesopen	mvs/jes2.h
+jesopen_ex	mvs/jes2.h
 jesprint	mvs/jes2.h
 jesprst	mvs/jes2.h
 jesreque	mvs/jes2.h
