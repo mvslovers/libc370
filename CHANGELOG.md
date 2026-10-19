@@ -66,6 +66,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   character. `perror()` no longer formats into a static buffer, and
   `tmpfile()` returns `NULL` when `tmpnam()` has no name left (measured on
   MVS).
+- **`exp()`, `pow()`, `atan2()`, `log(0)` and `frexp(0)` (#389).** `exp()`
+  reduces its argument, `x = n ln 2 + r`, and scales the result in its
+  exponent: it summed the series of `e**x` itself, so `exp(-20)` came out
+  negative and `exp(174)` ended in abend S0CC although its result fits.
+  Beyond the range it returns `HUGE_VAL` or 0 with `ERANGE`. `sinh()`,
+  `cosh()` and `tanh()` follow (`tanh(-90)` ended S0CC). `pow()` raises to
+  an integral power by squaring, returns `HUGE_VAL` with `ERANGE` for
+  `pow(0, y < 0)`, which ended S0CF, and for a result beyond the range.
+  `atan2(0, 0)` returns 0 instead of ending S0CF. `log(0)` returns
+  `-HUGE_VAL` with `ERANGE`, as C99 has it, and `frexp(0)` stores 0 in its
+  exponent (measured on MVS).
 
 ## [2.22.0] - 2026-10-19
 

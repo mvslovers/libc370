@@ -40,7 +40,7 @@ __PDPCLIB_API__ double frexp(double x, int *exp)
 
     if ( x == 0.0)
     {
-        exp=0;
+        *exp = 0;   /* it cleared the pointer, not *exp (#389) */
         return (0.0);
     }
 

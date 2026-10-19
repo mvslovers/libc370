@@ -36,16 +36,19 @@ are in @std-float. The consequences for a program are these:
 - *#cmd("HUGE_VAL") is a finite number*: 9.999999999999999999999E72, which is
   less than #cmd("DBL_MAX"). #cmd("acos()"), #cmd("asin()") and #cmd("log()")
   return it on a domain error (#cmd("asin()") of a value below -1 returns
-  #cmd("-HUGE_VAL")), and #cmd("strtod()") on overflow.
+  #cmd("-HUGE_VAL")), #cmd("exp()") and #cmd("pow()") on overflow, and
+  #cmd("strtod()") on overflow.
 #idx("HUGE_VAL")#idx("S0CC")#idx("S0CF")
 
 == Error Reporting <std-math-errors>
 
 #idx("errno", "mathematical functions")#idx("EDOM")
 A function whose argument lies outside its domain stores #cmd("EDOM") in
-#cmd("errno") and returns the value given in its entry. No function stores
-#cmd("ERANGE"): a result that is too large ends the program as described
-above.
+#cmd("errno") and returns the value given in its entry. #cmd("exp()"),
+#cmd("pow()") and #cmd("log(0)") store #cmd("ERANGE") for a result that is
+too large or too small, or a pole, and return #cmd("HUGE_VAL") (or
+#cmd("-HUGE_VAL")) or 0. The other functions do not check the range: a
+result that is too large ends the program as described above.
 To detect an error, set #cmd("errno") to 0 before the call and test it
 afterwards. The C99 macro #cmd("math_errhandling") is not defined.
 
@@ -141,9 +144,8 @@ signs of both arguments to determine the quadrant.
 
 === Notes
 
-#cmd("atan2(0.0, 0.0)") divides zero by zero and ends the program with abend
-#cmd("S0CF"). C99 allows a domain error here\; test for both arguments being
-zero before the call.
+#cmd("atan2(0.0, 0.0)") returns 0. Up to release 2.22.0 it divided zero by
+zero and ended the program with abend #cmd("S0CF").
 
 === Related
 
@@ -252,21 +254,16 @@ The hyperbolic cosine, sine or tangent.
 
 === Notes
 
-They inherit the limits of #cmd("exp()") (@std-math-exp). #cmd("cosh()")
-and #cmd("sinh()") end the program with abend #cmd("S0CC") when the
-magnitude of #var("x") exceeds about 173, a little before their result
-would leave the range of a #cmd("double").
-Where #cmd("exp()") is called with a negative argument -- #cmd("cosh()")
-and #cmd("sinh()") of a negative #var("x"), #cmd("tanh()") of a positive
-#var("x") -- the result loses accuracy as the magnitude grows:
-#cmd("tanh(10)") has about eight correct digits, #cmd("tanh(20)") is
-negative, and #cmd("cosh(-20)") is wrong in the first digit. Use the
-symmetries instead: #cmd("cosh(-x)") = #cmd("cosh(x)"), #cmd("sinh(-x)") =
-#cmd("-sinh(x)"), and for #cmd("tanh()") of a large argument the value 1.
+They are computed with #cmd("exp()") (@std-math-exp). For a magnitude of
+#var("x") above about 174.7, #cmd("exp()") returns #cmd("HUGE_VAL") and
+stores #cmd("ERANGE"), so #cmd("cosh()") and #cmd("sinh()") return half of
+it, about 5E72, with the sign of the result. #cmd("tanh()") returns +1 or -1
+for a large magnitude.
 
-#cmd("tanh()") also ends the program with abend #cmd("S0CC") when the
-magnitude of #var("x") exceeds about 86.5, although its result, +1 or -1, is
-in range: #cmd("exp(-2 * x)") overflows, or its series does.
+Up to release 2.22.0 #cmd("exp()") lost all accuracy for negative
+arguments, so #cmd("tanh(20)") was negative and #cmd("cosh(-20)") wrong in
+the first digit, and all three ended with abend #cmd("S0CC") above about 173
+(#cmd("tanh()") above about 86.5).
 
 === Related
 
@@ -287,26 +284,23 @@ double exp(double x);
 === Description
 
 #cmd("exp()") computes the exponential function of #var("x"),
-_e_#super[#var("x")], by summing its power series.
+_e_#super[#var("x")]. It splits #var("x") into #var("n") ln 2 + #var("r") with
+|#var("r")| at most ln 2 / 2, sums the power series of _e_#super[#var("r")],
+and scales by 2#super[#var("n")] in the exponent of the result.
 
 === Returns
 
-The exponential of #var("x").
+The exponential of #var("x"). For #var("x") above about 174.67 it returns
+#cmd("HUGE_VAL"), below about -180.2 it returns 0, and in both cases stores
+#cmd("ERANGE") in #cmd("errno").
 
 === Notes
 
-- *Negative arguments lose accuracy.* The series is summed without reducing
-  the argument, and for negative #var("x") its terms alternate in sign and
-  cancel. At #var("x") = -10 only about eight digits of the result are
-  correct, at -20 none, and at -30 the result is negative. For a negative argument compute #cmd("1.0 / exp(-x)"), which
-  is accurate.
-- For #var("x") greater than about 173 or less than about -173 the program
-  ends with abend #cmd("S0CC"). The terms of the series grow before they
-  shrink, and each is formed by multiplying the previous one by #var("x")
-  before dividing, so that intermediate product overflows first:
-  #cmd("exp(174)") abends although its result, about 3.7E75, is within
-  the range of a #cmd("double").
-- No #cmd("errno") value is ever set.
+- Up to release 2.22.0 the series of _e_#super[#var("x")] was summed without
+  reducing the argument: negative arguments lost their accuracy
+  (#cmd("exp(-30)") was negative), and above about 173 or below about -173
+  an intermediate term ended the program with abend #cmd("S0CC"), although
+  #cmd("exp(174)"), about 3.7E75, is within range.
 
 === Related
 
@@ -412,9 +406,8 @@ than 1, such that #var("value") equals the result times
 
 === Notes
 
-- When #var("value") is 0, #cmd("frexp()") does not store into
-  #cmd("*")#var("exp"): the variable keeps its previous contents, where C99
-  requires 0. Set it to 0 before the call.
+- When #var("value") is 0, #cmd("frexp()") stores 0 into
+  #cmd("*")#var("exp"). Up to release 2.22.0 it stored nothing.
 - #cmd("ldexp()") does not check the range. A result beyond the range of a
   #cmd("double") is not reported and is wrong.
 
@@ -443,15 +436,16 @@ natural logarithm of 10.
 
 === Returns
 
-The logarithm. If #var("x") is 0 or negative, #cmd("log()") returns
-#cmd("HUGE_VAL") -- a positive value, where C99 prescribes
-#cmd("-HUGE_VAL") for 0 -- and #cmd("log10()") returns
-#cmd("HUGE_VAL") divided by the natural logarithm of 10, about 4.3E72.
+The logarithm. If #var("x") is 0, #cmd("log()") returns #cmd("-HUGE_VAL"),
+if it is negative #cmd("HUGE_VAL")\; #cmd("log10()") returns these divided by
+the natural logarithm of 10, about 4.3E72.
 
 === Errors
 
 #deflist(width: 1.1in,
-  [#cmd("EDOM")], [#var("x") is 0 or negative.],
+  [#cmd("ERANGE")], [#var("x") is 0. Up to release 2.22.0 this was
+    #cmd("EDOM"), and the result #cmd("+HUGE_VAL").],
+  [#cmd("EDOM")], [#var("x") is negative.],
 )
 
 === Related
@@ -523,21 +517,22 @@ returns 0.
 #deflist(width: 1.1in,
   [#cmd("EDOM")], [#var("x") is negative and #var("y") is not an integral
     value.],
+  [#cmd("ERANGE")], [#var("x") is 0 and #var("y") negative (the result is
+    #cmd("HUGE_VAL")), or the result is beyond the range of a
+    #cmd("double") (#cmd("HUGE_VAL"), negative for a negative #var("x") and
+    an odd #var("y")).],
 )
 
 === Notes
 
-- An integral #var("y") is converted to #cmd("int"), so it must lie within
-  the range of #cmd("int"). The number of multiplications is
-  #cmd("|y|") - 1, so a large integral exponent takes correspondingly long.
-- #cmd("pow(0.0, y)") with a negative integral #var("y") divides by zero and
-  ends the program with abend #cmd("S0CF"). With a non-integral #var("y") it
-  takes the logarithm of 0, which is #cmd("HUGE_VAL"), and #cmd("exp()")
-  of its product with #var("y") ends with abend #cmd("S0CC").
-- A result beyond the range of a #cmd("double") ends the program with abend
-  #cmd("S0CC"). With a non-integral #var("y"), a result less than 1 inherits
-  the loss of accuracy of #cmd("exp()") for negative arguments:
-  #cmd("pow(10.0, -7.5)") has only two correct digits.
+- An integral #var("y") below 2#super[31] in magnitude is applied by
+  repeated squaring, about log#sub[2] |#var("y")| multiplications\; a larger
+  one, and a non-integral one, through #cmd("exp(y * log(x))").
+- Up to release 2.22.0 an integral #var("y") took |#var("y")| - 1
+  multiplications, #cmd("pow(0.0, y)") with a negative #var("y") ended the
+  program with abend #cmd("S0CF") or #cmd("S0CC"), a result beyond the
+  range ended it with #cmd("S0CC"), and a result less than 1 with a
+  non-integral #var("y") lost its accuracy with #cmd("exp()").
 
 === Related
 

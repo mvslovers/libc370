@@ -29,6 +29,9 @@ static const double ln2 = 0.69314718055994530941723212145818 ;
 
 __PDPCLIB_API__ double atan2(double y,double x)
 {
+    /* (0, 0): 0, as C99 has it for +0; it divided by zero, S0CF (#389) */
+    if (x == 0.0 && y == 0.0) return 0.0;
+
     return (x >= y) ?
                (x >= -y ? atan(y/x) : -pi/2 - atan(x/y))
               :
