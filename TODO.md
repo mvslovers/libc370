@@ -84,25 +84,28 @@ Each fix gets a red/green test in a container, then a PR and a merge.
     svcmain SVCMAIN_KEY low-bit key set key 0; host test tstsvckey) and
     #636 (PR #638, install removes only the headers listed in
     share/libc370/include-files.txt; host test tstinstall). Unreleased.
-- **Clear parts of otherwise open issues:**
-  - #395: everything but tmpfile, which is done, and the fread indicator;
-  - #389: frexp(0), atan2(0,0), pow(0,-n), pow by squaring, exp reduction;
-  - #392: no tm overwrite on error, difftime;
-  - #408: the C side of __dsalc;
-  - #411: OPEN rc 4, DD upper-casing, CLOSE rc. The sticky flags were
-    already fixed by PR #428;
-  - #412: NULL check and rc;
-  - #413: tsocmd ECT restore, sleep(), the eyecatchers;
-  - #476: try() rc sign, timer start failure;
-  - #420: strerror above 131, signatures;
-  - #179: no error flag on the old stream;
-  - #72: doc comments.
+- **A round (2026-10-19), merged, unreleased:** #640 (PR #641, try() frees
+  the SDWA: 512 B per caught abend before), #179 (PR #642), #174 (PR #643,
+  fclose always releases the ENQ), and the clear parts of open issues:
+  #392 no tm overwrite + difftime (PR #644), #420 strerror + signatures
+  (PR #645), #411 OPEN rc 4/DD case/CLOSE rc (PR #646), #395 all but the
+  fread indicator (PR #647), #389 exp/pow/atan2/log/frexp (PR #648), #408
+  C side of __dsalc (PR #649), #476 try() rc sign + timer start (PR #650),
+  #412 NULL + rc (PR #651), #413 tsocmd ECT/sleep/eyecatchers (PR #652),
+  #72 doc comments (PR #653). Each probed red/green in an own container.
+  #122 closed as duplicate of #113, #342 closed.
+  X'75' probes (all emulator defects, fixes belong in Hercules): #144 select()
+  misses a socket when Hercules holds its own descriptor, #163 lookups stop
+  the CPU (PR #655); #161 GETERROR word shared across address spaces and
+  stale per-slot errors, #165 no defect (PR #656); #162 slot leak aborts
+  Hercules (heap) at ~934 slots, #164 SELECT aux2=2048 SIGSEGV (PR #657).
+  Open from #161: guard `errno` after a failing socket() on our side?
+  #68 is draft PR #654, waiting for httpd#310.
 - **Waiting on a decision:**
   - #553: `__linkx` or `__linkerr`;
   - #461: nesting and guard;
   - #417: sockaddr type;
   - #418: header cleanup, MBT sweep;
-  - #174: fclose, "not settled" below;
   - #178;
   - #173: dscb4 layout with #409's view;
   - #160: send cap;
@@ -116,17 +119,15 @@ Each fix gets a red/green test in a container, then a PR and a merge.
   - #75;
   - #392's zone: mvsMF `consapi.c` relies on the zone-less mktime, so a
     release must be coordinated with mvsMF;
-  - #68: putting the format attributes into the headers. libc370 itself
-    shows 20 format warnings in 11 TUs, and cleaning those is S;
+  - #68: draft PR #654 (format attributes + 15 library fixes), waits for
+    httpd#310;
   - #113/#122. **New finding:** `@@crtset.c` copies the JSCB auth byte
     (+0xEC) into `crtauth` (+0x10D), not `crtopts` (+0x10C);
   - %p with `0x`.
 - **Research, parked or real stands only:**
   - #529, #465, #462;
-  - #342, #341, #340. The `l` aliases slice of #340 would be A;
+  - #341, #340. The `l` aliases slice of #340 would be A;
   - #295, #246, #206, #204, #30, #27;
-  - the X'75' measurements #144 and #161-#165. These can run in an own
-    container, but they are measurements, not fixes.
 
 *The pass before: **2026-10-06**, 83 issues open: the
 44 below, plus #384-#420 less #414/#415 (closed), #423, #448 (the doc
