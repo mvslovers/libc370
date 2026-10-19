@@ -22,6 +22,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   too small on some days (1 January 2023, a Sunday, gave `%U` 00 instead
   of 01). A `maxsize` of 0 wrote the result past the array; nothing is
   written now and the result is 0 (measured on MVS).
+- **The `<ctype.h>` macros take a `char` argument (#416).** They indexed
+  their table with the argument as it was, so `isalpha(*p)` with a
+  `char *p` drew `subscript has type 'char'` under `-Wall` and failed a
+  `-Werror` build. The macros now convert the argument to `int`; `EOF`
+  still has no class.
 
 ## [2.20.0] - 2026-10-18
 

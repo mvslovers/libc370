@@ -93,12 +93,11 @@ classified as nothing, and #cmd("toupper(EOF)") and #cmd("tolower(EOF)")
 return #cmd("EOF"). Any other value outside that range reads storage
 outside the table; the result is undefined, and no check is made.
 
-#note[The macros index the table with their argument. When the argument has
-type #cmd("char"), the compiler option #cmd("-Wall") reports
-#cmd("subscript has type `char'"), and with #cmd("-Werror") the
-compilation fails. Pass an #cmd("int"), or cast the character to
-#cmd("unsigned char"): #cmd("isalpha((unsigned char)*p)"). The cast changes
-no value, since #cmd("char") is unsigned.]
+The macros convert their argument to #cmd("int") before they index the
+table, so a #cmd("char") argument, #cmd("isalpha(*p)"), compiles cleanly
+under #cmd("-Wall -Werror"). Since #cmd("char") is unsigned, every
+character is a value from 0 to 255.
+
 
 == isalnum, isalpha, isblank, iscntrl, isdigit, isgraph, islower, isprint, ispunct, isspace, isupper, isxdigit <std-ctype-is>
 
