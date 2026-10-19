@@ -40,6 +40,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `time_t` values before converting them, so `difftime(0, 1)` was
   4294967295 instead of -1 (measured on MVS). The time-zone question of
   #392 stays open.
+- **`strerror()` returns a string for every value, and declarations match
+  their definitions (#420).** `strerror()` returned a null pointer for the
+  library's own VSAM error numbers 150 to 154, for every number above 131
+  and below 0; the VSAM numbers have their texts now, the rest
+  `"Unknown error"`, as do the gaps of the table that held other systems'
+  messages. `jesirput()` takes `const char card[80]`, `<mvs/dasd.h>` has
+  `DEV3375` (the old misspelling `DEB3375` stays as a second name), and the
+  definitions of `strerror()`, `jesirput()` and `__userExit` now match
+  their headers.
 
 ## [2.22.0] - 2026-10-19
 

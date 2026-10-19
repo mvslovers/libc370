@@ -11,7 +11,6 @@
 #include "mvs/wto.h"
 #include "src/internal/wtofmt.h"
 
-extern void (*__userex[__NATEXIT])(void);
 
 __PDPCLIB_API__ void *malloc(size_t size)
 {

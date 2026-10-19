@@ -4,8 +4,9 @@
 #include <string.h>
 #include <stddef.h>
 #include "mvs/vsam.h"
+#include "mvs/jes2.h"
 
-int jesirput(VSFILE *vsfile, const char *rec)
+int jesirput(VSFILE *vsfile, const char rec[80])
 {
     int      rc     = -1;
 

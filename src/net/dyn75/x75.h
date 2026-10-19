@@ -1,6 +1,10 @@
 #ifndef SRC_INTERNAL_X75_H
 #define SRC_INTERNAL_X75_H
 
+/* the translation tables of asc2ebc.c and ebc2asc.c (#420) */
+extern unsigned char *asc2ebc;
+extern unsigned char *ebc2asc;
+
 /* Parameter list for DYN75 calls */
 typedef struct pl75 {
     unsigned    r0;  /*  0 (Initially, but turns to > 0 after call.      00 */

@@ -8,7 +8,6 @@
 #include "stdlib.h"
 #include "string.h"
 
-extern unsigned char *ebc2asc;
 
 /* gethostbyname() */
 __asm__("\n&FUNC    SETC 'getaddrbyname'");

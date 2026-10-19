@@ -15,7 +15,8 @@ enum devtype {
     DEV3330=0x09,
     DEV3340=0x0A,
     DEV3350=0x0B,
-    DEB3375=0x0C,
+    DEV3375=0x0C,
+    DEB3375=DEV3375,    /* the name up to 2.22.0, a typo; kept (#420) */
     DEV333011=0x0D, /* 3330-11  */
     DEV3380=0x0E,
     DEV3390=0x0F,
