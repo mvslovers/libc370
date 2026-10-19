@@ -114,7 +114,7 @@ cleanup:
          * reclaims the region; a wedged-thread leak is the lesser evil.
          */
         wtof("cthread_manager_term(%08X): dispatch thread did not stop, "
-            "storage retained to avoid use-after-free", mgr);
+            "storage retained to avoid use-after-free", (unsigned)mgr);
         rc = -1;
         goto quit;
     }
@@ -151,7 +151,8 @@ cleanup:
 
     if (stuck) {
         wtof("cthread_manager_term(%08X): %u worker(s) still running, "
-            "manager storage retained to avoid use-after-free", mgr, stuck);
+            "manager storage retained to avoid use-after-free",
+            (unsigned)mgr, stuck);
         rc = -1;
         goto quit;
     }

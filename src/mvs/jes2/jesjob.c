@@ -196,7 +196,7 @@ JESJOB **jesjob(JES *jes, const char *filter, JESFILT type, int dd)
 
         job = calloc(1, sizeof(JESJOB));
         if (!job) {
-            wtof("Unable to allocate storage for %u byte JESJOB handle", sizeof(JESJOB));
+            wtof("Unable to allocate storage for %u byte JESJOB handle", (unsigned)sizeof(JESJOB));
             goto quit;
         }
 
@@ -204,7 +204,7 @@ JESJOB **jesjob(JES *jes, const char *filter, JESFILT type, int dd)
            while the spine may move and re-set right after (#126) */
         jes->injobs = NULL;
         if (arrayadd(&array, job)) {
-            wtof("Unable to add %u byte JESJOB handle to array", sizeof(JESJOB));
+            wtof("Unable to add %u byte JESJOB handle to array", (unsigned)sizeof(JESJOB));
             free(job);
             goto quit;
         }
@@ -385,13 +385,13 @@ process_pddb(__PDDB *pddb, JESJOB *job)
     JESDD *jesdd = calloc(1, sizeof(JESDD));
 
     if (!jesdd) {
-        wtof("Unable to allocate storage for %u byte JESDD handle", sizeof(JESDD));
+        wtof("Unable to allocate storage for %u byte JESDD handle", (unsigned)sizeof(JESDD));
         goto quit;
     }
 
     /* add the jesdd to the array of jesdd in the job handle */
     if (arrayadd(&job->jesdd, jesdd)) {
-        wtof("Unable to add %u byte JESDD handle to job", sizeof(JESDD));
+        wtof("Unable to add %u byte JESDD handle to job", (unsigned)sizeof(JESDD));
         free(jesdd);
         jesdd = NULL;
         goto quit;

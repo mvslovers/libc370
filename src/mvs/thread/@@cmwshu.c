@@ -84,7 +84,7 @@ cthread_worker_shutdown(CTHDWORK *work)
         work->state = CTHDWORK_STATE_STUCK;
         wtof("cthread_worker_shutdown(%08X): worker did not stop, TCB(%06X) "
             "and its stack retained to avoid terminating a live task",
-            work, task->tcb);
+            (unsigned)work, (unsigned)task->tcb);
         rc = -1;
     }
 

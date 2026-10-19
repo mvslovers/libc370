@@ -67,7 +67,8 @@ struct tm *localtime64_r (const time64_t *time, struct tm *local_tm)
 	{
 		/* create gm_tm from time value */
     	if( gmtime64_r(time, &gm_tm) == NULL ) { 
-			wtof("%s: gmtime64_r failure for time value 0x%016llX (%llu)", __func__, *time, *time);
+			wtof("%s: gmtime64_r failure for time value 0x%08X%08X", __func__,
+				(unsigned)time->u32[0], (unsigned)time->u32[1]);
     	    return NULL;
     	}
 
@@ -83,7 +84,8 @@ struct tm *localtime64_r (const time64_t *time, struct tm *local_tm)
 
 		/* create a safe_date using the safe_time value with adjustment for time zone */
     	if( localtime_r(&safe_time, &safe_date) == NULL ) {
-			wtof("%s: localtime_r failure for time value 0x%08X (%u)", __func__, safe_time, safe_time);
+			wtof("%s: localtime_r failure for time value 0x%08X (%u)", __func__,
+				(unsigned)safe_time, (unsigned)safe_time);
         	return NULL;
     	}
 	

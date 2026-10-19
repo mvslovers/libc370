@@ -46,7 +46,7 @@ cthread_worker_del(CTHDWORK **work)
     if (task && task->tcb && !(task->termecb & 0x40000000)) {
         (*work)->state = CTHDWORK_STATE_STUCK;
         wtof("cthread_worker_del(%08X): TCB(%06X) has not ended, worker "
-            "and task storage retained", *work, task->tcb);
+            "and task storage retained", (unsigned)*work, (unsigned)task->tcb);
         rc = -1;
         goto quit;
     }

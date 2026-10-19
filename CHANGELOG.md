@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- **`wtof()`, `wtorf()`, `wtodumpf()` and their `v` forms let the compiler
+  check their arguments (#68).** `<mvs/wto.h>` declares them with
+  `__attribute__((format(printf, ...)))`, so a format that does not match
+  its arguments draws a warning under `-Wall`, and fails a `-Werror` build.
+  The library's own 15 mismatches are fixed; one, in `localtime64_r()`,
+  passed a `time64_t`, a union, to `%llX` - the same 8 bytes as an
+  `unsigned long long`, so only the type was wrong.
+
 ### Fixed
 - **`make install` keeps headers other toolchains put into the sysroot
   (#636).** It cleared the whole `<sysroot>/include` before copying, which
