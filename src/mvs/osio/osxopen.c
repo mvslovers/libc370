@@ -5,20 +5,40 @@
 #include "mvs/recovery.h"
 #include <mvs/dd.h>
 
-static void opendcb(DCB *dcb, int typej, int *rc);
+static void opendcb(DCB *dcb, int typej, unsigned opt, int *rc);
 
 int
 osxopen(DCB *dcb, int typej)
 {
+    return osxopenm(dcb, typej, NULL);
+}
+
+/* mode: NULL or "u" opens for UPDAT, as osxopen() always did; "r" for
+   INPUT, which a data set the program may only read needs (#412) */
+int
+osxopenm(DCB *dcb, int typej, const char *mode)
+{
     int         rc   = 8;   /* not open, also when OPEN abended */
     JFCB        jfcb = {0};
+    unsigned    opt;
 
     /* no DCB: OPEN was given address 0, and DCBOFLGS was read from low
        storage, with rc left unset (#412) */
     if (!dcb) return 8;
 
+    switch (mode ? mode[0] : 'u') {
+    case 'r': case 'R': case 'i': case 'I':
+        opt = 0x00;             /* INPUT */
+        break;
+    case 'u': case 'U':
+        opt = 0x04;             /* UPDAT */
+        break;
+    default:
+        return 8;               /* no such mode: not opened */
+    }
+
     /* use try() in case of abend */
-    try(opendcb, dcb, typej, &rc);
+    try(opendcb, dcb, typej, opt, &rc);
 
     /* make sure the dataset was opened */
     if (!(dcb->dcboflg & DCBOFOPN)) {
@@ -46,9 +66,10 @@ quit:
 
 __asm__("\n&FUNC    SETC 'opendcb'");
 static void
-opendcb(DCB *dcb, int typej, int *rc)
+opendcb(DCB *dcb, int typej, unsigned opt, int *rc)
 {
-    unsigned    plist   = 0x84000000 | (unsigned)dcb;   /* UPDATE access */
+    /* the last entry, the open option, the DCB */
+    unsigned    plist   = 0x80000000 | (opt << 24) | (unsigned)dcb;
 
     if (!typej) {
         /* normal OPEN for a single dataset */

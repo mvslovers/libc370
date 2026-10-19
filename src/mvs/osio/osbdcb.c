@@ -4,6 +4,9 @@
 #include <ctype.h>
 #include "mvs/osio.h"
 
+/* the library's default exits, in oscheck.c (#412) */
+extern void __osdfx(DCB *dcb, int eodad)    asm("@@OSDFX");
+
 DCB *
 osbdcb(const char *ddname, EXITLIST *exitlist)
 {
@@ -21,10 +24,21 @@ osbdcb(const char *ddname, EXITLIST *exitlist)
         }
     }
 
+    /* end of data and an I/O error come back from oscheck() as 4 and 8,
+       not as S337 and S001.  A caller's own exit, stored after this,
+       wins (#412). */
+    __osdfx(dcb, 1);
+
     if (exitlist) {
         unsigned *list = calloc(1, sizeof(unsigned)*10);   /* up to 10 exits */
 
-        if (!list) goto quit;
+        if (!list) {
+            /* no DCB rather than one without the exits asked for: it
+               came back without dcbexlst and no word of it (#412) */
+            free(dcb);
+            dcb = NULL;
+            goto quit;
+        }
 
         dcb->dcbpriv  = (void*)list;    /* save address for cleanup */
         dcb->dcbexlst = (void*)list;

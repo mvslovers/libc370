@@ -4,6 +4,9 @@
 #include <ctype.h>
 #include "mvs/osio.h"
 
+/* the library's default exits, in oscheck.c (#412) */
+extern void __osdfx(DCB *dcb, int eodad)    asm("@@OSDFX");
+
 DCB *
 osddcb(const char *ddname)
 {
@@ -24,6 +27,11 @@ osddcb(const char *ddname)
             dcb->dcbddnam[i] = toupper(ddname[i]);
         }
     }
+
+    /* an I/O error comes back from oscheck() as 8, not as S001.  A
+       caller's own SYNAD, stored after this, wins.  BDAM reads by block
+       number and has no end of data, so no EODAD (#412). */
+    __osdfx(dcb, 0);
 
 quit:
     return dcb;

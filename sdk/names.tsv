@@ -4528,6 +4528,7 @@ oscheck	mvs/osio.h
 osdclose	mvs/osio.h
 osddcb	mvs/osio.h
 osdopen	mvs/osio.h
+osdopenm	mvs/osio.h
 osdread	mvs/osio.h
 osdwrite	mvs/osio.h
 osread	mvs/osio.h
@@ -4536,6 +4537,7 @@ osxcalc	mvs/osio.h
 osxclose	mvs/osio.h
 osxdcb	mvs/osio.h
 osxopen	mvs/osio.h
+osxopenm	mvs/osio.h
 osxread	mvs/osio.h
 osxwrite	mvs/osio.h
 pdslist	mvs/dslist.h

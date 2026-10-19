@@ -12,11 +12,11 @@ access methods, one block at a time, without the buffering of the
     #cmd("oscheck()") and #cmd("osbclose()") issue the #cmd("OPEN"),
     #cmd("READ"), #cmd("WRITE"), #cmd("CHECK") and #cmd("CLOSE") macros of
     the basic sequential access method.],
-  [EXCP], [#cmd("osxdcb()"), #cmd("osxopen()"), #cmd("osxcalc()"),
+  [EXCP], [#cmd("osxdcb()"), #cmd("osxopen()"), #cmd("osxopenm()"), #cmd("osxcalc()"),
     #cmd("osxread()"), #cmd("osxwrite()") and #cmd("osxclose()") run a channel
     program of the library's own with #cmd("EXCP") (SVC 0), to read or
     rewrite one block of a direct access data set by its block number.],
-  [BDAM], [#cmd("osddcb()"), #cmd("osdopen()"), #cmd("osdread()"),
+  [BDAM], [#cmd("osddcb()"), #cmd("osdopen()"), #cmd("osdopenm()"), #cmd("osdread()"),
     #cmd("osdwrite()") and #cmd("osdclose()") use the basic direct access method
     with relative block addressing.],
 )
@@ -31,23 +31,28 @@ statement, either one in the JCL or one allocated dynamically (see
 *Authorization.* None of these functions issues #cmd("TESTAUTH") or
 #cmd("MODESET"), and none needs APF authorization: OPEN, CLOSE, READ, WRITE,
 CHECK and EXCP on a data set allocated to the program are problem-state
-services. Data set protection still applies, and #cmd("osxopen()") and
-#cmd("osdopen()") always open for #cmd("UPDAT"), even when the program only
-reads.
+services. Data set protection still applies: #cmd("osxopen()") and
+#cmd("osdopen()") open for #cmd("UPDAT"), which needs the right to update
+the data set\; a program that only reads opens it with
+#cmd("osxopenm()") or #cmd("osdopenm()") and mode #cmd("\"r\"").
 
 *Restrictions.* #cmd("osread()"), #cmd("oswrite()"), #cmd("osdread()") and
 #cmd("osdwrite()") start the request and return; the program calls
 #cmd("oscheck()") with the same DECB before it touches the buffer or reuses the
-DECB. #cmd("osxread()") and #cmd("osxwrite()") wait for their own I/O. The DCBs
-the library builds name no #cmd("EODAD") and no #cmd("SYNAD") routine, so
-end of data and I/O errors arrive as abends (see @mvs-osio-oscheck). There
-is no test of these functions in the library's test suites.
+DECB. #cmd("osxread()") and #cmd("osxwrite()") wait for their own I/O. The
+BSAM DCB from #cmd("osbdcb()") names the library's #cmd("EODAD") and
+#cmd("SYNAD") routines, the BDAM DCB from #cmd("osddcb()") its
+#cmd("SYNAD") routine, so end of data and I/O errors come back from
+#cmd("oscheck()") as return codes (see @mvs-osio-oscheck). The library's
+own tests of these functions are MVS probes, not part of the host test
+suite.
 
 #tab(caption: [DCB fields a caller reads or sets])[
   #table(columns: (1.0in, 0.6in, 1fr),
     [Field], [Offset], [Use],
-    [#cmd("dcbeodad")], [X'20'], [The end-of-data routine. The DCBs built
-      here name none.],
+    [#cmd("dcbeodad")], [X'20'], [The end-of-data routine. #cmd("osbdcb()")
+      stores the library's\; a program may store its own after the call
+      (see @mvs-osio-dcb).],
     [#cmd("dcbexlst")], [X'24'], [The exit list address (before OPEN). See
       @mvs-osio-exitlist.],
     [#cmd("dcbrecfm")], [X'24'], [The record format byte (after OPEN).],
@@ -55,8 +60,9 @@ is no test of these functions in the library's test suites.
       blanks.],
     [#cmd("dcboflg")], [X'30'], [Open flags. #cmd("DCBOFOPN") (X'10') is on
       when the OPEN succeeded.],
-    [#cmd("dcbsynad")], [X'38'], [The I/O error routine. The DCBs built here
-      name none.],
+    [#cmd("dcbsynad")], [X'38'], [The I/O error routine.
+      #cmd("osbdcb()") and #cmd("osddcb()") store the library's\; a program
+      may store its own after the call (see @mvs-osio-dcb).],
     [#cmd("dcbblksi")], [X'3E'], [The block size. Set by OPEN for BSAM, from
       the JFCB by #cmd("osxopen()") and #cmd("osdopen()"), and by #cmd("oswrite()"),
       #cmd("osdread()") and #cmd("osdwrite()") when they are given a length.],
@@ -116,12 +122,28 @@ When #var("exitlist") is not #cmd("NULL"), #cmd("osbdcb()") and
 #cmd("exit_code") has the X'80' bit on, at most ten, and mark the last entry
 copied as the last.
 
+#idx("EODAD", "default")#idx("SYNAD", "default")
+#cmd("osbdcb()") stores the library's #cmd("EODAD") and #cmd("SYNAD")
+routines into the DCB, #cmd("osddcb()") its #cmd("SYNAD") routine (BDAM
+reads by block number and has no end of data). With them,
+#cmd("oscheck()") returns 4 at end of data and 8 for an I/O error, where
+the DCB without them made CHECK abend with S337 and S001 and the system
+wrote message #cmd("IEC020I") for the error. A program that wants its own
+routine stores its address into #cmd("dcbeodad") or #cmd("dcbsynad") after
+the call and before the open\; that routine is then the one taken. The
+library's routines are only entered from the CHECK of #cmd("oscheck()"):
+a program that issues CHECK itself on such a DCB gets S337 at end of data,
+as without an #cmd("EODAD"), and its I/O errors are accepted with no
+message, as by a #cmd("SYNAD") that returns at once.
+
 === Returns
-The address of the DCB, or #cmd("NULL") when no storage was available.
+The address of the DCB, or #cmd("NULL") when no storage was available,
+for the DCB or for the exit list.
 
 === Notes
-- When the storage for the exit list cannot be obtained, the DCB is
-  returned without an exit list, and nothing tells the caller.
+- Up to release 2.23.0 a DCB whose exit list could not be allocated was
+  returned without one, and nothing told the caller\; the DCBs had no
+  #cmd("EODAD") and no #cmd("SYNAD").
 - Free the DCB with the matching close function and a non-zero
   #var("freedcb")\; that also frees the exit list.
 
@@ -241,16 +263,30 @@ int oscheck(DECB *decb);
 or WRITE that used the DECB to complete. The CHECK runs under an ESTAE.
 
 === Returns
-0 when the I/O completed normally. Otherwise the abend that ended the CHECK,
-as #cmd("0x00sssuuu"), or a negative value when the ESTAE could not be
-established.
+#deflist(width: 0.8in,
+  [0], [The I/O completed normally.],
+  [4], [End of data: CHECK took the library's #cmd("EODAD") routine.],
+  [8], [An I/O error: CHECK took the library's #cmd("SYNAD") routine, or a
+    #cmd("SYNAD") routine of the program's that returned.],
+  [other], [The abend that ended the CHECK, as #cmd("0x00sssuuu"), or a
+    negative value when the ESTAE could not be established.],
+)
 
 === Notes
 - At end of data, and on an I/O error, CHECK passes control to the
-  #cmd("EODAD") or #cmd("SYNAD") routine of the DCB. The DCB that
-  #cmd("osbdcb()") builds names neither, so both conditions end in an abend,
-  which #cmd("oscheck()") returns. A program that reads to the end sees the
-  end of data as a non-zero return from #cmd("oscheck()").
+  #cmd("EODAD") or #cmd("SYNAD") routine of the DCB. The DCBs from
+  #cmd("osbdcb()") and #cmd("osddcb()") name the library's (see
+  @mvs-osio-dcb). A program that reads to the end sees the end of data as
+  the return code 4.
+- An I/O error is told by the completion code CHECK leaves in the ECB, the
+  first word of the DECB: anything but X'7F' (BSAM) or X'40' with no
+  exception code (BDAM) returns 8. So 8 also comes back when the program's
+  own #cmd("SYNAD") routine returns to CHECK. An #cmd("EODAD") routine of
+  the program's own is entered by a branch and does not come back to
+  #cmd("oscheck()").
+- Up to release 2.23.0 the end of data and an I/O error ended the CHECK in
+  S337 and S001, which #cmd("oscheck()") returned, and an I/O error that a
+  program's own #cmd("SYNAD") routine returned from gave 0.
 - #cmd("oscheck()") also completes the BDAM requests of #cmd("osdread()") and
   #cmd("osdwrite()").
 
@@ -291,7 +327,7 @@ reported.
 === Related
 @mvs-osio-osbopen, @mvs-osio-dcb
 
-== osxopen <mvs-osio-osxopen>
+== osxopen, osxopenm <mvs-osio-osxopen>
 #idx("osxopen")#idx("OPEN", "EXCP")
 
 === Format
@@ -299,20 +335,30 @@ reported.
 #include <mvs/osio.h>
 
 int osxopen(DCB *dcb, int typej);
+int osxopenm(DCB *dcb, int typej, const char *mode);
 ```
 
 === Description
+#idx("osxopenm")
 #cmd("osxopen()") opens a DCB made by #cmd("osxdcb()") for #cmd("UPDAT")
-(#cmd("OPEN TYPE=J") when #var("typej") is non-zero), under an ESTAE. OPEN
+(#cmd("OPEN TYPE=J") when #var("typej") is non-zero), under an ESTAE.
+#cmd("osxopenm()") opens it with the option #var("mode") names: only its
+first character counts, in either case\; #cmd("r") (or #cmd("i")) opens
+for #cmd("INPUT"), and #cmd("u") or a #cmd("NULL") #var("mode") for
+#cmd("UPDAT"), as #cmd("osxopen()") does. EXCP itself does not check the
+option\; it is OPEN that needs the right to update the data set for
+#cmd("UPDAT"), and to read it for #cmd("INPUT"). OPEN
 does not fill the data set attributes into an EXCP DCB, so after a
 successful open #cmd("osxopen()") reads the JFCB and copies its block size and
 record length into #cmd("dcbblksi") and #cmd("dcblrecl").
 
 === Returns
 0 when the data set is open; 8 when it is not, which includes an abend in
-OPEN and a #cmd("NULL") #var("dcb"); otherwise the return code of OPEN.
+OPEN, a #cmd("NULL") #var("dcb") and a #var("mode") of any other letter;
+otherwise the return code of OPEN.
 
 === Notes
+- #cmd("osxopenm()") is new after release 2.23.0.
 - Up to release 2.22.0 a #cmd("NULL") #var("dcb") was passed to OPEN, which
   read low storage as a DCB (message #cmd("IEC130I") with a name of random
   characters), and the return code was not set.
@@ -425,7 +471,7 @@ when #var("freedcb") is non-zero. A #cmd("NULL") #var("dcb") is ignored.
 === Related
 @mvs-osio-osxopen
 
-== osdopen <mvs-osio-osdopen>
+== osdopen, osdopenm <mvs-osio-osdopen>
 #idx("osdopen")#idx("OPEN", "BDAM")
 
 === Format
@@ -433,19 +479,24 @@ when #var("freedcb") is non-zero. A #cmd("NULL") #var("dcb") is ignored.
 #include <mvs/osio.h>
 
 int osdopen(DCB *dcb, int typej);
+int osdopenm(DCB *dcb, int typej, const char *mode);
 ```
 
 === Description
+#idx("osdopenm")
 #cmd("osdopen()") opens a DCB made by #cmd("osddcb()") for #cmd("UPDAT"), under
 an ESTAE, and copies the block size and record length from the JFCB into the
-DCB, as #cmd("osxopen()") does.
+DCB, as #cmd("osxopen()") does. #cmd("osdopenm()") takes a #var("mode") as
+#cmd("osxopenm()") does: #cmd("\"r\"") opens for #cmd("INPUT"), for a data
+set the program may only read.
 
 === Returns
-0 when the data set is open; 8 when it is not; otherwise the return code of
-OPEN.
+0 when the data set is open; 8 when it is not, which includes a
+#cmd("NULL") #var("dcb") and a #var("mode") of any other letter; otherwise
+the return code of OPEN.
 
 === Notes
-#var("dcb") must not be #cmd("NULL").
+#cmd("osdopenm()") is new after release 2.23.0.
 
 === Related
 @mvs-osio-osdread, @mvs-osio-osdclose

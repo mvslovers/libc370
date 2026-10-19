@@ -1,4 +1,5 @@
-/* OSDOPEN.C - open DD for BDAM access (read+write) */
+/* OSDOPEN.C - open DD for BDAM access */
+#include <stddef.h>
 #include "mvs/osio.h"
 
 /* the same OPEN as osxopen(): UPDAT, and the DCB fields completed from the
@@ -7,5 +8,12 @@
 int
 osdopen(DCB *dcb, int typej)
 {
-    return osxopen(dcb, typej);
+    return osxopenm(dcb, typej, NULL);
+}
+
+/* the same OPEN as osxopenm(): mode "r" opens for INPUT (#412) */
+int
+osdopenm(DCB *dcb, int typej, const char *mode)
+{
+    return osxopenm(dcb, typej, mode);
 }

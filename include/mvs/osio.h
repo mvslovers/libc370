@@ -30,15 +30,19 @@ extern void     osbread(DECB *decb, DCB *dcb, void *buf, int length) asm("OSREAD
 extern int      oswrite(DECB *decb, DCB *dcb, void *buf, int length);
 extern int      osbwrite(DECB *decb, DCB *dcb, void *buf, int length) asm("OSWRITE");
 
-/* check last read or write for completion */
+/* check last read or write for completion: 0 done, 4 end of data, 8 an
+** I/O error, otherwise the abend that ended the CHECK */
 extern int      oscheck(DECB *decb);
 
 /* - - - - E X C P - - - - */
 /* allocate and initialize DCB for EXCP access */
 extern DCB *    osxdcb(const char *ddname, EXITLIST *exitlist);
 
-/* open DCB for EXCP access */
+/* open DCB for EXCP access, for UPDAT */
 extern int      osxopen(DCB *dcb, int typej);
+
+/* open DCB for EXCP access: mode NULL or "u" for UPDAT, "r" for INPUT */
+extern int      osxopenm(DCB *dcb, int typej, const char *mode);
 
 /* given a DCB, number of blocks per track, and a block number,
 ** calculate 8 byte MBBCCHHR value.
@@ -67,6 +71,9 @@ extern DCB *    osddcb(const char *ddname);
 
 /* open DCB for BDAM UPDATE access (read+write) */
 extern int      osdopen(DCB *dcb, int typej);
+
+/* open DCB for BDAM access: mode NULL or "u" for UPDAT, "r" for INPUT */
+extern int      osdopenm(DCB *dcb, int typej, const char *mode);
 
 /* read one block from dataset by relative block number */
 extern int      osdread(DECB *decb, DCB *dcb, void *buf, int length, unsigned block);

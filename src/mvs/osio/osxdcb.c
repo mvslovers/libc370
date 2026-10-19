@@ -24,7 +24,13 @@ osxdcb(const char *ddname, EXITLIST *exitlist)
     if (exitlist) {
         unsigned *list = calloc(1, sizeof(unsigned)*10);   /* up to 10 exits */
 
-        if (!list) goto quit;
+        if (!list) {
+            /* no DCB rather than one without the exits asked for: it
+               came back without dcbexlst and no word of it (#412) */
+            free(dcb);
+            dcb = NULL;
+            goto quit;
+        }
 
         dcb->dcbpriv  = (void*)list;    /* save address for cleanup */
         dcb->dcbexlst = (void*)list;
