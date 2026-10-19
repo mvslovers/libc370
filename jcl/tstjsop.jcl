@@ -2,8 +2,8 @@
 //             MSGLEVEL=(1,1)
 //*
 //* libc370 #142 - jesopen() without a HASPCKPT DD.  See
-//* test/mvs/tstjsop.c.  GREEN is this tree, RED the library of
-//* 2.23.0.  NOCAT leaves IBMUSER.JX142.NOCAT uncataloged
+//* test/mvs/tstjsop.c.  GREEN is this tree, RED a library before
+//* the change.  NOCAT leaves IBMUSER.JX142.NOCAT uncataloged
 //* (DISP=(NEW,KEEP)) for the OBTAIN scan; run in a fresh system.
 //* No DYNAMNBR: a server's step does not have one either.
 //*

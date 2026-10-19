@@ -48,8 +48,9 @@
  *     cd $S && ld370 --pack TSTJSOG=TSTJSOG.iebcopy \
  *         TSTJSOR=TSTJSOR.iebcopy -o jx -xmit --dsn IBMUSER.LIBC370.JXSCR
  *
- * The RED module is built against the installed library (2.23.0), which
- * has no jesopen_ex() and no __jesvol(); -DRED leaves those cases out.
+ * The RED module is built against a library without this change (2.23.0
+ * or main before #142: add -I and -L for it), which has no jesopen_ex()
+ * and no __jesvol(); -DRED leaves those cases out.
  * Then jcl/recvjsop.jcl and jcl/tstjsop.jcl.
  *
  * RC 0 = passed, 8 = failed.
@@ -237,7 +238,7 @@ int main(int argc, char **argv)
     const char *mode = argc > 1 ? argv[1] : "NODD";
 
 #ifdef RED
-    wtof("TSTJSOP RED (installed library), %s", mode);
+    wtof("TSTJSOP RED (library before #142), %s", mode);
 #else
     wtof("TSTJSOP GREEN (this tree), %s", mode);
 #endif
