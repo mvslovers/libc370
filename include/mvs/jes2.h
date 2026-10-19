@@ -124,8 +124,16 @@ enum jesfilt {
     FILTER_JOBID                    /* Filter by job id                     */
 };
 
-/* Open JES datasets */
+/* Open JES datasets.  The checkpoint comes from the HASPCKPT DD when the
+   step has one, else SYS1.HASPCKPT is allocated: through the catalog, or
+   found by a search of the online volumes.  The spool comes from the
+   HASPACE1 DD, else SYS1.HASPACE on the spool volume the checkpoint names */
 JES *jesopen(void);
+
+/* jesopen_ex() - the same with another checkpoint data set: ckptdsn names
+   it (PREFIX.HASPCKPT), the spool is PREFIX.HASPACE, and no DD is used.
+   NULL does what jesopen() does */
+JES *jesopen_ex(const char *ckptdsn)                    asm("JESOPENX");
 
 /* Close JES datasets */
 int  jesclose(JES **jes);

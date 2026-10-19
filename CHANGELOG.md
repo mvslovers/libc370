@@ -68,6 +68,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   where `osxopen()` and `osdopen()` always opened for UPDAT. `osbdcb()`
   and `osxdcb()` return `NULL` when the exit list cannot be allocated;
   they returned the DCB without it (measured on MVS).
+- **`jesopen()` needs no DD statements any more, and `jesopen_ex()` names
+  another JES2 checkpoint (#142).** Up to now the job step had to carry
+  `HASPCKPT` and `HASPACE1` DD statements with the site's data set names,
+  and without them every attempt to read the job queue failed. A DD
+  statement still takes precedence when the step has one; without it,
+  `jesopen()` allocates `SYS1.HASPCKPT` itself, through the catalog or,
+  when it is not cataloged, on the online volume whose VTOC has it, and
+  `SYS1.HASPACE` on the spool volume the checkpoint names. `jesclose()`
+  unallocates both again. On a system whose JES2 uses another data set
+  name prefix, `jesopen_ex("PREFIX.HASPCKPT")` opens that checkpoint and
+  `PREFIX.HASPACE`, which helps programs that have no JCL of their own,
+  such as CGI programs; when the data set is found nowhere, the console
+  message names both possible causes (measured on MVS).
 
 ### Removed
 - **`crtopts` and `CRTOPTS_AUTH` are gone from `<mvs/crt.h>` (#113).** The

@@ -804,3 +804,5 @@ src/internal/svkey0.h	src/internal/svkey0.h	shared private header, new after 2.1
 src/time/@@getclk.c	src/time/@@getclk.c	new after 2.21.0 (#390): __getclk() and __todsec() in C, past 2038
 src/ext/time64/timegm.c	src/ext/time64/timegm.c	new after 2.23.0 (#392): timegm(), the 32-bit UTC inverse of gmtime()
 src/mvs/osio/@@osfill.c	src/mvs/osio/@@osfill.c	new after 2.23.0 (#412): DD name and exit list shared by osbdcb()/osxdcb()
+src/mvs/jes2/jesvol.c	src/mvs/jes2/jesvol.c	new after 2.23.0 (#142): __jesvol(), the checkpoint found by OBTAIN on the online volumes, declared only in src/mvs/jes2/jesvol.h
+src/mvs/jes2/jesvol.h	src/mvs/jes2/jesvol.h	private to the JES2 sources, new after 2.23.0 (#142): __jesvol()
