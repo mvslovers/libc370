@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- **`__linkx()`, `__linkdsx()` and `__loadx()` tell why a LINK or LOAD
+  failed (#553).** `__link()`, `__linkds()` and `__load()` return only -1
+  or `NULL` when the system cannot run or load a module, and so cannot
+  tell a missing module from one that cannot be fetched, or a failed
+  LINK from a program that returns -1. The new functions take
+  out-parameters for the completion code the system reports (`0x806` for
+  a missing module) and, for LOAD, the reason code; both stay 0 unless
+  LINK or LOAD failed (measured on MVS). The existing functions are
+  unchanged.
+
 ### Changed
 - **`fseek()` keeps the error indicator; `rewind()` clears it (#178).**
   `fseek()` and `fsetpos()` cleared the error indicator as well as the
