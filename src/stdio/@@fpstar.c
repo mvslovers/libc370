@@ -23,6 +23,7 @@ __fpstar(FILE *fp)
     char        *lrecl  = 0;
     char        *blksize= 0;
     char        *p      = 0;
+    int         blocked;
     TXT99       **txt99 = NULL;
     RB99        rb99    = {0};
     char        temp[sizeof(fp->mode)+1];
@@ -62,7 +63,7 @@ __fpstar(FILE *fp)
 		err = __txlrec(&txt99, lrecl);
 		if (err) goto quit;
 
-		if (strchr(recfm, 'B')) {
+		if (strchr(recfm, 'B') || strchr(recfm, 'b')) {
 			/* BLKSIZE=? */
 			blksize = getenv("TERMINAL_BLKSIZE");
 			if (blksize) {
@@ -92,6 +93,9 @@ __fpstar(FILE *fp)
 		if (!recfm) recfm = "V";
 		err = __txrecf(&txt99, recfm);
 		if (err) goto quit;
+		/* now: recfm points into temp, which lrecl= below reuses.  The
+		   mode string is in lower case, the environment in upper (#474) */
+		blocked = strchr(recfm, 'B') || strchr(recfm, 'b');
 
 		/* get logical record length */
 		p = strstr(fp->mode, "lrecl=");
@@ -105,7 +109,7 @@ __fpstar(FILE *fp)
 		err = __txlrec(&txt99, lrecl);
 		if (err) goto quit;
 
-		if (strchr(recfm, 'B')) {
+		if (blocked) {
 			/* get optional block size */
 			p = strstr(fp->mode, "blksize=");
 			if (!p) p = strstr(fp->mode, "blksize(");

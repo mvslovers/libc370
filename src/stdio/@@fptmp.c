@@ -5,10 +5,25 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include <strings.h>
 #include <stddef.h>
 #include <mvs/dynalloc.h>
 #include "mvs/dynalloc.h"
 #include "ext/array.h"
+
+/* SPACE in blocks: the length is the text from s up to end */
+__asm__("\n&FUNC    SETC 'txblk'");
+static int
+txblk(TXT99 ***txt99, const char *s, const char *end)
+{
+    char    blk[12];
+    size_t  n = (size_t)(end - s);
+
+    if (n >= sizeof(blk)) n = sizeof(blk) - 1;
+    memcpy(blk, s, n);
+    blk[n] = 0;
+    return __txblk(txt99, blk);
+}
 
 int
 __fptmp(FILE *fp)
@@ -17,7 +32,9 @@ __fptmp(FILE *fp)
     unsigned    count   = 0;
     char        *recfm  = 0;
     char        *lrecl  = 0;
+    char        *blksize= 0;
     char        *space  = 0;
+    int         blocked;
     char        *p      = 0;
     TXT99       **txt99 = NULL;
     RB99        rb99    = {0};
@@ -55,6 +72,9 @@ __fptmp(FILE *fp)
     if (!recfm) recfm = "V";
     err = __txrecf(&txt99, recfm);
     if (err) goto quit;
+    /* now: recfm points into temp, which the options below reuse.  The
+       mode string is in lower case, the environment in upper (#474) */
+    blocked = strchr(recfm, 'B') || strchr(recfm, 'b');
 
     /* get logical record length */
     p = strstr(fp->mode, "lrecl=");
@@ -68,17 +88,17 @@ __fptmp(FILE *fp)
     err = __txlrec(&txt99, lrecl);
     if (err) goto quit;
 
-    if (strchr(recfm, 'B')) {
+    if (blocked) {
         /* get optional block size */
         p = strstr(fp->mode, "blksize=");
         if (!p) p = strstr(fp->mode,"blksize(");
         if (p) {
             strcpy(temp,p+8);
-            recfm = __tok(temp, " ,)", &tok_save);
+            blksize = __tok(temp, " ,)", &tok_save);
         }
-        if (!p) p = getenv("TEMP_BLKSIZE");
-        if (p) {
-            err = __txbksz(&txt99, p);
+        if (!blksize) blksize = getenv("TEMP_BLKSIZE");
+        if (blksize) {
+            err = __txbksz(&txt99, blksize);
             if (err) goto quit;
         }
     }
@@ -101,18 +121,20 @@ __fptmp(FILE *fp)
     if (space) {
         char *x = strchr(space,'(');
         if (x) {
-            if (memcmp(space, "CYL", 3)==0) {
+            /* "cyl" from the mode string, "CYL" from TEMP_SPACE (#474) */
+            if (strncasecmp(space, "cyl", 3)==0) {
                 /* CYLINDERS */
                 err = __txcyl(&txt99, NULL);
             }
-            else if (memcmp(space, "TRK", 3)==0) {
+            else if (strncasecmp(space, "trk", 3)==0) {
                 /* TRACKS */
                 err = __txtrk(&txt99, NULL);
             }
             else {
-                /* BLOCKS */
-                err = __txblk(&txt99, p);
+                /* BLOCKS of the length before the '(' */
+                err = txblk(&txt99, space, x);
             }
+            if (err) goto quit;
             space = x+1;
         }
         while(*space && !isdigit(*space)) space++;
