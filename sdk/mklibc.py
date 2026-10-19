@@ -326,18 +326,85 @@ def cmd_build():
     return 0
 
 
+# the headers an install put down, relative to include/, one per line, in
+# <sysroot>/share/libc370: the next install removes exactly these (#636)
+HDR_MANIFEST = "include-files.txt"
+
+
+def shipped_headers():
+    """The headers of this tree, relative to include/, sorted."""
+    src_inc = f"{ROOT}/include"
+    out = []
+    for d, _, files in os.walk(src_inc):
+        for f in files:
+            if f.endswith(".h"):
+                out.append(os.path.relpath(os.path.join(d, f), src_inc))
+    return sorted(out)
+
+
 def copy_headers(inc):
     """Copy include/ as a tree into inc; -> the number of headers."""
     n = 0
     src_inc = f"{ROOT}/include"
-    for d, _, files in os.walk(src_inc):
-        for f in sorted(files):
-            if not f.endswith(".h"):
-                continue
-            rel = os.path.relpath(os.path.join(d, f), src_inc)
-            os.makedirs(os.path.join(inc, os.path.dirname(rel)), exist_ok=True)
-            shutil.copy(os.path.join(d, f), os.path.join(inc, rel)); n += 1
+    for rel in shipped_headers():
+        os.makedirs(os.path.join(inc, os.path.dirname(rel)), exist_ok=True)
+        shutil.copy(os.path.join(src_inc, rel), os.path.join(inc, rel)); n += 1
     return n
+
+
+def write_manifest():
+    """The list of this tree's headers, written into the build directory;
+    -> its path."""
+    path = f"{BUILD}/{HDR_MANIFEST}"
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write("# headers libc370 installed under include/; the next install"
+                 " removes these and no others\n")
+        fh.writelines(h + "\n" for h in shipped_headers())
+    return path
+
+
+def tsv_headers(path, cols):
+    """The header names in columns cols of the TSV file path."""
+    out = set()
+    for line in open(path, encoding="utf-8"):
+        if line.startswith("#"):
+            continue
+        fields = line.rstrip("\n").split("\t")
+        for c in cols:
+            if c < len(fields):
+                out.update(h for h in re.split(r"[ ,]+", fields[c])
+                           if h.endswith(".h"))
+    return out
+
+
+def known_headers():
+    """Every header name libc370 has shipped, for a sysroot whose install
+    wrote no manifest (before #636): this tree's, the 1.x and 2.x header
+    names of sdk/headermap.tsv, and the headers sdk/names-1.x.tsv and
+    sdk/names.tsv name."""
+    names = set(shipped_headers())
+    names |= tsv_headers(f"{ROOT}/sdk/headermap.tsv", (0, 1))
+    names |= tsv_headers(f"{ROOT}/sdk/names-1.x.tsv", (1,))
+    names |= tsv_headers(f"{ROOT}/sdk/names.tsv", (1,))
+    return names
+
+
+def remove_headers(inc, names):
+    """Remove the headers names (relative to inc) and the directories that
+    become empty by it; anything else in inc stays.  -> how many."""
+    gone = 0
+    root = os.path.realpath(inc)
+    for rel in sorted(names):
+        p = os.path.realpath(os.path.join(inc, rel))
+        if not p.startswith(root + os.sep) or not os.path.isfile(p):
+            continue
+        os.remove(p)
+        gone += 1
+        d = os.path.dirname(p)
+        while d != root and os.path.isdir(d) and not os.listdir(d):
+            os.rmdir(d)
+            d = os.path.dirname(d)
+    return gone
 
 
 def stage(inc, lib, mac):
@@ -350,6 +417,11 @@ def stage(inc, lib, mac):
     for d in (inc, lib, mac):
         os.makedirs(d, exist_ok=True)
     n = copy_headers(inc)
+    # the list of them, for the next install (#636); share/ goes into the
+    # tarball and the packages as well
+    share = os.path.join(os.path.dirname(mac), "share", "libc370")
+    os.makedirs(share, exist_ok=True)
+    shutil.copy(write_manifest(), share)
     # libc.a + startfiles
     shutil.copy(libc, f"{lib}/libc.a")
     for crt, _ in STARTFILES:
@@ -366,8 +438,6 @@ def stage(inc, lib, mac):
     # <sysroot>/share/libc370/sysmac-removed.txt: whatever installs a
     # sysroot without `make install` (cc370's install.sh, an unpacked
     # tarball) can delete them from there (#498)
-    share = os.path.join(os.path.dirname(mac), "share", "libc370")
-    os.makedirs(share, exist_ok=True)
     shutil.copy(SYSMAC_REMOVED, share)
     return n, m
 
@@ -383,6 +453,30 @@ def cmd_stage(prefix):
     return 0
 
 
+def install_into(inc, lib, mac):
+    """The headers, libc.a and macros into a sysroot's inc, lib and mac.
+
+    The headers of the previous libc370 install go first: install used to
+    copy and never delete, so a sysroot that had 1.x installed kept every
+    flat 1.x header beside the new tree, and <clibwto.h> still resolved --
+    from a stale copy, silently.  Only libc370's own go, though: other
+    toolchains put headers into the same include/ (pl1c370's pl1abi.h), and
+    clearing the whole directory deleted them (#636).  Which are libc370's
+    the previous install wrote into share/libc370/include-files.txt; before
+    that list existed, every header name libc370 has shipped stands in.
+    -> (headers, removed, kept, macro files)."""
+    manifest = os.path.join(os.path.dirname(mac), "share", "libc370", HDR_MANIFEST)
+    if os.path.isfile(manifest):
+        old = {l.strip() for l in open(manifest, encoding="utf-8")
+               if l.strip() and not l.startswith("#")}
+    else:
+        old = known_headers()
+    removed = remove_headers(inc, old) if os.path.isdir(inc) else 0
+    kept = sum(len(f) for _, _, f in os.walk(inc)) if os.path.isdir(inc) else 0
+    n, m = stage(inc, lib, mac)
+    return n, removed, kept, m
+
+
 def cmd_install():
     triple, inc, lib = sysroot()
     # macros go in the sysroot beside include/lib; as370's real binary lives in
@@ -390,23 +484,11 @@ def cmd_install():
     mac = os.path.join(os.path.dirname(inc), "macros")  # <sysroot>/macros = <prefix>/cc370/macros
     if not os.path.exists(f"{BUILD}/libc.a"):
         print("[install] build first (no", f"{BUILD}/libc.a" + ")"); return 1
-    # headers.  2.0 puts them in subdirectories (mvs/, ibm/mvs/, ...), so the
-    # whole tree is copied, not include/*.h (#256).  The sysroot's include/ is
-    # cleared first: install used to copy and never delete, so a sysroot that
-    # had 1.x installed would keep every flat 1.x header beside the new tree,
-    # and <clibwto.h> would still resolve -- from a stale copy, silently.
-    # libc370 owns that directory outright: cc370 searches no other include
-    # directory, and every file a 1.x install left there came from libc370.
-    # The path check keeps a mis-derived sysroot from costing anything else.
     if os.path.basename(inc) != "include" or \
             os.path.basename(os.path.dirname(inc)) != triple:
-        print(f"[install] refusing to clear {inc}: not <prefix>/{triple}/include")
+        print(f"[install] refusing to touch {inc}: not <prefix>/{triple}/include")
         return 1
-    stale = 0
-    if os.path.isdir(inc):
-        stale = sum(len(f) for _, _, f in os.walk(inc))
-        shutil.rmtree(inc)
-    n, m = stage(inc, lib, mac)
+    n, stale, kept, m = install_into(inc, lib, mac)
     # crt0.o/crt1.o from an install before 2.4.0: nothing reads them any
     # more (cc370 1.4 names no startfile, mbt finds the sysroot by libc.a),
     # and a stale copy of an old @@CRT0 is only a trap (#159).  Install only:
@@ -430,7 +512,8 @@ def cmd_install():
     if gone:
         print(f"[install] removed {gone} IBM macro(s) an earlier libc370 left in {mac}")
     print(f"[install] target {triple}")
-    print(f"[install] {n} headers -> {inc} ({stale} files there before, cleared)")
+    print(f"[install] {n} headers -> {inc} ({stale} libc370 headers of the"
+          f" previous install removed, {kept} other files kept)")
     print(f"[install] libc.a + crtm.o -> {lib}")
     print(f"[install] {m} macro files -> {mac}")
     print(f"[install] => an as370 installed in {os.path.dirname(mac)}/bin finds these by default;")

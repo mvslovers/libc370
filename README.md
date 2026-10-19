@@ -125,6 +125,14 @@ the sysroot is `<prefix>/cc370/`, default `~/.local/cc370/`):
 | `crtm.o` | `<sysroot>/lib` | the nested startup (a startfile); the C startup `@@CRT0` is inside `libc.a` |
 | macros (vendored SYS1.MACLIB + LIBC/370's `maclib/`; the prologue macros are CC/370's) | `<sysroot>/macros` | `as370` (real binary in `<sysroot>/bin`) finds them via `<exedir>/../macros`, no `-I` |
 
+Before it copies the headers, `make install` removes the ones the previous
+LIBC/370 install put there, listed in `<sysroot>/share/libc370/include-files.txt`
+(before that list existed: every header name LIBC/370 has shipped), so a header a
+release dropped does not linger. It deletes no other file: headers another
+toolchain installed into the same `include/` stay. A manual install from the
+release tarball should do the same - remove the files that list names, then
+unpack - rather than clear `include/`.
+
 After that the toolchain is self-contained:
 
 ```sh
