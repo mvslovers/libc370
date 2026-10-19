@@ -654,7 +654,8 @@ Use a HASPCKPT DD or jesopen_ex() with the checkpoint name
 ```
 
 A data set allocated by #cmd("jesopen()") takes a DD entry of the job
-step until #cmd("jesclose()"); the step needs no #cmd("DYNAMNBR") for it.
+step until #cmd("jesclose()"). The step needs no #cmd("DYNAMNBR") for the
+two (measured on MVS 3.8j in a step with no other dynamic allocation).
 
 The handle owns a copy of the job queue, which can be several tens of
 kilobytes; close it when it is no longer needed.
@@ -1020,7 +1021,7 @@ peripheral data definition block in an input/output table of the spool.
 
 #cmd("__cpclos()") closes the data set, unallocates a DD that was allocated
 dynamically, and frees the handle. A DD statement of the JCL stays
-allocated: MVS refuses to unallocate it (measured on MVS 3.8j).
+allocated (measured on MVS 3.8j).
 #cmd("NULL") is ignored.
 
 === Returns
