@@ -492,5 +492,17 @@ What later 2.x releases ask of a program or a build:
       #cmd("getenvi()"). Tell -1 from a positive IDCAMS code of
       #cmd("__listc()"). Compile again for the #cmd("<float.h>") and
       #cmd("<ctype.h>") changes.],
+    [2.22.0], [The #cmd("scanf()") functions accept field widths, do not
+      count conversions suppressed with #cmd("*"), return #cmd("EOF") when
+      the input ends before the first conversion, and match the character
+      after #cmd("%[...]"). #cmd("printf()") formats #cmd("%a") and
+      #cmd("%A"). #cmd("time()") works past 2038. #cmd("fwrite()") with a
+      size of 0 returns 0, and #cmd("fseek()") past the end of a record
+      stream fails. Temporary data sets with #cmd("space=") are allocated
+      on VIO. #cmd("__uastep()") leaves a STEPLIB alone that
+      #cmd("__austep()") did not authorize.], [Check formats written
+      around the old #cmd("scanf()") behaviour: a blank after #cmd("]"), a
+      count that includes #cmd("*") items, 0 for the end of the input.
+      Code that printed #cmd("%a") and expected it literally changes.]
   )
 ] <pg-migrate-since-tab>

@@ -66,8 +66,7 @@ Each fix gets a red/green test in a container, then a PR and a merge.
     (`strstr`, `strftime`, ctype, `float.h`, `__listc` rc, `setenv`,
     `bsearch`).
 - **M round, done 2026-10-19** (all red/green in own local MVS/CE
-  containers, red = installed 2.21.0; nothing released yet, all under
-  [Unreleased]):
+  containers, red = installed 2.21.0; released as 2.22.0):
   - #390 (PR #628): `__getclk()` in C, new `__todsec()`; right to the TOD
     clock's end 2042-09-17; red S0C9 from 2038-01-19 02:53:47, 0.32 s ahead.
   - #474 (PR #629 + scanf push-back in #631): fwrite size 0, fseek on +

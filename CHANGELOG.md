@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.22.0] - 2026-10-19
+
+Standard functions closer to C99 and a few MVS fixes. `scanf()` accepts
+field widths and returns `EOF` at the end of the input, `printf()` formats
+`%a` and prints the digits of large and small values right, `time()`
+works past 2038, `fwrite()` and `fseek()` handle their edge cases as C99
+says, and temporary and SYSOUT data sets take the `blksize=` and `space=`
+options of the mode string. `__uastep()` no longer removes a STEPLIB's
+authorization it did not grant. A minor release because a caller can
+notice several of these: `scanf()` returns `EOF` and no longer counts `*`
+conversions, `%a` prints a value, and temporary data sets with `space=`
+are allocated on VIO. The CC/370 range is unchanged: `>=1.6.0 <2`.
+
 ### Added
 - **`__todsec()`** in `<mvs/clock.h>` converts a TOD clock value to
   seconds since 1970; `__getclk()` uses it (#390).
