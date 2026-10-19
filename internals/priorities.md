@@ -198,9 +198,10 @@ answered from here:
   (`X'25'`). Moved out of libc370's predecessor because only the compiler can
   emit the other byte. Filed as an investigation: the first deliverable is a
   survey of who compares against `'\n'` across the projects.
-- **mvslovers/cc370#37** — `cc370` silently drops `-Wl,--ac,1` and `ld370
-  --pack` loses the AC again, so an authorized program can look linked and end
-  S047 with an empty SYSPRINT. Two deploy cycles, found building the #58 probe.
+- ~~**mvslovers/cc370#37**~~ — closed 2026-09-13. Measured there: `cc370`
+  passes `-Wl,--ac,1` through to ld370. What goes missing is the entry point
+  of a bare `.lm` packed with `ld370 --pack`, so the probe recipes pack an
+  `-iebcopy` member instead (#169).
 
 ## Where the crent370 issues went
 

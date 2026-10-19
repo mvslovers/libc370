@@ -34,11 +34,12 @@
  * case (1).  The reference system authorizes SYS2.LINKLIB (SYS1.PARMLIB
  * (IEAAPF00)).
  *
- * Two things that cost you if you do not know them: cc370 silently drops
- * -Wl,--ac,1, so the AC has to be set by calling ld370 yourself, and ld370
- * --pack needs --ac 1 again or the packed member loses it (mvslovers/cc370#37).
- * A module that looks authorized and is not ends the job S047, and with an
- * empty SYSPRINT - stdio buffers are lost on an abend even after fflush(),
+ * Two things that cost you if you do not know them: cc370 passes -Wl,--ac,1
+ * to ld370, but only a member with a directory (-flinker-output=iebcopy or
+ * xmit) can record the AC - a bare load module has nowhere to keep it, and
+ * ld370 --pack of a bare one loses its entry point (mvslovers/cc370#37,
+ * #169).  A module that looks authorized and is not ends the job S047, and
+ * with an empty SYSPRINT - stdio buffers are lost on an abend even after fflush(),
  * because the DCB is never closed.  An authorized program's WTO shows in the
  * job log WITHOUT the '+' prefix, which is how to tell the AC took.
  *
