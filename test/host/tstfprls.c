@@ -102,18 +102,18 @@
  *                     Without it size_t is an unknown type and every compile
  *                     against -I include fails.
  *
- *     cc -std=gnu99 -Wall -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast \
+ *     cc -std=gnu99 -Wall -fsanitize=address -Wno-int-to-pointer-cast \
+ *        -Wno-pointer-to-int-cast \
  *        -D'__asm__(...)=' -D'asm(x)=' -D__32BIT__ \
  *        -I ../../include -o tstfprls tstfprls.c
  *     ./tstfprls                                      # rc 0 when green
  *
  * Verified green both ways on macOS/clang (51/51, rc 0).
  *
- * NO -fsanitize=address, and not by preference: @@fpnew.c rewrites its mode
- * string in place with strcpy(p, p+1) (lines 43 and 47), which is an
- * overlapping copy - undefined in C, benign with a forward byte-at-a-time
- * strcpy, and an immediate abort under ASAN.  @@dsalc.c does the same.  It
- * predates #167 and is not touched here.
+ * With -fsanitize=address since #171: @@fpnew.c and @@dsalc.c rewrote their
+ * option strings in place with an overlapping strcpy(p, p+1), undefined in
+ * C and an immediate ASAN abort, so this test ran without it.  They use
+ * memmove() now.
  *
  * FOUR HOST-PORT DETAILS, none of them guessable:
  *
@@ -164,6 +164,7 @@ void   *memcpy(void *, const void *, size_t);
 void   *memset(void *, int, size_t);
 int     memcmp(const void *, const void *, size_t);
 char   *strcpy(char *, const char *);
+void   *memmove(void *, const void *, size_t);
 char   *strchr(const char *, int);
 char   *strstr(const char *, const char *);
 char   *strtok(char *, const char *);

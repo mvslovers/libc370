@@ -35,6 +35,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   compiler's own constants, with the same bit patterns (measured on MVS).
   `FLT_DIG` is 6, which a `float` preserves; it was 7. The objects stay in
   the library for programs compiled with the earlier header.
+- **The option strings of `fopen()` and `__dsalc()` are no longer
+  rewritten with an overlapping `strcpy()` (#171).** Removing the
+  parentheses of `name=(a,b)` and `trk(1,1)` copied a string onto itself,
+  which C leaves undefined; it uses `memmove()` now. The results are
+  unchanged (measured on MVS).
 
 ## [2.20.0] - 2026-10-18
 

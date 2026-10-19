@@ -26,6 +26,29 @@ struct __dsalc {
     int         mount;      // mount - let SVC 99 ask for a mount (#181)
 };
 
+/* p is at a '(' in temp: "TRK(n,n)" becomes "TRK=n,n" and "name=(a,b)"
+   becomes "name=a,b".  The shifts overlap, so memmove(), not strcpy()
+   (#171), and a '(' first in temp has nothing before it to read.  Returns
+   where the ')' was, or the end of the string. */
+static char *
+unparen(char *temp, char *p)
+{
+    if (p == temp || *(p-1) != '=') {
+        *p = '=';
+    }
+    else {
+        memmove(p, p+1, strlen(p+1)+1);
+    }
+
+    for(p++;*p; p++) {
+        if (*p==')') {
+            memmove(p, p+1, strlen(p+1)+1);
+            break;
+        }
+    }
+    return p;
+}
+
 int
 __dsalc(char *ddname, const char *opts)
 {
@@ -63,24 +86,7 @@ __dsalc(char *ddname, const char *opts)
         // wtof("%s: opts=\"%s\"", __func__, opts);
         for(p=temp; *p; p++) {
 
-            if (*p=='(') {
-                if (*(p-1) != '=') {
-                    /* convert "TRK(n,n)" to "TRK=n,n" 
-                    * or "nnnn(n,n)" to "nnnn=n,n" */
-                    *p = '=';
-                }
-                else {
-                    /* convert "name=(val1,val2)..." to "name=val1,val2..." */
-                    strcpy(p, p+1);
-                }
-
-                for(p++;*p; p++) {
-                    if (*p==')') {
-                        strcpy(p,p+1);
-                        break;
-                    }
-                }
-            }
+            if (*p=='(') p = unparen(temp, p);
 
             if (*p==',') *p = ';';
         }

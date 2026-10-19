@@ -116,17 +116,17 @@ tstfpapp() {
        -I $R/include -I $R -o "$B/t" tstfpapp.c && "$B/t"
 }
 tstfprls() {
-    "$CC" -std=gnu99 -Wall -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast \
+    "$CC" -std=gnu99 -Wall -fsanitize=address -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast \
        -D'__asm__(...)=' -D'asm(x)=' -D__32BIT__ \
        -I $R/include -I $R -o "$B/t" tstfprls.c && "$B/t"
 }
 tstdsnmt() {
-    "$CC" -std=gnu99 -Wall -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast \
+    "$CC" -std=gnu99 -Wall -fsanitize=address -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast \
        -D'__asm__(...)=' -D'asm(x)=' -D__32BIT__ \
        -I $R/include -I $R -o "$B/t" tstdsnmt.c && "$B/t"
 }
 tstfpunit() {
-    "$CC" -std=gnu99 -Wall -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast \
+    "$CC" -std=gnu99 -Wall -fsanitize=address -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast \
        -D'__asm__(...)=' -D'asm(x)=' -D__32BIT__ \
        -I $R/include -I $R -o "$B/t" tstfpunit.c && "$B/t"
 }

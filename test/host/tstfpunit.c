@@ -64,7 +64,8 @@
  * ====================================================================
  * BUILD AND RUN (host, from test/host)
  *
- *     cc -std=gnu99 -Wall -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast \
+ *     cc -std=gnu99 -Wall -fsanitize=address -Wno-int-to-pointer-cast \
+ *        -Wno-pointer-to-int-cast \
  *        -D'__asm__(...)=' -D'asm(x)=' -D__32BIT__ \
  *        -I ../../include -o tstfpunit tstfpunit.c
  *     ./tstfpunit                                     # rc 0 when green
@@ -91,6 +92,7 @@ void   *memcpy(void *, const void *, size_t);
 void   *memset(void *, int, size_t);
 int     memcmp(const void *, const void *, size_t);
 char   *strcpy(char *, const char *);
+void   *memmove(void *, const void *, size_t);
 char   *strchr(const char *, int);
 char   *strstr(const char *, const char *);
 char   *strtok(char *, const char *);
