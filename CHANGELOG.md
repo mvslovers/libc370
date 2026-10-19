@@ -40,6 +40,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   then failed to link. Use the `ENQ()` and `DEQ()` macros of
   `<mvs/enq.h>`, and `getsockname()` and `getpeername()`.
 
+### Fixed
+- **`malloc(0)` and `calloc()` with a size of 0 no longer report a
+  shortage (#394).** They returned `NULL`, which C99 allows, but also set
+  `errno` to `ENOMEM` and wrote "Out of memory, bytes needed=0" and a
+  traceback to the console, for a request that ran out of nothing. They
+  still return `NULL`, now without changing `errno` and without the
+  message (measured on MVS).
+
 ## [2.23.0] - 2026-10-19
 
 ### Added

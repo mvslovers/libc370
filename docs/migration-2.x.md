@@ -209,6 +209,7 @@ CHANGELOG has everything else.
 
 | Release | Change | What to do |
 |---|---|---|
+| Unreleased | `malloc(0)`, `calloc(0, n)` and `calloc(n, 0)` return `NULL` without setting `ENOMEM` and without the console message (#394) | Nothing, unless a program took `errno == ENOMEM` after `malloc(0)` for a shortage |
 | Unreleased | `fseek()` and `fsetpos()` keep the error indicator; only `rewind()` and `clearerr()` clear it (#178) | A program that seeks after a read or write error and expects to go on reading or writing calls `clearerr()` first |
 | Unreleased | The declarations of `__enq()`, `__deq()`, `__sosnam()`, `__sopnam()` are removed (#400); none was ever in the library, so a call never linked | Use `ENQ()`/`DEQ()` from `<mvs/enq.h>`, and `getsockname()`/`getpeername()` |
 | Unreleased | `PPAFLAG_TIN`, `PPAFLAG_TOUT`, `PPAFLAG_TERR` (`<mvs/crt.h>`) and `PPATIN`, `PPATOUT`, `PPATERR` (`CLIBPPA`) are removed (#72); the library never set them | Drop the test; it always answered no |
