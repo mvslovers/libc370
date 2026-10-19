@@ -209,6 +209,9 @@ CHANGELOG has everything else.
 
 | Release | Change | What to do |
 |---|---|---|
+| Unreleased | The declarations of `__enq()`, `__deq()`, `__sosnam()`, `__sopnam()` are removed (#400); none was ever in the library, so a call never linked | Use `ENQ()`/`DEQ()` from `<mvs/enq.h>`, and `getsockname()`/`getpeername()` |
+| Unreleased | `PPAFLAG_TIN`, `PPAFLAG_TOUT`, `PPAFLAG_TERR` (`<mvs/crt.h>`) and `PPATIN`, `PPATOUT`, `PPATERR` (`CLIBPPA`) are removed (#72); the library never set them | Drop the test; it always answered no |
+| Unreleased | `__try()` and `__tryrc()` are removed (#17); they were an unused older copy of `try()` and `tryrc()` | Call `try()` and `tryrc()` instead; same arguments, an abend is reported the same way |
 | Unreleased | `crtopts` and `CRTOPTS_AUTH` are removed from `<mvs/crt.h>`, and `CRTOPTS` from `clibcrt.copy` (#113). The field was never set, so a test of it was always false | Drop the test, and keep the code of its false branch |
 | 2.23.0 | `try()` and the functions built on it return -1, not +1, when no recovery routine can be set up; the timer requests return 0 when the timer thread cannot be started (#476) | A caller that treated +1 as "no ESTAE" tests for a negative value |
 | 2.23.0 | `tsocmd()` puts the caller's ECT back after the command (#413); `sleep()` returns the seconds left when its timer could not be set, where it returned 0 | Nothing |
