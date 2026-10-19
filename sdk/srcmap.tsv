@@ -10,7 +10,6 @@ asm/@@aread.asm	src/stdio/@@aread.asm	BSAM, the I/O under stdio (src/internal/bs
 asm/@@atrout.asm	src/stdio/@@atrout.asm	BSAM, the I/O under stdio (src/internal/bsam.h)
 asm/@@awrite.asm	src/stdio/@@awrite.asm	BSAM, the I/O under stdio (src/internal/bsam.h)
 asm/@@crt0.asm	src/mvs/crt/@@crt0.asm	runtime start-up
-asm/@@crtm.asm	src/mvs/crt/@@crtm.asm	runtime start-up
 asm/@@crtsvc.asm	src/mvs/svc/@@crtsvc.asm	the SVC-in-C scaffold, with svcmain.c (clibsvc.h)
 asm/@@dynal.asm	src/mvs/dynalloc/@@dynal.asm	SVC 99
 asm/@@exita.asm	src/mvs/crt/@@exita.asm	runtime start-up

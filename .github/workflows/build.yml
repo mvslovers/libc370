@@ -156,7 +156,6 @@ jobs:
           name: libc370-build
           path: |
             build/sdk/libc.a
-            build/sdk/crtm.o
           if-no-files-found: error
 
       - name: Gate (PRs into 2.0)

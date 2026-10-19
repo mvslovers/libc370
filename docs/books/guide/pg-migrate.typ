@@ -308,9 +308,10 @@ What later 2.x releases ask of a program or a build:
     [2.4.0], [#cmd("crt0.o") and #cmd("crt1.o") are no longer installed.
       The start-up routine #cmd("@@CRT0") is a member of #cmd("libc.a"),
       which a program's #cmd("main()") pulls in (@pg-startup-variants).
-      #cmd("crtm.o") stays.], [Drop #cmd("crt0.o") or #cmd("crt1.o") from
-      a link line that names it. With MBT, leave out the key
-      #cmd("startup"), or keep #cmd("\"crtm\"").],
+      #cmd("crtm.o") stayed until it was removed as well
+      (@pg-startup-variants).], [Drop #cmd("crt0.o") or #cmd("crt1.o")
+      from a link line that names it. With MBT, leave out the key
+      #cmd("startup").],
     [2.4.0], [#cmd("__premain()") is called before the standard streams are
       opened and before #cmd("main()").], [Replace a private
       #cmd("@@START") with it (@pg-startup-premain).],

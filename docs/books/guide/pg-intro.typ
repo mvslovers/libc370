@@ -125,7 +125,7 @@ LIBC/370 is built with CC/370 and only with CC/370, and the two are released
 as a pair. CC/370 provides the compiler, the routines the compiler calls
 (#cmd("libcc370rt.a")) and the assembler macros of the function prologue
 and epilogue; LIBC/370 provides the headers, #cmd("libc.a") with the start-up
-routine, the start-up object #cmd("crtm.o") and its own macros\; the MVS
+routine, and its own macros\; the MVS
 system macros, SYS1.MACLIB and SYS1.AMODGEN, come from a package of their
 own, maclib370, which the toolchain installs beside them. Each depends on the
 other's version:
@@ -159,8 +159,7 @@ was chosen:
   [#cmd("cc370/include")], [the headers, with the subdirectories of
     @pg-intro-dirs-tab.],
   [#cmd("cc370/lib")], [#cmd("libc.a"), the library itself, which also holds
-    the start-up routine #cmd("@@CRT0")\; #cmd("crtm.o"), the start-up
-    object for a module called by a C program (@pg-startup-variants)\; and
+    the start-up routine #cmd("@@CRT0") (@pg-startup-variants)\; and
     CC/370's #cmd("libcc370rt.a").],
   [#cmd("cc370/macros")], [the assembler macros of LIBC/370 and CC/370,
     with five JES2 mapping macros, for programs that include assembler

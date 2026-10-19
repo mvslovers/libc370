@@ -754,9 +754,7 @@ failed.
 
 === Notes
 - The function links the thread driver #cmd("CTHREAD"), and the C
-  start-up identifies it (see the introduction to this chapter). A module
-  started with #cmd("crtm") identifies nothing: its ATTACH works only when
-  the calling C program has identified #cmd("CTHREAD").
+  start-up identifies it (see the introduction to this chapter).
 - Up to libc370 2.18.1 only the low-order 20 bits of the size were kept,
   so exactly 1 MB gave a stack too small to run in, and sizes below 80 were
   raised only to 80.

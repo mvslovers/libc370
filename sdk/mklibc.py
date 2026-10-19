@@ -2,15 +2,15 @@
 """Build libc370 -- the cc370 target libc + install it into the cc370 sysroot.
 
 No mbt, no MVS: pure host toolchain (cc370 -S -> as370 -> ar370).  Produces the
-three artifacts a cross-libc needs and drops them where cc370 already looks:
+artifacts a cross-libc needs and drops them where cc370 already looks:
 
   headers   -> <sysroot>/include   (cc370 finds <stdio.h> etc. with no -I)
-  libc.a    -> <sysroot>/lib       (the libc370 runtime; -lc pulls it)
-  crtm.o    -> <sysroot>/lib       (the nested-startup startfile; it defines
-                                    @@CRT0 too, so it stays outside libc.a.
-                                    The C startup @@CRT0 is a member of libc.a
-                                    (#159); crt0.o and crt1.o, its copies for
-                                    cc370 before 1.4.0, are gone since 2.4.0)
+  libc.a    -> <sysroot>/lib       (the libc370 runtime; -lc pulls it, and
+                                    the C startup @@CRT0 is a member, #159)
+
+No startfile is installed any more: crt0.o and crt1.o, copies of @@CRT0 for
+cc370 before 1.4.0, are gone since 2.4.0, and crtm.o, the nested startup,
+since #608.  install removes all three from an older sysroot.
 
 The sysroot is derived from the driver itself (cc370 -dumpmachine /
 -print-prog-name=cc1), so renaming the target triple later needs no edit here.
@@ -69,11 +69,11 @@ OWN_MACLIBS = (f"{ROOT}/maclib", f"{ROOT}/hasp")
 # the IBM members that sysmac/ installed into <sysroot>/macros up to 2.7.x;
 # install removes them there, where a stale copy would win over maclib370
 SYSMAC_REMOVED = f"{ROOT}/sdk/sysmac-removed.txt"
-STARTUPS = ("@@crtm",)              # -> separate startfile, never archived
-# the startfiles installed beside libc.a.  crt0.o and crt1.o were copies of
-# the archived @@CRT0 for cc370 before 1.4.0 (#159); 2.4.0 needs 1.4.0
-STARTFILES = (("crtm.o", "@@crtm"),)
-STALE_STARTFILES = ("crt0.o", "crt1.o")   # an earlier install left them
+# the startfiles an earlier install left beside libc.a; install removes
+# them.  crt0.o and crt1.o were copies of the archived @@CRT0 for cc370
+# before 1.4.0 (#159, gone in 2.4.0); crtm.o was the nested startup, which
+# joined the C environment of the task instead of creating one (#608)
+STALE_STARTFILES = ("crt0.o", "crt1.o", "crtm.o")
 
 
 def run(cmd, cwd=None):
@@ -275,16 +275,12 @@ def cmd_build():
     def do(src):
         o = f"{odir}/{os.path.basename(src).rsplit('.',1)[0]}.o"
         return (src, o, assemble(src, o))
-    objs, crtobjs, fails = [], {}, []
+    objs, fails = [], []
     with cf.ThreadPoolExecutor(max_workers=8) as ex:
         for src, o, err in ex.map(do, srcs + asms):
             if err:
                 fails.append(err); continue
-            stem = os.path.basename(o)[:-2]
-            if stem in STARTUPS:                      # crt startfile -> separate
-                crtobjs[stem] = o
-            else:
-                objs.append(o)
+            objs.append(o)
     if fails:
         print(f"[libc] {len(fails)} failure(s):")
         for f in fails[:15]:
@@ -304,25 +300,20 @@ def cmd_build():
     # link order decide which code runs. #151: @@ERRNO was a function in one
     # object and a DC F'0' in another, with errno.h making every errno a call to
     # that name. Fail closed; there is no safe automatic pick.
-    dups, nscan, nskip = dupscan.scan(srcs + asms, startups=STARTUPS)
+    dups, nscan, nskip = dupscan.scan(srcs + asms)
     if dups:
         dupscan.report(dups, nscan, nskip, tag="libc")
         return 1
     # say so on success too -- a silent gate reads the same as an absent one
     print(f"[libc] no duplicate externals ({nscan} archived, {nskip} skipped)")
 
-    # 4. archive the runtime -> libc.a ; copy crt startfiles
+    # 4. archive the runtime -> libc.a
     libc = f"{BUILD}/libc.a"
     r = run([AR370, "rc", libc] + sorted(objs))
     if r.returncode != 0:
         print("[libc] ar370 failed:", r.stderr); return 1
-    for name, stem in STARTFILES:
-        if stem not in crtobjs:
-            print(f"[libc] MISSING startup {stem}"); return 1
-        shutil.copy(crtobjs[stem], f"{BUILD}/{name}")
     nmem = sum(1 for l in run([AR370, "t", libc]).stdout.splitlines() if l.strip().endswith("bytes"))
     print(f"[libc] OK -> {libc} ({nmem} members, {os.path.getsize(libc)} bytes, {OPT})")
-    print("[libc] startfile -> crtm.o (@@CRT0 is a libc.a member)")
     return 0
 
 
@@ -408,7 +399,7 @@ def remove_headers(inc, names):
 
 
 def stage(inc, lib, mac):
-    """Copy headers, libc.a + startfiles and macros into three directories.
+    """Copy headers, libc.a and macros into three directories.
     Copies only, never deletes: shared by install (into the sysroot) and by
     sdk/package.py (into a staging tree, #326)."""
     libc = f"{BUILD}/libc.a"
@@ -422,10 +413,8 @@ def stage(inc, lib, mac):
     share = os.path.join(os.path.dirname(mac), "share", "libc370")
     os.makedirs(share, exist_ok=True)
     shutil.copy(write_manifest(), share)
-    # libc.a + startfiles
+    # libc.a, with the C startup @@CRT0 in it
     shutil.copy(libc, f"{lib}/libc.a")
-    for crt, _ in STARTFILES:
-        shutil.copy(f"{BUILD}/{crt}", f"{lib}/{crt}")
     # assembler macros: hasp/ (the JES2 mappings) and maclib/ (libc370's own)
     # -> one dir as370 finds by default (<exedir>/../macros).  The IBM macros
     # are maclib370's, in <sysroot>/maclib370/macros (#494).
@@ -449,7 +438,7 @@ def cmd_stage(prefix):
     r = stage(f"{prefix}/include", f"{prefix}/lib", f"{prefix}/macros")
     if r is None:
         return 1
-    print(f"[stage] {r[0]} headers, libc.a + crtm.o, {r[1]} macro files -> {prefix}")
+    print(f"[stage] {r[0]} headers, libc.a, {r[1]} macro files -> {prefix}")
     return 0
 
 
@@ -489,10 +478,11 @@ def cmd_install():
         print(f"[install] refusing to touch {inc}: not <prefix>/{triple}/include")
         return 1
     n, stale, kept, m = install_into(inc, lib, mac)
-    # crt0.o/crt1.o from an install before 2.4.0: nothing reads them any
-    # more (cc370 1.4 names no startfile, mbt finds the sysroot by libc.a),
-    # and a stale copy of an old @@CRT0 is only a trap (#159).  Install only:
-    # lib comes from the driver's own sysroot, and a staging tree is new.
+    # crt0.o/crt1.o from an install before 2.4.0 and crtm.o from one before
+    # #608: nothing reads them any more (cc370 1.4 names no startfile, mbt
+    # finds the sysroot by libc.a), and a stale copy of an old @@CRT0 is
+    # only a trap (#159, #608).  Install only: lib comes from the driver's
+    # own sysroot, and a staging tree is new.
     for crt in STALE_STARTFILES:
         old = os.path.join(lib, crt)
         if os.path.isfile(old):
@@ -514,7 +504,7 @@ def cmd_install():
     print(f"[install] target {triple}")
     print(f"[install] {n} headers -> {inc} ({stale} libc370 headers of the"
           f" previous install removed, {kept} other files kept)")
-    print(f"[install] libc.a + crtm.o -> {lib}")
+    print(f"[install] libc.a -> {lib}")
     print(f"[install] {m} macro files -> {mac}")
     print(f"[install] => an as370 installed in {os.path.dirname(mac)}/bin finds these by default;")
     print(f"[install]    otherwise set AS370_MACLIB={mac}")

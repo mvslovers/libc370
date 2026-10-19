@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """package -- libc370's release artifacts, one per channel, for every host (#326).
 
-libc370 is MVS target code: headers, libc.a, crt*.o, macros.  It is the same
+libc370 is MVS target code: headers, libc.a, macros.  It is the same
 whatever the host, so there is one artifact per channel, not one per host:
 
     libc370-<v>-sysroot.tar.gz       include/ lib/ macros/ share/, no top directory:
@@ -159,7 +159,7 @@ def nfpm_yaml(stage, version, name):
         "maintainer: mvslovers <https://github.com/mvslovers>",
         "description: |",
         "  C runtime library for MVS 3.8j, the cc370 target library:",
-        "  headers, libc.a, startup objects and assembler macros.",
+        "  headers, libc.a and assembler macros.",
         "homepage: https://github.com/mvslovers/libc370",
         "license: BSD-2-Clause",
         "section: devel",

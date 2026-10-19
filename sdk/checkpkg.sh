@@ -81,11 +81,13 @@ same "rpm files = tarball files" "$r" "$t"
 check "files outside the sysroot (deb)" \
     "$(dpkg-deb -c "$DEB" | awk '{print $NF}' | grep -v '/$' \
        | grep -vc "^\./$SYS/")" "0"
-for f in lib/libc.a lib/crtm.o include/stdio.h \
+for f in lib/libc.a include/stdio.h \
          include/mvs/crt.h 'macros/$pso.macro' macros/clibregs.macro \
          share/libc370/sysmac-removed.txt share/libc370/include-files.txt; do
     check "tarball has $f" "$(echo "$t" | grep -Fcx "$f")" "1"
 done
+# no startfile: @@CRT0 is a libc.a member (#159), crtm.o is gone (#608)
+check "tarball has no lib/*.o" "$(echo "$t" | grep -c '^lib/.*\.o$')" "0"
 # the IBM macros are maclib370's since #494, never this package's
 grep -v '^#' "$ROOT/sdk/sysmac-removed.txt" | sed 's|^|macros/|' > "$D/.ibm"
 check "tarball has no IBM macro (sdk/sysmac-removed.txt)" \

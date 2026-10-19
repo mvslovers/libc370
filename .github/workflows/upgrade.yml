@@ -2,12 +2,18 @@
 # what is left in the sysroot's lib/.  Written for #159: 2.4.0 no longer
 # ships crt0.o/crt1.o, which the 2.3.x packages own, so dpkg and rpm should
 # remove them on the upgrade -- this measures it instead of assuming it.
+# #608 removed the last startfile, crtm.o, the same way: the packages of
+# 2.23.0 own it, the next release does not ship it.
 #
 # Installs cc370 `cc_from` + libc370 `from` in a clean container, lists
-# lib/, upgrades to cc370 `cc_to` + libc370 `to` (cc370 1.4 requires libc370
-# 2.3.0 or later, libc370 2.4 requires cc370 1.4, so the pair moves
-# together), lists lib/ again and checks: crt0.o and crt1.o gone, crtm.o and
-# libc.a present.  Runs by hand, and on a PR that changes this file.
+# lib/, upgrades to cc370 `cc_to` + libc370 `to`, lists lib/ again and
+# checks: crt0.o, crt1.o and crtm.o gone, libc.a present.  (2.3.1 -> 2.4.0,
+# the #159 measurement, needed the cc370 pair 1.3.1 -> 1.4.0; it would now
+# fail on crtm.o, which 2.4.0 still shipped.)
+#
+# Runs by hand, and on a PR that changes this file.  Until `to` is
+# released there is nothing to download: on a PR the job then says so in
+# the summary and stops at that step; by hand it fails.
 
 name: Package upgrade
 
@@ -17,19 +23,19 @@ on:
       from:
         description: "libc370 release before the upgrade"
         type: string
-        default: "2.3.1"
+        default: "2.23.0"
       cc_from:
         description: "cc370 release before the upgrade"
         type: string
-        default: "1.3.1"
+        default: "1.6.3"
       to:
-        description: "libc370 release after the upgrade"
+        description: "libc370 release after the upgrade (#608: the first without crtm.o)"
         type: string
-        default: "2.4.0"
+        default: "2.24.0"
       cc_to:
         description: "cc370 release after the upgrade"
         type: string
-        default: "1.4.0"
+        default: "1.6.3"
   pull_request:
     paths:
       - .github/workflows/upgrade.yml
@@ -45,12 +51,28 @@ jobs:
     name: ${{ matrix.os }} ${{ matrix.arch }}
     runs-on: ubuntu-latest
     env:
-      FROM: ${{ inputs.from || '2.3.1' }}
-      CC_FROM: ${{ inputs.cc_from || '1.3.1' }}
-      TO: ${{ inputs.to || '2.4.0' }}
-      CC_TO: ${{ inputs.cc_to || '1.4.0' }}
+      FROM: ${{ inputs.from || '2.23.0' }}
+      CC_FROM: ${{ inputs.cc_from || '1.6.3' }}
+      TO: ${{ inputs.to || '2.24.0' }}
+      CC_TO: ${{ inputs.cc_to || '1.6.3' }}
     steps:
+      - name: Is libc370 ${{ env.TO }} released?
+        id: rel
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "v$TO" -R mvslovers/libc370 >/dev/null 2>&1; then
+            echo "released=yes" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = pull_request ]; then
+            echo "released=no" >> "$GITHUB_OUTPUT"
+            echo "::warning::libc370 v$TO is not released yet: upgrade NOT measured, run this workflow by hand after the release"
+            echo "**libc370 v$TO is not released yet: the upgrade was NOT measured.** Run this workflow by hand after the release." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "libc370 v$TO is not released"; exit 1
+          fi
+
       - name: The packages
+        if: steps.rel.outputs.released == 'yes'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -70,6 +92,7 @@ jobs:
           ls -l old new
 
       - name: Install, upgrade and list lib/ in a clean ${{ matrix.image }}
+        if: steps.rel.outputs.released == 'yes'
         run: |
           cat > run.sh <<'EOF'
           #!/bin/sh
@@ -89,10 +112,10 @@ jobs:
               echo "== after ($(rpm -q libc370-devel))"; ls "$L"
           fi
           fail=0
-          for f in crt0.o crt1.o; do
+          for f in crt0.o crt1.o crtm.o; do
               if [ -e "$L/$f" ]; then echo "FAIL  $f still in $L"; fail=1; else echo "ok    $f gone"; fi
           done
-          for f in crtm.o libc.a; do
+          for f in libc.a; do
               if [ -e "$L/$f" ]; then echo "ok    $f present"; else echo "FAIL  $f missing"; fail=1; fi
           done
           exit $fail

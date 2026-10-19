@@ -216,9 +216,8 @@ for example -- #cmd("@@CCALL") builds the C environment on the first call
 (@pg-asm-ccall-main). Code can also call a C _program_ -- a load module with
 the usual C start-up, #cmd("@@CRT0") -- with #cmd("LINK"), #cmd("ATTACH")
 or #cmd("CALL"); the C start-up then builds the environment, and releases it
-when #cmd("main()") returns. @pg-startup describes the start-up modules,
-including #cmd("crtm") for the special case of a C module called on a task
-where a C program is already running.
+when #cmd("main()") returns. @pg-startup describes the start-up, and how
+a C module called by a C program is linked.
 
 == Calling C from COBOL and Other OS-Linkage Code <pg-asm-ccall>
 
