@@ -22,7 +22,7 @@
   GCC does not implement this and "long double" is same as "double"
 */
 
-/* rounding direction is unpredictable */
+/* HFP arithmetic truncates: toward zero */
 #define FLT_ROUNDS 0
 
 /* C99: operations are evaluated in their own type */
@@ -43,7 +43,7 @@
 
 
 /* As IBM uses hex float with "wobbling precision" these are approximate */
-#define FLT_DIG 7
+#define FLT_DIG 6
 #define DBL_DIG 15
 #define LDBL_DIG 15
 
@@ -91,17 +91,21 @@ extern _HexFloat _FltEps;
 extern _HexFloat _DblEps;
 #endif
 
-#define FLT_MAX _FltMax._Fval
-#define DBL_MAX _DblMax._Dval
-#define LDBL_MAX _DblMax._Lval
+/* constant expressions of their own type, as C99 5.2.4.2.2 requires: cc370
+   predefines the HFP values.  The objects above hold the same bits and stay
+   in libc.a for programs compiled with the earlier macros (#419). */
+#define FLT_MAX __FLT_MAX__
+#define DBL_MAX __DBL_MAX__
+#define LDBL_MAX __LDBL_MAX__
 
-#define FLT_MIN _FltMin._Fval
-#define DBL_MIN _DblMin._Fval
-#define LDBL_MIN _DblMin._Fval
+#define FLT_MIN __FLT_MIN__
+#define DBL_MIN __DBL_MIN__
+#define LDBL_MIN __LDBL_MIN__
 
-#define FLT_EPSILON _FltEps._Fval
-#define DBL_EPSILON _DblEps._Fval
-#define LDBL_EPSILON _DblEps._Fval
+#define FLT_EPSILON __FLT_EPSILON__
+#define DBL_EPSILON __DBL_EPSILON__
+#define LDBL_EPSILON __LDBL_EPSILON__
+
 
 
 

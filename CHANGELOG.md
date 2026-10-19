@@ -27,6 +27,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `char *p` drew `subscript has type 'char'` under `-Wall` and failed a
   `-Werror` build. The macros now convert the argument to `int`; `EOF`
   still has no class.
+- **The `<float.h>` limits are constants of their own type (#419).**
+  `FLT_MAX`, `DBL_MAX`, `LDBL_MAX` and the `MIN` and `EPSILON` macros were
+  members of objects in the library: they could not initialize a static
+  object, `DBL_MIN`, `DBL_EPSILON`, `LDBL_MIN` and `LDBL_EPSILON` had type
+  `float`, and `LDBL_MAX` was the `long` 2147483647. They are now the
+  compiler's own constants, with the same bit patterns (measured on MVS).
+  `FLT_DIG` is 6, which a `float` preserves; it was 7. The objects stay in
+  the library for programs compiled with the earlier header.
 
 ## [2.20.0] - 2026-10-18
 
