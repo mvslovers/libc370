@@ -231,7 +231,6 @@ __PDPCLIB_API__ size_t strftime(char *s,
                 /* the same with Monday, (wday+6)%7 days into the week */
                 w = (t->tm_yday + 7 - (t->tm_wday + 6) % 7) / 7;
                 strfmt(r, "%2", w);
-
                 break;
 
             case 'w' :
@@ -242,7 +241,6 @@ __PDPCLIB_API__ size_t strftime(char *s,
                 strfmt(r, "%2/%2/%2", t->tm_mon+1, t->tm_mday,
                     t->tm_year%100);
                 break;
-
 
             case 'X' :
                 strfmt(r, "%2:%2:%2", t->tm_hour, t->tm_min, t->tm_sec);

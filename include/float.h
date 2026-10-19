@@ -108,7 +108,6 @@ extern _HexFloat _DblEps;
 
 
 
-
 #else
 /*
  original stuff from Paul for IEEE maths

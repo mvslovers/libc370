@@ -17,9 +17,7 @@ __PDPCLIB_API__ char *strstr(const char *s1, const char *s2)
        char * without a cast that drops the const */
     if (*s2 == '\0') return strchr(s1, *s1);
 
-
     while (*p) {
-
         if (*p == *s2) {
             p1 = p;
             p2 = s2;
