@@ -23,7 +23,6 @@ trkcalc(DEVTYPE devtype, int keylen, int blksize)
         count = 0;
     }
 
-quit:
     return count;
 }
 #if 0

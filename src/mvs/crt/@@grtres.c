@@ -27,6 +27,5 @@ __grtres(void)
         }
     }
 
-quit:
     return rc;
 }

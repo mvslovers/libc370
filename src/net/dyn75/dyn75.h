@@ -11,11 +11,11 @@
 #include <netdb.h>
 
 #ifndef OR
-#define OR ??!??!
+#define OR ||
 #endif
 
 #ifndef BOR
-#define BOR ??!
+#define BOR |
 #endif
 
 typedef struct __75vect     __75VECT;

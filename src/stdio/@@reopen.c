@@ -14,7 +14,6 @@ FILE *
 __reopen(const char *fn, const char *mode, FILE *fp)
 {
     CLIBGRT *grt    = __grtget();
-    int     err     = 1;
     int     dynamic = 0;
     int     lost    = 0;
     int     rc;

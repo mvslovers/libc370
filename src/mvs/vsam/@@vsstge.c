@@ -28,6 +28,5 @@ __vsstge(VSFILE *vs, void *rec, int reclen, void *key, int keylen)
     __asm__("MODCB RPL=(%0),OPTCD=(KEQ),MF=(G,(%1))"
             : : "r"(&vs->rpl), "r"(pl) : "0", "1", "14", "15", "memory");
 
-quit:
     return rc;
 }

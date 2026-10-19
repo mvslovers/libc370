@@ -57,6 +57,5 @@ wtodump(const char *title, void *varea, int size, int chunk)
             indent, indent, "", j, x, x, sHex, chunk, chunk, eChar);
     }
 
-quit:
     return;
 }

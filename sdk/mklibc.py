@@ -52,8 +52,14 @@ if not re.fullmatch(r"-O[0123s]", OPT):
 # Without it GCC 3.4 defaults to gnu89, and a C99 construct such as a
 # declaration in a for loop's first clause does not compile.  -trigraphs
 # after it: the cc370 driver enables trigraphs by default and -std=gnu99
-# turns them off again, but @@estae.c spells || as ??!??! and headers do too.
-CFLAGS = [OPT, "-std=gnu99", "-trigraphs", "-Wuninitialized", f'-DVERSION="{VERSION}"',
+# turns them off again.  The library spelled || as ??!??! in places; since
+# #39 it has no trigraph left, and -Wall reports one that comes back.
+# -Wall since #39, at 0 warnings, so that a new one shows in the build
+# output.  -Wno-missing-braces: "= {0}" is the idiom for a zeroed aggregate,
+# and GCC 3.4 asks for one brace per level of the first member (the later
+# GCCs dropped the warning for it).
+CFLAGS = [OPT, "-std=gnu99", "-trigraphs", "-Wall", "-Wno-missing-braces",
+          "-Wuninitialized", f'-DVERSION="{VERSION}"',
           f"-I{ROOT}/include", f"-I{ROOT}"]   # private headers: "src/internal/x.h" (D10)
 # assembler macros, in search order: libc370's own (maclib/), the five JES2
 # mappings from HASPSRC (hasp/), then SYS1.MACLIB and SYS1.AMODGEN from

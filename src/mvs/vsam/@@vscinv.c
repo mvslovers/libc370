@@ -15,6 +15,5 @@ __vscinv(VSFILE *vs)
     __asm__("SHOWCB ACB=(%0),FIELDS=CINV,AREA=(%1),LENGTH=4,MF=(G,(%2))"
         : : "r"(&vs->acb), "r"(&cinv), "r"(pl) : "0", "1", "14", "15", "memory");
 
-quit:
     return cinv;
 }

@@ -28,7 +28,6 @@ cthread_manager_init(unsigned count, void *func, void *udata, unsigned stacksize
     unsigned        *psa    = (unsigned *)0;
     unsigned        *ascb   = (unsigned *)psa[0x224/4];
     unsigned        asid    = ((ascb[0x24/4]) >> 16);
-    unsigned        n;
 
     if (!mgr) goto quit;
 
@@ -39,7 +38,7 @@ cthread_manager_init(unsigned count, void *func, void *udata, unsigned stacksize
     mgr->stacksize  = stacksize;
     mgr->mintask    = count > 5 ? 3 : count > 3 ? 1 : 0;
     mgr->maxtask    = count;
-    sprintf(mgr->rname, "CTHDMGR.%04X.%08X", asid, mgr);
+    sprintf(mgr->rname, "CTHDMGR.%04X.%08X", asid, (unsigned)mgr);
 
     /* create thread manager dispatch thread */
     mgr->task       = cthread_create_ex(dispatch_thread, mgr, 0, 32*1024);
@@ -61,10 +60,6 @@ dispatch_thread(CTHDMGR *mgr)
     int                 pending     = 0;
     int					timer		= 1;	/* assume we need timer */
     int                 quiesce     = 0;
-    unsigned   			count       = 0;
-    unsigned            n;
-    CTHDWORK            *work;
-    CTHDTASK            *task;
 
 	/* initialize worker threads for dispatcher */
 	dispatch_thread_init(mgr);
@@ -119,7 +114,6 @@ dispatch_thread(CTHDMGR *mgr)
 	/* if we have any workers still running we have to kill them */
 	dispatch_thread_term(mgr);
 
-quit:
     return 0;
 }
 
@@ -222,7 +216,6 @@ dispatch_thread_check(CTHDMGR *mgr)
 {
     int         rc          = 0;
     unsigned   	count       = 0;
-    unsigned	deleted		= 0;
     unsigned    n;
     CTHDWORK    *work;
     CTHDTASK    *task;
@@ -408,7 +401,6 @@ static int
 dispatch_thread_work(CTHDMGR *mgr, int timer)
 {
     int                 rc          = 0;
-    unsigned            pending     = 0;
     unsigned   			count       = 0;
     unsigned            n;
 

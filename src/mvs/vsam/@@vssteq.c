@@ -29,6 +29,5 @@ __vssteq(VSFILE *vs, void *rec, int reclen, void *key, int keylen)
             : : "r"(&vs->rpl), "r"(pl) : "0", "1", "14", "15", "memory");
 #endif
 
-quit:
     return rc;
 }

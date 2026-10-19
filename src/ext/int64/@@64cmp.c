@@ -5,7 +5,6 @@
 __asm__("\n&FUNC    SETC '__64_cmp'");
 int __64_cmp(__64* a, __64* b)
 {
-	int		i;
 
 	if (a && b) {
 #if 1	/* gccmvs can compare 64 bit values */

@@ -12,6 +12,5 @@ __cibdel(CIB *cib)
             : "=r" (rc) : "r" (&com->comcibpt), "r" (cib) : "0", "1", "14", "15", "memory");
     }
 
-quit:
     return rc;
 }

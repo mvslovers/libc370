@@ -12,7 +12,6 @@ __fseek(FILE *fp, long int offset, int whence)
     long newpos;
     char fnm[FILENAME_MAX];
     long int x;
-    size_t y;
     char buf[1000];
 
     /* *any* seek will clear the error and eof indicators.  C says fseek

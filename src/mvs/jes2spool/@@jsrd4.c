@@ -17,8 +17,6 @@ int __jsrd4(HASPJS *js, unsigned mttr, void *buf4k, unsigned buflen)
 {
     int         rc      = -1;
     DCB         *dcb;
-    unsigned char *p     = buf4k;
-    unsigned    work     = mttr;
     unsigned    cc       = 0;
     unsigned    hh       = 0;
     unsigned    decb[8]  = {0};

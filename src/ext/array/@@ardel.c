@@ -31,6 +31,5 @@ arraydel( void * varray, unsigned index )
         }
     }
 
-quit:
     return vitem;
 }

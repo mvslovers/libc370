@@ -32,7 +32,6 @@ osxcalc(DCB *dcb, unsigned blkstrk, unsigned block, char *mbbcchhr)
     int         extents = (int) basic->debnmext;
 
     /* get block size on disk from DCB */
-    int         blksize = (int) dcb->dcbblksi;
 
     /* calculate relative track for this block */
     int         track   = blkstrk ? (block / blkstrk) : 0;

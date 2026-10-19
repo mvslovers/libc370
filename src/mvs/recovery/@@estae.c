@@ -54,7 +54,7 @@ __estae(ESTAE_OP op, void *fp, void *udata)
     if (!crt) goto quit;
     param = (PARAM*)crt->crtestpl;
 
-    if (op==ESTAE_CREATE ??!??! op==ESTAE_OVERLAY) {
+    if (op==ESTAE_CREATE || op==ESTAE_OVERLAY) {
         np = required(fp);
         if (!np) goto quit;
     }

@@ -52,7 +52,6 @@ __vswrit(VSFILE *vs, void *rec, int reclen, void *key, int keylen)
         restore(vs);
     }
 
-quit:
     return rc;
 }
 

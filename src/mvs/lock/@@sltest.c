@@ -11,7 +11,7 @@ systestlock(void *thing, int read)
 
     if (read) opts |= ENQ_SHR;
 
-    sprintf(rname, SYSLOCKRNAME, thing);
+    sprintf(rname, SYSLOCKRNAME, (unsigned)thing);
 
     return ENQ(SYSLOCKQNAME, rname, opts);
     /* 0==resource is not locked */

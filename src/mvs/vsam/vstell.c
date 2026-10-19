@@ -17,6 +17,5 @@ vstell(VSFILE *vs)
 
     unlock(vs,0);
 
-quit:
     return rba;
 }

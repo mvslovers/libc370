@@ -28,7 +28,7 @@ __caller(char   *caller)
         p += 4;
 
         memcpy(caller, p+1, *p);
-        caller[*p] = 0;
+        caller[(unsigned char)*p] = 0;
     }
 
 quit:

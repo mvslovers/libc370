@@ -144,7 +144,6 @@ parse(void *vdata, const char *fmt, ...)
 
     if (!udata->dsn[0]) goto quit;      /* not inside an entry */
 
-check_vol:
     if (!udata->dsn[0]) goto quit;   /* no dataset, we're finished */
 
     if (strcasecmp(p, "IN")==0) {

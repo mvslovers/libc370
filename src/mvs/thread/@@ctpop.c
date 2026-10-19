@@ -31,7 +31,7 @@ cthread_pop(CTHDPOP type)
 
     switch(type) {
     default:
-    /* case CTHDPOP_NOEXEC: /* pop func, do not execute         */
+    /* case CTHDPOP_NOEXEC:    pop func, do not execute         */
         break;
     case CTHDPOP_EXEC:      /* pop func, execute                */
         rc = func(arg);

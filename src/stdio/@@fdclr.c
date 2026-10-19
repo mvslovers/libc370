@@ -21,7 +21,7 @@ struct tu {
     short   parm1_len;
     char    parm1[98];
     /* parm2_len etc would theoretically follow, but we
-    /* can't define them, because the length of 98 is probably
+       can't define them, because the length of 98 is probably
        not correct in the first place */
 };
 

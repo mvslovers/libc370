@@ -22,7 +22,6 @@ __fpnew(FILE *fp)
     char        *volser = getenv("DATASET_VOLSER");
     int         mount   = 0;
     char        *p      = 0;
-    char 		*t;
     TXT99       **txt99 = NULL;
     RB99        rb99    = {0};
     char        temp[sizeof(fp->mode)+1];

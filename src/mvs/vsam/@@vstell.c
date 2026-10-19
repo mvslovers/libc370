@@ -15,6 +15,5 @@ __vstell(VSFILE *vs)
     __asm__("SHOWCB RPL=(%0),FIELDS=RBA,AREA=(%1),LENGTH=4,MF=(G,(%2))"
         : : "r"(&vs->rpl), "r"(&rba), "r"(pl) : "0", "1", "14", "15", "memory");
 
-quit:
     return rba;
 }

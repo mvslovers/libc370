@@ -25,7 +25,6 @@ __fmtloa(PDSLIST *pdslist, LOADSTAT *loadstat)
     const char  *ov     = "OV";
     const char  *ts     = "TS";
     int         i;
-    struct tm   tm;
 
     if (!data) goto quit;
     if (!stat) goto quit;

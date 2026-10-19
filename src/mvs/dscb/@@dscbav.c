@@ -1,6 +1,6 @@
 /* @@DSCBAV.C
-/*
-/* Data Set Control Block access routines
+ *
+ * Data Set Control Block access routines
  */
 #include <ext/strutil.h>
 #include "mvs/dscb.h"

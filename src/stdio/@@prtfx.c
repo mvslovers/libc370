@@ -326,7 +326,6 @@ static size_t _ftoa(out_fct_type out, char* buffer, size_t idx, size_t maxlen, d
     }
     else {
         unsigned int count = prec;
-        size_t start_len = len;
         /* now do fractional part, as an unsigned number */
         while (len < PRINTF_FTOA_BUFFER_SIZE) {
             --count;

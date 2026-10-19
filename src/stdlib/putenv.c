@@ -29,6 +29,5 @@ putenv(const char *str)
     err = setenv(name, value, 1);
     if (p) *p = '=';
 
-quit:
     return err;
 }

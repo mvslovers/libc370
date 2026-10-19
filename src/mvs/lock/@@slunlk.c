@@ -9,7 +9,7 @@ sysunlock(void *thing, int read)
     unsigned    opts    = ENQ_SYSTEM | ENQ_HAVE;
     char        rname[SYSLOCKRNAMESZ];
 
-    sprintf(rname, SYSLOCKRNAME, thing);
+    sprintf(rname, SYSLOCKRNAME, (unsigned)thing);
 
     return DEQ(SYSLOCKQNAME, rname, opts);
 }

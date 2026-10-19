@@ -67,6 +67,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   issues an SVC or calls system code now names registers 0, 1, 14 and 15
   as changed, and the build checks it; of the 112 statements changed,
   this was the only one whose generated code differed.
+- **The library compiles under `-Wall` without a warning (#39).** The
+  build now passes `-Wall` (and `-Wno-missing-braces`, for the `= {0}`
+  idiom), so a new warning shows in its output. 177 warnings were cleared:
+  unused variables and labels, among them a 4 KB buffer on the stack of
+  the JES2 spool open, trigraphs and nested comments, parentheses, and
+  pointers passed to `%08X`. Two have an effect: `__gtdsab()` tested its
+  DD name with `|` where `||` was meant (same result), and the SVC key
+  function had a shift without effect, which is now issue #634.
 
 ## [2.21.0] - 2026-10-19
 

@@ -213,7 +213,6 @@ static int get_lspace(VOLLIST *vol)
 		wtof("%s: LSPACE RC=%d", __func__, rc);
 	}
 	
-quit:
 	return rc;
 }
 

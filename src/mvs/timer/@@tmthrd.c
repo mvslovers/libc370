@@ -144,7 +144,6 @@ int tmr_thread(void *arg1, void *arg2)
 #endif
     }
 
-quit:
     lockrc = lock(tmr, 0);
     tmr->flags &= ~TMR_FLAG_RUNNING;
     if (lockrc==0) unlock(tmr, 0);
@@ -227,7 +226,6 @@ timed_waitlist(ECB **waitlist, ECB *timeout_ecb, unsigned bintvl, unsigned postc
     /* restore fsa value */
     fsa[0]   = save;
 
-quit:
     return 0;
 }
 

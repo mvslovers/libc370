@@ -14,13 +14,8 @@ __irallc(FILE *fp)
 {
     int         err     = 1;
     unsigned    count   = 0;
-    char        *recfm  = 0;
-    char        *lrecl  = 0;
-    char        *space  = 0;
-    char        *p      = 0;
     TXT99       **txt99 = NULL;
     RB99        rb99    = {0};
-    char        temp[sizeof(fp->mode)+1];
 
     /* we want the DDNAME returned to us */
     err = __txrddn(&txt99, NULL);

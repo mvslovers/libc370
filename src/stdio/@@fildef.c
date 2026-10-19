@@ -27,7 +27,7 @@ struct tu {
     short   parm1_len;
     char    parm1[98];
     /* parm2_len etc would theoretically follow, but we
-    /* can't define them, because the length of 98 is probably
+       can't define them, because the length of 98 is probably
        not correct in the first place */
 };
 
@@ -123,7 +123,6 @@ __fildef(char *fdddname, char *fnm, int mymode, int modeType)
         }
     }
 
-quit:
     if (fdddname[0]==0 && err==0 && tu[0].key == 0x0055) {
         /* return DDNAME to caller */
         memcpy(fdddname, tu[0].parm1, 8);

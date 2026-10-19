@@ -83,7 +83,6 @@ __fpopen(FILE *fp)
     DCB     *dcb    = 0;
     void    *asmbuf = 0;
     char    *pmember= 0;
-    JFCB    *j      = 0;
     char    ddname[8] = {0};
     char    member[8] = {0};
     JFCB    jfcb    = {0};

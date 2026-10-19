@@ -12,6 +12,5 @@ cthread_self(void)
     unsigned    tcb     = psa[0x21C/4];         /* get our TCB address */
     CTHDTASK    *task   = cthread_find(tcb);
 
-quit:
     return task;
 }
