@@ -1099,6 +1099,11 @@ similar, and the abend happened in one of them, #cmd("try()") releases the
 stack, the open files and the anchors those programs left behind before it
 returns.
 
+The system's record of the abend (the SDWA) is freed before #cmd("try()")
+returns, so a program that recovers many abends does not run out of
+storage. Up to release 2.22.0 about 500 bytes of the region stayed
+allocated after every abend #cmd("try()") recovered.
+
 === Example
 #code(read("../ex/mvs-program/try.c"))
 
