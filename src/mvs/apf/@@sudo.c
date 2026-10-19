@@ -20,7 +20,7 @@ int super_do(void *func, ...)
     }
     if (!sup) {
         /* no, switch to supervisor mode */
-        __asm__("MODESET\tMODE=SUP\n\tLR\t%0,15" : "=r"(rc) : : "1", "14", "15", "memory");
+        __asm__("MODESET\tMODE=SUP\n\tLR\t%0,15" : "=r"(rc) : : "0", "1", "14", "15", "memory");
         if (rc) goto quit;  /* not likely, but just in case */
     }
 
@@ -36,7 +36,7 @@ int super_do(void *func, ...)
 
     if (!sup) {
         /* return caller to problem state */
-        __asm__("MODESET\tMODE=PROB" : : : "1", "14", "15", "memory");
+        __asm__("MODESET\tMODE=PROB" : : : "0", "1", "14", "15", "memory");
     }
 
 quit:

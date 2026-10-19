@@ -32,7 +32,7 @@ int __prob(unsigned char pswkey, unsigned char *savekey)
         }
 
         /* switch to problem mode */
-        __asm__("MODESET\tMODE=PROB\n\tST\t15,0(,%0)" : : "r"(&rc) : "1", "14", "15", "memory");
+        __asm__("MODESET\tMODE=PROB\n\tST\t15,0(,%0)" : : "r"(&rc) : "0", "1", "14", "15", "memory");
         goto quit;
     }
 

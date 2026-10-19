@@ -15,7 +15,7 @@ int __super(unsigned char pswkey, unsigned char *savekey)
     /* are we already in supervisor mode? */
     if (!__issup()) {
         /* no, switch to supervisor mode */
-        __asm__("MODESET\tMODE=SUP\n\tST\t15,0(,%0)" : : "r"(&rc) : "1", "14", "15", "memory");
+        __asm__("MODESET\tMODE=SUP\n\tST\t15,0(,%0)" : : "r"(&rc) : "0", "1", "14", "15", "memory");
         if (rc) goto quit;  /* not likely, but just in case */
     }
 

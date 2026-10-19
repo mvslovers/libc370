@@ -47,7 +47,7 @@ racf_logout(ACEE **acee)
 "* See if we're in supervisor state\n"
 "*\n"
 "         TESTAUTH FCTN=0,STATE=YES,KEY=NO,RBLEVEL=1\n\tST\t15,%0" : "=m"(rc)
-        : : "1", "14", "15", "memory");
+        : : "0", "1", "14", "15", "memory");
     if (rc==0) {
         /* we're in supervisor state */
         sup = 1;
@@ -66,7 +66,7 @@ racf_logout(ACEE **acee)
 "*\n"
 "* enter supervisor state\n"
 "*\n"
-"         MODESET KEY=ZERO,MODE=SUP\n" : : : "1", "14", "15", "memory");
+"         MODESET KEY=ZERO,MODE=SUP\n" : : : "0", "1", "14", "15", "memory");
     }
 
     /* The ACEE to delete travels in the parameter list (ACEE= below, offset
@@ -82,7 +82,7 @@ racf_logout(ACEE **acee)
 "* delete ACEE\n"
 "*\n"
 "         RACINIT ENVIR=DELETE,ACEE=(%1),MF=(E,%2)\n"
-"         ST\t15,%0" : "=m"(rc) : "r"(acee), "m"(plist) : "1", "14", "15", "memory");
+"         ST\t15,%0" : "=m"(rc) : "r"(acee), "m"(plist) : "0", "1", "14", "15", "memory");
 
     /* One thing does have to be done by hand.  If ASXBSENV points at the ACEE
     ** just deleted it must be cleared, and RAKF does NOT do it -- measured,
@@ -111,7 +111,7 @@ racf_logout(ACEE **acee)
 "*\n"
 "* return to problem state\n"
 "*\n"
-"         MODESET KEY=NZERO,MODE=PROB\n" : : : "1", "14", "15", "memory");
+"         MODESET KEY=NZERO,MODE=PROB\n" : : : "0", "1", "14", "15", "memory");
     }
 
     *acee = (ACEE*)0;

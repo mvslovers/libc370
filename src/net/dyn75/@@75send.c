@@ -71,7 +71,7 @@ send(int ss, const void *buf, int len, int flags)
             rc = -1;
             goto quit;
         }
-        __asm__("STIMER WAIT,BINTVL==F'10'  0.10 seconds" : : : "0", "1", "memory");
+        __asm__("STIMER WAIT,BINTVL==F'10'  0.10 seconds" : : : "0", "1", "14", "15", "memory");
     }
 
     if (rc!=-1) goto quit;

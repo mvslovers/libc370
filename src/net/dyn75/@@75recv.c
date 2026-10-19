@@ -73,7 +73,7 @@ recv(int ss, void *vbuf, int len, int flags)
         rc = (int) pl.r4;
         if (rc==-2) {
             /* special case, we have to wait for some reason??? */
-            __asm__("STIMER WAIT,BINTVL==F'8'   0.08 seconds" : : : "0", "1", "memory");
+            __asm__("STIMER WAIT,BINTVL==F'8'   0.08 seconds" : : : "0", "1", "14", "15", "memory");
             rc = 0;
             continue;
         }

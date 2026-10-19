@@ -22,7 +22,7 @@ int super_key_do(unsigned char pswkey, void *func, ...)
     if (!sup) {
         /* no, switch to supervisor mode */
         __asm__("MODESET\tMODE=SUP      switch to supervisor state\n\t"
-                "LR\t%0,15              save return code" : "=r"(rc) : : "1", "14", "15", "memory");
+                "LR\t%0,15              save return code" : "=r"(rc) : : "0", "1", "14", "15", "memory");
         if (rc) goto quit;  /* not likely, but just in case */
     }
 
@@ -57,7 +57,7 @@ int super_key_do(unsigned char pswkey, void *func, ...)
 
     if (!sup) {
         /* return caller to problem state */
-        __asm__("MODESET\tMODE=PROB     switch to problem state" : : : "1", "14", "15", "memory");
+        __asm__("MODESET\tMODE=PROB     switch to problem state" : : : "0", "1", "14", "15", "memory");
     }
 
 quit:

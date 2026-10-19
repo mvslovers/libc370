@@ -141,7 +141,7 @@ selectex(int maxsock, fd_set *r, fd_set *w, fd_set *e, timeval * t,
         }
 
         /* we need to wait 0.08 seconds */
-        __asm__("STIMER WAIT,BINTVL==F'8'   0.08 seconds" : : : "0", "1", "memory");
+        __asm__("STIMER WAIT,BINTVL==F'8'   0.08 seconds" : : : "0", "1", "14", "15", "memory");
     }
 
 check:

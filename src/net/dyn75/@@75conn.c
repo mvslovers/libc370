@@ -56,7 +56,7 @@ connect(int ss, struct sockaddr_in *name, int length)
 
         /* wait one second */
         __asm__("STIMER WAIT,BINTVL==F'100'     1.00 seconds"
-        : : : "0", "1", "15", "memory");
+        : : : "0", "1", "14", "15", "memory");
     }
 
     /* check for error */

@@ -6,7 +6,7 @@ __asm__("\n&FUNC    SETC 'ecb_wait'");
 int
 ecb_wait(ECB *ecb)
 {
-    __asm__("WAIT\tECB=(%0)" : : "r"(ecb) : "1", "14", "15", "memory");
+    __asm__("WAIT\tECB=(%0)" : : "r"(ecb) : "0", "1", "14", "15", "memory");
 
     return 0;
 }
