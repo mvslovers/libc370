@@ -92,6 +92,13 @@ message\; two newlines in a row do.
 The formatted text is built in a buffer of 4096 bytes on the stack and is
 truncated to 4095 characters.
 
+The header declares #cmd("wtof()"), #cmd("vwtof()"), #cmd("wtorf()"),
+#cmd("vwtorf()") and #cmd("wtodumpf()") with the attribute
+#cmd("format(printf)"), so the compiler checks the arguments against the
+format: under #cmd("-Wall") a mismatch is a warning. A pointer printed with
+#cmd("%08X") is cast to #cmd("(unsigned)"). Up to release 2.22.0 nothing was
+checked.
+
 === Example
 ```
 wtof("DEMO001I %d RECORDS READ FROM %s", count, ddname);

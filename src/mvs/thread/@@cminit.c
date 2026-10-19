@@ -243,7 +243,7 @@ dispatch_thread_check(CTHDMGR *mgr)
 
             if (sys) {
                 wtof("worker %08X, task %08X ended ABEND S%03X",
-                    work, task, sys);
+                    (unsigned)work, (unsigned)task, sys);
             }
 
             work->state = CTHDWORK_STATE_STOPPED;

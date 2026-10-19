@@ -33,7 +33,7 @@ wtodump(const char *title, void *varea, int size, int chunk)
 
     wtof("%*.*sDump of %08X \"%s\" (%d bytes)\n",
         indent, indent, "",
-        area, title, size);
+        (unsigned)area, title, size);
 
     for (i=0, j=0; size > 0;i++ ) {
         if ( i==chunk ) {
