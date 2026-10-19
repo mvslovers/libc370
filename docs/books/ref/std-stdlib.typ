@@ -291,9 +291,11 @@ void *bsearch(const void *key, const void *base,
 
 #cmd("bsearch()") searches the array #var("base") of #var("nmemb") elements
 of #var("size") bytes for an element that matches the object #var("key").
-The array must be sorted in ascending order according to #var("compar"),
-which returns a negative value, 0 or a positive value when its first
-argument is less than, equal to or greater than its second.
+The array must be sorted in ascending order according to #var("compar").
+#cmd("bsearch()") calls it as #cmd("compar(key, element)"), and it returns
+a negative value, 0 or a positive value when the key is less than, equal
+to or greater than the element. The two arguments may have different
+types: a string key can be searched in an array of structures.
 
 === Returns
 
@@ -302,13 +304,10 @@ several elements match, any of them may be returned.
 
 === Notes
 
-*The arguments of #var("compar") are in the opposite order to C99.*
-LIBC/370 calls #cmd("compar(element, key)"), where C99 specifies
-#cmd("compar(key, element)"). A comparison function whose two arguments have
-the same type, as with #cmd("qsort()"), works either way. A function that
-expects a key of another type as its first argument -- a string key, say,
-searched in an array of structures -- does not work. Make the key an object
-of the element type, as in the example.
+Up to release 2.20.0 LIBC/370 called #cmd("compar(element, key)"), the
+opposite of C99. A comparison function whose two arguments have the same
+type works with both; one written for the old order, with the element
+first, has to swap its parameters.
 
 === Example
 

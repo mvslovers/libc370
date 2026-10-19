@@ -14,12 +14,13 @@ __PDPCLIB_API__ void *bsearch(const void *key, const void *base,
     {
         try = nmemb / 2;
         ptr = (void *)((char *)base + try * size);
-        res = compar(ptr, key);
+        /* C99 7.20.5.1: the key first, the element second (#388) */
+        res = compar(key, ptr);
         if (res == 0)
         {
             return ((void *)ptr);
         }
-        else if (res < 0)
+        else if (res > 0)
         {
             nmemb = nmemb - try - 1;
             base = (const void *)((const char *)ptr + size);

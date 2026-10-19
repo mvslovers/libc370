@@ -57,6 +57,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   in SYSENV had two entries, and `getenv()` returned the first, older
   value (measured on MVS). With `rewrite` 0 such a name also added a
   second variable instead of leaving the first alone.
+- **`bsearch()` calls the comparison function as `compar(key, element)`
+  (#388)**, as C99 specifies; it passed the element first. A function with
+  a key of another type than the elements, a string searched in a table of
+  structures for example, works now (measured on MVS). One written for the
+  old order has to swap its parameters.
 
 ## [2.20.0] - 2026-10-18
 
