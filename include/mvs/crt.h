@@ -175,10 +175,6 @@ struct clibppa {
 								/*     X'40' in a TSO batch job, X'C0'	*/
 								/*     at a terminal - test TSOFG first	*/
 								/*     (#72)							*/
-#define PPAFLAG_TIN		0x08	/* ... STDIN is terminal - never set	*/
-#define PPAFLAG_TOUT	0x04	/* ... STDOUT is terminal - never set	*/
-#define PPAFLAG_TERR	0x02	/* ... STDERR is terminal - never set	*/
-								/*     by the library (#72)			*/
 #define PPAFLAG_CCALL	0x01	/* ... built by @@CCALL (#507)			*/
     char    ppasubpl;			/* 21 save area subpool number          */
 	char 	ppaheaps;			/* 22 heap (malloc) subpool number		*/

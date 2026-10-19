@@ -109,8 +109,7 @@ For failures, the library's own mechanism is ESTAE, not signals:
 int rc = try(func, arg);   /* include/clibtry.h; rc = 0x00sssuuu, sss/uuu = abend code */
 ```
 
-`try()` expands to `___try`; a near-duplicate `__try` also exists and is dead —
-see #17.
+`try()` expands to `___try`, the only wrapper.
 
 ## The console belongs to the program, not to the library
 

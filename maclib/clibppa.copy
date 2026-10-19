@@ -11,9 +11,6 @@ PPAPSCB  DS     A                 1C PSCB address
 PPAFLAG  DS     X                 20 Processing flags
 PPATSOFG EQU    X'80'             ... TSO foreground environment
 PPATSOBG EQU    X'40'             ... any TSO, foreground too (#72)
-PPATIN   EQU    X'08'             ... STDIN terminal, never set
-PPATOUT  EQU    X'04'             ... STDOUT terminal, never set
-PPATERR  EQU    X'02'             ... STDERR terminal, never set
 PPACCALL EQU    X'01'             ... built by @@CCALL (#507)
 PPASUBPL DS     X                 21 save area subpool number
 PPAHEAPS DS     X                 22 heap (malloc) subpool number

@@ -31,9 +31,7 @@ failed(SDWA *sdwa, void *udata)
      * terminating TCB this task's libc370 CRT may already be gone, and
      * wto() is CRT-free (SVC 35 only).
      *
-     * #9: mirror of the guard in @@try.c failed().  This copy - @@@try.c,
-     * reached via try() -> ___try() - is the one every consumer actually
-     * drives; the @@try.c copy (__try) is not called by anyone. */
+     * (#9) */
     if (sdwa->SDWAERRD & SDWACLUP) {
         char    msg[] = "libc370 @@@try.c failed(): recovery cleanup-only, retry suppressed";
 
