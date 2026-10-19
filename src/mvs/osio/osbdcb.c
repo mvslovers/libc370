@@ -1,58 +1,30 @@
 /* OSBDCB.C - allocate a DCB for BSAM access */
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
 #include "mvs/osio.h"
 
 /* the library's default exits, in oscheck.c (#412) */
 extern void __osdfx(DCB *dcb, int eodad)    asm("@@OSDFX");
 
+/* the DD name and the exit list, in @@osfill.c (#412) */
+extern DCB *__osfill(DCB *dcb, const char *ddname, EXITLIST *exitlist)
+    asm("@@OSFILL");
+
 DCB *
 osbdcb(const char *ddname, EXITLIST *exitlist)
 {
     DCB     *dcb    = calloc(1, sizeof(DCB));
-    int     i;
 
-    if (!dcb) goto quit;
+    if (!dcb) return NULL;
 
     __asm__("MVC   0(PROTOLEN,%0),PROTODCB" : : "r"(dcb) : "memory");
-
-    if (ddname) {
-        if (ddname[2]==':') ddname += 3;
-        for (i=0; i < 8 && ddname[i]; i++) {
-            dcb->dcbddnam[i] = toupper(ddname[i]);
-        }
-    }
 
     /* end of data and an I/O error come back from oscheck() as 4 and 8,
        not as S337 and S001.  A caller's own exit, stored after this,
        wins (#412). */
     __osdfx(dcb, 1);
 
-    if (exitlist) {
-        unsigned *list = calloc(1, sizeof(unsigned)*10);   /* up to 10 exits */
-
-        if (!list) {
-            /* no DCB rather than one without the exits asked for: it
-               came back without dcbexlst and no word of it (#412) */
-            free(dcb);
-            dcb = NULL;
-            goto quit;
-        }
-
-        dcb->dcbpriv  = (void*)list;    /* save address for cleanup */
-        dcb->dcbexlst = (void*)list;
-        for(i=0; i < 10; i++, exitlist++) {
-            list[i] = exitlist->exit_code << 24 |
-                ((unsigned)exitlist->exit_addr & 0x00FFFFFF);
-            if (exitlist->exit_code & 0x80) break;
-        }
-        if (i==10) i--;
-        list[i] |= 0x80000000;  /* tag end of exit list */
-    }
-
-quit:
-    return dcb;
+    return __osfill(dcb, ddname, exitlist);
 }
 __asm__("\n"
 "PROTODCB DCB DSORG=PS,MACRF=R\n"
