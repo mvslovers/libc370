@@ -54,23 +54,28 @@ unparen(char *temp, char *p)
    the parentheses around them dropped */
 __asm__("\n&FUNC    SETC 'dsspace'");
 static int
-dsspace(TXT99 ***txt99, char *space)
+dsspace(TXT99 ***txt99, const char *space)
 {
-    char    *x      = strpbrk(space, "=,");
-    char    *end;
-    int     err;
+    const char  *x      = strpbrk(space, "=,");
+    char        unit[12];
+    char        qty[32];
+    size_t      n       = x ? (size_t)(x - space) : strlen(space);
+    int         err;
 
-    if (x) *x = 0;
-    if (strcmp(space, "CYL") == 0) err = __txcyl(txt99, NULL);
-    else if (strcmp(space, "TRK") == 0) err = __txtrk(txt99, NULL);
-    else err = __txblk(txt99, space);
+    if (n >= sizeof(unit)) n = sizeof(unit) - 1;
+    memcpy(unit, space, n);
+    unit[n] = 0;
+    if (strcmp(unit, "CYL") == 0) err = __txcyl(txt99, NULL);
+    else if (strcmp(unit, "TRK") == 0) err = __txtrk(txt99, NULL);
+    else err = __txblk(txt99, unit);
     if (err || !x) return err;
 
-    space = x + 1;
-    while (*space && !isdigit((unsigned char)*space)) space++;
-    end = strchr(space, ')');
-    if (end) *end = 0;
-    return __txspac(txt99, space);      /* "pri[,sec][,dir]" */
+    for (x++; *x && !isdigit((unsigned char)*x); x++) ;
+    n = strcspn(x, ")");
+    if (n >= sizeof(qty)) n = sizeof(qty) - 1;
+    memcpy(qty, x, n);
+    qty[n] = 0;
+    return __txspac(txt99, qty);        /* "pri[,sec][,dir]" */
 }
 
 int
@@ -115,12 +120,16 @@ __dsalc(char *ddname, const char *opts)
             if (*p==',') *p = ';';
         }
     }
+    else {
+        /* no opts: an empty string to parse.  With temp NULL, strtok(NULL)
+           went on with the caller's own pending strtok() (#408) */
+        temp = calloc(1, 1);
+        if (!temp) goto quit;
+    }
     
 	// wtof("%s: temp=\"%s\"", __func__, temp);
 
-    /* no opts: nothing to parse.  strtok(NULL) went on with the caller's
-       own pending strtok() (#408) */
-	for(p=temp ? strtok(temp, ";") : NULL; p; p=strtok(NULL, ";")) {
+	for(p=strtok(temp, ";"); p; p=strtok(NULL, ";")) {
         if (strcmp(p, "MOUNT")==0) dsalc->mount = 1;
         else if (strstr(p, "BLKSIZE=")) dsalc->blksize = p+8;
         else if (strstr(p, "DD=")) dsalc->ddn = p+3;
