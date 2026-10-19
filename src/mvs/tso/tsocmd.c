@@ -18,6 +18,8 @@ int tsocmd(const char *pgm, const char *buf)
 	ECT 		*ect		= NULL;
 	TSOCBUF 	*cbuf 		= NULL;
 	CPPL		cppl		= {0};
+	char		savecmd[8];		/* the caller's ECT, restored (#413) */
+	unsigned char	savesws		= 0;
 
 	if (!pgm) {
 		wtof("%s: Missing pgm pointer", __func__);
@@ -50,6 +52,11 @@ int tsocmd(const char *pgm, const char *buf)
 	memcpy(&cppl, ppa->ppacppl, sizeof(cppl));
 	ect = cppl.cpplect;
 
+	/* the ECT is the caller's session's own: its command name and NOPD
+	   bit are put back after the command (#413) */
+	memcpy(savecmd, ect->ectpcmd, sizeof(savecmd));
+	savesws = ect->ectsws;
+
 	/* put pgm name in ect as primary command */
 	memset(ect->ectpcmd, ' ', sizeof(ect->ectpcmd));
 	if (pgmlen > sizeof(ect->ectpcmd)) pgmlen = sizeof(ect->ectpcmd);
@@ -73,7 +80,10 @@ int tsocmd(const char *pgm, const char *buf)
 	// wtodumpf(cbuf, cbuf->cbuflen, "CBUF");
 
 	__link(pgm, NULL, &cppl, &rc);
-	
+
+	memcpy(ect->ectpcmd, savecmd, sizeof(savecmd));
+	ect->ectsws = savesws;
+
 quit:
 	if (cbuf) free(cbuf);
 

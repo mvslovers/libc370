@@ -48,23 +48,25 @@ Only the calling task waits\; other tasks of the address space keep running.
 
 === Returns
 
-Both functions always return 0.
+#cmd("sleep()") returns 0 after the wait, and the seconds it did not wait
+when the timer could not be set. #cmd("usleep()") always returns 0.
 
 === Notes
 
 - Nothing interrupts the wait: there are no signals that end it early, so
   #cmd("sleep()") never returns the unslept time that POSIX specifies.
 - If the timer for #cmd("sleep()") cannot be set, which happens when the
-  system is short of storage, #cmd("sleep()") returns at once without
-  waiting, still with 0. The library writes one console message per task
-  the first time this happens.
+  system is short of storage, #cmd("sleep()") returns at once with the
+  seconds left. The library writes one console message per task the first
+  time this happens. Up to release 2.22.0 it returned 0 in this case.
 - The #cmd("usleep()") interval is converted to timer units of 26.04
   microseconds by dividing by 26, truncated. A short wait can therefore be
   up to 26 microseconds shorter than requested, and a long one comes out
   longer: #cmd("usleep(1000000)") waits about 1.0016 seconds.
   The actual end of the wait also depends on the dispatching of the task.
-- A value of #var("seconds") greater than 42,949,672 (about 497 days)
-  overflows the interval in hundredths of a second.
+- A long interval is waited in pieces. Up to release 2.22.0 a value of
+  #var("seconds") greater than 42,949,672 (about 497 days) overflowed the
+  interval in hundredths of a second.
 - To wait for an event #emph[or] a time-out, use the timed waits on event
   control blocks described in @mvs-sync.
 

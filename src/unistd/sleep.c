@@ -18,13 +18,16 @@ sleep(unsigned seconds)
     wtof("%s(%u) TCB(%06X) SLEEPING", __func__, seconds, tcb);
 #endif
 
-    if (seconds > 0) {
-#if 0
-        __asm__("STIMER WAIT,BINTVL=(%0)"
-                : : "r"(&t): "0", "1", "14", "15", "memory");
-#else
-        ecb_timed_wait(&timeout_ecb, seconds * 100, 0);
-#endif
+    /* in pieces: seconds * 100 wrapped above 42949672 seconds.  When the
+       timer cannot be set nothing was waited, and the seconds left are the
+       result, as POSIX has it; it returned 0, "slept fully", and a retry
+       loop around it spun (#413) */
+    while (seconds > 0) {
+        unsigned    part = seconds > 4000000 ? 4000000 : seconds;
+
+        timeout_ecb = 0;
+        if (ecb_timed_wait(&timeout_ecb, part * 100, 0) < 0) return seconds;
+        seconds -= part;
     }
 #if 0
     wtof("%s(%u) TCB(%06X) AWAKE", __func__, seconds, tcb);

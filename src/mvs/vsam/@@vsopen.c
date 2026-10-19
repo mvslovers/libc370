@@ -79,7 +79,7 @@ __vsopen(const char *ddname, VSTYPE t, VSACCESS a, VSMODE m, VSFILE **vsfile)
     }
 
     /* initialize our VSAM file handle */
-    strcpy(vs->eye, VSFILE_EYE);
+    memcpy(vs->eye, VSFILE_EYE, sizeof(vs->eye));   /* 8, no NUL (#413) */
     strcpyp(vs->ddname, sizeof(vs->ddname), (char*)ddname, ' ');
     /* a DD name is upper case; "vsamesds" failed with EVSOPEN (#411) */
     for (i = 0; i < (int)sizeof(vs->ddname); i++) {
