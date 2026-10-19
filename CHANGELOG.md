@@ -49,6 +49,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   - `fscanf()` and `scanf()` push back the character that ends the scan
     also when they stop early, at a character that does not match; it was
     consumed.
+- **`printf()` prints the digits of large and small floating-point values
+  right (#225).** A value was scaled into the range 1 to 10 by one
+  division or multiplication by 10 per decimal exponent, up to 75 of them,
+  and each truncated: `%e` of 1e-30 printed `9.99999999999998934e-31`, and
+  `%f` of 1e60 was wrong from the 15th digit. The scaling now takes at most
+  four operations with exact powers of ten. Measured on MVS over 448 values
+  against the exact value of each double: the largest error went from 239
+  to 26 units of the 17th significant digit, and the values whose first 15
+  digits round wrong from 111 to 13, all of them close to a tie.
 
 ## [2.21.0] - 2026-10-19
 

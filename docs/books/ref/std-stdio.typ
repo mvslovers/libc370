@@ -506,7 +506,12 @@ precision above 126 overran a work area.
   buffer is written\; use #cmd("ferror()") to find out.
 
 Floating-point values are System/370 hexadecimal floating point, which has
-about 15 significant decimal digits and no infinity and no NaN.
+about 15 significant decimal digits and no infinity and no NaN. The digits
+printed for a value are right to about 16 significant digits: measured over
+448 values across the whole range, the printed value is at most 26 units of
+the 17th digit from the exact value of the double, below 22 orders of
+magnitude at most 4. Up to release 2.21.0 a large or small value was off by
+up to 239 such units, so the 15th digit of 1e60 or 1e-30 was wrong.
 
 #tab(caption: [Output of some conversions])[
   #table(columns: (2.2in, 1.15in, 1fr),

@@ -24,8 +24,9 @@
  * No value here is a power of ten, and only the first digit is compared:
  * the /10 scaling loop is inexact on HFP, so 1e60 prints as
  * 999999999999998046...000.000000 and 1e-30 under %e as 9.99...E-31
- * (JOB00720) - on main as well, not #222.  Length and the position of
- * the '.' are what the bound is about.
+ * (JOB00720) - on main as well, not #222 (#225 has since replaced the
+ * loop; test/mvs/tstdblsm.c measures the digits).  Length and the
+ * position of the '.' are what the bound is about.
  *
  * Build:   make build
  *          cc370 -O1 -Iinclude -L build/sdk test/mvs/tstdblrb.c \
