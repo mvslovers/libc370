@@ -41,10 +41,16 @@ osbclose(DCB *dcb, const char *option, int freedcb, int type_t)
     /* normal close */
     __asm__("LR    1,%0\n\tSVC   20         CLOSE"
         : : "r"(&plist) : "1", "14", "15", "memory");
-#if 0
-    /* release buffer pool (if any) */
-    __asm__("FREEPOOL ((%0))" : : "r"(dcb) : "1", "14", "15", "memory");
-#endif
+    /* release a buffer pool OPEN built: CLOSE leaves it to us (#114).
+       DCBBUFCB holds the pool's address, or has its low-order bit on for
+       "no pool" - the DCB macro's X'000001', and what FREEPOOL leaves
+       behind.  FREEPOOL itself checks nothing: it FREEMAINs what
+       DCBBUFCB points to, so it must not run without a pool. */
+    if ((((unsigned)dcb->dcbbufcb) & 0x00FFFFFF) &&
+        !(((unsigned)dcb->dcbbufcb) & 1)) {
+        __asm__("FREEPOOL ((%0))"
+            : : "r"(dcb) : "0", "1", "14", "15", "memory");
+    }
     /* if we have any private DCB storage we need to free it now */
     if (dcb->dcbpriv) {
         free(dcb->dcbpriv);
