@@ -16,8 +16,9 @@ static int bind1(int ss, struct sockaddr_in * name, int length);
 /* bind() */
 __asm__("\n&FUNC    SETC 'bind'");
 extern int
-bind(int ss, struct sockaddr_in * name, int length)
+bind(int ss, __SOCKADDR_ARG addr, int length)
 {
+    struct sockaddr_in  *name = addr.__sockaddr_in__;
     int     rc;
 
     if (name->sin_port==0) {

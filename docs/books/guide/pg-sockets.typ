@@ -143,11 +143,9 @@ The steps, with what is particular to MVS:
 + *Create the socket* (line 41). #cmd("AF_INET") is the only address family
   the emulator supports.
 + *Bind it to the port* (lines 47--51). #cmd("bind()"), #cmd("connect()")
-  and #cmd("accept()") take a #cmd("struct sockaddr_in *"), not a
-  #cmd("struct sockaddr *"): pass the address of the
-  #cmd("struct sockaddr_in") as it is. The cast that POSIX code carries,
-  #cmd("(struct sockaddr *)&sin"), draws an incompatible-pointer warning,
-  which #cmd("-Werror") makes an error. The port is a port of the
+  and #cmd("accept()") take the address of the #cmd("struct sockaddr_in")
+  as it is, or with the cast that POSIX code carries,
+  #cmd("(struct sockaddr *)&sin"): both compile without a warning. The port is a port of the
   workstation, not of MVS: it must be free there, and a port below 1024
   usually needs a Hercules that runs with the privileges for it.
 + *Close on every exit.* When #cmd("bind()") or #cmd("listen()") fails, the
@@ -278,7 +276,8 @@ Library Reference give the complete list.
       #cmd("closesocket()"). The library closes what is left when the
       program ends, also by an abend.],
     [#cmd("bind()"), #cmd("connect()"), #cmd("accept()")], [Take a
-      #cmd("struct sockaddr_in *"): pass it without a cast. The length
+      #cmd("struct sockaddr_in *") or a #cmd("struct sockaddr *"), with or
+      without the cast (up to libc370 2.23.0 only the first). The length
       arguments are not used\; #cmd("accept()")'s is an #cmd("int *").],
     [#cmd("recv()")], [Blocking: returns only when all #var("len") bytes
       have arrived or the peer closes. Use a non-blocking socket, or

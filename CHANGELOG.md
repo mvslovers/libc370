@@ -89,6 +89,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   dump (that would need APF authorization) and only wrote
   "system_dump requested" to the console. The value stays, the message is
   gone, and the abend is handled as with `DUMP_DEFAULT` (measured on MVS).
+- **The socket functions take a `struct sockaddr *` and a
+  `struct sockaddr_in *` alike (#417).** `bind()`, `connect()` and
+  `accept()` were declared with a `struct sockaddr_in *`, so the
+  `(struct sockaddr *)` cast that portable code carries drew an
+  incompatible-pointer warning, an error under `-Werror`;
+  `getsockname()` and `getpeername()` had the opposite problem. All five
+  now take their address as a GCC transparent union, as glibc does
+  (`__SOCKADDR_ARG`, and `__CONST_SOCKADDR_ARG` for `connect()`), so both
+  forms compile without a warning. The calls compile to the same code as
+  before; nothing needs to be rebuilt.
 
 ## [2.23.0] - 2026-10-19
 

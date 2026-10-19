@@ -16,6 +16,22 @@ struct sockaddr {
     char              sa_data[14];  /* 14 bytes of protocol address */
 };
 
+/* __SOCKADDR_ARG, __CONST_SOCKADDR_ARG - the address argument of the
+** socket functions (#417).  A GCC transparent union, as in glibc: the
+** caller passes a struct sockaddr * or a struct sockaddr_in *, with or
+** without the cast, and the function receives the pointer as it is. */
+union __sockaddr_arg {
+    struct sockaddr         *__sockaddr__;
+    struct sockaddr_in      *__sockaddr_in__;
+} __attribute__((__transparent_union__));
+typedef union __sockaddr_arg        __SOCKADDR_ARG;
+
+union __const_sockaddr_arg {
+    const struct sockaddr       *__sockaddr__;
+    const struct sockaddr_in    *__sockaddr_in__;
+} __attribute__((__transparent_union__));
+typedef union __const_sockaddr_arg  __CONST_SOCKADDR_ARG;
+
 struct linger {
     int     onoff;
     int     linger;
@@ -45,20 +61,20 @@ struct linger {
 
 int socket(int af, int type, int protocol)                                      asm("@@75SOCK");
 
-int bind(int ss, struct sockaddr_in *add, int length)                           asm("@@75BIND");
+int bind(int ss, __SOCKADDR_ARG add, int length)                               asm("@@75BIND");
 
-int connect(int ss, struct sockaddr_in *addr, int length)                       asm("@@75CONN");
+int connect(int ss, __CONST_SOCKADDR_ARG addr, int length)                     asm("@@75CONN");
 
 int listen(int ss, int backlog)                                                 asm("@@75LIST");
 
-int accept(int ss, struct sockaddr_in *addr, int *length)                       asm("@@75ACCE");
+int accept(int ss, __SOCKADDR_ARG addr, int *length)                           asm("@@75ACCE");
 
 int send(int ss, const void *buf, int len, int flags)                           asm("@@75SEND");
 
 int recv(int ss, void *buf, int len, int flags)                                 asm("@@75RECV");
 
-int getsockname(int ss, struct sockaddr *addr, int *addrlen)                    asm("@@75SNAM");
+int getsockname(int ss, __SOCKADDR_ARG addr, int *addrlen)                     asm("@@75SNAM");
 
-int getpeername(int ss, struct sockaddr *addr, int *addrlen)                    asm("@@75PNAM");
+int getpeername(int ss, __SOCKADDR_ARG addr, int *addrlen)                     asm("@@75PNAM");
 
 #endif /* SYS_SOCKET_H */

@@ -11,8 +11,9 @@
 /* connect() */
 __asm__("\n&FUNC    SETC 'connect'");
 extern int
-connect(int ss, struct sockaddr_in *name, int length)
+connect(int ss, __CONST_SOCKADDR_ARG addr, int length)
 {
+    const struct sockaddr_in  *name = addr.__sockaddr_in__;
     int     rc;
     int     i;
     PL75    pl;
@@ -62,10 +63,11 @@ connect(int ss, struct sockaddr_in *name, int length)
     /* check for error */
     rc      = (unsigned) pl.r4;
     if (rc>=0) {
-        struct sockaddr addr = {0};
-        int             addrlen = sizeof(addr);
-        __75snam(ss, &addr, &addrlen);
-        __soupd(ss, &addr, name);
+        struct sockaddr     local = {0};
+        struct sockaddr_in  peer = *name;
+        int                 addrlen = sizeof(local);
+        __75snam(ss, &local, &addrlen);
+        __soupd(ss, &local, &peer);
         goto quit;
     }
 
