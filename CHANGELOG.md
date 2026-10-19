@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- **`strstr()` with an empty `s2` returns `s1` (#393).** C99 requires a
+  pointer to the start of `s1` when the string searched for is empty; the
+  function returned a null pointer (measured on MVS).
+
 ## [2.20.0] - 2026-10-18
 
 A program's sockets no longer outlive it. The emulator keeps one socket

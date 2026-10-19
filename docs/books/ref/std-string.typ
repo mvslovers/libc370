@@ -512,12 +512,9 @@ compared.
 === Returns
 
 A pointer to the start of the occurrence, or #cmd("NULL") if #var("s2") does
-not occur in #var("s1").
+not occur in #var("s1"). If #var("s2") is the empty string, the result is
+#var("s1").
 
-=== Notes
-
-If #var("s2") is the empty string, C99 requires the result #var("s1").
-LIBC/370 returns #cmd("NULL") instead.
 
 === Related
 
