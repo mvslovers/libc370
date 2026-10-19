@@ -25,6 +25,29 @@ txblk(TXT99 ***txt99, const char *s, const char *end)
     return __txblk(txt99, blk);
 }
 
+/* __fpbks() - the BLKSIZE text unit for a data set that fopen() allocates,
+** from blksize=n or blksize(n) in mode, else from the environment variable
+** env; none when neither is there.  Here, because every program that can
+** reach __fpstar() links this module too (#474). */
+int
+__fpbks(TXT99 ***txt99, const char *mode, const char *env)
+{
+    const char  *p;
+    char        *blksize    = 0;
+    char        *tok_save   = NULL;
+    char        temp[16];
+
+    p = strstr(mode, "blksize=");
+    if (!p) p = strstr(mode, "blksize(");
+    if (p) {
+        strncpy(temp, p + 8, sizeof(temp) - 1);
+        temp[sizeof(temp) - 1] = 0;
+        blksize = __tok(temp, " ,)", &tok_save);
+    }
+    if (!blksize) blksize = getenv(env);
+    return blksize ? __txbksz(txt99, blksize) : 0;
+}
+
 int
 __fptmp(FILE *fp)
 {
@@ -32,7 +55,6 @@ __fptmp(FILE *fp)
     unsigned    count   = 0;
     char        *recfm  = 0;
     char        *lrecl  = 0;
-    char        *blksize= 0;
     char        *space  = 0;
     int         blocked;
     char        *p      = 0;
@@ -90,17 +112,8 @@ __fptmp(FILE *fp)
 
     if (blocked) {
         /* get optional block size */
-        p = strstr(fp->mode, "blksize=");
-        if (!p) p = strstr(fp->mode,"blksize(");
-        if (p) {
-            strcpy(temp,p+8);
-            blksize = __tok(temp, " ,)", &tok_save);
-        }
-        if (!blksize) blksize = getenv("TEMP_BLKSIZE");
-        if (blksize) {
-            err = __txbksz(&txt99, blksize);
-            if (err) goto quit;
-        }
+        err = __fpbks(&txt99, fp->mode, "TEMP_BLKSIZE");
+        if (err) goto quit;
     }
 
     /* get optional space "[CYL|TRK](pri[,sec])" or "blksize(pri[,sec])" */

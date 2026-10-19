@@ -26,9 +26,10 @@ __fseek(FILE *fp, long int offset, int whence)
        which would open "w+" for OUTPUT again and truncate (#189) */
     if ((fp->flags & _FILE_FLAG_READ) && (fp->flags & _FILE_FLAG_WRITE)) {
         /* a successful fseek() undoes ungetc(), C99 7.19.9.2 (#474) */
-        if (plusseek(fp, offset, whence)) return (-1);
-        fp->ungetch = -1;
-        return (0);
+        int rc = plusseek(fp, offset, whence);
+
+        if (rc == 0) fp->ungetch = -1;
+        return rc;
     }
 
     /* No flush here (#189).  On a text stream a flush ENDS the record, so

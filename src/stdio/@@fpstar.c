@@ -13,6 +13,9 @@
 #include "stddef.h"
 #include "ibm/mvs/ihacde.h"
 
+/* in @@fptmp.c (#474) */
+extern int __fpbks(TXT99 ***txt99, const char *mode, const char *env);
+
 int
 __fpstar(FILE *fp)
 {
@@ -111,17 +114,8 @@ __fpstar(FILE *fp)
 
 		if (blocked) {
 			/* get optional block size */
-			p = strstr(fp->mode, "blksize=");
-			if (!p) p = strstr(fp->mode, "blksize(");
-			if (p) {
-				strcpy(temp,p+8);
-				blksize = __tok(temp, " ,)", &tok_save);
-			}
-			if (!blksize) blksize = getenv("SYSOUT_BLKSIZE");
-			if (blksize) {
-				err = __txbksz(&txt99, blksize);
-				if (err) goto quit;
-			}
+			err = __fpbks(&txt99, fp->mode, "SYSOUT_BLKSIZE");
+			if (err) goto quit;
 		}
 	}
 
