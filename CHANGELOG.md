@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- **`make install` keeps headers other toolchains put into the sysroot
+  (#636).** It cleared the whole `<sysroot>/include` before copying, which
+  deleted, for example, the PL/I toolchain's `pl1abi.h` on every install.
+  It now removes only the headers of the previous LIBC/370 install, from
+  the list it writes to `<sysroot>/share/libc370/include-files.txt` (the
+  tarball and the packages carry it too); a sysroot installed before has
+  every header name LIBC/370 has shipped removed instead.
+
 ## [2.22.0] - 2026-10-19
 
 Standard functions closer to C99 and a few MVS fixes. `scanf()` accepts
