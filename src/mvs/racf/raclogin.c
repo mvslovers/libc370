@@ -102,7 +102,7 @@ racf_login(const char *user, const char *pass, const char *group, int *racf_rc)
 "* See if we're in supervisor state\n"
 "*\n"
 "         TESTAUTH FCTN=0,STATE=YES,KEY=NO,RBLEVEL=1\n\tST\t15,%0" : "=m"(rc)
-        : : "1", "14", "15", "memory");
+        : : "0", "1", "14", "15", "memory");
     if (rc==0) {
         /* we're in supervisor state */
         sup = 1;
@@ -115,7 +115,7 @@ racf_login(const char *user, const char *pass, const char *group, int *racf_rc)
 "* enter supervisor state\n"
 "*\n"
 "         MODESET KEY=ZERO,MODE=SUP\n"
-        : : : "1", "14", "15", "memory");
+        : : : "0", "1", "14", "15", "memory");
     }
 
     if (pass) {
@@ -127,7 +127,7 @@ racf_login(const char *user, const char *pass, const char *group, int *racf_rc)
 "               ACEE=(%1),USERID=(%2),PASSWRD=(%3),GROUP=(%4),MF=(E,%5)\n"
 "         ST\t15,%0" : "=m"(rc)
             : "r"(&acee), "r"(userid), "r"(password), "r"(group), "m"(plist)
-            : "1", "14", "15", "memory");
+            : "0", "1", "14", "15", "memory");
     }
     else {
         __asm__("\n"
@@ -138,7 +138,7 @@ racf_login(const char *user, const char *pass, const char *group, int *racf_rc)
 "               ACEE=(%1),USERID=(%2),GROUP=(%3),MF=(E,%4)\n"
 "         ST\t15,%0" : "=m"(rc)
             : "r"(&acee), "r"(userid), "r"(group), "m"(plist)
-            : "1", "14", "15", "memory");
+            : "0", "1", "14", "15", "memory");
     }
 
     if (!sup) {
@@ -148,7 +148,7 @@ racf_login(const char *user, const char *pass, const char *group, int *racf_rc)
 "* return to problem state\n"
 "*\n"
 "         MODESET KEY=NZERO,MODE=PROB\n"
-        : : : "1", "14", "15", "memory");
+        : : : "0", "1", "14", "15", "memory");
     }
 
     if (racf_rc) *racf_rc = rc;

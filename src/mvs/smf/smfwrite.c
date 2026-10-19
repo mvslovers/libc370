@@ -20,7 +20,7 @@ smf_write(void *record)
 "* See if we're in supervisor state\n"
 "*\n"
 "         TESTAUTH FCTN=0,STATE=YES,KEY=NO,RBLEVEL=1\n\tST\t15,%0"
-        : "=m"(rc) : : "1", "14", "15", "memory");
+        : "=m"(rc) : : "0", "1", "14", "15", "memory");
     if (rc == 0) {
         sup = 1;
     }
@@ -32,7 +32,7 @@ smf_write(void *record)
 "* enter supervisor state\n"
 "*\n"
 "         MODESET KEY=ZERO,MODE=SUP\n"
-        : : : "1", "14", "15", "memory");
+        : : : "0", "1", "14", "15", "memory");
     }
 
     /* SVC 83 - write SMF record: R0=0, R1=record address */
@@ -53,7 +53,7 @@ smf_write(void *record)
 "* return to problem state\n"
 "*\n"
 "         MODESET KEY=NZERO,MODE=PROB\n"
-        : : : "1", "14", "15", "memory");
+        : : : "0", "1", "14", "15", "memory");
     }
 
     return rc;

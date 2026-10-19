@@ -58,6 +58,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   against the exact value of each double: the largest error went from 239
   to 26 units of the 17th significant digit, and the values whose first 15
   digits round wrong from 111 to 13, all of them close to a tie.
+- **`__uastep()` clears the STEPLIB authorization only when `__austep()`
+  set it (#125).** In an authorized program it cleared it every time, so
+  an authorized STEPLIB lost its authorization for the rest of the step
+  (measured on MVS). The inline assembler had not told the compiler that
+  `TESTAUTH` changes register 15, where the compiler kept a pointer it
+  tested afterwards. Every inline assembler statement of the library that
+  issues an SVC or calls system code now names registers 0, 1, 14 and 15
+  as changed, and the build checks it; of the 112 statements changed,
+  this was the only one whose generated code differed.
 
 ## [2.21.0] - 2026-10-19
 

@@ -33,14 +33,14 @@ osbclose(DCB *dcb, const char *option, int freedcb, int type_t)
 
     if (type_t) {
         __asm__("LR    1,%0\n\tSVC   23         TCLOSE"
-            : : "r"(&plist) : "1", "14", "15", "memory");
+            : : "r"(&plist) : "0", "1", "14", "15", "memory");
         /* close,type=t leave the DCB open, so we're done */
         goto quit;
     }
 
     /* normal close */
     __asm__("LR    1,%0\n\tSVC   20         CLOSE"
-        : : "r"(&plist) : "1", "14", "15", "memory");
+        : : "r"(&plist) : "0", "1", "14", "15", "memory");
     /* release a buffer pool OPEN built: CLOSE leaves it to us (#114).
        DCBBUFCB holds the pool's address, or has its low-order bit on for
        "no pool" - the DCB macro's X'000001', and what FREEPOOL leaves

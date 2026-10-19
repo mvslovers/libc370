@@ -54,9 +54,9 @@ int jesxwrtr(SSSO *ssso, const char *class_list, const char *dest, const char *f
 #endif
 #if 0
     if (ssso->SSSOWTRC) {
-        __asm__("MODESET KEY=ZERO,MODE=SUP");
+        __asm__("MODESET KEY=ZERO,MODE=SUP" : : : "0", "1", "14", "15", "memory");
         wtodumpf(ssso->SSSOWTRC, sizeof(WTRC), "WTRC");
-        __asm__("MODESET KEY=NZERO,MODE=PROB");
+        __asm__("MODESET KEY=NZERO,MODE=PROB" : : : "0", "1", "14", "15", "memory");
     }
 #endif
 

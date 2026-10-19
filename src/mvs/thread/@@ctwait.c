@@ -16,7 +16,7 @@ cthread_wait(unsigned *ecb)
 #endif
     if (!ecb) goto quit;
 
-    __asm__("WAIT\tECB=(%0)" : : "r"(ecb) : "1", "14", "15", "memory");
+    __asm__("WAIT\tECB=(%0)" : : "r"(ecb) : "0", "1", "14", "15", "memory");
 #ifdef WTODEBUG
     wtof("cthdwait(%08X) ecb=%08X after WAIT", ecb, *ecb);
 #endif

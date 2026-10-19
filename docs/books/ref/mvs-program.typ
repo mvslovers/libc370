@@ -1379,6 +1379,11 @@ return in the state and with the key the caller had. Up to LIBC/370 2.18.1
 they returned in problem state with the key of the task, whatever the state
 of the caller was.
 
+Up to LIBC/370 2.21.0 #cmd("__uastep()") cleared the bit of an authorized
+program also when #cmd("__austep()") had not set it: a STEPLIB that was
+authorized in its own right lost its authorization for the rest of the job
+step.
+
 === Related
 @mvs-program-__autask, @mvs-program-__steplb
 

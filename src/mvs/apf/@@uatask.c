@@ -29,7 +29,7 @@ static void unauthorize(void)
         "SR\t0,0\n\t"
         "SR\t1,1\n\t"
         "SVC\t244"
-    );
+     : : : "0", "1", "14", "15", "memory");
 }
 
 __asm__("PRINT NOGEN");

@@ -41,7 +41,7 @@ int isplink(const char *service_name, ...)
 	__asm__("LR\t1,11           parameter list\n\t"
 			"L\t15,=V(ISPLINK)\n\t"
 			"BALR\t14,15          call ISPLINK\n\t"
-			"ST\t15,%0      save return code" : "=m"(rc)  : : "memory");
+			"ST\t15,%0      save return code" : "=m"(rc)  : : "0", "1", "14", "15", "memory");
 quit:
 	return rc;
 }

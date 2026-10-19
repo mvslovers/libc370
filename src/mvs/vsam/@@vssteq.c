@@ -17,16 +17,16 @@ __vssteq(VSFILE *vs, void *rec, int reclen, void *key, int keylen)
     vs->vsreset = 0;
 
     __asm__("MODCB RPL=(%0),OPTCD=(KEQ),MF=(G,(%1))"
-            : : "r"(&vs->rpl), "r"(pl) : "1", "14", "15", "memory");
+            : : "r"(&vs->rpl), "r"(pl) : "0", "1", "14", "15", "memory");
 
     __asm__("LA\t2,DONE\n\t"
             "POINT\tRPL=(%0)\n"
    "DONE\tDS\t0H\n\t"
             "ST\t15,%1"
-        : : "r"(&vs->rpl), "m"(rc) : "1", "2", "14", "15", "memory");
+        : : "r"(&vs->rpl), "m"(rc) : "0", "1", "14", "15", "2", "memory");
 #if 0
     __asm__("MODCB RPL=(%0),OPTCD=(KEQ),MF=(G,(%1))"
-            : : "r"(&vs->rpl), "r"(pl) : "1", "14", "15", "memory");
+            : : "r"(&vs->rpl), "r"(pl) : "0", "1", "14", "15", "memory");
 #endif
 
 quit:

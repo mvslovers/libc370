@@ -44,7 +44,7 @@ accept(int ss, struct sockaddr_in *name, int *length)
         if (rc!=-2) break;
 
         /* we need to wait */
-        __asm__("STIMER WAIT,BINTVL==F'8'   0.08 seconds" : : : "0", "1", "memory");
+        __asm__("STIMER WAIT,BINTVL==F'8'   0.08 seconds" : : : "0", "1", "14", "15", "memory");
     }
 
     if (rc >= 0) {

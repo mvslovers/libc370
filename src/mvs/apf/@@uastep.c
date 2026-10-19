@@ -11,7 +11,7 @@ __uastep(void)
     unsigned        st;
 
     /* check for APF authorization */
-    __asm__("TESTAUTH\tFCTN=1\n\tST\t15,%0" : "=m" (rc) : : "memory");
+    __asm__("TESTAUTH\tFCTN=1\n\tST\t15,%0" : "=m" (rc) : : "0", "1", "14", "15", "memory");
     if (rc!=0) goto quit;
 
     if (crt) {

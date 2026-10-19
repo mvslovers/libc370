@@ -86,7 +86,7 @@ jobs:
         run: python3 sdk/headermap.py check
 
       - name: asm memory clobbers
-        run: python3 sdk/asmlint.py   # every extended asm declares "memory" (#427)
+        run: python3 sdk/asmlint.py   # "memory" on every extended asm (#427), 0/1/14/15 on SVCs (#125)
 
       - name: Clone cc370
         id: cc370

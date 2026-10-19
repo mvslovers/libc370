@@ -13,14 +13,14 @@ __autask(void)
     volatile int rc = 0;
 
     /* check for APF authorization */
-    __asm__("TESTAUTH\tFCTN=1\n\tST\t15,%0" : "=m" (rc) : : "memory");
+    __asm__("TESTAUTH\tFCTN=1\n\tST\t15,%0" : "=m" (rc) : : "0", "1", "14", "15", "memory");
     /* wtof("%s TESTAUTH #1 rc=%d", __func__, rc); */
     if (rc==0) goto quit;
 
     /* get APF authorization */
     try(authorize,0);
 
-    __asm__("TESTAUTH\tFCTN=1\n\tST\t15,%0" : "=m" (rc) : : "memory");
+    __asm__("TESTAUTH\tFCTN=1\n\tST\t15,%0" : "=m" (rc) : : "0", "1", "14", "15", "memory");
     /* wtof("%s TESTAUTH #2 rc=%d", __func__, rc); */
     if (rc!=0) goto quit;
 
@@ -40,7 +40,7 @@ static void authorize(void)
         "SR\t0,0\n\t"
         "LA\t1,1\n\t"
         "SVC\t244"
-    );
+     : : : "0", "1", "14", "15", "memory");
 }
 
 __asm__("PRINT NOGEN");

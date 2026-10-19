@@ -21,7 +21,7 @@ racf_set_acee(ACEE *newacee)
 "* See if we're in supervisor state\n"
 "*\n"
 "         TESTAUTH FCTN=0,STATE=YES,KEY=NO,RBLEVEL=1\n\tST\t15,%0" : "=m"(rc)
-        : : "1", "14", "15", "memory");
+        : : "0", "1", "14", "15", "memory");
     if (rc==0) {
         /* we're in supervisor state, switch to key 0 */
         __asm__("\n"
@@ -47,7 +47,7 @@ racf_set_acee(ACEE *newacee)
 "* enter supervisor state\n"
 "*\n"
 "         MODESET KEY=ZERO,MODE=SUP\n"
-        : : : "1", "14", "15", "memory");
+        : : : "0", "1", "14", "15", "memory");
 
     /* set ASXBSENV with the new ACEE pointer */
     *asxbsenv = newacee;
@@ -57,7 +57,7 @@ racf_set_acee(ACEE *newacee)
 "* return to problem state\n"
 "*\n"
 "         MODESET KEY=NZERO,MODE=PROB\n"
-        : : : "1", "14", "15", "memory");
+        : : : "0", "1", "14", "15", "memory");
 
 quit:
     return oldacee;

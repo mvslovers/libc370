@@ -22,11 +22,11 @@ int iefssreq(SSOB *ssob)
     /* we need to set the high order bit in the SSOB pointer */
     ssob = (SSOB*) ((unsigned)ssob + 0x80000000);
 
-    if (!sup) __asm("MODESET MODE=SUP" : : : "15","0","1", "memory");
+    if (!sup) __asm("MODESET MODE=SUP" : : : "0", "1", "14", "15", "memory");
 
     rc = ssreq(ssob);
 
-    if (!sup) __asm("MODESET MODE=PROB" : : : "15","0","1", "memory");
+    if (!sup) __asm("MODESET MODE=PROB" : : : "0", "1", "14", "15", "memory");
 
     return rc;
 }
