@@ -5,7 +5,6 @@ int tmr_stop(void)
 {
     TMR         *tmr    = tmr_get();
     int         lockrc;
-    int         i;
     CTHDTASK    *task;
 
     if (!tmr) return -1;        /* no TMR anchor: no timer services (#85) */
@@ -86,6 +85,5 @@ int tmr_stop(void)
     }
     if (lockrc==0) unlock(tmr, 0);
 
-quit:
     return 0;
 }

@@ -90,7 +90,6 @@ void *getmain(unsigned size, unsigned sp)
         r1 += 8;                                    /* address returned to caller */
     }
 
-quit:
     return (void*)r1;
 }
 

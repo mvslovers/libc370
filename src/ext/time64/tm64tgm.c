@@ -42,9 +42,6 @@ time64_t timegm64(const struct tm *date)
     time64_t 	seconds;
     int      	year;
     int      	orig_year = (int)date->tm_year;
-    int      	cycles  = 0;
-	time64_t	tmp;
-	__64_DTYPE_TMP u;
 
 	__64_init(&days);
 	__64_init(&seconds);
@@ -154,7 +151,6 @@ time64_t timegm64(const struct tm *date)
 	__64_add_i32(&seconds, date->tm_sec, &seconds);
 #endif
 
-quit:
 #if 0
 	{
 		struct tm 	tm = *date;

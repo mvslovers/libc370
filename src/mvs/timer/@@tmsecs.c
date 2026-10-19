@@ -29,6 +29,5 @@ TMRSEC tmr_secs(TMRSEC *secs)
     /* Scale the microseconds and add to our result (secs.usecs) */
     *secs = ((double)tv.tv_sec + ((double)tv.tv_usec / 1000000.0));
 
-quit:
     return *secs;
 }

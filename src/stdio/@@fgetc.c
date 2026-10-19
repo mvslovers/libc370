@@ -165,7 +165,7 @@ tso_getline(unsigned char *buf, size_t len)
 #define TGET_EDIT		0x00
 
 	r0 = len;
-	r1 = (TGET_WAIT | TGET_EDIT) << 24 | (unsigned)buf & 0x00FFFFFF;
+	r1 = ((TGET_WAIT | TGET_EDIT) << 24) | ((unsigned)buf & 0x00FFFFFF);
 
 	__asm__(
 		"LR\t0,%0                buffer length\n\t"

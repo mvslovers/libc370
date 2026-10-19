@@ -5,7 +5,6 @@
 
 int initssob(SSOB *ssob, void *ssobindv)
 {
-    int         rc      = 0;
 
     memset(ssob, 0, SSOBHSIZ);
     memcpy(ssob->SSOBID, SSOBID_EYE, sizeof(ssob->SSOBID));

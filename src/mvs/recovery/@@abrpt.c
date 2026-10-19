@@ -93,7 +93,6 @@ __asm__("\n&FUNC    SETC 'get_addr'");
 static void
 get_addr(unsigned addr, char *buf)
 {
-    int         rc;
     int         i;
     int         j;
     int         pos;
@@ -247,7 +246,6 @@ dump_sa(SDWA *sdwa)
     unsigned    *tcb    = (unsigned*)psa[0x21c/4];      /* TCB      == PSATOLD  */
     unsigned    *fsa    = (unsigned*)(tcb[0x70/4] & 0x00FFFFFF);    /* first save area for TCB */
     unsigned    *ppa    = (unsigned*)(fsa[2]);          /* A(@PPA) */
-    int         i;
     unsigned    *n;
     unsigned    *prev;
     unsigned    *next;
@@ -354,7 +352,6 @@ recovery(SDWA *sdwa, void *udata)
     int         dump    = DUMP_DEFAULT;
     unsigned    *psa    = 0;                        /* low core == PSA      */
     void        *tcb    = (void*)psa[0x21c/4];      /* TCB      == PSATOLD  */
-    char        *p;
     int         i;
     unsigned    abcode;
     unsigned    epa;

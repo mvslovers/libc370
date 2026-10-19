@@ -26,8 +26,6 @@ ALCLIST **__listal(void *tcbptr, const char *ddname, unsigned opt)
     DSLIST      *dslist     = NULL;
     int         i;
     int         rc;
-    struct tm   tm          = {0};
-    char        *p;
 
     errno = 0;      /* an empty NULL is not a failure (#61) */
 
@@ -304,6 +302,5 @@ static int get_jfcb_values(DSLIST *dslist, JFCB *jfcb)
     if (jfcb->jfcbind2 & JFCSHARE) p = "SHR";
     strcpy(dslist->disp, p);
 
-quit:
     return rc;
 }

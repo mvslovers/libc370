@@ -29,7 +29,6 @@ __dblcvt(double num, char cnvtype, size_t nwidth, int nprecision,
 int
 vsnprintf(char *s, size_t n, const char *format, va_list arg)
 {
-    char        *sin        = s;
     int         fin         = 0;
     int         chcount     = 0;
     /* n is a size_t since #339; the budget stays an int, capped - no

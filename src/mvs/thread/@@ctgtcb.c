@@ -18,6 +18,5 @@ cthread_get_tcb(CTHDTASK *task)
         tcb = psa[0x21C/4];         /* get our TCB address */
     }
 
-quit:
     return tcb;
 }

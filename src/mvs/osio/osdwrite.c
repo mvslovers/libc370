@@ -20,6 +20,5 @@ osdwrite(DECB *decb, DCB *dcb, void *buf, int length, unsigned block)
         : "=r"(rc) : "r"(decb), "r"(dcb), "r"(buf), "r"(length), "r"(rec+1)
         : "0", "1", "14", "15", "memory");
 
-quit:
     return rc;
 }

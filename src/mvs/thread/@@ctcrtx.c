@@ -200,7 +200,6 @@ __asm__("\n&FUNC    SETC 'cleanup_thread'");
 static void
 cleanup_thread(void)
 {
-    int         rc              = 0;
     CLIBCRT     *crt            = __crtget();
     unsigned    count;
 

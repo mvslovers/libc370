@@ -12,7 +12,6 @@ int
 cthread_lock(int shared, const char *rname)
 {
     int             rc;
-    int             len;
     unsigned char   buf[24];
 
     if (!rname) {
@@ -39,7 +38,6 @@ int
 cthread_unlock(const char *rname)
 {
     int             rc;
-    int             len;
     unsigned char   buf[24];
 
     if (!rname) {

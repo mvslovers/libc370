@@ -14,7 +14,6 @@ int tsocmd(const char *pgm, const char *buf)
 	int			rc			= 8;
 	int			pgmlen		= 0;
 	int			buflen		= 0;
-	int			i;
 	CLIBPPA		*ppa		= __ppaget();
 	ECT 		*ect		= NULL;
 	TSOCBUF 	*cbuf 		= NULL;

@@ -12,6 +12,5 @@ __cibset(unsigned count)
             : "=r" (rc) : "r" (&com->comcibpt), "r" (count) : "0", "1", "14", "15", "memory");
     }
 
-quit:
     return rc;
 }

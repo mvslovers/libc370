@@ -28,6 +28,5 @@ __grtset(void)
         }
     }
 
-quit:
     return rc;
 }

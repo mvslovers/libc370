@@ -23,6 +23,5 @@ __vsupdt(VSFILE *vs, void *rec, int reclen)
             "ST\t15,%1"
         : : "r"(&vs->rpl), "m"(rc) : "0", "1", "14", "15", "2", "memory");
 
-quit:
     return rc;
 }

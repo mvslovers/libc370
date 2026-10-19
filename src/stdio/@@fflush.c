@@ -42,8 +42,6 @@ flushrec(FILE *fp, int newline)
 {
 	DCB				*dcb 	= fp->dcb;
     int             err     = 0;
-    unsigned char   *dptr;
-    size_t          lenwrite;
     int             fill;
 
     /* a record overwritten in place goes back through the UPDAT DCB
@@ -79,7 +77,6 @@ flushrec(FILE *fp, int newline)
 	if (!(fp->xflags & (_FILE_XFLAG_PUTLINE | _FILE_XFLAG_GETLINE))
         && dcb->dcbdevt == DCBDVTRM) {
 		/* DCB refers to terminal */
-		DECB	decb = {0};
 		size_t  len;
 
 		/* calculate length of data in buffer */
@@ -236,7 +233,6 @@ fixflush(FILE *fp, int fill)
     /* write buffer to disk */
     err = finwrite(fp);
 
-quit:
     return err;
 }
 
@@ -270,7 +266,6 @@ varflush(FILE *fp)
     // wtof("@@fflush:%s: dptr=0x%08X lenwrite=%u err=%d", __func__, dptr, lenwrite, err);
     // wtodumpf(dptr, lenwrite, "dptr");
 
-quit:
     return err;
 }
 
@@ -295,7 +290,7 @@ tso_putline(char *buf, unsigned len)
 #define TPUT_FULLSCR	(TPUT_CONTROL|TPUT_ASIS)
 
 	r0 = len & 0xFFFF;
-	r1 = (TPUT_WAIT | TPUT_HOLD) << 24 | (unsigned) buf & 0x00FFFFFF;
+	r1 = ((TPUT_WAIT | TPUT_HOLD) << 24) | ((unsigned) buf & 0x00FFFFFF);
 
 	__asm__(
 		"LR\t0,%0                buffer length\n\t"

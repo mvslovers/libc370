@@ -8,7 +8,6 @@
 void
 wtodumpf(void *buf, int len, const char *fmt, ...)
 {
-    int     rc  = 0;
     va_list list;
     char    title[80];
 

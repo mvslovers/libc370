@@ -9,6 +9,5 @@ osread(DECB *decb, DCB *dcb, void *buf, int length)
         : : "r"(decb), "r"(dcb), "r"(buf), "r"(length)
         : "0", "1", "14", "15", "memory");
 
-quit:
     return;
 }

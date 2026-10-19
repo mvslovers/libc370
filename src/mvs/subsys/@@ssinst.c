@@ -7,7 +7,6 @@
 __asm__("\n&FUNC    SETC 'ssct_install'");
 int ssct_install(SSCT *ssct, const char *after_name)
 {
-    unsigned        *cvt        = *(unsigned**)16;      /* get CVT pointer from PSA */
     SSCT            *after      = ssct_find(after_name);
     unsigned char   prevkey;
 

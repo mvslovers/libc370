@@ -20,6 +20,5 @@ arraysize( void * varray )
         }
     }
 
-quit:
     return size;
 }

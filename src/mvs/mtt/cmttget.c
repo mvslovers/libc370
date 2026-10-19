@@ -21,7 +21,6 @@ MTENTRY **cmtt_get_array(CMTT *cmtt)
     MTTABLE     *mttable;
     MTENTRY     *mtentry;
     unsigned    size;
-    unsigned    offset;
 
     /* CMTT handle is required */
     if (!cmtt) goto quit;

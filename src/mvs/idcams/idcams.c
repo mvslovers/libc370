@@ -175,7 +175,6 @@ static int link_idcams(const char *cmds, IDCAMS_SYSPRINT fn, void *arg)
     if (rc > 0) prc = rc * -1;  /* make negative */
     if (rc < 0) prc = rc;       /* already negative */
 
-quit:
     return prc;
 }
 

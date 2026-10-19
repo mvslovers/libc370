@@ -17,6 +17,5 @@ vsupdate(VSFILE *vs, void *rec, int reclen)
 
     unlock(vs,0);
 
-quit:
     return rc;
 }

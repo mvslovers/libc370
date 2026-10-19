@@ -21,6 +21,5 @@ arraynew(unsigned size)
         vnew = (void *)((char *)vnew + sizeof(ARRAY));
     }
 
-quit:
     return vnew;
 }

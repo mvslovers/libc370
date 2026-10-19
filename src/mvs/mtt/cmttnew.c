@@ -19,7 +19,6 @@ CMTT *cmtt_new(void)
     int             rc;
     unsigned char   caller_key;
     MTTABLE         *mttable;
-    MTENTRY         *mtentry;
     unsigned        size;
     unsigned        offset;
 

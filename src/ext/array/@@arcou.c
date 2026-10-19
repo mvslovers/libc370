@@ -20,6 +20,5 @@ arraycount( void * varray )
         }
     }
 
-quit:
     return count;
 }

@@ -37,7 +37,7 @@ DSAB *get_dsab(void *tcbptr, const char *ddname)
 
     /* no ddname? return first DSAB for this JSCB */
     if (!ddname) goto quit;
-    if (ddname[0]==' ' | ddname[0]==0) goto quit;
+    if (ddname[0]==' ' || ddname[0]==0) goto quit;
 
     /* we're going to match ddname and find the first DSAB that matches */
     for(i=0; ddname[i] && i < sizeof(tempname); i++) {

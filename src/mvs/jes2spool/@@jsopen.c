@@ -26,11 +26,7 @@ HASPJS *__jsopen(const char *dataset)
     HASPJS      *js     = NULL;
     DCB         *dcb    = NULL;
     unsigned    openpl  = 0x80000000;
-    int         i;
-    unsigned    work;
-    unsigned    blocks;
     char        devinfo[20] = {0};
-    char        buf[4096];
 
     /* Allocate a Spool File Handle */
     js = calloc(1, sizeof(HASPJS) + sizeof(DCB));

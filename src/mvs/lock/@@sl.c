@@ -15,7 +15,7 @@ syslock(void *thing, int read)
 #endif
     if (read) opts |= ENQ_SHR;
 
-    sprintf(rname, SYSLOCKRNAME, thing);
+    sprintf(rname, SYSLOCKRNAME, (unsigned)thing);
 
     return ENQ(SYSLOCKQNAME, rname, opts);
 }

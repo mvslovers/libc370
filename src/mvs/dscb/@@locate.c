@@ -1,7 +1,7 @@
 /* @@LOCATE.C */
 /*
-/* Locate Data Set By Name
-/* If dataset is found (rc==0) volser is returned in the &workarea[6]
+ * Locate Data Set By Name
+ * If dataset is found (rc==0) volser is returned in the &workarea[6]
 */
 #include <ext/strutil.h>
 #include <ctype.h>

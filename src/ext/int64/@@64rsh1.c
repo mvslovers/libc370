@@ -6,7 +6,6 @@ __asm__("\n&FUNC    SETC '__64_rshift_one_bit'");
 void __64_rshift_one_bit(__64* a)
 {
 	int i;
-	__64_DTYPE	tmp;
 
 	if (a) {
 		/* wtodumpf(a, sizeof(__64), "%s: before", __func__); */
