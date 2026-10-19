@@ -65,11 +65,24 @@ Each fix gets a red/green test in a container, then a PR and a merge.
   - Released as 2.21.0, a minor release: it changes what callers see
     (`strstr`, `strftime`, ctype, `float.h`, `__listc` rc, `setenv`,
     `bsearch`).
-- **M round:** #474 (five stdio items; `@@fptmp.c:71` has the same
-  `strchr(recfm,'B')` case bug as `@@fpstar.c:108`), #386 scanf widths,
-  #423 %a, #225 HFP scaling (container only), #390 time() past 2038
-  (synthetic TOD), #125 clobber lists (about 102 lines, not every one an SVC),
-  #39 step 3 (`-Wall` re-measured: **205** warnings over 736 TUs, not ~6690).
+- **M round, done 2026-10-19** (all red/green in own local MVS/CE
+  containers, red = installed 2.21.0; nothing released yet, all under
+  [Unreleased]):
+  - #390 (PR #628): `__getclk()` in C, new `__todsec()`; right to the TOD
+    clock's end 2042-09-17; red S0C9 from 2038-01-19 02:53:47, 0.32 s ahead.
+  - #474 (PR #629 + scanf push-back in #631): fwrite size 0, fseek on +
+    and record streams, temp/SYSOUT `blksize=`/`space=` (one parser,
+    `__fpdcb()`); temp data sets with space= now go to VIO, not disk.
+  - #386 (PR #631): scanf field widths, `%[`, `%*` not counted, EOF.
+  - #423 (PR #630): `%a`/`%A` from the HFP bits; printf programs +1268 bytes.
+  - #225 (PR #632): scaling with exact powers of ten; worst error 239 -> 26
+    units of digit 17 (probe tstdblsm + tstdblsm.py judge against the exact
+    value). Exact digits would need multi-word arithmetic.
+  - #125 (PR #633): asmlint SVC rule, 112 statements; found a real bug in
+    `__uastep()` (crt kept in R15 across TESTAUTH), measured from SYS2.LINKLIB.
+  - #39 (PR #635): `-Wall -Wno-missing-braces` in the build, 177 -> 0.
+  - New from the round: #634 (svcmain SVCMAIN_KEY low-bit key -> key 0),
+    #636 (install removes all of include/, also pl1c370's pl1abi.h).
 - **Clear parts of otherwise open issues:**
   - #395: everything but tmpfile, which is done, and the fread indicator;
   - #389: frexp(0), atan2(0,0), pow(0,-n), pow by squaring, exp reduction;
