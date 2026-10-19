@@ -1,22 +1,39 @@
 /* STRERROR.C */
 #include <stddef.h>
+#include <string.h>
 #include "errno.h"
 
-static const char *errors[];
+static char *errors[];
 
-const char *
+/* the library's own VSAM errnos, EVSTYPE .. EVSERROR */
+static char *vserrors[] = {
+/* EVSTYPE             150 */ "Invalid VSAM type",
+/* EVSACCESS           151 */ "Invalid VSAM access",
+/* EVSMODE             152 */ "Invalid VSAM mode",
+/* EVSOPEN             153 */ "VSAM cluster could not be opened",
+/* EVSERROR            154 */ "VSAM error occurred",
+};
+
+/* C99 7.21.6.2: a string for every value, never a null pointer (#420).
+   The values no errno has, from slots of the table below, from above
+   ENOTRECOVERABLE or below 0, share one text.  char *, as <string.h>
+   declares it; the strings are not to be written. */
+char *
 strerror(int error)
 {
-    const char  *str    = 0;
+    char        *str    = 0;
 
-    if (error >=0 && error <=ENOTRECOVERABLE) {
+    if (error >= 0 && error <= ENOTRECOVERABLE) {
         str = errors[error];
     }
+    else if (error >= EVSTYPE && error <= EVSERROR) {
+        str = vserrors[error - EVSTYPE];
+    }
 
-    return str;
+    return str ? str : "Unknown error";
 }
 
-static const char *errors[] = {
+static char *errors[] = {
 /*                       0 */ "No Error",
 /* EPERM                 1 */ "Operation not permitted",
 /* ENOENT                2 */ "No such file or directory",
@@ -28,7 +45,7 @@ static const char *errors[] = {
 /* ENOEXEC               8 */ "Exec format error",
 /* EBADF                 9 */ "Bad file number",
 /* ECHILD               10 */ "No child processes",
-/* EAGAIN               11 */ "Try again",
+/* (none)               11 */ 0,   /* no errno has this number */
 /* ENOMEM               12 */ "Out of memory",
 /* EACCES               13 */ "Permission denied",
 /* EFAULT               14 */ "Bad address",
@@ -108,42 +125,42 @@ static const char *errors[] = {
 /* EILSEQ               84 */ "Illegal byte sequence",
 /* ERESTART             85 */ "Interrupted system call should be restarted",
 /* ESTRPIPE             86 */ "Streams pipe error",
-/* EUSERS               87 */ "Too many users",
-/* ENOTSOCK             88 */ "Socket operation on non-socket",
-/* EDESTADDRREQ         89 */ "Destination address required",
-/* EMSGSIZE             90 */ "Message too long",
-/* EPROTOTYPE           91 */ "Protocol wrong type for socket",
-/* ENOPROTOOPT          92 */ "Protocol not available",
-/* EPROTONOSUPPORT      93 */ "Protocol not supported",
-/* ESOCKTNOSUPPORT      94 */ "Socket type not supported",
-/* EOPNOTSUPP           95 */ "Operation not supported on transport endpoint",
-/* EPFNOSUPPORT         96 */ "Protocol family not supported",
-/* EAFNOSUPPORT         97 */ "Address family not supported by protocol",
-/* EADDRINUSE           98 */ "Address already in use",
-/* EADDRNOTAVAIL        99 */ "Cannot assign requested address",
-/* ENETDOWN            100 */ "Network is down",
-/* ENETUNREACH         101 */ "Network is unreachable",
-/* ENETRESET           102 */ "Network dropped connection because of reset",
-/* ECONNABORTED        103 */ "Software caused connection abort",
-/* ECONNRESET          104 */ "Connection reset by peer",
-/* ENOBUFS             105 */ "No buffer space available",
-/* EISCONN             106 */ "Transport endpoint is already connected",
-/* ENOTCONN            107 */ "Transport endpoint is not connected",
-/* ESHUTDOWN           108 */ "Cannot send after transport endpoint shutdown",
-/* ETOOMANYREFS        109 */ "Too many references: cannot splice",
-/* ETIMEDOUT           110 */ "Connection timed out",
-/* ECONNREFUSED        111 */ "Connection refused",
-/* EHOSTDOWN           112 */ "Host is down",
-/* EHOSTUNREACH        113 */ "No route to host",
-/* EALREADY            114 */ "Operation already in progress",
-/* EINPROGRESS         115 */ "Operation now in progress",
-/* ESTALE              116 */ "Stale NFS file handle",
+/* (none)               87 */ 0,   /* no errno has this number */
+/* (none)               88 */ 0,   /* no errno has this number */
+/* (none)               89 */ 0,   /* no errno has this number */
+/* (none)               90 */ 0,   /* no errno has this number */
+/* (none)               91 */ 0,   /* no errno has this number */
+/* (none)               92 */ 0,   /* no errno has this number */
+/* (none)               93 */ 0,   /* no errno has this number */
+/* (none)               94 */ 0,   /* no errno has this number */
+/* (none)               95 */ 0,   /* no errno has this number */
+/* (none)               96 */ 0,   /* no errno has this number */
+/* (none)               97 */ 0,   /* no errno has this number */
+/* (none)               98 */ 0,   /* no errno has this number */
+/* (none)               99 */ 0,   /* no errno has this number */
+/* (none)              100 */ 0,   /* no errno has this number */
+/* (none)              101 */ 0,   /* no errno has this number */
+/* (none)              102 */ 0,   /* no errno has this number */
+/* (none)              103 */ 0,   /* no errno has this number */
+/* (none)              104 */ 0,   /* no errno has this number */
+/* (none)              105 */ 0,   /* no errno has this number */
+/* (none)              106 */ 0,   /* no errno has this number */
+/* (none)              107 */ 0,   /* no errno has this number */
+/* (none)              108 */ 0,   /* no errno has this number */
+/* (none)              109 */ 0,   /* no errno has this number */
+/* (none)              110 */ 0,   /* no errno has this number */
+/* (none)              111 */ 0,   /* no errno has this number */
+/* (none)              112 */ 0,   /* no errno has this number */
+/* (none)              113 */ 0,   /* no errno has this number */
+/* (none)              114 */ 0,   /* no errno has this number */
+/* (none)              115 */ 0,   /* no errno has this number */
+/* (none)              116 */ 0,   /* no errno has this number */
 /* EUCLEAN             117 */ "Structure needs cleaning",
 /* ENOTNAM             118 */ "Not a named type file",
 /* ENAVAIL             119 */ "No semaphores available",
 /* EISNAM              120 */ "Is a named type file",
 /* EREMOTEIO           121 */ "Remote I/O error",
-/* EDQUOT              122 */ "Quota exceeded",
+/* (none)              122 */ 0,   /* no errno has this number */
 /* ENOMEDIUM           123 */ "No medium found",
 /* EMEDIUMTYPE         124 */ "Wrong medium type",
 /* ECANCELED           125 */ "Operation Canceled",

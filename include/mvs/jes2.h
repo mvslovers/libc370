@@ -272,7 +272,7 @@ int jesxdone(SSSO *ssso);
 int initssob(SSOB *ssob, void *ssobindv);
 
 int jesiropn(VSFILE **vsfile);
-int jesirput(VSFILE  *vsfile, char card[80]);
+int jesirput(VSFILE  *vsfile, const char card[80]);
 int jesircls(VSFILE  *vsfile);
 int jesircl2(VSFILE  *vsfile, unsigned char jobid[8]);
 

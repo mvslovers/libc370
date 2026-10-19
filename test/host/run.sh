@@ -147,6 +147,12 @@ tstsvckey() {
        -I $R/include -I $R -o "$B/t" tstsvckey.c && "$B/t"
     return
 }
+tststrer() {
+    "$CC" -std=gnu99 -Wall -Wextra \
+       -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
+       -I $R/include -I $R -o "$B/t" tststrer.c && "$B/t"
+    return
+}
 tsttodsc() {
     "$CC" -std=gnu99 -Wall -Wextra \
        -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
@@ -321,7 +327,7 @@ tstwpos() {
 # not dropped from here - fix it, or say which issue it waits on.
 ALL="tst75sel tst75snd tstacee tstaradf tstardel tstblank tstcmtt tstdblcv tstdblrb tstdirck tstdsnmt tstemptl
      tstenqdq tsterrfl tstfabnd tstfcls tstfloor tstfpapp tstfprls tstfpunit tstgmain tstidcam tstidcrec tstinet tstiolk tstjesop
-     tstjesprb tstjestx tstl tstll tstlspd tstlstds tstpfarg tstpfflt tstpfval tstplus tstraclo tstrand tstrldwk tstrseek tstscnll tstssvt tstsubsy tsttm64vec tsttodsc tstinstall tstsvckey tsttxdsn tstvsnp
+     tstjesprb tstjestx tstl tstll tstlspd tstlstds tstpfarg tstpfflt tstpfval tstplus tstraclo tstrand tstrldwk tstrseek tstscnll tstssvt tststrer tstsubsy tsttm64vec tsttodsc tstinstall tstsvckey tsttxdsn tstvsnp
      tstwchar tstwpos tstwto"
 
 [ $# -gt 0 ] && ALL="$*"

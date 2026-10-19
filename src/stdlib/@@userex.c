@@ -5,4 +5,5 @@
 #include "ctype.h"
 #include "stddef.h"
 
-void (*__userex[__NATEXIT])(void) = {0};
+/* the name <stdlib.h> declares; both were @@USEREX to the linker (#420) */
+void (*__userExit[__NATEXIT])(void) = {0};

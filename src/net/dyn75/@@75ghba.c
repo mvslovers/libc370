@@ -9,7 +9,6 @@
 #include "string.h"
 #include "mvs/crt.h"
 
-extern unsigned char *asc2ebc;
 
 /* gethostbyaddr() */
 __asm__("\n&FUNC    SETC 'gethostbyaddr'");

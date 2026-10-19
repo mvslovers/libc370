@@ -1376,7 +1376,7 @@ changed and #cmd("errno") is not set.
 ```
 #include <mvs/jes2.h>
 
-int jesirput(VSFILE *vsfile, char card[80]);
+int jesirput(VSFILE *vsfile, const char card[80]);
 ```
 
 === Description

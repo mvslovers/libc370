@@ -449,17 +449,18 @@ English, for example #cmd("\"Out of memory\"") for #cmd("ENOMEM").
 
 === Returns
 
-A pointer to the message, or #cmd("NULL") if #var("errnum") is negative or
-greater than 131. #cmd("strerror(0)") returns #cmd("\"No Error\"").
+A pointer to the message. A number that is no error number - negative,
+above 131 and not a VSAM one, or one of the gaps below 131 - gives
+#cmd("\"Unknown error\""). #cmd("strerror(0)") returns #cmd("\"No Error\"").
 
 === Notes
 
 - The messages are constant strings. The header declares the return type
   #cmd("char *"), as C99 does, but the program must not modify them.
 - The error numbers of the VSAM functions, #cmd("EVSTYPE") (150) to
-  #cmd("EVSERROR") (154), have no message: #cmd("strerror()") returns
-  #cmd("NULL") for them. C99 requires a string for every value, so test for
-  #cmd("NULL") before printing the result, as in the example.
+  #cmd("EVSERROR") (154), have their own messages. Up to release 2.22.0
+  #cmd("strerror()") returned #cmd("NULL") for them and for every number
+  above 131 or below 0.
 - The list of error numbers is in @std-errno.
 
 === Example

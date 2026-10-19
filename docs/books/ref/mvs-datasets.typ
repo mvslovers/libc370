@@ -459,8 +459,8 @@ device type in a unit control block may be passed as it is.
     [#cmd("DEV3330")], [X'09'], [3330],
     [#cmd("DEV3340")], [X'0A'], [3340],
     [#cmd("DEV3350")], [X'0B'], [3350],
-    [#cmd("DEB3375")], [X'0C'], [3375. The name is spelled with #cmd("DEB")
-      in the header.],
+    [#cmd("DEV3375")], [X'0C'], [3375. #cmd("DEB3375"), the name up to
+      release 2.22.0, is kept as a second name for it.],
     [#cmd("DEV333011")], [X'0D'], [3330 model 11],
     [#cmd("DEV3380")], [X'0E'], [3380],
     [#cmd("DEV3390")], [X'0F'], [3390],
