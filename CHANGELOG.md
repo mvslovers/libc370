@@ -106,6 +106,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   (`__SOCKADDR_ARG`, and `__CONST_SOCKADDR_ARG` for `connect()`), so both
   forms compile without a warning. The calls compile to the same code as
   before; nothing needs to be rebuilt.
+- **`struct dscb4` lays out the format-4 DSCB that `__dscbv()` returns
+  (#173).** The structure began with the 44-byte key, which `__dscbv()`
+  does not return, and gave the keyed-overhead and VSAM-catalog fields
+  room of their own where the DSCB overlays them, so every field was read
+  from the wrong place: the track length of a 3350 came back as 256
+  instead of 19254. The structure now starts at the format identifier and
+  is the 96-byte data portion, with `devov` overlaying `devi`/`devl` and
+  `amcat` overlaying `vsind`/`cra`, all at the offsets of the IBM mapping
+  (measured on MVS on a 3350 and a 3380). `sizeof(DSCB)` is now 140, the
+  OBTAIN work area, instead of 146. A format-4 DSCB read with
+  `__dscbav()`, which returns the key first, starts at `dscb.work + 44`.
 
 ## [2.23.0] - 2026-10-19
 

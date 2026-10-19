@@ -280,10 +280,12 @@ library writes a message to the console.
 #idx("__dscbdv")
 To read the VTOC entry of one data set directly, use #cmd("__dscbdv()")
 from #cmd("<mvs/dscb.h>"): it reads the format-1 DSCB of a data set on a
-named volume. Its companions #cmd("__dscbav()"), which reads a DSCB by its
-disk address, and #cmd("__dscbv()"), which reads the format-4 DSCB, have
-restrictions that the _LIBC/370 Library Reference_ describes in Chapter 24,
-“Data Sets and DD Statements”\; read them before you use either.
+named volume. Its companion #cmd("__dscbv()") reads the format-4 DSCB,
+which describes the volume and the VTOC, into #cmd("dscb->dscb4").
+#cmd("__dscbav()"), which reads a DSCB by its disk address, returns the
+DSCB key first, laid out differently from what the other two return: the
+_LIBC/370 Library Reference_ describes it in Chapter 24, “Data Sets and DD
+Statements”\; read the notes there before you use it.
 
 === Reading a PDS Directory <pg-services-pds>
 
