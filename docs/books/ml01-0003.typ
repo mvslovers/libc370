@@ -11,8 +11,8 @@
   edition: [
     #text(font: head-font, weight: "bold", size: 11pt)[First Edition (October 2026)]
 
-    This edition applies to Version 2 Release 22 of LIBC/370
-    (libc370 2.22.0), as built with CC/370 1.6.0, and to all subsequent
+    This edition applies to Version 2 Release 23 of LIBC/370
+    (libc370 2.23.0), as built with CC/370 1.6.0, and to all subsequent
     releases and modifications until otherwise indicated in new editions.
 
     *Draft.* The output of the examples that run on MVS has still to be

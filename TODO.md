@@ -83,8 +83,8 @@ Each fix gets a red/green test in a container, then a PR and a merge.
   - New from the round, fixed after the 2.22.0 release: #634 (PR #639,
     svcmain SVCMAIN_KEY low-bit key set key 0; host test tstsvckey) and
     #636 (PR #638, install removes only the headers listed in
-    share/libc370/include-files.txt; host test tstinstall). Unreleased.
-- **A round (2026-10-19), merged, unreleased:** #640 (PR #641, try() frees
+    share/libc370/include-files.txt; host test tstinstall). Released in 2.23.0.
+- **A round (2026-10-19), released as 2.23.0:** #640 (PR #641, try() frees
   the SDWA: 512 B per caught abend before), #179 (PR #642), #174 (PR #643,
   fclose always releases the ENQ), and the clear parts of open issues:
   #392 no tm overwrite + difftime (PR #644), #420 strerror + signatures
@@ -100,7 +100,7 @@ Each fix gets a red/green test in a container, then a PR and a merge.
   stale per-slot errors, #165 no defect (PR #656); #162 slot leak aborts
   Hercules (heap) at ~934 slots, #164 SELECT aux2=2048 SIGSEGV (PR #657).
   Open from #161: guard `errno` after a failing socket() on our side?
-  #68 is draft PR #654, waiting for httpd#310.
+  #68 (PR #654, format(printf) on the wto functions) merged after httpd#310.
 - **Waiting on a decision:**
   - #553: `__linkx` or `__linkerr`;
   - #461: nesting and guard;
@@ -119,8 +119,6 @@ Each fix gets a red/green test in a container, then a PR and a merge.
   - #75;
   - #392's zone: mvsMF `consapi.c` relies on the zone-less mktime, so a
     release must be coordinated with mvsMF;
-  - #68: draft PR #654 (format attributes + 15 library fixes), waits for
-    httpd#310;
   - #113/#122. **New finding:** `@@crtset.c` copies the JSCB auth byte
     (+0xEC) into `crtauth` (+0x10D), not `crtopts` (+0x10C);
   - %p with `0x`.

@@ -503,6 +503,19 @@ What later 2.x releases ask of a program or a build:
       #cmd("__austep()") did not authorize.], [Check formats written
       around the old #cmd("scanf()") behaviour: a blank after #cmd("]"), a
       count that includes #cmd("*") items, 0 for the end of the input.
-      Code that printed #cmd("%a") and expected it literally changes.]
+      Code that printed #cmd("%a") and expected it literally changes.],
+    [2.23.0], [#cmd("wtof()"), #cmd("wtorf()"), #cmd("wtodumpf()") and
+      their #cmd("v") forms are checked against their format.
+      #cmd("try()") returns -1 when it cannot set up its recovery routine,
+      and frees the SDWA of every abend it recovers. #cmd("strerror()")
+      never returns a null pointer. #cmd("log(0)") sets #cmd("ERANGE"),
+      #cmd("exp()") and #cmd("pow()") work over their whole range.
+      #cmd("__dsalc()") uncatalogs for #cmd("UNCATLG"). #cmd("vsopen()")
+      accepts a cluster VSAM opens with a warning. #cmd("fflush(NULL)"),
+      #cmd("system(NULL)"), #cmd("ungetc()") and #cmd("mktime()") behave as
+      C99 says.], [Fix the calls the compiler now reports, usually a
+      pointer passed to #cmd("%08X"). Test #cmd("try()") for a negative
+      value where +1 meant "no recovery routine". Test #cmd("ERANGE")
+      after #cmd("log(0)").]
   )
 ] <pg-migrate-since-tab>

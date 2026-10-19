@@ -229,11 +229,11 @@ The VSAM values are stored by the functions that open a VSAM cluster (see
 
 === Notes
 
-- #cmd("strerror()") returns a null pointer for the VSAM values 150 to 154,
-  and for any number above 131. #cmd("perror()") prints such a number as
-  #cmd("unknown error:") followed by the number. A program that passes the
-  result of #cmd("strerror()") to #cmd("printf()") must test it for
-  #cmd("NULL") first.
+- #cmd("strerror()") returns a text for every value: the VSAM values 150 to
+  154 have their own, any other number without one gives
+  #cmd("\"Unknown error\""), and #cmd("perror()") prints the same text. Up
+  to release 2.22.0 #cmd("strerror()") returned a null pointer for the VSAM
+  values and for any number above 131.
 - #cmd("strerror(11)") returns #cmd("\"Try again\""), although no name has
   the value 11. #cmd("EAGAIN") is 35.
 - Values that the library stores itself include #cmd("EINVAL"),

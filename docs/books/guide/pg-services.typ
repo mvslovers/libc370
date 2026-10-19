@@ -187,8 +187,8 @@ Points to watch:
   once when the volume is not mounted, rather than asking the operator to
   mount it and waiting. Add the keyword #cmd("MOUNT") only where an operator
   is expected to mount the volume.
-- *Uncataloging.* Do not use #cmd("UNCATLG") as a disposition with
-  #cmd("__dsalc()"): it is taken as #cmd("CATLG").
+- *Uncataloging.* #cmd("UNCATLG") uncatalogs the data set. Up to release
+  2.22.0 #cmd("__dsalc()") took it as #cmd("CATLG").
 - *Other keywords.* A keyword that the reference does not list is ignored,
   without an error. MVS 3.8j has no #cmd("LIKE=").
 
