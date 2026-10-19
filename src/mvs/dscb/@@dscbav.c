@@ -23,7 +23,9 @@ __dscbav(const char cchhr[5], const char vol[6], DSCB *dscb)
     char    addr[6];
     char    volser[7];
 
-    strcpyp(addr, sizeof(addr)-1, (void*)cchhr, ' ');
+    /* the CCHHR is binary: X'00' is an ordinary byte in it, so it is
+       copied by length, not as a string (#409) */
+    memcpy(addr, cchhr, sizeof(addr)-1);
     addr[sizeof(addr)-1] = 0;
 
     strcpyp(volser, sizeof(volser)-1, (void*)vol, ' ');
