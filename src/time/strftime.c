@@ -76,7 +76,7 @@ static char *month[] = {
     "July", "August", "September", "October", "November", "December"
 };
 
-static char *__tzname[2] = { "" "" };
+static char *__tzname[2] = { "", "" };   /* no zone names: %Z is empty (#391) */
 
 static void strfmt(char *str, const char *fmt, ...);
 
@@ -128,9 +128,9 @@ static void strfmt(char *str, const char *fmt, ...);
  *              %Z      timezone name
  *              %%      percent sign
  *
- *      the standard date string is equivalent to:
+ *      the standard date string is equivalent to (C99 "C" locale):
  *
- *          %a %b %d %Y
+ *          %m/%d/%y
  *
  *      the standard time string is equivalent to:
  *
@@ -155,6 +155,7 @@ __PDPCLIB_API__ size_t strftime(char *s,
     char *p, *q, *r;
     char buf[26];
 
+    if (maxs == 0) return 0;    /* no room even for the null (#391) */
     p = s;
     q = s + maxs - 1;
     while ((*f != '\0')) {
@@ -222,14 +223,14 @@ __PDPCLIB_API__ size_t strftime(char *s,
 
             case 'U' :
                 w = t->tm_yday/7;
-                if (t->tm_yday%7 > t->tm_wday)
+                if (t->tm_yday%7 >= t->tm_wday)     /* (yday+7-wday)/7 (#391) */
                     w++;
                 strfmt(r, "%2", w);
                 break;
 
             case 'W' :
                 w = t->tm_yday/7;
-                if (t->tm_yday%7 > (t->tm_wday+6)%7)
+                if (t->tm_yday%7 >= (t->tm_wday+6)%7)
                     w++;
                 strfmt(r, "%2", w);
                 break;
@@ -239,9 +240,10 @@ __PDPCLIB_API__ size_t strftime(char *s,
                 break;
 
             case 'x' :
-                strfmt(r, "%3s %3s %2 %4", aday[t->tm_wday],
-                    amonth[t->tm_mon], t->tm_mday, t->tm_year+1900);
+                strfmt(r, "%2/%2/%2", t->tm_mon+1, t->tm_mday,
+                    t->tm_year%100);
                 break;
+
 
             case 'X' :
                 strfmt(r, "%2:%2:%2", t->tm_hour, t->tm_min, t->tm_sec);

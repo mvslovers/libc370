@@ -340,15 +340,16 @@ locale (English names).
     [#cmd("%p")], [#cmd("AM") or #cmd("PM")],
     [#cmd("%S")], [the second, #cmd("00") to #cmd("59")],
     [#cmd("%U")], [the week of the year, the first Sunday starting week 1,
-      #cmd("00") to #cmd("53")\; see the Notes],
+      #cmd("00") to #cmd("53")],
     [#cmd("%w")], [the weekday, #cmd("0") (Sunday) to #cmd("6")],
     [#cmd("%W")], [the week of the year, the first Monday starting week 1,
-      #cmd("00") to #cmd("53")\; see the Notes],
-    [#cmd("%x")], [*does not work*, see the Notes],
+      #cmd("00") to #cmd("53")],
+    [#cmd("%x")], [the date as #cmd("%m/%d/%y"), for example
+      #cmd("10/04/26")],
     [#cmd("%X")], [the time as #cmd("%H:%M:%S")],
     [#cmd("%y")], [the year without the century, #cmd("00") to #cmd("99")],
     [#cmd("%Y")], [the year with the century, four digits],
-    [#cmd("%Z")], [*do not use*, see the Notes],
+    [#cmd("%Z")], [nothing: the library has no time-zone name],
     [#cmd("%%")], [#cmd("%")],
   )
 ] <std-time-strftime-tab>
@@ -358,24 +359,16 @@ locale (English names).
 The number of characters placed into #var("s"), not counting the null
 character, or 0 if the result, with its null character, does not fit into
 #var("maxsize") characters. In that case #var("s") holds as much of the
-result as fits, terminated by a null character.
+result as fits, terminated by a null character. With a #var("maxsize") of 0
+nothing is written and the result is 0.
 
 === Notes
 
-- #cmd("%x") does not produce a date: it writes two numbers with an
-  #cmd("s") after each, followed by the day and the year. Build the date
-  from #cmd("%a %b %d %Y") instead.
-- #cmd("%Z") reads a time-zone name that the library does not have. When
-  #cmd("tm_isdst") is 0 it produces nothing\; when #cmd("tm_isdst") is not 0
-  it reads through a null pointer and produces unpredictable characters.
-  Every structure that #cmd("gmtime()"), #cmd("localtime()") and
-  #cmd("mktime()") return has #cmd("tm_isdst") = -1.
-- #cmd("%U") is one too small on every day of a year that begins on a
-  Sunday, and #cmd("%W") on every day of a year that begins on a Monday: 1
-  January 2023, a Sunday, gives #cmd("%U") #cmd("00") where C99 gives
-  #cmd("01"). In other years both are correct. Compute the week as
-  #cmd("(tm_yday + 7 - tm_wday) / 7") for #cmd("%U"), or with
-  #cmd("(tm_wday + 6) % 7") in place of #cmd("tm_wday") for #cmd("%W").
+- Up to release 2.20.0, #cmd("%x") wrote two numbers with an #cmd("s")
+  after each, #cmd("%Z") read through a null pointer when
+  #cmd("tm_isdst") was not 0 (as in every structure the library returns),
+  #cmd("%U") and #cmd("%W") were one too small on some days, and a
+  #var("maxsize") of 0 wrote past the array.
 - #cmd("%c") writes the day of the month with a leading zero, where C99's
   #cmd("\"C\"") locale uses a space.
 - The C99 conversions #cmd("%C"), #cmd("%D"), #cmd("%e"), #cmd("%F"),
@@ -383,7 +376,7 @@ result as fits, terminated by a null character.
   #cmd("%t"), #cmd("%T"), #cmd("%u"), #cmd("%V") and #cmd("%z") and the
   modifiers #cmd("E") and #cmd("O") are not supported. An unsupported
   conversion is copied into the result unchanged, percent sign included.
-- #var("maxsize") must be at least 1.
+
 - The members used are not checked: #cmd("tm_wday") and #cmd("tm_mon") must
   lie in their ranges.
 

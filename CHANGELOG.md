@@ -14,6 +14,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   (#399).** The compiler writes these characters as X'BA', X'BB' and X'B0',
   their code points in CP037, and the class table gave those three bytes
   no class at all (measured on MVS).
+- **`strftime()`: `%Z`, `%x`, `%U`, `%W` and a `maxsize` of 0 (#391).**
+  `%Z` read through a null pointer when `tm_isdst` was not 0, which is the
+  case for every structure the library returns; it now produces nothing,
+  since the library has no time-zone name. `%x` printed two numbers with an
+  `s` after each and is now the date as `%m/%d/%y`. `%U` and `%W` were one
+  too small on some days (1 January 2023, a Sunday, gave `%U` 00 instead
+  of 01). A `maxsize` of 0 wrote the result past the array; nothing is
+  written now and the result is 0 (measured on MVS).
 
 ## [2.20.0] - 2026-10-18
 
