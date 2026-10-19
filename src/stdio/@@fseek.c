@@ -4,36 +4,22 @@
 #include <errno.h>
 
 static int plusseek(FILE *fp, long offset, int whence);
-static int seek(FILE *fp, long offset, int whence);
 
-/* C99 7.19.9.2: a successful fseek() clears the end-of-file indicator and
-   leaves the error indicator alone; only rewind() clears both (#178).  A
-   stream in error stays in error, so a write after a failed write still
-   fails (#149).  The seek itself reads and reopens, and those refuse a
-   stream in error, so it runs with the indicator lifted and its own
-   failure is told apart from the one the stream already had.
-   _FILE_FLAG_ENOSPC rides with _FILE_FLAG_ERROR. */
 int
 __fseek(FILE *fp, long int offset, int whence)
-{
-    unsigned short  held = fp->flags & (_FILE_FLAG_ERROR | _FILE_FLAG_ENOSPC);
-    int             rc;
-
-    fp->flags &= 0xFFFF - (_FILE_FLAG_ERROR + _FILE_FLAG_ENOSPC + _FILE_FLAG_EOF);
-    rc = seek(fp, offset, whence);
-    fp->flags |= held;
-    return rc;
-}
-
-__asm__("\n&FUNC    SETC 'seek'");
-static int
-seek(FILE *fp, long offset, int whence)
 {
     long oldpos;
     long newpos;
     char fnm[FILENAME_MAX];
     long int x;
     char buf[1000];
+
+    /* the seek reads and reopens, which refuse a stream in error, so it
+       runs with every indicator clear; fseek() puts the error indicator
+       back afterwards (#178).  _FILE_FLAG_ENOSPC must follow
+       _FILE_FLAG_ERROR wherever it is cleared, or it dangles (#149). */
+    fp->flags   &= 0xFFFF - _FILE_FLAG_ERROR - _FILE_FLAG_ENOSPC;
+    fp->flags   &= 0xFFFF - _FILE_FLAG_EOF;
 
     /* '+' streams position themselves - and never through __reopen(),
        which would open "w+" for OUTPUT again and truncate (#189) */
