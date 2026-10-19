@@ -11,8 +11,9 @@
 /* getsockname() */
 __asm__("\n&FUNC    SETC 'getsockname'");
 extern int
-getsockname(int ss, struct sockaddr *addr, int *addrlen)
+getsockname(int ss, __SOCKADDR_ARG arg, int *addrlen)
 {
+    struct sockaddr *addr = arg.__sockaddr__;
     CLIBSOCK    *s  = 0;
     int         rc  = 0;
     PL75        pl;

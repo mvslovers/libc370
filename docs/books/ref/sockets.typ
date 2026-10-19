@@ -181,12 +181,20 @@ socket (#cmd("SOCK_DGRAM")) can be created, but without #cmd("sendto") and
 #cmd("recv()").
 
 Several prototypes differ from POSIX\; the differences are listed in the
-Notes of each entry. The one met most often: #cmd("bind()"),
-#cmd("connect()") and #cmd("accept()") take a #cmd("struct sockaddr_in *"), not
-a #cmd("struct sockaddr *"). The usual cast to #cmd("(struct sockaddr *)")
-therefore draws a warning about an incompatible pointer type, which
-#cmd("-Werror") turns into an error. Pass the address of the
-#cmd("struct sockaddr_in") itself.
+Notes of each entry. The address argument of #cmd("bind()"),
+#cmd("accept()"), #cmd("getsockname()") and #cmd("getpeername()") is a
+#cmd("__SOCKADDR_ARG"), that of #cmd("connect()") a
+#cmd("__CONST_SOCKADDR_ARG"): a GCC transparent union, as in glibc, of a
+pointer to #cmd("struct sockaddr") and a pointer to
+#cmd("struct sockaddr_in"). Pass the address of the
+#cmd("struct sockaddr_in") as it is, or with the cast
+#cmd("(struct sockaddr *)") that POSIX code carries: both compile without a
+warning, and the function receives the same pointer. (Up to libc370 2.23.0
+#cmd("bind()"), #cmd("connect()") and #cmd("accept()") took only a
+#cmd("struct sockaddr_in *"), #cmd("getsockname()") and
+#cmd("getpeername()") only a #cmd("struct sockaddr *"), and the other form
+drew an incompatible-pointer warning, which #cmd("-Werror") turned into an
+error.)
 
 === Types and Constants
 
@@ -250,7 +258,7 @@ connection. It makes the connection non-blocking and waits in
 ```
 #include <sys/socket.h>
 
-int accept(int ss, struct sockaddr_in *addr, int *length);
+int accept(int ss, __SOCKADDR_ARG addr, int *length);
 ```
 
 === Description
@@ -277,9 +285,9 @@ The number of the new socket, or -1 for an error.
 
 === Notes
 
-- #var("addr") is a #cmd("struct sockaddr_in *"), not a
-  #cmd("struct sockaddr *"), and #var("length") an #cmd("int *"), not a
-  #cmd("socklen_t *").
+- #var("addr") is a #cmd("struct sockaddr_in *") or a
+  #cmd("struct sockaddr *") (see the introduction), and #var("length") an
+  #cmd("int *"), not a #cmd("socklen_t *").
 - #var("length") is neither read nor changed. The peer address is always 16
   bytes, a #cmd("struct sockaddr_in").
 - The new socket is blocking, whatever #var("ss") is.
@@ -296,7 +304,7 @@ The number of the new socket, or -1 for an error.
 ```
 #include <sys/socket.h>
 
-int bind(int ss, struct sockaddr_in *add, int length);
+int bind(int ss, __SOCKADDR_ARG add, int length);
 ```
 
 === Description
@@ -316,8 +324,10 @@ leaves the port it used in #cmd("add->sin_port").
 
 === Notes
 
-- #var("add") is a #cmd("struct sockaddr_in *") and #var("length") an
-  #cmd("int")\; #var("length") is not used.
+- #var("add") is a #cmd("struct sockaddr_in *") or a
+  #cmd("struct sockaddr *") (see the introduction), not a pointer to
+  #cmd("const"): #cmd("bind()") may store the port in it. #var("length") is
+  an #cmd("int") and is not used.
 - The port is a port of the host, not of MVS. It must be free on the host,
   and on most hosts a port below 1024 can be bound only when Hercules runs
   with the privileges for it.
@@ -371,7 +381,7 @@ POSIX systems, which does not exist for sockets here.
 ```
 #include <sys/socket.h>
 
-int connect(int ss, struct sockaddr_in *addr, int length);
+int connect(int ss, __CONST_SOCKADDR_ARG addr, int length);
 ```
 
 === Description
@@ -398,8 +408,9 @@ then, #cmd("connect()") gives up.
 
 === Notes
 
-- #var("addr") is a #cmd("struct sockaddr_in *") and #var("length") an
-  #cmd("int")\; #var("length") is not used.
+- #var("addr") is a #cmd("struct sockaddr_in *") or a
+  #cmd("struct sockaddr *"), also to #cmd("const") (see the introduction),
+  and #var("length") an #cmd("int")\; #var("length") is not used.
 - A blocking #cmd("connect()") never waits much longer than one second. A
   slow peer is reported as #cmd("ECONNREFUSED"), not #cmd("ETIMEDOUT").
 
@@ -574,8 +585,8 @@ or the C run-time environment is not set up.
 ```
 #include <sys/socket.h>
 
-int getpeername(int ss, struct sockaddr *addr, int *addrlen);
-int getsockname(int ss, struct sockaddr *addr, int *addrlen);
+int getpeername(int ss, __SOCKADDR_ARG addr, int *addrlen);
+int getsockname(int ss, __SOCKADDR_ARG addr, int *addrlen);
 ```
 
 === Description
@@ -594,7 +605,9 @@ most #var("*addrlen") bytes of it. Otherwise it asks the emulator.
 
 === Notes
 
-- #var("addrlen") is an #cmd("int *"), not a #cmd("socklen_t *").
+- #var("addr") is a #cmd("struct sockaddr *") or a
+  #cmd("struct sockaddr_in *") (see the introduction), and #var("addrlen")
+  an #cmd("int *"), not a #cmd("socklen_t *").
 - On return #var("*addrlen") is set to 16, the size of a
   #cmd("struct sockaddr"), whatever was stored.
 - After #cmd("bind()"), #cmd("getsockname()") returns the address as it was

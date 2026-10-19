@@ -11,8 +11,9 @@
 /* accept() */
 __asm__("\n&FUNC    SETC 'accept'");
 extern int
-accept(int ss, struct sockaddr_in *name, int *length)
+accept(int ss, __SOCKADDR_ARG arg, int *length)
 {
+    struct sockaddr_in  *name = arg.__sockaddr_in__;
     int     rc;
     PL75    pl;
     struct sockaddr_in temp;

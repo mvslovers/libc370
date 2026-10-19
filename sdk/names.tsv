@@ -3777,6 +3777,7 @@ __64_xor_u64	ext/int64.h
 __ASSERT_INCLUDED	assert.h
 __CHARJOE	ibm/jes2/joe.h
 __CKPTJOE	ibm/jes2/joe.h
+__CONST_SOCKADDR_ARG	sys/socket.h
 __CTYPE_INCLUDED	ctype.h
 __DDSTR	ibm/mvs/ieftxtft.h
 __ENVVAR	mvs/env.h
@@ -3814,6 +3815,7 @@ __SIGHDL	signal.h
 __SIGNAL_INCLUDED	signal.h
 __SIZE_T_DEFINED	mvs/crt.h stddef.h stdlib.h string.h time.h wchar.h
 __SJB	ibm/jes2/sjb.h
+__SOCKADDR_ARG	sys/socket.h
 __STDARG_INCLUDED	stdarg.h
 __STDDEF_INCLUDED	stddef.h
 __STDLIB_INCLUDED	stdlib.h
@@ -3842,6 +3844,7 @@ __cibdel	mvs/console.h
 __cibget	mvs/console.h
 __cibset	mvs/console.h
 __ckptjoe	ibm/jes2/joe.h
+__const_sockaddr_arg	sys/socket.h
 __cos__	math.h
 __cpclos	mvs/jes2ckpt.h
 __cpopen	mvs/jes2ckpt.h
@@ -3969,6 +3972,7 @@ __sjb	ibm/jes2/sjb.h
 __smca	mvs/smf.h
 __smfid	mvs/smf.h
 __soadd	mvs/socket.h
+__sockaddr_arg	sys/socket.h
 __sodel	mvs/socket.h
 __sofind	mvs/socket.h
 __soupd	mvs/socket.h
