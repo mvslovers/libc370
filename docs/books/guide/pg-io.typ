@@ -305,6 +305,11 @@ name without apostrophes is taken as fully qualified.
 on success; otherwise the return code of the service they used -- #cmd("STOW")
 for a member, IDCAMS for a data set -- or a negative value when the data set
 could not be allocated or opened.
+Both find a data set through the catalog\; for one that is not
+cataloged, #cmd("__scratch()") and #cmd("__renamev()") of
+#cmd("<mvs/dscb.h>") delete and rename it by name and volume, and
+#cmd("__delmemv()") and #cmd("__renmemv()") of #cmd("<mvs/pds.h>") do the
+same for its members.
 
 == The Standard Streams <pg-io-std>
 

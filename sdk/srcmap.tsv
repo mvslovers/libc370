@@ -806,3 +806,6 @@ src/ext/time64/timegm.c	src/ext/time64/timegm.c	new after 2.23.0 (#392): timegm(
 src/mvs/osio/@@osfill.c	src/mvs/osio/@@osfill.c	new after 2.23.0 (#412): DD name and exit list shared by osbdcb()/osxdcb()
 src/mvs/jes2/jesvol.c	src/mvs/jes2/jesvol.c	new after 2.23.0 (#142): __jesvol(), the checkpoint found by OBTAIN on the online volumes, declared only in src/mvs/jes2/jesvol.h
 src/mvs/jes2/jesvol.h	src/mvs/jes2/jesvol.h	private to the JES2 sources, new after 2.23.0 (#142): __jesvol()
+src/mvs/dscb/@@dadsm.c	src/mvs/dscb/@@dadsm.c	new after 2.23.0 (#143): __scratch() and __renamev(), SCRATCH and RENAME by volume
+src/mvs/pds/@@pdsupd.c	src/mvs/pds/@@pdsupd.c	new after 2.23.0 (#143): the STOW core of __delmem(), __renmem() and their volume forms
+src/internal/pdsupd.h	src/internal/pdsupd.h	shared private header, new after 2.23.0 (#143): one STOW on a PDS allocated by name or volume
