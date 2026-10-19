@@ -72,9 +72,9 @@ after the integer promotions: the limits of the 8-bit and 16-bit types are
     [#cmd("UINT8_MAX")], [255], [#cmd("0xff")],
     [#cmd("INT16_MIN")], [−32768], [#cmd("(-32767 - 1)")],
     [#cmd("INT16_MAX")], [32767], [#cmd("0x7fff")],
-    [#cmd("UINT16_MAX")], [65535], [#cmd("(65535)")],
+    [#cmd("UINT16_MAX")], [65535], [#cmd("0xffff")],
     [#cmd("INT32_MIN")], [−2147483648], [#cmd("(-2147483647L - 1)")],
-    [#cmd("INT32_MAX")], [2147483647], [#cmd("2147483647L")],
+    [#cmd("INT32_MAX")], [2147483647], [#cmd("(0x7fffffffL)")],
     [#cmd("UINT32_MAX")], [4294967295], [#cmd("(0xffffffffUL)")],
     [#cmd("INT64_MIN")], [−9223372036854775808],
       [#cmd("(-9223372036854775807LL - 1)")],
@@ -151,11 +151,17 @@ yields 1099511627776, where #cmd("1 << 40") would shift a 32-bit
 
 == Other Names <std-stdint-other>
 
-#cmd("<stdint.h>") includes #cmd("<stddef.h>"), #cmd("<limits.h>") and
-#cmd("<signal.h>"), so every name those headers define is also defined
-after #cmd("#include <stdint.h>") -- among them the signal numbers such as
-#cmd("SIGINT"). It further defines #cmd("LONG_LONG_MAX"),
-#cmd("ULONG_LONG_MAX") and a set of macros beginning with #cmd("PRINTF_")
-that hold #cmd("printf()") length modifiers and field widths. These are not
-part of the C standard; a portable program does not use them and uses
-#cmd("<inttypes.h>") instead.
+#cmd("<stdint.h>") includes #cmd("<stddef.h>") and #cmd("<limits.h>"), so
+the names those two headers define are also defined after
+#cmd("#include <stdint.h>"). It does not include #cmd("<signal.h>"): a
+program that uses #cmd("signal()"), #cmd("raise()"), the signal numbers or
+#cmd("sig_atomic_t") includes #cmd("<signal.h>") itself.
+#cmd("SIG_ATOMIC_MIN") and #cmd("SIG_ATOMIC_MAX") are defined without it.
+
+Up to LIBC/370 2.23 the header also included #cmd("<signal.h>") and defined
+#cmd("LONG_LONG_MAX"), #cmd("ULONG_LONG_MAX") and a set of macros beginning
+with #cmd("PRINTF_") that held #cmd("printf()") length modifiers and field
+widths. None of them belongs to #cmd("<stdint.h>"), and they are gone: use
+#cmd("LLONG_MAX") and #cmd("ULLONG_MAX") of #cmd("<limits.h>") (see
+@std-limits) and the #cmd("PRI") and #cmd("SCN") macros of
+#cmd("<inttypes.h>") (see @std-inttypes).

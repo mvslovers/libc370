@@ -124,43 +124,11 @@
  *       improved performance -- not in this file, nor any vendor's
  *       stdint.h).
  *
- *   12) The following macros:
- *
- *       PRINTF_INTMAX_MODIFIER
- *       PRINTF_INT64_MODIFIER
- *       PRINTF_INT32_MODIFIER
- *       PRINTF_INT16_MODIFIER
- *       PRINTF_LEAST64_MODIFIER
- *       PRINTF_LEAST32_MODIFIER
- *       PRINTF_LEAST16_MODIFIER
- *       PRINTF_INTPTR_MODIFIER
- *
- *       are strings which have been defined as the modifiers required
- *       for the "d", "u" and "x" printf formats to correctly output
- *       (u)intmax_t, (u)int64_t, (u)int32_t, (u)int16_t, (u)least64_t,
- *       (u)least32_t, (u)least16_t and (u)intptr_t types respectively.
- *       PRINTF_INTPTR_MODIFIER is not defined for some systems which
- *       provide their own stdint.h.  PRINTF_INT64_MODIFIER is not
- *       defined if INT64_MAX is not defined.  These are an extension
- *       beyond what C99 specifies must be in stdint.h.
- *
- *       In addition, the following macros are defined:
- *
- *       PRINTF_INTMAX_HEX_WIDTH
- *       PRINTF_INT64_HEX_WIDTH
- *       PRINTF_INT32_HEX_WIDTH
- *       PRINTF_INT16_HEX_WIDTH
- *       PRINTF_INT8_HEX_WIDTH
- *       PRINTF_INTMAX_DEC_WIDTH
- *       PRINTF_INT64_DEC_WIDTH
- *       PRINTF_INT32_DEC_WIDTH
- *       PRINTF_INT16_DEC_WIDTH
- *       PRINTF_INT8_DEC_WIDTH
- *
- *       Which specifies the maximum number of characters required to
- *       print the number of that type in either hexadecimal or decimal.
- *       These are an extension beyond what C99 specifies must be in
- *       stdint.h.
+ *   12) libc370 (#418): this file no longer includes <signal.h> and no
+ *       longer defines the PRINTF_* macros, LONG_LONG_MAX or
+ *       ULONG_LONG_MAX; none of them is a <stdint.h> name.  Use the
+ *       PRI and SCN macros of <inttypes.h>, and LLONG_MAX and
+ *       ULLONG_MAX of <limits.h>.
  *
  *  Compilers tested (all with 0 warnings at their highest respective
  *  settings): Borland Turbo C 2.0, WATCOM C/C++ 11.0 (16 bits and 32
@@ -173,9 +141,9 @@
  *
  */
 
+#include <sys/_cc370.h>
 #include <stddef.h>
 #include <limits.h>
-#include <signal.h>
 
 #ifndef SIZE_MAX
 # if defined (__MVS__)
@@ -186,55 +154,12 @@
 #endif
 
 /*
- *  For gcc with _STDINT_H, fill in the PRINTF_INT*_MODIFIER macros, and
- *  do nothing else.
+ *  For gcc with _STDINT_H (another stdint.h was included first), do
+ *  nothing.
  */
 
 #if defined(__GNUC__) && defined(_STDINT_H) && !defined (_STDINT_H_INCLUDED)
 #define _STDINT_H_INCLUDED
-# ifndef PRINTF_INT64_MODIFIER
-#  define PRINTF_INT64_MODIFIER "ll"
-#include <sys/_cc370.h>
-# endif
-# ifndef PRINTF_INT32_MODIFIER
-#  define PRINTF_INT32_MODIFIER "l"
-# endif
-# ifndef PRINTF_INT16_MODIFIER
-#  define PRINTF_INT16_MODIFIER "h"
-# endif
-# ifndef PRINTF_INTMAX_MODIFIER
-#  define PRINTF_INTMAX_MODIFIER PRINTF_INT64_MODIFIER
-# endif
-# ifndef PRINTF_INT64_HEX_WIDTH
-#  define PRINTF_INT64_HEX_WIDTH "16"
-# endif
-# ifndef PRINTF_INT32_HEX_WIDTH
-#  define PRINTF_INT32_HEX_WIDTH "8"
-# endif
-# ifndef PRINTF_INT16_HEX_WIDTH
-#  define PRINTF_INT16_HEX_WIDTH "4"
-# endif
-# ifndef PRINTF_INT8_HEX_WIDTH
-#  define PRINTF_INT8_HEX_WIDTH "2"
-# endif
-# ifndef PRINTF_INT64_DEC_WIDTH
-#  define PRINTF_INT64_DEC_WIDTH "20"
-# endif
-# ifndef PRINTF_INT32_DEC_WIDTH
-#  define PRINTF_INT32_DEC_WIDTH "10"
-# endif
-# ifndef PRINTF_INT16_DEC_WIDTH
-#  define PRINTF_INT16_DEC_WIDTH "5"
-# endif
-# ifndef PRINTF_INT8_DEC_WIDTH
-#  define PRINTF_INT8_DEC_WIDTH "3"
-# endif
-# ifndef PRINTF_INTMAX_HEX_WIDTH
-#  define PRINTF_INTMAX_HEX_WIDTH PRINTF_INT64_HEX_WIDTH
-# endif
-# ifndef PRINTF_INTMAX_DEC_WIDTH
-#  define PRINTF_INTMAX_DEC_WIDTH PRINTF_INT64_DEC_WIDTH
-# endif
 #endif
 
 #ifndef _STDINT_H_INCLUDED
@@ -279,16 +204,10 @@
 #ifndef uint16_t
 #if (UINT_MAX == UINT16_MAX) || defined (S_SPLINT_S)
   typedef unsigned int uint16_t;
-# ifndef PRINTF_INT16_MODIFIER
-#  define PRINTF_INT16_MODIFIER ""
-# endif
 # define UINT16_C(v) v ## U
 #elif (USHRT_MAX == UINT16_MAX)
   typedef unsigned short uint16_t;
 # define UINT16_C(v) v
-# ifndef PRINTF_INT16_MODIFIER
-#  define PRINTF_INT16_MODIFIER "h"
-# endif
 #else
 #error "Platform not supported"
 #endif
@@ -304,15 +223,9 @@
 #if (INT_MAX == INT16_MAX) || defined (S_SPLINT_S)
   typedef signed int int16_t;
 # define INT16_C(v) v
-# ifndef PRINTF_INT16_MODIFIER
-#  define PRINTF_INT16_MODIFIER ""
-# endif
 #elif (SHRT_MAX == INT16_MAX)
   typedef signed short int16_t;
 # define INT16_C(v) v
-# ifndef PRINTF_INT16_MODIFIER
-#  define PRINTF_INT16_MODIFIER "h"
-# endif
 #else
 #error "Platform not supported"
 #endif
@@ -325,21 +238,12 @@
 #if (ULONG_MAX == UINT32_MAX) || defined (S_SPLINT_S)
   typedef unsigned long uint32_t;
 # define UINT32_C(v) v ## UL
-# ifndef PRINTF_INT32_MODIFIER
-#  define PRINTF_INT32_MODIFIER "l"
-# endif
 #elif (UINT_MAX == UINT32_MAX)
   typedef unsigned int uint32_t;
-# ifndef PRINTF_INT32_MODIFIER
-#  define PRINTF_INT32_MODIFIER ""
-# endif
 # define UINT32_C(v) v ## U
 #elif (USHRT_MAX == UINT32_MAX)
   typedef unsigned short uint32_t;
 # define UINT32_C(v) ((unsigned short) (v))
-# ifndef PRINTF_INT32_MODIFIER
-#  define PRINTF_INT32_MODIFIER ""
-# endif
 #else
 #error "Platform not supported"
 #endif
@@ -355,21 +259,12 @@
 #if (LONG_MAX == INT32_MAX) || defined (S_SPLINT_S)
   typedef signed long int32_t;
 # define INT32_C(v) v ## L
-# ifndef PRINTF_INT32_MODIFIER
-#  define PRINTF_INT32_MODIFIER "l"
-# endif
 #elif (INT_MAX == INT32_MAX)
   typedef signed int int32_t;
 # define INT32_C(v) v
-# ifndef PRINTF_INT32_MODIFIER
-#  define PRINTF_INT32_MODIFIER ""
-# endif
 #elif (SHRT_MAX == INT32_MAX)
   typedef signed short int32_t;
 # define INT32_C(v) ((short) (v))
-# ifndef PRINTF_INT32_MODIFIER
-#  define PRINTF_INT32_MODIFIER ""
-# endif
 #else
 #error "Platform not supported"
 #endif
@@ -390,9 +285,6 @@
    typedef unsigned long long uint64_t;
 #  define UINT64_C(v) v ## ULL
 #  define  INT64_C(v) v ## LL
-#  ifndef PRINTF_INT64_MODIFIER
-#   define PRINTF_INT64_MODIFIER "ll"
-#  endif
 # endif
 #endif
 
@@ -403,26 +295,13 @@
    typedef unsigned long long uint64_t;
 #  define UINT64_C(v) v ## ULL
 #  define  INT64_C(v) v ## LL
-#  ifndef PRINTF_INT64_MODIFIER
-#   define PRINTF_INT64_MODIFIER "ll"
-#  endif
 # elif (defined(__WATCOMC__) && defined(__WATCOM_INT64__)) || (defined(_MSC_VER) && _INTEGRAL_MAX_BITS >= 64) || defined (__BORLANDC__) || defined (__alpha) || defined (__DECC)
 #  define stdint_int64_defined
    typedef __int64 int64_t;
    typedef unsigned __int64 uint64_t;
 #  define UINT64_C(v) v ## UI64
 #  define  INT64_C(v) v ## I64
-#  ifndef PRINTF_INT64_MODIFIER
-#   define PRINTF_INT64_MODIFIER "I64"
-#  endif
 # endif
-#endif
-
-#if !defined (LONG_LONG_MAX) && defined (INT64_C)
-# define LONG_LONG_MAX INT64_C (9223372036854775807)
-#endif
-#ifndef ULONG_LONG_MAX
-# define ULONG_LONG_MAX UINT64_C (18446744073709551615)
 #endif
 
 #if !defined (INT64_MAX) && defined (INT64_C)
@@ -433,36 +312,6 @@
 #endif
 #if !defined (UINT64_MAX) && defined (INT64_C)
 # define UINT64_MAX UINT64_C (18446744073709551615)
-#endif
-
-/*
- *  Width of hexadecimal for number field.
- */
-
-#ifndef PRINTF_INT64_HEX_WIDTH
-# define PRINTF_INT64_HEX_WIDTH "16"
-#endif
-#ifndef PRINTF_INT32_HEX_WIDTH
-# define PRINTF_INT32_HEX_WIDTH "8"
-#endif
-#ifndef PRINTF_INT16_HEX_WIDTH
-# define PRINTF_INT16_HEX_WIDTH "4"
-#endif
-#ifndef PRINTF_INT8_HEX_WIDTH
-# define PRINTF_INT8_HEX_WIDTH "2"
-#endif
-
-#ifndef PRINTF_INT64_DEC_WIDTH
-# define PRINTF_INT64_DEC_WIDTH "20"
-#endif
-#ifndef PRINTF_INT32_DEC_WIDTH
-# define PRINTF_INT32_DEC_WIDTH "10"
-#endif
-#ifndef PRINTF_INT16_DEC_WIDTH
-# define PRINTF_INT16_DEC_WIDTH "5"
-#endif
-#ifndef PRINTF_INT8_DEC_WIDTH
-# define PRINTF_INT8_DEC_WIDTH "3"
 #endif
 
 /*
@@ -480,15 +329,6 @@
 # define UINTMAX_MAX  UINT64_MAX
 # define UINTMAX_C(v) UINT64_C(v)
 # define  INTMAX_C(v)  INT64_C(v)
-# ifndef PRINTF_INTMAX_MODIFIER
-#   define PRINTF_INTMAX_MODIFIER PRINTF_INT64_MODIFIER
-# endif
-# ifndef PRINTF_INTMAX_HEX_WIDTH
-#  define PRINTF_INTMAX_HEX_WIDTH PRINTF_INT64_HEX_WIDTH
-# endif
-# ifndef PRINTF_INTMAX_DEC_WIDTH
-#  define PRINTF_INTMAX_DEC_WIDTH PRINTF_INT64_DEC_WIDTH
-# endif
 #else
   typedef int32_t intmax_t;
   typedef uint32_t uintmax_t;
@@ -496,15 +336,6 @@
 # define UINTMAX_MAX  UINT32_MAX
 # define UINTMAX_C(v) UINT32_C(v)
 # define  INTMAX_C(v)  INT32_C(v)
-# ifndef PRINTF_INTMAX_MODIFIER
-#   define PRINTF_INTMAX_MODIFIER PRINTF_INT32_MODIFIER
-# endif
-# ifndef PRINTF_INTMAX_HEX_WIDTH
-#  define PRINTF_INTMAX_HEX_WIDTH PRINTF_INT32_HEX_WIDTH
-# endif
-# ifndef PRINTF_INTMAX_DEC_WIDTH
-#  define PRINTF_INTMAX_DEC_WIDTH PRINTF_INT32_DEC_WIDTH
-# endif
 #endif
 
 /*
@@ -521,8 +352,6 @@
   typedef uint16_t uint_least16_t;
   typedef  int32_t  int_least32_t;
   typedef uint32_t uint_least32_t;
-# define PRINTF_LEAST32_MODIFIER PRINTF_INT32_MODIFIER
-# define PRINTF_LEAST16_MODIFIER PRINTF_INT16_MODIFIER
 # define  UINT_LEAST8_MAX  UINT8_MAX
 # define   INT_LEAST8_MAX   INT8_MAX
 # define UINT_LEAST16_MAX UINT16_MAX
@@ -535,7 +364,6 @@
 # ifdef stdint_int64_defined
     typedef  int64_t  int_least64_t;
     typedef uint64_t uint_least64_t;
-#   define PRINTF_LEAST64_MODIFIER PRINTF_INT64_MODIFIER
 #   define UINT_LEAST64_MAX UINT64_MAX
 #   define  INT_LEAST64_MAX  INT64_MAX
 #   define  INT_LEAST64_MIN  INT64_MIN
@@ -610,9 +438,6 @@ typedef uint_least32_t uint_fast32_t;
  */
 
 #if defined (__MVS__) && !defined (STDINT_H_UINTPTR_T_DEFINED)
-# ifndef PRINTF_INTPTR_MODIFIER
-#  define PRINTF_INTPTR_MODIFIER ""
-# endif
 # ifndef PTRDIFF_MAX
 #  define PTRDIFF_MAX LONG_MAX   /* <stddef.h>: ptrdiff_t is long (#213) */
 # endif
@@ -651,9 +476,6 @@ typedef uint_least32_t uint_fast32_t;
 # ifdef stdint_intptr_bits
 #  define stdint_intptr_glue3_i(a,b,c)  a##b##c
 #  define stdint_intptr_glue3(a,b,c)    stdint_intptr_glue3_i(a,b,c)
-#  ifndef PRINTF_INTPTR_MODIFIER
-#    define PRINTF_INTPTR_MODIFIER      stdint_intptr_glue3(PRINTF_INT,stdint_intptr_bits,_MODIFIER)
-#  endif
 #  ifndef PTRDIFF_MAX
 #    define PTRDIFF_MAX                 stdint_intptr_glue3(INT,stdint_intptr_bits,_MAX)
 #  endif
@@ -684,7 +506,8 @@ typedef uint_least32_t uint_fast32_t;
  */
 
 #if defined (__MVS__)
-/* <signal.h> declares sig_atomic_t as int */
+/* sig_atomic_t of <signal.h> is int; this header does not include
+   <signal.h>, so the limits are written without the type (#418) */
 # ifndef SIG_ATOMIC_MAX
 #  define SIG_ATOMIC_MAX INT_MAX
 # endif

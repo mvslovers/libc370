@@ -1360,7 +1360,7 @@ INT16_C	stdint.h
 INT16_MAX	stdint.h
 INT16_MIN	stdint.h
 INT32_C	stdint.h
-INT32_MAX	limits.h stdint.h
+INT32_MAX	stdint.h
 INT32_MIN	stdint.h
 INT64_C	stdint.h
 INT64_MAX	stdint.h
@@ -1999,7 +1999,6 @@ LOCK_READ	mvs/lock.h
 LOCK_RW	mvs/lock.h
 LOCK_SHR	mvs/lock.h
 LOCWORK	mvs/dscb.h
-LONG_LONG_MAX	stdint.h
 LONG_MAX	limits.h
 LONG_MIN	limits.h
 LPDE	ibm/mvs/ihalpde.h
@@ -2121,24 +2120,6 @@ PRBLEN	ibm/mvs/iharb.h
 PRFMEEK	ibm/mvs/iefvkeys.h
 PRFMJK	ibm/mvs/iefvkeys.h
 PRFMPEK	ibm/mvs/iefvkeys.h
-PRINTF_INT16_DEC_WIDTH	stdint.h
-PRINTF_INT16_HEX_WIDTH	stdint.h
-PRINTF_INT16_MODIFIER	stdint.h
-PRINTF_INT32_DEC_WIDTH	stdint.h
-PRINTF_INT32_HEX_WIDTH	stdint.h
-PRINTF_INT32_MODIFIER	stdint.h
-PRINTF_INT64_DEC_WIDTH	stdint.h
-PRINTF_INT64_HEX_WIDTH	stdint.h
-PRINTF_INT64_MODIFIER	stdint.h
-PRINTF_INT8_DEC_WIDTH	stdint.h
-PRINTF_INT8_HEX_WIDTH	stdint.h
-PRINTF_INTMAX_DEC_WIDTH	stdint.h
-PRINTF_INTMAX_HEX_WIDTH	stdint.h
-PRINTF_INTMAX_MODIFIER	stdint.h
-PRINTF_INTPTR_MODIFIER	stdint.h
-PRINTF_LEAST16_MODIFIER	stdint.h
-PRINTF_LEAST32_MODIFIER	stdint.h
-PRINTF_LEAST64_MODIFIER	stdint.h
 PRIX16	inttypes.h
 PRIX32	inttypes.h
 PRIX64	inttypes.h
@@ -3553,7 +3534,7 @@ UCMVHRSN	ibm/mvs/ieecucm.h
 UCMXF	ibm/mvs/ieecucm.h
 UCSK	ibm/mvs/iefvkeys.h
 UINT16_C	stdint.h
-UINT16_MAX	limits.h stdint.h
+UINT16_MAX	stdint.h
 UINT32_C	stdint.h
 UINT32_MAX	stdint.h
 UINT64_C	stdint.h
@@ -3573,7 +3554,6 @@ UINT_LEAST64_MAX	stdint.h
 UINT_LEAST8_MAX	stdint.h
 UINT_MAX	limits.h
 ULLONG_MAX	limits.h
-ULONG_LONG_MAX	stdint.h
 ULONG_MAX	limits.h
 UNITK	ibm/mvs/iefvkeys.h
 UPTALD	ibm/mvs/ikjupt.h

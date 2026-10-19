@@ -52,7 +52,7 @@ values are written as expressions, for example #cmd("(-INT_MAX-1)"), so that
 they have the type of the limit they describe\; #cmd("SCHAR_MIN") is the
 literal #cmd("-128").
 
-#note[#cmd("<limits.h>") also defines #cmd("UINT16_MAX") and
-#cmd("INT32_MAX"), which belong to #cmd("<stdint.h>"). Their values are the
-same as there (see @std-stdint). A program that defines these names itself
-must not include #cmd("<limits.h>").]
+#cmd("<limits.h>") defines no other name. #cmd("UINT16_MAX"),
+#cmd("INT32_MAX") and the other limits of the exact-width types are in
+#cmd("<stdint.h>") (see @std-stdint); up to LIBC/370 2.23 #cmd("<limits.h>")
+defined #cmd("UINT16_MAX") and #cmd("INT32_MAX") as well.

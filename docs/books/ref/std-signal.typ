@@ -55,7 +55,10 @@ for all of them.
 #cmd("SIG_DFL"), #cmd("SIG_IGN") and #cmd("SIG_ERR") are the addresses of
 three functions of the library, #cmd("__sigdfl"), #cmd("__sigign") and
 #cmd("__sigerr"), each of type #cmd("void (*)(int)"). The header also
-defines the type #cmd("sig_atomic_t") as #cmd("int").
+defines the type #cmd("sig_atomic_t") as #cmd("int"); its limits,
+#cmd("SIG_ATOMIC_MIN") and #cmd("SIG_ATOMIC_MAX"), are in #cmd("<stdint.h>")
+(see @std-stdint). #cmd("<signal.h>") is included by no other header of the
+library: a program that uses these names includes it itself.
 
 #idx("SIG_DFL", "action")
 The default action, #cmd("SIG_DFL"), depends on the signal:
