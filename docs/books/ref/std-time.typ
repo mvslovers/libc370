@@ -417,12 +417,11 @@ The calendar time.
   system whose clock runs on local time, the result is off by the
   time-zone offset.
 - The fraction of a second is truncated.
-- The conversion divides the clock value with the 32-bit signed
-  #cmd("DIVIDE") instruction, whose quotient cannot exceed 2147483647. From
-  19 January 2038, about 02:54 UTC, onward the quotient does not fit, and
-  #cmd("time()") ends in a fixed-point divide exception, abend #cmd("S0C9").
-  Programs that must run beyond that date need the 64-bit time functions
-  (@ext).
+- #cmd("time()") is right up to 17 September 2042, 23:53:47 UTC, where the
+  TOD clock itself runs out and starts again at 1900. Up to release 2.21.0
+  the conversion used a signed division that ended in a fixed-point divide
+  exception, abend #cmd("S0C9"), from 19 January 2038, about 02:54 UTC, on,
+  and the result was about 0.32 seconds ahead.
 
 === Related
 
