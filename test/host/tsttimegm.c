@@ -269,37 +269,44 @@ static void outofrange(void)
     }
 }
 
+/* 1 when old_mktime(), timegm() and mktime() disagree on one input */
+static int differs(int year, int mon, int mday, int sec)
+{
+    struct tm t0, t1, t2;
+    uint32_t r0, r1, r2;
+
+    t0 = tm_zero;
+    t0.tm_year = year;
+    t0.tm_mon  = mon;
+    t0.tm_mday = mday;
+    t0.tm_sec  = sec;
+    t0.tm_isdst = -1;
+    t1 = t2 = t0;
+    r0 = (uint32_t)old_mktime(&t0);
+    r1 = (uint32_t)timegm(&t1);
+    r2 = (uint32_t)mktime(&t2);
+    return r0 != r1 || r0 != r2 || memcmp(&t0, &t1, sizeof(t0)) != 0
+        || memcmp(&t0, &t2, sizeof(t0)) != 0;
+}
+
 static void equivalence(void)
 {
     static const int yr[]  = { 70, 71, 72, 99, 100, 124, 126, 138, 200, 205 };
     static const int mon[] = { 0, 1, 2, 11 };
     static const int day[] = { 1, 28, 29, 31, 60, 292, 365, 366 };
     static const int sec[] = { 0, 59, 3600, 45296, 86399, 86400 };
-    unsigned a, b, c, d, n = 0, bad = 0;
+    unsigned a, b, i, n = 0, bad = 0;
+    const unsigned nday = sizeof(day) / sizeof(day[0]);
+    const unsigned nsec = sizeof(sec) / sizeof(sec[0]);
     char msg[96];
 
     for (a = 0; a < sizeof(yr) / sizeof(yr[0]); a++)
-    for (b = 0; b < sizeof(mon) / sizeof(mon[0]); b++)
-    for (c = 0; c < sizeof(day) / sizeof(day[0]); c++)
-    for (d = 0; d < sizeof(sec) / sizeof(sec[0]); d++) {
-        struct tm t0, t1, t2;
-        uint32_t r0, r1, r2;
-
-        t0 = tm_zero;
-        t0.tm_year = yr[a];
-        t0.tm_mon  = mon[b];
-        t0.tm_mday = day[c];
-        t0.tm_sec  = sec[d];
-        t0.tm_isdst = -1;
-        t1 = t2 = t0;
-        r0 = (uint32_t)old_mktime(&t0);
-        r1 = (uint32_t)timegm(&t1);
-        r2 = (uint32_t)mktime(&t2);
-        n++;
-        if (r0 != r1 || r0 != r2 || memcmp(&t0, &t1, sizeof(t0))
-            || memcmp(&t0, &t2, sizeof(t0)))
-            bad++;
-    }
+        for (b = 0; b < sizeof(mon) / sizeof(mon[0]); b++)
+            for (i = 0; i < nday * nsec; i++) {
+                bad += (unsigned)differs(yr[a], mon[b], day[i / nsec],
+                                         sec[i % nsec]);
+                n++;
+            }
     snprintf(msg, sizeof(msg),
              "5 timegm() == mktime() == old mktime() on %u inputs, %u differ",
              n, bad);
