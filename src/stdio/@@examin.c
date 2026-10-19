@@ -11,7 +11,6 @@
 
 #include <ext/int64.h>
 
-#define unused(x) ((void)(x))
 /* Emit one character.  For the string sink (fq == NULL) the write is
    bounded by smax, the space the caller says is left in s; extraCh keeps
    counting the LOGICAL length regardless, so the caller still learns what
@@ -33,6 +32,68 @@ static const char digits[] = "0123456789abcdef";
 extern void
 __dblcvx(double num, char cnvtype, size_t nwidth, int nprecision, int alt,
          char *result, size_t rsize);
+
+/* hexflt() - %a and %A of the double whose two words are w (#423).
+**
+** A System/370 double is 0.F x 16**(E-64): a sign bit, a 7-bit exponent
+** E and a fraction F of 14 hex digits.  Its digits are hexadecimal
+** already, so C99's [-]0xh.hhhp+d is F's first digit h before the point,
+** the rest after it, and the binary exponent 4 * (E - 65).  A normalized
+** fraction has a nonzero first digit, as C99 asks for.  No floating point
+** is needed; a shorter precision rounds by a hex-digit carry, half away
+** from zero like the other conversions.  The result goes into out, at
+** most n bytes with the NUL; a precision that does not fit is cut. */
+__asm__("\n&FUNC    SETC 'hexflt'");
+static void
+hexflt(const unsigned *w, int upper, int prec, int alt, char *out, size_t n)
+{
+    const char  *dg     = upper ? DIGITS : digits;
+    char        d[15];
+    int         e       = (int)((w[0] >> 24) & 0x7F) - 65;
+    int         nd, i, k, last;
+    char        *o      = out;
+    char        *end    = out + n - 8;      /* room for p, sign, exponent */
+
+    for (i = 0; i < 6; i++) d[i] = (char)((w[0] >> (20 - 4 * i)) & 0xF);
+    for (i = 0; i < 8; i++) d[6 + i] = (char)((w[1] >> (28 - 4 * i)) & 0xF);
+    d[14] = 0;
+
+    for (last = 13; last >= 0 && d[last] == 0; last--) ;
+    if (last < 0) {
+        e = 0;                              /* zero: 0x0p+0 */
+    }
+    else {
+        /* an unnormalized fraction: its first nonzero digit goes first */
+        for (k = 0; d[k] == 0; k++) ;
+        for (i = 0; i < 14; i++) d[i] = (i + k < 14) ? d[i + k] : 0;
+        e -= k;
+        last -= k;
+    }
+
+    nd = (prec < 0) ? last : prec;          /* digits after the point */
+    if (nd < 13 && d[nd + 1] >= 8) {
+        /* round: carry from the last digit kept */
+        for (i = nd; i >= 0 && ++d[i] == 16; i--) d[i] = 0;
+        if (i < 0) {
+            d[0] = 1;                       /* F.FF.. became 10.0 */
+            e++;
+        }
+    }
+
+    if (w[0] & 0x80000000U) *o++ = '-';
+    *o++ = '0';
+    *o++ = upper ? 'X' : 'x';
+    *o++ = dg[(int)d[0]];
+    if (nd > 0 || alt) *o++ = '.';
+    for (i = 1; i <= nd && o < end; i++) *o++ = (i < 14) ? dg[(int)d[i]] : '0';
+    *o++ = upper ? 'P' : 'p';
+    e *= 4;
+    *o++ = (e < 0) ? '-' : '+';
+    if (e < 0) e = -e;
+    k = (e >= 100) ? 3 : (e >= 10) ? 2 : 1;
+    for (i = k; i > 0; i--, e /= 10) o[i - 1] = (char)('0' + e % 10);
+    o[k] = '\0';
+}
 
 int
 __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax,
@@ -339,17 +400,27 @@ __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax,
             }
         }
     }
-    else if (strchr("eEgGfF", specifier) != NULL && specifier != 0) {
-        if (precision < 0) {
-            precision = 6;
-        }
+    else if (strchr("eEgGfFaA", specifier) != NULL && specifier != 0) {
+        /* %a: the hex digits after the 0x come after any zero padding */
+        pfx = (specifier == 'a' || specifier == 'A') ? 2 : 0;
 
         vdbl = va_arg(*arg, double);
-        /* the digits only; width and flags are placed here, as for the
-           integers: __dblcvt() pads with blanks on the left, which left the
-           0 and - flags unheard and put + or space outside the width (#355) */
-        __dblcvx(vdbl, specifier, 0, precision, flagHash, work,
-                 sizeof(work) - 1);   /* keep a byte for the sign (#222) */
+        if (pfx) {
+            unsigned w[2];
+
+            memcpy(w, &vdbl, sizeof(w));
+            hexflt(w, specifier == 'A', precision, flagHash, work,
+                   sizeof(work) - 1);
+        }
+        else {
+            /* the digits only; width and flags are placed here, as for the
+               integers: __dblcvt() pads with blanks on the left, which left
+               the 0 and - flags unheard and put + or space outside the
+               width (#355) */
+            __dblcvx(vdbl, specifier, 0, precision < 0 ? 6 : precision,
+                     flagHash, work,
+                     sizeof(work) - 1);   /* keep a byte for the sign (#222) */
+        }
         {
             const char  *body = work;
             int         sign = 0;
@@ -379,10 +450,13 @@ __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax,
             if (sign) {
                 outch(sign);
             }
+            for (x = 0; x < pfx; x++) {
+                outch(body[x]);
+            }
             if (!flagMinus && flagZero) {
                 for (x = 0; x < pad; x++) outch('0');
             }
-            for (x = 0; x < (int)slen; x++) {
+            for (x = pfx; x < (int)slen; x++) {
                 outch(body[x]);
             }
             if (flagMinus) {
@@ -482,14 +556,8 @@ __examin(const char **formt, FILE *fq, char *s, va_list *arg, int smax,
         extraCh++;
     }
     else {
-        /* Not supported (%a, %A) or no meaning at all: print the
-           conversion as it stands, so the omission shows.  %a and %A
-           still take their double, or every later conversion would read
-           the argument meant for the one before it (#383). */
-        if (specifier == 'a' || specifier == 'A') {
-            vdbl = va_arg(*arg, double);
-            unused(vdbl);
-        }
+        /* no meaning at all: print the conversion as it stands, so the
+           omission shows */
         outch('%');
         extraCh++;
         for (const char *p = start; p < format; p++) {

@@ -24,6 +24,9 @@
  * mvsdev JOB01364, 2026-10-05 (RECEIVE JOB01363): GREEN CC 0000, 34/34;
  * RED (the installed 2.2.0 libc.a) CC 0001, 0 of 34 passed.
  *
+ * With #423's %a cases, own MVS/CE container, 2026-10-19: GREEN CC 0000,
+ * 60/60; RED (2.21.0) CC 0001, every %a case printed as written.
+ *
  * RC: 0 = every check passed, 1 = a check failed (it is the COND CODE).
  */
 #include <stdio.h>

@@ -9,6 +9,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ### Added
 - **`__todsec()`** in `<mvs/clock.h>` converts a TOD clock value to
   seconds since 1970; `__getclk()` uses it (#390).
+- **`printf()` and its relatives format `%a` and `%A` (#423).** A double
+  is printed in hexadecimal, `0x1p+0` for 1.0, from the digits of the
+  System/370 fraction, so the first digit is 1 to F: `0x8p-4` for 0.5.
+  Precision, the `#` flag, width, `-`, `0`, `+` and blank work as for
+  `%e`. The conversion was printed as written (measured on MVS).
 
 ### Fixed
 - **`time()` works past 2038 (#390).** It divided the microseconds since
