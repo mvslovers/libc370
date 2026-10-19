@@ -46,11 +46,27 @@ fixed without a decision from the maintainer and verified with a host test or
 in an own MVS/CE container? Rounds agreed with the maintainer: S first, then M.
 Each fix gets a red/green test in a container, then a PR and a merge.
 
-- **S round:** #393 strstr(""), #388 bsearch order, #391 strftime, #399
-  ctype `[ ] ^`, #416 ctype `(int)` cast, #419 float.h from cc370's
-  `__DBL_*__`, #409 __dscbav memcpy, #410 __listc rc and next_dsab(""), #171
-  memmove, #114 FREEPOOL, #37 parallel SDK compile, #475 setenv trimmed
-  lookup (the caseless fallback stays), #169 prose.
+- **S round, done 2026-10-19:**
+  - Merged: #393 (PR #609), #391 (#610), #399 (#611), #416 (#612), #419
+    (#613), #171 (#615), #409 (#616), #410 (#617), #475's trimmed lookup
+    (#618), #37 (#619) and #169 (#620); #614 removed stray blank lines.
+  - Every fix that has a run-time effect was tested red/green in a
+    disposable MVS/CE container. Red was the installed 2.20.0, green the
+    branch. #416 and #419 are red at compile time.
+  - #171 is red/green on the host under ASan; tstfprls, tstfpunit and
+    tstdsnmt run with `-fsanitize=address` now.
+  - Not done, and why:
+    - **#388**: HTTPD's `mime_cmp()` (`src/httpmime.c:103`) is written for
+      the current (element, key) order, so the fix needs HTTPD to change
+      in step (comment on #388).
+    - **#114**: unknown whether FREEPOOL resets DCBBUFCB. If it does not,
+      a second OPEN of the same DCB uses freed storage, and ufsd's
+      `ufsfmt.c` reopens exactly that way. Measure in a container first.
+    - **#475's caseless fallback**: a decision for the maintainer; the
+      issue stays open.
+  - Not released yet: everything sits under [Unreleased]. It changes what
+    callers see (`strstr`, `strftime`, ctype, `float.h`, `__listc` rc,
+    `setenv`), so it is a minor release.
 - **M round:** #474 (five stdio items; `@@fptmp.c:71` has the same
   `strchr(recfm,'B')` case bug as `@@fpstar.c:108`), #386 scanf widths,
   #423 %a, #225 HFP scaling (container only), #390 time() past 2038
