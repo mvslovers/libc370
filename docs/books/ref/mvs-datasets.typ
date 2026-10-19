@@ -406,10 +406,10 @@ The return code of OBTAIN:
   #cmd("dscb.work[20]"). Moreover #cmd("DSCB4") is 146 bytes long, six more
   than a DSCB, so not every field in it can be at its true offset. The
   library itself reads #cmd("dstrk") only.
-- *#cmd("__dscbav()") does not work for an address that contains a byte of
-  zeros.* It takes the length of #var("cchhr") with #cmd("strlen()"), so
-  the address is cut at the first X'00' and padded with blanks. Every
-  address on a cylinder below 256 begins with X'00'.
+- #cmd("__dscbav()") reads the address in OBTAIN's SEEK mode and returns
+  the whole DSCB, its 44-byte key first. Up to release 2.20.0 it cut
+  #var("cchhr") at the first X'00' byte, so an address on a cylinder
+  below 256 did not work.
 - A format-1 DSCB describes only the part of a data set on one volume.
   #cmd("noepv") counts the extents on that volume.
 - #cmd("sizeof(DSCB)") is 146, because of #cmd("DSCB4")\; #cmd("DSCB1") is

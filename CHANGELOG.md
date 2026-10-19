@@ -40,6 +40,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   parentheses of `name=(a,b)` and `trk(1,1)` copied a string onto itself,
   which C leaves undefined; it uses `memmove()` now. The results are
   unchanged (measured on MVS).
+- **`__dscbav()` reads the DSCB at any address (#409).** It copied the
+  5-byte binary address with a string function, which stopped at the first
+  X'00' byte and padded with blanks, so every address on a cylinder below
+  256 failed (measured on MVS: OBTAIN return code 20 for the VTOC's first
+  record; now its format-4 DSCB, key and data).
 
 ## [2.20.0] - 2026-10-18
 
