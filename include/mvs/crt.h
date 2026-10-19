@@ -171,11 +171,15 @@ struct clibppa {
     void    *ppatiot;           /* 18 TIOT address                      */
     void    *ppapscb;           /* 1C PSCB address                      */
     char 	ppaflag;			/* 20 Processing flag(s)				*/
-#define PPAFLAG_TSOFG	0x80	/* ... TSO environment					*/
-#define PPAFLAG_TSOBG	0x40	/* ... TSO background environment		*/
-#define PPAFLAG_TIN		0x08	/* ... STDIN is terminal				*/
-#define PPAFLAG_TOUT	0x04	/* ... STDOUT is terminal				*/
-#define PPAFLAG_TERR	0x02	/* ... STDERR is terminal				*/
+#define PPAFLAG_TSOFG	0x80	/* ... TSO at a terminal (foreground)	*/
+#define PPAFLAG_TSOBG	0x40	/* ... under TSO at all, foreground too:	*/
+								/*     X'40' in a TSO batch job, X'C0'	*/
+								/*     at a terminal - test TSOFG first	*/
+								/*     (#72)							*/
+#define PPAFLAG_TIN		0x08	/* ... STDIN is terminal - never set	*/
+#define PPAFLAG_TOUT	0x04	/* ... STDOUT is terminal - never set	*/
+#define PPAFLAG_TERR	0x02	/* ... STDERR is terminal - never set	*/
+								/*     by the library (#72)			*/
 #define PPAFLAG_CCALL	0x01	/* ... built by @@CCALL (#507)			*/
     char    ppasubpl;			/* 21 save area subpool number          */
 	char 	ppaheaps;			/* 22 heap (malloc) subpool number		*/
