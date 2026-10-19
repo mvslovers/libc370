@@ -50,8 +50,7 @@ case.
       #cmd("float")],
     [#cmd("DBL_MANT_DIG")], [14], [the same for #cmd("double")],
     [#cmd("LDBL_MANT_DIG")], [14], [the same for #cmd("long double")],
-    [#cmd("FLT_DIG")], [7], [decimal digits a #cmd("float") preserves; see
-      the note below],
+    [#cmd("FLT_DIG")], [6], [decimal digits a #cmd("float") preserves],
     [#cmd("DBL_DIG")], [15], [decimal digits a #cmd("double") preserves],
     [#cmd("LDBL_DIG")], [15], [the same for #cmd("long double")],
     [#cmd("FLT_MIN_EXP")], [−64], [smallest #var("e") for which
@@ -77,10 +76,9 @@ All macros in @std-float-int are integer constants and can be used in
 #cmd("#if") directives.
 
 #idx("FLT_DIG")
-#note[#cmd("FLT_DIG") is 7 in the header, but a #cmd("float") does not
-preserve 7 decimal digits. With a fraction of 6 hexadecimal digits the
-guaranteed number is floor((6 − 1) × log#sub[10] 16) = 6, and the compiler's
-own #cmd("__FLT_DIG__") is 6. Use 6.]
+With a fraction of 6 hexadecimal digits a #cmd("float") preserves
+floor((6 − 1) × log#sub[10] 16) = 6 decimal digits in the worst case, a
+#cmd("double") with 14 digits floor(13 × log#sub[10] 16) = 15.
 
 #tab(caption: [Floating characteristics in \<float.h\>])[
   #table(columns: (1.15in, 2.2in, 0.6in, 1fr),
@@ -89,58 +87,45 @@ own #cmd("__FLT_DIG__") is 6. Use 6.]
       #cmd("float")],
     [#cmd("DBL_MAX")], [7.23700557733226211E+75], [#cmd("double")],
       [largest #cmd("double")],
-    [#cmd("LDBL_MAX")], [2147483647 (wrong)], [#cmd("long")], [see the
-      note below],
+    [#cmd("LDBL_MAX")], [7.23700557733226211E+75], [#cmd("long double")],
+      [the same for #cmd("long double")],
     [#cmd("FLT_MIN")], [5.39760535E−79], [#cmd("float")], [smallest
       normalized #cmd("float"), 16#super[−65]],
-    [#cmd("DBL_MIN")], [5.39760535E−79], [#cmd("float")], [smallest
-      normalized #cmd("double"), 16#super[−65]],
-    [#cmd("LDBL_MIN")], [5.39760535E−79], [#cmd("float")], [the same for
-      #cmd("long double")],
+    [#cmd("DBL_MIN")], [5.39760534693402789E−79], [#cmd("double")],
+      [smallest normalized #cmd("double"), 16#super[−65]],
+    [#cmd("LDBL_MIN")], [5.39760534693402789E−79], [#cmd("long double")],
+      [the same for #cmd("long double")],
     [#cmd("FLT_EPSILON")], [9.53674316E−07], [#cmd("float")], [difference
       between 1 and the next #cmd("float"), 16#super[−5]],
-    [#cmd("DBL_EPSILON")], [2.22044604925031308E−16], [#cmd("float")],
+    [#cmd("DBL_EPSILON")], [2.22044604925031308E−16], [#cmd("double")],
       [difference between 1 and the next #cmd("double"), 16#super[−13]],
-    [#cmd("LDBL_EPSILON")], [2.22044604925031308E−16], [#cmd("float")],
+    [#cmd("LDBL_EPSILON")], [2.22044604925031308E−16], [#cmd("long double")],
       [the same for #cmd("long double")],
   )
 ] <std-float-flt>
 
-#idx("FLT_MAX", "not a constant")
-The macros in @std-float-flt are not constants. Each expands to a member of
-a union object in the library, which holds the bit pattern of the value:
-#cmd("FLT_MAX"), for example, is #cmd("_FltMax._Fval"). This has three
-consequences, all of which differ from the C standard:
-
-- *They are not constant expressions.* They cannot initialize an object of
-  static storage duration: #cmd("static double big = DBL_MAX;") is
-  rejected with #cmd("initializer element is not constant"). Nor can they be
-  used where the compiler needs a constant, such as a #cmd("case") label
-  or an array size.
-- *Several have the wrong type.* #cmd("DBL_MIN"), #cmd("DBL_EPSILON") and
-  the #cmd("LDBL_") minimum and epsilon are #cmd("float") objects. Their
-  values are exact in a #cmd("float") and become the same #cmd("double")
-  when promoted, so arithmetic with them is correct, but
-  #cmd("sizeof(DBL_EPSILON)") is 4.
-- *#cmd("LDBL_MAX") is wrong.* It reads the first four bytes of the largest
-  #cmd("double") as a #cmd("long"), and yields the integer 2147483647
-  instead of 7.2E+75.
-
-#idx("__DBL_MAX__")
-Where a constant is needed, or for #cmd("LDBL_MAX"), use the macros that
-cc370 itself predefines. They have the same values, as constants of the
-right type: #cmd("__FLT_MAX__"), #cmd("__DBL_MAX__"), #cmd("__LDBL_MAX__"),
-#cmd("__FLT_MIN__"), #cmd("__DBL_MIN__"), #cmd("__LDBL_MIN__"),
-#cmd("__FLT_EPSILON__"), #cmd("__DBL_EPSILON__") and
-#cmd("__LDBL_EPSILON__").
+#idx("FLT_MAX", "constant")#idx("__DBL_MAX__")
+The macros in @std-float-flt are constant expressions of the type shown, as
+C99 requires: they expand to the values cc370 predefines,
+#cmd("__FLT_MAX__"), #cmd("__DBL_MAX__") and so on, and can initialize an
+object of static storage duration. The decimal values in the table are
+those literals; each converts to exactly the bit pattern of the
+hexadecimal value named in the last column.
 
 ```
 #include <float.h>
 
-static const double big = __DBL_MAX__;   /* DBL_MAX is not a constant */
+static const double big = DBL_MAX;
 ```
 
-#note[#cmd("FLT_ROUNDS") is the constant 0, which in C means rounding
-toward zero. The comment beside it in the header calls the rounding
-direction unpredictable, for which C has the value −1. The library has no
-function that changes the rounding.]
+#note[Up to release 2.20.0 these macros were members
+ of union objects in
+the library (#cmd("FLT_MAX") was #cmd("_FltMax._Fval")): not constant
+expressions, #cmd("DBL_MIN") and #cmd("DBL_EPSILON") of type
+#cmd("float"), and #cmd("LDBL_MAX") the #cmd("long") 2147483647. The
+objects are still in #cmd("libc.a") for programs compiled with those
+headers.]
+
+#cmd("FLT_ROUNDS") is 0: hexadecimal floating point truncates, so addition
+rounds toward zero. The library has no function that changes the rounding.
+
