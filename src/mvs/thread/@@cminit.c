@@ -38,7 +38,8 @@ cthread_manager_init(unsigned count, void *func, void *udata, unsigned stacksize
     mgr->stacksize  = stacksize;
     mgr->mintask    = count > 5 ? 3 : count > 3 ? 1 : 0;
     mgr->maxtask    = count;
-    sprintf(mgr->rname, "CTHDMGR.%04X.%08X", asid, (unsigned)mgr);
+    snprintf(mgr->rname, sizeof(mgr->rname), "CTHDMGR.%04X.%08X", asid,
+             (unsigned)mgr);
 
     /* create thread manager dispatch thread */
     mgr->task       = cthread_create_ex(dispatch_thread, mgr, 0, 32*1024);
