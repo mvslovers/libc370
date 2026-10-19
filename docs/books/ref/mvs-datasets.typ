@@ -119,8 +119,8 @@ blank DD name.
 
 #cmd("next_dsab()") returns the DSAB after #var("dsab"):
 
-- With #var("ddname") #cmd("NULL") or beginning with a blank, the next DSAB
-  on the chain, whatever its DD name. A loop from #cmd("get_dsab(NULL,
+- With #var("ddname") #cmd("NULL"), an empty string or a string that begins
+  with a blank, the next DSAB on the chain, whatever its DD name. A loop from #cmd("get_dsab(NULL,
   NULL)") through #cmd("next_dsab()") visits every DSAB of the step.
 - Otherwise the next data set of the same concatenation: the next DSAB if
   its DD name is blank, and #cmd("NULL") when the next DD has a name of its
@@ -159,9 +159,9 @@ check.
 === Notes
 - #var("tcbptr") is used only to find the first DSAB: #cmd("next_dsab()")
   follows the chain from #var("dsab").
-- To #cmd("get_dsab()") an empty #var("ddname") is the same as
-  #cmd("NULL"). To #cmd("next_dsab()") it is not: it selects the
-  concatenation that #var("dsab") belongs to, as a name does.
+- To both functions an empty #var("ddname") is the same as #cmd("NULL").
+  Up to release 2.20.0 #cmd("next_dsab()") took it as a name, so
+  #cmd("__listal()") with an empty name listed only the first DD.
 - The chain belongs to the job step, and dynamic allocation in another task
   of the step changes it. A program with several tasks serializes the walk
   itself.
@@ -517,13 +517,12 @@ call lets a #cmd("printf()")-like function be passed directly.
 ignored.
 
 === Returns
-0 when the output was read, -1 when the temporary data set could not be
-allocated or read back.
+The return code of IDCAMS, for example 4 for a level with no entries, or
+-1 when the temporary data set could not be allocated or read back.
 
 === Notes
-- The return code of IDCAMS is not returned, contrary to the comment in the
-  header: a level that does not exist and a level that IDCAMS could not list
-  both return 0. The listing says which.
+- Up to release 2.20.0 #cmd("__listc()") returned 0 whatever IDCAMS ended
+  with.
 - Calls of #cmd("__listc()") in one address space are serialized, so tasks
   that list at the same time wait for one another.
 - When the temporary data set cannot be allocated or read back, a message

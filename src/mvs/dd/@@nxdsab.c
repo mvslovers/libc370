@@ -30,7 +30,7 @@ DSAB *next_dsab(DSAB *dsab, void *tcbptr, const char *ddname)
     dsab = dsab->dsabfchn;
 
     if (!ddname) goto quit;
-    if (ddname[0]==' ' || ddname==0) goto quit;
+    if (ddname[0]==' ' || ddname[0]==0) goto quit;  /* all DDs, as get_dsab() (#410) */
     
     if (dsab) {
         /* just to make sure we don't go completely off the rails */
