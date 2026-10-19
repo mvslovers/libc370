@@ -21,8 +21,9 @@ and the volumes that are online. Three of them, #cmd("__fabandon()"),
     association blocks (DSAB) and the task input/output table (TIOT), and
     the job file control block (JFCB) of a DD, read with the RDJFCB macro.],
   [#cmd("<mvs/dscb.h>")], [the data set control blocks (DSCB) of the VTOC,
-    read with the OBTAIN macro (SVC 27), and the catalog, read with the
-    LOCATE macro (SVC 26).],
+    read with the OBTAIN macro (SVC 27), the catalog, read with the
+    LOCATE macro (SVC 26), and the deleting and renaming of a data set on
+    one volume, with SCRATCH (SVC 29) and RENAME (SVC 30).],
   [#cmd("<mvs/dasd.h>")], [device types, and the number of blocks that fit
     on a track (the TRKCALC macro).],
   [#cmd("<mvs/dslist.h>")], [lists: the data sets of a catalog level
@@ -30,7 +31,8 @@ and the volumes that are online. Three of them, #cmd("__fabandon()"),
     and their free space (LSPACE, SVC 78), and the DD statements of a
     task.],
   [#cmd("<mvs/pds.h>")], [the PDS directory: the BLDL macro and STOW
-    (SVC 21), and the renaming and deleting of members.],
+    (SVC 21), and the renaming and deleting of members, also in a PDS on
+    a given volume.],
   [#cmd("<mvs/file.h>")], [#cmd("__fabandon()"), which closes a stream that
     a failed write has left unusable, and #cmd("__fx37()"), which tells
     which x37 abend a write that ran out of space stood for.],
@@ -43,9 +45,10 @@ None of these functions needs APF authorization. They read control blocks
 of the caller's own task (TCB, JSCB, TIOT, DSAB) and of the system (CVT,
 unit control blocks), which a program in problem state may read, and they
 issue SVCs that an unauthorized program may issue. The data set security of
-the system applies as it does to any program: #cmd("__renmem()") and
-#cmd("__delmem()") open the data set for output, and need the authority to
-update it.
+the system applies as it does to any program: #cmd("__renmem()"),
+#cmd("__delmem()") and their volume forms open the data set for output, and
+need the authority to update it\; #cmd("__scratch()") and
+#cmd("__renamev()") need the authority that SCRATCH and RENAME ask for.
 
 #idx("data set name", "in a function argument")
 The functions take a data set name or a DD name as an ordinary C string,
@@ -458,7 +461,104 @@ if (__dscbdv("SYS1.MACLIB", "MVSRES", &dscb) == 0)
 ```
 
 === Related
-@mvs-datasets-locate, @mvs-datasets-listds, @mvs-datasets-trkcalc
+@mvs-datasets-locate, @mvs-datasets-listds, @mvs-datasets-trkcalc,
+@mvs-datasets-scratch
+
+== \_\_scratch, \_\_renamev <mvs-datasets-scratch>
+#idx("__scratch")#idx("__renamev")#idx("SCRATCH macro")#idx("RENAME macro")
+#idx("data set", "deleting by volume")#idx("data set", "renaming by volume")
+#idx("uncataloged data set")
+
+=== Format
+```
+#include <mvs/dscb.h>
+
+int __scratch(const char dsn[44], const char vol[6], int flags);
+int __renamev(const char dsn[44], const char vol[6],
+              const char newdsn[44]);
+```
+
+=== Description
+#cmd("__scratch()") deletes the data set #var("dsn") from the volume
+#var("vol"), with the SCRATCH macro (SVC 29). #cmd("__renamev()") renames
+the data set #var("dsn") on the volume #var("vol") to #var("newdsn"), with
+the RENAME macro (SVC 30). Both work on the volume table of contents of
+that one volume and never on the catalog. They reach what
+#cmd("remove()") and #cmd("rename()"), which go through the catalog,
+cannot: a data set that is not cataloged, and one of two data sets of the
+same name on different volumes.
+
+#var("dsn"), #var("newdsn") and #var("vol") are strings of up to 44, 44
+and 6 characters\; the functions pad them with blanks and pass them in the
+case they are given. The volume must be online: the functions take its
+device type from its unit control block and do not ask for a volume to be
+mounted.
+
+#var("flags") of #cmd("__scratch()") is 0 or #cmd("__SCRATCH_OVRD"), which
+deletes the data set even when its expiration date has not passed
+(CAMLST SCRATCH with #cmd("OVRD")). SVC 29 knows no other option for a
+caller.
+
+=== Returns
+The return code of SCRATCH or RENAME, and #cmd("errno") from the status
+that the system returns for the volume (@mvs-datasets-scratch-tab):
+
+#deflist(width: 0.6in,
+  [0], [The data set was deleted or renamed.],
+  [4], [No unit was available for the volume. #cmd("errno") is
+    #cmd("ENODEV").],
+  [8], [The data set was not deleted or renamed\; #cmd("errno") tells
+    why.],
+  [-1], [No SVC was issued: an argument is #cmd("NULL"), empty or too
+    long (#cmd("EINVAL")), or the volume is not online
+    (#cmd("ENODEV")).],
+)
+
+#tab(caption: [errno after return code 8])[
+  #table(columns: (0.75in, 0.55in, 1fr),
+    [errno], [Status], [Meaning],
+    [#cmd("ENOENT")], [1], [The data set is not in the VTOC of the
+      volume.],
+    [#cmd("EACCES")], [2], [The data set is password protected.],
+    [#cmd("EPERM")], [3], [#cmd("__scratch()"): the expiration date has not
+      passed, and #cmd("__SCRATCH_OVRD") was not given.],
+    [#cmd("EEXIST")], [3], [#cmd("__renamev()"): a data set named
+      #var("newdsn") exists on the volume already.],
+    [#cmd("EIO")], [4], [A permanent I/O error.],
+    [#cmd("ENODEV")], [5], [No unit was available for the volume.],
+    [#cmd("ENXIO")], [6], [The operator could not mount the volume.],
+    [#cmd("EBUSY")], [7], [The data set is open.],
+  )
+] <mvs-datasets-scratch-tab>
+
+The status is the byte that SCRATCH and RENAME set in the entry of the
+volume list. With one volume, return code 4 means status 5.
+
+=== Notes
+- *The catalog is not changed.* A cataloged data set deleted with
+  #cmd("__scratch()") leaves its catalog entry behind, and one renamed with
+  #cmd("__renamev()") stays cataloged under the old name. For a cataloged
+  data set use #cmd("remove()") and #cmd("rename()").
+- SCRATCH and RENAME take the ENQ on the data set name themselves and
+  release it before they return\; no allocation remains. A data set that
+  is open in the address space is not deleted (status 7).
+- On MVS 3.8j after 1999 the expiration date does not stop SCRATCH: the
+  format-1 DSCB keeps the year in two digits (2026 as 26), while SCRATCH
+  compares it with the current year counted from 1900 (126), so every
+  date looks past and the data set is deleted without
+  #cmd("__SCRATCH_OVRD") (measured).
+- Only the format-1 DSCB names the data set\; renaming a data set
+  that spans several volumes takes one call per volume.
+
+=== Example
+```
+if (__scratch("MYUSER.OLD.LIST", "WORK01", 0) != 0)
+    printf("not deleted: %s\n", strerror(errno));
+```
+
+=== Related
+@mvs-datasets-dscbdv, @mvs-datasets-renmem, @std-stdio-remove,
+@std-stdio-rename
 
 == trkcalc <mvs-datasets-trkcalc>
 #idx("trkcalc")#idx("TRKCALC macro")#idx("track capacity")
@@ -1113,9 +1213,9 @@ for an unknown #var("func").
 === Related
 @mvs-datasets-renmem, @mvs-datasets-bldl
 
-== \_\_renmem, \_\_delmem <mvs-datasets-renmem>
-#idx("__renmem")#idx("__delmem")#idx("member", "renaming")
-#idx("member", "deleting")
+== \_\_renmem, \_\_delmem, \_\_renmemv, \_\_delmemv <mvs-datasets-renmem>
+#idx("__renmem")#idx("__delmem")#idx("__renmemv")#idx("__delmemv")
+#idx("member", "renaming")#idx("member", "deleting")
 
 === Format
 ```
@@ -1123,6 +1223,9 @@ for an unknown #var("func").
 
 int __renmem(const char *dsn, const char *oldmem, const char *newmem);
 int __delmem(const char *dsn, const char *mem);
+int __renmemv(const char *dsn, const char *vol, const char *oldmem,
+              const char *newmem);
+int __delmemv(const char *dsn, const char *vol, const char *mem);
 ```
 
 === Description
@@ -1134,6 +1237,15 @@ output, update the directory with STOW, then close and free it again.
 The member names are converted to upper case and end at the first blank or
 after eight characters. #var("dsn") is passed to dynamic allocation as
 #cmd("DSN=")#var("dsn").
+
+#cmd("__renmemv()") and #cmd("__delmemv()") do the same in the data set
+#var("dsn") on the volume #var("vol"), which need not be cataloged: the
+allocation is #cmd("DSN=")#var("dsn")#cmd(";VOLSER=")#var("vol"), without
+a unit, which dynamic allocation takes from the mounted volume. They read
+the format-1 DSCB of #var("dsn") on #var("vol") first (#cmd("__dscbdv()")),
+because dynamic allocation does not look into the VTOC and allocates a
+name that is not on the volume all the same. With #var("vol") #cmd("NULL")
+they are #cmd("__renmem()") and #cmd("__delmem()").
 
 A rename keeps the member's data, its TTR and its user data, such as ISPF
 statistics, so it works for members of every record format, load modules
@@ -1150,8 +1262,8 @@ member is reclaimed when the data set is compressed.
   [20], [Not enough virtual storage.],
   [-1], [An argument is #cmd("NULL"), a member name is empty, or storage
     ran out.],
-  [-2], [The data set could not be allocated: it does not exist, or is in
-    use.],
+  [-2], [The data set could not be allocated: it does not exist, is not
+    on the volume #var("vol"), or is in use.],
   [-3], [The data set could not be opened for output.],
 )
 
@@ -1164,9 +1276,11 @@ The positive values are the return codes of STOW.
   the programs.
 - #cmd("remove()") of a name with a member, such as
   #cmd("\"A.B(MEM)\""), deletes the member through #cmd("__delmem()").
+- The volume is not mounted for the volume forms: a volume that is not
+  online gives -2.
 
 === Related
-@mvs-datasets-stow, @mvs-dynalloc
+@mvs-datasets-stow, @mvs-datasets-scratch, @mvs-dynalloc
 
 == \_\_fabandon <mvs-datasets-fabandon>
 #idx("__fabandon")#idx("x37 abend", "closing after")#idx("D37 abend")

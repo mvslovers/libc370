@@ -3811,6 +3811,7 @@ __PDDB	ibm/jes2/pddb.h
 __PDPCLIB_API__	stddef.h
 __PPAGET	mvs/crt.h
 __PSO	ibm/jes2/pso.h
+__SCRATCH_OVRD	mvs/dscb.h
 __SETJMP_INCLUDED	setjmp.h
 __SIGHDL	signal.h
 __SIGNAL_INCLUDED	signal.h
@@ -3858,6 +3859,7 @@ __ddstr	ibm/mvs/ieftxtft.h
 __dec	s370/atomic.h
 __delete	mvs/link.h
 __delmem	mvs/pds.h
+__delmemv	mvs/pds.h
 __dsalc	mvs/dynalloc.h
 __dsalcf	mvs/dynalloc.h
 __dscbav	mvs/dscb.h
@@ -3961,7 +3963,10 @@ __prob	mvs/apf.h
 __pso	ibm/jes2/pso.h
 __pswkey	mvs/apf.h
 __rdjfcb	mvs/dd.h
+__renamev	mvs/dscb.h
 __renmem	mvs/pds.h
+__renmemv	mvs/pds.h
+__scratch	mvs/dscb.h
 __setj	setjmp.h
 __setsp	mvs/storage.h
 __sigdfl	signal.h

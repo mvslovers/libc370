@@ -1485,10 +1485,13 @@ IDCAMS could not be called.
 - IDCAMS needs the data set exclusively. A member deleted in the
   #var("dsname")#cmd("(")#var("member")#cmd(")") form does not, so it can be
   deleted while other jobs use the library.
+- A data set is found through the catalog. One that is not cataloged, or
+  one of the same name on another volume, is deleted with
+  #cmd("__scratch()"), a member of it with #cmd("__delmemv()").
 
 === Related
 
-@std-stdio-rename, @mvs-dynalloc.
+@std-stdio-rename, @mvs-datasets-scratch, @mvs-dynalloc.
 
 == rename <std-stdio-rename>
 
@@ -1523,11 +1526,13 @@ when IDCAMS could not be called.
 
 === Notes
 
-The names are read as for #cmd("remove()").
+The names are read as for #cmd("remove()"). A data set that is not
+cataloged is renamed with #cmd("__renamev()"), a member of it with
+#cmd("__renmemv()").
 
 === Related
 
-@std-stdio-remove.
+@std-stdio-remove, @mvs-datasets-scratch.
 
 == setbuf, setvbuf <std-stdio-setbuf>
 

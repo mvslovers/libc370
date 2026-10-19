@@ -74,4 +74,12 @@ extern int __renmem(const char *dsn, const char *oldmem, const char *newmem);
  * dsn(member) names here; IDCAMS DELETE stays for whole data sets. */
 extern int __delmem(const char *dsn, const char *mem);
 
+/* __renmemv(), __delmemv() the same on the PDS dsn on volume vol, which
+ * need not be cataloged (#143): dynamic allocation by DSN= and VOLSER=,
+ * no unit.  Returns as above; -2 also when dsn is not on vol. */
+extern int __renmemv(const char *dsn, const char *vol, const char *oldmem,
+                     const char *newmem)                   asm("@@RENMMV");
+extern int __delmemv(const char *dsn, const char *vol, const char *mem)
+                                                           asm("@@DELMMV");
+
 #endif /* MVS_PDS_H */

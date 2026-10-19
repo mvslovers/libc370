@@ -247,5 +247,37 @@ extern int __dscbv(const char vol[6], DSCB *dscb);
 /* __locate() - locate dataset by name, volser is returned in the workarea */
 extern int __locate(const char dsn[44], LOCWORK *workarea);
 
+/* Delete and rename a data set on one volume, through its VTOC: SCRATCH
+ * (SVC 29) and RENAME (SVC 30).  Neither touches the catalog, so they reach
+ * an uncataloged data set, or one of two data sets of the same name on
+ * different volumes; remove() and rename() stay the way for cataloged ones.
+ * The volume must be mounted.  dsn, newdsn and vol are strings, padded with
+ * blanks to 44 and 6 characters, and passed in the case they are given.
+ *
+ * Return Code: the return code of SCRATCH or RENAME (register 15)
+ *    0  the data set was deleted or renamed
+ *    4  no unit was available for the volume (errno ENODEV)
+ *    8  not done on the volume; errno tells why, from the volume status:
+ *         ENOENT  1  the data set is not in the VTOC of the volume
+ *         EACCES  2  it is password protected
+ *         EPERM   3  __scratch(): its expiration date has not passed
+ *         EEXIST  3  __renamev(): newdsn exists on the volume already
+ *         EIO     4  a permanent I/O error
+ *         ENODEV  5  no unit was available for the volume
+ *         ENXIO   6  the operator could not mount the volume
+ *         EBUSY   7  the data set is open
+ *   -1  an argument is NULL, empty or too long (errno EINVAL), or the
+ *       volume is not online (errno ENODEV); no SVC was issued
+ */
+#define __SCRATCH_OVRD  0x00000001  /* delete before the expiration date */
+
+/* __scratch() - delete data set dsn from volume vol; flags 0 or __SCRATCH_OVRD */
+extern int __scratch(const char dsn[44], const char vol[6], int flags)
+                                                           asm("@@SCRTCH");
+
+/* __renamev() - rename data set dsn on volume vol to newdsn */
+extern int __renamev(const char dsn[44], const char vol[6],
+                     const char newdsn[44])                asm("@@RENAMV");
+
 
 #endif

@@ -209,6 +209,7 @@ CHANGELOG has everything else.
 
 | Release | Change | What to do |
 |---|---|---|
+| Unreleased | New: `__scratch()`, `__renamev()` (`<mvs/dscb.h>`), `__delmemv()`, `__renmemv()` (`<mvs/pds.h>`) delete and rename data sets and members by name and volume (#143) | Nothing; use them for a data set that is not cataloged |
 | Unreleased | `jesopen()` allocates `SYS1.HASPCKPT` and `SYS1.HASPACE` itself when the step has no `HASPCKPT`/`HASPACE1` DD (catalog first, then a search of the online volumes); new `jesopen_ex(ckptdsn)` for another checkpoint name (#142) | Nothing; the two DD statements may be dropped where JES2 uses the prefix `SYS1`. Keep them, or call `jesopen_ex()`, where it uses another |
 | Unreleased | New `__vsfdbk()` and `VSFDBK` in `<mvs/vsam.h>`: return code, feedback code, record length and RBA of the last VSAM request (#625) | Nothing; to tell a missing key from end of data or a duplicate, call `__vsfdbk()` after the request instead of reading `vs->rc`/`vs->rsn` |
 | Unreleased | `oscheck()` returns 4 at end of data and 8 for an I/O error instead of the S337/S001 abend code, and 8 (not 0) when a program's own SYNAD routine returned from an I/O error; `osbdcb()`/`osxdcb()` return `NULL` when the exit list cannot be allocated; new `osxopenm()`/`osdopenm()` open read-only with mode `"r"` (#412) | Test `oscheck()` for 4 and 8 where the code compared with the abend codes; a program whose SYNAD routine returns now sees 8 from `oscheck()`; check the DCB from `osbdcb()`/`osxdcb()` for `NULL` also when it passes an exit list |

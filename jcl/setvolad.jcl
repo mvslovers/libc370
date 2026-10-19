@@ -1,0 +1,66 @@
+//SETVOLAD JOB (SYS),'LIBC370 143 SETUP',CLASS=A,MSGCLASS=H,
+//             MSGLEVEL=(1,1)
+//*
+//* libc370 #143 - the data sets of test/mvs/tstvolad.c.  A job of its
+//* own: a job holds the SYSDSN ENQ of every name in its JCL until
+//* it ends, and SCRATCH and RENAME in jcl/tstvolad.jcl take it.
+//*
+//* IBMUSER.TSTVOLAD.PDS twice: cataloged on WORK00 (AAA BBB) and
+//* uncataloged on WORK01 (AAA CCC).  UNC on PUB001 (3390), EXP and
+//* EXP2 (not expired) and DUP on WORK01, all four uncataloged.  The
+//* volumes are those of MVS/CE; tstvolad.c names them too.
+//*
+//* GREEN removes all of it.  After a failed run, delete what is left
+//* on WORK01 and PUB001 (IEHPROGM SCRATCH) before this job runs again.
+//*
+//DEL      EXEC PGM=IEFBR14
+//D1       DD  DSN=IBMUSER.TSTVOLAD.PDS,DISP=(MOD,DELETE),
+//             UNIT=SYSDA,SPACE=(TRK,(1,1,1))
+//*
+//CATA     EXEC PGM=IEBGENER
+//SYSPRINT DD  SYSOUT=*
+//SYSIN    DD  DUMMY
+//SYSUT1   DD  *
+MEMBER AAA OF THE CATALOGED COPY ON WORK00
+/*
+//SYSUT2   DD  DSN=IBMUSER.TSTVOLAD.PDS(AAA),DISP=(NEW,CATLG),
+//             UNIT=3350,VOL=SER=WORK00,SPACE=(TRK,(1,1,2)),
+//             DCB=(RECFM=FB,LRECL=80,BLKSIZE=800)
+//CATB     EXEC PGM=IEBGENER
+//SYSPRINT DD  SYSOUT=*
+//SYSIN    DD  DUMMY
+//SYSUT1   DD  *
+MEMBER BBB OF THE CATALOGED COPY ON WORK00
+/*
+//SYSUT2   DD  DSN=IBMUSER.TSTVOLAD.PDS(BBB),DISP=OLD
+//*
+//UNCA     EXEC PGM=IEBGENER
+//SYSPRINT DD  SYSOUT=*
+//SYSIN    DD  DUMMY
+//SYSUT1   DD  *
+MEMBER AAA OF THE UNCATALOGED COPY ON WORK01
+/*
+//SYSUT2   DD  DSN=IBMUSER.TSTVOLAD.PDS(AAA),DISP=(NEW,KEEP),
+//             UNIT=3350,VOL=SER=WORK01,SPACE=(TRK,(1,1,2)),
+//             DCB=(RECFM=FB,LRECL=80,BLKSIZE=800)
+//UNCC     EXEC PGM=IEBGENER
+//SYSPRINT DD  SYSOUT=*
+//SYSIN    DD  DUMMY
+//SYSUT1   DD  *
+MEMBER CCC OF THE UNCATALOGED COPY ON WORK01
+/*
+//SYSUT2   DD  DSN=IBMUSER.TSTVOLAD.PDS(CCC),DISP=OLD,
+//             UNIT=3350,VOL=SER=WORK01
+//*
+//PS       EXEC PGM=IEFBR14
+//UNC      DD  DSN=IBMUSER.TSTVOLAD.UNC,DISP=(NEW,KEEP),
+//             UNIT=3390,VOL=SER=PUB001,SPACE=(TRK,(1,1))
+//EXP      DD  DSN=IBMUSER.TSTVOLAD.EXP,DISP=(NEW,KEEP),
+//             UNIT=3350,VOL=SER=WORK01,SPACE=(TRK,(1,1)),
+//             LABEL=RETPD=30
+//EXP2     DD  DSN=IBMUSER.TSTVOLAD.EXP2,DISP=(NEW,KEEP),
+//             UNIT=3350,VOL=SER=WORK01,SPACE=(TRK,(1,1)),
+//             LABEL=RETPD=30
+//DUP      DD  DSN=IBMUSER.TSTVOLAD.DUP,DISP=(NEW,KEEP),
+//             UNIT=3350,VOL=SER=WORK01,SPACE=(TRK,(1,1))
+//

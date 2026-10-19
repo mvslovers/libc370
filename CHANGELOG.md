@@ -45,6 +45,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   X'04' end of data, X'08' duplicate key, X'10' record not found), the
   component code, the record length and the RBA of that one request, read
   from the RPL (measured on MVS). The existing functions are unchanged.
+- **`__scratch()`, `__renamev()`, `__delmemv()` and `__renmemv()` delete
+  and rename a data set, or a member of a PDS, by name and volume
+  (#143).** `remove()`, `rename()`, `__delmem()` and `__renmem()` find a
+  data set through the catalog, so a data set that is not cataloged, or
+  one of two data sets of the same name on different volumes, could not be
+  deleted or renamed at all. `__scratch(dsn, vol, flags)` and
+  `__renamev(dsn, vol, newdsn)` in `<mvs/dscb.h>` work on the volume table
+  of contents of the named volume with SCRATCH (SVC 29) and RENAME
+  (SVC 30), and leave the catalog alone; `__SCRATCH_OVRD` deletes before
+  the expiration date. They return the system's return code and set
+  `errno` from its status for the volume (`ENOENT` not there, `EEXIST`
+  new name taken, `EBUSY` open, ...). `__delmemv(dsn, vol, mem)` and
+  `__renmemv(dsn, vol, old, new)` in `<mvs/pds.h>` allocate the PDS by
+  volume, without a unit, and otherwise work as `__delmem()` and
+  `__renmem()`, which are unchanged (measured on MVS).
 
 ### Changed
 - **`fseek()` keeps the error indicator; `rewind()` clears it (#178).**
