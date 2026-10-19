@@ -28,13 +28,79 @@ close-path probes; assets incl. the manuals, `pair`, tap checked), 2.8.1 on 2026
 share/libc370/sysmac-removed.txt in the sysroot #498 PR #499; assets, `pair`, tap checked)
 (tag `v2.2.0` on `0ba452a`, cc370 `>=1.1.0 <2`, built with cc370 1.1.0;
 assets, `pair` and the Homebrew tap checked; cc370's `install.sh` with cc370
-1.2.0 picks 2.2.0). `main` is 2.16.1-dev. Size work: F1+F4 merged (PR #574, `b5e9c61`; mvsdev JOB02398/02400/02402 alike with 2.16.0); F3 merged (PR #575, `cec6326`; SYSENV via BSAM, getenv 57.0 -> 25.0 KB, mvsdev JOB02404); F2 merged (PR #576, `41b206f`, vvprintf split, #577 closed; sprintf 47.3 -> 30.4 KB, mvsdev JOB02408/02410); F5 merged (PR #579, `f619057`; standard streams via __fpopn, puts 59.0 -> 50.2 KB, mvsdev JOB02412/02414); 2.17.0 released 2026-10-17 (tag `v2.17.0` on `87b72d1`, PR #580; MBT pre-release sweep of 15 consumers and canary MBTTEST JOB02416, assets, `pair`, tap checked). Then #581 ACEE sub-fields (PR #582), #583 arraydel (PR #584), printf to C99 in two steps (#220/#384 values and memory, PR #585; #221/#384/#578 form, PR #586; conformance test tstpf99, 19 of 944 left on purpose); 2.18.0 released 2026-10-18 (tag `v2.18.0` on `f9755fd`, PR #587; MBT sweep 15/15, canary JOB02435/02437). Then #283/#401 getmain (PR #588), #405/#407 racf_logout(NULL) and subsys key-0 stores (PR #589, APF tstracfl JOB02448), #590 idcams column 72 (PR #591, JOB02454); 2.18.1 released 2026-10-18 (tag `v2.18.1` on `d7a6ba7`, PR #592). Group 1 of the open issues: #402 MODESET S047 and #406 SSI return codes (PR #593, APF tstapfau), #404 wto (PR #594, dev1 JOB02460; wtor/wtorf measured with operator replies in an own MVS/CE container, tstwtorm) merged; #398 arrayaddf (container probe tstaradm) merged; #397 __64 (container probe tst64m) merged; #396 sockets (container probe tstsockm; program-end close left documented) merged; #403 mtxfree/threads (container probe tstthrdm) merged; #406 spool/checkpoint (container probe tstspolm) merged - group 1 done; 2.19.0 released 2026-10-18 (tag `v2.19.0` on `d82422c`, PR #603; MBT sweep 15/15, assets, `pair`, tap checked). #601 step 1 (close at end and under try(), container probe tstsoenm) merged; step 2 (start-up ESTAE, S0C1/S322/S222 measured) merged; release 2.20.0 in preparation (`release/2.20.0`). Open: #423 %a, #225 HFP scaling, %p form (internals/size-analysis.md). 2.16.0 on 2026-10-16 (tag `v2.16.0` on `5571c1d`, PR #570): the start-up links no stdio and no printf (#564 steps 3/4, PR #569; mvsdev JOB02396): SYSENV/TZ on first use, diagnostics via wto, empty main 72.7 -> 14.8 KB, __rtinit 0.2 ms; httpd cgistart/httplua keep their own start-up and behave as before; assets, `pair`, tap checked. Next: a size analysis of the whole library (xref maps of typical programs; known: sprintf -> vvprintf -> @@fputc -> @@fpswt -> @@fpopen, @@64mul/@@64lshw -> wtof, fopen pulls every name kind - a lean open path for the standard streams). 2.15.0 on 2026-10-16 (tag `v2.15.0` on `7f5e361`, PR #567): the standard streams open on first use (#564 step 1+2, PR #566; mvsdev JOB02392: __rtinit 2.4 ms vs 20.3 ms without SYSTERM/SYSIN, no SYSOUT/NULLFILE allocation for unused streams, @@CCALL probes unchanged); assets, `pair`, tap checked. Open in #564: step 3/4 - the load module still pulls printf and fopen through malloc's diagnostics (wtof; @@wtotb -> try -> estae -> fprintf(stderr)) and loadenv (empty main 143 members, 72.7 KB); tzset() costs 0.6-1.3 ms. 2.14.0 on 2026-10-16 (tag `v2.14.0` on `6e0a88f`, PR #562): fread() on a record stream returns the elements read (#559, PR #560; mvsdev JOB02382), the record length with size 1; pl1c370 switches its fread(buf, RECBUF, 1) to size 1 with its 2.14.0 pin; assets, `pair`, tap checked. 2.13.0 on 2026-10-15 (tag `v2.13.0` on `6efab29`, PR #557): recfm=/lrecl=/blksize= of a `DD:` fopen() override the DD and the DSCB (#554, PR #555; mvsdev JOB02380), for pl1c370's PL/I ENVIRONMENT; no consumer passes them with a `DD:` name (sweep 2026-10-15); assets, `pair`, tap checked. 2.12.1 on 2026-10-15 (tag `v2.12.1` on `0c5e84f`, PR #551): `__CRTRES` frees `ppa->ppacrt` (#546, PR #550; mvsdev JOB02349: 128 B per LINKed C module run before, 0 after) -- the root cause of mvsmf#430; the CGI modules must be rebuilt against it; assets, `pair`, tap checked. 2.12.0 on 2026-10-15 (tag `v2.12.0` on `a1c424f`, PR #547): 16 extents/VIO give ENOSPC, not EIO (#538, PR #541; mvsdev JOB02339), `__fx37()` (#539, PR #544; JOB02347, IEBDG controls JOB02342/02343); assets incl. the manuals, `pair`, tap checked; pl1c370 switches to `__fx37()`. #543 (a PDS member whose secondary space runs out abends E37-04 before the library sees it) documented, PR #548. 2.11.0 on 2026-10-14 (tag `v2.11.0` on `e39227c`, PR #533): `tryinfo()`, the PSW and R14 of an abend `try()` caught (#530, PR #531; mvsdev JOB02238); assets incl. the manuals, `pair`, tap, RTD checked; mvsMF picks it up for MVSMF901E (mvsmf#425). 2.10.3 on 2026-10-13 (tag `v2.10.3` on `a790dc4`, PR #527): no STOW for a member whose write failed #524 (PR #525); assets, `pair`, tap checked; the ufsd/ftpd/httpd/mvsMF releases build on it. 2.10.2 on 2026-10-12 (tag `v2.10.2` on `5e4fdd4`, PR #522): __listds() and '-' #519 (PR #520); assets, `pair`, tap checked. 2.10.1 on 2026-10-12 (tag `v2.10.1` on `a204f3b`, PR #517): VSAM KSDS #514 (PR #515); assets, `pair`, tap checked. 2.9.0 on 2026-10-12 (tag `v2.9.0` on `528424f`, PR #505): `@@CCALL` and the macro `CCALL`, C called from COBOL and other OS-linkage code (#502, PR #503); assets incl. the manuals, `pair`, tap checked. Open from #502: CTHREAD stacks (U3101), COBOL main without a C program: #507, released in 2.10.0 on 2026-10-12 (tag `v2.10.0` on `d4435e5`, PR #511; assets, `pair`, tap checked). Releases are tagged after the go of
-the coordinating mbt session and the maintainer's approval. Tier 0 (the 2.0 critical path) is done
-but for the consumer ports still pinned to 1.0.8 (step 7). 1.0.8 is the last
+1.2.0 picks 2.2.0). `main` is 2.16.1-dev. Size work: F1+F4 merged (PR #574, `b5e9c61`; mvsdev JOB02398/02400/02402 alike with 2.16.0); F3 merged (PR #575, `cec6326`; SYSENV via BSAM, getenv 57.0 -> 25.0 KB, mvsdev JOB02404); F2 merged (PR #576, `41b206f`, vvprintf split, #577 closed; sprintf 47.3 -> 30.4 KB, mvsdev JOB02408/02410); F5 merged (PR #579, `f619057`; standard streams via __fpopn, puts 59.0 -> 50.2 KB, mvsdev JOB02412/02414); 2.17.0 released 2026-10-17 (tag `v2.17.0` on `87b72d1`, PR #580; MBT pre-release sweep of 15 consumers and canary MBTTEST JOB02416, assets, `pair`, tap checked). Then #581 ACEE sub-fields (PR #582), #583 arraydel (PR #584), printf to C99 in two steps (#220/#384 values and memory, PR #585; #221/#384/#578 form, PR #586; conformance test tstpf99, 19 of 944 left on purpose); 2.18.0 released 2026-10-18 (tag `v2.18.0` on `f9755fd`, PR #587; MBT sweep 15/15, canary JOB02435/02437). Then #283/#401 getmain (PR #588), #405/#407 racf_logout(NULL) and subsys key-0 stores (PR #589, APF tstracfl JOB02448), #590 idcams column 72 (PR #591, JOB02454); 2.18.1 released 2026-10-18 (tag `v2.18.1` on `d7a6ba7`, PR #592). Group 1 of the open issues: #402 MODESET S047 and #406 SSI return codes (PR #593, APF tstapfau), #404 wto (PR #594, dev1 JOB02460; wtor/wtorf measured with operator replies in an own MVS/CE container, tstwtorm) merged; #398 arrayaddf (container probe tstaradm) merged; #397 __64 (container probe tst64m) merged; #396 sockets (container probe tstsockm; program-end close left documented) merged; #403 mtxfree/threads (container probe tstthrdm) merged; #406 spool/checkpoint (container probe tstspolm) merged - group 1 done; 2.19.0 released 2026-10-18 (tag `v2.19.0` on `d82422c`, PR #603; MBT sweep 15/15, assets, `pair`, tap checked). #601 step 1 (close at end and under try(), container probe tstsoenm) merged; step 2 (start-up ESTAE, S0C1/S322/S222 measured) merged; 2.20.0 released 2026-10-19 (tag `v2.20.0` on `d5d2b53`, PR #606; MBT sweep 15/15 plus a server canary, assets, `pair`, tap checked). Next: #173 dscb4 key skew, #392 mktime zone. Open: #423 %a, #225 HFP scaling, %p form (internals/size-analysis.md). 2.16.0 on 2026-10-16 (tag `v2.16.0` on `5571c1d`, PR #570): the start-up links no stdio and no printf (#564 steps 3/4, PR #569; mvsdev JOB02396): SYSENV/TZ on first use, diagnostics via wto, empty main 72.7 -> 14.8 KB, __rtinit 0.2 ms; httpd cgistart/httplua keep their own start-up and behave as before; assets, `pair`, tap checked. Next: a size analysis of the whole library (xref maps of typical programs; known: sprintf -> vvprintf -> @@fputc -> @@fpswt -> @@fpopen, @@64mul/@@64lshw -> wtof, fopen pulls every name kind - a lean open path for the standard streams). 2.15.0 on 2026-10-16 (tag `v2.15.0` on `7f5e361`, PR #567): the standard streams open on first use (#564 step 1+2, PR #566; mvsdev JOB02392: __rtinit 2.4 ms vs 20.3 ms without SYSTERM/SYSIN, no SYSOUT/NULLFILE allocation for unused streams, @@CCALL probes unchanged); assets, `pair`, tap checked. Open in #564: step 3/4 - the load module still pulls printf and fopen through malloc's diagnostics (wtof; @@wtotb -> try -> estae -> fprintf(stderr)) and loadenv (empty main 143 members, 72.7 KB); tzset() costs 0.6-1.3 ms. 2.14.0 on 2026-10-16 (tag `v2.14.0` on `6e0a88f`, PR #562): fread() on a record stream returns the elements read (#559, PR #560; mvsdev JOB02382), the record length with size 1; pl1c370 switches its fread(buf, RECBUF, 1) to size 1 with its 2.14.0 pin; assets, `pair`, tap checked. 2.13.0 on 2026-10-15 (tag `v2.13.0` on `6efab29`, PR #557): recfm=/lrecl=/blksize= of a `DD:` fopen() override the DD and the DSCB (#554, PR #555; mvsdev JOB02380), for pl1c370's PL/I ENVIRONMENT; no consumer passes them with a `DD:` name (sweep 2026-10-15); assets, `pair`, tap checked. 2.12.1 on 2026-10-15 (tag `v2.12.1` on `0c5e84f`, PR #551): `__CRTRES` frees `ppa->ppacrt` (#546, PR #550; mvsdev JOB02349: 128 B per LINKed C module run before, 0 after) -- the root cause of mvsmf#430; the CGI modules must be rebuilt against it; assets, `pair`, tap checked. 2.12.0 on 2026-10-15 (tag `v2.12.0` on `a1c424f`, PR #547): 16 extents/VIO give ENOSPC, not EIO (#538, PR #541; mvsdev JOB02339), `__fx37()` (#539, PR #544; JOB02347, IEBDG controls JOB02342/02343); assets incl. the manuals, `pair`, tap checked; pl1c370 switches to `__fx37()`. #543 (a PDS member whose secondary space runs out abends E37-04 before the library sees it) documented, PR #548. 2.11.0 on 2026-10-14 (tag `v2.11.0` on `e39227c`, PR #533): `tryinfo()`, the PSW and R14 of an abend `try()` caught (#530, PR #531; mvsdev JOB02238); assets incl. the manuals, `pair`, tap, RTD checked; mvsMF picks it up for MVSMF901E (mvsmf#425). 2.10.3 on 2026-10-13 (tag `v2.10.3` on `a790dc4`, PR #527): no STOW for a member whose write failed #524 (PR #525); assets, `pair`, tap checked; the ufsd/ftpd/httpd/mvsMF releases build on it. 2.10.2 on 2026-10-12 (tag `v2.10.2` on `5e4fdd4`, PR #522): __listds() and '-' #519 (PR #520); assets, `pair`, tap checked. 2.10.1 on 2026-10-12 (tag `v2.10.1` on `a204f3b`, PR #517): VSAM KSDS #514 (PR #515); assets, `pair`, tap checked. 2.9.0 on 2026-10-12 (tag `v2.9.0` on `528424f`, PR #505): `@@CCALL` and the macro `CCALL`, C called from COBOL and other OS-linkage code (#502, PR #503); assets incl. the manuals, `pair`, tap checked. Open from #502: CTHREAD stacks (U3101), COBOL main without a C program: #507, released in 2.10.0 on 2026-10-12 (tag `v2.10.0` on `d4435e5`, PR #511; assets, `pair`, tap checked). Releases are tagged after the go of
+the coordinating mbt session and the maintainer's approval. Tier 0 (the 2.0 critical path) is done,
+step 7 included (lua370 pins 2.4.1, httplua and httprexx 2.6.1; local checkouts 2026-10-19). 1.0.8 is the last
 1.x; a serious defect there gets an emergency 1.0.9 from the tag `v1.0.8` (D8
 in `internals/design-2.0.md`).
 
-*Last reconciled against the tracker: **2026-10-06**, 83 issues open: the
+*Last reconciled against the tracker: **2026-10-19**, 70 issues open after
+this pass. Every open issue was checked against `main` at `d5d2b53` (2.20.0).
+Closed as done: #453 (PR #460), #578 (PRs #585/#586), #250 (items 1-3 in
+phase 1), #159 (PR #424, #441), #245 (2.0.0 and step 7; phase 4 split to
+**#607**), #448 (libc370 side complete; mvsmf#387 and rexx370#335 remain in
+their repos). The @@crtm question from #159 is **#608**.*
+
+**The 2026-10-19 triage.** Each issue was sorted by one question: can it be
+fixed without a decision from the maintainer and verified with a host test or
+in an own MVS/CE container? Rounds agreed with the maintainer: S first, then M.
+Each fix gets a red/green test in a container, then a PR and a merge.
+
+- **S round:** #393 strstr(""), #388 bsearch order, #391 strftime, #399
+  ctype `[ ] ^`, #416 ctype `(int)` cast, #419 float.h from cc370's
+  `__DBL_*__`, #409 __dscbav memcpy, #410 __listc rc and next_dsab(""), #171
+  memmove, #114 FREEPOOL, #37 parallel SDK compile, #475 setenv trimmed
+  lookup (the caseless fallback stays), #169 prose.
+- **M round:** #474 (five stdio items; `@@fptmp.c:71` has the same
+  `strchr(recfm,'B')` case bug as `@@fpstar.c:108`), #386 scanf widths,
+  #423 %a, #225 HFP scaling (container only), #390 time() past 2038
+  (synthetic TOD), #125 clobber lists (about 102 lines, not every one an SVC),
+  #39 step 3 (`-Wall` re-measured: **205** warnings over 736 TUs, not ~6690).
+- **Clear parts of otherwise open issues:**
+  - #395: everything but tmpfile, which is done, and the fread indicator;
+  - #389: frexp(0), atan2(0,0), pow(0,-n), pow by squaring, exp reduction;
+  - #392: no tm overwrite on error, difftime;
+  - #408: the C side of __dsalc;
+  - #411: OPEN rc 4, DD upper-casing, CLOSE rc. The sticky flags were
+    already fixed by PR #428;
+  - #412: NULL check and rc;
+  - #413: tsocmd ECT restore, sleep(), the eyecatchers;
+  - #476: try() rc sign, timer start failure;
+  - #420: strerror above 131, signatures;
+  - #179: no error flag on the old stream;
+  - #72: doc comments.
+- **Waiting on a decision:**
+  - #553: `__linkx` or `__linkerr`;
+  - #461: nesting and guard;
+  - #417: sockaddr type;
+  - #418: header cleanup, MBT sweep;
+  - #174: fclose, "not settled" below;
+  - #178;
+  - #173: dscb4 layout with #409's view;
+  - #160: send cap;
+  - #143: SCRATCH/RENAME API;
+  - #394: malloc(0);
+  - #400: remove or implement;
+  - #142;
+  - #17: drop `__try`;
+  - #105;
+  - #52;
+  - #75;
+  - #392's zone: mvsMF `consapi.c` relies on the zone-less mktime, so a
+    release must be coordinated with mvsMF;
+  - #68: putting the format attributes into the headers. libc370 itself
+    shows 20 format warnings in 11 TUs, and cleaning those is S;
+  - #113/#122. **New finding:** `@@crtset.c` copies the JSCB auth byte
+    (+0xEC) into `crtauth` (+0x10D), not `crtopts` (+0x10C);
+  - %p with `0x`.
+- **Research, parked or real stands only:**
+  - #529, #465, #462;
+  - #342, #341, #340. The `l` aliases slice of #340 would be A;
+  - #295, #246, #206, #204, #30, #27;
+  - the X'75' measurements #144 and #161-#165. These can run in an own
+    container, but they are measurements, not fixes.
+
+*The pass before: **2026-10-06**, 83 issues open: the
 44 below, plus #384-#420 less #414/#415 (closed), #423, #448 (the doc
 rewrite for #159), #453 and #454, all placed in Tier 1 item 4. Closed since
 2026-10-04: #382, #383, #414, #415, #425-#427, #431 (released in 2.3.x).
@@ -545,7 +611,8 @@ checklist is #245.
      (mvsmf#379, prerelease `v1.2.0-dev`), rexx370 and lstring370, all
      pinning `2.0.0`. httpd and mvsMF took crypto370 in the same PR.
      Findings folded into the brief (#310).
-   - **still on 1.0.8:** lua370, httplua, httprexx.
+   - ~~still on 1.0.8: lua370, httplua, httprexx~~ -- ported: lua370 pins
+     2.4.1, httplua and httprexx 2.6.1 (local checkouts, 2026-10-19).
    - **open:** nothing pins `edge` since brexx370#274 merged -- what
      happens to it is the maintainer's call.
 8. ~~**Prerelease `v2.0.0-rc1`**~~ -- skipped (2026-10-01): ufsd and brexx370
@@ -1425,6 +1492,10 @@ a hard ER for the same name exists; not a blocker, since nothing declares a hard
 
 ### 32 · #169 — the authorized probe recipes pack a bare `.lm`
 
+*2026-10-19: the five recipes are fixed (all pack `NAME.iebcopy` now). Left: prose only --
+`test/mvs/tstracau.c:37-50` still says cc370 drops `-Wl,--ac,1`, and
+`internals/priorities.md:201` still lists cc370#37 as live. In the S round.*
+
 Five places — `jcl/tstracau.jcl`, `jcl/tstracmx.jcl`, `test/mvs/tstracmx.c`,
 `test/mvs/tstracfl.c`, `docs/consumer-notes.md` — pack `NAME=NAME` instead of
 `NAME=NAME.iebcopy`. A bare `.lm` carries no PDS directory, so `--pack` has to
@@ -1735,8 +1806,8 @@ same question for reading spooled SYSOUT.
   `-Wall` in the SDK build. #125 is the one with a measured failure and is
   independent of the rest; #68 goes last and in its own three-step order, or it
   reddens consumer CI.
-- **2.0 restructure** — **2.0.0 released 2026-10-01**; what is left is Tier 0
-  step 7 (lua370, httplua, httprexx still on 1.0.8). The history: #245 (umbrella), with #244 feeding it (#243, #248 and
+- **2.0 restructure** — **2.0.0 released 2026-10-01**; Tier 0 step 7 is done
+  too (lua370 2.4.1, httplua/httprexx 2.6.1); #245 closed 2026-10-19, phase 4 (the OS seam) is #607. The history: #245 (umbrella), with #244 feeding it (#243, #248 and
   #140 landed, PR #255). The plan is `internals/design-2.0.md`: a hard cut to a
   standard-shaped header layout (`libc370/`, `mvs/`, `s370/`, `ibm/mvs/`,
   `ibm/jes2/`), with internals out of the sysroot. Phase 0 comes first:
