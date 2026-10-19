@@ -38,18 +38,27 @@ static const double ln2 = 0.69314718055994530941723212145818 ;
 
 */
 
-__PDPCLIB_API__ double asin (double y)
+static double asin_pos (double y);
+
+__PDPCLIB_API__ double asin (double x)
+{
+/*
+  if arg is -ve then we want "-asin(-x)"; not written as such: the
+  compiler folds -asin(-x), asin being odd, into asin(x), and that
+  became a branch back to the top that never ended (#675)
+*/
+
+    if (x <0.0 ) return ( -asin_pos(-x) );
+
+    return ( asin_pos(x) );
+}
+
+static double asin_pos (double y)
 {
     int i;
     double term,answer,work,x,powx,coef;
 
     x = y;
-
-/*
-  if arg is -ve then we want "-asin(-x)"
-*/
-
-    if (x <0.0 ) return ( -asin(-x) );
 
 /*
     If arg is > 1.0 we can't calculate
@@ -68,7 +77,7 @@ __PDPCLIB_API__ double asin (double y)
     if( x > 0.75 )
     {
         x = ( sqrt(1.0 - (x*x) ) );
-        return((pi/2.0)-asin(x));
+        return((pi/2.0)-asin_pos(x));
     }
 
 /*

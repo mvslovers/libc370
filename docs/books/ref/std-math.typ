@@ -148,6 +148,12 @@ below -1.
   [#cmd("EDOM")], [#var("x") is less than -1 or greater than +1.],
 )
 
+=== Notes
+
+Up to release 2.23.0 #cmd("asin()") of a negative argument, and with it
+#cmd("acos()"), did not return: the program looped until it ended in abend
+S322.
+
 === Related
 
 #cmd("atan()") (@std-math-atan), #cmd("cos()") (@std-math-cos).
@@ -180,6 +186,12 @@ signs of both arguments to determine the quadrant.
 
 #cmd("atan2(0.0, 0.0)") returns 0. Up to release 2.22.0 it divided zero by
 zero and ended the program with abend #cmd("S0CF").
+
+Up to release 2.23.0 #cmd("atan()") did not return for a negative
+argument, nor for one between about 0.27 and 0.58 or 1.73 and 3.73, which
+its reduction makes negative\; the program looped until it ended in abend
+S322. #cmd("atan2()") looped where it calls #cmd("atan()") with such a
+value.
 
 === Related
 
