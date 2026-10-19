@@ -10,14 +10,19 @@
 /* is fp still one of the program's open streams? */
 __asm__("\n&FUNC    SETC 'isopen'");
 static int
-isopen(CLIBGRT *grt, FILE *fp)
+isopen(CLIBGRT *grt, const FILE *fp)
 {
-    unsigned    i, n;
+    unsigned    n;
     int         found = 0;
 
     lock(&grt->grtfile, 0);
     n = arraycount(&grt->grtfile);
-    for (i = 0; i < n && !found; i++) found = (grt->grtfile[i] == fp);
+    for (unsigned i = 0; i < n; i++) {
+        if (grt->grtfile[i] == fp) {
+            found = 1;
+            break;
+        }
+    }
     unlock(&grt->grtfile, 0);
     return found;
 }
@@ -33,7 +38,7 @@ flushall(void)
 {
     CLIBGRT     *grt    = __grtget();
     FILE        **copy;
-    unsigned    i, n;
+    unsigned    n;
     int         err     = 0;
     int         owned;
 
@@ -45,7 +50,7 @@ flushall(void)
     unlock(&grt->grtfile, 0);
     if (!copy) return n ? EOF : 0;
 
-    for (i = 0; i < n; i++) {
+    for (unsigned i = 0; i < n; i++) {
         owned = __flock(copy[i]);
         if (isopen(grt, copy[i]) && (copy[i]->flags & _FILE_FLAG_WRITE)
                 && __fflush(copy[i])) err = EOF;
