@@ -31,7 +31,7 @@ __wsaget(void *key, unsigned len)
     if (!wsa) {
         wsa = calloc(1, size);
         if (wsa) {
-            strcpy(wsa->wsaeye, CLIBWSA_EYE);
+            memcpy(wsa->wsaeye, CLIBWSA_EYE, sizeof(wsa->wsaeye));   /* 8, no NUL (#413) */
             wsa->wsakey     = key;
             wsa->wsasize    = size;
             if ((unsigned)key > 0x00002000 && (unsigned)key < 0xFF000000) {

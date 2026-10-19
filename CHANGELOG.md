@@ -97,6 +97,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   address 0 to OPEN, which read low storage as a DCB, and returned a
   return code they had not set (measured on MVS: message IEC130I with a
   DD name of random characters).
+- **`tsocmd()` restores the caller's ECT; `sleep()` reports a wait it
+  could not do (#413).** `tsocmd()` wrote the called command's name into
+  the ECT of the caller's TSO session and changed its no-operands bit,
+  and left them so for every later command of the session (measured on
+  MVS). `sleep()` returned 0, "slept fully", when the timer could not be
+  set; it returns the seconds left, so a retry loop no longer spins, and
+  waits a long interval in pieces instead of letting it overflow.
 
 ## [2.22.0] - 2026-10-19
 

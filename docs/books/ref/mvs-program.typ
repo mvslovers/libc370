@@ -1636,8 +1636,9 @@ cannot be obtained.
 === Notes
 Each case that returns 8 is also reported to the operator.
 
-The ECT belongs to the TSO session. #cmd("tsocmd()") leaves the primary
-command name and the no-operands switch as it set them.
+The ECT belongs to the TSO session. #cmd("tsocmd()") puts the primary
+command name and the switches back as they were before the call. Up to
+release 2.22.0 it left them as it had set them.
 
 #cmd("tsocmdf()") formats into a buffer of 1024 bytes and truncates a longer
 result.
