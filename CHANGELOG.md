@@ -18,6 +18,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   four bits (#634).** `svcmain()`'s `SVCMAIN_KEY` was meant to take key 8
   as `0x08` as well as `0x80`, but the shift was a statement without
   effect, and `0x08` set key 0 in the caller's PSW.
+- **`try()` gives back the storage of an abend it recovers (#640).** Its
+  recovery exit asked for the retry without asking the system to free
+  the SDWA, so about 500 bytes of the region stayed allocated after every
+  abend `try()` caught, until the address space ended. A server that
+  survives abends lost that much each time (measured on MVS: 25,640 bytes
+  after 50 abends; now none).
 
 ## [2.22.0] - 2026-10-19
 

@@ -49,7 +49,11 @@ failed(SDWA *sdwa, void *udata)
     __asm__("MVC\t0(64,%0),0(%1)" :
         : "r" (&sdwa->SDWASR00), "r" (regs)  : "memory");
 
-    /* RC=4,RETRY=retry,restore registers */
+    /* RC=4,RETRY=retry,restore registers.  SDWAFREE: RTM frees the SDWA
+       before the retry, as SETRP FRESDWA=YES does - the retry path never
+       frees it, and every retried abend kept about 520 bytes of the region
+       until the address space ended (#640) */
+    sdwa->SDWAACF2 |= SDWAFREE;
     SETRP(sdwa,4,retry,1);
 
     /* 4=retry */
