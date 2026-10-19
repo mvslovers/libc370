@@ -640,9 +640,11 @@ takes a long time.
 #idx("time64")
 #idx("year 2038")
 The time functions of #cmd("<time.h>") (see @std-time) count seconds since
-1 January 1970 in a 32-bit #cmd("time_t"), which runs out in 2038. The
-functions of #cmd("<ext/time64.h>") do the same work with 64-bit values,
-and add values in milliseconds and microseconds.
+1 January 1970 in an unsigned 32-bit #cmd("time_t"), which runs out in
+2106\; #cmd("time()") itself ends with the TOD clock in 2042 (up to
+release 2.21.0 it failed from 2038). The functions of
+#cmd("<ext/time64.h>") do the same work with 64-bit values, and add values
+in milliseconds and microseconds.
 
 #tab(caption: [Types of \<ext/time64.h\>])[
   #table(columns: (1.1in, 0.9in, 1fr),
