@@ -64,19 +64,21 @@ __dsalc(char *ddname, const char *opts)
         for(p=temp; *p; p++) {
 
             if (*p=='(') {
-                if (*(p-1) != '=') {
+                /* p > temp: a '(' first in the string has nothing before it (#171) */
+                if (p == temp || *(p-1) != '=') {
                     /* convert "TRK(n,n)" to "TRK=n,n" 
                     * or "nnnn(n,n)" to "nnnn=n,n" */
                     *p = '=';
                 }
                 else {
-                    /* convert "name=(val1,val2)..." to "name=val1,val2..." */
-                    strcpy(p, p+1);
+                    /* convert "name=(val1,val2)..." to "name=val1,val2..."
+                       memmove: the copy overlaps, strcpy() is undefined (#171) */
+                    memmove(p, p+1, strlen(p+1)+1);
                 }
 
                 for(p++;*p; p++) {
                     if (*p==')') {
-                        strcpy(p,p+1);
+                        memmove(p, p+1, strlen(p+1)+1);
                         break;
                     }
                 }
