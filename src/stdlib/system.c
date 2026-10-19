@@ -18,6 +18,11 @@ __PDPCLIB_API__ int system(const char *string)
     size_t cnt;
     char *p;
 
+    /* C99 7.20.4.6: system(NULL) asks whether there is a command
+       processor.  There is: a program is LINKed.  It dereferenced the
+       null pointer (#395). */
+    if (string == NULL) return 1;
+
     p = strchr(string, ' ');
     if (p == NULL) {
         p = strchr(string, '\0');

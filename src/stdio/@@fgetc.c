@@ -44,13 +44,16 @@ __fgetc(FILE *fp)
         if (__fpswt(fp, 0)) goto quit;
     }
 
-    if (fp->flags & (_FILE_FLAG_EOF |_FILE_FLAG_RECORD)) goto quit;
+    if (fp->flags & _FILE_FLAG_RECORD) goto quit;
 
+    /* a pushed-back character comes before the end of file (#395) */
     if (fp->ungetch != -1) {
         c = (int)fp->ungetch;
         fp->ungetch = -1;
         goto quit;
     }
+
+    if (fp->flags & _FILE_FLAG_EOF) goto quit;
 
     if (fp->upto < fp->endbuf) goto dogetc;
 

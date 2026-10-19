@@ -81,6 +81,11 @@ __reopen(const char *fn, const char *mode, FILE *fp)
     if (dynamic)    fp->flags |= _FILE_FLAG_DYNAMIC;
     f->flags    = 0;
     fp->recfm   = f->recfm;
+    /* the new stream's: a character pushed back onto the old one is
+       discarded, and UPDAT, PUTLINE, GETLINE, DD: belong to the new open
+       (#395) */
+    fp->ungetch = -1;
+    fp->xflags  = f->xflags;
     memcpy(fp->ddname, f->ddname, sizeof(fp->ddname));
     memcpy(fp->member, f->member, sizeof(fp->member));
     memcpy(fp->dataset, f->dataset, sizeof(fp->dataset));

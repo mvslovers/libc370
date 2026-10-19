@@ -55,6 +55,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `vsopen()` closed the handle again and failed with `errno` 4. A DD name
   in lower case failed with `EVSOPEN`. `vsclose()` always returned 0
   (measured on MVS).
+- **`fflush(NULL)`, `system(NULL)`, `ungetc()` after the end of file,
+  `freopen()` and `perror()` as C99 has them (#395).** `fflush(NULL)` flushes
+  every output stream; it read low storage as a stream. `system(NULL)`
+  returns 1; it called a program whose name it read from low storage
+  (abend 806 on MVS). A successful `ungetc()` clears the end-of-file
+  indicator, and the next read returns the character; it returned `EOF`.
+  `freopen()` discards a character pushed back onto the old stream and
+  takes the new stream's own options; the first read returned the old
+  character. `perror()` no longer formats into a static buffer, and
+  `tmpfile()` returns `NULL` when `tmpnam()` has no name left (measured on
+  MVS).
 
 ## [2.22.0] - 2026-10-19
 
