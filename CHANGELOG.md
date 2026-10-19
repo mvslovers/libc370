@@ -49,6 +49,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `DEV3375` (the old misspelling `DEB3375` stays as a second name), and the
   definitions of `strerror()`, `jesirput()` and `__userExit` now match
   their headers.
+- **`vsopen()` opens a cluster that an earlier program left open, and takes
+  a DD name in lower case; `vsclose()` returns CLOSE's return code
+  (#411).** VSAM opens such a cluster with a warning, return code 4;
+  `vsopen()` closed the handle again and failed with `errno` 4. A DD name
+  in lower case failed with `EVSOPEN`. `vsclose()` always returned 0
+  (measured on MVS).
 
 ## [2.22.0] - 2026-10-19
 
