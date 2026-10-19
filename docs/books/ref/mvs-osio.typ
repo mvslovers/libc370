@@ -310,10 +310,12 @@ record length into #cmd("dcbblksi") and #cmd("dcblrecl").
 
 === Returns
 0 when the data set is open; 8 when it is not, which includes an abend in
-OPEN; otherwise the return code of OPEN.
+OPEN and a #cmd("NULL") #var("dcb"); otherwise the return code of OPEN.
 
 === Notes
-- #var("dcb") must not be #cmd("NULL").
+- Up to release 2.22.0 a #cmd("NULL") #var("dcb") was passed to OPEN, which
+  read low storage as a DCB (message #cmd("IEC130I") with a name of random
+  characters), and the return code was not set.
 - The block size comes from the JFCB, that is, from what the DD statement
   coded. When the DD does not code #cmd("BLKSIZE"), set #cmd("dcbblksi")
   before reading.
