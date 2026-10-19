@@ -93,6 +93,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   identifier when the timer thread could not be started, and it never
   fired; they return 0. `cmtt_new()` took the pointers of its copy of the
   master trace table from the live table after copying it.
+- **`osxopen()` and `osdopen()` refuse a `NULL` DCB (#412).** They passed
+  address 0 to OPEN, which read low storage as a DCB, and returned a
+  return code they had not set (measured on MVS: message IEC130I with a
+  DD name of random characters).
 
 ## [2.22.0] - 2026-10-19
 

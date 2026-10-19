@@ -10,8 +10,12 @@ static void opendcb(DCB *dcb, int typej, int *rc);
 int
 osxopen(DCB *dcb, int typej)
 {
-    int         rc;
+    int         rc   = 8;   /* not open, also when OPEN abended */
     JFCB        jfcb = {0};
+
+    /* no DCB: OPEN was given address 0, and DCBOFLGS was read from low
+       storage, with rc left unset (#412) */
+    if (!dcb) return 8;
 
     /* use try() in case of abend */
     try(opendcb, dcb, typej, &rc);
