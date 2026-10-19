@@ -80,6 +80,8 @@ include/                        installed into the sysroot
   assert.h ... wchar.h          ISO C99; to add: stdbool.h, inttypes.h, iso646.h
   strings.h unistd.h            POSIX subset, only for functions that exist (D2)
   sys/socket.h netinet/in.h arpa/inet.h
+  dynit.h                       z/OS XL C interface, kept where z/OS has it so ported code
+                                compiles unchanged (naming.md rule 3, #52)
   ext/                          portable extensions: array.h, time64.h, version.h, strutil.h, int64.h
   mvs/                          MVS API: wto.h, dynalloc.h, jes2.h, racf.h, smf.h, vsam.h, thread.h, recovery.h,
                                 wsa.h, jes2spool.h, socket.h (to be dissolved, D11), ...

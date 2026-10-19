@@ -13,13 +13,17 @@ A program that is to read or write a data set on MVS needs a DD statement
 for it. The functions in this chapter create and remove DD statements while
 the program runs, through the MVS dynamic allocation service (the DYNALLOC
 macro, SVC 99), and run IDCAMS, the access method services utility, to
-catalog, delete or rename data sets. Two headers provide them:
+catalog, delete or rename data sets. Three headers provide them:
 
 #deflist(width: 1.35in,
   [#cmd("<mvs/dynalloc.h>")], [dynamic allocation: a one-call interface
     that takes JCL-like keywords (#cmd("__dsalc()")), the routines that
     build SVC 99 text units one by one, and the SVC itself
     (#cmd("__svc99()")).],
+  [#cmd("<dynit.h>")], [dynamic allocation through a structure, the
+    interface of the z/OS XL C/C++ run-time library: #cmd("dyninit()"),
+    #cmd("dynalloc()") and #cmd("dynfree()"). A program written for it on
+    z/OS compiles here unchanged.],
   [#cmd("<mvs/idcams.h>")], [IDCAMS commands, with or without access to
     the messages that IDCAMS prints.],
 )
@@ -50,6 +54,11 @@ A program can use the service at three levels:
   #cmd("__svc99()") itself (see @mvs-dynalloc-svc99-ex).
 + #cmd("__svc99()") issues SVC 99 for a request block that the program has
   built entirely by itself.
+
+#cmd("dynalloc()") and #cmd("dynfree()") of #cmd("<dynit.h>") sit beside
+the first level: the program fills in the fields of a structure instead of
+writing keywords, and receives the error and information codes of a failed
+request in that structure (@mvs-dynit).
 
 #cmd("__dynal()") is a fourth, older interface: it allocates one existing
 data set, or a member of one, with #cmd("DISP=SHR") and
@@ -329,6 +338,256 @@ returns #cmd("0x14000001").
 
 === Related
 @mvs-dynalloc-dsalc
+
+== The z/OS Interface: \<dynit.h\> <mvs-dynit>
+#idx("dynit.h")
+#idx("dynamic allocation", "z/OS interface")
+#idx("__dyn_t")
+#cmd("<dynit.h>") is the dynamic allocation interface of the z/OS XL C/C++
+run-time library. A program describes the request in a structure of type
+#cmd("__dyn_t"): it clears the structure with #cmd("dyninit()"), sets the
+fields it needs, and passes it to #cmd("dynalloc()") or #cmd("dynfree()").
+The names, the types and the constants are those of z/OS, so a program
+written for that interface compiles here unchanged\; the header is in the
+top directory of the include tree for the same reason, and is included as
+#cmd("<dynit.h>").
+
+The functions build the SVC 99 text units themselves, in storage on the
+stack, and issue the request with #cmd("__svc99()"). They write no message
+to the operator. The outcome is the return code, and for a request that
+SVC 99 rejected, the fields #cmd("__errcode") and #cmd("__infocode").
+
+What MVS 3.8j cannot do is decided field by field
+(@mvs-dynit-fields-tab): a field is passed on as its text unit, ignored,
+or refused. A refused field makes the call return -2 before SVC 99 is
+issued, with nothing allocated. A field that merely steers where SMS
+would place a data set is ignored, since the allocation is correct
+without it.
+
+#tab(caption: [Fields of \_\_dyn\_t and their treatment on MVS 3.8j])[
+  #table(columns: (1.15in, 0.8in, 1fr),
+    [Field], [Key], [On MVS 3.8j],
+    [#cmd("__ddname")], [#cmd("DALDDNAM")], [Passed on, at most 8
+      characters. #cmd("NULL"), an empty string or #cmd("\"????????\"")
+      makes MVS generate a name (#cmd("DALRTDDN"))\; it is returned in
+      #cmd("__retddn"), and for #cmd("\"????????\"") also written over the
+      question marks, as z/OS does.],
+    [#cmd("__dsname")], [#cmd("DALDSNAM")], [Passed on, at most 44
+      characters. Without it a new data set is temporary, and its name is
+      returned in #cmd("__retdsn") (#cmd("DALRTDSN")), except for SYSOUT,
+      #cmd("__DUMMY_DSN") and #cmd("__TERM").],
+    [#cmd("__member")], [#cmd("DALMEMBR")], [Passed on, at most 8.],
+    [#cmd("__status")], [#cmd("DALSTATS")], [#cmd("__DISP_OLD"),
+      #cmd("__DISP_MOD"), #cmd("__DISP_NEW"), #cmd("__DISP_SHR").],
+    [#cmd("__normdisp"), #cmd("__conddisp")], [#cmd("DALNDISP"),
+      #cmd("DALCDISP")], [#cmd("__DISP_KEEP"), #cmd("__DISP_DELETE"),
+      #cmd("__DISP_CATLG"), #cmd("__DISP_UNCATLG").],
+    [#cmd("__sysout")], [#cmd("DALSYSOU")], [A class, or
+      #cmd("__DEF_CLASS") for the default class (#cmd("SYSOUT=*")).],
+    [#cmd("__sysoutname")], [#cmd("DALSPGNM")], [Passed on with
+      #cmd("__sysout"), at most 8.],
+    [#cmd("__unit")], [#cmd("DALUNIT")], [Passed on, at most 8\; see
+      Notes for mount requests.],
+    [#cmd("__volser")], [#cmd("DALVLSER")], [Passed on, at most 6.],
+    [#cmd("__volrefds")], [#cmd("DALVLRDS")], [Passed on, at most 44.],
+    [#cmd("__dcbrefds"), #cmd("__dcbrefdd")], [#cmd("DALDCBDS"),
+      #cmd("DALDCBDD")], [Passed on: the DCB attributes of a model data
+      set or DD.],
+    [#cmd("__dsorg")], [#cmd("DALDSORG")], [#cmd("__DSORG_PS"),
+      #cmd("__DSORG_PO") and the other #cmd("__DSORG_") constants.],
+    [#cmd("__recfm")], [#cmd("DALRECFM")], [The #cmd("_F_"), #cmd("_V_"),
+      #cmd("_U_"), #cmd("_B_"), #cmd("_S_"), #cmd("_A_"), #cmd("_M_")
+      constants added together, for example #cmd("_FB_ + _A_")\; a value
+      outside 0 to 255 is refused.],
+    [#cmd("__lrecl"), #cmd("__blksize")], [#cmd("DALLRECL"),
+      #cmd("DALBLKSZ")], [Passed on.],
+    [#cmd("__keylength")], [#cmd("DALKYLEN")], [Passed on, 1 to 255.],
+    [#cmd("__alcunit")], [#cmd("DALCYL"), #cmd("DALTRK")], [#cmd("__CYL")
+      or #cmd("__TRK")\; any other value is refused. For space in blocks,
+      leave it 0 and set #cmd("__avgblk").],
+    [#cmd("__primary"), #cmd("__secondary"), #cmd("__dirblk"),
+      #cmd("__avgblk")], [#cmd("DALPRIME"), #cmd("DALSECND"),
+      #cmd("DALDIR"), #cmd("DALBLKLN")], [Passed on when greater than 0\;
+      more than 16,777,215 (three bytes) is refused.],
+    [#cmd("__misc_flags")], [], [#cmd("__CLOSE") (#cmd("DALCLOSE")),
+      #cmd("__RELEASE") (#cmd("DALRLSE")), #cmd("__PERM")
+      (#cmd("DALPERMA")), #cmd("__CONTIG") (#cmd("DALSPFRM"), value
+      #cmd("CONTIG")), #cmd("__ROUND") (#cmd("DALROUND")), #cmd("__TERM")
+      (#cmd("DALTERM")), #cmd("__DUMMY_DSN") (#cmd("DALDUMMY")),
+      #cmd("__HOLDQ") (#cmd("DALSHOLD")).],
+    [#cmd("__password")], [#cmd("DALPASSW")], [Passed on, at most 8.],
+    [#cmd("__miscitems")], [], [Passed on: the program's own text units,
+      the last pointer with its high-order bit set.],
+    [#cmd("__storclass"), #cmd("__mgntclass")], [], [Ignored: there is no
+      SMS on MVS 3.8j.],
+    [#cmd("__dataclass")], [], [Refused: a data class supplies attributes
+      that the allocation would then lack.],
+    [#cmd("__recorg"), #cmd("__keyoffset"), #cmd("__rls")], [], [Refused:
+      VSAM data sets are defined with IDCAMS on MVS 3.8j.],
+    [#cmd("__refdd"), #cmd("__like")], [], [Refused. #cmd("__dcbrefds")
+      and #cmd("__dcbrefdd") copy the DCB attributes, but not the space.],
+    [#cmd("__dsntype")], [], [#cmd("__DSNT_PDS") is accepted and ignored,
+      since a library on MVS 3.8j is a PDS\; any other value is refused.],
+    [#cmd("__pathname")], [], [Refused: there is no UNIX file system.
+      #cmd("__pathopts"), #cmd("__pathmode"), #cmd("__pathndisp") and
+      #cmd("__pathcdisp") are ignored.],
+    [#cmd("__rbx"), #cmd("__emsgparmlist")], [], [Ignored: the request
+      block of MVS 3.8j has no extension (its word at offset 12 is
+      reserved), so no messages are returned. The types
+      #cmd("__S99rbx_t") and #cmd("__S99emparms_t") are declared but
+      incomplete.],
+    [#cmd("__errcode"), #cmd("__infocode")], [], [Output: the error and
+      information codes of SVC 99.],
+    [#cmd("__retddn"), #cmd("__retdsn")], [], [Output, an extension of
+      LIBC/370: the DD name and the data set name that MVS generated, as
+      strings without trailing blanks.],
+  )
+] <mvs-dynit-fields-tab>
+
+Character fields are converted to uppercase, and a value longer than its
+maximum is cut to that length\; z/OS does both as well. Numeric fields of 0
+are not passed on.
+
+== dyninit <mvs-dynit-dyninit>
+#idx("dyninit")
+
+=== Format
+```
+#include <dynit.h>
+
+int dyninit(__dyn_t *dyn_parms);
+```
+
+=== Description
+#cmd("dyninit()") sets every field of #var("*dyn_parms") to zero or
+#cmd("NULL"), so that a request contains only the fields the program sets
+afterwards. Call it before each new request, also when the structure is
+used again.
+
+=== Returns
+0.
+
+=== Notes
+#cmd("dyninit()") is a macro that calls #cmd("memset()")\; it evaluates
+its argument once. There is no function of that name in the library.
+
+=== Related
+@mvs-dynit-dynalloc, @mvs-dynit-dynfree
+
+== dynalloc <mvs-dynit-dynalloc>
+#idx("dynalloc")
+#idx("dynamic allocation", "with a structure")
+
+=== Format
+```
+#include <dynit.h>
+
+int dynalloc(__dyn_t *dyn_parms);
+```
+
+=== Description
+#cmd("dynalloc()") allocates a data set, a SYSOUT data set, a dummy data
+set or the terminal, as the fields of #var("*dyn_parms") describe it
+(@mvs-dynit-fields-tab). It builds one text unit for each field that is
+set and issues SVC 99 with the allocation function.
+
+When #cmd("__ddname") does not name the DD, MVS generates the name, and
+#cmd("dynalloc()") returns it in #cmd("__retddn"). A new data set without
+#cmd("__dsname") is a temporary one\; its name is returned in
+#cmd("__retdsn").
+
+=== Returns
+#deflist(width: 1.35in,
+  [0], [The data set was allocated.],
+  [-1], [The request did not fit the work area of the function: more than
+    48 text units, which only #cmd("__miscitems") can make. Nothing was
+    allocated.],
+  [-2], [#var("dyn_parms") is #cmd("NULL"), or a field holds a value the
+    function cannot pass on or that MVS 3.8j cannot do
+    (@mvs-dynit-fields-tab). Nothing was allocated.],
+  [other], [The return code of SVC 99, normally 4, with the reason in
+    #cmd("__errcode") and #cmd("__infocode").],
+)
+
+=== Errors
+#deflist(width: 1.35in,
+  [#cmd("EINVAL")], [The function returned -2.],
+  [#cmd("ENOMEM")], [The function returned -1.],
+)
+
+=== Notes
+- #cmd("__errcode") and #cmd("__infocode") are set by every call: to 0
+  when the request was refused before SVC 99, to the codes of the request
+  block otherwise. For example, a data set that is not cataloged, with
+  #cmd("__status") #cmd("__DISP_SHR"), gives return code 4 and
+  #cmd("__errcode") #cmd("X'1708'") (measured on MVS 3.8j).
+- *Mount requests.* When #cmd("__unit") or #cmd("__volser") is set, the
+  request carries the flag #cmd("S99NOMNT"): a volume that is not mounted
+  makes the call fail at once instead of asking the operator to mount it,
+  the rule #cmd("__dsalc()") follows as well. #cmd("__dyn_t") has no field
+  to ask for the mount\; a program that needs one builds the request with
+  #cmd("__svc99()").
+- Every request carries the flag #cmd("S99NOCNV"), so MVS never satisfies
+  it with an existing allocation.
+- #cmd("__ddname") set to #cmd("\"????????\"") must point to writable
+  storage of 9 bytes: the generated name is written there.
+- A z/OS program and this one agree on names, not on the layout of
+  #cmd("__dyn_t"): do not exchange the structure in binary form.
+- The data set receives its normal disposition when the DD is freed with
+  #cmd("dynfree()"), at the close with #cmd("__CLOSE"), or at the end of
+  the job step.
+
+=== Example
+#fig(caption: [Creating a data set with dynalloc()])[
+  #code(read("../ex/mvs-dynalloc/dynit.c"), numbers: true)
+] <mvs-dynit-ex>
+
+=== Related
+@mvs-dynit-dyninit, @mvs-dynit-dynfree, @mvs-dynalloc-dsalc
+
+== dynfree <mvs-dynit-dynfree>
+#idx("dynfree")
+#idx("dynamic allocation", "freeing a DD")
+
+=== Format
+```
+#include <dynit.h>
+
+int dynfree(__dyn_t *dyn_parms);
+```
+
+=== Description
+#cmd("dynfree()") removes an allocation with an SVC 99 unallocation
+request. It reads only these fields, and ignores the others, as z/OS does:
+
+#deflist(width: 1.35in,
+  [#cmd("__ddname")], [the DD to free (#cmd("DUNDDNAM")).],
+  [#cmd("__dsname"), #cmd("__member")], [the data set, or member, whose
+    allocation is to be freed (#cmd("DUNDSNAM"), #cmd("DUNMEMBR")), with or
+    without a DD name.],
+  [#cmd("__normdisp")], [a disposition that overrides the one of the
+    allocation (#cmd("DUNOVDSP")), for example #cmd("__DISP_DELETE").],
+  [#cmd("__miscitems")], [further text units of the program.],
+  [#cmd("__pathname")], [refused: there is no UNIX file system.],
+)
+
+=== Returns
+As #cmd("dynalloc()"): 0 when the allocation was freed, -1 or -2 when the
+request was not issued, otherwise the return code of SVC 99 with
+#cmd("__errcode") and #cmd("__infocode") set. A structure that names
+neither a DD nor a data set is refused with -2.
+
+=== Notes
+- A DD that does not exist gives return code 4 and #cmd("__errcode")
+  #cmd("X'0438'") (measured on MVS 3.8j).
+- The request carries the unallocation option of key #cmd("DUNUNALC"),
+  which also frees a DD that is permanently allocated, as
+  #cmd("__dsfree()") does.
+- The DD name is converted to uppercase, so the name #cmd("dynalloc()")
+  returned can be passed in any case.
+
+=== Related
+@mvs-dynit-dynalloc, @mvs-dynalloc-dsfree
 
 == \_\_svc99 <mvs-dynalloc-svc99>
 #idx("__svc99")

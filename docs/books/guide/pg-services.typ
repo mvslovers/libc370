@@ -193,6 +193,14 @@ Points to watch:
   without an error. MVS 3.8j has no #cmd("LIKE=").
 
 #idx("fopen", "creating a data set")
+#idx("dynalloc")#idx("dynit.h")
+A program written for z/OS that fills in a #cmd("__dyn_t") and calls
+#cmd("dynalloc()") and #cmd("dynfree()") of #cmd("<dynit.h>") compiles and
+runs as it is. That interface also returns the error and information codes
+of a failed request, in #cmd("__errcode") and #cmd("__infocode")\; the
+_LIBC/370 Library Reference_ describes it, with the fields MVS 3.8j cannot
+honor, in Chapter 25, “Dynamic Allocation and IDCAMS”.
+
 For a new data set that needs nothing beyond what #cmd("fopen()") can say,
 there is a shorter way: #cmd("fopen()") creates a data set opened by name
 for writing, and accepts the unit and volume in its mode string

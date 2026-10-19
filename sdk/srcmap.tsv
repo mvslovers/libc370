@@ -809,3 +809,7 @@ src/mvs/jes2/jesvol.h	src/mvs/jes2/jesvol.h	private to the JES2 sources, new aft
 src/mvs/dscb/@@dadsm.c	src/mvs/dscb/@@dadsm.c	new after 2.23.0 (#143): __scratch() and __renamev(), SCRATCH and RENAME by volume
 src/mvs/pds/@@pdsupd.c	src/mvs/pds/@@pdsupd.c	new after 2.23.0 (#143): the STOW core of __delmem(), __renmem() and their volume forms
 src/internal/pdsupd.h	src/internal/pdsupd.h	shared private header, new after 2.23.0 (#143): one STOW on a PDS allocated by name or volume
+src/dynit/@@dynrq.c	src/dynit/@@dynrq.c	new after 2.23.0 (#52): the SVC 99 request dynalloc() and dynfree() build
+src/dynit/dynalloc.c	src/dynit/dynalloc.c	new after 2.23.0 (#52): dynalloc() of <dynit.h>
+src/dynit/dynfree.c	src/dynit/dynfree.c	new after 2.23.0 (#52): dynfree() of <dynit.h>
+src/dynit/dynreq.h	src/dynit/dynreq.h	area-local private header, new after 2.23.0 (#52): the request of <dynit.h>
