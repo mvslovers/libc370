@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.21.0] - 2026-10-19
+
+A round of fixes to standard functions that did not do what C99 says, and
+to a few MVS helpers. `bsearch()` calls the comparison function with the
+key first, `strstr()` finds an empty string, `strftime()` no longer reads
+through a null pointer for `%Z`, the `<float.h>` limits are constants,
+`setenv()` compares names exactly, and closing a data set gives back its
+buffer pool. A minor release because several of these change what a caller
+sees: a comparison function written for the old `bsearch()` order, code
+that relied on `strstr(s, "")` being a null pointer, on `setenv()`
+matching a name in another case, or on `__listc()` returning 0 for an
+empty level. The CC/370 range is unchanged: `>=1.6.0 <2`.
+
 ### Fixed
 - **`strstr()` with an empty `s2` returns `s1` (#393).** C99 requires a
   pointer to the start of `s1` when the string searched for is empty; the

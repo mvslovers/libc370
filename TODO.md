@@ -62,9 +62,9 @@ Each fix gets a red/green test in a container, then a PR and a merge.
       pool keeps X'000001'. 40 cycles leaked 40 pools before, now 1.
   - **#475's caseless fallback** (PR #626): dropped on the maintainer's
     call; `setenv()` compares exactly, as `getenv()` does.
-  - Not released yet: everything sits under [Unreleased]. It changes what
-    callers see (`strstr`, `strftime`, ctype, `float.h`, `__listc` rc,
-    `setenv`, `bsearch`), so it is a minor release.
+  - Released as 2.21.0, a minor release: it changes what callers see
+    (`strstr`, `strftime`, ctype, `float.h`, `__listc` rc, `setenv`,
+    `bsearch`).
 - **M round:** #474 (five stdio items; `@@fptmp.c:71` has the same
   `strchr(recfm,'B')` case bug as `@@fpstar.c:108`), #386 scanf widths,
   #423 %a, #225 HFP scaling (container only), #390 time() past 2038
