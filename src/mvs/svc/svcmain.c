@@ -40,9 +40,10 @@ int svcmain(SVCREGS *svcregs, unsigned *r15, unsigned *r0, unsigned *r1)
         if ((svcregs->r15 & 0xFF) == PSWKEYNONE) break;
 
         /* if the caller has the key in the lowest bits, shift the key to
-           proper alignment - meant to; "svcregs->r15 << 4;" stood here and
-           shifted nothing (#39: statement with no effect; #634).  Kept as it
-           behaved until the change is measured. */
+           proper alignment: 0x08 is key 8, as 0x80 is.  It was
+           "svcregs->r15 << 4;", which shifted nothing, and 0x08 set key 0
+           (#634) */
+        if (svcregs->r15 < 0x10) svcregs->r15 <<= 4;
 
         /* remove and replace the callers PSW key value */
         rb->RBOPSWB2 &= 0x0F;                   /* remove   */

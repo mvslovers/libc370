@@ -140,6 +140,13 @@ tstinstall() {
     python3 tstinstall.py >/dev/null
     return
 }
+tstsvckey() {
+    "$CC" -std=gnu99 -Wall -Wextra -Wno-missing-braces \
+       -Wno-missing-field-initializers -Wno-unused-parameter \
+       -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
+       -I $R/include -I $R -o "$B/t" tstsvckey.c && "$B/t"
+    return
+}
 tsttodsc() {
     "$CC" -std=gnu99 -Wall -Wextra \
        -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
@@ -314,7 +321,7 @@ tstwpos() {
 # not dropped from here - fix it, or say which issue it waits on.
 ALL="tst75sel tst75snd tstacee tstaradf tstardel tstblank tstcmtt tstdblcv tstdblrb tstdirck tstdsnmt tstemptl
      tstenqdq tsterrfl tstfabnd tstfcls tstfloor tstfpapp tstfprls tstfpunit tstgmain tstidcam tstidcrec tstinet tstiolk tstjesop
-     tstjesprb tstjestx tstl tstll tstlspd tstlstds tstpfarg tstpfflt tstpfval tstplus tstraclo tstrand tstrldwk tstrseek tstscnll tstssvt tstsubsy tsttm64vec tsttodsc tstinstall tsttxdsn tstvsnp
+     tstjesprb tstjestx tstl tstll tstlspd tstlstds tstpfarg tstpfflt tstpfval tstplus tstraclo tstrand tstrldwk tstrseek tstscnll tstssvt tstsubsy tsttm64vec tsttodsc tstinstall tstsvckey tsttxdsn tstvsnp
      tstwchar tstwpos tstwto"
 
 [ $# -gt 0 ] && ALL="$*"
