@@ -77,6 +77,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `atan2(0, 0)` returns 0 instead of ending S0CF. `log(0)` returns
   `-HUGE_VAL` with `ERANGE`, as C99 has it, and `frexp(0)` stores 0 in its
   exponent (measured on MVS).
+- **`__dsalc()`: `UNCATLG`, the JCL form of `SPACE=`, and a `NULL` option
+  string (#408).** A disposition of `UNCATLG` or `UNCAT` was taken as
+  `CATLG`, so a data set to be uncataloged was cataloged.
+  `SPACE=(TRK,(1,2))`, `(CYL,(5,2,10))` and `(800,(10,5))` made the call
+  fail; they are accepted. With `opts` `NULL` the function went on with
+  the caller's own `strtok()` and took its tokens as keywords: it
+  cataloged a data set named in the caller's string (measured on MVS).
 
 ## [2.22.0] - 2026-10-19
 
