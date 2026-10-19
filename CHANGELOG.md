@@ -35,6 +35,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   is declared as another name of its `double` function and returns
   exactly what that function returns (measured on MVS). The `float`
   variants and the other functions C99 added are still not provided.
+- **`__vsfdbk()` reports what the last VSAM request did (#625).** The VSAM
+  functions return a record length, -1, -2 or 8, and the codes behind them
+  were only in the handle's `rc`, `rsn` and `component` fields, which the
+  error exits write and nothing resets: after a successful read they still
+  held the previous error, the end of the data left them unchanged, and
+  `rc` stayed 0 on MVS 3.8j. `__vsfdbk(vs, &fb)` fills a `VSFDBK` after any
+  call with the return code (0, 8 or 12), the feedback code (for example
+  X'04' end of data, X'08' duplicate key, X'10' record not found), the
+  component code, the record length and the RBA of that one request, read
+  from the RPL (measured on MVS). The existing functions are unchanged.
 
 ### Changed
 - **`fseek()` keeps the error indicator; `rewind()` clears it (#178).**
