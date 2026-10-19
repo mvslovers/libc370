@@ -341,7 +341,8 @@ record by its key and rewrite it:
 + Read the record with #cmd("vsread()"), giving the key and its length.
   The key must be the full key as the cluster holds it, here blank-padded to
   8 characters. A key that is not found is reported as an error, -2 with
-  reason code 16 in #cmd("vs->rsn"), not as end of data.
+  feedback code 16 (X'10'), not as end of data; #cmd("__vsfdbk()") gives
+  the code.
 + Change the record and rewrite it with #cmd("vsupdate()"). The update
   applies to the record the handle read last, so issue no other request on
   the handle between the read and the update.
@@ -364,6 +365,15 @@ errors: #cmd("vseof()") and #cmd("vserror()") report it until
 #cmd("vsclear()") resets it. A remembered error does not make a later read
 fail, so a program that handles an error, such as a key not found, can read
 on.
+
+#idx("__vsfdbk")
+*The feedback code says why.* After any call, #cmd("__vsfdbk()") fills a
+#cmd("VSFDBK") with what the last request did: the return code (0, 8 or
+12), the feedback code, the record length and the RBA. These belong to that
+one request -- a good read after a failed one reports 0 -- so a program
+that tells a missing key (X'10') from a duplicate (X'08') or the end of the
+data (X'04') asks #cmd("__vsfdbk()") right after the call instead of reading
+codes the handle may have kept from an earlier error.
 
 Each function exists in two forms: #cmd("vsread()") takes a lock on the
 handle around the request, so that several tasks can share one handle, and
