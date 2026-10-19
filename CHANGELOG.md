@@ -28,6 +28,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   usable (#179).** It set the old stream's error indicator, and since the
   indicator refuses every read and write, the stream was dead although
   nothing had failed on it (measured on MVS).
+- **`fclose()` releases the stream's lock also when the task already
+  held it (#174).** A write that abended under the caller's own recovery
+  leaves the lock taken; `fclose()` then freed the stream but kept the
+  lock, on storage the next `fopen()` could get back, where it made that
+  stream skip its own locking (measured on MVS).
 
 ## [2.22.0] - 2026-10-19
 

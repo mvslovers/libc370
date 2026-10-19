@@ -16,7 +16,6 @@
 int
 fclose(FILE *fp)
 {
-    int     owned;
     int     rc      = 0;
     int     err;
 
@@ -25,9 +24,11 @@ fclose(FILE *fp)
 
     /* the whole teardown runs under the FILE lock, so an in-flight
        vfprintf() on the same FILE finishes (or waits) before the DCB
-       closes and the buffer goes away (#147); rc=8 = caller already
-       holds it (#145) */
-    owned = (lock(fp,0) == 0);
+       closes and the buffer goes away (#147).  rc=8, the task holds it
+       already, is not only an outer caller (#145): a write that abended
+       under the caller's own recovery took it and never DEQ'd it.  The
+       FILE is freed either way, so the lock goes with it below (#174). */
+    lock(fp,0);
 
     if (fp->flags & _FILE_FLAG_OPEN) {
         /* flush any pending data to disk; __fflush - we hold the lock.
@@ -47,8 +48,10 @@ fclose(FILE *fp)
         }
     }
 
-    /* buffer, DD, grtfile, FILE, lock - shared with __fabandon() (#168) */
-    __fpterm(fp, owned);
+    /* buffer, DD, grtfile, FILE, lock - shared with __fabandon() (#168).
+       The DEQ is RET=HAVE: an outer caller's later unlock() of the freed
+       FILE answers 8 and changes nothing */
+    __fpterm(fp, 1);
 
 quit:
     return rc;
