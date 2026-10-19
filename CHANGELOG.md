@@ -84,6 +84,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   fail; they are accepted. With `opts` `NULL` the function went on with
   the caller's own `strtok()` and took its tokens as keywords: it
   cataloged a data set named in the caller's string (measured on MVS).
+- **`try()` returns -1 when it cannot set up its recovery routine; timer
+  requests fail when no timer thread runs; `cmtt_new()` adjusts its copy
+  from the copy (#476).** With no task anchor or ten recovery routines
+  in use, `try()`, `__try()`, `__linkt()` and `__linkds()` returned +1,
+  which reads as user abend 1 (measured on MVS). `tmr_ecb()`,
+  `tmr_func()` and their siblings queued a request and returned its
+  identifier when the timer thread could not be started, and it never
+  fired; they return 0. `cmtt_new()` took the pointers of its copy of the
+  master trace table from the live table after copying it.
 
 ## [2.22.0] - 2026-10-19
 

@@ -90,7 +90,10 @@ call(void *func, void *plist)
     /* create ESTAE with failed() as the recovery routine */
     rc = estae(ESTAE_CREATE, failed, &regs);
     if (rc) {
-        rc *= -1;   /* make negative */
+        /* negative: an ESTAE return code made so, and __estae()'s own -1
+           (no CRT, ten levels in use) kept so.  It was negated to +1, which
+           reads as user abend 1 (#476) */
+        if (rc > 0) rc = -rc;
         goto quit;
     }
 

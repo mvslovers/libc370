@@ -10,7 +10,8 @@ TQEID tmr_func_keep(int (*func)(void *, TQE*), void *udata, unsigned bintvl)
 
     if (!tmr) return 0;         /* no TMR anchor: no timer services (#85) */
 
-    tmr_start();
+    /* no timer thread: the request would never fire (#476) */
+    if (tmr_start()) return 0;
 
     tqe = tqe_new(NULL, func, udata, bintvl, TQE_FLAG_KEEP);
     if (tqe) {

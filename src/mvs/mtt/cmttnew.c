@@ -83,19 +83,21 @@ CMTT *cmtt_new(void)
     memcpy(cmtt->mttable, mttable, size);
     // wtodumpf(cmtt->mttable, sizeof(MTTABLE), "cmtt->mttable copy");
     
-    /* fixup the pointers in the cmtt->mttable */
-    offset = ((unsigned)mttable->mttcurpt - (unsigned)mttable);
+    /* fixup the pointers in the cmtt->mttable.  The offsets come from the
+       copy: the live table's pointers, read after the memcpy(), may have
+       moved on since, and then pointed past the entries copied (#476) */
+    offset = ((unsigned)cmtt->mttable->mttcurpt - (unsigned)mttable);
     cmtt->mttable->mttcurpt = (MTENTRY*)((unsigned)cmtt->mttable + offset);
     
-    offset = (mttable->mttentpt - (unsigned)mttable);
+    offset = (cmtt->mttable->mttentpt - (unsigned)mttable);
     cmtt->mttable->mttentpt = (unsigned)cmtt->mttable + offset;
     
-    offset = (mttable->mttendpt - (unsigned)mttable);
+    offset = (cmtt->mttable->mttendpt - (unsigned)mttable);
     cmtt->mttable->mttendpt = (unsigned)cmtt->mttable + offset;
 
     cmtt->mttable->mttsp = 0;
 
-    offset = ((unsigned)mttable->mttwrppt - (unsigned)mttable);
+    offset = ((unsigned)cmtt->mttable->mttwrppt - (unsigned)mttable);
     cmtt->mttable->mttwrppt = (MTENTRY*)((unsigned)cmtt->mttable + offset);
 
     /* switch to problem mode key 8 */

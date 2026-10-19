@@ -635,8 +635,7 @@ is stored in #var("prc") when that is not #cmd("NULL").
 === Returns
 0 when the program returned, the abend code in the form #cmd("X'00sssuuu'")
 when it ended abnormally (see @mvs-program-try), or a negative value when
-the ESTAE could not be created -- or +1, as for #cmd("try()"), when the
-library could not set it up (libc370 issue 476). No dump is taken.
+the ESTAE could not be created. No dump is taken.
 
 === Notes
 When a called C program ends abnormally, its own termination code does not
@@ -1081,10 +1080,10 @@ for #cmd("tryinfo()").
 === Returns
 0 when #var("func") returned normally\; the abend code when it ended
 abnormally\; a negative value, the ESTAE return code negated, when the
-ESTAE macro failed. When the library could not even begin to set up the
-recovery routine -- no task anchor, or ten routines established already --
-the value is +1, which cannot be told from a user abend U0001 (a defect,
-libc370 issue 476).
+ESTAE macro failed, and -1 when the library could not even begin to set up
+the recovery routine -- no task anchor, or ten routines established
+already. Up to release 2.22.0 that last case returned +1, which could not
+be told from a user abend U0001.
 
 === Notes
 The return value of #var("func") is lost. A function called with
@@ -1128,7 +1127,7 @@ that follow it under a recovery routine, in the same way.
 === Returns
 0 when #var("func") returned normally, the abend code when it ended
 abnormally, and a negative value when the recovery routine could not be
-established -- or +1, as for #cmd("try()") (libc370 issue 476).
+established.
 
 === Notes
 The comment in the header says that #cmd("__try()") returns 0 unless the

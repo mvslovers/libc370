@@ -1329,9 +1329,9 @@ second: once (#cmd("tmr_ecb()")), once and then kept disabled
 (#cmd("tmr_ecb_every()")). The timer thread is started if it is not running.
 
 === Returns
-The identifier of the request, or 0 when it could not be made. If the timer
-thread cannot be started, the request is queued and its identifier
-returned all the same, but it never fires (a defect, libc370 issue 476).
+The identifier of the request, or 0 when it could not be made, including
+when the timer thread cannot be started. Up to release 2.22.0 such a
+request was queued and its identifier returned, but it never fired.
 
 === Notes
 - The post code is the identifier of the request.
@@ -1365,9 +1365,8 @@ hundredths of a second: once, once and then kept disabled, or every
 thread.
 
 === Returns
-The identifier of the request, or 0 when it could not be made. As for
-#cmd("tmr_ecb()"), a request whose timer thread could not be started is
-returned with an identifier and never fires (libc370 issue 476).
+The identifier of the request, or 0 when it could not be made, including
+when the timer thread cannot be started.
 
 === Example
 #code(read("../ex/mvs-sync/timer.c"))

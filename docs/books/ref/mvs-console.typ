@@ -425,10 +425,10 @@ handle to it. The master trace table is the wrap-around table in which MVS
 records the messages and commands that pass through the consoles\; it is
 found through the CVT and the master scheduler resident data area.
 
-The copy is taken in key 0, without serialization: the size is read before
-the copy, and the pointers of the copy are adjusted from the live table
-afterwards, so a table that MVS changes meanwhile can give an inconsistent
-copy (a defect, libc370 issue 476). It is made in the program's own storage, in key 8, and the
+The copy is taken in key 0, without serialization, so a table that MVS
+changes while it is copied can give an inconsistent copy. The pointers of
+the copy are adjusted from the copied header\; up to release 2.22.0 they
+were taken from the live table after the copy. It is made in the program's own storage, in key 8, and the
 pointers in its header are adjusted to point into the copy. The table on
 the system is not changed.
 
