@@ -222,17 +222,16 @@ __PDPCLIB_API__ size_t strftime(char *s,
                 break;
 
             case 'U' :
-                w = t->tm_yday/7;
-                if (t->tm_yday%7 >= t->tm_wday)     /* (yday+7-wday)/7 (#391) */
-                    w++;
+                /* C99: the week of the first Sunday is week 1 (#391) */
+                w = (t->tm_yday + 7 - t->tm_wday) / 7;
                 strfmt(r, "%2", w);
                 break;
 
             case 'W' :
-                w = t->tm_yday/7;
-                if (t->tm_yday%7 >= (t->tm_wday+6)%7)
-                    w++;
+                /* the same with Monday, (wday+6)%7 days into the week */
+                w = (t->tm_yday + 7 - (t->tm_wday + 6) % 7) / 7;
                 strfmt(r, "%2", w);
+
                 break;
 
             case 'w' :
