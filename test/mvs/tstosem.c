@@ -21,6 +21,9 @@
  *     called it too, and oscheck() returned 0.
  *   7 control: a CHECK of the caller's own on a DCB with the library's
  *     EODAD, at end of data, ends in S337 as without an EODAD.
+ *   8 a WRITE that goes well is 0 from oscheck(): BDAM rewrites block 0
+ *     of DD RO as it was, BSAM writes one block to DD OUT.  oscheck()
+ *     reads the ECB, and a good BDAM completion is X'40', not X'7F'.
  *
  * BUILD (from the repository root, after make; S a scratch directory):
  *
@@ -235,9 +238,47 @@ static void eodsyn(void)
     osbclose(dcb, NULL, 1, 0);
 }
 
+static void writes(void)
+{
+    DCB     *dcb;
+    DECB    decb;
+    int     rc;
+
+    dcb = osddcb("RO");
+    rc = osdopen(dcb, 0);
+    if (rc == 0) {
+        memset(&decb, 0, sizeof(decb));
+        osdread(&decb, dcb, buf, 800, 0);
+        rc = oscheck(&decb);
+    }
+    if (rc == 0) {
+        memset(&decb, 0, sizeof(decb));
+        osdwrite(&decb, dcb, buf, 800, 0);
+        rc = oscheck(&decb);
+    }
+    wtof("TSTOSEM   BDAM rewrite of block 0: oscheck() %08X, ECB %08X", rc,
+         decb.decsdecb);
+    want(rc == 0, "BDAM WRITE: oscheck() 0");
+    osdclose(dcb, 1);
+
+    dcb = osbdcb("OUT", NULL);
+    rc = osbopen(dcb, 0, "w");
+    memset(&decb, 0, sizeof(decb));
+    if (rc == 0) {
+        memset(buf, '-', sizeof(buf));
+        oswrite(&decb, dcb, buf, 800);
+        rc = oscheck(&decb);
+    }
+    wtof("TSTOSEM   BSAM write of one block: oscheck() %08X, ECB %08X", rc,
+         decb.decsdecb);
+    want(rc == 0, "BSAM WRITE: oscheck() 0");
+    osbclose(dcb, NULL, 1, 0);
+}
+
 int main(void)
 {
     exopen();
+    writes();
     bdopen();
     eodsyn();
     return bad ? 8 : 0;
