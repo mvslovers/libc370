@@ -33,8 +33,10 @@ __reopen(const char *fn, const char *mode, FILE *fp)
     /* open "new" file handle */
     f = fopen(fn, mode);
     if (!f) {
-        /* set error indicator, keep file open */
-        fp->flags |= _FILE_FLAG_ERROR;
+        /* keep the old stream open and as it was: nothing failed on it,
+           and its error indicator refuses every later read and write
+           since #149, so setting it killed a healthy stream (#179).  The
+           NULL from freopen() is the report. */
         fp = NULL;  /* indicate failure */
         goto quit;
     }

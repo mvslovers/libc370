@@ -1180,8 +1180,9 @@ Those of #cmd("fopen()"). See also the notes.
 === Notes
 
 - The new data set is opened before the old one is closed. If the open
-  fails, #var("stream") stays open on its old data set, with its error
-  indicator set; C99 requires it to be closed.
+  fails, #var("stream") stays open on its old data set and can be used as
+  before\; C99 requires it to be closed. Up to release 2.22.0 its error
+  indicator was set as well, which refused every later read and write.
 - #var("filename") must not be a null pointer: a change of mode on the
   same data set is not supported, and #cmd("freopen()") returns
   #cmd("NULL").
