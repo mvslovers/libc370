@@ -202,8 +202,13 @@ which is also stored in #cmd("errno"). On failure #var("*vsfile") is set to
 )
 
 === Notes
-#var("dd") is used as given: it is not converted to uppercase, no
-#cmd("DD:") prefix is removed, and only its first eight characters count.
+- #var("dd") is converted to uppercase\; no #cmd("DD:") prefix is removed,
+  and only its first eight characters count. Up to release 2.22.0 it was
+  used as given, and a name in lower case failed with #cmd("EVSOPEN").
+- A cluster that an earlier program left open, for example by an abend,
+  opens with a warning from VSAM (message #cmd("IEC161I") 056-084), and
+  #cmd("vsopen()") returns 0 for it. Up to release 2.22.0 it closed the
+  handle again and failed with #cmd("errno") 4.
 
 === Example
 #code(read("../ex/mvs-vsam/ksdsread.c"))
@@ -227,7 +232,8 @@ Closes the cluster, when it is open, and frees the handle. A #cmd("NULL")
 #var("vs") is accepted by #cmd("__vsclos()").
 
 === Returns
-Always 0; the return code of CLOSE is not reported.
+The return code of CLOSE, 0 when it closed cleanly, and 0 for a handle that
+was not open. Up to release 2.22.0 always 0.
 
 === Related
 @mvs-vsam-vsopen

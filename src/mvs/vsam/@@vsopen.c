@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <errno.h>
+#include <ctype.h>
 #include "mvs/vsam.h"
 
 #if 0
@@ -31,6 +32,7 @@ int
 __vsopen(const char *ddname, VSTYPE t, VSACCESS a, VSMODE m, VSFILE **vsfile)
 {
     int         rc      = 0;
+    int         i;
     VSFILE      *vs     = 0;
     ACB         *acb    = 0;
     RPL         *rpl    = 0;
@@ -79,6 +81,10 @@ __vsopen(const char *ddname, VSTYPE t, VSACCESS a, VSMODE m, VSFILE **vsfile)
     /* initialize our VSAM file handle */
     strcpy(vs->eye, VSFILE_EYE);
     strcpyp(vs->ddname, sizeof(vs->ddname), (char*)ddname, ' ');
+    /* a DD name is upper case; "vsamesds" failed with EVSOPEN (#411) */
+    for (i = 0; i < (int)sizeof(vs->ddname); i++) {
+        vs->ddname[i] = (char)toupper((unsigned char)vs->ddname[i]);
+    }
     vs->type    = t;
     vs->access  = a;
     vs->mode    = m;
@@ -186,13 +192,19 @@ __vsopen(const char *ddname, VSTYPE t, VSACCESS a, VSMODE m, VSFILE **vsfile)
         break;
     }
 
-    /* open VSAM cluster */
-    __asm__("MVC\t0($OPNLEN,%1),OPNMODEL    Copy prototype OPEN\n\t"
-            "OPEN  ((%0)),MF=(E,(%1))\n\t"
-            "ST    15,%2"
-        : : "r"(&vs->acb), "r"(pl), "m"(rc) : "0", "1", "14", "15", "memory");
+    /* open VSAM cluster.  The ACB's open flag decides, not R15: OPEN
+       ends with R15 4 and the ACB open after a warning, for example
+       ACBERFLG X'74' for a cluster an abend left open, and that handle
+       works.  It was closed again and the call failed with errno 4
+       (#411).  R15 is an output now; as an "m" input it was only stored
+       because cc370 happened to reload rc. */
+    __asm__("MVC\t0($OPNLEN,%2),OPNMODEL    Copy prototype OPEN\n\t"
+            "OPEN  ((%1)),MF=(E,(%2))\n\t"
+            "ST    15,%0"
+        : "=m"(rc) : "r"(&vs->acb), "r"(pl) : "0", "1", "14", "15", "memory");
     if (acb->acboflgs & ACBOPEN) {
         vs->flags |= VSFILE_FLAG_OPEN;
+        rc = 0;
     }
     else {
         rc = EVSOPEN;
