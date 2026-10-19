@@ -1229,7 +1229,8 @@ completion code in #cmd("sss") and the reason code in the last three digits.
 
 === Notes
 - Call it while the stream is open, after the write that failed and before
-  #cmd("fclose()") or #cmd("clearerr()"), which clear the condition.
+  #cmd("fclose()"), #cmd("clearerr()") or #cmd("rewind()"), which clear
+  the condition. #cmd("fseek()") keeps it.
 - A member of a partitioned data set whose secondary space is used up is
   not turned into #cmd("ENOSPC"): MVS ends the program with E37-04 before
   the library is called, as it would without the library. A program that

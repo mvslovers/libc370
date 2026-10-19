@@ -409,7 +409,8 @@ set is closed. Four rules follow:
   #cmd("errno") is #cmd("ENOSPC")\; any other permanent I/O error gives
   #cmd("EIO"). Every later write on the stream fails at once in the same
   way, and every later read with #cmd("EIO"), until the program calls
-  #cmd("clearerr()"). To learn which abend the write stood for -- D37 or
+  #cmd("clearerr()") or #cmd("rewind()")\; #cmd("fseek()") does not lift
+  it. To learn which abend the write stood for -- D37 or
   B37 -- call #cmd("__fx37()") of #cmd("<mvs/file.h>") before closing the
   stream.
 
