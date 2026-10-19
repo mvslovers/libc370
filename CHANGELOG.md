@@ -62,6 +62,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   a key of another type than the elements, a string searched in a table of
   structures for example, works now (measured on MVS). One written for the
   old order has to swap its parameters.
+- **`osbclose()` releases the buffer pool OPEN built (#114).** With a
+  `BUFNO` on the DD, OPEN builds a pool for the BSAM DCB and CLOSE leaves
+  it; `osbclose()` never freed it, so each open and close of a new DCB
+  lost the pool (measured on MVS: 40 cycles, 40 pools at 40 addresses;
+  now one, reused). A DCB without a pool is left alone, and a DCB closed
+  with its storage kept opens again with a new pool.
 
 ## [2.20.0] - 2026-10-18
 
