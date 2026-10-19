@@ -159,11 +159,10 @@ The difference, as a #cmd("double").
 
 === Notes
 
-The subtraction is done in #cmd("time_t"), which is unsigned, before the
-result is converted. When #var("time1") is earlier than #var("time0") the
-result is therefore not negative, but 4294967296 minus the true difference.
-Pass the later time first, or compare the two values before you call
-#cmd("difftime()").
+When #var("time1") is earlier than #var("time0") the result is negative. Up
+to release 2.22.0 the subtraction was done in the unsigned #cmd("time_t")
+before the conversion, and the result was 4294967296 minus the true
+difference.
 
 === Example
 
@@ -271,8 +270,8 @@ time_t mktime(struct tm *timeptr);
 #cmd("mktime()") converts the broken-down time #var("timeptr") into a
 calendar time. It uses #cmd("tm_year"), #cmd("tm_mon"), #cmd("tm_mday"),
 #cmd("tm_hour"), #cmd("tm_min") and #cmd("tm_sec")\; #cmd("tm_wday"),
-#cmd("tm_yday") and #cmd("tm_isdst") are ignored. Then it replaces the whole
-structure with the broken-down form of the result, as #cmd("gmtime()")
+#cmd("tm_yday") and #cmd("tm_isdst") are ignored. On success it replaces the
+whole structure with the broken-down form of the result, as #cmd("gmtime()")
 produces it, which sets #cmd("tm_wday") and #cmd("tm_yday") and brings the
 other members into their ranges.
 
@@ -292,8 +291,9 @@ or greater than 205 (the years 1970 to 2105).
   #cmd("tm_sec") outside their ranges are carried by the arithmetic, so
   #cmd("tm_mday") = 32 in January gives 1 February. #cmd("tm_mon") must lie
   in the range 0 to 11.
-- When the year is out of range, the structure is still replaced: it then
-  holds the broken-down form of #cmd("(time_t)-1"), 7 February 2106.
+- When the year is out of range, the structure is left as it was. Up to
+  release 2.22.0 it was still replaced, with the broken-down form of
+  #cmd("(time_t)-1"), 7 February 2106.
 
 === Related
 

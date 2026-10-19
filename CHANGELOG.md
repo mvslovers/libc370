@@ -33,6 +33,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   leaves the lock taken; `fclose()` then freed the stream but kept the
   lock, on storage the next `fopen()` could get back, where it made that
   stream skip its own locking (measured on MVS).
+- **`mktime()` leaves the caller's `struct tm` alone when it fails, and
+  `difftime()` of an earlier `time1` is negative (#392).** For a year
+  outside 1970 to 2105 `mktime()` returned -1 but still replaced the
+  structure with 7 February 2106. `difftime()` subtracted the unsigned
+  `time_t` values before converting them, so `difftime(0, 1)` was
+  4294967295 instead of -1 (measured on MVS). The time-zone question of
+  #392 stays open.
 
 ## [2.22.0] - 2026-10-19
 

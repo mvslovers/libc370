@@ -30,10 +30,12 @@ __PDPCLIB_API__ time_t mktime(struct tm *timeptr)
 {
     time_t tt;
 
-	/* 70 = 1970 Unix EPOCH     || 205 = 2105 (roll over in 2106) */
+	/* 70 = 1970 Unix EPOCH     || 205 = 2105 (roll over in 2106).  Out
+	   of range: -1, and the caller's struct tm stays as it was (#392) -
+	   it was overwritten with what gmtime() made of 0xFFFFFFFF */
     if ((timeptr->tm_year < 70) || (timeptr->tm_year > 205))
     {
-        tt = (time_t)-1;
+        return (time_t)-1;
     }
     else
     {
