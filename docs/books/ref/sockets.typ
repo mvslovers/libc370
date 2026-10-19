@@ -1038,9 +1038,11 @@ int send(int ss, const void *buf, int len, int flags);
 
 === Description
 
-#cmd("send()") sends #var("len") bytes from #var("buf") on the connected
-socket #var("ss"). It may send fewer bytes than asked when the host's send
-buffer is nearly full\; the program then sends the rest with another call.
+#cmd("send()") sends up to #var("len") bytes from #var("buf") on the
+connected socket #var("ss"). One call sends at most 256 bytes, and fewer when
+the host's send buffer is nearly full\; the program sends the rest with
+further calls, starting where the last one stopped. A request of more than
+256 bytes therefore always returns a short count, never 0.
 
 When the send buffer is full, a blocking #cmd("send()") waits for the peer to
 read: it tries again every 0.1 seconds, up to 100 times. If no byte could be
@@ -1050,7 +1052,7 @@ emulator until the peer reads.
 
 === Returns
 
-The number of bytes sent, or -1 for an error.
+The number of bytes sent, at most 256, or -1 for an error.
 
 === Errors
 
@@ -1064,6 +1066,12 @@ The number of bytes sent, or -1 for an error.
 === Notes
 
 - #var("flags") is not used.
+- The 256-byte limit protects the data. The emulator copies the buffer in
+  256-byte pieces, and on some Hercules builds a page fault on the buffer in
+  the middle of a larger copy made the peer receive the right number of
+  bytes with the wrong content. A program cannot tell which build it runs
+  on, so the limit always applies. Up to libc370 2.23.0 one call sent the
+  whole buffer.
 - The return type is #cmd("int") and #var("len") an #cmd("int"), not
   #cmd("ssize_t") and #cmd("size_t").
 - The data is moved without translation\; see @sockets-provider.

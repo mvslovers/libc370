@@ -91,12 +91,10 @@
  *   that stops reading; the end-to-end gate is mvslovers/httpd ->
  *   docs/hercules-x75-send-stall-repro.md, driven against ftpd.
  *
- * - Not the 4096-byte chunking @@75recv.c documents.  It is deliberately NOT
- *   mirrored: x75.c's copy loop is direction-symmetric (same 255-byte
- *   segmentation, same effective_addr2 += i), lar_tcpip() sets len_in from R1
- *   with no cap, and grep finds no 4096, 4095 or 0x1000 in x75.c, tcpip.c or
- *   their headers.  Whatever the recv comment observed, its cause is not in
- *   the guest/host copy.
+ * - The 256-byte cap (#160, case 8): one X'75' never carries more than one
+ *   copy segment, so a request above 256 bytes is offered as 256 and the
+ *   short count comes back - never 0.  Why 256 and only 256 is in
+ *   @@75send.c; the measurement is the MVS probe test/mvs/tst75sst.c.
  *
  * ====================================================================
  * BUILD AND RUN
@@ -111,7 +109,7 @@
  *     cc -std=gnu99 -Wall -Wextra -fsanitize=address -Wno-trigraphs \
  *        -D'__asm__(...)=' -D'asm(...)=' -D__volatile__= -D__32BIT__ \
  *        -I $R/include -I $R/src/internal -o t tst75snd.c
- *     ./t                                             # 39/39, rc 0
+ *     ./t                                             # 47/47, rc 0
  *
  * Four warnings are expected and are all host artefacts: two libc370 stdio
  * prototypes that disagree with the host's builtins, one inline-asm operand
@@ -469,6 +467,43 @@ int main(void)
     CHECK_EQ(nreq,       1, "7: len 0: still one X'75'");
     CHECK_EQ(req_len[0], 0, "7: len 0: length passed through");
     CHECK_EQ(the_errno,  0, "7: len 0: errno untouched");
+
+    /* ---------------------------------------------------------------
+    ** 8. the cap (#160): more than 256 bytes go out as ONE X'75' of 256,
+    **    and the short count comes back; the caller sends the rest.  At
+    **    256 and below the request is untouched.
+    */
+    {
+        static char big[1000];
+        unsigned    i;
+
+        /* a loop, not memset(): libc370's memset is inline asm */
+        for (i = 0; i < sizeof big; i++) big[i] = 'X';
+
+        script_reset(big, 256, 1, 0, 0);
+        the_errno = 0;
+        rc = send(4, big, (int) sizeof big, 0);
+        show("8: 1000 bytes");
+
+        CHECK_EQ(rc,          256, "8: 1000 bytes: rc is the short count");
+        CHECK_EQ(nreq,          1, "8: 1000 bytes: one X'75'");
+        CHECK_EQ(req_len[0],  256, "8: 1000 bytes: offered one segment");
+        CHECK_EQ(wirelen,     256, "8: 1000 bytes: bytes on the wire");
+
+        script_reset(big, 256, 1, 0, 0);
+        rc = send(4, big, 256, 0);
+        show("8: 256 bytes");
+
+        CHECK_EQ(rc,          256, "8: 256 bytes: rc");
+        CHECK_EQ(req_len[0],  256, "8: 256 bytes: offered whole");
+
+        script_reset(big, -2, 1, 256, 1);
+        rc = send(4, big, 257, 0);
+        show("8: 257 bytes after -2");
+
+        CHECK_EQ(rc,          256, "8: 257 bytes after -2: rc");
+        check_all_requests_whole(256, "8: 257 bytes after -2: both capped");
+    }
 
     printf("\n%d/%d checks passed\n", checks - fails, checks);
     return fails ? 1 : 0;
