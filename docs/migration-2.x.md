@@ -209,6 +209,7 @@ CHANGELOG has everything else.
 
 | Release | Change | What to do |
 |---|---|---|
+| Unreleased | New `__linkx()`, `__linkdsx()` and `__loadx()` in `<mvs/link.h>` return the completion code (and for LOAD the reason code) of a failed LINK or LOAD (#553) | Nothing; use them instead of `__link()`/`__linkds()`/`__load()` where the reason for a failure matters |
 | Unreleased | `malloc(0)`, `calloc(0, n)` and `calloc(n, 0)` return `NULL` without setting `ENOMEM` and without the console message (#394) | Nothing, unless a program took `errno == ENOMEM` after `malloc(0)` for a shortage |
 | Unreleased | `fseek()` and `fsetpos()` keep the error indicator; only `rewind()` and `clearerr()` clear it (#178) | A program that seeks after a read or write error and expects to go on reading or writing calls `clearerr()` first |
 | Unreleased | The declarations of `__enq()`, `__deq()`, `__sosnam()`, `__sopnam()` are removed (#400); none was ever in the library, so a call never linked | Use `ENQ()`/`DEQ()` from `<mvs/enq.h>`, and `getsockname()`/`getpeername()` |

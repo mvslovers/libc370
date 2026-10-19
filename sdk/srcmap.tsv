@@ -225,6 +225,8 @@ src/clib/@@jsrd4.c	src/mvs/jes2spool/@@jsrd4.c	declared in <mvs/jes2spool.h>
 src/clib/@@link.c	src/mvs/link/@@link.c	declared in <mvs/link.h>
 src/clib/@@linkds.c	src/mvs/link/@@linkds.c	declared in <mvs/link.h>
 src/clib/@@linkt.c	src/mvs/link/@@linkt.c	declared in <mvs/link.h>
+src/mvs/link/@@linkdx.c	src/mvs/link/@@linkdx.c	new after 2.0.0 (#553)
+src/mvs/link/@@linkx.c	src/mvs/link/@@linkx.c	new after 2.0.0 (#553)
 src/clib/@@listal.c	src/mvs/dslist/@@listal.c	declared in <mvs/dslist.h>
 src/clib/@@listc.c	src/mvs/dslist/@@listc.c	declared in <mvs/dslist.h>
 src/clib/@@listds.c	src/mvs/dslist/@@listds.c	declared in <mvs/dslist.h>
@@ -244,6 +246,7 @@ src/clib/@@lkuntf.c	src/mvs/lock/@@lkuntf.c	declared in <mvs/lock.h>
 src/clib/@@lkuntr.c	src/mvs/lock/@@lkuntr.c	declared in <mvs/lock.h>
 src/clib/@@load.c	src/mvs/link/@@load.c	declared in <mvs/link.h>
 src/clib/@@loadhi.c	src/mvs/link/@@loadhi.c	declared in <mvs/link.h>
+src/mvs/link/@@loadx.c	src/mvs/link/@@loadx.c	new after 2.0.0 (#553)
 src/clib/@@locate.c	src/mvs/dscb/@@locate.c	declared in <mvs/dscb.h>
 src/clib/@@mtd.c	src/time/@@mtd.c	date arithmetic behind <time.h>
 src/clib/@@muldi3.c	cc370:runtime/src/@@muldi3.c	moved to cc370 libcc370rt.a (#313, cc370#687)

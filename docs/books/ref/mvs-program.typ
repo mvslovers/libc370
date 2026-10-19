@@ -600,13 +600,61 @@ The return code of the program in register 15, or -1 when #var("pgm") is
 === Notes
 The LINK is issued with an error exit, so a program that cannot be found
 gives -1 instead of abend S806. A program can of course also return -1
-itself.
+itself. #cmd("__linkx()") tells the two cases apart and also returns the
+completion code.
 
 An abend of the called program is not intercepted: it ends the caller as
 well, unless the caller has an ESTAE. Use #cmd("__linkt()") to catch it.
 
 === Related
-@mvs-program-__linkt, @mvs-program-tsocmd
+@mvs-program-__linkx, @mvs-program-__linkt, @mvs-program-tsocmd
+
+== \_\_linkx <mvs-program-__linkx>
+#idx("__linkx")
+#idx("S806 abend", "completion code of a failed LINK")
+
+=== Format
+```
+#include <mvs/link.h>
+
+int __linkx(const char *pgm, void *dcb, void *r1, int *prc,
+            unsigned *abcode);
+```
+
+=== Description
+Calls the program #var("pgm") as #cmd("__link()") does and, when
+#var("abcode") is not #cmd("NULL"), also stores why the LINK failed.
+
+When #cmd("LINK") takes its error exit, the completion code the system
+would have ended the caller with is stored in #var("abcode"), such as
+#cmd("X'806'") when the program cannot be found or #cmd("X'106'") when it
+cannot be fetched. The system writes its message #cmd("IEA703I") with the
+code and the reason to the job log. In every other case, also when the
+program returns, #var("abcode") is set to 0.
+
+The completion code is right-aligned, #cmd("X'00000806'"), not in the form
+#cmd("X'00sssuuu'") of an abend code that #cmd("try()") returns.
+
+=== Returns
+The return code of the program in register 15, or -1 when #var("pgm") is
+#cmd("NULL") or empty or #cmd("LINK") takes its error exit. When
+#var("prc") is not #cmd("NULL"), the same value is stored in it.
+
+A program that returns -1 itself leaves #var("abcode") at 0, so a nonzero
+#var("abcode") tells a failed #cmd("LINK") from it.
+
+=== Notes
+The external name is #cmd("@@LINKX").
+
+#cmd("LINK") passes no reason code to its error exit, so
+#cmd("__linkx()") has none to give. #cmd("__loadx()") returns the reason
+code of a failed #cmd("LOAD").
+
+An abend of the called program is not intercepted, as with
+#cmd("__link()"). Use #cmd("__linkdsx()") to catch it.
+
+=== Related
+@mvs-program-__link, @mvs-program-__linkdsx, @mvs-program-__loadx
 
 == \_\_linkt, \_\_linkds <mvs-program-__linkt>
 #idx("__linkt")
@@ -648,6 +696,43 @@ up the region.
 
 === Related
 @mvs-program-__link, @mvs-program-try, @mvs-program-abendrpt
+
+== \_\_linkdsx <mvs-program-__linkdsx>
+#idx("__linkdsx")
+
+=== Format
+```
+#include <mvs/link.h>
+
+int __linkdsx(const char *pgm, void *dcb, void *r1, int *prc,
+              unsigned *abcode);
+```
+
+=== Description
+Calls the program #var("pgm") as #cmd("__linkds()") does: under the
+protection of #cmd("try()"), with an abend report to the operator and no
+dump. Like #cmd("__linkx()"), it stores the completion code of a failed
+#cmd("LINK") in #var("abcode") when that is not #cmd("NULL"), and 0 in
+every other case.
+
+The return code of the called program, or -1 when it could not be called,
+is stored in #var("prc") when that is not #cmd("NULL").
+
+=== Returns
+0 when the program returned or could not be called, the abend code in the
+form #cmd("X'00sssuuu'") when it ended abnormally (see @mvs-program-try),
+or a negative value when the ESTAE could not be created.
+
+A program that cannot be found is no abend: #cmd("__linkdsx()") returns 0,
+#var("prc") is -1 and #var("abcode") is #cmd("X'806'"). An abend of the
+called program leaves #var("abcode") at 0.
+
+=== Notes
+The external name is #cmd("@@LINKDX"). The C name cut to eight
+characters would be #cmd("@@LINKDS"), which is #cmd("__linkds()").
+
+=== Related
+@mvs-program-__linkx, @mvs-program-__linkt, @mvs-program-try
 
 == \_\_call <mvs-program-__call>
 #idx("__call")
@@ -702,12 +787,69 @@ member is not found or the LOAD fails.
 === Notes
 The external name is #cmd("@@LOAD").
 
+#cmd("__load()") does not tell why it failed. #cmd("__loadx()") returns the
+completion and reason code of a failed #cmd("LOAD").
+
 Each successful #cmd("__load()") raises the use count of the module, and each
 #cmd("__delete()") lowers it. Call #cmd("__delete()") once for each
 #cmd("__load()").
 
 === Related
-@mvs-program-__delete, @mvs-program-__call, @mvs-program-__steplb
+@mvs-program-__loadx, @mvs-program-__delete, @mvs-program-__call,
+@mvs-program-__steplb
+
+== \_\_loadx <mvs-program-__loadx>
+#idx("__loadx")
+#idx("S806 abend", "completion code of a failed LOAD")
+
+=== Format
+```
+#include <mvs/link.h>
+
+void *__loadx(void *dcb, const char *module, unsigned *size, char *ac,
+              unsigned *abcode, unsigned *reason);
+```
+
+=== Description
+Brings the load module #var("module") into storage with
+#cmd("LOAD EPLOC=") and returns its entry point. #var("dcb") is the address
+of an open DCB of the library to search, or #cmd("NULL"), in which case
+#cmd("LOAD") searches the places it always searches, among them the task,
+step or job library, the link pack area and the link library.
+
+When the module is loaded and #var("size") is not #cmd("NULL"), its length
+in bytes is stored there\; when #var("ac") is not #cmd("NULL"), its APF
+authorization code is stored there.
+
+When #cmd("LOAD") takes its error exit, the completion code the system
+would have ended the caller with is stored in #var("abcode") and the reason
+code in #var("reason"), each when not #cmd("NULL"): #cmd("X'806'") and 4
+when the module cannot be found, #cmd("X'106'") and a reason when it cannot
+be fetched. The system writes its message #cmd("IEA703I") with the same
+codes to the job log. In every other case both are set to 0.
+
+The completion code is right-aligned, #cmd("X'00000806'"), not in the form
+#cmd("X'00sssuuu'") of an abend code that #cmd("try()") returns.
+
+=== Returns
+The entry point address, or #cmd("NULL") when the name is missing or empty
+(#var("abcode") 0) or #cmd("LOAD") takes its error exit (#var("abcode")
+nonzero).
+
+=== Notes
+The external name is #cmd("@@LOADX").
+
+Unlike #cmd("__load()"), #cmd("__loadx()") does not look the member up
+with #cmd("BLDL") first: the search is the one of #cmd("LOAD EPLOC="), and
+a module that does not exist reaches the error exit, with message
+#cmd("IEA703I") in the job log, where #cmd("__load()") fails quietly.
+
+Each successful #cmd("__loadx()") raises the use count of the module, and
+each #cmd("__delete()") lowers it.
+
+=== Related
+@mvs-program-__load, @mvs-program-__delete, @mvs-program-__call,
+@mvs-program-__linkx
 
 == \_\_delete <mvs-program-__delete>
 #idx("__delete")
@@ -720,7 +862,8 @@ int __delete(const char *module);
 ```
 
 === Description
-Gives up a module loaded by #cmd("__load()"), with #cmd("DELETE EPLOC=").
+Gives up a module loaded by #cmd("__load()") or #cmd("__loadx()"), with
+#cmd("DELETE EPLOC=").
 
 === Returns
 The return code of #cmd("DELETE"): 0 when the module was deleted, 4 when it
