@@ -24,6 +24,19 @@ int __linkt(const char *pgm, void *dcb, void *r1, int *prc);
 */
 int __linkds(const char *pgm, void *dcb, void *r1, int *prc);
 
+/* __linkx() - __link() that also reports why LINK failed (#553).
+   when LINK takes its error exit (abend S806 for a missing module, S106
+   for a fetch error, ...) returns -1 and stores the completion code,
+   right-aligned (0x806), at abcode; otherwise *abcode is 0.
+   abcode can be NULL.
+*/
+int __linkx(const char *pgm, void *dcb, void *r1, int *prc,
+            unsigned *abcode)                               asm("@@LINKX");
+
+/* __linkdsx() - __linkds() with the completion code of __linkx() (#553) */
+int __linkdsx(const char *pgm, void *dcb, void *r1, int *prc,
+              unsigned *abcode)                             asm("@@LINKDX");
+
 /* ---- from 1.x clibos.h -------------------------------------------------- */
 /* __call() call func with plist value as R1, returns func return code as int */
 int __call(void *func, void *plist);
@@ -35,6 +48,15 @@ CDE *clib_find_cde(const char *name)                        asm("@@FNDCDE");
 /* also returns size and access code value if not NULL */
 /* dcb value can be NULL to search all possible locations, linklib, tasklib, steplib */
 void *__load(void *dcb, const char *module, unsigned *size, char *ac) asm("@@LOAD");
+
+/* __loadx() - LOAD EPLOC= that reports why it failed (#553).
+   returns the entry point, or 0 on failure.  When LOAD takes its error
+   exit, the completion code (0x806, 0x106, ...) is stored at abcode and
+   the reason code at reason; otherwise both are 0.  size, ac, abcode and
+   reason can be NULL.  dcb NULL searches as LOAD does.
+*/
+void *__loadx(void *dcb, const char *module, unsigned *size, char *ac,
+              unsigned *abcode, unsigned *reason)           asm("@@LOADX");
 
 /* __delete() - remove module from storage, return 0 on success, 4 if not found */
 int __delete(const char *module);

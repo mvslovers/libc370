@@ -3921,7 +3921,9 @@ __jsrd4	mvs/jes2spool.h
 __labs	stdlib.h
 __link	mvs/link.h
 __linkds	mvs/link.h
+__linkdsx	mvs/link.h
 __linkt	mvs/link.h
+__linkx	mvs/link.h
 __listal	mvs/dslist.h
 __listc	mvs/dslist.h
 __listds	mvs/dslist.h
@@ -3941,6 +3943,7 @@ __lkuntf	mvs/lock.h
 __lkuntr	mvs/lock.h
 __load	mvs/link.h
 __loadhi	mvs/link.h
+__loadx	mvs/link.h
 __locate	mvs/dscb.h
 __nwtx99	mvs/dynalloc.h
 __nwtx9a	mvs/dynalloc.h
