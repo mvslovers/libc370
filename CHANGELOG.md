@@ -141,6 +141,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `FREE=CLOSE` frees the DD when the data set is closed, and `__dynal()`
   always allocates with `FREE=CLOSE`, as its description always said
   (measured on MVS).
+- **`atan()`, `atan2()` and `asin()` return for every argument (#675).**
+  `atan()` and `asin()` handled a negative argument by calling themselves
+  as `-atan(-x)` and `-asin(-x)`. The compiler rewrites that, both
+  functions being odd, into a call with the unchanged argument, and the
+  function went on calling itself until the job ran out of CPU time (abend
+  `S322`). This hit every negative argument of either function, `atan()` of
+  arguments between about 0.268 and 0.577 or 1.732 and 3.732 (its argument
+  reduction produced a negative value), and `atan2()` in the quadrants that
+  reach those. Both now take the sign apart without calling themselves;
+  over a grid from -1e70 to 1e70 the results agree with a reference to
+  within 4e-16 relative (measured on MVS).
 
 ## [2.23.0] - 2026-10-19
 
