@@ -4,7 +4,8 @@
 
 #idx("math.h")
 The header #cmd("<math.h>") declares the mathematical functions of C90, all
-for #cmd("double"), and defines the macro #cmd("HUGE_VAL"). This chapter
+for #cmd("double"), their #cmd("long double") variants from C99, and defines
+the macro #cmd("HUGE_VAL"). This chapter
 first describes the floating-point arithmetic of System/370, which differs
 from the IEEE arithmetic that most C programs are written for, and then
 the functions.
@@ -52,12 +53,45 @@ result that is too large ends the program as described above.
 To detect an error, set #cmd("errno") to 0 before the call and test it
 afterwards. The C99 macro #cmd("math_errhandling") is not defined.
 
+== The long double Functions <std-math-long>
+
+#idx("long double", "mathematical functions")#idx("sqrtl")
+C99 gives each of the 22 functions a #cmd("long double") variant, named with
+a trailing #cmd("l"): #cmd("acosl()"), #cmd("asinl()"), #cmd("atanl()"),
+#cmd("atan2l()"), #cmd("ceill()"), #cmd("cosl()"), #cmd("coshl()"),
+#cmd("expl()"), #cmd("fabsl()"), #cmd("floorl()"), #cmd("fmodl()"),
+#cmd("frexpl()"), #cmd("ldexpl()"), #cmd("logl()"), #cmd("log10l()"),
+#cmd("modfl()"), #cmd("powl()"), #cmd("sinl()"), #cmd("sinhl()"),
+#cmd("sqrtl()"), #cmd("tanl()") and #cmd("tanhl()"). Each has the
+prototype of its #cmd("double") function with #cmd("long double") in place
+of #cmd("double"), for example
+
+```
+long double sqrtl(long double x);
+long double frexpl(long double value, int *exp);
+long double modfl(long double value, long double *iptr);
+```
+
+#cmd("long double") is #cmd("double") on this target (@std-float), so
+#cmd("<math.h>") declares each variant as another name of its
+#cmd("double") function: #cmd("sqrtl(x)") calls #cmd("sqrt()") and returns
+exactly what #cmd("sqrt(x)") returns, with the same errors. The entries of
+this chapter apply to both. (Up to LIBC/370 2.23.0 the variants did not
+exist.)
+
+The two share one external name on MVS (#cmd("SQRT")), which is why
+#cmd("<math.h>") declares the #cmd("double") function with that name as an
+#cmd("asm") label as well. A program that declares #cmd("sqrt()") itself
+and calls it before it includes #cmd("<math.h>") gets the warning that two
+external symbols map to one MVS name. Include #cmd("<math.h>") first, or do
+not declare the function yourself.
+
 == What Is Not Provided <std-math-missing>
 
-LIBC/370 provides only the 22 functions described in this chapter. None of
-the functions that C99 added to #cmd("<math.h>") exists: there are no
-#cmd("float") and #cmd("long double") variants (#cmd("sinf()"),
-#cmd("sqrtl()") ...), and no #cmd("round()"), #cmd("trunc()"),
+LIBC/370 provides only the 22 functions described in this chapter and
+their #cmd("long double") variants. None of the other functions that C99
+added to #cmd("<math.h>") exists: there are no #cmd("float") variants
+(#cmd("sinf()"), #cmd("sqrtf()") ...), and no #cmd("round()"), #cmd("trunc()"),
 #cmd("hypot()"), #cmd("cbrt()"), #cmd("log2()"), #cmd("exp2()"),
 #cmd("expm1()"), #cmd("log1p()"), #cmd("copysign()"), #cmd("fmin()"),
 #cmd("fmax()"), #cmd("nan()") or the classification macros

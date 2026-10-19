@@ -29,37 +29,68 @@
 
 #endif
 
-double ceil(double x);
-double fabs(double x);
-double floor(double x);
-double fmod(double x, double y);
+double ceil(double x)                   __asm__("CEIL");
+double fabs(double x)                   __asm__("FABS");
+double floor(double x)                  __asm__("FLOOR");
+double fmod(double x, double y)         __asm__("FMOD");
 
 /* unimplemented: */
 
 
-double atan2(double y, double x);
-double frexp(double value, int *exp);
-double ldexp(double x, int exp);
-double modf(double value, double *iptr);
+double atan2(double y, double x)        __asm__("ATAN2");
+double frexp(double value, int *exp)    __asm__("FREXP");
+double ldexp(double x, int exp)         __asm__("LDEXP");
+double modf(double value, double *iptr) __asm__("MODF");
 
 /*
   Implemented by d.wade - April 2006
 */
 
-double pow(double x, double y);
-double sqrt(double x);
-double acos(double x);
-double asin(double x);
-double atan(double x);
-double cos(double x);
-double sin(double x);
-double tan(double x);
-double cosh(double x);
-double sinh(double x);
-double tanh(double x);
-double exp(double x);
-double log(double x);
-double log10(double x);
+double pow(double x, double y)          __asm__("POW");
+double sqrt(double x)                   __asm__("SQRT");
+double acos(double x)                   __asm__("ACOS");
+double asin(double x)                   __asm__("ASIN");
+double atan(double x)                   __asm__("ATAN");
+double cos(double x)                    __asm__("COS");
+double sin(double x)                    __asm__("SIN");
+double tan(double x)                    __asm__("TAN");
+double cosh(double x)                   __asm__("COSH");
+double sinh(double x)                   __asm__("SINH");
+double tanh(double x)                   __asm__("TANH");
+double exp(double x)                    __asm__("EXP");
+double log(double x)                    __asm__("LOG");
+double log10(double x)                  __asm__("LOG10");
+
+/*
+  C99 7.12: the long double functions (#340).  long double is double on
+  this target (<float.h>: LDBL_MANT_DIG == DBL_MANT_DIG), so each is the
+  double function under its own MVS name.  The double declarations above
+  carry the same asm label: cc370 maps sqrt and sqrtl to one 8-character
+  name either way, and it warns about two C names for one MVS name unless
+  both are spelled as that label.
+*/
+long double ceill(long double x)                    __asm__("CEIL");
+long double fabsl(long double x)                    __asm__("FABS");
+long double floorl(long double x)                   __asm__("FLOOR");
+long double fmodl(long double x, long double y)     __asm__("FMOD");
+long double atan2l(long double y, long double x)    __asm__("ATAN2");
+long double frexpl(long double value, int *exp)     __asm__("FREXP");
+long double ldexpl(long double x, int exp)          __asm__("LDEXP");
+long double modfl(long double value, long double *iptr) __asm__("MODF");
+long double powl(long double x, long double y)      __asm__("POW");
+long double sqrtl(long double x)                    __asm__("SQRT");
+long double acosl(long double x)                    __asm__("ACOS");
+long double asinl(long double x)                    __asm__("ASIN");
+long double atanl(long double x)                    __asm__("ATAN");
+long double cosl(long double x)                     __asm__("COS");
+long double sinl(long double x)                     __asm__("SIN");
+long double tanl(long double x)                     __asm__("TAN");
+long double coshl(long double x)                    __asm__("COSH");
+long double sinhl(long double x)                    __asm__("SINH");
+long double tanhl(long double x)                    __asm__("TANH");
+long double expl(long double x)                     __asm__("EXP");
+long double logl(long double x)                     __asm__("LOG");
+long double log10l(long double x)                   __asm__("LOG10");
 
 
 #ifdef __WATCOMC__

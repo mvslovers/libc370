@@ -47,9 +47,10 @@ C99 in the GNU dialect, with these headers:
       reached through DD statements (@pg-io).],
     [#cmd("<stdlib.h>")], [Complete. #cmd("EXIT_FAILURE") is 12, the MVS
       convention.],
-    [#cmd("<math.h>")], [The 22 functions of C89. The functions that C99
-      added, such as #cmd("round()") and the #cmd("float") variants, are
-      not provided.],
+    [#cmd("<math.h>")], [The 22 functions of C89 and their C99
+      #cmd("long double") variants, such as #cmd("sqrtl()"). The other
+      functions that C99 added, such as #cmd("round()") and the
+      #cmd("float") variants, are not provided.],
     [#cmd("<wchar.h>")], [The types and limits only. Wide characters are
       handled with the multibyte functions of #cmd("<stdlib.h>").],
   )

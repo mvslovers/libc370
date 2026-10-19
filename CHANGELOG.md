@@ -28,6 +28,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   conversions (`mktime64()` and the job times built on it, and the dates in
   the data set lists) already call `timegm()`, with unchanged results.
   `mktime()` no longer needs the task's static `struct tm`.
+- **`<math.h>` declares the C99 `long double` functions (#340).**
+  `sqrtl()`, `sinl()`, `powl()` and the other 19 `long double` variants of
+  the 22 C89 functions were missing, so a C99 program that called one did
+  not compile. `long double` is `double` on this target, so each variant
+  is declared as another name of its `double` function and returns
+  exactly what that function returns (measured on MVS). The `float`
+  variants and the other functions C99 added are still not provided.
 
 ### Changed
 - **`fseek()` keeps the error indicator; `rewind()` clears it (#178).**
