@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.23.0] - 2026-10-19
+
 ### Added
 - **`wtof()`, `wtorf()`, `wtodumpf()` and their `v` forms let the compiler
   check their arguments (#68).** `<mvs/wto.h>` declares them with
