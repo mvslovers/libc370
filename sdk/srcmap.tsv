@@ -15,7 +15,6 @@ asm/@@crtsvc.asm	src/mvs/svc/@@crtsvc.asm	the SVC-in-C scaffold, with svcmain.c 
 asm/@@dynal.asm	src/mvs/dynalloc/@@dynal.asm	SVC 99
 asm/@@exita.asm	src/mvs/crt/@@exita.asm	runtime start-up
 asm/@@freem.asm	src/mvs/storage/@@freem.asm	GETMAIN/FREEMAIN
-asm/@@getclk.asm	src/time/@@getclk.asm	the clock and the time zone behind <time.h>
 asm/@@getm.asm	src/mvs/storage/@@getm.asm	GETMAIN/FREEMAIN
 asm/@@getpfx.asm	src/mvs/tso/@@getpfx.asm	TSO prefix
 asm/@@gettz.asm	src/time/@@gettz.asm	the clock and the time zone behind <time.h>
@@ -800,3 +799,4 @@ src/stdio/@@fpopn.c	src/stdio/@@fpopn.c	new after 2.16.0 (size analysis F5): fop
 src/mvs/idcams/@@idcrec.c	src/mvs/idcams/@@idcrec.c	new after 2.18.0 (#590): IDCAMS input records within column 72
 src/internal/idcrec.h	src/internal/idcrec.h	shared private header, new after 2.18.0: IDCAMS input records
 src/internal/svkey0.h	src/internal/svkey0.h	shared private header, new after 2.18.1 (#402): supervisor key 0 and back to the caller's state
+src/time/@@getclk.c	src/time/@@getclk.c	new after 2.21.0 (#390): __getclk() and __todsec() in C, past 2038

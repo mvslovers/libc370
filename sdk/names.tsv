@@ -3988,6 +3988,7 @@ __swap	s370/atomic.h
 __tab	ibm/jes2/tab.h
 __tgm	ibm/jes2/tgm.h
 __tiot	mvs/dd.h
+__todsec	mvs/clock.h
 __try	mvs/recovery.h
 __tryinf	mvs/recovery.h
 __tryrc	mvs/recovery.h

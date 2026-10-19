@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- **`__todsec()`** in `<mvs/clock.h>` converts a TOD clock value to
+  seconds since 1970; `__getclk()` uses it (#390).
+
+### Fixed
+- **`time()` works past 2038 (#390).** It divided the microseconds since
+  1970 with a signed division, which ended in abend S0C9 from 19 January
+  2038, about 02:54 UTC, on, and it dropped 0.32 seconds of the 1900-1970
+  offset, so the result was that much ahead. It is now right up to the end
+  of the TOD clock, 17 September 2042, 23:53:47 UTC (measured on MVS with
+  synthetic clock values).
+
 ## [2.21.0] - 2026-10-19
 
 A round of fixes to standard functions that did not do what C99 says, and

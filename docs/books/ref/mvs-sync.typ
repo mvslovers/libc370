@@ -1526,11 +1526,37 @@ The seconds since 1970.
 === Notes
 - #var("buf") needs no alignment.
 - The TOD clock is taken to run in Coordinated Universal Time.
-- The seconds are computed with a signed 32-bit division and are valid up
-  to the year 2038.
+- The seconds are computed by #cmd("__todsec()") and are right up to the
+  end of the TOD clock, 17 September 2042, 23:53:47 UTC. Up to release
+  2.21.0 #cmd("__getclk()") ended in abend #cmd("S0C9") from 19 January
+  2038, about 02:54 UTC, on.
 
 === Related
-@mvs-sync-tmr_secs, @mvs-sync-gettz
+@mvs-sync-todsec, @mvs-sync-tmr_secs, @mvs-sync-gettz
+
+== \_\_todsec <mvs-sync-todsec>
+#idx("__todsec")
+
+=== Format
+```
+#include <mvs/clock.h>
+
+unsigned int __todsec(const void *tod);
+```
+
+=== Description
+Converts the 8-byte TOD clock value at #var("tod"), as STORE CLOCK gives it,
+to whole seconds since 00:00 on 1 January 1970. The fraction of a second is
+truncated.
+
+=== Returns
+The seconds since 1970. A value before 1970 gives a meaningless result.
+
+=== Notes
+- #var("tod") needs no alignment.
+
+=== Related
+@mvs-sync-getclk
 
 == \_\_gettz <mvs-sync-gettz>
 #idx("__gettz")

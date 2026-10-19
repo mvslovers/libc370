@@ -7,6 +7,7 @@
 */
 
 unsigned int __getclk(void *buf);
+unsigned int __todsec(const void *tod);
 int __gettz(void);
 
 #endif /* MVS_CLOCK_H */

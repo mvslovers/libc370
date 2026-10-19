@@ -209,6 +209,7 @@ CHANGELOG has everything else.
 
 | Release | Change | What to do |
 |---|---|---|
+| Unreleased | `time()` and `__getclk()` work up to the end of the TOD clock in September 2042 (#390); they abended S0C9 from January 2038 and ran 0.32 seconds ahead. New `__todsec()` in `<mvs/clock.h>` converts a TOD clock value to seconds since 1970 | Nothing |
 | 2.21.0 | `setenv()` and `putenv()` compare the name exactly (#475); when no name matched exactly they replaced a variable whose name differed only in case, and renamed it | A program that set a variable in a different case than it was defined in, to replace it, has to use the same case; `getenvi()` finds a name regardless of case |
 | 2.21.0 | `bsearch()` calls `compar(key, element)`, as C99 specifies (#388); it called `compar(element, key)` | A comparison function whose two parameters have the same type works as before. One written for the old order, with the table element first and a key of another type second, has to swap its parameters: it now receives the key first |
 | 2.21.0 | `setenv()`, `putenv()` and the SYSENV/ENVIRON loading look a variable up by its name without the surrounding blanks (#475): a second `NAME = value` record replaces the first, where it was added beside it and `getenv()` returned the first value | A SYSENV that set a variable twice and relied on the first value has to drop the second record |
