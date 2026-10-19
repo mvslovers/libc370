@@ -45,7 +45,7 @@ time64_t mktime64(struct tm *input_date)
 	__64_init(&time);
 
     if ((year < 1970) || (year > 9999)) {
-		/* in keeping with our 32 bit mktime() function:
+		/* in keeping with our 32 bit timegm() function:
 			disallow anything before 1970
 			disallow anything after 9999
 		*/
@@ -53,9 +53,9 @@ time64_t mktime64(struct tm *input_date)
 		goto quit;
     }
 
-	/* safe "years" can use the 32 bit mktime() function */
+	/* safe "years" can use the 32 bit timegm() function (UTC, #392) */
     if( MIN_SAFE_YEAR <= year && year <= MAX_SAFE_YEAR ) { 
-        __64_from_u32(&time, mktime(input_date));
+        __64_from_u32(&time, timegm(input_date));
         goto quit;
     }
 
@@ -65,7 +65,7 @@ time64_t mktime64(struct tm *input_date)
 	safe_date = date;
 
 	/* initialize time using safe date */
-    __64_from_u32(&time, (uint32_t) mktime(&safe_date));
+    __64_from_u32(&time, (uint32_t) timegm(&safe_date));
 	/* add the seconds between the input_date year and safe_date year */
 	seconds = seconds_between_years(year, (int)(safe_date.tm_year + 1900));
     __64_add_u64(&time, seconds, &time);

@@ -8,6 +8,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <time.h>
+#include <ext/time64.h>    /* timegm() */
 #include "ext/array.h"        /* dynamic array prototypes     */
 #include "mvs/dscb.h"       /* DSCB structs and prototypes  */
 #include "mvs/dslist.h"       /* __listc()                    */
@@ -310,7 +311,7 @@ parse(void *vdata, const char *fmt, ...)
     dslist->crjday  = *(unsigned short*)&dscb1->credt[1];
     tm.tm_year      = dslist->cryear - 1900;
     tm.tm_mday      = dslist->crjday;
-    mktime(&tm);
+    timegm(&tm);
     dslist->crmon   = tm.tm_mon + 1;
     dslist->crday   = tm.tm_mday;
 
@@ -322,7 +323,7 @@ parse(void *vdata, const char *fmt, ...)
     memset(&tm, 0, sizeof(tm));
     tm.tm_year      = dslist->rfyear - 1900;
     tm.tm_mday      = dslist->rfjday;
-    mktime(&tm);
+    timegm(&tm);
     dslist->rfmon   = tm.tm_mon + 1;
     dslist->rfday   = tm.tm_mday;
 

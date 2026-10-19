@@ -75,6 +75,7 @@ utime64_t utime64(utime64_t *itimer)									asm("TM64UTIM"); /* get system time
 double difftime64(time64_t time1, time64_t time0)						asm("TM64DTIM");
 
 /* create time value from struct tm */
+time_t timegm(struct tm*);											/* 32 bit, UTC: the inverse of gmtime() */
 time64_t timegm64(const struct tm*)										asm("TM64TGM");
 time64_t mktime64(struct tm*)											asm("TM64MKT");
 

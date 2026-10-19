@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <ext/time64.h>    /* timegm() */
 #include "mvs/dslist.h"
 
 static int cvtdate(int century, unsigned char *date, struct tm *tm);
@@ -78,7 +79,7 @@ cvtdate(int century, unsigned char *date, struct tm *tm)
     tm->tm_mday *= 10;
     tm->tm_mday += ((date[2] & 0xF0) >> 4);
 
-    if (mktime(tm) < 0) return -1;
+    timegm(tm);
 
     return 0;
 }

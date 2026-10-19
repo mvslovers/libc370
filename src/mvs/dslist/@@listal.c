@@ -218,7 +218,7 @@ static int get_dscb_values(DSLIST *dslist)
     dslist->crjday  = *(unsigned short*)&dscb1->credt[1];
     tm.tm_year      = dslist->cryear - 1900;
     tm.tm_mday      = dslist->crjday;
-    mktime(&tm);
+    timegm(&tm);
     dslist->crmon   = tm.tm_mon + 1;
     dslist->crday   = tm.tm_mday;
 
@@ -230,7 +230,7 @@ static int get_dscb_values(DSLIST *dslist)
     memset(&tm, 0, sizeof(tm));
     tm.tm_year      = dslist->rfyear - 1900;
     tm.tm_mday      = dslist->rfjday;
-    mktime(&tm);
+    timegm(&tm);
     dslist->rfmon   = tm.tm_mon + 1;
     dslist->rfday   = tm.tm_mday;
 
@@ -280,7 +280,7 @@ static int get_jfcb_values(DSLIST *dslist, JFCB *jfcb)
     dslist->crjday  = *(unsigned short*)&jfcb->jfcbcrdt[1];
     tm.tm_year      = dslist->cryear - 1900;
     tm.tm_mday      = dslist->crjday;
-    mktime(&tm);
+    timegm(&tm);
     dslist->crmon   = tm.tm_mon + 1;
     dslist->crday   = tm.tm_mday;
 
