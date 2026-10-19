@@ -2115,9 +2115,6 @@ PGMEK	ibm/mvs/iefvkeys.h
 PNONDISP	ibm/mvs/ikjtcb.h
 PPAEYE	mvs/crt.h
 PPAFLAG_CCALL	mvs/crt.h
-PPAFLAG_TERR	mvs/crt.h
-PPAFLAG_TIN	mvs/crt.h
-PPAFLAG_TOUT	mvs/crt.h
 PPAFLAG_TSOBG	mvs/crt.h
 PPAFLAG_TSOFG	mvs/crt.h
 PRBLEN	ibm/mvs/iharb.h
@@ -3857,7 +3854,6 @@ __ddstr	ibm/mvs/ieftxtft.h
 __dec	s370/atomic.h
 __delete	mvs/link.h
 __delmem	mvs/pds.h
-__deq	mvs/enq.h
 __dsalc	mvs/dynalloc.h
 __dsalcf	mvs/dynalloc.h
 __dscbav	mvs/dscb.h
@@ -3865,7 +3861,6 @@ __dscbdv	mvs/dscb.h
 __dscbv	mvs/dscb.h
 __dsfree	mvs/dynalloc.h
 __dynal	mvs/dynalloc.h
-__enq	mvs/enq.h
 __enqdeq	mvs/enq.h
 __envlz	mvs/env.h
 __envvar	mvs/env.h
@@ -3973,8 +3968,6 @@ __smfid	mvs/smf.h
 __soadd	mvs/socket.h
 __sodel	mvs/socket.h
 __sofind	mvs/socket.h
-__sopnam	mvs/socket.h
-__sosnam	mvs/socket.h
 __soupd	mvs/socket.h
 __ssib	mvs/subsys.h
 __steplb	mvs/apf.h
@@ -3988,9 +3981,7 @@ __tab	ibm/jes2/tab.h
 __tgm	ibm/jes2/tgm.h
 __tiot	mvs/dd.h
 __todsec	mvs/clock.h
-__try	mvs/recovery.h
 __tryinf	mvs/recovery.h
-__tryrc	mvs/recovery.h
 __txacat	mvs/dynalloc.h
 __txadel	mvs/dynalloc.h
 __txakee	mvs/dynalloc.h

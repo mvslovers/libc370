@@ -319,7 +319,6 @@ src/clib/@@tqeget.c	src/mvs/timer/@@tqeget.c	declared in <mvs/timer.h>
 src/clib/@@tqeprg.c	src/mvs/timer/@@tqeprg.c	declared in <mvs/timer.h>
 src/clib/@@tqerst.c	src/mvs/timer/@@tqerst.c	declared in <mvs/timer.h>
 src/clib/@@tqnew.c	src/mvs/timer/@@tqnew.c	declared in <mvs/timer.h>
-src/clib/@@try.c	src/mvs/recovery/@@try.c	declared in <mvs/recovery.h>
 src/clib/@@txacat.c	src/mvs/dynalloc/@@txacat.c	declared in <mvs/dynalloc.h>
 src/clib/@@txadel.c	src/mvs/dynalloc/@@txadel.c	declared in <mvs/dynalloc.h>
 src/clib/@@txakee.c	src/mvs/dynalloc/@@txakee.c	declared in <mvs/dynalloc.h>

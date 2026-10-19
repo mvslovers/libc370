@@ -16,10 +16,6 @@
 #define ENQ_CHNG        0x20        /* RET=CHNG                         */
 #define ENQ_HAVE        0x00        /* RET=HAVE (default)               */
 
-extern int  __enq(const char *qn, const char *rn, unsigned options);
-
-extern int  __deq(const char *qn, const char *rn, unsigned options);
-
 extern int  __enqdeq(const char *qn, const char *rn, unsigned options, int deq);
 
 #define ENQ(qn,rn,opt)  __enqdeq((qn),(rn),(opt),0)

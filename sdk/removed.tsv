@@ -216,6 +216,9 @@ PDF_RGB_G	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
 PDF_RGB_R	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
 PDF_TRANSPARENT	clibpdf.h	-	PDF generator: declared, never implemented (#248)
 PDF_WHITE	clibpdf.h	-	PDF generator: declared, never implemented (#248)
+PPAFLAG_TERR	clibppa.h	-	never set by the library (#72)
+PPAFLAG_TIN	clibppa.h	-	never set by the library (#72)
+PPAFLAG_TOUT	clibppa.h	-	never set by the library (#72)
 PRINTF_DISABLE_SUPPORT_LONG_LONG	clibprti.h	internal	now in src/internal/printf.h
 PRINTF_DISABLE_SUPPORT_PTRDIFF_T	clibprti.h	internal	now in src/internal/printf.h
 PRINTF_FTOA_BUFFER_SIZE	clibprti.h	internal	now in src/internal/printf.h
@@ -369,6 +372,8 @@ __aread	mvssupa.h	internal	now in src/internal/bsam.h
 __awrite	mvssupa.h	internal	now in src/internal/bsam.h
 __caller	clibio.h	internal	now in src/internal/fileio.h
 __ddbusy	clibio.h	internal	now in src/internal/fileio.h
+__deq	clibenq.h	<mvs/enq.h> DEQ	declared, never in libc.a (#400)
+__enq	clibenq.h	<mvs/enq.h> ENQ	declared, never in libc.a (#400)
 __fflnl	clibio.h	internal	now in src/internal/fileio.h
 __fflush	clibio.h	internal	now in src/internal/fileio.h
 __fgetc	clibio.h	internal	now in src/internal/fileio.h
@@ -393,9 +398,13 @@ __rescrt	clib.h	<mvs/crt.h> __crtres	clib.h alias (#256)
 __resgrt	clib.h	<mvs/crt.h> __grtres	clib.h alias (#256)
 __setcrt	clib.h	<mvs/crt.h> __crtset	clib.h alias (#256)
 __setgrt	clib.h	<mvs/crt.h> __grtset	clib.h alias (#256)
+__sopnam	clibsock.h	<sys/socket.h> getpeername	declared, never in libc.a (#400)
+__sosnam	clibsock.h	<sys/socket.h> getsockname	declared, never in libc.a (#400)
 __svc	clibsvc.h	internal	now in src/internal/clibsvc.h
 __system	mvssupa.h	internal	now in src/internal/bsam.h
 __textlc	mvssupa.h	internal	now in src/internal/bsam.h
+__try	clibtry.h	<mvs/recovery.h> try	unused twin of try() (#17)
+__tryrc	clibtry.h	<mvs/recovery.h> tryrc	unused twin of tryrc() (#17)
 _atoi	clibprti.h	internal	now in src/internal/printf.h
 _ftoa	clibprti.h	internal	now in src/internal/printf.h
 _is_digit	clibprti.h	internal	now in src/internal/printf.h

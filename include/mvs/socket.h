@@ -60,10 +60,4 @@ extern int  __sodel(int ss);
 /* __sofind() - returns index of found socket or 0 if not found */
 extern int  __sofind(int ss, CLIBSOCK **s);
 
-/* __sosnam() - get socket name (local side of socket) */
-extern int  __sosnam(int ss, void *name);
-
-/* __sopnam() - get peer name (remote side of socket) */
-extern int  __sopnam(int ss, void *peer);
-
 #endif /* MVS_SOCKET_H */

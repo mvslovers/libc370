@@ -1116,8 +1116,6 @@ int __soadd(int ss, void *name, void *peer);
 int __soupd(int ss, void *name, void *peer);
 int __sodel(int ss);
 int __sofind(int ss, CLIBSOCK **s);
-int __sosnam(int ss, void *name);
-int __sopnam(int ss, void *peer);
 ```
 
 === Description
@@ -1146,8 +1144,5 @@ when there is none. #cmd("__soupd") and #cmd("__sodel") return 0, and
 
 - A program does not normally call these functions. They change only the
   library's record, never the socket itself.
-- #cmd("__sosnam") and #cmd("__sopnam") are declared but not defined in
-  the library\; a program that calls them does not link. Use
-  #cmd("getsockname()") and #cmd("getpeername()").
 - #cmd("struct clientid") is declared in the header, but no function uses
   it.

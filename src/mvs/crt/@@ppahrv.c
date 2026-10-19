@@ -1,7 +1,7 @@
 /* @@PPAHRV.C - __ppahrv() - free what a dead program's own exit path
  * would have freed (#96).
  *
- * Called from ___try()/__try()'s abend-path walk (#93) for each
+ * Called from ___try()'s abend-path walk (#93) for each
  * validated abandoned PPA, BEFORE the stack+PPA block itself is
  * FREEMAINed.  A program that abends under try() never runs __exit()
  * or @@EXITA: its eagerly opened stdio FILEs (@@start.c fopens

@@ -41,20 +41,13 @@ extern int __estae(ESTAE_OP op, void *fp, void *udata);
 extern int ___try(void *func, ...);
 #define try(func,...) ___try((func), __VA_ARGS__)
 
-/* call func with ESTAE protection. Returns 0 unless the ESTAE create fails */
-/* note: used only when we don't care the failure reason */
-extern int __try(void *func, ...);
-
 /* abend report via WTO messages */
 extern int __abrpt(ESTAE_OP op, DUMP_OP);
 #define abendrpt(eop,dop) __abrpt((eop),(dop))
 
-/* return last ___try() or __try() rc/abend code */
+/* return last ___try() rc/abend code */
 unsigned ___tryrc(void);
 #define tryrc() ___tryrc()
-
-/* return last ___try() or __try() rc/abend code */
-unsigned __tryrc(void);
 
 /* where the last ___try() abend happened (#530): the BC-mode PSW at the
 ** time of error (SDWACTL1 -- instruction address, ILC, interruption code)
@@ -64,7 +57,7 @@ unsigned __tryrc(void);
 ** Cleared and set exactly when tryrc() is:
 ** zero after a try() that did not abend, but after a try() whose function
 ** itself caught an abend in a nested try(), the nested one's values.
-** __try() leaves them zero.  The pointer is into the CRT and stays valid;
+** The pointer is into the CRT and stays valid;
 ** the values are overwritten by the next try(). */
 typedef struct tryinfo {
     unsigned    psw[2];     /* BC-mode PSW at the time of error         */

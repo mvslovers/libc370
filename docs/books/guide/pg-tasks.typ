@@ -285,8 +285,6 @@ mind:
   _address_ system-wide. Every address space has its own private storage at
   the same addresses, so use them only for objects in common storage. For
   anything else, use #cmd("ENQ") with a name.
-- Use #cmd("ENQ") and #cmd("DEQ"), not #cmd("__enq") and #cmd("__deq"): the
-  header declares the latter, but the library does not contain them.
 
 === Atomic Updates <pg-tasks-atomic>
 

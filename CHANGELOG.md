@@ -14,6 +14,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   took the path it takes now unconditionally. The byte at X'10C' is reserved
   (`crtrsv1`, `CRTOPTS` in `clibcrt.copy` is an unnamed `DS X`), and
   `crtauth` starts at 0. The layout of the task anchor is unchanged.
+- **`__try()` and `__tryrc()` are gone; use `try()` and `tryrc()`
+  (#17).** They were an
+  older copy of `try()` and `tryrc()` that nothing called any more, and the
+  two copies had begun to differ. A program that still calls `__try()` or
+  `__tryrc()` no longer compiles; `try()` and `tryrc()` take the same
+  arguments and report an abend the same way.
+- **The flags `PPAFLAG_TIN`, `PPAFLAG_TOUT` and `PPAFLAG_TERR` are gone
+  from `<mvs/crt.h>`, and `PPATIN`, `PPATOUT` and `PPATERR` from the
+  `CLIBPPA` assembler mapping (#72).** They claimed to say whether standard
+  input, output and error were the terminal, but the library never set
+  them, so a test of any of them always answered no. The bits stay unused.
+- **The declarations of `__enq()`, `__deq()`, `__sosnam()` and
+  `__sopnam()` are gone (#400).** The headers declared them, but the
+  library never contained them, so a program that called one compiled and
+  then failed to link. Use the `ENQ()` and `DEQ()` macros of
+  `<mvs/enq.h>`, and `getsockname()` and `getpeername()`.
 
 ## [2.23.0] - 2026-10-19
 

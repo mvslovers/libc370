@@ -1110,37 +1110,9 @@ allocated after every abend #cmd("try()") recovered.
 @mvs-program-tryrc, @mvs-program-tryinfo, @mvs-program-__linkt,
 @mvs-program-estae
 
-== \_\_try <mvs-program-__try>
-#idx("__try")
-
-=== Format
-```
-#include <mvs/recovery.h>
-
-int __try(void *func, ...);
-```
-
-=== Description
-An older form of #cmd("try()"). It calls #var("func") with the arguments
-that follow it under a recovery routine, in the same way.
-
-=== Returns
-0 when #var("func") returned normally, the abend code when it ended
-abnormally, and a negative value when the recovery routine could not be
-established.
-
-=== Notes
-The comment in the header says that #cmd("__try()") returns 0 unless the
-ESTAE cannot be created. That is not so: it returns the abend code like
-#cmd("try()"). Use #cmd("try()").
-
-=== Related
-@mvs-program-try
-
-== tryrc, \_\_\_tryrc, \_\_tryrc <mvs-program-tryrc>
+== tryrc, \_\_\_tryrc <mvs-program-tryrc>
 #idx("tryrc")
 #idx("___tryrc")
-#idx("__tryrc")
 
 === Format
 ```
@@ -1148,13 +1120,11 @@ ESTAE cannot be created. That is not so: it returns the abend code like
 
 unsigned ___tryrc(void);
 #define tryrc() ___tryrc()
-unsigned __tryrc(void);
 ```
 
 === Description
-Return the result of the most recent #cmd("try()") or #cmd("__try()") on the
-current task: 0 when the function returned, or the abend code. The two
-functions read the same field.
+Return the result of the most recent #cmd("try()") on the current task: 0
+when the function returned, or the abend code.
 
 === Returns
 The result, or #cmd("X'FFFFFFFF'") when the task has no task anchor.
@@ -1162,8 +1132,7 @@ The result, or #cmd("X'FFFFFFFF'") when the task has no task anchor.
 === Notes
 #cmd("try()") sets the field to 0 when it starts and stores the abend code
 when the function ends abnormally\; it leaves it 0 when the recovery
-routine cannot be established. #cmd("__try()") stores its return value,
-negative values included.
+routine cannot be established.
 
 == tryinfo, \_\_tryinf <mvs-program-tryinfo>
 #idx("tryinfo")
@@ -1210,7 +1179,6 @@ zeros.
 The values are set and cleared exactly when #cmd("tryrc()") is: when the
 function given to #cmd("try()") itself caught an abend with a nested
 #cmd("try()") and then returned, they describe that nested abend.
-#cmd("__try()") sets them to 0.
 
 ```
 if (try(work, arg)) {

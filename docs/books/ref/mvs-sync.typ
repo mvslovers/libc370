@@ -355,9 +355,6 @@ Both return 1 without issuing the service when #var("qn") or #var("rn") is
   so a longer name is not refused but cut, modulo 256.
 - A DEQ must use the scope of the ENQ, or it addresses a different resource
   and returns 8.
-- #idx("__enq")#idx("__deq")The header also declares #cmd("__enq") and
-  #cmd("__deq"). The library contains no definition of them, and a program
-  that calls them cannot be linked\; use #cmd("ENQ") and #cmd("DEQ").
 
 === Related
 @mvs-sync-locks
