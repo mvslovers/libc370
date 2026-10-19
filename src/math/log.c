@@ -41,9 +41,14 @@ __PDPCLIB_API__ double log (double x)
     int i,scale;
     double term,answer,work,xs;
 
-    if (x <= 0 )
+    if (x == 0)
     {
-        /* need to set signal */
+        /* a pole: -HUGE_VAL and ERANGE, C99 7.12.6.7 (#389) */
+        errno=ERANGE;
+        return (-HUGE_VAL);
+    }
+    if (x < 0 )
+    {
         errno=EDOM;
         return (HUGE_VAL);
     }
