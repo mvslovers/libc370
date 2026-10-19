@@ -389,7 +389,8 @@ out of space does not end the program with an x37 abend: the write fails,
 the error indicator is set and #cmd("errno") is #cmd("ENOSPC")\; any
 other permanent I/O error sets #cmd("EIO"). Every later write on the
 stream fails at once with the same #cmd("errno"), every later read with
-#cmd("EIO"), and nothing more is written, until #cmd("clearerr()") is called.
+#cmd("EIO"), and nothing more is written, until #cmd("clearerr()") or
+#cmd("rewind()") is called.
 The exception is a member of a partitioned data set whose secondary space
 is used up: MVS ends the program with E37-04 before the library is called
 (see #cmd("__fx37()")). Because the last block is
@@ -653,7 +654,9 @@ value.
   has freed space for a data set that ran out of it calls
   #cmd("clearerr()") and writes again. The records lost in the failed write
   are not written again.
-- #cmd("fseek()") and #cmd("rewind()") also clear both indicators.
+- #cmd("rewind()") also clears both indicators. #cmd("fseek()") and
+  #cmd("fsetpos()") clear only the end-of-file indicator, so a stream in
+  error stays in error after a seek. Up to release 2.23.0 they cleared both.
 
 === Related
 
@@ -1277,8 +1280,8 @@ bytes from the beginning (#cmd("SEEK_SET")), from the current position
 describes the positions and how the library reaches them.
 #cmd("fsetpos()") is #cmd("fseek(stream, *pos, SEEK_SET)"), and
 #cmd("rewind()") is #cmd("fseek(stream, 0L, SEEK_SET)") without a return
-value. A successful call discards a character pushed back with
-#cmd("ungetc()"). Up to release 2.21.0, on a stream opened with a #cmd("+")
+value, followed by #cmd("clearerr()"). A successful call discards a
+character pushed back with #cmd("ungetc()"). Up to release 2.21.0, on a stream opened with a #cmd("+")
 mode, it survived a move to the current position.
 
 === Returns
@@ -1297,8 +1300,12 @@ failure.
 
 === Notes
 
-- All three functions clear the error indicator as well as the end-of-file
-  indicator. C99 lets #cmd("fseek()") clear only the end-of-file indicator.
+- A successful #cmd("fseek()") or #cmd("fsetpos()") clears the end-of-file
+  indicator and leaves the error indicator as it was: the seek itself can
+  succeed on a stream in error, but every later read and write still fails
+  until #cmd("clearerr()") or #cmd("rewind()"). #cmd("rewind()") clears
+  both indicators. Up to release 2.23.0 all three cleared both, so a seek
+  after a failed write let the program write on.
 - On a stream opened #cmd("\"w\"") or #cmd("\"a\"") that has been written
   to, #cmd("rewind()") does not move the position: it cannot return to the
   beginning without truncating the data set.
