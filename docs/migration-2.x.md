@@ -209,6 +209,7 @@ CHANGELOG has everything else.
 
 | Release | Change | What to do |
 |---|---|---|
+| Unreleased | `fclose()` always releases the stream's lock, also one the task held before the call (#174) | Nothing. A caller that holds the lock around `fclose()` and unlocks afterwards gets 8 from that `unlock()`, as for any lock it no longer holds |
 | Unreleased | `try()` frees the SDWA of every abend it recovers (#640); about 500 bytes of the region per abend stayed allocated | Nothing |
 | Unreleased | A failed `freopen()` leaves the old stream open without its error indicator (#179); the indicator was set and refused every later read and write | Nothing; a `clearerr()` after a failed `freopen()` is no longer needed |
 | 2.22.0 | `__uastep()` in an authorized program leaves the STEPLIB's APF authorization alone unless `__austep()` set it (#125); it cleared it every time | Nothing. A program that relied on `__uastep()` to de-authorize a STEPLIB it had not authorized itself has to stop relying on it |

@@ -39,6 +39,11 @@
  *   8. __aclose() rc 12 -> fclose() EOF, errno ENOSPC, teardown complete
  *   9. __aclose() rc 8  -> fclose() EOF, errno EIO, teardown complete
  *
+ * And #174: a FILE whose lock the task still holds when fclose() runs
+ * (a write that abended under the caller's recovery took it):
+ *
+ *  10. no ENQ is left on the freed FILE      - RED, 2026-10-19: one is
+ *
  * BUILD / RUN (host, from test/host; same flag recipe as tstvsnp.c):
  *
  *     R=../..
@@ -285,6 +290,18 @@ int main(void)
     lastblock(0,  0,   0,      "(7) rc 0");
     lastblock(12, EOF, ENOSPC, "(8) rc 12");
     lastblock(8,  EOF, EIO,    "(9) rc 8");
+
+    /* #174: the task already holds the FILE lock when fclose() runs - a
+       write that abended under the caller's own recovery took it and never
+       DEQ'd it.  The FILE is freed either way, so its ENQ must not outlive
+       it (lock() answers 8 here, as ENQ RET=HAVE does) */
+    printf("\n#174: fclose() of a FILE whose lock the task still holds\n");
+    fp = mkfile();
+    lock(fp, 0);
+    fclose(fp);
+    watchfp = 0;
+    CHECK_EQ((int)arraycount(&fakegrt.grtfile), 0, "(10) FILE left grtfile");
+    CHECK_EQ(hold_n, 0, "(10) no ENQ left on the freed FILE");
 
     return mbt_test_summary("tstfcls");
 }
