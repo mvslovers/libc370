@@ -134,7 +134,7 @@ into a partitioned data set that already exists.
       #cmd("DATASET_VOLSER")], [#cmd("RECFM=V"), #cmd("LRECL=255"), the
       installation's default space, unit and volume],
     [#cmd("&&") temporary], [#cmd("TEMP_RECFM"), #cmd("TEMP_LRECL"),
-      #cmd("TEMP_SPACE")], [#cmd("RECFM=V"),
+      #cmd("TEMP_BLKSIZE"), #cmd("TEMP_SPACE")], [#cmd("RECFM=V"),
       #cmd("LRECL=255"), #cmd("UNIT=VIO")],
     [SYSOUT (#cmd("*"))], [#cmd("SYSOUT_CLASS"), #cmd("SYSOUT_RECFM"),
       #cmd("SYSOUT_LRECL"), #cmd("SYSOUT_BLKSIZE")], [the job's message
@@ -259,16 +259,13 @@ set is created.
 #cmd("unit="), #cmd("volser=") and #cmd("mount") apply to a new cataloged
 data set only. A SYSOUT data set (#cmd("*")) takes #cmd("recfm="),
 #cmd("lrecl=") and #cmd("blksize=")\; a temporary data set takes
-#cmd("recfm="), #cmd("lrecl=") and #cmd("space="), and no block size. Other
+#cmd("recfm="), #cmd("lrecl="), #cmd("blksize=") and #cmd("space="). Other
 text in the mode string is ignored.
 
-Two of these do not work as written, because the mode string is converted
-to lowercase before it is examined (a defect, libc370 issue 474, read
-from the library source): #cmd("space=cyl(...)") and #cmd("space=trk(...)") for a temporary
-data set are taken as a space in blocks, and #cmd("blksize=") for a SYSOUT
-data set is never used, since its record format is tested for an uppercase
-#cmd("B"). The environment variables #cmd("TEMP_SPACE") and
-#cmd("SYSOUT_RECFM"), in uppercase, work.
+Up to release 2.21.0 a temporary data set ignored #cmd("blksize="), took
+#cmd("space=cyl(...)") and #cmd("space=trk(...)") as a space in blocks, so
+that the allocation on VIO failed and #cmd("fopen()") allocated it on disk
+instead, and a SYSOUT data set ignored #cmd("blksize=").
 
 == Records and Lines <std-stdio-records>
 
@@ -1267,9 +1264,9 @@ bytes from the beginning (#cmd("SEEK_SET")), from the current position
 describes the positions and how the library reaches them.
 #cmd("fsetpos()") is #cmd("fseek(stream, *pos, SEEK_SET)"), and
 #cmd("rewind()") is #cmd("fseek(stream, 0L, SEEK_SET)") without a return
-value. A character pushed back with #cmd("ungetc()") is discarded, except
-on a stream opened with a #cmd("+") mode, where it survives the move (a
-defect, libc370 issue 474).
+value. A successful call discards a character pushed back with
+#cmd("ungetc()"). Up to release 2.21.0, on a stream opened with a #cmd("+")
+mode, it survived a move to the current position.
 
 === Returns
 
@@ -1296,8 +1293,8 @@ failure.
   the data set and ignores #var("offset").
 - A position beyond the end of a data set opened #cmd("\"r\"") fails, sets
   the error and end-of-file indicators and leaves the stream at the end.
-  On a record stream it returns 0 and sets no indicator (a defect,
-  libc370 issue 474).
+  So does a record stream\; up to release 2.21.0 it returned 0 there and
+  set no indicator.
 - Moving backward, or forward over a long distance, reads the data set and
   takes time in proportion; a move within the current record does not
   (@std-stdio-position).
@@ -1369,9 +1366,9 @@ which is #var("size") #sym.times #var("nmemb"), and bytes 2 and 3 are zero.
 The number of complete elements written; less than #var("nmemb") on an
 error. On a record stream 1 when the record was written and 0 when it was
 not, whatever #var("nmemb") is. When #var("size") or #var("nmemb") is 0,
-nothing is written\; on a record stream 0 is returned, but on a text or
-binary stream #var("nmemb") is returned (#cmd("fwrite(p, 0, 5, f)")
-returns 5), which is a defect (libc370 issue 474).
+nothing is written and 0 is returned. Up to release 2.21.0 a text or
+binary stream returned #var("nmemb") for a #var("size") of 0
+(#cmd("fwrite(p, 0, 5, f)") returned 5).
 
 === Errors
 
@@ -1639,9 +1636,9 @@ already been pushed back.
   #cmd("clearerr()"), before or after #cmd("ungetc()"), and the next read
   returns it.
 - The position that #cmd("ftell()") reports does not change.
-- #cmd("fseek()"), #cmd("fsetpos()") and #cmd("rewind()") discard the
-  character, except on a stream opened with a #cmd("+") mode (a defect, libc370
-  issue 474).
+- A successful #cmd("fseek()"), #cmd("fsetpos()") or #cmd("rewind()")
+  discards the character\; up to release 2.21.0 not always on a stream
+  opened with a #cmd("+") mode.
 
 === Related
 

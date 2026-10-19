@@ -82,6 +82,10 @@ __fwrite(const void *vptr, size_t size, size_t nmemb, FILE *fp)
         goto quit;
     }
 
+    /* C99 7.19.8.2: size or nmemb 0 writes nothing and returns 0 (#474) -
+       the loop below returned nmemb for size 0 */
+    if (!size) goto quit;
+
     /* slower but accurate implementation */
     for(i=0; i < nmemb; i++) {
         for(j=0; j < size; j++) {

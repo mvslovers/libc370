@@ -25,7 +25,11 @@ __fseek(FILE *fp, long int offset, int whence)
     /* '+' streams position themselves - and never through __reopen(),
        which would open "w+" for OUTPUT again and truncate (#189) */
     if ((fp->flags & _FILE_FLAG_READ) && (fp->flags & _FILE_FLAG_WRITE)) {
-        return plusseek(fp, offset, whence);
+        /* a successful fseek() undoes ungetc(), C99 7.19.9.2 (#474) */
+        int rc = plusseek(fp, offset, whence);
+
+        if (rc == 0) fp->ungetch = -1;
+        return rc;
     }
 
     /* No flush here (#189).  On a text stream a flush ENDS the record, so
@@ -119,7 +123,12 @@ __fseek(FILE *fp, long int offset, int whence)
     if (fp->flags & _FILE_FLAG_RECORD) {
         /* record mode, newpos is desired record number */
         for(x=oldpos; x < newpos; x++) {
-            __fread(buf, sizeof(buf), 1, fp);
+            /* past the end fails, as on a byte stream below (#474) */
+            __fread(buf, 1, sizeof(buf), fp);
+            if (fp->flags & (_FILE_FLAG_EOF | _FILE_FLAG_ERROR)) {
+                fp->flags |= (_FILE_FLAG_ERROR + _FILE_FLAG_EOF);
+                goto quit;
+            }
         }
         goto quit;
     }

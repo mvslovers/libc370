@@ -5,24 +5,95 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include <strings.h>
 #include <stddef.h>
 #include <mvs/dynalloc.h>
 #include "mvs/dynalloc.h"
 #include "ext/array.h"
+
+/* SPACE in blocks: the length is the text from s up to end */
+__asm__("\n&FUNC    SETC 'txblk'");
+static int
+txblk(TXT99 ***txt99, const char *s, const char *end)
+{
+    char    blk[12];
+    size_t  n = (size_t)(end - s);
+
+    if (n >= sizeof(blk)) n = sizeof(blk) - 1;
+    memcpy(blk, s, n);
+    blk[n] = 0;
+    return __txblk(txt99, blk);
+}
+
+/* option() - the value of name=v or name(v) in mode, copied into buf (n
+** bytes), else the environment variable pfx followed by var, else NULL */
+__asm__("\n&FUNC    SETC 'option'");
+static const char *
+option(const char *mode, const char *name, char *buf, size_t n,
+       const char *pfx, const char *var)
+{
+    char        key[24];
+    size_t      k       = strlen(name);
+    const char  *p;
+    char        *v;
+    char        *tok_save = NULL;
+
+    memcpy(key, name, k);
+    key[k] = '=';
+    key[k + 1] = 0;
+    p = strstr(mode, key);
+    key[k] = '(';
+    if (!p) p = strstr(mode, key);
+    if (p) {
+        strncpy(buf, p + k + 1, n - 1);
+        buf[n - 1] = 0;
+        v = __tok(buf, " ,)", &tok_save);
+        if (v) return v;
+    }
+    strcpy(key, pfx);
+    strcat(key, var);
+    return getenv(key);
+}
+
+/* __fpdcb() - the RECFM, LRECL and, for a blocked format, BLKSIZE text
+** units of a data set that fopen() allocates: from the mode string, else
+** from the environment variables pfx RECFM, LRECL and BLKSIZE ("TEMP_",
+** "SYSOUT_"), else V and 255 (#474).  The mode string is in lower case,
+** the environment in upper.  Here, because every program that can reach
+** __fpstar() links this module too. */
+int
+__fpdcb(TXT99 ***txt99, const char *mode, const char *pfx)
+{
+    char        buf[16];
+    const char  *v;
+    int         err;
+    int         blocked;
+
+    v = option(mode, "recfm", buf, sizeof(buf), pfx, "RECFM");
+    if (!v) v = "V";
+    err = __txrecf(txt99, v);
+    if (err) return err;
+    blocked = strchr(v, 'B') || strchr(v, 'b');
+
+    v = option(mode, "lrecl", buf, sizeof(buf), pfx, "LRECL");
+    if (!v) v = "255";
+    err = __txlrec(txt99, v);
+    if (err || !blocked) return err;
+
+    v = option(mode, "blksize", buf, sizeof(buf), pfx, "BLKSIZE");
+    return v ? __txbksz(txt99, v) : 0;
+}
 
 int
 __fptmp(FILE *fp)
 {
     int         err     = 1;
     unsigned    count   = 0;
-    char        *recfm  = 0;
-    char        *lrecl  = 0;
     char        *space  = 0;
     char        *p      = 0;
     TXT99       **txt99 = NULL;
     RB99        rb99    = {0};
     char        temp[sizeof(fp->mode)+1];
-    char        *tok_save = NULL;
 
     /* we want the DDNAME returned to us */
     err = __txrddn(&txt99, NULL);
@@ -44,44 +115,9 @@ __fptmp(FILE *fp)
     err = __txorg(&txt99, "PS");
     if (err) goto quit;
 
-    /* get record format */
-    p = strstr(fp->mode, "recfm=");
-    if (!p) p = strstr(fp->mode,"recfm(");
-    if (p) {
-        strcpy(temp,p+6);
-        recfm = __tok(temp, " ,)", &tok_save);
-    }
-    if (!recfm) recfm = getenv("TEMP_RECFM");
-    if (!recfm) recfm = "V";
-    err = __txrecf(&txt99, recfm);
+    /* RECFM, LRECL, BLKSIZE */
+    err = __fpdcb(&txt99, fp->mode, "TEMP_");
     if (err) goto quit;
-
-    /* get logical record length */
-    p = strstr(fp->mode, "lrecl=");
-    if (!p) p = strstr(fp->mode,"lrecl(");
-    if (p) {
-        strcpy(temp,p+6);
-        lrecl = __tok(temp, " ,)", &tok_save);
-    }
-    if (!lrecl) lrecl = getenv("TEMP_LRECL");
-    if (!lrecl) lrecl = "255";
-    err = __txlrec(&txt99, lrecl);
-    if (err) goto quit;
-
-    if (strchr(recfm, 'B')) {
-        /* get optional block size */
-        p = strstr(fp->mode, "blksize=");
-        if (!p) p = strstr(fp->mode,"blksize(");
-        if (p) {
-            strcpy(temp,p+8);
-            recfm = __tok(temp, " ,)", &tok_save);
-        }
-        if (!p) p = getenv("TEMP_BLKSIZE");
-        if (p) {
-            err = __txbksz(&txt99, p);
-            if (err) goto quit;
-        }
-    }
 
     /* get optional space "[CYL|TRK](pri[,sec])" or "blksize(pri[,sec])" */
     p = strstr(fp->mode, "space=");
@@ -101,18 +137,20 @@ __fptmp(FILE *fp)
     if (space) {
         char *x = strchr(space,'(');
         if (x) {
-            if (memcmp(space, "CYL", 3)==0) {
+            /* "cyl" from the mode string, "CYL" from TEMP_SPACE (#474) */
+            if (strncasecmp(space, "cyl", 3)==0) {
                 /* CYLINDERS */
                 err = __txcyl(&txt99, NULL);
             }
-            else if (memcmp(space, "TRK", 3)==0) {
+            else if (strncasecmp(space, "trk", 3)==0) {
                 /* TRACKS */
                 err = __txtrk(&txt99, NULL);
             }
             else {
-                /* BLOCKS */
-                err = __txblk(&txt99, p);
+                /* BLOCKS of the length before the '(' */
+                err = txblk(&txt99, space, x);
             }
+            if (err) goto quit;
             space = x+1;
         }
         while(*space && !isdigit(*space)) space++;

@@ -17,6 +17,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   offset, so the result was that much ahead. It is now right up to the end
   of the TOD clock, 17 September 2042, 23:53:47 UTC (measured on MVS with
   synthetic clock values).
+- **`fwrite()`, `fseek()` and the options of a temporary or SYSOUT data
+  set (#474).** Measured on MVS:
+  - `fwrite()` with a `size` of 0 returns 0 on a text or binary stream; it
+    returned `nmemb`.
+  - A successful `fseek()` on a stream opened with `+` discards a character
+    pushed back with `ungetc()`; a move to the current position kept it.
+  - `fseek()` past the end of a record stream fails and sets the
+    end-of-file and error indicators, as on a byte stream; it returned 0.
+  - A temporary data set (`&&name`) takes `blksize=` from the mode string;
+    it got a block size of 19040 for `blksize=800`. `space=trk(...)` and
+    `space=cyl(...)` are allocated on VIO; they were taken as blocks, the
+    VIO allocation failed and the data set went to disk.
+  - A SYSOUT data set (`*`) takes `blksize=`; it got 32720 for
+    `blksize=800`.
 
 ## [2.21.0] - 2026-10-19
 

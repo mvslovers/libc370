@@ -1,6 +1,5 @@
 /* @@FPSTAR.C */
 #include <stdio.h>
-#include "src/internal/tok.h"
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
@@ -12,6 +11,9 @@
 #include "mvs/wto.h"
 #include "stddef.h"
 #include "ibm/mvs/ihacde.h"
+
+/* in @@fptmp.c (#474) */
+extern int __fpdcb(TXT99 ***txt99, const char *mode, const char *pfx);
 
 int
 __fpstar(FILE *fp)
@@ -25,8 +27,6 @@ __fpstar(FILE *fp)
     char        *p      = 0;
     TXT99       **txt99 = NULL;
     RB99        rb99    = {0};
-    char        temp[sizeof(fp->mode)+1];
-    char        *tok_save = NULL;
 
     /* we want the DDNAME returned to us */
     err = __txrddn(&txt99, NULL);
@@ -62,7 +62,7 @@ __fpstar(FILE *fp)
 		err = __txlrec(&txt99, lrecl);
 		if (err) goto quit;
 
-		if (strchr(recfm, 'B')) {
+		if (strchr(recfm, 'B') || strchr(recfm, 'b')) {
 			/* BLKSIZE=? */
 			blksize = getenv("TERMINAL_BLKSIZE");
 			if (blksize) {
@@ -81,44 +81,9 @@ __fpstar(FILE *fp)
 		err = __txorg(&txt99, "PS");
 		if (err) goto quit;
 
-		/* get record format */
-		p = strstr(fp->mode, "recfm=");
-		if (!p) p = strstr(fp->mode,"recfm(");
-		if (p) {
-			strcpy(temp,p+6);
-			recfm = __tok(temp, " ,)", &tok_save);
-		}
-		if (!recfm) recfm = getenv("SYSOUT_RECFM");
-		if (!recfm) recfm = "V";
-		err = __txrecf(&txt99, recfm);
+		/* RECFM, LRECL, BLKSIZE */
+		err = __fpdcb(&txt99, fp->mode, "SYSOUT_");
 		if (err) goto quit;
-
-		/* get logical record length */
-		p = strstr(fp->mode, "lrecl=");
-		if (!p) p = strstr(fp->mode, "lrecl(");
-		if (p) {
-			strcpy(temp,p+6);
-			lrecl = __tok(temp, " ,)", &tok_save);
-		}
-		if (!lrecl) lrecl = getenv("SYSOUT_LRECL");
-		if (!lrecl) lrecl = "255";
-		err = __txlrec(&txt99, lrecl);
-		if (err) goto quit;
-
-		if (strchr(recfm, 'B')) {
-			/* get optional block size */
-			p = strstr(fp->mode, "blksize=");
-			if (!p) p = strstr(fp->mode, "blksize(");
-			if (p) {
-				strcpy(temp,p+8);
-				blksize = __tok(temp, " ,)", &tok_save);
-			}
-			if (!blksize) blksize = getenv("SYSOUT_BLKSIZE");
-			if (blksize) {
-				err = __txbksz(&txt99, blksize);
-				if (err) goto quit;
-			}
-		}
 	}
 
     count = arraycount(&txt99);
