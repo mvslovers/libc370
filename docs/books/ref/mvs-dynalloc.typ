@@ -52,7 +52,8 @@ A program can use the service at three levels:
   built entirely by itself.
 
 #cmd("__dynal()") is a fourth, older interface: it allocates one existing
-data set with #cmd("DISP=SHR").
+data set, or a member of one, with #cmd("DISP=SHR") and
+#cmd("FREE=CLOSE").
 
 #idx("authorization", "dynamic allocation")
 None of these functions needs APF authorization, and none of them changes
@@ -166,8 +167,9 @@ converted to uppercase. A keyword that is not in the table is ignored.
       name. Without it MVS generates a name, which is returned in
       #var("ddname").],
     [#cmd("DSN=")#var("dsn"), #cmd("DSNAME=")#var("dsn")], [The data set
-      name. A member cannot be given: #cmd("DSN=A.B(MEM)") reaches the
-      allocation as #cmd("A.B=MEM"), a defect (libc370 issue 408).],
+      name. A member name or a relative generation in parentheses may
+      follow it, as in JCL: #cmd("DSN=A.B(MEM)") allocates member
+      #cmd("MEM") of #cmd("A.B").],
     [#cmd("DISP=")#var("status"), #cmd("DISP=(")#var("status")#cmd(",")#var("normal")#cmd(",")#var("abnormal")#cmd(")")],
       [#var("status") is #cmd("NEW"), #cmd("OLD"), #cmd("MOD") or
       #cmd("SHR"). #var("normal") and #var("abnormal") are #cmd("KEEP"),
@@ -197,12 +199,15 @@ converted to uppercase. A keyword that is not in the table is ignored.
       [Volume serial numbers.],
     [#cmd("MOUNT")], [Allow MVS to ask the operator to mount a volume\;
       see Notes.],
+    [#cmd("FREE=CLOSE")], [Free the DD when the data set is closed, as
+      #cmd("FREE=CLOSE") does in JCL. The DD no longer exists after
+      that close, so the data set can be opened only once through it.],
   )
 ] <mvs-dynalloc-dsalc-tab>
 
 The text units are issued in this order, whatever the order of the
-keywords: DD name, data set name, disposition, DCB model, DSORG, RECFM,
-LRECL, BLKSIZE, space, unit, volumes.
+keywords: DD name, member name, data set name, disposition, DCB model,
+DSORG, RECFM, LRECL, BLKSIZE, space, unit, volumes, #cmd("FREE=CLOSE").
 
 === Returns
 0 when the data set was allocated. 1 when #var("opts") holds a value the
@@ -224,6 +229,9 @@ code of SVC 99. #cmd("__dsalcf()") returns 4 when #var("opts") is
 - Up to release 2.22.0 the JCL form #cmd("SPACE=(TRK,(1,1))") made the
   call return 1, and a disposition of #cmd("UNCATLG") or #cmd("UNCAT") was
   taken as #cmd("CATLG").
+- Up to release 2.23.0 a member name was not recognized
+  (#cmd("DSN=A.B(MEM)") reached SVC 99 as the name #cmd("A.B=MEM"), and
+  the call failed), and #cmd("FREE=CLOSE") was ignored.
 - The error and information codes of a failed request are not returned.
   To see them, build the request with the #cmd("__tx...()") routines and
   issue it with #cmd("__svc99()").
@@ -235,7 +243,8 @@ code of SVC 99. #cmd("__dsalcf()") returns 4 when #var("opts") is
 - #cmd("__dsalcf()") formats into a buffer of 512 bytes\; a longer
   keyword string is truncated.
 - The data set is released, and its normal disposition takes effect, when
-  the DD is freed with #cmd("__dsfree()") or at the end of the job step.
+  the DD is freed with #cmd("__dsfree()"), at the close with
+  #cmd("FREE=CLOSE"), or at the end of the job step.
 
 === Example
 #fig(caption: [Creating a data set with \_\_dsalcf()])[
@@ -288,10 +297,11 @@ int __dynal(size_t ddn_len, char *ddn, size_t dsn_len, char *dsn);
 
 === Description
 #cmd("__dynal()") allocates the existing data set #var("dsn") with
-#cmd("DISP=SHR"). The DD stays allocated after the data set is closed:
-#cmd("FREE=CLOSE") is meant, but the request does not pass it (a defect,
-libc370 issue 408). Free the DD when it is no longer needed. #var("dsn") is #var("dsn_len") characters long, 1 to
-44, and need not be terminated by a null character.
+#cmd("DISP=SHR") and #cmd("FREE=CLOSE"): the DD is freed when the data set
+is closed. #var("dsn") is #var("dsn_len") characters long and need not be
+terminated by a null character. The name itself is 1 to 44 characters\; a
+member name or a relative generation of 1 to 8 characters in parentheses
+may follow it, as in #cmd("A.B(MEM)"), and allocates that member.
 
 #var("ddn") names the DD, #var("ddn_len") characters, 1 to 8. If the name
 is all blanks or all zeros and #var("ddn_len") is 8, MVS generates a DD
@@ -303,13 +313,16 @@ whether it exists or not.
 The high-order halfword holds the return code of SVC 99, and the
 low-order halfword the contents of register 0 after the SVC. Two values
 report an error of #cmd("__dynal()") itself: #cmd("0x14000001") for a
-length out of range, and #cmd("0x048040")#var("nn") when its work area
+length out of range or an empty member name, and #cmd("0x048040")#var("nn") when its work area
 could not be obtained, #var("nn") being the GETMAIN return code.
 
 === Notes
 The call is an ordinary cc370 call, with register 1 pointing to a list of
 the four argument values, which is the parameter list the assembler routine
-expects. A member name in #var("dsn") is not recognized.
+expects.
+
+Up to release 2.23.0 a member name in #var("dsn") was not recognized (the
+allocation failed), and the DD stayed allocated after the close.
 
 A call with a DD name and a #var("dsn_len") of 0 frees that DD and then
 returns #cmd("0x14000001").

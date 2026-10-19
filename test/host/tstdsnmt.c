@@ -43,6 +43,11 @@
  *   (12)-(15) SPACE=(TRK,(1,2)), (CYL,(5,2,10)) and (800,(10,5)), the JCL
  *        forms, give the unit and the quantities; they failed in the
  *        blocks branch.  TRK(3,4) is the control.
+ *   (16)-(18) DSN=A.B(MEM) gives a DALMEMBR unit "MEM" and a DALDSNAM
+ *        unit "A.B"; the red made it the name "A.B=MEM".  DSN= with a
+ *        member beside a JCL-form SPACE=, and DSNAME= in lower case.
+ *   (19)-(20) FREE=CLOSE adds the DALCLOSE unit; without it, none.  The
+ *        red ignored the keyword.
  * Not here: opts NULL no longer going on with the caller's strtok() - the
  * only text unit is then also the last, whose pointer __dsalc() marks with
  * X'80000000', which a 64-bit host cannot follow.
@@ -86,6 +91,7 @@ size_t  strcspn(const char *, const char *);
 size_t  strlen(const char *);
 char   *strpbrk(const char *, const char *);
 int     strcmp(const char *, const char *);
+int     strncmp(const char *, const char *, size_t);
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -238,7 +244,7 @@ static int svc99_flag1;
 
 /* the text units as SVC 99 would have seen them: __dsalc() frees them
    before it returns */
-static struct { int dal; unsigned char text[8]; } seen[MAX_TU];
+static struct { int dal; int size; unsigned char text[48]; } seen[MAX_TU];
 static int seen_n;
 
 int __svc99(void *rb)
@@ -251,6 +257,7 @@ int __svc99(void *rb)
     for (seen_n = 0, n = 0; n < tu_count && seen_n < MAX_TU; n++) {
         if (!tu_made[n]) continue;
         seen[seen_n].dal = tu_made[n]->dal;
+        seen[seen_n].size = tu_made[n]->count ? tu_made[n]->size : -1;
         memset(seen[seen_n].text, 0, sizeof(seen[0].text));
         memcpy(seen[seen_n].text, tu_made[n]->text,
                tu_made[n]->count && tu_made[n]->size < sizeof(seen[0].text)
@@ -312,6 +319,7 @@ int __txspac(TXT99 ***txt99, const char *space)
 }
 #include "../../src/mvs/dynalloc/@@txunit.c"
 #include "../../src/mvs/dynalloc/@@txvols.c"
+#include "../../src/mvs/dynalloc/@@txclos.c"
 
 #include "../../src/ext/array/@@aradd.c"
 #include "../../src/ext/array/@@arnew.c"
@@ -329,6 +337,19 @@ static unsigned char *tufind(int dal)
         if (seen[n].dal == dal) return seen[n].text;
     }
     return NULL;
+}
+
+/* the text unit with key dal holds exactly the characters want */
+static int tuis(int dal, const char *want)
+{
+    int n;
+
+    for (n = 0; n < seen_n; n++) {
+        if (seen[n].dal != dal) continue;
+        return seen[n].size == (int)strlen(want)
+            && memcmp(seen[n].text, want, strlen(want)) == 0;
+    }
+    return 0;
 }
 
 static int tuval(int dal)
@@ -444,6 +465,35 @@ int main(void)
     rc = run("DSN=MVSLOVE.TEST.NEW;DISP=(NEW,CATLG);SPACE=TRK(3,4)", dd);
     CHECK(tufind(DALTRK) != NULL && strcmp(got_spac, "3,4") == 0,
           "tracks, quantities \"3,4\"");
+
+    printf("\n(16) DSN=A.B(MEM) -> member unit and the name alone\n");
+    rc = run("DSN=SYS1.PROC(TSO);DISP=SHR", dd);
+    CHECK_EQ(rc, 0, "__dsalc() succeeds");
+    CHECK(tuis(DALMEMBR, "TSO"), "DALMEMBR is \"TSO\"");
+    CHECK(tuis(DALDSNAM, "SYS1.PROC"), "DALDSNAM is \"SYS1.PROC\"");
+
+    printf("\n(17) DSN= with a member and SPACE=(TRK,(1,2))\n");
+    rc = run("DSN=A.B(MEMBER1);DISP=(NEW,CATLG);SPACE=(TRK,(1,2,1))", dd);
+    CHECK_EQ(rc, 0, "__dsalc() succeeds");
+    CHECK(tuis(DALMEMBR, "MEMBER1"), "DALMEMBR is \"MEMBER1\"");
+    CHECK(tuis(DALDSNAM, "A.B"), "DALDSNAM is \"A.B\"");
+    CHECK(strcmp(got_spac, "1,2,1") == 0, "quantities \"1,2,1\"");
+
+    printf("\n(18) dsname= in lower case, comma separated\n");
+    rc = run("dsname=a.b(x),disp=shr", dd);
+    CHECK_EQ(rc, 0, "__dsalc() succeeds");
+    CHECK(tuis(DALMEMBR, "X"), "DALMEMBR is \"X\"");
+    CHECK(tuis(DALDSNAM, "A.B"), "DALDSNAM is \"A.B\"");
+    CHECK(tuval(DALSTATS) == 0x08, "DISP=SHR (X'08') still parsed");
+
+    printf("\n(19) FREE=CLOSE -> DALCLOSE\n");
+    rc = run("DSN=A.B;DISP=SHR;free=close", dd);
+    CHECK_EQ(rc, 0, "__dsalc() succeeds");
+    CHECK(tufind(DALCLOSE) != NULL, "a DALCLOSE unit");
+
+    printf("\n(20) control: no FREE=CLOSE, no DALCLOSE\n");
+    rc = run("DSN=A.B;DISP=SHR", dd);
+    CHECK(tufind(DALCLOSE) == NULL, "no DALCLOSE unit");
 
     return mbt_test_summary("TSTDSNMT");
 }

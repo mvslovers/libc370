@@ -148,8 +148,8 @@ To copy a data set into a new one with the same attributes, as
 + Allocate the output with #cmd("DISP=(NEW,CATLG,DELETE)") and take its
   DCB attributes from the input with #cmd("DCBDSN=") (line 25), as
   #cmd("DCB=(")#var("dsn")#cmd(")") does in JCL. Give the space as
-  #cmd("SPACE=TRK(5,5)"): the JCL form #cmd("SPACE=(TRK,(5,5))"), with
-  nested parentheses, is not understood and makes the call return 1.
+  #cmd("SPACE=TRK(5,5)") or in the JCL form #cmd("SPACE=(TRK,(5,5))")\;
+  releases up to 2.22.0 understand only the first.
 + Open both through their DD names, #cmd("DD:INPUT") and #cmd("DD:OUTPUT")
   (lines 36 and 37), and copy. Check the result of #cmd("fclose()") for the
   output: the last block is written when the data set is closed, and an
