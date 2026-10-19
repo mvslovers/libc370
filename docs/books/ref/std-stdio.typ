@@ -462,9 +462,14 @@ modifier, and then the conversion character. The flags are #cmd("-"),
       #cmd("h"), #cmd("l"), #cmd("ll"), #cmd("j"), #cmd("z") or #cmd("t")
       the type that modifier names.],
     [#cmd("%")], [A #cmd("%") character. A flag or a width is ignored.],
-    [#cmd("a"), #cmd("A")], [Not supported. The argument, a #cmd("double"),
-      is consumed, and the conversion specification is printed as it is
-      written: #cmd("printf(\"%a\", 1.0)") prints #cmd("%a").],
+    [#cmd("a"), #cmd("A")], [A floating-point value in hexadecimal:
+      #cmd("0x"), one hexadecimal digit, the point, the further digits,
+      #cmd("p") and the binary exponent with a sign. The digits are those
+      of the System/370 fraction, so the first one is 1 to F, not always
+      1: #cmd("printf(\"%a\", 0.5)") prints #cmd("0x8p-4"). Without a
+      precision as many digits as the value has\; #cmd("%A") writes
+      #cmd("0X"), uppercase digits and #cmd("P"). Up to release 2.21.0
+      the conversion was printed as written.],
   )
 ] <std-stdio-printf-tab>
 
@@ -484,7 +489,10 @@ the zeros in front of the sign and was not ignored with a precision,
 #cmd("h") and #cmd("hh") did not narrow the value, and an integer
 precision above 126 overran a work area.
 
-- #cmd("%a") and #cmd("%A") are not implemented; see the table.
+- #cmd("%a") and #cmd("%A") give the leading digit of the System/370
+  fraction, 1 to F, where a system with binary floating point gives 1:
+  #cmd("0x8p-4") for 0.5, where C99 on such a system gives
+  #cmd("0x1p-1"). Both are the same value, as C99 allows.
 - A conversion character that has no meaning is printed as written,
   together with its flags, width and precision, and consumes no argument:
   #cmd("printf(\"%y|%d\", 5)") prints #cmd("%y|5"). A #cmd("%") at the
@@ -511,7 +519,8 @@ about 15 significant decimal digits and no infinity and no NaN.
     [#cmd("printf(\"%g\", 0.000123456)")], [#cmd("0.000123456")], [#cmd("0.000123456")],
     [#cmd("printf(\"%010.2f\", -3.14159)")], [#cmd("-000003.14")], [#cmd("-000003.14")],
     [#cmd("printf(\"%05d\", -3)")], [#cmd("-0003")], [#cmd("-0003")],
-    [#cmd("printf(\"%a\", 1.0)")], [#cmd("%a")], [#cmd("0x1p+0")],
+    [#cmd("printf(\"%a\", 1.0)")], [#cmd("0x1p+0")], [#cmd("0x1p+0")],
+    [#cmd("printf(\"%a\", 0.5)")], [#cmd("0x8p-4")], [#cmd("0x1p-1") with binary floating point],
     [#cmd("printf(\"%p\", p)")], [#cmd("00001234")], [an implementation-defined form],
   )
 ] <std-stdio-printf-ex>

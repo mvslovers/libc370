@@ -256,9 +256,10 @@ into. The ones that most often matter:
   the format. A program that must run with an older library replaces a
   format such as #cmd("\"%2d%2d\""), for example by #cmd("strtol()") on
   the fields.
-- *#cmd("printf()")* ignores #cmd("h") and #cmd("hh") on the integer
-  conversions, so a value is printed as the #cmd("int") it was passed as,
-  and does not implement #cmd("%a"): the conversion is printed as written.
+- *#cmd("printf(\"%a\")")* shows the digits of the hexadecimal floating
+  point (below): #cmd("0x8p-4") for 0.5, where a system with IEEE floating
+  point prints #cmd("0x1p-1"). Up to release 2.21.0 #cmd("%a") was printed
+  as written, and up to 2.17.0 #cmd("h") and #cmd("hh") were ignored.
 - *Floating point is hexadecimal* (HFP), not IEEE: a #cmd("float") holds
   21 to 24 bits of precision, a #cmd("double") 53 to 56, both reach about
   #cmd("7.2E+75"), and there is no infinity and no NaN. Results that are

@@ -40,6 +40,23 @@ static void pfa(const char *want, const char *f, ...)
 #endif
 }
 
+#ifndef __CC370__
+/* the output ends with want: for %a on the host, where only the argument
+   handling can be checked */
+static void pfs(const char *want, const char *f, ...)
+{
+    char b[64];
+    va_list ap;
+    size_t n, w = strlen(want);
+
+    va_start(ap, f);
+    vsnprintf(b, sizeof(b), f, ap);
+    va_end(ap);
+    n = strlen(b);
+    CHECK(n >= w && strcmp(b + n - w, want) == 0, f);
+}
+#endif
+
 /* %n with a length modifier: the count lands in an object of the named
    width, between two guard bytes that must survive, and the argument
    after it is still the right one */
@@ -91,11 +108,31 @@ static void pfarg_cases(void)
     pfa("x|42", "%-c|%d", 'x', 42);
     pfa("[  x][y  ]", "[%3c][%-3c]", 'x', 'y');
     pfa("   %|42", "%4c|%d", '%', 42);
-    /* %a and %A are not implemented yet: the conversion is printed as it
-       stands, but its double is taken off the list */
-    pfa("%a|42", "%a|%d", 1.0, 42);
-    pfa("%A|42", "%A|%d", 1.0, 42);
-    pfa("%.3a|42", "%.3a|%d", 1.0, 42);
+    /* %a and %A (#423): hexadecimal floating point.  The digits are the
+       System/370 ones, so the exact text is checked on MVS; the host has
+       IEEE doubles, and checks that the double is taken off the list */
+#ifdef __CC370__
+    pfa("0x1p+0|42", "%a|%d", 1.0, 42);
+    pfa("0X1P+0|42", "%A|%d", 1.0, 42);
+    pfa("0x1.000p+0|42", "%.3a|%d", 1.0, 42);
+    pfa("0x8p-4", "%a", 0.5);
+    pfa("-0x2.8p+0", "%a", -2.5);
+    pfa("0x0p+0", "%a", 0.0);
+    pfa("0XF.F8P+4", "%A", 255.5);
+    pfa("0x2p+0", "%.0a", 1.5);
+    pfa("0x1.0p+4", "%.1a", 15.96875);
+    pfa("0x1.p+0", "%#.0a", 1.0);
+    pfa("    0x1p+0", "%10a", 1.0);
+    pfa("0x00001p+0", "%010a", 1.0);
+    pfa("-0x0002.8p+0", "%012a", -2.5);
+    pfa("+0x1p+0", "%+a", 1.0);
+    pfa("0x1p+0    |", "%-10a|", 1.0);
+    pfa("0x1p-4", "%a", 0.0625);
+#else
+    pfs("|42", "%a|%d", 1.0, 42);
+    pfs("|42", "%A|%d", 1.0, 42);
+    pfs("|42", "%.3a|%d", 1.0, 42);
+#endif
     /* a conversion without a meaning, and no argument for it */
     pfa("%y|", "%y|");
     pfa("%5y|", "%5y|");

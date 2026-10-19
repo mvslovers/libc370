@@ -23,6 +23,10 @@
  * fail, then ASan stops the run with a global-buffer-overflow at "abc%":
  * vsnprintf() stepped past the format's NUL.
  *
+ * #423: hexflt_cases() runs the %a formatter on System/370 bit patterns,
+ * which the host's IEEE doubles cannot carry through printf; the shared
+ * cases check the exact %a text on MVS only.  GREEN 38/38.
+ *
  * RC: 0 = every check passed, 1 = at least one did not.
  */
 #include "src/internal/fileio.h"
@@ -156,11 +160,48 @@ static int mbt_run = 0, mbt_passed = 0, mbt_failed = 0;
 
 #include "../mvs/tstpfargcase.h"
 
+/* #423: hexflt() on System/370 bit patterns, which the host's IEEE
+   doubles cannot carry through printf */
+static void hx(const char *want, unsigned w0, unsigned w1, int upper,
+               int prec, int alt)
+{
+    unsigned w[2];
+    char b[128];
+
+    w[0] = w0;
+    w[1] = w1;
+    hexflt(w, upper, prec, alt, b, sizeof(b));
+    CHECK(strcmp(b, want) == 0, want);
+    if (strcmp(b, want) != 0) printf("        got \"%s\"\n", b);
+}
+
+static void hexflt_cases(void)
+{
+    hx("0x1p+0", 0x41100000, 0, 0, -1, 0);              /* 1.0 */
+    hx("0x8p-4", 0x40800000, 0, 0, -1, 0);              /* 0.5 */
+    hx("-0x2.8p+0", 0xC1280000, 0, 0, -1, 0);           /* -2.5 */
+    hx("0x0p+0", 0, 0, 0, -1, 0);
+    hx("-0x0p+0", 0x80000000, 0, 0, -1, 0);             /* -0.0 */
+    hx("0x0.000p+0", 0, 0, 0, 3, 0);
+    hx("0XF.F8P+4", 0x42FF8000, 0, 1, -1, 0);           /* 255.5 */
+    hx("0x2p+0", 0x41180000, 0, 0, 0, 0);               /* %.0a 1.5 */
+    hx("0x1.0p+4", 0x41FF8000, 0, 0, 1, 0);             /* %.1a 15.96875 */
+    hx("0x1.p+0", 0x41100000, 0, 0, 0, 1);              /* %#.0a */
+    hx("0x1.000p+0", 0x41100000, 0, 0, 3, 0);
+    hx("0x1p-4", 0x41010000, 0, 0, -1, 0);              /* unnormalized */
+    hx("0xf.fffffffffffffp+248", 0x7FFFFFFF, 0xFFFFFFFF, 0, -1, 0);
+    hx("0x1p-260", 0x00100000, 0, 0, -1, 0);            /* smallest */
+    hx("0x1.23456789abcdep+0", 0x41123456, 0x789ABCDE, 0, -1, 0);
+    hx("0x1.2345679p+0", 0x41123456, 0x789ABCDE, 0, 7, 0);
+    hx("0x1.23456789abcde00p+0", 0x41123456, 0x789ABCDE, 0, 15, 0);
+}
+
 int main(void)
 {
     ctype_init();
     printf("=== tstpfarg: printf takes every argument (#383), host ===\n");
     pfarg_cases();
+    hexflt_cases();
     printf("=== tstpfarg: %d/%d passed", mbt_passed, mbt_run);
     if (mbt_failed > 0) printf(" (%d FAILED)", mbt_failed);
     printf(" ===\n");
