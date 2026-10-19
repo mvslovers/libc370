@@ -55,18 +55,15 @@ Each fix gets a red/green test in a container, then a PR and a merge.
     branch. #416 and #419 are red at compile time.
   - #171 is red/green on the host under ASan; tstfprls, tstfpunit and
     tstdsnmt run with `-fsanitize=address` now.
-  - Not done, and why:
-    - **#388**: HTTPD's `mime_cmp()` (`src/httpmime.c:103`) is written for
-      the current (element, key) order, so the fix needs HTTPD to change
-      in step (comment on #388).
-    - **#114**: unknown whether FREEPOOL resets DCBBUFCB. If it does not,
-      a second OPEN of the same DCB uses freed storage, and ufsd's
-      `ufsfmt.c` reopens exactly that way. Measure in a container first.
-    - **#475's caseless fallback**: a decision for the maintainer; the
-      issue stays open.
+  - Held back first, then done the same day after the maintainer's go:
+    - **#388** (PR #621): the httpd side is mvslovers/httpd#303.
+    - **#114** (PR #622): measured first. FREEPOOL sets DCBBUFCB's low
+      bit, a reopen of the same DCB builds a new pool, and a DCB without a
+      pool keeps X'000001'. 40 cycles leaked 40 pools before, now 1.
+  - Open: **#475's caseless fallback**, a decision for the maintainer.
   - Not released yet: everything sits under [Unreleased]. It changes what
     callers see (`strstr`, `strftime`, ctype, `float.h`, `__listc` rc,
-    `setenv`), so it is a minor release.
+    `setenv`, `bsearch`), so it is a minor release.
 - **M round:** #474 (five stdio items; `@@fptmp.c:71` has the same
   `strchr(recfm,'B')` case bug as `@@fpstar.c:108`), #386 scanf widths,
   #423 %a, #225 HFP scaling (container only), #390 time() past 2038
