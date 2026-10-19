@@ -152,14 +152,17 @@ struct dscb3 {
    unsigned char  ptrds[5];      /* pointer (CCHHR) to next format-3 DSCB or zero */
 };
 
+/* The format-4 DSCB as __dscbv() returns it: the 96-byte data portion,
+** without the 44-byte key of X'04' (#173).  Offsets are those of the
+** IECSDSL1 mapping.  __dscbav() returns the key first: its format-4 DSCB
+** starts at dscb.work + 44. */
 struct dscb4 {
-   char           key[44];       /* all hex 0x04 */
-   char           fmtid;         /* format id 0xF4 */
-   unsigned char  hpchr[5];      /* highest address (CCHHR) of a format-1 DSCB */
-   unsigned short dsrec;         /* number of available DSCBs */
-   unsigned char  hcchh[4];      /* CCHH of next available alternate track */
-   unsigned short noatk;         /* number of remaining alternate tracks */
-   unsigned char  vtoci;         /* VTOC indicators */
+   char           fmtid;         /* 00 format id 0xF4 */
+   unsigned char  hpchr[5];      /* 01 highest address (CCHHR) of a format-1 DSCB */
+   unsigned short dsrec;         /* 06 number of available DSCBs */
+   unsigned char  hcchh[4];      /* 08 CCHH of next available alternate track */
+   unsigned short noatk;         /* 0C number of remaining alternate tracks */
+   unsigned char  vtoci;         /* 0E VTOC indicators */
 #define DOSBT     0x80           /* .. VSE bit. Indexed VTOC */
 #define DVTOC     0x40           /* .. index was disabled */
 #define EFVLD     0x20           /* .. extented free space management flag */
@@ -168,36 +171,44 @@ struct dscb4 {
 #define DIRF      0x04           /* .. DIRF bit. a VTOC changce is incomplete */
 #define DICVT     0x02           /* .. DIRF reclaimed */
 #define IVTOC     0x01           /* .. volume uses an indexed VTOC */
-   unsigned char  noext;         /* number of extents in the VTOC */
-   unsigned char  smsfg;         /* SMS indicators */
+   unsigned char  noext;         /* 0F number of extents in the VTOC */
+   unsigned char  smsfg;         /* 10 SMS indicators (reserved on MVS 3.8j) */
 #define SMSCV     0x40           /* .. SMS in initial status */
 #define SMS       0xC0           /* .. SMS volume */
-   unsigned char  devac;         /* number of alternate cylinders when volume was formatted */
-   unsigned short dscyl;         /* number of logical cylinders */
-   unsigned short dstrk;         /* number of tracks in logical cylinder */
-   unsigned short devtk;         /* device track length */
-   unsigned short devov;         /* keyed record overhead */
-   unsigned char  devi;          /* non-last-keyed record overhead */
-   unsigned char  devl;          /* last keyed record overhead */
-   unsigned char  devk;          /* non-keyed record overhead differential */
-   unsigned char  devfg;         /* device flags */
+   unsigned char  devac;         /* 11 number of alternate cylinders when volume was formatted (reserved on MVS 3.8j) */
+   unsigned short dscyl;         /* 12 number of logical cylinders */
+   unsigned short dstrk;         /* 14 number of tracks in logical cylinder */
+   unsigned short devtk;         /* 16 device track length */
+   __extension__ union {
+   unsigned short devov;         /* 18 keyed record overhead when devfg has 0x08, else devi and devl */
+   __extension__ struct {
+   unsigned char  devi;          /* 18 non-last-keyed record overhead */
+   unsigned char  devl;          /* 19 last keyed record overhead */
+   };
+   };
+   unsigned char  devk;          /* 1A non-keyed record overhead differential */
+   unsigned char  devfg;         /* 1B device flags */
 #define DEVAV     0x10           /* .. value in DEVAC is valid */
-   unsigned short devtl;         /* device tolerance */
-   unsigned char  devdt;         /* number of DSCBs per track */
-   unsigned char  devdb;         /* number of PDS directory blocks per track */
-   unsigned char  amtim[8];      /* VSAM time stamp */
-   unsigned char  amcat[3];      /* VSAM catalog indicator */
-   unsigned char  vsind;         /* VSAM indicators */
+   unsigned short devtl;         /* 1C device tolerance */
+   unsigned char  devdt;         /* 1E number of DSCBs per track */
+   unsigned char  devdb;         /* 1F number of PDS directory blocks per track */
+   unsigned char  amtim[8];      /* 20 VSAM time stamp */
+   __extension__ union {
+   unsigned char  amcat[3];      /* 28 VSAM catalog indicator: vsind and cra */
+   __extension__ struct {
+   unsigned char  vsind;         /* 28 VSAM indicators */
 #define VSREF     0x80           /* .. a VSAM catalog references this volume */
 #define VSBAD     0x40           /* .. the VSAM data sets on this volume are unusable (no longer set) */
-   unsigned short cra;           /* relative track location of the CRA */
-   unsigned char  r2tim[8];      /* VSAM volume/catalog match time stamp */
-   char           reserved1[5];  /* reserved */
-   unsigned char  f6ptr[5];      /* pointer (CCHHR) to first format-6 DSCB or zero (no longer supported) */
-   EXTENT         extent[2];     /* VTOC extents */
-   unsigned char  eflvl;         /* Extent free-space management level */
-   unsigned char  efptr[5];      /* pointer to extended free-space information (format-7 DSCBs) */
-   char           reserved2[9];  /* reserved */
+   unsigned char  cra[2];        /* 29 relative track location of the CRA */
+   };
+   };
+   unsigned char  r2tim[8];      /* 2B VSAM volume/catalog match time stamp */
+   char           reserved1[5];  /* 33 reserved */
+   unsigned char  f6ptr[5];      /* 38 pointer (CCHHR) to first format-6 DSCB or zero (no longer supported) */
+   EXTENT         extent[2];     /* 3D VTOC extent (DS4VTOCE); extent[1] is reserved on MVS 3.8j */
+   unsigned char  eflvl;         /* 51 Extent free-space management level */
+   unsigned char  efptr[5];      /* 52 pointer to extended free-space information (format-7 DSCBs) */
+   char           reserved2[9];  /* 57 reserved */
 };
 
 union dscb {

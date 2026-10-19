@@ -317,7 +317,8 @@ functions pad them with blanks to 44 and 6 characters.
     before you use it.],
   [#cmd("__dscbv()")], [reads the format-4 DSCB, which describes the VTOC
     and the device (OBTAIN SEARCH for the name of 44 bytes X'04'). The
-    result is the 96-byte data portion: see the notes.],
+    result is the 96-byte data portion of the DSCB, laid out as
+    #cmd("dscb->dscb4") (@mvs-datasets-dscb4-tab).],
 )
 
 #var("dscb") must point to a #cmd("DSCB") union, which provides the 140
@@ -380,6 +381,34 @@ values of each field are defined in #cmd("<mvs/dscb.h>") next to it.
   )
 ] <mvs-datasets-extent-tab>
 
+#tab(caption: [DSCB4 fields (format-4 DSCB, data portion)])[
+  #table(columns: (0.75in, 0.6in, 1fr),
+    [Field], [Offset], [Contents],
+    [#cmd("fmtid")], [X'00'], [Format identifier, #cmd("'4'") (X'F4').],
+    [#cmd("hpchr")], [X'01'], [Address (CCHHR) of the last format-1 DSCB.],
+    [#cmd("dsrec")], [X'06'], [Number of free DSCBs in the VTOC.],
+    [#cmd("noext")], [X'0F'], [Number of extents of the VTOC.],
+    [#cmd("dscyl")], [X'12'], [Number of cylinders of the volume.],
+    [#cmd("dstrk")], [X'14'], [Number of tracks in a cylinder.],
+    [#cmd("devtk")], [X'16'], [Track length in bytes.],
+    [#cmd("devov")], [X'18'], [Keyed record overhead, a halfword when
+      #cmd("devfg") has X'08'\; otherwise its two bytes are #cmd("devi")
+      (X'18'), the overhead of a keyed block that is not the last on the
+      track, and #cmd("devl") (X'19'), that of the last one.],
+    [#cmd("devk")], [X'1A'], [Overhead a block without a key saves.],
+    [#cmd("devfg")], [X'1B'], [Device flags.],
+    [#cmd("devtl")], [X'1C'], [Device tolerance.],
+    [#cmd("devdt")], [X'1E'], [DSCBs per track.],
+    [#cmd("devdb")], [X'1F'], [Directory blocks per track.],
+    [#cmd("amcat")], [X'28'], [VSAM catalog indicator: #cmd("vsind")
+      (X'28') and #cmd("cra") (X'29', two bytes).],
+    [#cmd("f6ptr")], [X'38'], [Address (CCHHR) of the first format-6 DSCB,
+      or zeros.],
+    [#cmd("extent[0]")], [X'3D'], [The extent of the VTOC
+      (@mvs-datasets-extent-tab).],
+  )
+] <mvs-datasets-dscb4-tab>
+
 The format-3 DSCB (#cmd("DSCB3"), 140 bytes) holds four extents in its key
 (#cmd("extent4")), its identifier #cmd("fmtid") (X'F3') at X'2C', nine more
 extents (#cmd("extent9")), and at X'87' the address of the next format-3
@@ -397,23 +426,27 @@ The return code of OBTAIN:
 )
 
 === Notes
-- *#cmd("__dscbv()") and #cmd("DSCB4") do not match.* The #cmd("dscb4")
-  member of the union describes the whole DSCB, beginning with its 44-byte
-  key, but #cmd("__dscbv()") returns the data portion, which begins with
-  #cmd("fmtid"). A field of #cmd("dscb4") is therefore found 44 bytes
-  before its structure offset, in #cmd("dscb.work"): the number of tracks
-  in a cylinder, #cmd("dstrk") at structure offset 64, is the halfword at
-  #cmd("dscb.work[20]"). Moreover #cmd("DSCB4") is 146 bytes long, six more
-  than a DSCB, so not every field in it can be at its true offset. The
-  library itself reads #cmd("dstrk") only.
+- Up to release 2.23.0 #cmd("DSCB4") began with the 44-byte key, which
+  #cmd("__dscbv()") does not return, and had two fields of its own where
+  the format-4 DSCB has one overlaying two (#cmd("devov") over
+  #cmd("devi") and #cmd("devl"), #cmd("amcat") over #cmd("vsind") and
+  #cmd("cra")). Every field was read from the wrong place: #cmd("devtk") of
+  a 3350 came back as 256 instead of 19254. A program built against the
+  earlier header reads the right fields once it is compiled again\; one
+  that read #cmd("dscb.work") at the offsets of
+  @mvs-datasets-dscb4-tab needs no change.
 - #cmd("__dscbav()") reads the address in OBTAIN's SEEK mode and returns
-  the whole DSCB, its 44-byte key first. Up to release 2.20.0 it cut
+  the whole DSCB, its 44-byte key first: #cmd("dscb->dscb3") fits a
+  format-3 DSCB, and a format-4 DSCB read this way starts at
+  #cmd("dscb.work + 44"), not at #cmd("dscb->dscb4"). Up to release 2.20.0 it cut
   #var("cchhr") at the first X'00' byte, so an address on a cylinder
   below 256 did not work.
 - A format-1 DSCB describes only the part of a data set on one volume.
   #cmd("noepv") counts the extents on that volume.
-- #cmd("sizeof(DSCB)") is 146, because of #cmd("DSCB4")\; #cmd("DSCB1") is
-  96 bytes long and #cmd("DSCB3") 140.
+- #cmd("sizeof(DSCB)") is 140, the work area OBTAIN needs\;
+  #cmd("DSCB1") and #cmd("DSCB4") are 96 bytes long and #cmd("DSCB3") 140.
+  (Up to release 2.23.0 #cmd("DSCB4") was 146 bytes long, and so was
+  #cmd("DSCB").)
 
 === Example
 ```
