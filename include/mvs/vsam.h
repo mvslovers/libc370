@@ -6,6 +6,7 @@ typedef struct vsfile   VSFILE;     /* VSAM file handle                     */
 typedef enum   vstype   VSTYPE;     /* type: KSDS/ESDS/RRDS                 */
 typedef enum   vsaccess VSACCESS;   /* access: DIR/SEQ/DYNAM                */
 typedef enum   vsmode   VSMODE;     /* mode: IN/OUT/UPD                     */
+typedef struct vsfdbk   VSFDBK;     /* outcome of the last request          */
 
 typedef struct acb      ACB;        /* ACCESS METHOD CONTROL BLOCK          */
 typedef struct rpl      RPL;        /* REQUEST PARAMETER LIST               */
@@ -673,6 +674,29 @@ extern int  vssteq(VSFILE *vs, void *rec, int reclen, void *key, int keylen);
 /* __vsstge() - start key >=, return 0=success, otherwise POINT error */
 extern int  __vsstge(VSFILE *vs, void *rec, int reclen, void *key, int keylen);
 extern int  vsstge(VSFILE *vs, void *rec, int reclen, void *key, int keylen);
+
+/* VSFDBK - the outcome of the last request on a handle (#625).
+** __vsfdbk() fills it from the RPL after any call; every field describes
+** that one request, not an earlier one.  The caller allocates it.
+*/
+struct vsfdbk {
+    int                 r15;        /* 00 return code: 0, 8 logical error,
+                                          12 physical error (RPLRTNCD,
+                                          which VSAM also returns in R15) */
+    unsigned char       fdbk;       /* 04 feedback (reason) code, RPLERRCD:
+                                          X'04' end of data, X'08' duplicate
+                                          key, X'10' record not found ... */
+    unsigned char       comp;       /* 05 component code, RPLCMPON          */
+    unsigned char       rsvd1[2];   /* 06 reserved, set to zero             */
+    unsigned            reclen;     /* 08 record length (RECLEN)            */
+    unsigned            rba;        /* 0C relative byte address (RBA)       */
+    void                *recaddr;   /* 10 record address of a locate-mode
+                                          GET; NULL (no locate mode yet)    */
+    unsigned            rsvd2;      /* 14 reserved, set to zero             */
+};                                  /* 18 (24 bytes)                        */
+
+/* __vsfdbk() - outcome of the last request: R15, feedback, RECLEN, RBA */
+extern int  __vsfdbk(VSFILE *vs, VSFDBK *fb);
 
 /* __vstell() - get RBA for last I/O operation */
 extern unsigned __vstell(VSFILE *vs);

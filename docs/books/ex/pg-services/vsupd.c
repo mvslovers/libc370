@@ -9,6 +9,7 @@
 int bump(const char *keyval)
 {
     VSFILE  *vs;
+    VSFDBK  fb;
     char    rec[80];
     char    num[6];
     char    key[KEYLEN];
@@ -26,7 +27,8 @@ int bump(const char *keyval)
     len = vsread(vs, rec, sizeof(rec), key, sizeof(key));
     if (len < 0) {
         /* a missing key is an error (reason 16), not end of data */
-        printf("key %.8s: rc %d, reason %d\n", key, vs->rc, vs->rsn);
+        __vsfdbk(vs, &fb);
+        printf("key %.8s: rc %d, reason %d\n", key, fb.r15, fb.fdbk);
         vsclose(vs);
         return 4;
     }
@@ -43,8 +45,10 @@ int bump(const char *keyval)
     rec[14] = ' ';                      /* ... so restore it         */
 
     rc = vsupdate(vs, rec, len);        /* rewrites the record read  */
-    if (rc)
-        printf("update failed: rc %d, reason %d\n", vs->rc, vs->rsn);
+    if (rc) {
+        __vsfdbk(vs, &fb);
+        printf("update failed: rc %d, reason %d\n", fb.r15, fb.fdbk);
+    }
 
     vsclose(vs);
     return rc ? 8 : 0;

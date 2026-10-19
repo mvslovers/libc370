@@ -24,8 +24,8 @@ and #cmd("__vs")#var("name"). The #cmd("vs") form takes a lock on the handle
 (the #cmd("lock()") function with the handle address as resource, see
 @mvs-sync) around the call, so that several tasks can share a handle; the
 #cmd("__vs") form takes no lock. #cmd("vsopen()") takes no lock either -- there
-is no handle yet. #cmd("__vsmdfy()") and #cmd("__vsshwc()") exist only in the
-#cmd("__") form.
+is no handle yet. #cmd("__vsmdfy()"), #cmd("__vsshwc()") and
+#cmd("__vsfdbk()") exist only in the #cmd("__") form.
 
 *Errors.* VSAM reports a failed request through the exit routines that
 #cmd("__vsopen()") installs (LERAD, SYNAD and EODAD). LERAD and SYNAD
@@ -35,14 +35,22 @@ The request returns 8 (logical error), 12 (physical error) or 4 (end of
 data). *The flags stay set* until
 #cmd("vsclear()") resets them, as the end-of-file and error indicators of a
 stream do, and #cmd("vseof()") and #cmd("vserror()") test them. The value
-#cmd("vsread()") returns reflects only its own GET. The #cmd("errno") values of
+#cmd("vsread()") returns reflects only its own GET.
+
+*The outcome of each request.* #cmd("__vsfdbk()") (@mvs-vsam-vsfdbk) tells,
+after any call, what the last request on the handle did: its return code,
+the feedback code, the record length and the RBA. Unlike the codes in the
+handle and the flags, these describe that one request and are never left
+over from an earlier one, so a program that asks #cmd("__vsfdbk()") after
+each call needs neither #cmd("vsclear()") nor the exit routines' codes. The #cmd("errno") values of
 @mvs-vsam-errno are set by #cmd("vsopen()") and #cmd("vsread()").
 
 The library's tests cover #cmd("vsopen()"), #cmd("vsread()"),
 #cmd("vseof()"), #cmd("vserror()") and #cmd("vsclear()") on an
 entry-sequenced cluster on MVS, and on a key-sequenced cluster the
 sequential load, #cmd("vswrite()") and #cmd("vsread()") by key with dynamic
-access, and #cmd("vsupdate()"). The other functions and the relative-record
+access, #cmd("vsupdate()"), and #cmd("__vsfdbk()") after a read, a read of
+a missing key, a duplicate write and the end of data. The other functions and the relative-record
 type are not tested.
 
 #tab(caption: [VSAM errno values])[
@@ -78,8 +86,10 @@ error, and changes none of them.
       #cmd("VSFILE_FLAG_ERROR") (X'02') an error occurred;
       #cmd("VSFILE_FLAG_EOF") (X'01') end of data was reached.
       #cmd("VSFILE_FLAG_STARTGE") (X'40') is defined and never set.],
-    [#cmd("rc")], [X'12'], [The VSAM return code of the failed request
-      (RPL feedback byte 1): 8 logical, 12 physical error.],
+    [#cmd("rc")], [X'12'], [Meant for the VSAM return code of the failed
+      request. The exit routines take it from #cmd("SHOWCB FIELDS=FDBK"),
+      which on MVS 3.8j gives the reason code alone, so it stays 0
+      (measured). #cmd("__vsfdbk()") reports the return code.],
     [#cmd("rsn")], [X'13'], [The VSAM reason (error) code, for example 16
       (X'10') for a record not found.],
     [#cmd("component")], [X'14'], [The component code of the feedback.],
@@ -108,7 +118,8 @@ compiler assigns.
       on while the cluster is open.],
     [#cmd("acberflg")], [ACB X'31'], [The OPEN or CLOSE error code.],
     [#cmd("acblrecl")], [ACB X'3E'], [The logical record length.],
-    [#cmd("rplfdbwd")], [RPL X'0C'], [The feedback word of the last request:
+    [#cmd("rplfdbwd")], [RPL X'0C'], [The feedback word of the last request
+      (read it with #cmd("__vsfdbk()")):
       #cmd("rplrtncd") (X'0D') return code, #cmd("rplcmpon") (X'0E')
       component, #cmd("rplerrcd") (X'0F') reason code.],
     [#cmd("rplrlen")], [RPL X'30'], [The length of the last record.],
@@ -417,6 +428,109 @@ The relative byte address of the record of the last request (#cmd("SHOWCB")
 
 === Notes
 The RBA can be given back as the #var("key") of an ESDS read.
+
+== \_\_vsfdbk <mvs-vsam-vsfdbk>
+#idx("__vsfdbk")#idx("VSFDBK")#idx("feedback code", "VSAM")
+
+=== Format
+```
+#include <mvs/vsam.h>
+
+int __vsfdbk(VSFILE *vs, VSFDBK *fb);
+```
+
+=== Description
+Stores in #var("*fb") the outcome of the last request -- #cmd("GET"),
+#cmd("PUT"), #cmd("POINT") or #cmd("ERASE") -- that a function issued on
+the handle #var("vs"): the return code, the component and reason codes of
+the RPL feedback word, and the record length and RBA (#cmd("SHOWCB")
+#cmd("FIELDS=(RECLEN,RBA)")). Call it after any read, write, update,
+delete or positioning call, before the next one.
+
+VSAM sets these fields on every request, so they describe that request
+alone: a successful read after a failed one reports return code 0 and
+feedback code 0, and the end of the data reports its own code, not the one
+of an earlier error. The handle's #cmd("rc"), #cmd("rsn") and
+#cmd("component") fields and the flags that #cmd("vseof()") and
+#cmd("vserror()") test are not used and not changed.
+
+#tab(caption: [VSFDBK fields])[
+  #table(columns: (0.8in, 0.6in, 1fr),
+    [Field], [Offset], [Contents],
+    [#cmd("r15")], [X'00'], [The return code, #cmd("int"): 0 success, 8
+      logical error, 12 physical error. It is the return code byte of the
+      RPL feedback word (#cmd("rplrtncd")), the value VSAM also returns in
+      register 15.],
+    [#cmd("fdbk")], [X'04'], [The feedback (reason) code,
+      #cmd("rplerrcd"): with return code 8 the logical error, with 12
+      the physical error, and with 0 a note such as X'08' (more records
+      with this key on a non-unique alternate index path).],
+    [#cmd("comp")], [X'05'], [The component code, #cmd("rplcmpon").],
+    [#cmd("rsvd1")], [X'06'], [Reserved, set to 0.],
+    [#cmd("reclen")], [X'08'], [The record length: of the record read by a
+      successful #cmd("GET") or written by a #cmd("PUT").],
+    [#cmd("rba")], [X'0C'], [The relative byte address of that record, as
+      #cmd("vstell()") returns it.],
+    [#cmd("recaddr")], [X'10'], [The address of the record in VSAM's
+      buffer for a locate-mode #cmd("GET")\; the functions use move mode,
+      so it is #cmd("NULL").],
+    [#cmd("rsvd2")], [X'14'], [Reserved, set to 0.],
+  )
+] <mvs-vsam-vsfdbk-tab>
+
+The structure is 24 bytes long and the caller provides it.
+
+#tab(caption: [Common results])[
+  #table(columns: (2.2in, 0.5in, 0.6in, 1fr),
+    [Request], [#cmd("r15")], [#cmd("fdbk")], [What the function returned],
+    [Record read], [0], [0], [#cmd("vsread()"): the length],
+    [Read past the last record], [8], [X'04'], [#cmd("vsread()"): -1],
+    [Key not found], [8], [X'10'], [#cmd("vsread()"): -2],
+    [Write of a key that is there (direct)], [8], [X'08'],
+      [#cmd("vswrite()"): 8],
+    [Key out of sequence (load)], [8], [X'0C'], [#cmd("vswrite()"): 8],
+  )
+] <mvs-vsam-vsfdbk-codes>
+
+The first four rows are measured on MVS 3.8j with a key-sequenced cluster
+opened with #cmd("VSACCESS_DYNAM") and #cmd("VSMODE_UPD")\; the reason
+codes are VSAM's and the same for every function that issues the request.
+
+=== Returns
+0 when #var("*fb") is filled. -1 when #var("vs") or #var("fb") is
+#cmd("NULL")\; otherwise the non-zero return code of #cmd("SHOWCB"), and
+#var("*fb") then holds the codes but no record length and RBA.
+
+=== Notes
+- #cmd("reclen") and #cmd("rba") are those VSAM left in the RPL\; after a
+  failed request they need not belong to any record. Use them when
+  #cmd("r15") is 0.
+- A read by key that does not find the key issues no #cmd("GET"): the
+  feedback is that of the #cmd("POINT"), which is the answer.
+- The read and write functions report a request VSAM did not accept at all
+  (register 15 = 4, another request active on the RPL) only through their
+  own return value\; the feedback word then still belongs to the active
+  request. The #cmd("vs") forms lock the handle, so it does not happen
+  with them.
+- #cmd("__vsfdbk()") takes no lock. When tasks share a handle, the task
+  that made the request must call it before another task issues the next
+  one.
+- The handle's #cmd("rc") field stays 0 on MVS 3.8j
+  (@mvs-vsam-vsfile-tab), so #cmd("__vsfdbk()") is the way to the return
+  code.
+
+=== Example
+```
+VSFDBK  fb;
+int     len = vsread(vs, rec, sizeof(rec), key, 8);
+
+__vsfdbk(vs, &fb);
+if (len == -2 && fb.r15 == 8 && fb.fdbk == 0x10)
+    printf("no record with this key\n");
+```
+
+=== Related
+@mvs-vsam-vsread, @mvs-vsam-vswrite, @mvs-vsam-vstell, @mvs-vsam-vsclear
 
 == vsclear, vseof, vserror <mvs-vsam-vsclear>
 #idx("vsclear")#idx("__vsclr")#idx("vseof")#idx("__vseof")#idx("vserror")#idx("__vserr")
