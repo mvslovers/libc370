@@ -32,7 +32,7 @@ setenv(const char *name, const char *value, int rewrite)
 
     lock(&grt->grtenv,0);
 
-    while(*name==' ') name++;                   /* skip leading spaces */
+    if (name) while(*name==' ') name++;         /* skip leading spaces */
 	l_name = name ? strlen(name) : 0;
 	while(l_name > 0 && name[l_name-1]==' ') l_name--;  /* trim */
 	if (l_name == 0 || value == NULL) {
@@ -40,16 +40,9 @@ setenv(const char *name, const char *value, int rewrite)
 		goto quit;
 	}
 
-    /* see if we have this name in the environment variables            */
-    /* note: we want to replace exact match variables if possible       */
-    found = __findenv(name, &index, 0);             /* same case        */
-    if (!found) found = __findenv(name, &index, 1); /* try caseless     */
-    if (found && !rewrite) {
-        /* found it, but rewrite not desired */
-        goto quit;
-    }
-
-    /* allocate a new environment variable */
+    /* the new environment variable, built first: its name is the trimmed
+       one, and that is the name to look up - "NAME " from a SYSENV record
+       "NAME = value" has to find NAME (#475) */
     while(*value==' ') value++;                 /* remove leading spaces */
 	l_value = strlen(value);
 	length = l_name + l_value + sizeof(__ENVVAR);
@@ -62,6 +55,16 @@ setenv(const char *name, const char *value, int rewrite)
     envvar->value   = &envvar->buf[l_name+1];
     memcpy(envvar->name, name, l_name);
     memcpy(envvar->value, value, l_value);
+
+    /* see if we have this name in the environment variables            */
+    /* note: we want to replace exact match variables if possible       */
+    found = __findenv(envvar->name, &index, 0);             /* same case    */
+    if (!found) found = __findenv(envvar->name, &index, 1); /* try caseless */
+    if (found && !rewrite) {
+        /* found it, but rewrite not desired */
+        free(envvar);
+        goto quit;
+    }
 
     if (index >= 0) {
         if (found) {

@@ -50,6 +50,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   level with no entries looked like success (measured on MVS: 4 now).
   `next_dsab()` takes an empty DD name as all DDs, as `get_dsab()` does, so
   `__listal()` with `""` lists every DD instead of only the first.
+- **`setenv()` finds a variable by its name without the surrounding
+  blanks (#475).** It removed the blanks for the variable it stored, but
+  looked up the name as given, so `"NAME "` never matched `NAME`. A SYSENV
+  record `NAME = value` reaches `setenv()` that way: a variable set twice
+  in SYSENV had two entries, and `getenv()` returned the first, older
+  value (measured on MVS). With `rewrite` 0 such a name also added a
+  second variable instead of leaving the first alone.
 
 ## [2.20.0] - 2026-10-18
 

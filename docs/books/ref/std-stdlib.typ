@@ -803,10 +803,10 @@ variable of that name exists already, it is replaced when #var("rewrite")
 is not 0 and left alone otherwise\; the search for it ignores case when no
 name matches exactly. The name and value are copied.
 
-Blanks around #var("name") are left out only when its length is checked:
-the variable is looked up and stored under the name as given. So
-#cmd("\"NAME \"") does not find #cmd("NAME") and is added beside it, a
-defect (libc370 issue 475).
+Blanks around #var("name") are removed: #cmd("\" NAME \"") sets the
+variable #cmd("NAME"). Up to release 2.20.0 the variable was looked up
+under the name as given, so #cmd("\"NAME \"") did not find #cmd("NAME")
+and a second variable was added beside it.
 
 #cmd("putenv()") takes a string of the form #cmd("name=value") and calls
 #cmd("setenv(name, value, 1)"). A string without #cmd("=") sets the variable

@@ -209,6 +209,7 @@ CHANGELOG has everything else.
 
 | Release | Change | What to do |
 |---|---|---|
+| Unreleased | `setenv()`, `putenv()` and the SYSENV/ENVIRON loading look a variable up by its name without the surrounding blanks (#475): a second `NAME = value` record replaces the first, where it was added beside it and `getenv()` returned the first value | A SYSENV that set a variable twice and relied on the first value has to drop the second record |
 | Unreleased | `__listc()` returns the IDCAMS return code, for example 4 for a level with no entries (#410); it returned 0. `next_dsab()` and so `__listal()` take an empty DD name as all DDs; `__listal(tcb, "", opt)` listed only the first DD | A caller that took any nonzero `__listc()` result as a failure to read the listing has to tell -1 (no listing) from a positive IDCAMS code |
 | Unreleased | `strstr(s, "")` returns `s`, as C99 requires (#393); it returned `NULL` | Code that treated an empty search string as "not found" through the `NULL` has to test for the empty string itself |
 | Unreleased | `ispunct()`, `isgraph()` and `isprint()` are true for `[`, `]` and `^` (X'BA', X'BB', X'B0'), which had no class (#399) | A program that tested for these three characters itself because the functions missed them can drop the test |
