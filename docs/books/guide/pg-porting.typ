@@ -251,10 +251,11 @@ with #cmd("__stklen"), and its threads with #cmd("cthread_create_ex()").
 The library follows C99, with differences that a ported program can walk
 into. The ones that most often matter:
 
-- *#cmd("scanf()") has no field width.* A digit after the #cmd("%") is not
-  a width: the conversion fails, and with it the rest of the format. A
-  format such as #cmd("\"%2d%2d\"") must be replaced, for example by
-  #cmd("strtol()") on the fields.
+- *#cmd("scanf()") before release 2.22.0 had no field width.* A digit
+  after the #cmd("%") made the conversion fail, and with it the rest of
+  the format. A program that must run with an older library replaces a
+  format such as #cmd("\"%2d%2d\""), for example by #cmd("strtol()") on
+  the fields.
 - *#cmd("printf()")* ignores #cmd("h") and #cmd("hh") on the integer
   conversions, so a value is printed as the #cmd("int") it was passed as,
   and does not implement #cmd("%a"): the conversion is printed as written.

@@ -15,6 +15,73 @@
 #define BOX(b) do { memset(&(b), GUARD, sizeof(b)); } while (0)
 #define INTACT(b) ((b).lo == GUARD && (b).hi == GUARD)
 
+/* #386: field widths, %[ and its next format character, %* not counted,
+   EOF for input that ends before the first conversion */
+static void scn_cases386(void)
+{
+    int     a, b, r;
+    char    s1[16], s2[16], c3[4];
+    double  d;
+
+    a = b = -1;
+    r = scan("1234", "%2d%d", &a, &b);
+    CHECK(r == 2 && a == 12 && b == 34, "%2d%d \"1234\" is 12 and 34");
+    memset(s1, 0, sizeof(s1));
+    memset(c3, 0, sizeof(c3));
+    r = scan("hello", "%3s%c", s1, c3);
+    CHECK(r == 2 && strcmp(s1, "hel") == 0 && c3[0] == 'l',
+          "%3s%c \"hello\" is \"hel\" and 'l'");
+    memset(c3, 0, sizeof(c3));
+    r = scan("abcd", "%3c", c3);
+    CHECK(r == 1 && memcmp(c3, "abc", 3) == 0 && c3[3] == 0,
+          "%3c reads three characters");
+    r = scan("ab", "%3c", c3);
+    CHECK(r == EOF, "%3c on \"ab\": the input ends first, EOF");
+    a = -1;
+    r = scan("-123", "%3d", &a);
+    CHECK(r == 1 && a == -12, "%3d \"-123\": the sign counts, -12");
+    d = 0;
+    r = scan("1.25", "%3lf", &d);
+    CHECK(r == 1 && d > 1.1999 && d < 1.2001, "%3lf \"1.25\" is 1.2");
+    memset(s1, 0, sizeof(s1));
+    r = scan("abcabc", "%2[abc]", s1);
+    CHECK(r == 1 && strcmp(s1, "ab") == 0, "%2[abc] stops after 2");
+
+    memset(s1, 0, sizeof(s1));
+    memset(s2, 0, sizeof(s2));
+    r = scan("abcxdef", "%[abc]x%s", s1, s2);
+    CHECK(r == 2 && strcmp(s1, "abc") == 0 && strcmp(s2, "def") == 0,
+          "%[abc]x%s: the x after ] is matched, not skipped");
+    memset(s1, 0, sizeof(s1));
+    r = scan("abc", "%[abc]", s1);
+    CHECK(r == 1 && strcmp(s1, "abc") == 0, "%[abc] as the last item");
+    memset(s1, 0x5A, sizeof(s1));
+    r = scan("", "%[^x]", s1);
+    CHECK(r == EOF && (unsigned char)s1[0] == 0x5A,
+          "%[^x] on \"\": EOF, nothing stored");
+
+    a = -1;
+    r = scan("5 6", "%*d %d", &a);
+    CHECK(r == 1 && a == 6, "%*d %d returns 1");
+    r = scan("x y", "%*s %*s");
+    CHECK(r == 0, "%*s %*s returns 0");
+
+    r = scan("", "%d", &a);
+    CHECK(r == EOF, "%d on \"\" returns EOF");
+    r = scan("   ", "%d", &a);
+    CHECK(r == EOF, "%d on blanks returns EOF");
+    r = scan("abc", "%d", &a);
+    CHECK(r == 0, "%d on \"abc\" returns 0, a matching failure");
+    r = scan("", "%s", s1);
+    CHECK(r == EOF, "%s on \"\" returns EOF");
+    a = 0;
+    r = scan("7", "%d%d", &a, &b);
+    CHECK(r == 1 && a == 7, "%d%d on \"7\" returns 1");
+    a = -1;
+    r = scan("", "%n", &a);
+    CHECK(r == 0 && a == 0, "%n on \"\" returns 0");
+}
+
 static void scn_cases(void)
 {
     BOXED(signed char) c;
@@ -160,4 +227,6 @@ static void scn_cases(void)
     BOX(f);
     r = scan("0.5", "%f", &f.v);
     CHECK(r == 1 && f.v == 0.5f && INTACT(f), "%f still float");
+
+    scn_cases386();
 }

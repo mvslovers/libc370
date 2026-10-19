@@ -521,8 +521,10 @@ about 15 significant decimal digits and no infinity and no NaN.
 #idx("scanf", "conversions")
 The functions of the #cmd("scanf()") family accept the conversions of
 @std-stdio-scanf-tab. A specification is #cmd("%"), an optional #cmd("*")
-that suppresses the assignment, an optional length modifier and the
-conversion character. White space in the format skips any white space in
+that suppresses the assignment, an optional field width, an optional
+length modifier and the conversion character. The field width is the
+largest number of characters the conversion reads, white space it skips
+first not counted\; #cmd("%c") reads exactly that many, 1 without a width. White space in the format skips any white space in
 the input, and any other character must match the input.
 
 #tab(caption: [Conversions of the scanf() functions])[
@@ -543,7 +545,8 @@ the input, and any other character must match the input.
       #cmd("char *")\; the string is terminated.],
     [#cmd("[")#var("set")#cmd("]"), #cmd("[^")#var("set")#cmd("]")], [A
       sequence of characters in #var("set"), or not in it. #cmd("char *").],
-    [#cmd("c")], [One character. #cmd("char *")\; no terminator.],
+    [#cmd("c")], [As many characters as the field width, one without a
+      width. #cmd("char *")\; no terminator.],
     [#cmd("n")], [Stores the number of characters read so far. Not counted
       in the return value.],
     [#cmd("%")], [Matches a #cmd("%").],
@@ -557,21 +560,17 @@ integer the argument points to; #cmd("L") with an integer conversion means
 
 These rules differ from C99:
 
-- *There is no field width.* A digit after the #cmd("%") is not a width;
-  the conversion fails and with it the rest of the format. #cmd("%s") and
-  #cmd("%[") therefore store as many characters as the input holds, and the
-  array they write to must be large enough for the longest possible input.
-  #cmd("%c") always reads one character.
 - #cmd("%X"), #cmd("%F"), #cmd("%a") and #cmd("%A") are not supported.
-- A conversion suppressed with #cmd("*") is counted in the return value.
 - In #cmd("%[") a #cmd("-") is an ordinary character, not a range:
-  #cmd("%[a-z]") matches #cmd("a"), #cmd("-") and #cmd("z").
-- The character that follows the closing #cmd("]") of #cmd("%[") in the
-  format is skipped and has no effect. Follow #cmd("]") with a blank:
-  #cmd("\"%[^,] ,%d\"") reads #cmd("abc,12") as intended, where
-  #cmd("\"%[^,],%d\"") does not. A format must not end with #cmd("%[...]").
-- When the input ends before the first conversion, the functions return
-  0, not #cmd("EOF").
+  #cmd("%[a-z]") matches #cmd("a"), #cmd("-") and #cmd("z"). C99 leaves
+  this to the implementation.
+
+Up to release 2.21.0 there was no field width: a digit after the
+#cmd("%") made the conversion fail. A conversion suppressed with #cmd("*")
+was counted in the return value, the character after the #cmd("]") of
+#cmd("%[") was skipped, a format ending with #cmd("%[...]") was read past
+its end, and the functions returned 0 instead of #cmd("EOF") when the
+input ended before the first conversion.
 
 == Macros and Types <std-stdio-macros>
 
@@ -1211,20 +1210,17 @@ store the results in the objects the further arguments point to.
 
 The number of conversions that stored a value, which may be fewer than
 requested if the input does not match. Conversions suppressed with
-#cmd("*") are counted. At the end of the input the functions return 0;
-they do not return #cmd("EOF").
+#cmd("*") are not counted. #cmd("EOF") when the input ends before the
+first conversion.
 
 === Notes
 
-- There is no field width, so #cmd("%s") and #cmd("%[") cannot be
-  limited. Read a line with #cmd("fgets()") and convert it with
-  #cmd("sscanf()"), into arrays as long as the line buffer, so that no
-  input can overrun them.
+- Give #cmd("%s") and #cmd("%[") a field width one less than the array
+  they write to, so that no input can overrun it.
 - #cmd("fscanf()") and #cmd("scanf()") read one character beyond the last
-  one they convert and push it back with #cmd("ungetc()") -- but only when
-  the format runs to its end. When they stop early, at a character that
-  does not match the format or at an input failure, that character is
-  consumed (a defect, libc370 issue 474).
+  one they convert and push it back with #cmd("ungetc()"). Up to release
+  2.21.0 they did so only when the format ran to its end: when they
+  stopped early, that character was consumed.
 
 === Example
 

@@ -32,6 +32,10 @@
  *
  * Through vsscanf() (#338): mvsdev JOB01311, GREEN CC 0000, 43/43.
  *
+ * With #386's widths, %[, %*, EOF cases and #474's push-back on a stream
+ * (pushback_cases()), own MVS/CE container, 2026-10-19: GREEN CC 0000,
+ * 64/64; RED (2.21.0) CC 0001, 17 of 64 failed - every new case.
+ *
  * RC: 0 = every check passed, 1 = a check failed (it is the COND CODE).
  */
 #include <stdio.h>
@@ -97,11 +101,40 @@ static void hfp_cases(void)
           "%lf 7.2e75, in range");
 }
 
+/* #474: a character that ends an input item goes back to the stream, also
+   when the scan stops early.  Stream input only - sscanf() has no stream. */
+static void pushback_cases(void)
+{
+    FILE    *f;
+    int     n = -1, r, c;
+    float   x;
+
+    printf("\n(stream) push-back on an early stop (#474):\n");
+    f = fopen("&&SCN", "w+");
+    if (!f) {
+        CHECK(0, "fopen &&SCN w+");
+        return;
+    }
+    fputs("y12 abc 7%z\n", f);
+    fseek(f, 0, SEEK_SET);
+    r = fscanf(f, "x%d", &n);
+    c = fgetc(f);
+    CHECK(r == 0 && c == 'y', "fscanf \"x%d\" on \"y12\": 'y' is still there");
+    r = fscanf(f, "%d %f", &n, &x);
+    c = fgetc(f);
+    CHECK(r == 1 && n == 12 && c == 'a', "%f on \"abc\": 'a' is still there");
+    r = fscanf(f, "bc %d%%", &n);
+    c = fgetc(f);
+    CHECK(r == 1 && n == 7 && c == 'z', "%% on \"%z\": 'z' is still there");
+    fclose(f);
+}
+
 int main(void)
 {
     printf("=== tstscnll: scanf length modifiers on MVS (#318) ===\n\n");
     scn_cases();
     hfp_cases();
+    pushback_cases();
     printf("\n=== tstscnll: %d/%d passed", run - failed, run);
     if (failed > 0) printf(" (%d FAILED)", failed);
     printf(" ===\n");

@@ -29,6 +29,10 @@
  * long is 64 bits, so storing a long fills a long long.  That half of
  * #318 is visible on MVS only - test/mvs/tstscnll.c.
  *
+ * #386 (scn_cases386()): RED, 2026-10-19, against main's vvscanf.c: 8
+ * width and %[ cases fail, then %[abc] as the last item reads past the
+ * format's NUL (ASan global-buffer-overflow).
+ *
  * RC: 0 = every check passed, 1 = at least one did not.
  */
 #define __CTYPE_INCLUDED
@@ -39,6 +43,8 @@ typedef unsigned long size_t;
 #endif
 void *memset(void *, int, size_t);
 void *memchr(const void *, int, size_t);
+int memcmp(const void *, const void *, size_t);
+int strcmp(const char *, const char *);
 char *strchr(const char *, int);
 int isspace(int c);
 int isdigit(int c);

@@ -31,6 +31,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
     VIO allocation failed and the data set went to disk.
   - A SYSOUT data set (`*`) takes `blksize=`; it got 32720 for
     `blksize=800`.
+- **`scanf()` and its relatives: field widths, `%[`, `*`, `EOF` and the
+  push-back (#386, #474).** Measured on MVS:
+  - A field width limits the conversion: `%2d%d` on `1234` gives 12 and
+    34, `%3s` on `hello` gives `hel`, `%3c` reads three characters. A width
+    made the conversion fail before.
+  - The character after the `]` of `%[` in the format is matched; it was
+    skipped. A format ending with `%[...]` was read past its end.
+  - A conversion suppressed with `*` is not counted in the return value.
+  - The result is `EOF` when the input ends before the first conversion;
+    it was 0.
+  - `fscanf()` and `scanf()` push back the character that ends the scan
+    also when they stop early, at a character that does not match; it was
+    consumed.
 
 ## [2.21.0] - 2026-10-19
 
