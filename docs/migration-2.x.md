@@ -209,6 +209,7 @@ CHANGELOG has everything else.
 
 | Release | Change | What to do |
 |---|---|---|
+| Unreleased | `fseek()` and `fsetpos()` keep the error indicator; only `rewind()` and `clearerr()` clear it (#178) | A program that seeks after a read or write error and expects to go on reading or writing calls `clearerr()` first |
 | Unreleased | The declarations of `__enq()`, `__deq()`, `__sosnam()`, `__sopnam()` are removed (#400); none was ever in the library, so a call never linked | Use `ENQ()`/`DEQ()` from `<mvs/enq.h>`, and `getsockname()`/`getpeername()` |
 | Unreleased | `PPAFLAG_TIN`, `PPAFLAG_TOUT`, `PPAFLAG_TERR` (`<mvs/crt.h>`) and `PPATIN`, `PPATOUT`, `PPATERR` (`CLIBPPA`) are removed (#72); the library never set them | Drop the test; it always answered no |
 | Unreleased | `__try()` and `__tryrc()` are removed (#17); they were an unused older copy of `try()` and `tryrc()` | Call `try()` and `tryrc()` instead; same arguments, an abend is reported the same way |

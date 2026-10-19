@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+- **`fseek()` keeps the error indicator; `rewind()` clears it (#178).**
+  `fseek()` and `fsetpos()` cleared the error indicator as well as the
+  end-of-file indicator, so a seek after a failed write lifted the error
+  silently and the program went on writing into a data set that was
+  still full. As C99 specifies, a successful `fseek()` now clears only the
+  end-of-file indicator, and a stream in error stays in error until
+  `clearerr()` or `rewind()`, which clears both (measured on MVS).
+
 ### Removed
 - **`crtopts` and `CRTOPTS_AUTH` are gone from `<mvs/crt.h>` (#113).** The
   field was never set: the start-up copied the job step's authorization byte
