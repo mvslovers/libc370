@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - **`strstr()` with an empty `s2` returns `s1` (#393).** C99 requires a
   pointer to the start of `s1` when the string searched for is empty; the
   function returned a null pointer (measured on MVS).
+- **`ispunct()`, `isgraph()` and `isprint()` are true for `[`, `]` and `^`
+  (#399).** The compiler writes these characters as X'BA', X'BB' and X'B0',
+  their code points in CP037, and the class table gave those three bytes
+  no class at all (measured on MVS).
 
 ## [2.20.0] - 2026-10-18
 

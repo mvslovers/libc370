@@ -58,26 +58,22 @@ which MVS allows in names, are punctuation.
     [#cmd("isspace()")], [6], [X'05' horizontal tab, X'0B' vertical tab,
       X'0C' form feed, X'0D' carriage return, X'15' new line, X'40' space],
     [#cmd("isblank()")], [2], [X'05' horizontal tab, X'40' space],
-    [#cmd("ispunct()")], [34], [X'4A'–X'50', X'5A'–X'61', X'6A'–X'6F',
-      X'79'–X'7F', X'A1', X'AD', X'BD', X'C0', X'D0', X'E0'],
-    [#cmd("isgraph()")], [96], [#cmd("isalnum()") and #cmd("ispunct()")],
-    [#cmd("isprint()")], [97], [#cmd("isgraph()") and X'40' space],
+    [#cmd("ispunct()")], [37], [X'4A'–X'50', X'5A'–X'61', X'6A'–X'6F',
+      X'79'–X'7F', X'A1', X'AD', X'B0', X'BA', X'BB', X'BD', X'C0', X'D0',
+      X'E0'],
+    [#cmd("isgraph()")], [99], [#cmd("isalnum()") and #cmd("ispunct()")],
+    [#cmd("isprint()")], [100], [#cmd("isgraph()") and X'40' space],
     [#cmd("iscntrl()")], [60], [X'00'–X'3F', except X'29', X'30', X'31' and
       X'3E'],
   )
 ] <std-ctype-classes>
 
 #idx("brackets", "classification")
-#note[The square brackets and the circumflex are not classified correctly.
 cc370 translates #cmd("'['"), #cmd("']'") and #cmd("'^'") to X'BA', X'BB'
-and X'B0', their code points in CP037, but the table marks X'AD' and X'BD'
-as punctuation instead -- the code points of the brackets in code page
-1047 -- and gives X'BA', X'BB' and X'B0' no class. On this target
-#cmd("ispunct('[')"), #cmd("isgraph('[')") and #cmd("isprint('[')") are
-therefore 0, and so are they for #cmd("']'") and #cmd("'^'"), while X'AD'
-(#cmd("Ý") in CP037) and X'BD' (#cmd("¨")) count as punctuation. A program
-that must accept these three characters as printable has to test for them
-itself.]
+and X'B0', their code points in CP037, and the table classifies these as
+punctuation. X'AD' and X'BD', where code page 1047 puts the brackets, are
+#cmd("Ý") and #cmd("¨") in CP037 and count as punctuation too.
+
 
 The line feed X'25' is a control character but not white space, because a
 C program writes the new line as X'15'. Data that comes from a system
