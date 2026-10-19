@@ -20,17 +20,13 @@ declared in plain text:
     <NAME>   PDPPRLG ...,ENTRY=YES     function prologue that entries itself
     <NAME>   CSECT                     named control section
 
-Two kinds of module are skipped, because neither is ever an archive member and
-a gate that cries wolf gets ignored:
-
-  * anything exporting @@MAIN -- mklibc.py drops those objects from libc.a by
-    design ("a stray main must not land in libc.a"), so the handful of test and
-    demo programs carrying one never share the namespace;
-  * the separate startfile crtm (STARTUPS below) -- it is copied out as
-    crtm.o, never archived, and defines @@CRT0 like the CRT member @@crt0
-    does; at most one of the two is linked into a load module, and an
-    explicit crtm.o beats the archive.  (@@crt0 itself is archived since
-    #159; its copies crt0.o/crt1.o were dropped in 2.4.0.)
+One kind of module is skipped, because it is never an archive member and a
+gate that cries wolf gets ignored: anything exporting @@MAIN -- mklibc.py
+drops those objects from libc.a by design ("a stray main must not land in
+libc.a"), so the handful of test and demo programs carrying one never share
+the namespace.  (Up to #608 the startfile crtm was skipped too: it was copied
+out as crtm.o, never archived, and defined @@CRT0 like the member @@crt0.
+Every library source is archived now.)
 
     python3 sdk/dupscan.py [path ...]      default: src asm
 
@@ -51,10 +47,6 @@ import os
 import re
 import sys
 
-# mirrors mklibc.py's STARTUPS -- kept in step by hand, and the build gate
-# passes its own list so a drift here cannot silently narrow the scan
-STARTUPS = ("@@crtm",)
-
 ENTRY_DIR = re.compile(r"^\s+ENTRY\s+(\S+)", re.I)
 PROLOGUE = re.compile(r"^(\S+)\s+PDPPRLG\b.*\bENTRY=YES\b", re.I)
 CSECT = re.compile(r"^(\S+)\s+CSECT\b", re.I)
@@ -73,15 +65,10 @@ def externals(path):
     return names
 
 
-def scan(paths, startups=STARTUPS):
+def scan(paths):
     """-> (duplicates {name: [module, ...]}, modules scanned, non-archived skipped)"""
     owners, files, skipped = {}, 0, 0
-    stems = tuple(s.lower() for s in startups)
     for path in paths:
-        stem = os.path.basename(path).rsplit(".", 1)[0].lower()
-        if stem in stems:
-            skipped += 1                  # startfile, not archived -- see docstring
-            continue
         names = externals(path)
         if "@@MAIN" in names:
             skipped += 1                  # never archived -- see the docstring

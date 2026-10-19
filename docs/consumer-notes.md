@@ -75,8 +75,8 @@ Two build-side guards are worth knowing because they change what ships:
 
 The C startup `@@CRT0` is a member of `libc.a` (#159): a program's `main` refers
 to it, so automatic library call brings it in, and cc370 from 1.4.0 names no
-startfile on the link line. The only startfile left is `crtm.o`, the nested
-startup, which sits outside `libc.a` because it defines `@@CRT0` too — see
+startfile on the link line. No startfile is installed: `crt0.o`/`crt1.o` went
+in 2.4.0, `crtm.o`, the nested startup, in #608 — see
 [`startup.md`](startup.md).
 
 ## VL parameter lists are yours to build

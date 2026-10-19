@@ -117,8 +117,8 @@ Each fix gets a red/green test in a container, then a PR and a merge.
     (a VSAM redesign is a 3.x topic).
   - Measure first: #160 send-side probe, then cap and return the short count.
   - Coordinated with another project: #113 delete `crtopts` (httpd
-    `httpd.c:1391`); #608 remove `crtm.o` with #105 (MBT drops the
-    `mbt doctor` check first); #392 `timegm()` first, then a zone-aware
+    `httpd.c:1391`); ~~#608 remove `crtm.o` with #105~~ (branch
+    feat/remove-crtm-608; MBT 3 treats crtm.o as optional since bff5bd4); #392 `timegm()` first, then a zone-aware
     `mktime()` (an mvsMF release); #418 header leaks after an MBT sweep.
   - Not doing: #75 closed (clock() stays -1); #461 and #607 parked; `%p`
     keeps `00001234` (documented).
@@ -1196,7 +1196,12 @@ the semantics of `TSOFG`/`TSOBG` and either set the three dead defines (in
 `@@fpstar.c`, which knows) or delete them. Declared-and-dead is the worst of the
 three options.
 
-### 9 · #105 — `GRTFLAG1_TSO` sticks beyond `__start()`
+### ~~9 · #105 — `GRTFLAG1_TSO` sticks beyond `__start()`~~ — settled with #608
+
+Reachability settled it: the only second `__start()` on one GRT was `crtm.o`,
+removed by #608; `@@CRT0` callocs a new GRT for every start. `__start()` now
+also clears the flag for a non-TSO start (hygiene, no behaviour change).
+
 
 A design decision, not a patch: recompute per `__start()` (set *and* clear), or
 move the TSO property into the CRT. The two readings differ for `fopen.c`,

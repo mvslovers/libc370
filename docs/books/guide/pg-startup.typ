@@ -12,8 +12,8 @@ under TSO, or with #cmd("LINK") or #cmd("ATTACH") from another program.
 Before #cmd("main()") can run, the library has to build a C environment
 around it: a stack, the anchors that hold #cmd("errno") and the open
 files, the three standard streams, the arguments and the environment
-variables. This chapter describes what the start-up does, how to choose
-between the three start-up modules, how a program receives its parameter
+variables. This chapter describes what the start-up does, how a C module
+called by another C program is linked, how a program receives its parameter
 and returns its return code, how to give it a larger stack, and how to
 pass it settings through the #cmd("SYSENV") DD statement.
 
@@ -29,7 +29,7 @@ every C program is linked with it and enters there;
   #code("MVS            EXEC PGM=, CALL, LINK, ATTACH
   |
   v
-@@CRT0         start-up routine (libc.a; crtm.o for a module)
+@@CRT0         start-up routine (libc.a)
   |              - one GETMAIN for the program area and the stack
   |              - the anchors: program, task, process
   |              - program name, TSO or batch
@@ -109,25 +109,15 @@ output is lost. A missing DD is not a reason: a missing #cmd("SYSPRINT")
 or #cmd("SYSTERM") is replaced by a SYSOUT data set, or by the terminal in
 a TSO session, a missing #cmd("SYSIN") by an empty input.
 
-== The Start-Up Routines <pg-startup-variants>
+== The Start-Up Routine <pg-startup-variants>
 
-#idx("@@CRT0", "in libc.a")#idx("crtm")#idx("start-up module")
-There are two start-up routines, and both define the entry point
-#cmd("@@CRT0"), so a program is linked with exactly one of them:
+#idx("@@CRT0", "in libc.a")#idx("start-up module")
+There is one start-up routine for a C program, #cmd("@@CRT0"), with a
+default stack of 256 KB. Every C program uses it, with or without
+threads: it builds the C environment described above and releases it
+when the program ends.
 
-#tab(caption: [The start-up routines])[
-  #table(columns: (1.1in, 0.9in, 1fr),
-    [Routine], [Default stack], [Use it for],
-    [#cmd("@@CRT0"), a member of #cmd("libc.a")], [256 KB], [Every C
-      program, with or without threads. It builds the C environment
-      described above and releases it when the program ends.],
-    [#cmd("crtm.o")], [64 KB], [A C module that is called from a C program
-      running on the same task and shares its C environment. It builds no
-      environment of its own. Never use it for a program that MVS starts.],
-  )
-] <pg-startup-variants-tab>
-
-A third way exists for code that is not C: a COBOL or assembler main
+A second way exists for code that is not C: a COBOL or assembler main
 program that calls C functions through #cmd("@@CCALL") gets the same
 environment, built on its first call and released by #cmd("CCTERM")
 (@pg-asm-ccall-main). It has no #cmd("main()") and no parameter to parse,
@@ -136,9 +126,7 @@ and the start-up hook #cmd("__premain()") is not called.
 #cmd("@@CRT0") is a member of #cmd("libc.a"). A source file that defines
 #cmd("main()") refers to it, so the linker takes it from the library like
 any other function, and the cc370 driver names no start-up object on the
-link line at all. An object module named before the libraries that defines
-#cmd("@@CRT0") wins over the library: that is how #cmd("crtm.o") is used
-(@pg-startup-link).
+link line at all.
 
 #idx("crt0.o", "no longer installed")#idx("crt1.o", "no longer installed")
 #note[Releases of LIBC/370 up to 2.3 also installed #cmd("@@CRT0") as the
@@ -182,51 +170,30 @@ neither module is #cmd("@@CRT0") at offset 0.
   #screen(raw(read("../ex/pg-startup/crtlink.txt")))
 ] <pg-startup-crtlink-fig>
 
-#idx("crtm", "restrictions")
-*crtm.* #cmd("crtm") is for a narrow case. It expects to find the anchors
-of a C program that is already running on the same task and uses them
-instead of building its own. It is entered with the address of its
-parameter in register 0, not through a parameter list in register 1, so it
-is called by code written for it, not by MVS. Three consequences follow:
+#idx("crtm.o", "removed")
+*A C module called by a C program.* A load module that a C program calls
+with #cmd("LINK"), #cmd("__link()") or #cmd("system()") is linked like any
+other C program, with #cmd("@@CRT0"): it builds its own environment --
+its own standard streams, open files, #cmd("atexit()") functions and
+environment variables -- and releases it before it returns, and the
+caller's environment is in force again. Its heap storage comes from the
+subpool the caller's does. Code that must run on the caller's environment
+instead, without one of its own, is a C function called through a
+#cmd("CCALL") stub, the way a C function is called from assembler under a
+C program (@pg-asm-ccall). (For a stub in a module the C program calls
+with #cmd("LINK"), this follows from the library source and has not been
+verified on MVS.)
 
-- Started as a job step, or on a task without a C program, a #cmd("crtm")
-  module abends at once.
-- It shares the caller's standard streams, open files, #cmd("atexit()")
-  functions and environment variables. It starts with the caller's
-  streams and opens none of its own. But it ends through #cmd("exit()"),
-  like any C program, and that works on the shared environment: it calls
-  the caller's #cmd("atexit()") functions, closes every open file, the
-  caller's standard streams included, and frees the environment
-  variables. Only its own stack is released, but the caller's C input and
-  output does not survive it. (This follows from the library source and
-  has not been verified on MVS.) Use #cmd("crtm") only where the end of
-  the module may end the caller's C input and output as well.
-- It issues no #cmd("IDENTIFY"). A thread it creates can be attached only
-  when the calling program has made #cmd("CTHREAD") known.
-
-A program that calls another C program with #cmd("__link()") or
-#cmd("system()") does not need #cmd("crtm"): the called program, with the
-usual #cmd("@@CRT0"), builds its own environment and releases it before it
-returns.
-
-=== Linking with crtm <pg-startup-link>
-
-To link a module with #cmd("crtm"), name #cmd("crtm.o") on the link line,
-ahead of the libraries. #cmd("cc370 -print-file-name=crtm.o") gives its
-full name in the installed library. Because it defines #cmd("@@CRT0"), the
-linker does not take the one in #cmd("libc.a").
-@pg-startup-crtm-fig shows the command, which is silent when it succeeds,
-and the entry point, which #cmd("crtm.o"), named first, puts at offset 0.
-
-#fig(caption: [Linking with crtm])[
-  #screen(raw(read("../ex/pg-startup/crtm.txt")))
-] <pg-startup-crtm-fig>
-
-#idx("mbt", "start-up module")
-With MBT, a C program leaves out the key #cmd("startup") of its
-#cmd("[[module]]") in #cmd("project.toml")\; #cmd("startup = \"crtm\"")
-links #cmd("crtm.o"). The _CC/370 Command Reference_, Chapter 1, “The cc370
-Command”, describes the link options.
+#note[Releases of LIBC/370 up to 2.23 also installed a second start-up
+object, #cmd("crtm.o"), for a C module that joined the C environment of a
+program already running on the same task instead of building its own. It
+was entered with its parameter in register 0, abended when no C program
+ran on the task, and ended through #cmd("exit()") on the shared
+environment, so it closed the caller's files and standard streams too.
+It is gone. A build that names it fails: cc370 reports
+#cmd("crtm.o: No such file or directory"), and MBT 3 (mbt) reports
+#cmd("startup = \"crtm\"") as a configuration error. Link the module as
+described above instead.]
 
 == Running Code Before main() <pg-startup-premain>
 
@@ -455,7 +422,7 @@ the records still in their buffers are lost; see @pg-errors.]
 The automatic variables of every C function, and the save area of every
 call, are kept on the C stack, which the start-up obtains in one piece
 before #cmd("main()") is called. Its size is fixed for the life of the
-program: 256 KB with #cmd("@@CRT0"), 64 KB with #cmd("crtm").
+program: 256 KB by default.
 
 *The stack is not checked.* Each function takes its frame from the top of
 the stack as it is called, and nothing tests whether the frame still fits.

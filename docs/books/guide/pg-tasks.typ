@@ -24,10 +24,8 @@ Every function is described in the _LIBC/370 Library Reference_, Chapter 30,
 #cmd("CTHREAD"), the thread driver of the library. A program that calls
 #cmd("cthread_create()") links the driver from #cmd("libc.a"), and the C
 start-up makes the name known to MVS before #cmd("main()") is called
-(@pg-startup-variants). Any start-up of a C program will do; the timer
-service and the worker pool, which create threads of their own, need
-nothing more either. Only a module linked with #cmd("crtm") identifies
-nothing itself and depends on the program that called it.
+(@pg-startup-variants). The timer service and the worker pool, which
+create threads of their own, need nothing more either.
 
 *Know what the threads share.* @pg-tasks-share-tab lists what belongs to the
 program as a whole and what each task has for itself.

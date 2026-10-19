@@ -1,4 +1,4 @@
-# C startup: `@@crt0`, `@@crtm` and `@@CCALL`
+# C startup: `@@crt0` and `@@CCALL`
 
 This note explains the C startup ("crt") modules in `src/mvs/crt/`, what they
 actually do (not just what their comments claim), and **when to use which**.
@@ -11,11 +11,12 @@ compiles into a stub that references `@@CRT0` (`EXTRN @@CRT0`), so automatic
 library call brings the startup in, and cc370 from 1.4.0 puts no startfile on
 the link line. libc370 2.4.0 requires that cc370 and no longer installs the
 startfile copies `crt0.o`/`crt1.o` (2.3.x still shipped them, identical).
+The nested startup `crtm.o` is gone too since #608 (see "`@@crtm` — removed"
+below), so libc370 installs no startfile at all.
 
 | Module | Use it for | Threads | Builds the runtime? |
 |--------|------------|:-------:|---------------------|
 | `@@CRT0` in `libc.a` | every standalone C program | when it calls `cthread_create*()` | yes (full) |
-| `crtm.o` (a startfile) | a C module entered **inside an already-running C runtime on the same TCB** (LINK/XCTL/LOAD+BALR from a C program) | no | no — it **reuses** the caller's runtime |
 | none: `@@CCALL` (since 2.10.0) | C functions called from a **COBOL or assembler main program**, through `CCALL` stubs | no | yes, on the first call; `CCTERM` releases it |
 
 Rules of thumb:
@@ -25,12 +26,17 @@ Rules of thumb:
   references it hard, so it is linked exactly when the program can create a
   thread; `@@CRT0` refers to it weakly and issues `IDENTIFY EPLOC=CTHREAD`
   only when it is there. A program without threads carries neither.
-* **`@@CRT0` vs `crtm`** = *"do I build the runtime (top level) or inherit one
-  (nested)?"*. `crtm.o` is named explicitly; an explicit object beats the
-  archive, so `@@CRT0` is then not pulled.
-* **Never use `crtm` as the top-level startfile.** Without a prior `@@CRT0`
-  on the same TCB its unchecked `@@CRTGET` dereferences a NULL CLIBCRT and
-  abends.
+* **A C module LINKed from a C program** is linked like any program, with
+  `@@CRT0`: it builds its own PPA/CRT/GRT on the caller's TCB (the caller's
+  PPA is saved in `PPASAVE` and back in `8(TCBFSAB)` after `@@EXITA`), its own
+  lazy standard streams and environment, and inherits only the heap subpool
+  (`PPAHEAPS`, #89). `__link()` and `system()` call such modules.
+* **C code that must run on the caller's runtime** (what `crtm` was for) is a
+  C function behind a `CCALL` stub: `@@CCALL` case 1 finds the caller's C
+  frame through the save-area chain and runs the function on the caller's
+  stack and GRT; it returns without `__exit()`, so nothing of the caller's is
+  closed. (By design of `@@CCALL`; the LINKed-module variant of that call has
+  not been measured on MVS.)
 * **A program that is not C** (a COBOL main program) links no startup at all.
   The first call through a `CCALL` stub builds the runtime the way `@@CRT0`
   does, and `CALL 'CCTERM'` before `STOP RUN` releases it (#507); see
@@ -144,54 +150,26 @@ Until 2.3.0 there was a second startfile, `@@crt1`: a copy of crt0 with the
 `IDENTIFY` commented out, so that a program could choose "no threads". The
 choice is now made by what the program links (above), and the copy is gone.
 
-## `@@crtm` — minimal, nested startup
+## `@@crtm` — removed (#608)
 
-`@@crtm` is **not** "`@@CRT0` with a smaller stack". It omits fundamental setup and
-therefore **requires an already-initialised C runtime on the same TCB**. What it
-does *not* do, versus `@@CRT0`:
+Up to 2.23.0 a second startfile, `crtm.o` (`src/mvs/crt/@@crtm.asm`), was
+installed beside `libc.a`. It did not build a runtime but **joined** the one
+already on the TCB: it GETMAINed only a 64 KB stack, called `@@CRTGET` for the
+existing CLIBCRT (abend `U0801` when there was none), took the parameter
+address in **R0** instead of `R1 -> A(parm)`, and carried its own inline
+`@@EXITA` that freed only its stack. Because it ended through `__exit()` on
+the caller's GRT, it ran the caller's `atexit()` functions and closed every
+open file, the caller's standard streams included. It also defined `@@CRT0`,
+so it had to stay outside `libc.a`, and it was the only way a second
+`__start()` could run on one GRT (#105).
 
-| Step | `@@CRT0` | crtm |
-|------|:-----------:|:----:|
-| GETMAIN for the **PPA** | yes (`+ L'CLIBPPA`) | **no** — stack only |
-| Build PPA eyecatcher / `PPASTKLN` | yes | **no** |
-| Anchor PPA in **TCBFSA** | yes | **no** |
-| **`@@CRTSET`** (create CLIBCRT) | yes | **no** |
-| **`@@GRTSET`** (create CLIBGRT) | yes | **no** |
-| **`EXTRACT`** TIOT/TSO/PSB | yes | **no** |
-| `@@CRTGET` | only to set `CRTSAVE` | **yes — assumes an existing CRT** |
-
-Instead crtm calls `@@CRTGET` to fetch an **existing** CLIBCRT, saves its current
-`CRTSAVE` into `OLDSAVE`, and swaps in its own save area. **`@@CRTGET` is
-dereferenced without a NULL check** — if no CRT exists, the store lands in
-protected low core and abends. So crtm is only valid when an outer `@@CRT0`
-already put a PPA in the TCBFSA and registered a CRT for this TCB; `@@CRTGET ->
-@@PPAGET` then finds the *parent's* anchors.
-
-Two more distinctive details:
-
-* **Non-standard linkage.** `@@CRT0` takes the parm via `R1 -> A(parm)`. crtm keeps
-  **R0** (`PGMR0`) and passes it as `__start`'s first argument `p` — i.e. the
-  address of the length-prefixed parm block goes **directly in R0**, one
-  indirection less. This signals that crtm is entered by purpose-built caller
-  code, not attached as a job step by the system.
-* **Self-contained minimal `@@EXITA` inline.** Because crtm provides `@@EXITA` as
-  its own `ENTRY`, the linker uses it and does **not** pull `@@exita.o` from
-  `libc.a`. This inline `@@EXITA` restores `CRTSAVE` from `OLDSAVE`, FREEMAINs
-  **only its own stack**, and `RETURN`s to crtm's caller. It deliberately calls
-  **neither `@@GRTRES` nor `@@CRTRES`** — crtm did not create CRT/GRT/PPA, so it
-  must not tear them down.
-
-Default stack: `MAINSTK DS 16384F` = **64 KB** (a quarter of `@@CRT0`'s).
-
-**Caveat:** crtm shares the parent's GRT, and the GRT holds the standard
-streams, the list of open files, the `atexit()` table and the environment.
-A crtm module uses the parent's streams (since 2.15.0 they open on first use,
-#564; since 2.4.0 a stream that is already set is never opened over).
-But it still ends through `__exit()`, which works on that same GRT: it runs the
-parent's `atexit()` functions, **closes every open file — the parent's standard
-streams included —** and frees the environment. (Read from `@@exit.c` and
-`@@start.c`; not measured on MVS.) crtm fits where the nested module's end may
-end the caller's C I/O as well, not for "call one C function and carry on".
+No known project linked it (checked 2026-10-19), and #608 removed it: the
+source, the build, the install (which now deletes an old
+`<sysroot>/lib/crtm.o`, like `crt0.o`/`crt1.o`), the packages. A link line
+naming it fails with `crtm.o: No such file or directory`; MBT 3 reports
+`startup = "crtm"` as a configuration error naming libc370#608, MBT 2
+complains only in `make doctor`. Replacements: link the module normally
+(`@@CRT0`), or call the C function through a `CCALL` stub (TL;DR above).
 
 ## `@@CCALL` — the runtime for a caller that is not C
 
@@ -218,12 +196,11 @@ U3101.
 | | Teardown module | GRT freed | CRT freed | PPA out of TCBFSA | FREEMAIN |
 |---|---|:--:|:--:|:--:|:--:|
 | `@@CRT0` | `@@exita.o` (from `libc.a`) | yes (`@@GRTRES`) | yes (`@@CRTRES`) | yes | PPA + stack |
-| crtm | inline `@@EXITA` | no | no | no | own stack only |
 | `@@CCALL` environment (`exit()`, `CCTERM`) | `@@exita.o` (from `libc.a`) | yes | yes | yes | PPA + stack |
 
 `@@exita.asm` finds the PPA directly via `8(TCBFSAB)` (not through `@@PPAGET`),
-relying on `@@CRT0` having put it there — consistent with crtm not doing so and thus
-needing its own exit.
+relying on `@@CRT0` (or `@@CCALL`) having put it there. (The removed `crtm`
+put no PPA there and therefore carried its own `@@EXITA`.)
 
 ## Note on stale comments
 

@@ -107,9 +107,17 @@ __start(char *p, char *pgmname, int tsojbid, void **pgmr1)
     /* TSO-shaped only if the length covers the 4-byte prefix it then
        skips: a length of 1..3 with a zero third byte made parmLen - 4
        negative below, and memcpy() took it as a huge size (httpd#275) */
+    /* The flag says what this start found, set or cleared here, never
+       left from an earlier start (#105).  @@CRT0, the only caller since
+       crtm.o is gone (#608), builds a new GRT for every start, so the
+       flag is clear on entry and the clear below changes nothing today:
+       it keeps the flag from being one-way. */
     if ((parmLen >= 4) && (p[2] == 0)) {
         grt->grtflag1 |= GRTFLAG1_TSO;
         progLen = (unsigned int)p[3];
+    }
+    else {
+        grt->grtflag1 &= ~GRTFLAG1_TSO;
     }
 
     /* first, so that it is the oldest recovery of the program and runs

@@ -1,24 +1,29 @@
 #!/usr/bin/env python3
 """tstinstall.py - libc370 #636: `make install` removes libc370's headers of
-the previous install, and no others.
+the previous install, and no others; #608: it removes the startfiles an
+earlier install left in lib/ (crtm.o, and crt0.o/crt1.o from before 2.4.0).
 
 sdk/mklibc.py install cleared the whole <sysroot>/include before it copied
 the headers, so a header another toolchain had put there - pl1c370's
 pl1abi.h - was gone after every libc370 install.
 
 The test runs mklibc's cmd_install() against a throwaway sysroot: sysroot()
-is replaced to point there, and BUILD at a directory with a stand-in libc.a
-and crtm.o, so neither cc370 nor a build is needed.
+is replaced to point there, and BUILD at a directory with a stand-in libc.a,
+so neither cc370 nor a build is needed.
 
   1 a sysroot an older install left (no manifest): the 1.x header
     clibwto.h goes, the libc370 headers are new, pl1abi.h and pl1/x.h stay,
-    and the install writes share/libc370/include-files.txt
+    and the install writes share/libc370/include-files.txt; lib/ held
+    crtm.o, crt0.o and crt1.o, and after the install it holds none of them,
+    while libc.a is there and another toolchain's file in lib/ stays
   2 the next install with that manifest: a header the manifest lists but
     this tree no longer ships goes, the foreign files stay
 
 Usage (from test/host):  python3 tstinstall.py [path to sdk/mklibc.py]
 RED, 2026-10-19, against main's mklibc.py: pl1abi.h and pl1/x.h are gone
 after case 1.
+RED (#608), 2026-10-20, against main's mklibc.py: lib/crtm.o is still there
+after case 1 (main installs it).
 RC: 0 = every check passed, 1 = at least one did not.
 """
 import importlib.util
@@ -55,8 +60,9 @@ with tempfile.TemporaryDirectory() as tmp:
     lib = os.path.join(tmp, "cc370", triple, "lib")
     build = os.path.join(tmp, "build")
     put(os.path.join(build, "libc.a"), "!<arch>\n")
-    for crt, _ in mk.STARTFILES:
-        put(os.path.join(build, crt), "obj")
+    # an older build/sdk had crtm.o beside libc.a, and an older mklibc.py
+    # copies it: there for the RED against one (#608)
+    put(os.path.join(build, "crtm.o"), "obj")
     mk.BUILD = build
     mk.sysroot = lambda: (triple, inc, lib)
 
@@ -65,6 +71,9 @@ with tempfile.TemporaryDirectory() as tmp:
     put(os.path.join(inc, "stdio.h"), "old\n")      # libc370, replaced
     put(os.path.join(inc, "pl1abi.h"))              # pl1c370
     put(os.path.join(inc, "pl1", "x.h"))            # a foreign directory
+    for crt in ("crtm.o", "crt0.o", "crt1.o"):      # earlier startfiles
+        put(os.path.join(lib, crt), "old obj")
+    put(os.path.join(lib, "libpl1.a"), "!<arch>\n")  # another toolchain's
     rc = mk.cmd_install()
     check(rc == 0, "install 1 returns 0")
     check(not os.path.exists(os.path.join(inc, "clibwto.h")),
@@ -76,6 +85,11 @@ with tempfile.TemporaryDirectory() as tmp:
     man = os.path.join(tmp, "cc370", triple, "share", "libc370",
                        "include-files.txt")
     check(os.path.isfile(man), "share/libc370/include-files.txt written")
+    for crt in ("crtm.o", "crt0.o", "crt1.o"):
+        check(not os.path.exists(os.path.join(lib, crt)),
+              f"the old startfile lib/{crt} is gone (#608, #159)")
+    check(os.path.isfile(os.path.join(lib, "libc.a")), "lib/libc.a installed")
+    check(os.path.isfile(os.path.join(lib, "libpl1.a")), "lib/libpl1.a stays")
 
     # 2: a header the previous install shipped and this tree does not
     if os.path.isfile(man):

@@ -29,8 +29,7 @@ TSO commands. The headers are:
 
 #idx("start-up", "of a C program")
 How a C program is started -- the start-up routine #cmd("@@CRT0"), the
-start-up module #cmd("crtm"), the stack, and the parameters a program
-receives -- is described in the _LIBC/370 Programmer's Guide_. This chapter
+stack, and the parameters a program receives -- is described in the _LIBC/370 Programmer's Guide_. This chapter
 describes only the interfaces of #cmd("<mvs/crt.h>") that a program may call.
 
 #idx("authorization", "program management functions")
@@ -299,11 +298,6 @@ which #cmd("@@START") a program gets then depends on the order of its link
 line, and a wrong choice is not reported: ld370's #cmd("--warn-shadow")
 names a #cmd("@@START") from an earlier library, and nothing names one from
 an object module.
-
-A module started with #cmd("crtm") also calls the function, if it defines
-one. Under #cmd("crtm") the standard streams are the caller's, so a stream
-the function sets replaces the caller's stream for the caller as well.
-(This follows from the library source and has not been verified on MVS.)
 
 === Example
 ```

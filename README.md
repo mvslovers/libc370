@@ -22,7 +22,7 @@ is the last 1.x release. Crypto (SHA-256, Blowfish, base64) is
 
 LIBC/370 2.8 and later needs **CC/370 1.6.0 or later, below 2**. The compiler
 helpers (`libcc370rt.a`) and the prologue macros belong to CC/370; headers,
-`libc.a` (with the startup `@@CRT0`), `crtm.o` and LIBC/370's own macros to
+`libc.a` (with the startup `@@CRT0`) and LIBC/370's own macros to
 LIBC/370; SYS1.MACLIB and SYS1.AMODGEN to maclib370, which only an `as370` from
 CC/370 1.6.0 finds by itself. Every header checks the compiler
 (`#error "libc370 needs cc370 1.6.0 or later"`), and CC/370 in turn needs a
@@ -121,8 +121,7 @@ the sysroot is `<prefix>/cc370/`, default `~/.local/cc370/`):
 | Artifact | Location | Effect |
 |----------|----------|--------|
 | headers (`stdio.h` …, `mvs/`, `ext/`, `ibm/`, `s370/`) | `<sysroot>/include` | `cc370 -c foo.c` finds them with no `-I` |
-| `libc.a` (the runtime) | `<sysroot>/lib` | `-lc` pulls it |
-| `crtm.o` | `<sysroot>/lib` | the nested startup (a startfile); the C startup `@@CRT0` is inside `libc.a` |
+| `libc.a` (the runtime, with the C startup `@@CRT0`) | `<sysroot>/lib` | `-lc` pulls it; no startfile is installed |
 | macros (vendored SYS1.MACLIB + LIBC/370's `maclib/`; the prologue macros are CC/370's) | `<sysroot>/macros` | `as370` (real binary in `<sysroot>/bin`) finds them via `<exedir>/../macros`, no `-I` |
 
 Before it copies the headers, `make install` removes the ones the previous
@@ -131,7 +130,10 @@ LIBC/370 install put there, listed in `<sysroot>/share/libc370/include-files.txt
 release dropped does not linger. It deletes no other file: headers another
 toolchain installed into the same `include/` stay. A manual install from the
 release tarball should do the same - remove the files that list names, then
-unpack - rather than clear `include/`.
+unpack - rather than clear `include/`. `make install` also removes the
+startfiles earlier releases put into `<sysroot>/lib` (`crt0.o`, `crt1.o`, and
+`crtm.o`, gone since #608); after unpacking the tarball over an older sysroot,
+delete them by hand.
 
 After that the toolchain is self-contained:
 

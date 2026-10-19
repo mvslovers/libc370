@@ -62,6 +62,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   library never contained them, so a program that called one compiled and
   then failed to link. Use the `ENQ()` and `DEQ()` macros of
   `<mvs/enq.h>`, and `getsockname()` and `getpeername()`.
+- **`crtm.o`, the nested start-up object, is no longer built or installed
+  (#608).** It let a C module join the C environment of a program already
+  running on the same task instead of building its own, but it ended
+  through `exit()` on that shared environment and so closed the caller's
+  files and standard streams as well, and it abended when no C program ran
+  on the task. `make install` now deletes a `crtm.o` an earlier release
+  left in the sysroot's `lib/`, as it does `crt0.o` and `crt1.o`, and the
+  packages no longer contain it. A link line that names it fails with
+  `crtm.o: No such file or directory`. A C module called by a C program is
+  linked like any program and builds its own environment; for C code that
+  must run on the caller's environment, see the `CCALL` stub. With
+  it, the start-up now clears the TSO flag of the run-time anchor for a
+  start that is not a TSO command, rather than only ever setting it (#105):
+  every start builds a new anchor, so nothing changes for a program.
 
 ### Fixed
 - **`malloc(0)` and `calloc()` with a size of 0 no longer report a
