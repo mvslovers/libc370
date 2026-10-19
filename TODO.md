@@ -80,8 +80,10 @@ Each fix gets a red/green test in a container, then a PR and a merge.
   - #125 (PR #633): asmlint SVC rule, 112 statements; found a real bug in
     `__uastep()` (crt kept in R15 across TESTAUTH), measured from SYS2.LINKLIB.
   - #39 (PR #635): `-Wall -Wno-missing-braces` in the build, 177 -> 0.
-  - New from the round: #634 (svcmain SVCMAIN_KEY low-bit key -> key 0),
-    #636 (install removes all of include/, also pl1c370's pl1abi.h).
+  - New from the round, fixed after the 2.22.0 release: #634 (PR #639,
+    svcmain SVCMAIN_KEY low-bit key set key 0; host test tstsvckey) and
+    #636 (PR #638, install removes only the headers listed in
+    share/libc370/include-files.txt; host test tstinstall). Unreleased.
 - **Clear parts of otherwise open issues:**
   - #395: everything but tmpfile, which is done, and the fread indicator;
   - #389: frexp(0), atan2(0,0), pow(0,-n), pow by squaring, exp reduction;
