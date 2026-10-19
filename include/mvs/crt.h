@@ -113,8 +113,7 @@ struct clibcrt {
     char        crthostn[80];       /* 68 host name for DYN75               */
     int         crtestct;           /* B8 ESTAE stack count                 */
     unsigned    crtestpl[10*2];     /* BC ESTAE parameter list              */
-    char        crtopts;            /* 10C copy of original JFCBOPTS byte   */
-#define CRTOPTS_AUTH        0x01    /* ... JFCBAUTH bit for APF authorized  */
+    char        crtrsv1;            /* 10C reserved, was crtopts (#113)     */
     char        crtauth;            /* 10D authorization flags              */
 #define CRTAUTH_ON          0x80    /* ... task auth via __autask()         */
 #define CRTAUTH_STEPLIB     0x40    /* ... steplib auth via __austep()      */

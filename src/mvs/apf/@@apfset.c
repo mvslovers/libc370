@@ -17,10 +17,8 @@ clib_apf_setup(const char *pgm)
 
     if (!crt) return -1;        /* no CRT: no auth state (#85) */
 
-    if (!(crt->crtopts & CRTOPTS_AUTH)) {
-        /* this task has not been authorized yet */
-        rc = unauth_setup(pgm);
-    }
+    /* crtopts, tested here, was never set, so this always ran (#113) */
+    rc = unauth_setup(pgm);
 
     return rc;
 }
