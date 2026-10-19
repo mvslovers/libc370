@@ -12,7 +12,10 @@ __txclos(TXT99 ***txt99, const char *unused)
     tu = NewTXT99(DALCLOSE,0,0,0);
     if (!tu) goto quit;
 
-    if (arrayadd(txt99, tu)) goto quit;
+    if (arrayadd(txt99, tu)) {
+        free(tu);               /* not in the list: ours to free */
+        goto quit;
+    }
 
     err = 0;
 

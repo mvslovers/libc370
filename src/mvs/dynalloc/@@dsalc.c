@@ -24,6 +24,7 @@ struct __dsalc {
     char        *unit;      // unit=...
     char        *volser;    // volser=...
     int         mount;      // mount - let SVC 99 ask for a mount (#181)
+    int         freeclose;  // free=close - unallocate at CLOSE (#408)
 };
 
 /* p is at a '(' in temp: "TRK(n,n)" becomes "TRK=n,n" and "name=(a,b)"
@@ -47,6 +48,17 @@ unparen(char *temp, char *p)
         }
     }
     return p;
+}
+
+/* tok is the keyword being converted.  The parentheses of a data set name
+   are its member (or relative generation), which __txdsn() turns into its
+   own text unit: they stay.  unparen() made "DSN=A.B(MEM)" "DSN=A.B=MEM"
+   (#408). */
+static int
+isdsn(const char *tok)
+{
+    while (*tok == ' ') tok++;
+    return strncmp(tok, "DSN=", 4) == 0 || strncmp(tok, "DSNAME=", 7) == 0;
 }
 
 /* the SPACE text units from space as __dsalc() leaves it: the unit (TRK,
@@ -113,11 +125,17 @@ __dsalc(char *ddname, const char *opts)
         * to something like  "DD=TEST;SPACE=TRK,val1,val2;..." 
         */
         // wtof("%s: opts=\"%s\"", __func__, opts);
-        for(p=temp; *p; p++) {
+        for(p=temp, t=temp; *p; p++) {
 
+            if (*p=='(' && isdsn(t)) {
+                p = strchr(p, ')');     /* "A.B(MEM)" goes on as it is */
+                if (!p) break;
+                continue;
+            }
             if (*p=='(') p = unparen(temp, p);
 
             if (*p==',') *p = ';';
+            if (*p==';') t = p + 1;     /* the next keyword starts */
         }
     }
     else {
@@ -131,6 +149,7 @@ __dsalc(char *ddname, const char *opts)
 
 	for(p=strtok(temp, ";"); p; p=strtok(NULL, ";")) {
         if (strcmp(p, "MOUNT")==0) dsalc->mount = 1;
+        else if (strcmp(p, "FREE=CLOSE")==0) dsalc->freeclose = 1;
         else if (strstr(p, "BLKSIZE=")) dsalc->blksize = p+8;
         else if (strstr(p, "DD=")) dsalc->ddn = p+3;
         else if (strstr(p, "DDNAME=")) dsalc->ddn = p+7;
@@ -264,6 +283,12 @@ __dsalc(char *ddname, const char *opts)
 
     if (dsalc->volser) {
         err = __txvols(&txt99, dsalc->volser);
+        if (err) goto quit;
+    }
+
+    if (dsalc->freeclose) {
+        /* FREE=CLOSE: the DD goes when the data set is closed (#408) */
+        err = __txclos(&txt99, NULL);
         if (err) goto quit;
     }
 

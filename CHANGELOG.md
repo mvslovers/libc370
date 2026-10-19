@@ -117,6 +117,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   (measured on MVS on a 3350 and a 3380). `sizeof(DSCB)` is now 140, the
   OBTAIN work area, instead of 146. A format-4 DSCB read with
   `__dscbav()`, which returns the key first, starts at `dscb.work + 44`.
+- **`__dsalc()` allocates a member and takes `FREE=CLOSE`; `__dynal()`
+  allocates a member and frees its DD at the close (#408).** `__dsalc()`
+  turned `DSN=A.B(MEM)` into the name `A.B=MEM`, which the allocation
+  refused, and ignored the keyword `FREE=CLOSE`. `__dynal()` passed a
+  name with a member to the allocation as it was, so it failed too, and
+  its DD stayed allocated after the data set was closed. Now
+  `DSN=A.B(MEM)` and `__dynal()` of `"A.B(MEM)"` allocate the member,
+  `FREE=CLOSE` frees the DD when the data set is closed, and `__dynal()`
+  always allocates with `FREE=CLOSE`, as its description always said
+  (measured on MVS).
 
 ## [2.23.0] - 2026-10-19
 

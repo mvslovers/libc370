@@ -1,8 +1,44 @@
 //TSTDSALM JOB (SYS),'LIBC370 408',CLASS=A,MSGCLASS=H,
 //             MSGLEVEL=(1,1)
 //*
-//* libc370 #408 - __dsalc() SPACE= JCL form, NULL opts.  See test/mvs/tstdsalm.c.
+//* libc370 #408 - __dsalc() SPACE= JCL form, NULL opts, member
+//* names, FREE=CLOSE; __dynal() members and FREE=CLOSE.  See
+//* test/mvs/tstdsalm.c.
 //* GREEN is this tree; RED, where there is one, the installed library.
+//*
+//* The data sets the probe reads: a PDS with members MEMA and MEMB,
+//* and a sequential data set.  The old ones go first.
+//*
+//DEL      EXEC PGM=IEFBR14
+//D1       DD  DSN=IBMUSER.LIBC370.T408P,DISP=(MOD,DELETE),
+//             UNIT=SYSDA,SPACE=(TRK,(1,1,1))
+//D2       DD  DSN=IBMUSER.LIBC370.T408S,DISP=(MOD,DELETE),
+//             UNIT=SYSDA,SPACE=(TRK,(1,1))
+//MEMA     EXEC PGM=IEBGENER
+//SYSPRINT DD  SYSOUT=*
+//SYSIN    DD  DUMMY
+//SYSUT1   DD  *
+MEMA LINE 1
+/*
+//SYSUT2   DD  DSN=IBMUSER.LIBC370.T408P(MEMA),DISP=(NEW,CATLG),
+//             UNIT=SYSDA,SPACE=(TRK,(1,1,2)),
+//             DCB=(DSORG=PO,RECFM=FB,LRECL=80,BLKSIZE=800)
+//MEMB     EXEC PGM=IEBGENER
+//SYSPRINT DD  SYSOUT=*
+//SYSIN    DD  DUMMY
+//SYSUT1   DD  *
+MEMB LINE 1
+/*
+//SYSUT2   DD  DSN=IBMUSER.LIBC370.T408P(MEMB),DISP=OLD
+//SEQ      EXEC PGM=IEBGENER
+//SYSPRINT DD  SYSOUT=*
+//SYSIN    DD  DUMMY
+//SYSUT1   DD  *
+SEQ LINE 1
+/*
+//SYSUT2   DD  DSN=IBMUSER.LIBC370.T408S,DISP=(NEW,CATLG),
+//             UNIT=SYSDA,SPACE=(TRK,(1,1)),
+//             DCB=(RECFM=FB,LRECL=80,BLKSIZE=800)
 //*
 //GREEN    EXEC PGM=TSTDSAG,REGION=4M,COND=EVEN,TIME=(0,10)
 //STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.DASCR

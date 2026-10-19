@@ -45,7 +45,12 @@
 *        contents is hex zero or blank, and len=8, gets assigned.     *
 *                                                                     *
 *    "dsn-adr" is the address of a 1 to 44 byte data set name of an   *
-*        existing file (sequential or partitioned).                   *
+*        existing file (sequential or partitioned).  A member name    *
+*        (or relative generation) in parentheses may follow the name: *
+*        "A.B(MEM)" allocates member MEM of A.B.                      *
+*                                                                     *
+*    The DD is allocated DISP=SHR and FREE=CLOSE: it goes when the    *
+*        data set is closed.                                          *
 *                                                                     *
 *    Calling @@DYNAL with a DDNAME and a zero length for the DSN      *
 *    results in unallocation of that DD (and a PARM error).           *
@@ -106,11 +111,8 @@ DYNALHAV ST    R1,8(,R13)         LINK OURS TO CALLER'S SAVE AREA
          STCM  R0,7,ALLARBP+1     REQUEST POINTER
          LA    R0,ALLATXTP
          ST    R0,ALLARB+8        TEXT UNIT POINTER
-         LA    R0,ALLAXDSN
-         LA    R1,ALLAXDSP
-         LA    R2,ALLAXDDN
-         O     R2,=X'80000000'
-         STM   R0,R2,ALLATXTP     TEXT UNIT ADDRESSES
+*   THE TEXT UNIT ADDRESSES ARE STORED AT DYNALNDD, ONCE IT IS KNOWN
+*   WHETHER THE NAME CARRIES A MEMBER (#408)
 *   COMPLETE REQUEST WITH CALLER'S DATA
 *
          LTR   R4,R4              CHECK DDN LENGTH
@@ -140,6 +142,51 @@ DYNALDDN SR    R5,R5              SIGNAL NO FEEDBACK
          DYNALLOC ,               REQUEST ALLOCATION
 DYNALNDD LTR   R6,R6              CHECK DSN LENGTH
          BNP   DYNALEXT           OOPS
+*   A MEMBER NAME IN PARENTHESES GOES INTO ITS OWN TEXT UNIT, DALMEMBR,
+*   AND THE DATA SET NAME ENDS BEFORE THE '(' (#408)
+         LA    R8,ALLATXTP        -> NEXT TEXT UNIT ADDRESS
+         LA    R0,ALLAXDSN
+         ST    R0,0(,R8)          DSNAME FIRST
+         LA    R8,4(,R8)
+         LR    R1,R7              -> DSN
+         LR    R2,R6              ITS LENGTH
+DYNALSCN CLI   0(R1),C'('         MEMBER FOLLOWS ?
+         BE    DYNALMEM           YES
+         LA    R1,1(,R1)
+         BCT   R2,DYNALSCN
+         B     DYNALLST           NO MEMBER
+DYNALMEM LR    R0,R1
+         SR    R0,R7              LENGTH OF THE NAME BEFORE '('
+         LA    R1,1(,R1)          -> MEMBER NAME
+         BCTR  R2,0               LENGTH AFTER '(', ')' INCLUDED
+         LTR   R2,R2
+         BNP   DYNALEXT           "A.B(" - NO MEMBER NAME
+         LR    R3,R1
+         AR    R3,R2
+         BCTR  R3,0               -> LAST CHARACTER
+         CLI   0(R3),C')'         CLOSING PARENTHESIS ?
+         BNE   DYNALMLN           NO, THE NAME RUNS TO THE END
+         BCTR  R2,0               DROP IT
+         LTR   R2,R2
+         BNP   DYNALEXT           "A.B()" - NO MEMBER NAME
+DYNALMLN CH    R2,=AL2(L'ALLAMEM)   AT MOST 8 CHARACTERS ?
+         BH    DYNALEXT           NO
+         STH   R2,ALLAMEM-2       SET LENGTH INTO TEXT UNIT
+         BCTR  R2,0
+         EX    R2,DYNAXMEM        MOVE MEMBER NAME
+         LR    R6,R0              THE DATA SET NAME ALONE
+         LA    R0,ALLAXMEM
+         ST    R0,0(,R8)          MEMBER SECOND
+         LA    R8,4(,R8)
+DYNALLST LA    R0,ALLAXDSP
+         ST    R0,0(,R8)          DISP=SHR
+         LA    R0,ALLAXFRE
+         ST    R0,4(,R8)          FREE=CLOSE (#408)
+         LA    R0,ALLAXDDN
+         O     R0,=X'80000000'
+         ST    R0,8(,R8)          DDNAME, THE LAST
+         LTR   R6,R6              A NAME BEFORE THE '(' ?
+         BNP   DYNALEXT           NO
          CH    R6,=AL2(L'ALLADSN)   REASONABLE SIZE ?
          BH    DYNALEXT           NO
          STH   R6,ALLADSN-2       SET LENGTH INTO TEXT UNIT
@@ -156,6 +203,7 @@ DYNALNDD LTR   R6,R6              CHECK DSN LENGTH
          B     DYNALEXT           AND RETURN
 DYNAXDDN MVC   ALLADDN(0),0(R5)   COPY DD NAME
 DYNAXDSN MVC   ALLADSN(0),0(R7)   COPY DATA SET NAME
+DYNAXMEM MVC   ALLAMEM(0),0(R1)   COPY MEMBER NAME
 *    PROGRAM EXIT, WITH APPROPRIATE RETURN CODES
 *
 DYNALEXT LR    R1,R13        COPY STORAGE ADDRESS
