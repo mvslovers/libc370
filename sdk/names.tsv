@@ -286,7 +286,6 @@ CRTFLAG_TOUT	mvs/crt.h
 CRTFLAG_TSO	mvs/crt.h
 CRTFLAG_TSOB	mvs/crt.h
 CRTFLAG_TZSET	mvs/crt.h
-CRTOPTS_AUTH	mvs/crt.h
 CTHDMGR	mvs/thread.h
 CTHDMGR_EYE	mvs/thread.h
 CTHDMGR_POST_DATA	mvs/thread.h

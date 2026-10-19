@@ -209,6 +209,7 @@ CHANGELOG has everything else.
 
 | Release | Change | What to do |
 |---|---|---|
+| Unreleased | `crtopts` and `CRTOPTS_AUTH` are removed from `<mvs/crt.h>`, and `CRTOPTS` from `clibcrt.copy` (#113). The field was never set, so a test of it was always false | Drop the test, and keep the code of its false branch |
 | 2.23.0 | `try()` and the functions built on it return -1, not +1, when no recovery routine can be set up; the timer requests return 0 when the timer thread cannot be started (#476) | A caller that treated +1 as "no ESTAE" tests for a negative value |
 | 2.23.0 | `tsocmd()` puts the caller's ECT back after the command (#413); `sleep()` returns the seconds left when its timer could not be set, where it returned 0 | Nothing |
 | 2.23.0 | `<mvs/wto.h>` declares `wtof()`, `vwtof()`, `wtorf()`, `vwtorf()` and `wtodumpf()` with the `format(printf)` attribute (#68): the compiler checks the arguments against the format | A call whose arguments do not match its format draws a warning, and fails a `-Wall -Werror` build. The common case is a pointer to `%08X`: cast it to `(unsigned)` |

@@ -15,7 +15,7 @@ CRTHOSTE DS    10F                   hostent areas for DYN75
 CRTHOSTN DS    CL80                  host name for DYN75
 CRTESTCT DS    F                     ESTAE stack count
 CRTESTPL DS    20F                   ESTAE parameter list
-CRTOPTS  DS    X                     copy of JFCBOPTS at startup
+         DS    X                     reserved, was CRTOPTS (#113)
 CRTAUTH  DS    X                     flags for @@AUTH
          DS    2X                    unused
 CRTERRNO DS    F                     error number

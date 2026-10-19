@@ -17,7 +17,6 @@ __CRTSET(void)
     unsigned    *psa    = 0;                        /* low core == PSA      */
     unsigned    *tcb    = (unsigned*)psa[0x21c/4];  /* TCB      == PSATOLD  */
     unsigned    *otcb   = (unsigned*)tcb[0x84/4];   /* OTCB     == TCBOTC   */
-    unsigned    *jscb   = (unsigned*)tcb[0xB4/4];   /* JSCB     == TCBJSCB  */
     CLIBPPA     *ppa    = __PPAGET();               /* Pgm Prop Anchor      */
     CLIBCRT     *crt    = (CLIBCRT *)0;             /* CLIBCRT  or NULL     */
     CLIBGRT     *grt    = (CLIBGRT *)0;
@@ -56,7 +55,6 @@ __CRTSET(void)
         } while(0);
 #endif
         crt->crtuserl   = sizeof(CLIBCRT);
-        crt->crtauth    = *((char*)jscb + 0xEC);    /* JSCBAUTH byte */
 
         rc = arrayadd(&ppa->ppacrt, crt);
     }

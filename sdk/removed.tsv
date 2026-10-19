@@ -9,6 +9,7 @@ BOR	socket.h	internal	now in src/net/dyn75/dyn75.h
 Byte	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
 Bytef	clibmz.h miniz.h	-	miniz: declared, never in libc.a (#243)
 CLIBJPA	clibjpa.h	internal	now in src/internal/crtanchor.h
+CRTOPTS_AUTH	clibcrt.h	-	never set, the field it tested is reserved now (#113)
 DSTR	clibpdfi.h	-	PDF generator: declared, never implemented (#248)
 EMFILE10	emfilei.h	-	emfile: sources only in attic/, never built (#248)
 EMFILEEYE10	emfilei.h	-	emfile: sources only in attic/, never built (#248)

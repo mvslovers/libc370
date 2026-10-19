@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Removed
+- **`crtopts` and `CRTOPTS_AUTH` are gone from `<mvs/crt.h>` (#113).** The
+  field was never set: the start-up copied the job step's authorization byte
+  into `crtauth`, the byte after it, where none of the library's own flags
+  live. So `CRTOPTS_AUTH` was always clear, and `clib_apf_setup()` always
+  took the path it takes now unconditionally. The byte at X'10C' is reserved
+  (`crtrsv1`, `CRTOPTS` in `clibcrt.copy` is an unnamed `DS X`), and
+  `crtauth` starts at 0. The layout of the task anchor is unchanged.
+
 ## [2.23.0] - 2026-10-19
 
 ### Added
