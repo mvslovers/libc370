@@ -16,6 +16,7 @@ __listc(const char *level, const char *option,
     unsigned    *psa    	= (unsigned *)0;
     void        *ascb   	= (void *)psa[0x224/4];
     int     	ret         = -1;
+    int     	rc          = 0;    /* the IDCAMS return code (#410) */
     FILE    	*fp         = 0;
     char    	*p          = 0;
     char    	ddname[12]  = {0};
@@ -45,7 +46,7 @@ __listc(const char *level, const char *option,
     if (!option) option = "";
 
     lock(ascb,LOCK_EXC);
-    ret = idcams(" LISTC LEVEL('%s') OUTFILE(%s) %s", level, ddname, option);
+    rc = idcams(" LISTC LEVEL('%s') OUTFILE(%s) %s", level, ddname, option);
     unlock(ascb,LOCK_EXC);
 
     /* reopen the temp dataset by the saved DD name */
@@ -103,7 +104,7 @@ __listc(const char *level, const char *option,
 
     /* now close the temp dataset and deallocate the DD, deletes the dataset */
     fclose(fp);
-    ret = 0;
+    ret = rc;
 
 quit:
     return (ret);

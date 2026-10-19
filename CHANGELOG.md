@@ -45,6 +45,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   X'00' byte and padded with blanks, so every address on a cylinder below
   256 failed (measured on MVS: OBTAIN return code 20 for the VTOC's first
   record; now its format-4 DSCB, key and data).
+- **`__listc()` returns the IDCAMS return code (#410)**, as its
+  declaration says; it returned 0 whenever the listing could be read, so a
+  level with no entries looked like success (measured on MVS: 4 now).
+  `next_dsab()` takes an empty DD name as all DDs, as `get_dsab()` does, so
+  `__listal()` with `""` lists every DD instead of only the first.
 
 ## [2.20.0] - 2026-10-18
 
