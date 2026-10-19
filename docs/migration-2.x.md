@@ -209,6 +209,7 @@ CHANGELOG has everything else.
 
 | Release | Change | What to do |
 |---|---|---|
+| Unreleased | `bsearch()` calls `compar(key, element)`, as C99 specifies (#388); it called `compar(element, key)` | A comparison function whose two parameters have the same type works as before. One written for the old order, with the table element first and a key of another type second, has to swap its parameters: it now receives the key first |
 | Unreleased | `setenv()`, `putenv()` and the SYSENV/ENVIRON loading look a variable up by its name without the surrounding blanks (#475): a second `NAME = value` record replaces the first, where it was added beside it and `getenv()` returned the first value | A SYSENV that set a variable twice and relied on the first value has to drop the second record |
 | Unreleased | `__listc()` returns the IDCAMS return code, for example 4 for a level with no entries (#410); it returned 0. `next_dsab()` and so `__listal()` take an empty DD name as all DDs; `__listal(tcb, "", opt)` listed only the first DD | A caller that took any nonzero `__listc()` result as a failure to read the listing has to tell -1 (no listing) from a positive IDCAMS code |
 | Unreleased | `strstr(s, "")` returns `s`, as C99 requires (#393); it returned `NULL` | Code that treated an empty search string as "not found" through the `NULL` has to test for the empty string itself |
