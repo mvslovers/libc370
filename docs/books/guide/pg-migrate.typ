@@ -478,5 +478,19 @@ What later 2.x releases ask of a program or a build:
       socket functions uses one of the ten #cmd("estae()") levels for
       this.], [Nothing, unless a program left a socket open on purpose
       for a later one: it has to keep running instead.],
+    [2.21.0], [#cmd("bsearch()") calls #cmd("compar(key, element)"), as
+      C99 does\; it passed the element first. #cmd("strstr(s, \"\")")
+      returns #var("s"). #cmd("setenv()") compares the name exactly and
+      no longer replaces a variable whose name differs in case.
+      #cmd("__listc()") returns the IDCAMS return code. #cmd("strftime()")
+      formats #cmd("%x"), #cmd("%Z"), #cmd("%U") and #cmd("%W") as C99
+      says. The #cmd("<float.h>") limits are constants of their own type,
+      and #cmd("FLT_DIG") is 6.], [Swap the parameters of a
+      #cmd("bsearch()") comparison function written for the old order
+      whose key and element have different types. Set and replace a
+      variable in the case it was defined in, or find it with
+      #cmd("getenvi()"). Tell -1 from a positive IDCAMS code of
+      #cmd("__listc()"). Compile again for the #cmd("<float.h>") and
+      #cmd("<ctype.h>") changes.],
   )
 ] <pg-migrate-since-tab>
