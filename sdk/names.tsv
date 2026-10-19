@@ -4688,6 +4688,7 @@ time	time.h
 time64	ext/time64.h
 time64_t	ext/time64.h
 time_t	time.h
+timegm	ext/time64.h
 timegm64	ext/time64.h
 timeval	sys/select.h
 tiot	ibm/mvs/ieftiot1.h

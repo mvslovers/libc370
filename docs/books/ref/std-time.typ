@@ -56,7 +56,7 @@ described in @std-stdlib.
 
 === Static Buffers <std-time-static>
 
-#cmd("gmtime()"), #cmd("localtime()") and #cmd("mktime()") return or use one
+#cmd("gmtime()") and #cmd("localtime()") return one
 #cmd("struct tm") that belongs to the calling task, and #cmd("asctime()") and
 #cmd("ctime()") one character buffer. Each call overwrites the previous
 result of the same task\; the tasks of a program do not disturb each other.
@@ -287,6 +287,11 @@ or greater than 205 (the years 1970 to 2105).
   time-zone offset. #cmd("mktime()") is therefore the inverse of
   #cmd("gmtime()"), not of #cmd("localtime()"). To convert local time,
   subtract #cmd("__tzget()") from the result.
+- *For UTC, call #cmd("timegm()") (@ext-timegm).* It does what
+  #cmd("mktime()") does today. A later release makes #cmd("mktime()") read
+  the fields as local time, as C99 says\; code that means UTC and calls
+  #cmd("timegm()") is not affected by that change, code that calls
+  #cmd("mktime()") for UTC is.
 - Values of #cmd("tm_mday"), #cmd("tm_hour"), #cmd("tm_min") and
   #cmd("tm_sec") outside their ranges are carried by the arithmetic, so
   #cmd("tm_mday") = 32 in January gives 1 February. #cmd("tm_mon") must lie
@@ -297,8 +302,8 @@ or greater than 205 (the years 1970 to 2105).
 
 === Related
 
-#cmd("gmtime()") (@std-time-gmtime), #cmd("__tzget()")
-(@std-time-tzset).
+#cmd("timegm()") (@ext-timegm), #cmd("gmtime()") (@std-time-gmtime),
+#cmd("__tzget()") (@std-time-tzset).
 
 == strftime <std-time-strftime>
 

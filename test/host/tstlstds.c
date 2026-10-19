@@ -64,11 +64,14 @@
  *
  * BUILD AND RUN (host, from test/host)
  *
- *     cc -std=gnu99 -Wall -fsanitize=address \
+ *     cc -std=gnu99 -Wall -fsanitize=address -U__LP64__ \
  *        -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
  *        -I ../../include -I ../.. -o tstlstds tstlstds.c \
  *        ../../src/ext/strutil/@@patmat.c
  *     ./tstlstds                                      # rc 0 when green
+ *
+ * -U__LP64__: @@listds.c includes <ext/time64.h> for timegm() (#392), which
+ * refuses an LP64 build; the call resolves to the host's own timegm().
  */
 /* string.h suppressed and its functions declared here: its memset() is
  * static __inline S/370 assembler that -D'__asm__(...)=' does not reach, and

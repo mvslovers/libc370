@@ -893,9 +893,10 @@ time64_t timegm64(const struct tm *tm);
 === Description
 
 Both functions convert a broken-down time to seconds since 1970.
-#cmd("mktime64()") takes #var("tm") as local time, as #cmd("mktime()") does\;
-#cmd("timegm64()") takes it as GMT and uses #cmd("tm_year"), #cmd("tm_mon"),
-#cmd("tm_mday"), #cmd("tm_hour"), #cmd("tm_min") and #cmd("tm_sec").
+#cmd("mktime64()") takes #var("tm") as UTC (GMT), as #cmd("timegm()")
+does\; #cmd("timegm64()") takes it as GMT too and uses
+#cmd("tm_year"), #cmd("tm_mon"), #cmd("tm_mday"), #cmd("tm_hour"),
+#cmd("tm_min") and #cmd("tm_sec").
 
 === Returns
 
@@ -904,15 +905,16 @@ or, for #cmd("mktime64()"), after 9999.
 
 === Notes
 
-- For a year from 1970 to 2037 #cmd("mktime64()") is #cmd("mktime()"), and
-  changes #var("tm") as #cmd("mktime()") does. For a later year it fills
-  #var("tm") again from the result, as #cmd("gmtime64()") would.
+- For a year from 1970 to 2037 #cmd("mktime64()") is #cmd("timegm()")
+  (@ext-timegm), and changes #var("tm") as #cmd("timegm()") does. For a
+  later year it fills #var("tm") again from the result, as
+  #cmd("gmtime64()") would.
 - #cmd("timegm64()") does not normalize #var("tm")\; the fields must be in
   their ranges.
 
 === Related
 
-@ext-gmtime64, @ext-localtime64
+@ext-gmtime64, @ext-localtime64, @ext-timegm
 
 == time64, mtime64, utime64 <ext-time64-fn>
 
@@ -942,6 +944,55 @@ The time.
 === Related
 
 @ext-clock64
+
+== timegm <ext-timegm>
+
+#idx("timegm")
+#idx("UTC")
+=== Format
+
+```
+#include <ext/time64.h>
+
+time_t timegm(struct tm *tm);
+```
+
+=== Description
+
+#cmd("timegm()") converts the broken-down time #var("tm"), taken as UTC
+(GMT), into seconds since 1 January 1970, in a 32-bit #cmd("time_t"). It is
+the inverse of #cmd("gmtime()"). It uses #cmd("tm_year"), #cmd("tm_mon"),
+#cmd("tm_mday"), #cmd("tm_hour"), #cmd("tm_min") and #cmd("tm_sec")\;
+#cmd("tm_wday"), #cmd("tm_yday") and #cmd("tm_isdst") are ignored. On success
+it replaces the whole structure with the broken-down form of the result, as
+#cmd("gmtime_r()") produces it: #cmd("tm_wday") and #cmd("tm_yday") are set,
+#cmd("tm_isdst") is -1, and the other members are brought into their ranges.
+
+=== Returns
+
+The time, or #cmd("(time_t)-1") if #cmd("tm_year") is less than 70 or
+greater than 205 (the years 1970 to 2105). #var("tm") is then left as it was.
+
+=== Notes
+
+- Values of #cmd("tm_mday"), #cmd("tm_hour"), #cmd("tm_min") and
+  #cmd("tm_sec") outside their ranges are carried by the arithmetic:
+  #cmd("tm_mon") = 0 with #cmd("tm_mday") = 292 gives the 292nd day of the
+  year, and #cmd("tm_sec") = 45296 gives 12:34:56. #cmd("tm_mon") must lie
+  in the range 0 to 11.
+- #cmd("timegm()") does the arithmetic that #cmd("mktime()") does today,
+  which applies no time zone (@std-time-mktime). Code that means UTC calls
+  #cmd("timegm()")\; it keeps its results when a later release makes
+  #cmd("mktime()") read #var("tm") as local time, as C99 says.
+- #cmd("timegm()") needs no storage of the task, unlike #cmd("gmtime()").
+- C23 declares #cmd("timegm()") in #cmd("<time.h>"). LIBC/370 follows C99,
+  so it is declared here.
+- For a year after 2105, use #cmd("timegm64()") (@ext-mktime64).
+
+=== Related
+
+#cmd("mktime()") (@std-time-mktime), #cmd("gmtime_r()") (@std-time-gmtime),
+@ext-mktime64
 
 == String Helpers <ext-strutil>
 

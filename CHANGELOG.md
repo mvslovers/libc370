@@ -16,6 +16,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   a missing module) and, for LOAD, the reason code; both stay 0 unless
   LINK or LOAD failed (measured on MVS). The existing functions are
   unchanged.
+- **`timegm()` converts a broken-down UTC time to seconds since 1970 (#392).**
+  It is the inverse of `gmtime()`, with a 32-bit `time_t`, declared in
+  `<ext/time64.h>` beside `timegm64()`. It accepts the years 1970 to 2105,
+  carries out-of-range seconds, minutes, hours and days into the next field,
+  and sets `tm_wday` and `tm_yday`; outside the years it returns -1 and
+  leaves the structure alone. This is what `mktime()` has always done, since
+  `mktime()` applies no time zone. A later release makes `mktime()` read the
+  structure as local time, as C99 says; code that means UTC should call
+  `timegm()` now and is not affected by that change. The library's own UTC
+  conversions (`mktime64()` and the job times built on it, and the dates in
+  the data set lists) already call `timegm()`, with unchanged results.
+  `mktime()` no longer needs the task's static `struct tm`.
 
 ### Changed
 - **`fseek()` keeps the error indicator; `rewind()` clears it (#178).**
