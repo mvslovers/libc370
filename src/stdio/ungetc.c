@@ -15,6 +15,9 @@ ungetc(int c, FILE *fp)
     }
     else {
         fp->ungetch = (unsigned char)c;
+        /* C99 7.19.7.11: a successful ungetc() clears the end-of-file
+           indicator, and the next read returns the character (#395) */
+        fp->flags &= 0xFFFF - _FILE_FLAG_EOF;
     }
 
     if (owned) unlock(fp,0);

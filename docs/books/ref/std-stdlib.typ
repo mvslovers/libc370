@@ -1029,10 +1029,9 @@ The completion code of the subtask, as follows:
 
 === Notes
 
-- #var("string") must not be #cmd("NULL"). C99 lets a program call
-  #cmd("system(NULL)") to ask whether a command processor exists\; LIBC/370
-  does not check for it and takes the contents of low storage as the
-  program name.
+- #cmd("system(NULL)") asks whether a command processor exists and
+  returns 1: a program can always be called. Up to release 2.22.0 it took
+  the contents of low storage as the program name.
 - The value is a completion code, not a status in the POSIX sense: test
   the high-order bit for an abend, as in the example.
 

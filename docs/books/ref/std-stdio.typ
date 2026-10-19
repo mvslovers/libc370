@@ -738,8 +738,9 @@ the data set is out of space, another positive value for an I/O error.
 
 === Notes
 
-- #cmd("fflush(NULL)") is not supported: #var("stream") must point to an
-  open stream. To flush all streams, call #cmd("fflush()") for each.
+- #cmd("fflush(NULL)") flushes every stream the program has open for
+  writing and returns #cmd("EOF") if one of them failed. Up to release 2.22.0
+  it read low storage as a stream.
 - The record reaches the access method, not the data set: the block that
   holds it is written when it is full or at #cmd("fclose()"). After an
   abend, what #cmd("fflush()") wrote may still be lost.
@@ -1187,8 +1188,9 @@ Those of #cmd("fopen()"). See also the notes.
   same data set is not supported, and #cmd("freopen()") returns
   #cmd("NULL").
 - #var("stream") must be open.
-- A character pushed back with #cmd("ungetc()") before the call is not
-  discarded.
+- A character pushed back with #cmd("ungetc()") before the call is
+  discarded. Up to release 2.22.0 the first read after #cmd("freopen()")
+  returned it.
 - Closing the old data set writes its last block. A failure there does
   not make #cmd("freopen()") fail; it sets #cmd("errno") to
   #cmd("ENOSPC") or #cmd("EIO"). Set #cmd("errno") to 0 before the call
@@ -1415,15 +1417,14 @@ void perror(const char *s);
 #cmd("perror()") writes to #cmd("stderr") the string #var("s"), a colon and
 a blank, and then the message for the current value of #cmd("errno") and
 a #cmd("'\\n'"). If #var("s") is a null pointer or empty, only the message
-is written. For a value that #cmd("strerror()") has no message for, the
-message is #cmd("unknown error:") followed by the number.
+is written. The message is the one #cmd("strerror()") returns, so a value
+that is no error number gives #cmd("Unknown error").
 
 === Notes
 
-The #cmd("unknown error:") message is formatted into a static buffer of 24
-bytes, which holds a number of up to nine digits, or eight and a minus
-sign. A value of #cmd("errno") of 1000000000 or more, or of -100000000 or
-less, overruns the buffer by up to two bytes.
+Up to release 2.22.0 such a value was formatted as #cmd("unknown error:")
+and the number into a static buffer of 24 bytes, which a value of
+1000000000 or more overran.
 
 === Example
 
@@ -1640,12 +1641,10 @@ already been pushed back.
 
 === Notes
 
-- #cmd("ungetc()") does not clear the end-of-file indicator, although C99
-  requires a successful call to clear it, and a read does not return a pushed-back character while the
-  indicator is set: after the end of the data set the next read returns
-  #cmd("EOF") again. The character is held back, not lost. Call
-  #cmd("clearerr()"), before or after #cmd("ungetc()"), and the next read
-  returns it.
+- A successful #cmd("ungetc()") clears the end-of-file indicator, and the
+  next read returns the character also after the end of the data set. Up
+  to release 2.22.0 the indicator stayed set and the read returned
+  #cmd("EOF").
 - The position that #cmd("ftell()") reports does not change.
 - A successful #cmd("fseek()"), #cmd("fsetpos()") or #cmd("rewind()")
   discards the character\; up to release 2.21.0 not always on a stream
