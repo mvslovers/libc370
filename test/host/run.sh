@@ -138,6 +138,7 @@ tstgmain() {
 }
 tstinstall() {
     python3 tstinstall.py >/dev/null
+    return
 }
 tsttodsc() {
     "$CC" -std=gnu99 -Wall -Wextra \

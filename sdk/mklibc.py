@@ -352,24 +352,40 @@ def copy_headers(inc):
     return n
 
 
+def write_manifest():
+    """The list of this tree's headers, written into the build directory;
+    -> its path."""
+    path = f"{BUILD}/{HDR_MANIFEST}"
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write("# headers libc370 installed under include/; the next install"
+                 " removes these and no others\n")
+        fh.writelines(h + "\n" for h in shipped_headers())
+    return path
+
+
+def tsv_headers(path, cols):
+    """The header names in columns cols of the TSV file path."""
+    out = set()
+    for line in open(path, encoding="utf-8"):
+        if line.startswith("#"):
+            continue
+        fields = line.rstrip("\n").split("\t")
+        for c in cols:
+            if c < len(fields):
+                out.update(h for h in re.split(r"[ ,]+", fields[c])
+                           if h.endswith(".h"))
+    return out
+
+
 def known_headers():
     """Every header name libc370 has shipped, for a sysroot whose install
     wrote no manifest (before #636): this tree's, the 1.x and 2.x header
     names of sdk/headermap.tsv, and the headers sdk/names-1.x.tsv and
     sdk/names.tsv name."""
     names = set(shipped_headers())
-    for line in open(f"{ROOT}/sdk/headermap.tsv", encoding="utf-8"):
-        if line.startswith("#"):
-            continue
-        cols = line.rstrip("\n").split("\t")
-        names.update(c for c in cols[:2] if c.endswith(".h"))
-    for tsv in ("names-1.x.tsv", "names.tsv"):
-        for line in open(f"{ROOT}/sdk/{tsv}", encoding="utf-8"):
-            if line.startswith("#") or "\t" not in line:
-                continue
-            for h in re.split(r"[ ,]+", line.rstrip("\n").split("\t")[1]):
-                if h.endswith(".h"):
-                    names.add(h)
+    names |= tsv_headers(f"{ROOT}/sdk/headermap.tsv", (0, 1))
+    names |= tsv_headers(f"{ROOT}/sdk/names-1.x.tsv", (1,))
+    names |= tsv_headers(f"{ROOT}/sdk/names.tsv", (1,))
     return names
 
 
@@ -405,10 +421,7 @@ def stage(inc, lib, mac):
     # tarball and the packages as well
     share = os.path.join(os.path.dirname(mac), "share", "libc370")
     os.makedirs(share, exist_ok=True)
-    with open(os.path.join(share, HDR_MANIFEST), "w", encoding="utf-8") as fh:
-        fh.write("# headers libc370 installed under include/; the next install"
-                 " removes these and no others\n")
-        fh.writelines(h + "\n" for h in shipped_headers())
+    shutil.copy(write_manifest(), share)
     # libc.a + startfiles
     shutil.copy(libc, f"{lib}/libc.a")
     for crt, _ in STARTFILES:
