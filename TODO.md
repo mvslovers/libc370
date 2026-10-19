@@ -60,7 +60,8 @@ Each fix gets a red/green test in a container, then a PR and a merge.
     - **#114** (PR #622): measured first. FREEPOOL sets DCBBUFCB's low
       bit, a reopen of the same DCB builds a new pool, and a DCB without a
       pool keeps X'000001'. 40 cycles leaked 40 pools before, now 1.
-  - Open: **#475's caseless fallback**, a decision for the maintainer.
+  - **#475's caseless fallback** (PR #626): dropped on the maintainer's
+    call; `setenv()` compares exactly, as `getenv()` does.
   - Not released yet: everything sits under [Unreleased]. It changes what
     callers see (`strstr`, `strftime`, ctype, `float.h`, `__listc` rc,
     `setenv`, `bsearch`), so it is a minor release.
