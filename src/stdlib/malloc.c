@@ -16,6 +16,10 @@ __PDPCLIB_API__ void *malloc(size_t size)
 {
     void *ptr;
 
+    /* C99 7.20.3 lets a request for 0 bytes return NULL.  That is not a
+       shortage: no ENOMEM, no console message, no traceback (#394) */
+    if (size == 0) return NULL;
+
 #define MAX_CHUNK	(6 * 1024 * 1024)	/* 6M */
     if (size > MAX_CHUNK) {
 		ptr = NULL;

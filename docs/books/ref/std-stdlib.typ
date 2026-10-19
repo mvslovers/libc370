@@ -351,8 +351,8 @@ A pointer to the storage, or #cmd("NULL") if it could not be obtained.
 - A product that does not fit into 32 bits is refused before
   #cmd("malloc()") is called, so no console message is written for it.
   Any other failure is a failure of #cmd("malloc()"), with its message.
-- #cmd("calloc()") with a product of 0 returns #cmd("NULL"), as
-  #cmd("malloc(0)") does.
+- #cmd("calloc()") with a product of 0 returns #cmd("NULL") without
+  setting #cmd("errno") or writing a message, as #cmd("malloc(0)") does.
 
 === Example
 
@@ -538,8 +538,8 @@ A pointer to the storage, or #cmd("NULL") if it could not be obtained.
 === Errors
 
 #deflist(width: 1.1in,
-  [#cmd("ENOMEM")], [The storage could not be obtained, #var("size") is
-    greater than 6 megabytes, or #var("size") is 0.],
+  [#cmd("ENOMEM")], [The storage could not be obtained, or #var("size") is
+    greater than 6 megabytes.],
 )
 
 === Notes
@@ -548,10 +548,9 @@ A pointer to the storage, or #cmd("NULL") if it could not be obtained.
   #cmd("Out of memory, bytes needed=")#var("n"), followed by a traceback of
   the calling routines. The message is meant for the operator\; the program
   still receives #cmd("NULL") and continues.
-- #cmd("malloc(0)") returns #cmd("NULL"), sets #cmd("ENOMEM") and writes the
-  message. C99 allows the null pointer, but a program that passes a length of
-  0 harmlessly on other systems produces a console message here. Test for 0
-  before the call.
+- #cmd("malloc(0)") returns #cmd("NULL"), as C99 allows. It is not a
+  failure: #cmd("errno") is not changed and no message is written. Up to
+  release 2.23.0 it set #cmd("ENOMEM") and wrote the message.
 - A single block can be at most 6 megabytes (6,291,456 bytes).
 - A storage shortage is reported as #cmd("NULL"), not as an abend: the
   #cmd("GETMAIN") is conditional.

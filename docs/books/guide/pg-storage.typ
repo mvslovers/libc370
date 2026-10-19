@@ -65,9 +65,10 @@ program should allocate:
     [A failure writes a console message.], [Each failed #cmd("malloc()")
       writes #cmd("Out of memory, bytes needed=")#var("n") and a traceback to
       the console, and returns #cmd("NULL").],
-    [#cmd("malloc(0)") is a failure.], [It returns #cmd("NULL"), sets
-      #cmd("ENOMEM") and writes the console message. Test a length for 0
-      before allocating it.],
+    [#cmd("malloc(0)") returns #cmd("NULL").], [It is not a failure: no
+      #cmd("ENOMEM"), no console message. A program that stores the result
+      must not take #cmd("NULL") for a shortage when the length was 0. Up
+      to release 2.23.0 it set #cmd("ENOMEM") and wrote the message.],
     [#cmd("free()") of a pointer that did not come from #cmd("malloc()"),
       or was freed already, is not detected.], [The #cmd("FREEMAIN") fails,
       and the program abends.],
