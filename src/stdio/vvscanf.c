@@ -11,6 +11,27 @@
 #define inch() ((fp == NULL) ? \
     (ch = (unsigned char)*s++) : (ch = getc(fp)))
 
+/* the input is used up: end of file, or the end of the string */
+#define AT_END ((fp != NULL) ? (ch == EOF) : (ch == 0))
+
+/* no field width given */
+#define NOWIDTH 0x7FFFFFFF
+
+/* getwidth() - the field width of a format item at *f, NOWIDTH when there
+** is none; *f is moved past it (#386) */
+__asm__("\n&FUNC    SETC 'getwidth'");
+static int
+getwidth(const char **f)
+{
+    int w = 0;
+
+    while (**f >= '0' && **f <= '9') {
+        w = w * 10 + (**f - '0');
+        (*f)++;
+    }
+    return w > 0 ? w : NOWIDTH;
+}
+
 /* vvscanf - the guts of the input scanning */
 /* several mods by Dave Edwards */
 int
@@ -35,6 +56,11 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
        for the 64-bit ll, j and L.  z and t are 'l': size_t and ptrdiff_t
        are long-sized under cc370. */
     int size = 0;
+    /* the field width, counted down as the item reads (#386) */
+    int width = NOWIDTH;
+    /* an input failure: the input ended before an item could match.  Before
+       the first conversion that makes the result EOF, C99 7.19.6.2 (#386) */
+    int failed = 0;
     int informatitem;  /* nonzero if % format item started */
            /* informatitem is 1 if we have processed "%l" but not the
               type letter (s,d,e,f,g,...) yet. */
@@ -64,10 +90,11 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
                     skipvar = 1;
                     format++;
                 }
+                width = getwidth(&format);
             }
 
             if (*format == '%') {  /* %% */
-                if (ch != '%') return (cnt);
+                if (ch != '%') goto done;
                 inch();
                 informatitem=0;
             }
@@ -100,16 +127,14 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
 
                     /* Skip leading whitespace: */
                     while (ch>=0 && isspace(ch)) inch();
-                    if ((fp != NULL && ch == EOF) || (fp == NULL && ch == 0)) {
-                                         /* at EOF or end of string */
-                        if (!skipvar) {
-                            *cptr = 0;   /* give a null string */
-                        }
-                        continue;
+                    if (AT_END) {
+                        /* an input failure: nothing stored (#386) */
+                        failed = 1;
+                        goto done;
                     }
                     else {
                         for(;;) {
-                            if (isspace(ch)) break;
+                            if (isspace(ch) || width == 0) break;
                             if ((fp != NULL && ch == EOF)
                                 || (fp == NULL && ch == 0)) {
                                 break;
@@ -118,13 +143,14 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
                             if (!skipvar) {
                                 *cptr++ = (char)ch;
                             }
+                            width--;
                             inch();
                         }
 
                         if (!skipvar) {
                             *cptr = '\0';
                         }
-                        cnt++;
+                        cnt += !skipvar;    /* %*s is not counted (#386) */
                     }
                 }
                 else if (*format == '[') {
@@ -150,7 +176,7 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
                     first = format;
                     format++;
                     last = strchr(format, ']');
-                    if (last == NULL) return (cnt);
+                    if (last == NULL) goto done;
 
                     size = (size_t)(last - first);
                     while (1) {
@@ -158,12 +184,13 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
                            processing for '-' so it hasn't been
                            added */
                         found = (memchr(first, ch, size) != NULL);
-                        if (found && reverse) break;
+                        if ((found && reverse) || AT_END || width == 0) break;
                         if (!found && !reverse) break;
                         if (!skipvar) {
                             *cptr++ = (char)ch;
                         }
                         mcnt++;
+                        width--;
                         inch();
                         /* if at EOF or end of string, bug out */
                         if ((fp != NULL && ch == EOF)
@@ -176,29 +203,37 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
                         if (!skipvar) {
                             *cptr++ = '\0';
                         }
-                        cnt++;
+                        cnt += !skipvar;
                     }
                     else {
+                        failed = AT_END;
                         break;
                     }
-                    format = last + 1;
+                    /* at the ']': the format++ below steps past it.  last + 1
+                       skipped the next format character, and stepped past
+                       the NUL when %[ was the last item (#386) */
+                    format = last;
                 }
                 else if (*format == 'c') {
                     if (!skipvar) {
                         cptr = va_arg(arg, char *);
                     }
 
-                    if ((fp != NULL && ch == EOF)
-                        || (fp == NULL && ch == 0)) {
-                        /* do nothing */
-                    }
-                    else {
+                    /* exactly width characters, 1 without a width (#386) */
+                    width = (width == NOWIDTH) ? 1 : width;
+                    while (width > 0 && !AT_END) {
                         if (!skipvar) {
-                            *cptr = ch;
+                            *cptr++ = (char)ch;
                         }
-                        cnt++;
+                        width--;
                         inch();
                     }
+                    if (width > 0) {
+                        /* the input ended first: an input failure */
+                        failed = 1;
+                        goto done;
+                    }
+                    cnt += !skipvar;
                 }
                 else if (*format == 'n') {
                     long n;
@@ -240,11 +275,11 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
 
                     /* Skip leading whitespace: */
                     while (ch>=0 && isspace(ch)) inch();
-                    if (ch == '-') {
-                        neg = 1;
+                    if (ch == '-' || ch == '+') {
+                        neg = (ch == '-');
+                        width--;
                         inch();
                     }
-                    else if(ch == '+') inch();
 
                     /* the digits, as strtoul() reads them (#316): a digit
                        must be below the base, letters come from the
@@ -254,14 +289,14 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
                         undecided = 1;
                     }
 
-                    while (!((fp != NULL && ch == EOF)
-                             || (fp == NULL && ch == 0))) {
+                    while (width > 0 && !AT_END) {
                         int d;
 
                         if ((ch == 'x' || ch == 'X') && mcnt == 1 && x == 0
                             && (base == 16 || (base == 8 && undecided))) {
                             base = 16;
                             undecided = 0;
+                            width--;
                             inch();
                             continue;
                         }
@@ -279,6 +314,7 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
                             break;
                         }
                         x = x * base + d;
+                        width--;
                         inch();
                         mcnt++;
                     }
@@ -288,6 +324,7 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
                     /* If we didn't get any characters, don't go any
                        further */
                     if (mcnt == 0) {
+                        failed = AT_END;
                         break;
                     }
 
@@ -329,7 +366,7 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
                             }
                         }
                     }
-                    cnt++;
+                    cnt += !skipvar;
                 }
                 else if (*format=='e' || *format=='f' || *format=='g' ||
                          *format=='E' || *format=='G') {
@@ -358,13 +395,13 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
                     }
                     /* Skip leading whitespace: */
                     while (ch>=0 && isspace(ch)) inch();
-                    if (ch=='-') {
-                        negsw1=1;
+                    if (ch=='-' || ch=='+') {
+                        negsw1 = (ch=='-');
+                        width--;
                         inch();
                     }
-                    else if (ch=='+') inch();
 
-                    while (ch>0) {
+                    while (ch>0 && width>0) {
                         if (ch=='.' && dotsw==0 && expsw==0) dotsw=1;
                         else if (isdigit(ch)) {
                             if (expsw) {
@@ -394,12 +431,16 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
                             if (ch=='-') negsw2=1;
                         }
                         else break;   /* bad char: end of input item */
+                        width--;
                         inch();
                     }
 
                     /* don't finish at end of input there may be a %n */
                     /* Check for a valid fl-pt value: */
-                    if (ndigs1==0 || (expsw && ndigs2==0)) return(cnt);
+                    if (ndigs1==0 || (expsw && ndigs2==0)) {
+                        failed = (ndigs1 == 0) && AT_END;
+                        goto done;
+                    }
                     if (nsig == 0) {
                         fpval = 0.0;
                     }
@@ -437,7 +478,7 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
                         else if (fpval < -FLT_MAX) *fptr = -FLT_MAX;
                         else *fptr=(float)fpval;
                     }
-                    cnt++;
+                    cnt += !skipvar;
                 }
             }
         }
@@ -450,7 +491,10 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
             }
         }
         else { /* some other character in the format string */
-            if (ch != *format) return (cnt);
+            if (ch != *format) {
+                failed = AT_END;
+                goto done;
+            }
             inch();
         }
         format++;
@@ -459,7 +503,10 @@ vvscanf(const char *format, va_list arg, FILE *fp, const char *s)
             /* EOF */
     }
 
+    /* every way out comes here: the character read past the input item goes
+       back to the stream (#474) */
+done:
     if (fp != NULL) ungetc(ch, fp);
 
-    return (cnt);
+    return (cnt == 0 && failed) ? EOF : cnt;
 }

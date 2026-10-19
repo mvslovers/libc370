@@ -101,10 +101,11 @@ To read a data set line by line:
 
 #idx("scanf", "field width")
 To take values out of a line, convert it with #cmd("sscanf()") after
-#cmd("fgets()"). The #cmd("scanf()") functions of the library accept no
-field width, so a #cmd("%s") stores as many characters as the input has:
-make every array that #cmd("sscanf()") fills as long as the line buffer,
-and no line can overrun it.
+#cmd("fgets()"). Give every #cmd("%s") and #cmd("%[") a field width one
+less than the array it fills, #cmd("%15s") for a #cmd("char[16]"), so that
+no line can overrun it. Up to release 2.21.0 the #cmd("scanf()") functions
+accepted no field width: there, make every array as long as the line
+buffer.
 
 == Records and Lines <pg-io-records>
 
