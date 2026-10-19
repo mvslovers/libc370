@@ -24,6 +24,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   abend `try()` caught, until the address space ended. A server that
   survives abends lost that much each time (measured on MVS: 25,640 bytes
   after 50 abends; now none).
+- **A `freopen()` that cannot open the new data set leaves the old stream
+  usable (#179).** It set the old stream's error indicator, and since the
+  indicator refuses every read and write, the stream was dead although
+  nothing had failed on it (measured on MVS).
 
 ## [2.22.0] - 2026-10-19
 
