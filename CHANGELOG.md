@@ -44,6 +44,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   still full. As C99 specifies, a successful `fseek()` now clears only the
   end-of-file indicator, and a stream in error stays in error until
   `clearerr()` or `rewind()`, which clears both (measured on MVS).
+- **Block I/O: end of data and I/O errors come back from `oscheck()` as
+  return codes, and EXCP and BDAM data sets can be opened read-only
+  (#412).** The DCBs `osbdcb()` and `osddcb()` built had no end-of-data
+  (EODAD) and no I/O error (SYNAD) routine, so CHECK abended with S337 at
+  the end of the data and with S001, and an error message on the console,
+  on an I/O error; `oscheck()` returned the abend code, and an I/O error
+  that a program's own SYNAD routine returned from was reported as
+  success. Now the DCBs carry library routines: `oscheck()` returns 4 at
+  end of data and 8 for an I/O error, also after a program's own SYNAD
+  routine, which, stored into the DCB after the call, is still the one
+  taken. `osxopenm()` and `osdopenm()` take a mode: `"r"` opens for INPUT
+  where `osxopen()` and `osdopen()` always opened for UPDAT. `osbdcb()`
+  and `osxdcb()` return `NULL` when the exit list cannot be allocated;
+  they returned the DCB without it (measured on MVS).
 
 ### Removed
 - **`crtopts` and `CRTOPTS_AUTH` are gone from `<mvs/crt.h>` (#113).** The
