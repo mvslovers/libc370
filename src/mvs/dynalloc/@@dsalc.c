@@ -49,6 +49,30 @@ unparen(char *temp, char *p)
     return p;
 }
 
+/* the SPACE text units from space as __dsalc() leaves it: the unit (TRK,
+   CYL or a block length) up to the first '=' or ',', then the quantities,
+   the parentheses around them dropped */
+__asm__("\n&FUNC    SETC 'dsspace'");
+static int
+dsspace(TXT99 ***txt99, char *space)
+{
+    char    *x      = strpbrk(space, "=,");
+    char    *end;
+    int     err;
+
+    if (x) *x = 0;
+    if (strcmp(space, "CYL") == 0) err = __txcyl(txt99, NULL);
+    else if (strcmp(space, "TRK") == 0) err = __txtrk(txt99, NULL);
+    else err = __txblk(txt99, space);
+    if (err || !x) return err;
+
+    space = x + 1;
+    while (*space && !isdigit((unsigned char)*space)) space++;
+    end = strchr(space, ')');
+    if (end) *end = 0;
+    return __txspac(txt99, space);      /* "pri[,sec][,dir]" */
+}
+
 int
 __dsalc(char *ddname, const char *opts)
 {
@@ -94,7 +118,9 @@ __dsalc(char *ddname, const char *opts)
     
 	// wtof("%s: temp=\"%s\"", __func__, temp);
 
-	for(p=strtok(temp, ";"); p; p=strtok(NULL, ";")) {
+    /* no opts: nothing to parse.  strtok(NULL) went on with the caller's
+       own pending strtok() (#408) */
+	for(p=temp ? strtok(temp, ";") : NULL; p; p=strtok(NULL, ";")) {
         if (strcmp(p, "MOUNT")==0) dsalc->mount = 1;
         else if (strstr(p, "BLKSIZE=")) dsalc->blksize = p+8;
         else if (strstr(p, "DD=")) dsalc->ddn = p+3;
@@ -158,28 +184,24 @@ __dsalc(char *ddname, const char *opts)
         
         p = strtok(NULL, " ,");
         if (p) {
-            /* normal disposition */
+            /* normal disposition.  UNCAT before CAT: strstr() finds "CAT"
+               in "UNCATLG", which cataloged what was to be uncataloged
+               (#408) */
             if (strstr(p, "DEL")) err = __txdel(&txt99, NULL);
-            else if (strstr(p, "DELETE")) err = __txdel(&txt99, NULL);
-            else if (strstr(p, "CAT")) err = __txcat(&txt99, NULL);
-            else if (strstr(p, "CATLG")) err = __txcat(&txt99, NULL);
-            else if (strstr(p, "KEEP")) err = __txkeep(&txt99, NULL);
             else if (strstr(p, "UNCAT")) err = __txucat(&txt99, NULL);
-            else if (strstr(p, "UNCATLG")) err = __txucat(&txt99, NULL);
+            else if (strstr(p, "CAT")) err = __txcat(&txt99, NULL);
+            else if (strstr(p, "KEEP")) err = __txkeep(&txt99, NULL);
             else err = 1;
             if (err) goto quit;
         }
         
         p = strtok(NULL, " ,");
         if (p) {
-            /* abnormal disposition */
+            /* abnormal disposition, the same order (#408) */
             if (strstr(p, "DEL")) err = __txadel(&txt99, NULL);
-            else if (strstr(p, "DELETE")) err = __txadel(&txt99, NULL);
-            else if (strstr(p, "CAT")) err = __txacat(&txt99, NULL);
-            else if (strstr(p, "CATLG")) err = __txacat(&txt99, NULL);
-            else if (strstr(p, "KEEP")) err = __txakee(&txt99, NULL);
             else if (strstr(p, "UNCAT")) err = __txauca(&txt99, NULL);
-            else if (strstr(p, "UNCATLG")) err = __txauca(&txt99, NULL);
+            else if (strstr(p, "CAT")) err = __txacat(&txt99, NULL);
+            else if (strstr(p, "KEEP")) err = __txakee(&txt99, NULL);
             else err = 1;
             if (err) goto quit;
         }
@@ -217,31 +239,12 @@ __dsalc(char *ddname, const char *opts)
         if (err) goto quit;
     }
 
-    /* get optional space "[CYL|TRK],pri[,sec]," or "blksize,pri[,sec]," */
+    /* get optional space: "TRK(pri,sec)" arrives as "TRK=pri,sec", the
+       JCL form "(TRK,(pri,sec))" as "TRK,(pri,sec)", and a block length
+       as "800=pri,sec" or "800,(pri,sec)".  The JCL form fell into the
+       blocks branch with a length of "TRK,(1,1)" (#408). */
     if (dsalc->space) {
-		if (memcmp(dsalc->space, "CYL=", 4)==0) {
-			/* CYLINDERS */
-			err = __txcyl(&txt99, NULL);
-            if (err) goto quit;
-			dsalc->space += 4;
-		}
-		else if (memcmp(dsalc->space, "TRK=", 4)==0) {
-			/* TRACKS */
-			err = __txtrk(&txt99, NULL);
-            if (err) goto quit;
-			dsalc->space += 4;
-		}
-		else {
-			/* BLOCKS */
-			char *x = strchr(dsalc->space, '=');
-			if (x) *x = 0;
-			err = __txblk(&txt99, dsalc->space);
-            if (err) goto quit;
-			if (x) dsalc->space = x+1;
-        }
-
-        while(*dsalc->space && !isdigit(*dsalc->space)) dsalc->space++;
-        err = __txspac(&txt99, dsalc->space);  /* "pri[,sec][,dir]" */
+        err = dsspace(&txt99, dsalc->space);
         if (err) goto quit;
     }
 

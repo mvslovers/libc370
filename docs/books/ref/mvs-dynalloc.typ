@@ -172,7 +172,7 @@ converted to uppercase. A keyword that is not in the table is ignored.
       [#var("status") is #cmd("NEW"), #cmd("OLD"), #cmd("MOD") or
       #cmd("SHR"). #var("normal") and #var("abnormal") are #cmd("KEEP"),
       #cmd("DELETE") (or #cmd("DEL")), #cmd("CATLG") (or #cmd("CAT")) or
-      #cmd("UNCATLG"). Any other value, #cmd("PASS") among them, makes the
+      #cmd("UNCATLG") (or #cmd("UNCAT")). Any other value, #cmd("PASS") among them, makes the
       call fail without allocating anything.],
     [#cmd("DCBDSN=")#var("dsn")], [The model data set of
       #cmd("DCB=(")#var("dsn")#cmd(")") in JCL: its DCB attributes are
@@ -189,7 +189,9 @@ converted to uppercase. A keyword that is not in the table is ignored.
      #cmd("SPACE=")#var("blklen")#cmd("(")#var("p")#cmd(",")#var("s")#cmd(",")#var("d")#cmd(")")],
       [Space in tracks, cylinders or blocks of #var("blklen") bytes:
       primary quantity #var("p"), and optionally secondary quantity
-      #var("s") and directory blocks #var("d").],
+      #var("s") and directory blocks #var("d"). The JCL form
+      #cmd("SPACE=(TRK,(")#var("p")#cmd(",")#var("s")#cmd("))") is accepted
+      as well.],
     [#cmd("UNIT=")#var("unit")], [Unit name, for example #cmd("SYSDA").],
     [#cmd("VOLSER=")#var("vol"), #cmd("VOLSER=(")#var("v1")#cmd(",")#var("v2")#cmd(",...)")],
       [Volume serial numbers.],
@@ -219,19 +221,17 @@ code of SVC 99. #cmd("__dsalcf()") returns 4 when #var("opts") is
   set.
 - Every request carries the flag #cmd("S99NOCNV"), so MVS never satisfies
   it with an existing allocation.
-- The JCL form #cmd("SPACE=(TRK,(1,1))"), with nested parentheses, is not
-  understood and makes the call return 1. Write #cmd("SPACE=TRK(1,1)").
-- A disposition of #cmd("UNCATLG") or #cmd("UNCAT") is taken as
-  #cmd("CATLG"), because the value is searched for #cmd("CAT") before
-  #cmd("UNCAT"). To uncatalog, build the request with #cmd("__txucat()") or
-  #cmd("__txauca()") and issue it with #cmd("__svc99()").
+- Up to release 2.22.0 the JCL form #cmd("SPACE=(TRK,(1,1))") made the
+  call return 1, and a disposition of #cmd("UNCATLG") or #cmd("UNCAT") was
+  taken as #cmd("CATLG").
 - The error and information codes of a failed request are not returned.
   To see them, build the request with the #cmd("__tx...()") routines and
   issue it with #cmd("__svc99()").
 - #cmd("__dsalc()") uses #cmd("strtok()") internally and restores the
   position of the caller's #cmd("strtok()") sequence before it returns.
-  Do not pass #cmd("NULL") for #var("opts"): the function then continues
-  the caller's #cmd("strtok()") sequence.
+  A #cmd("NULL") #var("opts") is no keywords at all. Up to release 2.22.0
+  it went on with the caller's #cmd("strtok()") sequence and took its
+  tokens as keywords.
 - #cmd("__dsalcf()") formats into a buffer of 512 bytes\; a longer
   keyword string is truncated.
 - The data set is released, and its normal disposition takes effect, when

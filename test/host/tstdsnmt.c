@@ -36,6 +36,17 @@
  *   (8)  a token that merely contains MOUNT ("NOMOUNT") is not the
  *        keyword: S99NOMNT stays.
  *
+ * And #408, read from the text units __dsalc() built:
+ *
+ *   (9)-(11) DISP=(..,UNCATLG,UNCATLG) and (OLD,UNCAT) uncatalog; they
+ *        cataloged (strstr() found "CAT" first).  CATLG is the control.
+ *   (12)-(15) SPACE=(TRK,(1,2)), (CYL,(5,2,10)) and (800,(10,5)), the JCL
+ *        forms, give the unit and the quantities; they failed in the
+ *        blocks branch.  TRK(3,4) is the control.
+ * Not here: opts NULL no longer going on with the caller's strtok() - the
+ * only text unit is then also the last, whose pointer __dsalc() marks with
+ * X'80000000', which a 64-bit host cannot follow.
+ *
  * WHAT IT DOES NOT PIN - that needs the MVS probe (test/mvs/tstdsnmt.c):
  * that SVC 99 then really returns instead of raising IEF238D.  The probe
  * cannot see a wait from inside either; the job log is the evidence.
@@ -73,6 +84,7 @@ char   *strtok(char *, const char *);
 size_t  strspn(const char *, const char *);   /* src/internal/tok.h */
 size_t  strcspn(const char *, const char *);
 size_t  strlen(const char *);
+char   *strpbrk(const char *, const char *);
 int     strcmp(const char *, const char *);
 
 #include <stdio.h>
@@ -224,12 +236,27 @@ void __frtx9a(TXT99 ***txt99)
 static int svc99_calls;
 static int svc99_flag1;
 
+/* the text units as SVC 99 would have seen them: __dsalc() frees them
+   before it returns */
+static struct { int dal; unsigned char text[8]; } seen[MAX_TU];
+static int seen_n;
+
 int __svc99(void *rb)
 {
     RB99 *rb99 = (RB99 *)rb;
+    int  n;
 
     svc99_calls++;
     svc99_flag1 = rb99->flag1;
+    for (seen_n = 0, n = 0; n < tu_count && seen_n < MAX_TU; n++) {
+        if (!tu_made[n]) continue;
+        seen[seen_n].dal = tu_made[n]->dal;
+        memset(seen[seen_n].text, 0, sizeof(seen[0].text));
+        memcpy(seen[seen_n].text, tu_made[n]->text,
+               tu_made[n]->count && tu_made[n]->size < sizeof(seen[0].text)
+               ? tu_made[n]->size : (tu_made[n]->count ? sizeof(seen[0].text) : 0));
+        seen_n++;
+    }
 
     if (tu_count > 0 && tu_made[0]->dal == DALRTDDN) {
         memcpy(tu_made[0]->text, "SYS00001", 8);
@@ -263,8 +290,26 @@ int __svc99(void *rb)
 #include "../../src/mvs/dynalloc/@@txbksz.c"
 #include "../../src/mvs/dynalloc/@@txcyl.c"
 #include "../../src/mvs/dynalloc/@@txtrk.c"
+/* the strings __dsalc() hands to the space builders (#408): their 3-byte
+   quantities are the low bytes of an int on S/370, always zero on this
+   little-endian host, so the arguments are what can be checked */
+static char got_spac[32], got_blk[32];
+#define __txblk real_txblk
 #include "../../src/mvs/dynalloc/@@txblk.c"
+#undef __txblk
+#define __txspac real_txspac
 #include "../../src/mvs/dynalloc/@@txspac.c"
+#undef __txspac
+int __txblk(TXT99 ***txt99, const char *blocks)
+{
+    snprintf(got_blk, sizeof(got_blk), "%s", blocks ? blocks : "(null)");
+    return real_txblk(txt99, blocks);
+}
+int __txspac(TXT99 ***txt99, const char *space)
+{
+    snprintf(got_spac, sizeof(got_spac), "%s", space ? space : "(null)");
+    return real_txspac(txt99, space);
+}
 #include "../../src/mvs/dynalloc/@@txunit.c"
 #include "../../src/mvs/dynalloc/@@txvols.c"
 
@@ -274,10 +319,31 @@ int __svc99(void *rb)
 #include "../../src/ext/array/@@arget.c"
 #include "../../src/ext/array/@@arfre.c"
 
+/* the text unit with key dal that __dsalc() made, its first byte, and its
+   3-byte quantity the way __txspac()/__txblk() store it */
+static unsigned char *tufind(int dal)
+{
+    int n;
+
+    for (n = 0; n < seen_n; n++) {
+        if (seen[n].dal == dal) return seen[n].text;
+    }
+    return NULL;
+}
+
+static int tuval(int dal)
+{
+    unsigned char *t = tufind(dal);
+
+    return t ? t[0] : -1;
+}
+
 /* ------------------------------------------------------------------------ */
 static int run(const char *opts, char *dd)
 {
     tu_count    = 0;
+    seen_n      = 0;
+    got_spac[0] = got_blk[0] = 0;
     svc99_calls = 0;
     svc99_flag1 = -1;
     if (dd) dd[0] = 0;
@@ -339,6 +405,45 @@ int main(void)
     rc = run("DSN=MVSLOVE.TEST.NEW;DISP=OLD;VOLSER=PUB001;NOMOUNT", dd);
     CHECK_EQ(rc, 0, "__dsalc() succeeds");
     CHECK_EQ(svc99_flag1, S99NOCNV | S99NOMNT, "NOMOUNT is not MOUNT");
+
+    /* #408 ------------------------------------------------------------ */
+    printf("\n#408 (9) DISP=(NEW,UNCATLG,UNCATLG) -> uncatalog, both\n");
+    rc = run("DSN=MVSLOVE.TEST.NEW;DISP=(NEW,UNCATLG,UNCATLG);SPACE=TRK(1,1)", dd);
+    CHECK_EQ(rc, 0, "__dsalc() succeeds");
+    CHECK(tuval(DALNDISP) == 0x01, "normal disposition UNCATLG (X'01'), not CATLG");
+    CHECK(tuval(DALCDISP) == 0x01, "abnormal disposition UNCATLG (X'01')");
+
+    printf("\n(10) DISP=(OLD,UNCAT) -> uncatalog\n");
+    rc = run("DSN=MVSLOVE.TEST.OLD;DISP=(OLD,UNCAT)", dd);
+    CHECK_EQ(rc, 0, "__dsalc() succeeds");
+    CHECK(tuval(DALNDISP) == 0x01, "UNCAT is X'01'");
+
+    printf("\n(11) control: DISP=(NEW,CATLG,DELETE)\n");
+    rc = run("DSN=MVSLOVE.TEST.NEW;DISP=(NEW,CATLG,DELETE);SPACE=TRK(1,1)", dd);
+    CHECK(tuval(DALNDISP) == 0x02, "CATLG is X'02'");
+
+    printf("\n(12) SPACE=(TRK,(1,2)), the JCL form\n");
+    rc = run("DSN=MVSLOVE.TEST.NEW;DISP=(NEW,CATLG);SPACE=(TRK,(1,2))", dd);
+    CHECK_EQ(rc, 0, "__dsalc() succeeds");
+    CHECK(tufind(DALTRK) != NULL, "tracks");
+    CHECK(strcmp(got_spac, "1,2") == 0, "quantities \"1,2\"");
+
+    printf("\n(13) SPACE=(CYL,(5,2,10))\n");
+    rc = run("DSN=MVSLOVE.TEST.NEW;DISP=(NEW,CATLG);SPACE=(CYL,(5,2,10))", dd);
+    CHECK_EQ(rc, 0, "__dsalc() succeeds");
+    CHECK(tufind(DALCYL) != NULL, "cylinders");
+    CHECK(strcmp(got_spac, "5,2,10") == 0, "quantities \"5,2,10\"");
+
+    printf("\n(14) SPACE=(800,(10,5)), blocks\n");
+    rc = run("DSN=MVSLOVE.TEST.NEW;DISP=(NEW,CATLG);SPACE=(800,(10,5))", dd);
+    CHECK_EQ(rc, 0, "__dsalc() succeeds");
+    CHECK(strcmp(got_blk, "800") == 0, "block length \"800\"");
+    CHECK(strcmp(got_spac, "10,5") == 0, "quantities \"10,5\"");
+
+    printf("\n(15) control: SPACE=TRK(3,4)\n");
+    rc = run("DSN=MVSLOVE.TEST.NEW;DISP=(NEW,CATLG);SPACE=TRK(3,4)", dd);
+    CHECK(tufind(DALTRK) != NULL && strcmp(got_spac, "3,4") == 0,
+          "tracks, quantities \"3,4\"");
 
     return mbt_test_summary("TSTDSNMT");
 }
