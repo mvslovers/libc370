@@ -290,7 +290,8 @@ Library Reference give the complete list.
     [#cmd("connect()")], [A blocking connect gives up after about one
       second, with #cmd("ECONNREFUSED").],
     [#cmd("select()")], [The time is rounded up to a multiple of 0.08
-      seconds. The socket #var("msock")#cmd("-1") must be open.],
+      seconds. The socket #var("msock")#cmd("-1") must be open. Every
+      failure sets #cmd("ENOTSOCK").],
     [#cmd("ioctlsocket()")], [Takes the place of #cmd("fcntl()") for
       #cmd("FIONBIO"): a pointer to a nonzero word makes the socket
       non-blocking, a pointer to 0 blocking again. A socket returned by

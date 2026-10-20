@@ -147,17 +147,16 @@ selectex(int maxsock, fd_set *r, fd_set *w, fd_set *e, timeval * t,
 check:
     rc = (int) pl.r4;       /* get return code */
     if (rc==-1) {
-        /* get error */
-        pl.r1   = (unsigned) 0;
-        pl.r8   = (unsigned) (pl.r7 >> 16); /* get socket */
-        pl.r7   = (unsigned) 2;
-        __75(&pl);
-#if 0
-        __75vect->error = (int) pl.r4;
-        errno = __75vect->error;
-#else
-        errno = (int) pl.r4;
-#endif
+        /* Every way the emulator fails a select run means a socket in it
+        ** is gone: one of the sets names a closed socket, or the socket
+        ** the run is keyed to was closed, and perhaps handed out again,
+        ** while the run waited.  The error word of that socket number
+        ** (GETERRORS) is not this call's: it is unset on some of those
+        ** paths and may belong to the number's new holder (#161).  Do not
+        ** read it.  Leaving r7 alone also keeps the calls below select
+        ** calls, so Finish frees the run's state.
+        */
+        errno = ENOTSOCK;
     }
 
     if (r) {
