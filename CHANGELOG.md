@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.24.1] - 2026-10-20
+
 ### Fixed
 - **A failed `select()` sets `ENOTSOCK`, and a failed `socket()` reports
   only errors `socket()` can have (#161).** The Hercules TCP/IP
