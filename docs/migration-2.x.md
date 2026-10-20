@@ -209,6 +209,7 @@ CHANGELOG has everything else.
 
 | Release | Change | What to do |
 |---|---|---|
+| Unreleased | `<stdint.h>` no longer includes `<signal.h>` and no longer defines `LONG_LONG_MAX`, `ULONG_LONG_MAX` or the `PRINTF_*` macros; `<limits.h>` no longer defines `INT32_MAX` or `UINT16_MAX` (#418) | Include `<signal.h>` where `signal()`, `raise()`, `SIG*` or `sig_atomic_t` are used, and `<stdint.h>` (or `<inttypes.h>`) where `INT32_MAX` or `UINT16_MAX` are used; replace `LONG_LONG_MAX`/`ULONG_LONG_MAX` with `LLONG_MAX`/`ULLONG_MAX` of `<limits.h>`, and the `PRINTF_*` macros with the `PRI`/`SCN` macros of `<inttypes.h>` |
 | Unreleased | `send()` sends at most 256 bytes per call and returns that short count, never 0, for a larger request (#160) | Loop until everything is sent, starting each call where the last one stopped; code that treated a short count as an error, or ignored it, now loses data |
 | Unreleased | New header `<dynit.h>`: `dyninit()`, `dynalloc()`, `dynfree()` and `__dyn_t`, the z/OS interface to dynamic allocation (#52) | Nothing; code written for z/OS `<dynit.h>` can now be compiled. A program that carries its own `dynit.h`/`dynalloc()` should keep working (its own object resolves `DYNALLOC` before `libc.a` is searched; not measured); drop them to use the library's |
 | Unreleased | New: `__scratch()`, `__renamev()` (`<mvs/dscb.h>`), `__delmemv()`, `__renmemv()` (`<mvs/pds.h>`) delete and rename data sets and members by name and volume (#143) | Nothing; use them for a data set that is not cataloged |

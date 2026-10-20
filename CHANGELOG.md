@@ -163,6 +163,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   it, the start-up now clears the TSO flag of the run-time anchor for a
   start that is not a TSO command, rather than only ever setting it (#105):
   every start builds a new anchor, so nothing changes for a program.
+- **`<stdint.h>` and `<limits.h>` define only their own names (#418).**
+  `<stdint.h>` included `<signal.h>`, so `SIGINT`, `raise()`,
+  `sig_atomic_t` and the rest of `<signal.h>` were visible after
+  `#include <stdint.h>` alone, and it defined `LONG_LONG_MAX`,
+  `ULONG_LONG_MAX` and 18 macros beginning with `PRINTF_` (printf length
+  modifiers and field widths), none of which C99 puts there. `<limits.h>`
+  defined `INT32_MAX` and `UINT16_MAX`, which belong to `<stdint.h>`. A
+  program that defined any of these names itself, after including the
+  header, got a redefinition error under `-Werror`. Now `<stdint.h>` no
+  longer includes `<signal.h>` (`SIG_ATOMIC_MIN` and `SIG_ATOMIC_MAX` are
+  still defined, without it), the `PRINTF_*` macros, `LONG_LONG_MAX` and
+  `ULONG_LONG_MAX` are gone, and `<limits.h>` no longer defines
+  `INT32_MAX` or `UINT16_MAX`. Every name C99 requires is where C99 puts
+  it, with the same value. The library code is unchanged.
 
 ### Fixed
 - **`malloc(0)` and `calloc()` with a size of 0 no longer report a
