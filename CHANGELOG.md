@@ -60,6 +60,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `__renmemv(dsn, vol, old, new)` in `<mvs/pds.h>` allocate the PDS by
   volume, without a unit, and otherwise work as `__delmem()` and
   `__renmem()`, which are unchanged (measured on MVS).
+- **`<dynit.h>`: dynamic allocation through a structure, as the z/OS
+  XL C/C++ run-time library offers it (#52).** `dyninit()` clears a
+  `__dyn_t`, the program sets the fields it needs (data set name,
+  member, disposition, unit, volume, DCB attributes, space, SYSOUT
+  class, flags such as `__CLOSE`), and `dynalloc()` allocates;
+  `dynfree()` frees by DD name or by data set name. The names, types and
+  constants are those of z/OS, so a program written for that interface
+  compiles unchanged. A failed request returns the SVC 99 return code
+  with the error and information codes in `__errcode` and `__infocode`
+  (a data set that is not cataloged gives 4 and X'1708', measured on
+  MVS). What MVS 3.8j cannot do is ignored (SMS storage and management
+  class, the request block extension) or refused with -2 before
+  anything is allocated (SMS data class, VSAM attributes, `LIKE`,
+  `REFDD`, UNIX paths); the Library Reference lists every field. As an
+  extension, `__retddn` and `__retdsn` return the DD name and the data
+  set name MVS generated.
 
 ### Changed
 - **`fseek()` keeps the error indicator; `rewind()` clears it (#178).**
