@@ -209,6 +209,7 @@ CHANGELOG has everything else.
 
 | Release | Change | What to do |
 |---|---|---|
+| Unreleased | A failed `select()` always sets `ENOTSOCK`; a failed `socket()` sets `ENOBUFS` for any error other than `EMFILE`, `ENFILE`, `ENOBUFS`, `ENOMEM`, `EACCES`, `EAFNOSUPPORT`, `EPROTONOSUPPORT`, `EPROTOTYPE`, `EINVAL` (#161) | Nothing, unless code tested `select()`'s errno for a particular network error; treat any `select()` failure as a socket that is gone |
 | 2.24.0 | After a failed VSAM request the handle's `rc` is 8 or 12 and `component` the real component code; up to 2.23.0 both stayed 0 (#680) | Code that tested `vs->rc == 0` to mean "no error" or ignored `rc` now sees the return code; test `vserror()` or `vs->rc != 0` for a failure. `rsn` is unchanged |
 | 2.24.0 | `<stdint.h>` no longer includes `<signal.h>` and no longer defines `LONG_LONG_MAX`, `ULONG_LONG_MAX` or the `PRINTF_*` macros; `<limits.h>` no longer defines `INT32_MAX` or `UINT16_MAX` (#418) | Include `<signal.h>` where `signal()`, `raise()`, `SIG*` or `sig_atomic_t` are used, and `<stdint.h>` (or `<inttypes.h>`) where `INT32_MAX` or `UINT16_MAX` are used; replace `LONG_LONG_MAX`/`ULONG_LONG_MAX` with `LLONG_MAX`/`ULLONG_MAX` of `<limits.h>`, and the `PRINTF_*` macros with the `PRI`/`SCN` macros of `<inttypes.h>` |
 | 2.24.0 | `send()` sends at most 256 bytes per call and returns that short count, never 0, for a larger request (#160) | Loop until everything is sent, starting each call where the last one stopped; code that treated a short count as an error, or ignored it, now loses data |
