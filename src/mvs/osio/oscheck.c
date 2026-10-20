@@ -40,15 +40,15 @@ oscheck(DECB *decb)
     rc = try(check, decb, &state);
     if (rc) return rc;
 
-    /* 4: end of data, through the library's EODAD.  8: an I/O error,
-       through the library's SYNAD - or through a SYNAD of the caller's
-       that returned, which leaves the completion code in the ECB.  A
-       request that went well leaves X'7F' (BSAM) or X'40' with no
-       exception code (BDAM, measured on MVS) (#412). */
+    /* OSIO_EOD: end of data, through the library's EODAD.  OSIO_IOERR:
+       an I/O error, through the library's SYNAD - or through a SYNAD of
+       the caller's that returned, which leaves the completion code in
+       the ECB.  A request that went well leaves X'7F' (BSAM) or X'40'
+       with no exception code (BDAM, measured on MVS) (#412). */
     if (state) return state;
     if ((decb->decsdecb >> 24) == 0x7F) return 0;
     if ((decb->decsdecb >> 8) == 0x400000) return 0;
-    return 8;
+    return OSIO_IOERR;
 }
 
 /* The CHECK, and the default EODAD and SYNAD routines osbdcb() and
@@ -86,8 +86,8 @@ check(DECB *decb, int *state)
 "         BR    14                  back to CHECK\n"
 "         DS    0F\n"
 "OSCKMARK DC    X'D6E2C3D2'\n"
-"OSCKEOD  DC    F'4'\n"
-"OSCKIOE  DC    F'8'\n"
+"OSCKEOD  DC    F'4'                OSIO_EOD\n"
+"OSCKIOE  DC    F'8'                OSIO_IOERR\n"
 "         DROP  15\n"
 "OSCKDONE DS    0H"
         : : "r"(decb), "r"(state) : "0", "1", "2", "3", "14", "15", "memory");
