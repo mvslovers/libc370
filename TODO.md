@@ -125,12 +125,6 @@ Each fix gets a red/green test in a container, then a PR and a merge.
     (PRs #671, #686).
   - Told: mvsmf#439 (3380 blocks per track once dscb4 is right), ftpd#137
     (send side fixed; stale comment in ftpd#dat.c).
-- **Still open from the decisions:**
-  - #392 step 2: `mktime()` and `mktime64()` read local time, the JES
-    conversion moves to `timegm64()`; timed with an mvsMF release
-    (consapi.c switches to `timegm()`); LUA/370's `os.time()` is fixed by
-    it.
-  - VSAM #623, then #624, additive, one minor each.
 - **2.24.1, released 2026-10-20** (tag `v2.24.1` on `ef09210`, PR #695; MBT
   sweep 15/15, UFSD start red on 2.24.0 / green on 2.24.1; assets, `pair`,
   tap checked):
@@ -148,6 +142,13 @@ Each fix gets a red/green test in a container, then a PR and a merge.
     while tskey()/svkey0.h hold a switched key leaves that key in the PSW
     (retry key not measured); malloc() inside a window stays key 0 by
     design (documented under __super()).
+- **Still open from the decisions:**
+  - #392 step 2: `mktime()` and `mktime64()` read local time, the JES
+    conversion moves to `timegm64()`; timed with an mvsMF release
+    (consapi.c switches to `timegm()`); LUA/370's `os.time()` is fixed by
+    it.
+  - VSAM #623, then #624, additive, one minor each.
+  - #161 Hercules side: waits for upstream (SDL-Hercules-390/hyperion#894, PR #895).
   - Small: `@@listds.c`/`@@fmtisp.c` can include `<time.h>` for
     `timegm()`; `@@listds.c` can read `struct dscb4` instead of `work[20]`.
   - Build: a CI check fails when the library build shows a warning, rather
