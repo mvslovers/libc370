@@ -32,9 +32,9 @@
 
 static volatile double      dx = 0.5, dy = 2.0;
 static volatile long double lx = 0.5L, ly = 2.0L;
-/* atan() of 0.5 does not return: it reduces 0.5 to atan(-0.06), and
-   atan() of a negative argument loops (measured, a defect of its own).
-   0.25 takes the series directly. */
+/* 0.25 takes atan()'s series directly.  Up to 2.23.0, atan() of 0.5
+   did not return: it reduced 0.5 to atan(-0.06), and atan() of a
+   negative argument looped (#675, fixed). */
 static volatile double      ax = 0.25;
 static volatile long double lax = 0.25L;
 static int bad, run;
