@@ -24,6 +24,7 @@
 #include "mvs/lock.h"
 #include "ext/array.h"
 #include "mvs/crt.h"
+#include "src/internal/tskey.h"
 
 extern char *__getpfx(void);
 
@@ -166,8 +167,17 @@ quit:
     }
 
     if (fp) {
+        /* the list is created, and grows, in the task's key (#693): made
+           in a caller's key-0 window it was key-0 storage, and the
+           program's next fopen() in its own key ended S0C4 storing into
+           it (2.15.0-2.24.0; up to 2.14.0 the start-up's fopen() of
+           stdout had created it) */
+        unsigned st;
+
         lock(&grt->grtfile,0);
+        st = tskey();
         arrayadd(&grt->grtfile, fp);
+        tsrestore(st);
         unlock(&grt->grtfile,0);
     }
 

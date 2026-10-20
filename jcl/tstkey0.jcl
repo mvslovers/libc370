@@ -8,8 +8,11 @@
 //* deleted again in the last step.  Writes SYS2.LINKLIB: an own
 //* throwaway container only, or the maintainer's approval each time.
 //* The results are WTOs in this job log; RC 0 = passed, 8 = failed.
-//* Run: own MVS/CE container, 2026-10-20: GREEN 7/7, CC 0; RED 5
-//*      FAIL (S0C4, S30A), step S0C4; both members deleted.
+//* Case D (PARM='D') runs in a step of its own: it needs a fresh
+//* list of open files.
+//* Run: own MVS/CE container, 2026-10-20: GREEN and GREEND all
+//*      PASS, CC 0; RED 5 FAIL (S0C4, S30A), step S0C4; REDD S30A
+//*      inside the window, CC 8; both members deleted.
 //*
 //COPY     EXEC PGM=IEBCOPY
 //SYSPRINT DD  SYSOUT=*
@@ -21,7 +24,8 @@
   COPY INDD=IN,OUTDD=OUT
   SELECT MEMBER=((TSTKEY0G,,R),(TSTKEY0R,,R))
 /*
-//GREEN    EXEC PGM=TSTKEY0G,REGION=4M,COND=(0,NE,COPY)
+//GREEN    EXEC PGM=TSTKEY0G,REGION=4M,
+//             COND=(0,NE,COPY)
 //STEPLIB  DD  DISP=SHR,DSN=SYS2.LINKLIB
 //SYSPRINT DD  SYSOUT=*
 //SYSTERM  DD  SYSOUT=*
@@ -29,7 +33,14 @@
 //SYSENV   DD  *
 K0VAR=ONE
 /*
-//RED      EXEC PGM=TSTKEY0R,REGION=4M,COND=((0,NE,COPY),EVEN)
+//GREEND   EXEC PGM=TSTKEY0G,REGION=4M,PARM='D',
+//             COND=((0,NE,COPY),EVEN)
+//STEPLIB  DD  DISP=SHR,DSN=SYS2.LINKLIB
+//SYSPRINT DD  SYSOUT=*
+//SYSTERM  DD  SYSOUT=*
+//SYSUDUMP DD  SYSOUT=*
+//RED      EXEC PGM=TSTKEY0R,REGION=4M,
+//             COND=((0,NE,COPY),EVEN)
 //STEPLIB  DD  DISP=SHR,DSN=SYS2.LINKLIB
 //SYSPRINT DD  SYSOUT=*
 //SYSTERM  DD  SYSOUT=*
@@ -37,6 +48,12 @@ K0VAR=ONE
 //SYSENV   DD  *
 K0VAR=ONE
 /*
+//REDD     EXEC PGM=TSTKEY0R,REGION=4M,PARM='D',
+//             COND=((0,NE,COPY),EVEN)
+//STEPLIB  DD  DISP=SHR,DSN=SYS2.LINKLIB
+//SYSPRINT DD  SYSOUT=*
+//SYSTERM  DD  SYSOUT=*
+//SYSUDUMP DD  SYSOUT=*
 //CLEAN    EXEC PGM=IDCAMS,COND=EVEN
 //SYSPRINT DD  SYSOUT=*
 //SYSIN    DD  *

@@ -14,18 +14,9 @@
 ** __premain(), so what the hook does is not overridden, and the hook still
 ** runs before any of it.
 **
-** One thing it does create: the empty array of open files, grt->grtfile
-** (#693).  Created by the first fopen() instead, it took the PSW key of
-** that call, and a program whose first fopen() came inside a key-0 window
-** (__super(PSWKEY0, ...), __loadhi()) ended S0C4 at its next fopen() in
-** its own key, storing into a key-0 array (2.15.0-2.24.0).  Up to 2.14.0
-** the start-up's own fopen() of stdout created it, in the program's key.
-** It costs arraynew() and one calloc(); calloc() is linked anyway.
-**
 ** Returns 0.
 */
 #include "mvs/crt.h"
-#include "ext/array.h"
 
 int
 __rtinit(void)
@@ -35,8 +26,6 @@ __rtinit(void)
     if (grt) {
         grt->grtflag1 |= GRTFLAG1_STDLAZY;
         grt->grtflag2 |= GRTFLAG2_ENVLAZY;
-        /* __premain() may have opened a file already */
-        if (!grt->grtfile) grt->grtfile = arraynew(0);
     }
     return 0;
 }
