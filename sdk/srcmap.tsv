@@ -813,3 +813,4 @@ src/dynit/@@dynrq.c	src/dynit/@@dynrq.c	new after 2.23.0 (#52): the SVC 99 reque
 src/dynit/dynalloc.c	src/dynit/dynalloc.c	new after 2.23.0 (#52): dynalloc() of <dynit.h>
 src/dynit/dynfree.c	src/dynit/dynfree.c	new after 2.23.0 (#52): dynfree() of <dynit.h>
 src/dynit/dynreq.h	src/dynit/dynreq.h	area-local private header, new after 2.23.0 (#52): the request of <dynit.h>
+src/internal/tskey.h	src/internal/tskey.h	shared private header, new after 2.24.0 (#693): the task's own PSW key for state the library creates on first use

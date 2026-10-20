@@ -900,6 +900,11 @@ The caller must be APF-authorized and run in PSW key 0. An authorized
 program that runs in another key calls it as
 #cmd("super_key_do(PSWKEY0, __loadhi, module, &lpa, &epa, &size)").
 
+It opens and closes the member with #cmd("fopen()") inside the caller's
+key-0 window; the program's own #cmd("fopen()") calls afterwards are not
+affected (they were, from LIBC/370 2.15.0 to 2.24.0, see
+@mvs-program-__super).
+
 The module is read from STEPLIB only. A module with a relocation item that
 lies outside the module is refused, and nothing is left in common storage.
 
@@ -1610,6 +1615,15 @@ nonzero return code of #cmd("MODESET").
 
 Restore the key saved by #cmd("__super()") when calling #cmd("__prob()"), or
 the program goes on in the wrong key.
+
+In supervisor state with PSW key 0, #cmd("GETMAIN") takes subpool 0 from
+subpool 252, so storage that #cmd("malloc()") returns there, and the
+#cmd("FILE") of a stream opened there, is key-0 storage. Free it, or close
+the stream, before #cmd("__prob()"): in its own key the program can neither
+change nor free it (abend #cmd("S0C4") or #cmd("S30A")). The state the
+library keeps for the program -- the list of open files, the standard
+streams, the #cmd("SYSENV") environment -- is created in the key of the
+task even when its first use comes in such a window.
 
 === Related
 @mvs-program-super_do, @mvs-program-__pswkey
