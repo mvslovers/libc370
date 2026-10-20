@@ -101,30 +101,43 @@ Each fix gets a red/green test in a container, then a PR and a merge.
   Hercules (heap) at ~934 slots, #164 SELECT aux2=2048 SIGSEGV (PR #657).
   Open from #161: guard `errno` after a failing socket() on our side?
   #68 (PR #654, format(printf) on the wto functions) merged after httpd#310.
-- **Decided 2026-10-19** (decision page; each issue carries a "Decision"
-  comment with the details). Next work, by kind:
-  - Plain work in libc370: #17 drop `__try`/`__tryrc`; #72 remove
-    TIN/TOUT/TERR; #400 remove the four declarations; #394 malloc(0) quiet;
-    #413 DUMP_SDUMP = DUMP_DEFAULT; #178 fseek/rewind to C99; #173 drop
-    `key[44]` from dscb4; #417 transparent union; #340 the 22 `l` aliases;
-    #408 FREE=CLOSE, finish `__dynal()`, member names; #412 read-only mode,
-    default SYNAD/EODAD only where 0, exit list on calloc failure;
-    #246 write the naming rule into internals/.
-  - New API: #52 z/OS `<dynit.h>`; #143 `__scratch`/`__renamev` + `...v()`
-    (DALVLSER/DALUNIT measurement first; mvsmf#336 waits); #142
-    `jesopen()` fallback + `jesopen_ex()`; #553 `__linkx`/`__loadx` with
-    out-parameters; VSAM #625 -> #623 -> #624, additive, one minor each
-    (a VSAM redesign is a 3.x topic).
-  - Measure first: #160 send-side probe, then cap and return the short count.
-  - Coordinated with another project: #113 delete `crtopts` (httpd
-    `httpd.c:1391`); ~~#608 remove `crtm.o` with #105~~ (branch
-    feat/remove-crtm-608; MBT 3 treats crtm.o as optional since bff5bd4); #392 `timegm()` first, then a zone-aware
-    `mktime()` (an mvsMF release); #418 header leaks after an MBT sweep.
+- **Decision round, done 2026-10-20** (decision page of 2026-10-19 and a
+  second one of 2026-10-20; each issue carries a "Decision" comment). All
+  merged, red/green in own MVS/CE containers or at compile time; the 2.24.0
+  candidate:
+  - Plain work: #246 naming rule in internals/naming.md (PR #662); #17,
+    #72, #400 (PR #664); #178 fseek/rewind (PR #663); #394 (PR #667); #413
+    (PR #668); #417 (PR #666); #340 the `l` aliases (PR #670); #173 dscb4
+    without `key[44]` (PR #673); #408 (PR #672); #412 read-only mode,
+    default SYNAD/EODAD, exit list (PR #676) and `OSIO_EOD`/`OSIO_IOERR`
+    (PR #687); #675 atan/asin S322 loop, found on the way (PR #677).
+  - New API: #52 `<dynit.h>` (PR #682); #143 `__scratch`/`__renamev`
+    (PR #681); #142 `jesopen()` fallback + `jesopen_ex()` (PR #679, the
+    uncataloged checkpoint measured end to end in PR #685); #553
+    `__linkx`/`__loadx` (PR #669); #625 `__vsfdbk()` (PR #678).
+  - #160 `send()` passes at most one 256-byte segment (PR #683; every
+    consumer loops on partial writes).
+  - #680 VSFILE `rc`/`component` from the RPL feedback word (PR #688).
+  - Coordinated: #113 `crtopts` reserved (PR #665, after httpd#316); #608
+    `crtm.o` gone with #105 (PR #674, mbt 3 since bff5bd4); #418 header
+    leaks (PR #684, MBT sweep 15/15); #392 step 1 `timegm()` in `<time.h>`
+    (PRs #671, #686).
+  - Told: mvsmf#439 (3380 blocks per track once dscb4 is right), ftpd#137
+    (send side fixed; stale comment in ftpd#dat.c).
+- **Still open from the decisions:**
+  - #392 step 2: `mktime()` and `mktime64()` read local time, the JES
+    conversion moves to `timegm64()`; timed with an mvsMF release
+    (consapi.c switches to `timegm()`); LUA/370's `os.time()` is fixed by
+    it.
+  - VSAM #623, then #624, additive, one minor each.
+  - #161 after 2.24.0: red/green, the fix in the mvslovers Hercules fork,
+    then an upstream issue and PR.
+  - Small: `@@listds.c`/`@@fmtisp.c` can include `<time.h>` for
+    `timegm()`; `@@listds.c` can read `struct dscb4` instead of `work[20]`.
+  - Build: a CI check fails when the library build shows a warning, rather
+    than `-Werror` in sdk/mklibc.py.
   - Not doing: #75 closed (clock() stays -1); #461 and #607 parked; `%p`
     keeps `00001234` (documented).
-  - Build: a CI check fails when the library build shows a warning, rather
-    than `-Werror` in sdk/mklibc.py (build.yml's report step, or gate.py
-    pointed at main).
 - **Research, parked or real stands only:**
   - #529, #465, #462;
   - #341;
