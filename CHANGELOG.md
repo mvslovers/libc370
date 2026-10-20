@@ -18,7 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   unchanged.
 - **`timegm()` converts a broken-down UTC time to seconds since 1970 (#392).**
   It is the inverse of `gmtime()`, with a 32-bit `time_t`, declared in
-  `<ext/time64.h>` beside `timegm64()`. It accepts the years 1970 to 2105,
+  `<time.h>`, where C23 puts it (`<ext/time64.h>` includes it). It accepts the years 1970 to 2105,
   carries out-of-range seconds, minutes, hours and days into the next field,
   and sets `tm_wday` and `tm_yday`; outside the years it returns -1 and
   leaves the structure alone. This is what `mktime()` has always done, since
