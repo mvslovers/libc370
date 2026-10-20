@@ -7,6 +7,8 @@ typedef enum   vstype   VSTYPE;     /* type: KSDS/ESDS/RRDS                 */
 typedef enum   vsaccess VSACCESS;   /* access: DIR/SEQ/DYNAM                */
 typedef enum   vsmode   VSMODE;     /* mode: IN/OUT/UPD                     */
 typedef struct vsfdbk   VSFDBK;     /* outcome of the last request          */
+typedef struct vsopts   VSOPTS;     /* options for __vsopenx()              */
+typedef struct vsinfo   VSINFO;     /* the cluster's attributes after OPEN  */
 
 typedef struct acb      ACB;        /* ACCESS METHOD CONTROL BLOCK          */
 typedef struct rpl      RPL;        /* REQUEST PARAMETER LIST               */
@@ -624,7 +626,8 @@ struct vsfile {
 enum vstype {
     VSTYPE_KSDS=0,                  /* keyed sequential dataset     (key)   */
     VSTYPE_ESDS,                    /* entry sequenced dataset      (rba)   */
-    VSTYPE_RRDS                     /* relative record number       (rrn)   */
+    VSTYPE_RRDS,                    /* relative record number       (rrn)   */
+    VSTYPE_ANY                      /* __vsopenx(): the type OPEN finds     */
 };
 
 enum vsaccess {
@@ -643,6 +646,51 @@ enum vsmode {
 /* __vsopen() - open VSAM cluster */
 extern int  __vsopen(const char *dd, VSTYPE, VSACCESS, VSMODE, VSFILE **vsfile);
 extern int  vsopen(const char *dd, VSTYPE, VSACCESS, VSMODE, VSFILE **vsfile);
+
+/* VSOPTS - what __vsopenx() opens a cluster with (#623).  A zero field
+** leaves VSAM's default; the caller allocates it.
+*/
+struct vsopts {
+    VSTYPE              type;       /* 00 VSTYPE_KSDS, _ESDS, _RRDS, or
+                                          VSTYPE_ANY: the type of the
+                                          cluster, found after OPEN         */
+    VSACCESS            access;     /* 04 as for __vsopen()                 */
+    VSMODE              mode;       /* 08 as for __vsopen()                 */
+    unsigned short      bufnd;      /* 0C data buffers (ACB BUFND)          */
+    unsigned short      bufni;      /* 0E index buffers (ACB BUFNI)         */
+    unsigned            bufsp;      /* 10 buffer space in bytes (BUFSP)     */
+    const char          *password;  /* 14 password, 1 to 8 characters;
+                                          NULL: none                        */
+    unsigned            flags;      /* 18 VSOPT_ flags                      */
+#define VSOPT_RST       0x01        /* ... MACRF=RST: empty a REUSE cluster */
+#define VSOPT_SKP       0x02        /* ... MACRF=SKP, OPTCD=SKP: skip
+                                           sequential, a key on every read  */
+#define VSOPT_SIS       0x04        /* ... MACRF=SIS: sequential insert     */
+#define VSOPT_AIX       0x08        /* ... MACRF=AIX: the DD names a path;
+                                           process its alternate index      */
+};                                  /* 1C (28 bytes)                        */
+
+/* VSINFO - the attributes of an open cluster (#623), from SHOWCB and
+** TESTCB of the ACB.  The caller allocates it.
+*/
+struct vsinfo {
+    VSTYPE              type;       /* 00 VSTYPE_KSDS, _ESDS or _RRDS       */
+    unsigned            keylen;     /* 04 key length (KEYLEN), 0 for ESDS   */
+    unsigned            rkp;        /* 08 relative key position (RKP)       */
+    unsigned            lrecl;      /* 0C maximum record length (LRECL)     */
+    unsigned            cisz;       /* 10 data CI size (CINV)               */
+    unsigned            bufnd;      /* 14 data buffers in effect (BUFND)    */
+    unsigned            bufni;      /* 18 index buffers in effect (BUFNI)   */
+    unsigned            bufsp;      /* 1C buffer space in effect (BUFSP)    */
+};                                  /* 20 (32 bytes)                        */
+
+/* __vsopenx() - open VSAM cluster with buffers, password, MACRF options */
+extern int  __vsopenx(const char *dd, const VSOPTS *opts, VSFILE **vsfile)
+                                                            asm("@@VSOPNX");
+
+/* __vsinfo() - type, KEYLEN, RKP, LRECL, CI size and buffers of the open
+   cluster */
+extern int  __vsinfo(VSFILE *vs, VSINFO *info);
 
 /* __vsclos() - close VSAM cluster */
 extern int  __vsclos(VSFILE *vs);
