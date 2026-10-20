@@ -57,8 +57,9 @@
  *   emulator clearing Cerr on SOCKET/ACCEPT/CLOSE (mvslovers/hyperion
  *   fix/x75-cerr-reset), library before #161:   0 x5, 48 x5
  *   that emulator, this library:                38 x10
- * stale_slot was 98 (and 100 in the second step, two reads inherited from
- * the first step's job) on the released emulator, 0 on the clearing one.
+ * stale_slot was 98 on the released emulator (100 in the job's second
+ * step: two fresh sockets read the last errors of the first step's program,
+ * in the same address space), 0 on the clearing one.
  *
  * MODES (PARM):
  *   (none)      single address space, ROUNDS rounds of A + B + C.
