@@ -960,7 +960,9 @@ The number of ready sockets\; 0 when the time ran out\; -1 for an error.
 === Errors
 
 #deflist(width: 1.35in,
-  [#cmd("ENOTSOCK")], [a set holds a number that is not an open socket.],
+  [#cmd("ENOTSOCK")], [a set holds a number that is not an open socket, or
+    a socket of the call was closed while #cmd("select()") waited. Every
+    failure of #cmd("select()") sets #cmd("ENOTSOCK").],
 )
 
 === Notes
@@ -974,6 +976,10 @@ The number of ready sockets\; 0 when the time ran out\; -1 for an error.
 - The socket #var("msock")#cmd("-1") must be open\; the emulator keeps
   its state for the call under that number.
 - #var("t") is not changed.
+- Up to libc370 2.24.0 a failed #cmd("select()") set #cmd("errno") to the
+  last error recorded for the socket number #var("msock")#cmd("-1"). When
+  that socket had been closed and the number handed to another socket, in
+  this or another program, that was the other socket's error, or 0.
 
 === Related
 
@@ -1110,6 +1116,13 @@ The socket number, from 1 to 1023, or -1 for an error.
 #deflist(width: 1.35in,
   [#cmd("EMFILE")], [all socket numbers are in use, by this or by other
     programs.],
+  [#cmd("EAFNOSUPPORT"), #cmd("EPROTONOSUPPORT"), #cmd("EPROTOTYPE"),
+    #cmd("EINVAL")], [#var("af"), #var("type") or #var("protocol") is not
+    supported, or they do not fit together.],
+  [#cmd("ENFILE"), #cmd("ENOMEM"), #cmd("EACCES")], [reported by the
+    workstation's socket layer.],
+  [#cmd("ENOBUFS")], [no resources for the socket\; also every other
+    error, see the Notes.],
 )
 
 === Notes
@@ -1117,6 +1130,13 @@ The socket number, from 1 to 1023, or -1 for an error.
 - The program must run in the C run-time environment that the startup
   module sets up\; the socket table is kept there, one for each address
   space.
+- The emulator keeps the error of a failed #cmd("socket()") in one word for
+  the whole emulator, which a failing #cmd("socket()"), #cmd("gethostbyname()")
+  or #cmd("gethostbyaddr()") in any program writes, and the library reads it
+  with a second instruction. Another program's error can come in between.
+  #cmd("socket()") therefore reports only the values listed above, and
+  #cmd("ENOBUFS") for any other\; a listed value can still be another
+  program's. Up to libc370 2.24.0 any value was passed on, also 0.
 - The first call is also where a missing TCPIP instruction shows\; see
   @sockets-provider.
 

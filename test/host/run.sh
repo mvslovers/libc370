@@ -42,6 +42,11 @@ tst75sel() {
        -I $R/include -I $R -o "$B/t" tst75sel.c && "$B/t"
     return
 }
+tst75sok() {
+    "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address -Wno-trigraphs \
+       -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
+       -I $R/include -I $R -o "$B/t" tst75sok.c && "$B/t"
+}
 tstcmtt() {
     "$CC" -std=gnu99 -Wall -Wextra -o "$B/t" tstcmtt.c && "$B/t"
 }
@@ -340,7 +345,7 @@ tstwpos() {
 
 # The tests a plain run covers: all of them.  A test that stops building is
 # not dropped from here - fix it, or say which issue it waits on.
-ALL="tst75sel tst75snd tstacee tstaradf tstardel tstblank tstcmtt tstdblcv tstdblrb tstdirck tstdsnmt tstdynit tstemptl
+ALL="tst75sel tst75snd tst75sok tstacee tstaradf tstardel tstblank tstcmtt tstdblcv tstdblrb tstdirck tstdsnmt tstdynit tstemptl
      tstenqdq tsterrfl tstfabnd tstfcls tstfloor tstfpapp tstfprls tstfpunit tstgmain tstidcam tstidcrec tstinet tstiolk tstjesop
      tstjesprb tstjestx tstl tstll tstlspd tstlstds tstpfarg tstpfflt tstpfval tstplus tstraclo tstrand tstrldwk tstrseek tstscnll tstssvt tststrer tstsubsy tsttimegm tsttm64vec tsttodsc tstinstall tstsvckey tsttxdsn tstvsnp
      tstwchar tstwpos tstwto"

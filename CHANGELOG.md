@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- **A failed `select()` sets `ENOTSOCK`, and a failed `socket()` reports
+  only errors `socket()` can have (#161).** The Hercules TCP/IP
+  instruction keeps errors per socket number and, for `socket()`, in one
+  word for the whole emulator. When a socket was closed while `select()`
+  waited on it and its number was handed to another socket, `select()`
+  returned -1 with that other socket's error, the closed socket's old
+  error, or 0; it now always sets `ENOTSOCK`, and the emulator's
+  bookkeeping for the call is released again. `socket()` read its error
+  from the shared word, which a failing `socket()`, `gethostbyname()` or
+  `gethostbyaddr()` in any program writes; it now keeps only `EMFILE`,
+  `ENFILE`, `ENOBUFS`, `ENOMEM`, `EACCES`, `EAFNOSUPPORT`,
+  `EPROTONOSUPPORT`, `EPROTOTYPE` and `EINVAL`, and reports `ENOBUFS` for
+  anything else (measured on MVS: a `select()` whose socket was closed
+  and re-created under it gave errno 61, 48 or 0 in 10 of 10 rounds
+  before, `ENOTSOCK` in 10 of 10 after).
+
 ## [2.24.0] - 2026-10-20
 
 ### Added

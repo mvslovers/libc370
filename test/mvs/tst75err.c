@@ -16,7 +16,8 @@
  * Socket slot numbers are handed out emulator-wide, lowest free first, and
  * CLOSE resets the slot's handle, open and blocking flags - but not Cerr[].
  * So there are three ways a guest can read an error that is not its own,
- * and this probe measures each one separately:
+ * and this probe measures each one separately, plus what select() makes of
+ * the second one (D):
  *
  *   A. CROSSED SLOT   error 1 on socket X, error 2 on socket Y, then read X.
  *                     If X reads error 2, Cerr is not per socket.  The source
@@ -34,6 +35,31 @@
  *                     system has a failing socket()/gethostbyname()/
  *                     gethostbyaddr() at that moment); the two-address-space
  *                     variant below provokes exactly that.
+ *   D. SELECT ON A RE-USED NUMBER
+ *                     select() - the library function - waits on socket B.
+ *                     B got the number of socket A, closed after a refused
+ *                     connect (Cerr 61).  A subtask closes B under the
+ *                     waiting select and takes the number again with a raw
+ *                     SOCKET (C); on odd rounds C then fails a bind of its
+ *                     own (EADDRINUSE, 48).  The emulator fails select's next
+ *                     poll (the run's state went with the CLOSE) and sets no
+ *                     error word for it.  The errno select() reports:
+ *                       38 ENOTSOCK   right: the socket is gone
+ *                       61            A's stale word (slot never cleared)
+ *                       48            C's word, another socket's error
+ *                        0            nothing, on a -1 return
+ *                     Only this part goes through the library, so only its
+ *                     result differs between the G and R steps.
+ *
+ * MEASURED (2026-10-20, own MVS/CE containers, 10 select rounds each):
+ *   emulator as released, library before #161:  61 x5, 48 x5
+ *   emulator as released, this library:         38 x10
+ *   emulator clearing Cerr on SOCKET/ACCEPT/CLOSE (mvslovers/hyperion
+ *   fix/x75-cerr-reset), library before #161:   0 x5, 48 x5
+ *   that emulator, this library:                38 x10
+ * stale_slot was 98 on the released emulator (100 in the job's second
+ * step: two fresh sockets read the last errors of the first step's program,
+ * in the same address space), 0 on the clearing one.
  *
  * MODES (PARM):
  *   (none)      single address space, ROUNDS rounds of A + B + C.
@@ -60,32 +86,43 @@
  * For A and B the emulator code involved is deterministic, so their counts
  * stand as they are.
  *
- * BUILD (host, from the repository root, after make):
+ * BUILD (host, from the repository root, after make; S a scratch directory,
+ * R a directory holding a libc.a built from the release being compared
+ * against):
  *     cc370 -O1 -Wall -Werror -Iinclude -I. -L build/sdk \
- *         test/mvs/tst75err.c -o TST75ERR -flinker-output=iebcopy
- *     ld370 --pack TST75ERR=TST75ERR.iebcopy -o probe -xmit --dsn <PDS>
+ *         test/mvs/tst75err.c -o $S/TST75ERG -flinker-output=iebcopy
+ *     cc370 -O1 -Wall -Werror -Iinclude -I. -L $R \
+ *         test/mvs/tst75err.c -o $S/TST75ERR -flinker-output=iebcopy
+ *     cd $S && ld370 --pack TST75ERG=TST75ERG.iebcopy \
+ *         TST75ERR=TST75ERR.iebcopy -o probe -xmit --dsn IBMUSER.LIBC370.XESCR
  *
- * RUN: jcl/tst75err.jcl (single address space), jcl/tst75erx.jcl (two
+ * RUN: jcl/recv75err.jcl, then jcl/tst75err.jcl (single address space,
+ * steps GREEN = TST75ERG and RED = TST75ERR), jcl/tst75erx.jcl (two
  * concurrent jobs; check from IEF403I/IEF404I in both job logs that they
  * actually overlapped before reading a zero as anything).
  *
  * OUTPUT: one WTO per round (TST75ERR r=...: socket numbers X and Y, the
  * error provoked on each, fr = the fresh read before any failure, got = the
  * immediate read-back, post = X read again after Y's error, G = the global
- * error and what GETERROR returned; flags X = crossed, S = stale), then:
+ * error and what GETERROR returned; flags X = crossed, S = stale), one per
+ * select round (TST75ERR sel r=...), then:
  *   TST75ERR SUMMARY rounds=.. provoked=.. crossed_slot=.. stale_slot=..
  *            crossed_global=..
+ *   TST75ERR SUMMARY select rounds=.. failed=.. enotsock=.. stale=..
+ *            newholder=.. zero=.. other=.. notcreated=..
  *
  * RC: 0 = nothing crossed, nothing stale; 4 = a condition could not be
  * created (a provocation did not give its expected code) and nothing was
  * seen; 8 = at least one read returned an error that was not the reader's
- * own (A, B or C).
+ * own (A, B or C), or a failed select() reported anything but ENOTSOCK (D).
  */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <errno.h>
 #include <mvs/wto.h>
+#include <mvs/thread.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <mvs/socket.h>
@@ -93,6 +130,7 @@
 #include "src/net/dyn75/x75.h"
 
 #define ROUNDS        50
+#define SELROUNDS     10
 #define GENROUNDS    300
 #define PORTBASE   27600            /* first port tried for the listener    */
 #define PORTTRIES     10
@@ -113,7 +151,14 @@ static const char *gen_name[NKIND]  = { "PROTO", "AF", "INVAL" };
 static unsigned lport;              /* the probe's listening port           */
 static unsigned dport;              /* a port with no listener              */
 static int      last_err[NSLOT];
-static unsigned char peer[64];      /* GETPEERNAME output, never used        */    /* what each slot held when we closed it */
+static unsigned char peer[64];      /* GETPEERNAME output, never used        */
+
+struct selctx {                     /* D: what the subtask did              */
+    int     b;                      /* the number to close                  */
+    int     own;                    /* 1 = C provokes an error of its own   */
+    int     c;                      /* what SOCKET handed out               */
+    int     crc;                    /* the provocation's return code        */
+};
 
 static int  x75(unsigned r7, unsigned r8, unsigned r9);
 static int  x75b(unsigned r7, unsigned r8, unsigned r9, void *r6);
@@ -124,6 +169,8 @@ static int  provoke(int s, int kind);
 static void snooze(unsigned ticks);
 static int  single(void);
 static int  general(int g);
+static int  selcase(void);
+static int  closer(void *a, void *b);
 
 int main(int argc, char **argv)
 {
@@ -150,6 +197,7 @@ static int single(void)
     int     r;
     int     provoked = 0, crossed = 0, stale = 0, stale_prev = 0;
     int     gcrossed = 0, gprovoked = 0, notprov = 0;
+    int     selbad;
 
     wtof("TST75ERR start single-AS rounds=%d", ROUNDS);
 
@@ -281,6 +329,8 @@ static int single(void)
         closesocket(y);
     }
 
+    selbad = selcase();
+
     closesocket(lsock);
 
     wtof("TST75ERR SUMMARY rounds=%d provoked=%d notprov=%d crossed_slot=%d",
@@ -288,15 +338,121 @@ static int single(void)
     wtof("TST75ERR SUMMARY stale_slot=%d (=prev holder %d) gen_provoked=%d"
          " crossed_global=%d", stale, stale_prev, gprovoked, gcrossed);
 
-    if (crossed || stale || gcrossed) {
+    if (crossed || stale || gcrossed || selbad > 0) {
         wtof("TST75ERR DEFECT SEEN - RC 8");
         return 8;
     }
-    if (notprov || gprovoked < ROUNDS) {
+    if (notprov || gprovoked < ROUNDS || selbad < 0) {
         wtof("TST75ERR CONDITION NOT CREATED in every round - RC 4");
         return 4;
     }
     wtof("TST75ERR nothing crossed - RC 0");
+    return 0;
+}
+
+/*
+ * D: select() on a number that is closed and handed out again under it.
+ * Returns the number of rounds with a wrong errno, or -1 if none was wrong
+ * and some round could not be set up.
+ */
+static int selcase(void)
+{
+    struct sockaddr_in  addr;
+    struct selctx       ctx;
+    CTHDTASK            *task;
+    fd_set              rset;
+    timeval             tv;
+    int     r;
+    int     a, b;
+    int     rc, err;
+    int     failed = 0, enotsock = 0, stale = 0, newholder = 0, zero = 0;
+    int     other = 0, notcreated = 0;
+    const char *what;
+
+    for (r = 0; r < SELROUNDS; r++) {
+        /* A: a refused connect leaves 61 in the slot, then A goes */
+        a = socket(AF_INET, SOCK_STREAM, 0);
+        if (a < 0 || provoke(a, K_REFUSED) != -1) {
+            wtof("TST75ERR sel r=%d A not set up (%d)", r, a);
+            if (a >= 0) closesocket(a);
+            notcreated++;
+            continue;
+        }
+        closesocket(a);
+
+        /* B: same number, listening, so nothing makes it readable */
+        b = socket(AF_INET, SOCK_STREAM, 0);
+        memset(&addr, 0, sizeof(addr));
+        addr.sin_family      = AF_INET;
+        addr.sin_addr.s_addr = 0x7F000001;
+        if (b != a || bind(b, &addr, sizeof(addr)) < 0 || listen(b, 1) < 0) {
+            wtof("TST75ERR sel r=%d B not set up (A=%d B=%d)", r, a, b);
+            if (b >= 0) closesocket(b);
+            notcreated++;
+            continue;
+        }
+
+        ctx.b   = b;
+        ctx.own = r & 1;
+        ctx.c   = -1;
+        ctx.crc = 0;
+        task = cthread_create((void *)closer, &ctx, NULL);
+        if (!task) {
+            wtof("TST75ERR sel r=%d cthread_create failed", r);
+            closesocket(b);
+            notcreated++;
+            continue;
+        }
+
+        FD_ZERO(&rset);
+        FD_SET(b, &rset);
+        tv.tv_sec  = 3;
+        tv.tv_usec = 0;
+        errno = 0;
+        rc  = select(b + 1, &rset, NULL, NULL, &tv);
+        err = errno;
+
+        cthread_wait(&task->termecb);
+        cthread_delete(&task);
+
+        /* B's number now belongs to C; close what is there */
+        if (ctx.c >= 0 && ctx.c != b) x75(12, (unsigned)ctx.c, 0);
+        closesocket(b);
+
+        if (ctx.c != b || rc != -1 || (ctx.own && ctx.crc != -1)) {
+            what = "NOT CREATED";
+            notcreated++;
+        } else {
+            failed++;
+            if (err == ENOTSOCK)              { what = "ENOTSOCK"; enotsock++; }
+            else if (err == kind_err[K_REFUSED]) { what = "STALE"; stale++; }
+            else if (err == kind_err[K_INUSE])   { what = "NEWHOLDER"; newholder++; }
+            else if (err == 0)                { what = "ZERO"; zero++; }
+            else                              { what = "OTHER"; other++; }
+        }
+        wtof("TST75ERR sel r=%d B=%d C=%d own=%d crc=%d rc=%d errno=%d %s",
+             r, b, ctx.c, ctx.own, ctx.crc, rc, err, what);
+    }
+
+    wtof("TST75ERR SUMMARY select rounds=%d failed=%d enotsock=%d stale=%d"
+         " newholder=%d zero=%d other=%d notcreated=%d", SELROUNDS, failed,
+         enotsock, stale, newholder, zero, other, notcreated);
+
+    if (failed - enotsock) return failed - enotsock;
+    return notcreated ? -1 : 0;
+}
+
+/* D's subtask: let select() start waiting, then close its socket and take
+   the number again, raw, so no library state in this task is involved */
+static int closer(void *a, void *b)
+{
+    struct selctx *ctx = a;
+
+    (void)b;
+    snooze(40);                     /* 0.4 s: select() is polling by now */
+    x75(12, (unsigned)ctx->b, 0);
+    ctx->c = x75(5, (AF_INET << 16) | SOCK_STREAM, 0);
+    if (ctx->own && ctx->c >= 0) ctx->crc = provoke(ctx->c, K_INUSE);
     return 0;
 }
 
