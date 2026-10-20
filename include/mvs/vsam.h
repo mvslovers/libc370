@@ -626,9 +626,12 @@ struct vsfile {
 enum vstype {
     VSTYPE_KSDS=0,                  /* keyed sequential dataset     (key)   */
     VSTYPE_ESDS,                    /* entry sequenced dataset      (rba)   */
-    VSTYPE_RRDS,                    /* relative record number       (rrn)   */
-    VSTYPE_ANY                      /* __vsopenx(): the type OPEN finds     */
+    VSTYPE_RRDS                     /* relative record number       (rrn)   */
 };
+/* __vsopenx(): the type OPEN finds (#623).  A macro, not an enumerator:
+   a fourth enumerator would make -Wall flag every switch on a VSTYPE
+   that names the three types and has no default */
+#define VSTYPE_ANY      ((VSTYPE)3)
 
 enum vsaccess {
     VSACCESS_DIR=0,                 /* direct access                        */

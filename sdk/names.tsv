@@ -3597,6 +3597,7 @@ VSOPT_SIS	mvs/vsam.h
 VSOPT_SKP	mvs/vsam.h
 VSREF	mvs/dscb.h
 VSTYPE	mvs/vsam.h
+VSTYPE_ANY	mvs/vsam.h
 WCHAR_MAX	stdint.h wchar.h
 WCHAR_MIN	stdint.h wchar.h
 WEOF	wchar.h

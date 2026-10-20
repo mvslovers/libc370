@@ -39,7 +39,9 @@
  * GREEN CC 0000, 40/40; RED CC 0001, 1/3 (vsopen() refuses type 3 with
  * EVSTYPE, and the REUSE cluster kept its records).  The same job ran
  * twice before in that container (JOB00019, JOB00020), 40/40 each time:
- * its last step leaves nothing behind.  Measured on the way:
+ * its last step leaves nothing behind.  With VSTYPE_ANY a macro instead
+ * of an enumerator: GREEN 40/40, RED 1/3 again (fresh container,
+ * JOB00019).  Measured on the way:
  *   - SHOWCB ACB gives BUFND, BUFNI and BUFSP as the ACB holds them, 0
  *     when none was set; VSAM's defaults are not filled in.
  *   - OPEN takes MACRF=(KEY,ADR) for a KSDS, an ESDS, an RRDS and a

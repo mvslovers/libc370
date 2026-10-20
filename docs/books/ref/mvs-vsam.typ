@@ -164,7 +164,9 @@ directly.
     [#cmd("VSTYPE_ANY")], [3], [For #cmd("__vsopenx()") only: the type of
       the cluster, found after OPEN; #cmd("MACRF=(KEY,ADR)"), then the
       #cmd("OPTCD") of that type. #cmd("vsopen()") refuses it with
-      #cmd("EVSTYPE").],
+      #cmd("EVSTYPE"). A macro of type #cmd("VSTYPE"), not a member of
+      the enumeration, so that a #cmd("switch") over the three types
+      draws no warning.],
     [#cmd("VSACCESS_DIR")], [0], [Direct; #cmd("MACRF=DIR"),
       #cmd("OPTCD=DIR").],
     [#cmd("VSACCESS_SEQ")], [1], [Sequential; #cmd("MACRF=SEQ"),
