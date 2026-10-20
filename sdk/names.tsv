@@ -3588,9 +3588,16 @@ VSFILE_FLAG_ERROR	mvs/vsam.h
 VSFILE_FLAG_OPEN	mvs/vsam.h
 VSFILE_FLAG_STARTGE	mvs/vsam.h
 VSFILE_FLAG_WRITE	mvs/vsam.h
+VSINFO	mvs/vsam.h
 VSMODE	mvs/vsam.h
+VSOPTS	mvs/vsam.h
+VSOPT_AIX	mvs/vsam.h
+VSOPT_RST	mvs/vsam.h
+VSOPT_SIS	mvs/vsam.h
+VSOPT_SKP	mvs/vsam.h
 VSREF	mvs/dscb.h
 VSTYPE	mvs/vsam.h
+VSTYPE_ANY	mvs/vsam.h
 WCHAR_MAX	stdint.h wchar.h
 WCHAR_MIN	stdint.h wchar.h
 WEOF	wchar.h
@@ -4113,9 +4120,11 @@ __vsdel	mvs/vsam.h
 __vseof	mvs/vsam.h
 __vserr	mvs/vsam.h
 __vsfdbk	mvs/vsam.h
+__vsinfo	mvs/vsam.h
 __vslrec	mvs/vsam.h
 __vsmdfy	mvs/vsam.h
 __vsopen	mvs/vsam.h
+__vsopenx	mvs/vsam.h
 __vsread	mvs/vsam.h
 __vsshwc	mvs/vsam.h
 __vssteq	mvs/vsam.h
@@ -4868,10 +4877,12 @@ vseof	mvs/vsam.h
 vserror	mvs/vsam.h
 vsfdbk	mvs/vsam.h
 vsfile	mvs/vsam.h
+vsinfo	mvs/vsam.h
 vslrecl	mvs/vsam.h
 vsmode	mvs/vsam.h
 vsnprintf	stdio.h
 vsopen	mvs/vsam.h
+vsopts	mvs/vsam.h
 vsprintf	stdio.h
 vsread	mvs/vsam.h
 vsscanf	stdio.h

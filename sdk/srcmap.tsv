@@ -399,6 +399,8 @@ src/clib/@@vsclos.c	src/mvs/vsam/@@vsclos.c	declared in <mvs/vsam.h>
 src/clib/@@vsclr.c	src/mvs/vsam/@@vsclr.c	declared in <mvs/vsam.h>
 src/clib/@@vsdel.c	src/mvs/vsam/@@vsdel.c	declared in <mvs/vsam.h>
 src/mvs/vsam/@@vsfdbk.c	src/mvs/vsam/@@vsfdbk.c	new after 2.23.0 (#625): __vsfdbk(), the outcome of the last VSAM request
+src/mvs/vsam/@@vsinfo.c	src/mvs/vsam/@@vsinfo.c	new after 2.24.1 (#623): __vsinfo(), the attributes of an open VSAM cluster
+src/mvs/vsam/@@vsopnx.c	src/mvs/vsam/@@vsopnx.c	new after 2.24.1 (#623): __vsopenx(), VSAM OPEN with buffers, password and MACRF options
 src/clib/@@vseof.c	src/mvs/vsam/@@vseof.c	declared in <mvs/vsam.h>
 src/clib/@@vserr.c	src/mvs/vsam/@@vserr.c	declared in <mvs/vsam.h>
 src/clib/@@vslrec.c	src/mvs/vsam/@@vslrec.c	declared in <mvs/vsam.h>
@@ -814,3 +816,4 @@ src/dynit/dynalloc.c	src/dynit/dynalloc.c	new after 2.23.0 (#52): dynalloc() of 
 src/dynit/dynfree.c	src/dynit/dynfree.c	new after 2.23.0 (#52): dynfree() of <dynit.h>
 src/dynit/dynreq.h	src/dynit/dynreq.h	area-local private header, new after 2.23.0 (#52): the request of <dynit.h>
 src/internal/tskey.h	src/internal/tskey.h	shared private header, new after 2.24.0 (#693): the task's own PSW key for state the library creates on first use
+src/internal/vsopen.h	src/internal/vsopen.h	shared private header, new after 2.24.1 (#623): the body of __vsopen() with a call before OPEN, for __vsopenx()

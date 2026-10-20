@@ -387,7 +387,21 @@ Each function exists in two forms: #cmd("vsread()") takes a lock on the
 handle around the request, so that several tasks can share one handle, and
 #cmd("__vsread()") does not. One handle has one position in the cluster, so
 tasks that share a handle must also agree on whose position it is.
-Password-protected clusters are not supported.
+
+#idx("__vsopenx")#idx("__vsinfo")
+*More at OPEN.* #cmd("__vsopenx()") opens a cluster with a #cmd("VSOPTS")
+instead of three arguments. Besides the type, access and mode it takes the
+number of data and index buffers, the buffer space, the cluster's
+password, and the options #cmd("VSOPT_RST") (empty a #cmd("REUSE") cluster
+for a new load), #cmd("VSOPT_SKP") (skip-sequential reads by ascending
+key), #cmd("VSOPT_SIS") (sequential insert strategy) and #cmd("VSOPT_AIX")
+(read an alternate index itself through its path). With the type
+#cmd("VSTYPE_ANY") the program need not know whether the cluster is a
+KSDS, an ESDS or an RRDS: OPEN finds out, and #cmd("__vsinfo()") then
+tells the type, the key length and position, the maximum record length
+and the control interval size. A password is checked only where the
+cluster is not RACF-indicated\; the _LIBC/370 Library Reference_ has
+the details under #cmd("__vsopenx") in the chapter “VSAM”.
 
 // -------------------------------------------------------------------------
 == Communicating with the Operator <pg-services-console>

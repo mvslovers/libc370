@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include "mvs/vsam.h"
+#include "src/internal/vsopen.h"
 
 #if 0
 __asm__("\n"
@@ -30,6 +31,15 @@ __asm__("\n"
 
 int
 __vsopen(const char *ddname, VSTYPE t, VSACCESS a, VSMODE m, VSFILE **vsfile)
+{
+    return __vsopn(ddname, t, a, m, vsfile, 0, 0);
+}
+
+/* __vsopen() with a call before OPEN, for __vsopenx() (#623); see
+   src/internal/vsopen.h */
+int
+__vsopn(const char *ddname, VSTYPE t, VSACCESS a, VSMODE m, VSFILE **vsfile,
+        int (*prep)(VSFILE *, void *), void *arg)
 {
     int         rc      = 0;
     int         i;
@@ -190,6 +200,12 @@ __vsopen(const char *ddname, VSTYPE t, VSACCESS a, VSMODE m, VSFILE **vsfile)
         __asm__("MODCB RPL=(%0),OPTCD=(UPD),MF=(G,(%1))"
                 : : "r"(&vs->rpl), "r"(pl) : "0", "1", "14", "15", "memory");
         break;
+    }
+
+    /* the options of __vsopenx() (#623) */
+    if (prep) {
+        rc = prep(vs, arg);
+        if (rc) goto quit;
     }
 
     /* open VSAM cluster.  The ACB's open flag decides, not R15: OPEN

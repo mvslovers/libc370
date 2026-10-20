@@ -16,16 +16,17 @@ single RPL, so one handle has one position in the cluster at a time.
 
 *Authorization.* The functions issue no #cmd("TESTAUTH") and no
 #cmd("MODESET")\; they run in problem state, and no APF authorization is
-needed. VSAM password protection, where a cluster has it, is not handled: the
-ACB carries no password.
+needed. A cluster's password is given to #cmd("__vsopenx()")
+(@mvs-vsam-vsopenx)\; #cmd("vsopen()") passes none.
 
 *Two forms of every function.* Each operation exists as #cmd("vs")#var("name")
 and #cmd("__vs")#var("name"). The #cmd("vs") form takes a lock on the handle
 (the #cmd("lock()") function with the handle address as resource, see
 @mvs-sync) around the call, so that several tasks can share a handle; the
 #cmd("__vs") form takes no lock. #cmd("vsopen()") takes no lock either -- there
-is no handle yet. #cmd("__vsmdfy()"), #cmd("__vsshwc()") and
-#cmd("__vsfdbk()") exist only in the #cmd("__") form.
+is no handle yet. #cmd("__vsmdfy()"), #cmd("__vsshwc()"),
+#cmd("__vsfdbk()"), #cmd("__vsopenx()") and #cmd("__vsinfo()") exist only
+in the #cmd("__") form.
 
 *Errors.* VSAM reports a failed request through the exit routines that
 #cmd("__vsopen()") installs (LERAD, SYNAD and EODAD). LERAD and SYNAD
@@ -54,8 +55,13 @@ The library's tests cover #cmd("vsopen()"), #cmd("vsread()"),
 entry-sequenced cluster on MVS, and on a key-sequenced cluster the
 sequential load, #cmd("vswrite()") and #cmd("vsread()") by key with dynamic
 access, #cmd("vsupdate()"), and #cmd("__vsfdbk()") after a read, a read of
-a missing key, a duplicate write and the end of data. The other functions and the relative-record
-type are not tested.
+a missing key, a duplicate write and the end of data. #cmd("__vsopenx()")
+and #cmd("__vsinfo()") are tested on MVS with a key-sequenced, an
+entry-sequenced and a relative-record cluster opened with
+#cmd("VSTYPE_ANY"), a REUSE cluster emptied with #cmd("VSOPT_RST"), the
+buffer counts, a read password, #cmd("VSOPT_SKP"), #cmd("VSOPT_SIS") and an
+alternate index read through its path with #cmd("VSOPT_AIX"). The other
+functions are not tested.
 
 #tab(caption: [VSAM errno values])[
   #table(columns: (1.1in, 0.6in, 1fr),
@@ -101,7 +107,9 @@ error, and changes none of them.
     [#cmd("component")], [X'14'], [The component code of the feedback,
       #cmd("rplcmpon"). Up to release 2.23.0 it stayed 0, like
       #cmd("rc").],
-    [#cmd("type")], [X'15'], [The #cmd("VSTYPE") given to #cmd("vsopen()").],
+    [#cmd("type")], [X'15'], [The #cmd("VSTYPE") given to #cmd("vsopen()")\;
+      after #cmd("__vsopenx()") with #cmd("VSTYPE_ANY"), the type OPEN
+      found.],
     [#cmd("access")], [X'16'], [The #cmd("VSACCESS").],
     [#cmd("mode")], [X'17'], [The #cmd("VSMODE").],
     [#cmd("acb")], [X'18'], [The ACB (@mvs-vsam-acbrpl).],
@@ -153,6 +161,12 @@ directly.
     [#cmd("VSTYPE_RRDS")], [2], [Relative record; #cmd("MACRF=KEY"),
       #cmd("OPTCD=KEY"). The argument is a 4-byte relative record
       number.],
+    [#cmd("VSTYPE_ANY")], [3], [For #cmd("__vsopenx()") only: the type of
+      the cluster, found after OPEN; #cmd("MACRF=(KEY,ADR)"), then the
+      #cmd("OPTCD") of that type. #cmd("vsopen()") refuses it with
+      #cmd("EVSTYPE"). A macro of type #cmd("VSTYPE"), not a member of
+      the enumeration, so that a #cmd("switch") over the three types
+      draws no warning.],
     [#cmd("VSACCESS_DIR")], [0], [Direct; #cmd("MACRF=DIR"),
       #cmd("OPTCD=DIR").],
     [#cmd("VSACCESS_SEQ")], [1], [Sequential; #cmd("MACRF=SEQ"),
@@ -182,7 +196,8 @@ directly.
   )
 ] <mvs-vsam-open-rules>
 
-Every other combination is passed to VSAM, which refuses at OPEN those it
+#cmd("__vsopenx()") with #cmd("VSTYPE_ANY") refuses what is refused for a
+KSDS. Every other combination is passed to VSAM, which refuses at OPEN those it
 does not support.
 
 == vsopen, \_\_vsopen <mvs-vsam-vsopen>
@@ -233,7 +248,148 @@ which is also stored in #cmd("errno"). On failure #var("*vsfile") is set to
 #code(read("../ex/mvs-vsam/ksdsread.c"))
 
 === Related
-@mvs-vsam-vsclose, @mvs-vsam-vsread
+@mvs-vsam-vsopenx, @mvs-vsam-vsclose, @mvs-vsam-vsread
+
+== \_\_vsopenx <mvs-vsam-vsopenx>
+#idx("__vsopenx")#idx("VSOPTS")#idx("password", "VSAM")
+
+=== Format
+```
+#include <mvs/vsam.h>
+
+int __vsopenx(const char *dd, const VSOPTS *opts, VSFILE **vsfile);
+```
+
+=== Description
+#cmd("__vsopenx()") opens the cluster allocated to DD #var("dd") as
+#cmd("vsopen()") does, with the type, access and mode of #var("*opts"), and
+gives OPEN what #cmd("vsopen()") cannot: the number of buffers, a
+password, the #cmd("MACRF") options #cmd("RST"), #cmd("SKP"), #cmd("SIS")
+and #cmd("AIX"), and the type left to OPEN. It stores the handle in
+#var("*vsfile")\; every other function takes the handle as one from
+#cmd("vsopen()"). #cmd("vsopen()") itself is unchanged. The caller
+allocates the #cmd("VSOPTS") and sets every field\; a field of 0 leaves the
+ACB as #cmd("vsopen()") builds it.
+
+#tab(caption: [VSOPTS fields])[
+  #table(columns: (0.8in, 0.6in, 1fr),
+    [Field], [Offset], [Contents],
+    [#cmd("type")], [X'00'], [#cmd("VSTYPE_KSDS"), #cmd("VSTYPE_ESDS"),
+      #cmd("VSTYPE_RRDS"), or #cmd("VSTYPE_ANY"): the handle is opened keyed
+      and addressed, and after OPEN its RPL and its #cmd("type") are set to
+      the type of the cluster (#cmd("TESTCB ATRB"), as #cmd("__vsinfo()")
+      reports it).],
+    [#cmd("access")], [X'04'], [The #cmd("VSACCESS"), as for
+      #cmd("vsopen()").],
+    [#cmd("mode")], [X'08'], [The #cmd("VSMODE"), as for #cmd("vsopen()").],
+    [#cmd("bufnd")], [X'0C'], [Data buffers, the ACB's #cmd("BUFND")
+      (#cmd("unsigned short")).],
+    [#cmd("bufni")], [X'0E'], [Index buffers, #cmd("BUFNI")
+      (#cmd("unsigned short")).],
+    [#cmd("bufsp")], [X'10'], [Buffer space in bytes, #cmd("BUFSP").],
+    [#cmd("password")], [X'14'], [The password, a string of 1 to 8
+      characters as the cluster was defined with it (IDCAMS takes it in
+      upper case), or #cmd("NULL") for none. OPEN reads it\; the ACB does
+      not keep its address.],
+    [#cmd("flags")], [X'18'], [The options of @mvs-vsam-vsopt, or 0.],
+  )
+] <mvs-vsam-vsopts-tab>
+
+The structure is 28 bytes long.
+
+#tab(caption: [VSOPTS flags])[
+  #table(columns: (1.1in, 0.5in, 1fr),
+    [Flag], [Value], [Meaning],
+    [#cmd("VSOPT_RST")], [X'01'], [#cmd("MACRF=RST"): a cluster defined with
+      #cmd("REUSE") is emptied at OPEN. Meant for #cmd("VSMODE_OUT") or
+      #cmd("VSMODE_UPD")\; with #cmd("VSMODE_IN") OPEN empties the cluster
+      as well, and the next OPEN for input fails, because the cluster is
+      empty (message #cmd("IEC161I") 072, measured). A cluster without
+      #cmd("REUSE") fails OPEN (#cmd("EVSOPEN"), #cmd("acberflg") X'E8',
+      measured).],
+    [#cmd("VSOPT_SKP")], [X'02'], [#cmd("MACRF=SKP") and the RPL's
+      #cmd("OPTCD=SKP"): skip-sequential processing. Each #cmd("vsread()")
+      then takes a key, in ascending order, and reads the record with that
+      key without a pass over the records between. Not for an ESDS or
+      #cmd("VSACCESS_ADR").],
+    [#cmd("VSOPT_SIS")], [X'04'], [#cmd("MACRF=SIS"): the sequential insert
+      strategy for keyed inserts, which splits a control interval or area
+      at the insert point instead of in the middle.],
+    [#cmd("VSOPT_AIX")], [X'08'], [#cmd("MACRF=AIX"): #var("dd") names a
+      path\; the alternate index itself is processed, not the base cluster
+      through it. Its records are the alternate key and the prime keys
+      behind a 5-byte header. On a DD that names a cluster, not a path,
+      OPEN ignores it (measured).],
+  )
+] <mvs-vsam-vsopt>
+
+=== Returns
+0 when the cluster is open; otherwise the #cmd("errno") value of the
+failure, which is also stored in #cmd("errno"). On failure
+#var("*vsfile") is set to #cmd("NULL") and nothing is left allocated.
+
+=== Errors
+#deflist(width: 1.0in,
+  [#cmd("EINVAL")], [#var("opts") or #var("vsfile") is #cmd("NULL"), a
+    flag other than those of @mvs-vsam-vsopt is set, or the password is
+    longer than 8 characters.],
+  [#cmd("EVSACCESS")], [#cmd("VSOPT_SKP") with #cmd("VSTYPE_ESDS") or
+    #cmd("VSACCESS_ADR")\; or with #cmd("VSTYPE_ANY") on a cluster that
+    OPEN found to be an ESDS, which is then closed again.],
+  [#cmd("EVSTYPE"), #cmd("EVSMODE")], [As for #cmd("vsopen()")
+    (@mvs-vsam-open-rules).],
+  [#cmd("ENOMEM")], [No storage for the handle.],
+  [#cmd("EVSOPEN")], [OPEN did not open the ACB: as for #cmd("vsopen()"),
+    and for a missing or wrong password or #cmd("VSOPT_RST") on a cluster
+    without #cmd("REUSE"). Also when #cmd("TESTCB") cannot tell the type for
+    #cmd("VSTYPE_ANY").],
+)
+
+=== Notes
+- *Passwords.* VSAM's catalog code checks a cluster's password at OPEN
+  only when the catalog holding it has a password itself and the cluster
+  is not RACF-indicated (#cmd("RACF") #cmd("(YES)") in the LISTCAT
+  output)\; for a RACF-indicated cluster the security product decides. On
+  MVS/CE with RAKF the job's ACEE carries automatic data set protection,
+  so every entry DEFINE created was RACF-indicated, and the protected
+  cluster opened with the right password, a wrong one and none
+  (measured)\; the refusal of a wrong password could not be measured
+  there. Define a protected cluster with #cmd("ATTEMPTS(0)"), so that
+  VSAM does not ask the operator for a missing password and wait for the
+  reply.
+- *Buffers.* #cmd("__vsinfo()") reports the values the ACB was given:
+  0 for a field that was left 0, not the default VSAM chose.
+- *VSOPT_SKP and writes.* A #cmd("vswrite()") on a key-sequenced cluster
+  opened with #cmd("VSACCESS_DYNAM") and #cmd("VSMODE_UPD") sets the RPL
+  back to #cmd("OPTCD=SEQ") after the write\; the reads after it are no
+  longer skip-sequential.
+- A program that calls only #cmd("vsopen()") links neither
+  #cmd("__vsopenx()") nor #cmd("__vsinfo()").
+- There is no #cmd("vsopenx()"): the function takes no lock, like
+  #cmd("vsopen()").
+
+=== Example
+```
+VSOPTS  o;
+VSINFO  in;
+VSFILE  *vs;
+
+memset(&o, 0, sizeof(o));
+o.type      = VSTYPE_ANY;
+o.access    = VSACCESS_SEQ;
+o.mode      = VSMODE_IN;
+o.bufnd     = 6;
+o.password  = "RDPW";
+if (__vsopenx("MASTER", &o, &vs) == 0) {
+    __vsinfo(vs, &in);
+    printf("type %d, key %u at %u, records up to %u bytes\n",
+           in.type, in.keylen, in.rkp, in.lrecl);
+    vsclose(vs);
+}
+```
+
+=== Related
+@mvs-vsam-vsopen, @mvs-vsam-vsinfo, @mvs-vsam-enums
 
 == vsclose, \_\_vsclos <mvs-vsam-vsclose>
 #idx("vsclose")#idx("__vsclos")
@@ -581,7 +737,67 @@ unsigned __vscinv(VSFILE *vs);
 === Returns
 #cmd("vslrecl()") returns the maximum logical record length of the data
 component, #cmd("vscinv()") its control interval size, each from
-#cmd("SHOWCB") of the open ACB.
+#cmd("SHOWCB") of the open ACB. #cmd("__vsinfo()") (@mvs-vsam-vsinfo)
+returns both with the type, the key and the buffers.
+
+== \_\_vsinfo <mvs-vsam-vsinfo>
+#idx("__vsinfo")#idx("VSINFO")#idx("TESTCB")
+
+=== Format
+```
+#include <mvs/vsam.h>
+
+int __vsinfo(VSFILE *vs, VSINFO *info);
+```
+
+=== Description
+Stores in #var("*info") the attributes of the cluster open on #var("vs"):
+its type from #cmd("TESTCB ATRB"), and its key length, key position,
+maximum record length, control interval size and buffers from
+#cmd("SHOWCB ACB"). It works on a handle from #cmd("vsopen()") as well as
+from #cmd("__vsopenx()"), and the type is the cluster's own, not the one
+the handle was opened with. The caller allocates the #cmd("VSINFO").
+
+#tab(caption: [VSINFO fields])[
+  #table(columns: (0.8in, 0.6in, 1fr),
+    [Field], [Offset], [Contents],
+    [#cmd("type")], [X'00'], [#cmd("VSTYPE_KSDS"), #cmd("VSTYPE_ESDS") or
+      #cmd("VSTYPE_RRDS"). An alternate index opened with
+      #cmd("VSOPT_AIX"), and a path, report #cmd("VSTYPE_KSDS").],
+    [#cmd("keylen")], [X'04'], [The key length, #cmd("KEYLEN")\; 0 for an
+      ESDS and an RRDS. Through a path, the alternate key's.],
+    [#cmd("rkp")], [X'08'], [The relative key position, #cmd("RKP"). Of an
+      alternate index opened with #cmd("VSOPT_AIX"), 5: the key follows the
+      record header.],
+    [#cmd("lrecl")], [X'0C'], [The maximum record length, #cmd("LRECL"), as
+      #cmd("vslrecl()") returns it.],
+    [#cmd("cisz")], [X'10'], [The data control interval size, #cmd("CINV"),
+      as #cmd("vscinv()") returns it.],
+    [#cmd("bufnd")], [X'14'], [#cmd("BUFND") of the ACB.],
+    [#cmd("bufni")], [X'18'], [#cmd("BUFNI") of the ACB.],
+    [#cmd("bufsp")], [X'1C'], [#cmd("BUFSP") of the ACB.],
+  )
+] <mvs-vsam-vsinfo-tab>
+
+The structure is 32 bytes long. On MVS 3.8j #cmd("SHOWCB") returns the
+buffer fields of the ACB as the program set them: 0 when it set none, not
+the numbers VSAM chose (measured).
+
+=== Returns
+0 when #var("*info") is filled. -1 when #var("vs") or #var("info") is
+#cmd("NULL") or #cmd("TESTCB") fails\; otherwise the non-zero return code
+of #cmd("SHOWCB").
+
+=== Notes
+- Measured on MVS 3.8j: a KSDS with #cmd("KEYS(8 0)"),
+  #cmd("RECORDSIZE(80 80)") and a 4096-byte CI gives #cmd("VSTYPE_KSDS"),
+  8, 0, 80, 4096\; an ESDS with #cmd("RECORDSIZE(80 100)") gives
+  #cmd("VSTYPE_ESDS"), keylen 0, lrecl 100\; an alternate index with
+  #cmd("KEYS(6 10)") read through its path with #cmd("VSOPT_AIX") gives
+  keylen 6, rkp 5, lrecl 19.
+
+=== Related
+@mvs-vsam-vsopenx, @mvs-vsam-vslrecl
 
 == \_\_vsmdfy <mvs-vsam-vsmdfy>
 #idx("__vsmdfy")#idx("MODCB")
