@@ -2067,6 +2067,8 @@ OPTUT	mvs/dscb.h
 OPTVSE	mvs/dscb.h
 OPTWVC	mvs/dscb.h
 ORGAM	mvs/dscb.h
+OSIO_EOD	mvs/osio.h
+OSIO_IOERR	mvs/osio.h
 OUTLIMK	ibm/mvs/iefvkeys.h
 PARMEEK	ibm/mvs/iefvkeys.h
 PARMPEK	ibm/mvs/iefvkeys.h

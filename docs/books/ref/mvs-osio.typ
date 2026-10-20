@@ -126,7 +126,8 @@ copied as the last.
 #cmd("osbdcb()") stores the library's #cmd("EODAD") and #cmd("SYNAD")
 routines into the DCB, #cmd("osddcb()") its #cmd("SYNAD") routine (BDAM
 reads by block number and has no end of data). With them,
-#cmd("oscheck()") returns 4 at end of data and 8 for an I/O error, where
+#cmd("oscheck()") returns #cmd("OSIO_EOD") (4) at end of data and
+#cmd("OSIO_IOERR") (8) for an I/O error, where
 the DCB without them made CHECK abend with S337 and S001 and the system
 wrote message #cmd("IEC020I") for the error. A program that wants its own
 routine stores its address into #cmd("dcbeodad") or #cmd("dcbsynad") after
@@ -249,7 +250,7 @@ was written is known only after #cmd("oscheck()").
 @mvs-osio-oscheck, @mvs-osio-osread
 
 == oscheck <mvs-osio-oscheck>
-#idx("oscheck")#idx("CHECK")
+#idx("oscheck")#idx("CHECK")#idx("OSIO_EOD")#idx("OSIO_IOERR")
 
 === Format
 ```
@@ -263,11 +264,13 @@ int oscheck(DECB *decb);
 or WRITE that used the DECB to complete. The CHECK runs under an ESTAE.
 
 === Returns
-#deflist(width: 0.8in,
+#deflist(width: 1.35in,
   [0], [The I/O completed normally.],
-  [4], [End of data: CHECK took the library's #cmd("EODAD") routine.],
-  [8], [An I/O error: CHECK took the library's #cmd("SYNAD") routine, or a
-    #cmd("SYNAD") routine of the program's that returned.],
+  [#cmd("OSIO_EOD") (4)], [End of data: CHECK took the library's
+    #cmd("EODAD") routine.],
+  [#cmd("OSIO_IOERR") (8)], [An I/O error: CHECK took the library's
+    #cmd("SYNAD") routine, or a #cmd("SYNAD") routine of the program's that
+    returned.],
   [other], [The abend that ended the CHECK, as #cmd("0x00sssuuu"), or a
     negative value when the ESTAE could not be established.],
 )
@@ -277,22 +280,26 @@ or WRITE that used the DECB to complete. The CHECK runs under an ESTAE.
   #cmd("EODAD") or #cmd("SYNAD") routine of the DCB. The DCBs from
   #cmd("osbdcb()") and #cmd("osddcb()") name the library's (see
   @mvs-osio-dcb). A program that reads to the end sees the end of data as
-  the return code 4.
+  the return code #cmd("OSIO_EOD").
 - An I/O error is told by the completion code CHECK leaves in the ECB, the
   first word of the DECB: anything but X'7F' (BSAM) or X'40' with no
-  exception code (BDAM) returns 8. So 8 also comes back when the program's
-  own #cmd("SYNAD") routine returns to CHECK. An #cmd("EODAD") routine of
-  the program's own is entered by a branch and does not come back to
-  #cmd("oscheck()").
+  exception code (BDAM) returns #cmd("OSIO_IOERR"). So it also comes back
+  when the program's own #cmd("SYNAD") routine returns to CHECK. An
+  #cmd("EODAD") routine of the program's own is entered by a branch and
+  does not come back to #cmd("oscheck()").
 - Up to release 2.23.0 the end of data and an I/O error ended the CHECK in
   S337 and S001, which #cmd("oscheck()") returned, and an I/O error that a
   program's own #cmd("SYNAD") routine returned from gave 0.
+- #cmd("<mvs/osio.h>") defines #cmd("OSIO_EOD") and #cmd("OSIO_IOERR")
+  since release 2.24.0\; a program built for an older release compares
+  with 4 and 8.
 - #cmd("oscheck()") also completes the BDAM requests of #cmd("osdread()") and
   #cmd("osdwrite()").
 
 === Example
 The program copies a RECFM=F data set block by block until #cmd("oscheck()")
-reports the end of the input.
+reports the end of the input with #cmd("OSIO_EOD")\; any other return code
+ends it with 8.
 
 #code(read("../ex/mvs-osio/bsamcopy.c"))
 

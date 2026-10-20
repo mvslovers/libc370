@@ -76,6 +76,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `REFDD`, UNIX paths); the Library Reference lists every field. As an
   extension, `__retddn` and `__retdsn` return the DD name and the data
   set name MVS generated.
+- **`<mvs/osio.h>` names the return codes of `oscheck()`: `OSIO_EOD` (4)
+  and `OSIO_IOERR` (8) (#412).** A program that checks a BSAM or BDAM
+  request for end of data or an I/O error can compare with these names
+  instead of the bare numbers 4 and 8. The values and the behaviour of
+  `oscheck()` are unchanged.
 
 ### Changed
 - **`fseek()` keeps the error indicator; `rewind()` clears it (#178).**

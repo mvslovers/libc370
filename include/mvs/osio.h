@@ -30,9 +30,13 @@ extern void     osbread(DECB *decb, DCB *dcb, void *buf, int length) asm("OSREAD
 extern int      oswrite(DECB *decb, DCB *dcb, void *buf, int length);
 extern int      osbwrite(DECB *decb, DCB *dcb, void *buf, int length) asm("OSWRITE");
 
-/* check last read or write for completion: 0 done, 4 end of data, 8 an
-** I/O error, otherwise the abend that ended the CHECK */
+/* check last read or write for completion: 0 done, OSIO_EOD end of
+** data, OSIO_IOERR an I/O error, otherwise the abend that ended the CHECK */
 extern int      oscheck(DECB *decb);
+
+/* return codes of oscheck() besides 0 and an abend code */
+#define OSIO_EOD    4   /* end of data: CHECK took the library's EODAD */
+#define OSIO_IOERR  8   /* an I/O error: CHECK took a SYNAD */
 
 /* - - - - E X C P - - - - */
 /* allocate and initialize DCB for EXCP access */

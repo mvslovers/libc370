@@ -24,7 +24,7 @@ int main(void)
 
     for (blocks = 0; ; blocks++) {
         osread(&decb, in, buf, in->dcbblksi);
-        if ((rc = oscheck(&decb)) != 0) break;   /* end of data or error */
+        if ((rc = oscheck(&decb)) != 0) break;   /* OSIO_EOD at the end */
         oswrite(&decb, out, buf, in->dcbblksi);
         if ((rc = oscheck(&decb)) != 0) break;
     }
@@ -32,6 +32,10 @@ int main(void)
     free(buf);
     osbclose(out, NULL, 1, 0);
     osbclose(in, NULL, 1, 0);
-    printf("%d blocks copied, last CHECK %08X\n", blocks, rc);
+    printf("%d blocks copied\n", blocks);
+    if (rc != OSIO_EOD) {               /* OSIO_IOERR or an abend code */
+        printf("CHECK ended with %08X\n", rc);
+        return 8;
+    }
     return 0;
 }
