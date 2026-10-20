@@ -209,6 +209,7 @@ CHANGELOG has everything else.
 
 | Release | Change | What to do |
 |---|---|---|
+| Unreleased | `send()` sends at most 256 bytes per call and returns that short count, never 0, for a larger request (#160) | Loop until everything is sent, starting each call where the last one stopped; code that treated a short count as an error, or ignored it, now loses data |
 | Unreleased | New header `<dynit.h>`: `dyninit()`, `dynalloc()`, `dynfree()` and `__dyn_t`, the z/OS interface to dynamic allocation (#52) | Nothing; code written for z/OS `<dynit.h>` can now be compiled. A program that carries its own `dynit.h`/`dynalloc()` should keep working (its own object resolves `DYNALLOC` before `libc.a` is searched; not measured); drop them to use the library's |
 | Unreleased | New: `__scratch()`, `__renamev()` (`<mvs/dscb.h>`), `__delmemv()`, `__renmemv()` (`<mvs/pds.h>`) delete and rename data sets and members by name and volume (#143) | Nothing; use them for a data set that is not cataloged |
 | Unreleased | `jesopen()` allocates `SYS1.HASPCKPT` and `SYS1.HASPACE` itself when the step has no `HASPCKPT`/`HASPACE1` DD (catalog first, then a search of the online volumes); new `jesopen_ex(ckptdsn)` for another checkpoint name (#142) | Nothing; the two DD statements may be dropped where JES2 uses the prefix `SYS1`. Keep them, or call `jesopen_ex()`, where it uses another |

@@ -112,6 +112,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `PREFIX.HASPACE`, which helps programs that have no JCL of their own,
   such as CGI programs; when the data set is found nowhere, the console
   message names both possible causes (measured on MVS).
+- **`send()` sends at most 256 bytes per call (#160).** The Hercules
+  TCP/IP instruction copies the send buffer in 256-byte pieces and is
+  restarted after a page fault on the buffer. Hercules builds without the
+  host-side fix then restart the copy at the start of their own buffer,
+  so after a fault in the middle of a larger `send()` the peer received
+  the right number of bytes with the wrong content. A copy of 256 bytes
+  or less cannot be hit, and a program cannot tell a fixed build from an
+  unfixed one, so `send()` now passes at most 256 bytes to the emulator
+  and returns that short count; it never returns 0 for a non-empty
+  request. Programs that send the rest after a short count, as they
+  already had to, need no change (measured on MVS: on an unfixed build
+  25 of 25 forced faults corrupted the data before, none after).
 
 ### Removed
 - **`crtopts` and `CRTOPTS_AUTH` are gone from `<mvs/crt.h>` (#113).** The
