@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- **The manuals say correctly when VSAM checks a password (#623).** The
+  2.25.0 text said a password is checked only for a cluster that is not
+  RACF-indicated. What decides is the catalog: in a user catalog that is
+  RACF-indicated, VSAM checked no password of the clusters in it; in a
+  catalog that is not, a missing or wrong password failed OPEN with
+  `EVSOPEN` (ACB error code X'98', message IEC161I 040), also for a
+  cluster that is RACF-indicated itself, and the right password opened it
+  (measured on MVS). The library is unchanged.
+
 ## [2.25.0] - 2026-10-20
 
 ### Added
