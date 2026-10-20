@@ -29,8 +29,12 @@ is no handle yet. #cmd("__vsmdfy()"), #cmd("__vsshwc()") and
 
 *Errors.* VSAM reports a failed request through the exit routines that
 #cmd("__vsopen()") installs (LERAD, SYNAD and EODAD). LERAD and SYNAD
-record the return, component and reason codes of the RPL feedback word in
-the handle and set the error flag\; EODAD only sets the end-of-file flag.
+copy the return, component and reason codes of the RPL feedback word,
+which VSAM has set when it takes the exit, into the handle's #cmd("rc"),
+#cmd("component") and #cmd("rsn") fields and set the error flag\; EODAD
+only sets the end-of-file flag. After a failed request #cmd("rc") is 8 or
+12. Up to release 2.23.0 #cmd("rc") and #cmd("component") stayed 0
+(@mvs-vsam-vsfile-tab).
 The request returns 8 (logical error), 12 (physical error) or 4 (end of
 data). *The flags stay set* until
 #cmd("vsclear()") resets them, as the end-of-file and error indicators of a
@@ -86,13 +90,17 @@ error, and changes none of them.
       #cmd("VSFILE_FLAG_ERROR") (X'02') an error occurred;
       #cmd("VSFILE_FLAG_EOF") (X'01') end of data was reached.
       #cmd("VSFILE_FLAG_STARTGE") (X'40') is defined and never set.],
-    [#cmd("rc")], [X'12'], [Meant for the VSAM return code of the failed
-      request. The exit routines take it from #cmd("SHOWCB FIELDS=FDBK"),
-      which on MVS 3.8j gives the reason code alone, so it stays 0
-      (measured). #cmd("__vsfdbk()") reports the return code.],
-    [#cmd("rsn")], [X'13'], [The VSAM reason (error) code, for example 16
-      (X'10') for a record not found.],
-    [#cmd("component")], [X'14'], [The component code of the feedback.],
+    [#cmd("rc")], [X'12'], [The VSAM return code of the last failed
+      request: 8 logical error, 12 physical error. The exit routines copy
+      it from the RPL feedback word (#cmd("rplrtncd")). Up to release
+      2.23.0 they took it from #cmd("SHOWCB FIELDS=FDBK"), which on
+      MVS 3.8j gives the reason code alone, so it stayed 0 (measured).],
+    [#cmd("rsn")], [X'13'], [The VSAM reason (error) code,
+      #cmd("rplerrcd"), for example 16 (X'10') for a record not found or 8
+      for a duplicate key.],
+    [#cmd("component")], [X'14'], [The component code of the feedback,
+      #cmd("rplcmpon"). Up to release 2.23.0 it stayed 0, like
+      #cmd("rc").],
     [#cmd("type")], [X'15'], [The #cmd("VSTYPE") given to #cmd("vsopen()").],
     [#cmd("access")], [X'16'], [The #cmd("VSACCESS").],
     [#cmd("mode")], [X'17'], [The #cmd("VSMODE").],
@@ -515,9 +523,10 @@ codes are VSAM's and the same for every function that issues the request.
 - #cmd("__vsfdbk()") takes no lock. When tasks share a handle, the task
   that made the request must call it before another task issues the next
   one.
-- The handle's #cmd("rc") field stays 0 on MVS 3.8j
-  (@mvs-vsam-vsfile-tab), so #cmd("__vsfdbk()") is the way to the return
-  code.
+- The handle's #cmd("rc"), #cmd("rsn") and #cmd("component") fields hold
+  the same codes for the last failed request, until #cmd("vsclear()")\;
+  #cmd("__vsfdbk()") also reports a successful request and the end of the
+  data. Up to release 2.23.0 #cmd("rc") stayed 0 (@mvs-vsam-vsfile-tab).
 
 === Example
 ```

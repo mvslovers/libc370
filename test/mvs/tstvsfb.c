@@ -43,6 +43,23 @@
  * alone.  The RPL feedback words were X'14080010' (b), 0 (a),
  * X'0A080008' (c), X'00080004' (d) and X'07080004' (d').
  *
+ * ISSUE #680: the LERAD and SYNAD exits filled vs->rc, vs->component and
+ * vs->rsn from SHOWCB FIELDS=FDBK, which on MVS 3.8j gives the reason
+ * code alone, so vs->rc stayed 0.  They now take the three codes from
+ * the RPL feedback word.  Checks (b2) and (c2) read the handle after
+ * the missing key and, cleared by vsclear() first, after the duplicate
+ * write: rc 8 with rsn X'10' and X'08', component as in the RPL.  They
+ * also show that VSAM has set the feedback word when it takes the exit.
+ * For #680 both modules are built with -DNEWAPI: TSTVSFBG links this
+ * tree's libc.a, TSTVSFBR the library of origin/main before the fix
+ * (R below).
+ *
+ * Own MVS/CE container, 2026-10-20 (#680, RECEIVE JOB00018, run
+ * JOB00019): GREEN CC 0000, 15/15, handle rc 8 rsn X'10' after (b) and
+ * rc 8 rsn X'08' after (c); RED CC 0001, 13/15, rc 0 in both.  The
+ * component code is 0 in both feedback words, so (b2)/(c2) cannot tell
+ * it apart; it comes from the same word as rc.
+ *
  * RC: 0 = every check passed, 1 = a check failed (it is the COND CODE).
  */
 #include <stdio.h>
@@ -68,6 +85,15 @@ struct seen {
     unsigned    reclen;
     unsigned    rba;
 };
+
+/* the codes the error exit left in the handle (#680) */
+static void handle(VSFILE *vs, unsigned rsn, const char *what)
+{
+    printf("  handle: rc %u rsn X'%02X' component %u (RPL comp %u)\n",
+           vs->rc, vs->rsn, vs->component, vs->rpl.rplcmpon);
+    check(vs->rc == 8 && vs->rsn == rsn &&
+          vs->component == vs->rpl.rplcmpon, what);
+}
 
 static void learn(VSFILE *vs, int ret, struct seen *s)
 {
@@ -133,6 +159,7 @@ int main(void)
     learn(vs, r, &s);
     check(r == -2, "(b) vsread() returns -2");
     check(s.r15 == 8 && s.fdbk == 0x10, "(b) R15 8, feedback X'10'");
+    handle(vs, 0x10, "(b2) handle: rc 8, rsn X'10', component of the RPL");
 
     /* (a) a key that is there, right after the error */
     printf(" (a) read KEY00002\n");
@@ -150,10 +177,12 @@ int main(void)
     printf(" (c) write KEY00001 (already there)\n");
     memset(buf, ' ', 80);
     memcpy(buf, "KEY00001 DUPLICATE", 18);
+    vsclear(vs);
     r = vswrite(vs, buf, 80, buf, 8);
     learn(vs, r, &s);
     check(r == 8, "(c) vswrite() returns 8");
     check(s.r15 == 8 && s.fdbk == 0x08, "(c) R15 8, feedback X'08'");
+    handle(vs, 0x08, "(c2) handle: rc 8, rsn X'08', component of the RPL");
 
     /* (d) the end of the data */
     printf(" (d) read KEY00003, then the next record\n");
