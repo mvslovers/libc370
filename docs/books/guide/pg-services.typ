@@ -400,7 +400,7 @@ key), #cmd("VSOPT_SIS") (sequential insert strategy) and #cmd("VSOPT_AIX")
 KSDS, an ESDS or an RRDS: OPEN finds out, and #cmd("__vsinfo()") then
 tells the type, the key length and position, the maximum record length
 and the control interval size. A password is checked only where the
-cluster is not RACF-indicated\; the _LIBC/370 Library Reference_ has
+catalog holding the cluster is not RACF-indicated\; the _LIBC/370 Library Reference_ has
 the details under #cmd("__vsopenx") in the chapter “VSAM”.
 
 // -------------------------------------------------------------------------

@@ -347,16 +347,20 @@ failure, which is also stored in #cmd("errno"). On failure
 
 === Notes
 - *Passwords.* VSAM's catalog code checks a cluster's password at OPEN
-  only when the catalog holding it has a password itself and the cluster
+  only when the catalog holding it has a password itself and the catalog
   is not RACF-indicated (#cmd("RACF") #cmd("(YES)") in the LISTCAT
-  output)\; for a RACF-indicated cluster the security product decides. On
-  MVS/CE with RAKF the job's ACEE carries automatic data set protection,
-  so every entry DEFINE created was RACF-indicated, and the protected
-  cluster opened with the right password, a wrong one and none
-  (measured)\; the refusal of a wrong password could not be measured
-  there. Define a protected cluster with #cmd("ATTEMPTS(0)"), so that
-  VSAM does not ask the operator for a missing password and wait for the
-  reply.
+  output)\; in a RACF-indicated catalog the security product decides, for
+  every cluster in it. Whether the cluster itself is RACF-indicated does
+  not matter. Measured on MVS/CE with RAKF: there the job's ACEE carries
+  automatic data set protection, so a user catalog and every entry a
+  normal job DEFINEs are RACF-indicated, and a protected cluster in such
+  a catalog opened with the right password, a wrong one and none. In a
+  catalog that is not RACF-indicated, #cmd("__vsopenx()") without the
+  password or with a wrong one failed with #cmd("EVSOPEN") (ACB error
+  code X'98', message IEC161I 040), also for a cluster that was
+  RACF-indicated itself, and with the right one it opened. Define a
+  protected cluster with #cmd("ATTEMPTS(0)"), so that VSAM does not ask
+  the operator for a missing password and wait for the reply.
 - *Buffers.* #cmd("__vsinfo()") reports the values the ACB was given:
   0 for a field that was left 0, not the default VSAM chose.
 - *VSOPT_SKP and writes.* A #cmd("vswrite()") on a key-sequenced cluster
