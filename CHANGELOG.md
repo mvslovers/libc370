@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- **`__vsopenx()` opens a VSAM cluster with buffers, a password and the
+  `MACRF` options, and `__vsinfo()` reads the cluster's attributes after
+  OPEN (#623).** `vsopen()` takes a type, an access and a mode and nothing
+  else. `__vsopenx()` takes them in a `VSOPTS` together with the numbers
+  of data and index buffers (`BUFND`, `BUFNI`), the buffer space
+  (`BUFSP`), the cluster's password and the options `VSOPT_RST` (empty a
+  `REUSE` cluster at OPEN), `VSOPT_SKP` (skip-sequential reads),
+  `VSOPT_SIS` (sequential insert strategy) and `VSOPT_AIX` (process an
+  alternate index through its path). With the new type `VSTYPE_ANY` the
+  caller need not know the type: OPEN finds it, and `__vsinfo()` reports
+  it with the key length and position, the maximum record length, the
+  control interval size and the buffer fields (measured on MVS with a
+  key-sequenced, an entry-sequenced and a relative-record cluster, a
+  `REUSE` cluster and an alternate index). `vsopen()` and the other
+  functions are unchanged, and a program that does not call the new
+  functions does not link them. VSAM checks a password only for a
+  cluster that is not RACF-indicated.
+
 ## [2.24.1] - 2026-10-20
 
 ### Fixed
