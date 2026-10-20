@@ -532,6 +532,16 @@ What later 2.x releases ask of a program or a build:
       #cmd("struct dscb4"). Include #cmd("<signal.h>") or
       #cmd("<stdint.h>") where their names are used. Loop on
       #cmd("send()") until everything is sent. Call #cmd("clearerr()")
-      before seeking past a read or write error.]
+      before seeking past a read or write error.],
+    [2.24.1], [An authorized program whose first #cmd("fopen()"), first
+      use of a standard stream or first #cmd("getenv()") comes inside a
+      key-0 window (#cmd("__super(PSWKEY0, ...)"), #cmd("__loadhi()"))
+      gets the library's state in its own key; 2.15.0 to 2.24.0 ended
+      S0C4 or S30A at the next such call. A failed #cmd("select()") sets
+      #cmd("ENOTSOCK"); a failed #cmd("socket()") reports only errors
+      #cmd("socket()") can have, #cmd("ENOBUFS") for any other.],
+      [Nothing. A workaround that opened a file before the first key-0
+      window can go. Treat any #cmd("select()") failure as a socket that
+      is gone.]
   )
 ] <pg-migrate-since-tab>
