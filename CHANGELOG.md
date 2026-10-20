@@ -237,6 +237,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   reach those. Both now take the sign apart without calling themselves;
   over a grid from -1e70 to 1e70 the results agree with a reference to
   within 4e-16 relative (measured on MVS).
+- **A failed VSAM request leaves its return code in the handle (#680).**
+  The error exits filled the `VSFILE` fields `rc`, `component` and `rsn`
+  from `SHOWCB FIELDS=FDBK`, which on MVS 3.8j gives the reason code
+  alone, so `rc` and `component` stayed 0 after every error. The exits now
+  copy all three codes from the RPL feedback word, which VSAM has set when
+  it takes the exit: after a read of a missing key `rc` is 8 and `rsn`
+  X'10', after a duplicate write `rc` is 8 and `rsn` X'08' (measured on
+  MVS). `rsn` is unchanged.
 
 ## [2.23.0] - 2026-10-19
 

@@ -12,6 +12,11 @@
 //* Run:     own MVS/CE container JOB00019, 2026-10-20: GREEN CC 0000,
 //*          13/13; RED CC 0001, 7/13 (codes left from the request
 //*          before).
+//* #680:    both modules built with -DNEWAPI, TSTVSFBR against
+//*          origin/main before the fix.  Own MVS/CE container
+//*          JOB00019, 2026-10-20: GREEN CC 0000, 15/15; RED CC 0001,
+//*          13/15 (handle rc 0 after the missing key and the
+//*          duplicate write).
 //*
 //* RC 0 = every check passed, 1 = a check failed (the COND CODE).
 //*

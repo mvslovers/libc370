@@ -5,25 +5,23 @@
 #include <errno.h>
 #include "mvs/vsam.h"
 
-/* This is the VSAM common error handler for LERAD and SYNAD errors */
+/* This is the VSAM common error handler for LERAD and SYNAD errors.
+
+   The return, component and reason codes come from the RPL feedback
+   word, which VSAM sets before it takes the exit.  SHOWCB FIELDS=FDBK,
+   used up to 2.23.0, gives the reason code alone on MVS 3.8j, so rc
+   stayed 0 (#680, measured). */
 int
 __vsxerr(RPL *rpl, int code)
 {
     VSFILE          *vs     = (VSFILE*)((char*)rpl - offsetof(VSFILE,rpl));
-    unsigned        pl[16]  = {0};
-    unsigned char   fdbk[4] = {0};
     int (*reset)(VSFILE *);
 
     vs->flags   |= VSFILE_FLAG_ERROR;
 
-    __asm__("\n"
-    "\tSHOWCB RPL=(%0),                                               X\n"
-    "\t\tFIELDS=FDBK,AREA=(%1),LENGTH=4,MF=(G,(%2))"
-        : : "r"(rpl), "r"(fdbk), "r"(pl) : "0", "1", "14", "15", "memory");
-
-    vs->rc          = fdbk[1];
-    vs->component   = fdbk[2];
-    vs->rsn         = fdbk[3];
+    vs->rc          = rpl->rplrtncd;
+    vs->component   = rpl->rplcmpon;
+    vs->rsn         = rpl->rplerrcd;
 
     if (vs->vsreset) {
         if ((vs->flags & VSFILE_FLAG_STARTGE) ||
