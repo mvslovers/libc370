@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.25.0] - 2026-10-20
+
 ### Added
 - **`__vsopenx()` opens a VSAM cluster with buffers, a password and the
   `MACRF` options, and `__vsinfo()` reads the cluster's attributes after

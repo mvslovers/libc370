@@ -542,6 +542,12 @@ What later 2.x releases ask of a program or a build:
       #cmd("socket()") can have, #cmd("ENOBUFS") for any other.],
       [Nothing. A workaround that opened a file before the first key-0
       window can go. Treat any #cmd("select()") failure as a socket that
-      is gone.]
+      is gone.],
+    [2.25.0], [#cmd("__vsopenx()") opens a VSAM cluster with buffers, a
+      password and the #cmd("MACRF") options RST, SKP, SIS and AIX, and
+      with #cmd("VSTYPE_ANY") without knowing its type;
+      #cmd("__vsinfo()") reports the type and attributes after OPEN.
+      #cmd("vsopen()") and the other VSAM functions are unchanged.],
+      [Nothing.]
   )
 ] <pg-migrate-since-tab>
