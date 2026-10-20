@@ -131,8 +131,23 @@ Each fix gets a red/green test in a container, then a PR and a merge.
     (consapi.c switches to `timegm()`); LUA/370's `os.time()` is fixed by
     it.
   - VSAM #623, then #624, additive, one minor each.
-  - #161 (2.24.0 is out, next): red/green, the fix in the mvslovers
-    Hercules fork, then an upstream issue and PR.
+- **2.24.1, released 2026-10-20** (tag `v2.24.1` on `ef09210`, PR #695; MBT
+  sweep 15/15, UFSD start red on 2.24.0 / green on 2.24.1; assets, `pair`,
+  tap checked):
+  - #693 (PR #694): the lazily created state (open-file list, standard
+    streams, SYSENV) is created and grown in the task's key (TCBPKF, via
+    src/internal/tskey.h) also inside a key-0 window; 2.15.0-2.24.0 ended
+    S0C4/S30A back in the program's key (AC(1) probe tstkey0, cases A-D).
+  - #161 libc370 side (PR #692): select() sets ENOTSOCK, socket() keeps only
+    its own errors. Hercules: SDL-Hercules-390/hyperion#894, PR #895
+    (`Cerr[m] = 0` in SOCKET/ACCEPT/CLOSE, branch fix/x75-cerr-reset of the
+    fork); #161 stays open until upstream decides. The global GETERROR word
+    stays (interface change, not pursued).
+  - Open from #693: setenv() growing the environment past 20 variables
+    inside a key-0 window still allocates in key 0 (as in 2.14.0); an abend
+    while tskey()/svkey0.h hold a switched key leaves that key in the PSW
+    (retry key not measured); malloc() inside a window stays key 0 by
+    design (documented under __super()).
   - Small: `@@listds.c`/`@@fmtisp.c` can include `<time.h>` for
     `timegm()`; `@@listds.c` can read `struct dscb4` instead of `work[20]`.
   - Build: a CI check fails when the library build shows a warning, rather
