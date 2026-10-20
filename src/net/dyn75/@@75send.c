@@ -22,6 +22,29 @@
 */
 #define SEND_STALL_MAX  100     /* consecutive no-progress attempts */
 
+/* At most one X'75' copy segment per call (#160) -- the cap recv() has had
+** since #154, for the same reason in the other direction.
+**
+** X'75' copies in 256-byte segments and is restartable: a page translation
+** exception on the guest buffer is nullifying, MVS resolves the page and the
+** instruction runs again from the top.  The guest side resumes correctly (R1
+** and the base register were advanced before the exception); an unfixed
+** emulator has nothing to resume the HOST side from and recomputes it from
+** map32[R2], so the rest of the send buffer is copied to the START of the
+** host buffer.  The peer then receives the right length with the wrong
+** bytes: the tail moved down over the head, and garbage where the tail
+** belonged.  A single segment is atomic against that exception -- it either
+** faults having moved nothing or completes -- so 256 bytes or less is immune
+** by construction.
+**
+** A guest cannot tell a patched emulator from an unpatched one, so the cap
+** stays.  send() therefore returns at most SEND_SEG per call: a short count,
+** never 0 for a non-empty request.  Callers already loop on a short count;
+** send() itself does not, because callers build their state on the count it
+** returns (see the -2 comment below).
+*/
+#define SEND_SEG        256     /* bytes per X'75' (#160)            */
+
 /* send() */
 __asm__("\n&FUNC    SETC 'send'");
 extern int
@@ -30,6 +53,10 @@ send(int ss, const void *buf, int len, int flags)
     int     rc;
     int     stall   = 0;
     PL75    pl;
+
+    /* len <= SEND_SEG, including 0 and a negative len, goes through as it
+    ** always has */
+    int     chunk   = (len > SEND_SEG) ? SEND_SEG : len;
 
 #if 0
     wtof("__75send(%d,%08X,%d,%d)", ss, buf, len, flags);
@@ -45,7 +72,7 @@ send(int ss, const void *buf, int len, int flags)
          */
         __asm__("XC\t0(64,%0),0(%0)     clear __75 parameter list"
             : : "r" (&pl) : "memory");
-        pl.r1   = (unsigned) len;
+        pl.r1   = (unsigned) chunk;
         pl.r5   = (unsigned) buf;
         pl.r7   = (unsigned) 10;        /* function code for send() */
         pl.r8   = (unsigned) ss;

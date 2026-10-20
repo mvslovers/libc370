@@ -159,9 +159,9 @@ The steps, with what is particular to MVS:
   program's own (line 65). #cmd("inet_ntoa()") would do as well in this
   program, but its result is one buffer for the whole C program,
   overwritten by the next call from any of its tasks.
-+ *Format, translate and send* (lines 68--73). #cmd("send()") may send
-  fewer bytes than asked when the buffer on the workstation is nearly
-  full\; #cmd("send_all()") sends the rest. A blocking #cmd("send()") gives
++ *Format, translate and send* (lines 68--73). #cmd("send()") sends at
+  most 256 bytes per call, and fewer when the buffer on the workstation is
+  nearly full\; #cmd("send_all()") sends the rest. A blocking #cmd("send()") gives
   up when the peer has not read anything for ten seconds.
 + *Close the connection* (line 74), and at the end the listening socket.
 
@@ -283,7 +283,8 @@ Library Reference give the complete list.
       have arrived or the peer closes. Use a non-blocking socket, or
       #cmd("FIONREAD"), to read what has arrived. #var("flags") is ignored\;
       there is no #cmd("MSG_PEEK").],
-    [#cmd("send()")], [May send fewer bytes than asked\; loop. A blocking
+    [#cmd("send()")], [Sends at most 256 bytes per call, and may send
+      fewer\; loop until everything is out. A blocking
       #cmd("send()") fails with #cmd("EWOULDBLOCK") after ten seconds
       without progress. #var("flags") is ignored.],
     [#cmd("connect()")], [A blocking connect gives up after about one
