@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.24.0] - 2026-10-20
+
 ### Added
 - **`__linkx()`, `__linkdsx()` and `__loadx()` tell why a LINK or LOAD
   failed (#553).** `__link()`, `__linkds()` and `__load()` return only -1

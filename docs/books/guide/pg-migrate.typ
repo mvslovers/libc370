@@ -517,6 +517,21 @@ What later 2.x releases ask of a program or a build:
       C99 says.], [Fix the calls the compiler now reports, usually a
       pointer passed to #cmd("%08X"). Test #cmd("try()") for a negative
       value where +1 meant "no recovery routine". Test #cmd("ERANGE")
-      after #cmd("log(0)").]
+      after #cmd("log(0)").],
+    [2.24.0], [#cmd("crtm.o") is no longer installed. #cmd("__try()"),
+      #cmd("__tryrc()"), #cmd("crtopts"), the #cmd("PPAFLAG_T...") flags
+      and four declarations that never linked are removed.
+      #cmd("struct dscb4") is the data portion #cmd("__dscbv()") returns,
+      so its field offsets move. #cmd("<stdint.h>") and #cmd("<limits.h>")
+      define only their own names. #cmd("send()") sends at most 256 bytes
+      per call. #cmd("oscheck()") returns #cmd("OSIO_EOD") and
+      #cmd("OSIO_IOERR") where it returned abend codes. #cmd("fseek()")
+      keeps the error indicator. A failed VSAM request leaves its return
+      code in #cmd("vs->rc").], [Drop #cmd("crtm.o") from link lines and
+      the removed names from the source. Rebuild code that reads
+      #cmd("struct dscb4"). Include #cmd("<signal.h>") or
+      #cmd("<stdint.h>") where their names are used. Loop on
+      #cmd("send()") until everything is sent. Call #cmd("clearerr()")
+      before seeking past a read or write error.]
   )
 ] <pg-migrate-since-tab>
