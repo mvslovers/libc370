@@ -49,6 +49,7 @@ time_t time(time_t *timer);
 clock_t clock(void);
 double difftime(time_t time1, time_t time0);
 time_t mktime(struct tm *timeptr);
+time_t timegm(struct tm *timeptr);	/* C23: UTC, the inverse of gmtime() */
 char *asctime(const struct tm *timeptr);
 char *ctime(const time_t *timer);
 struct tm *gmtime(const time_t *timer);

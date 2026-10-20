@@ -287,7 +287,7 @@ or greater than 205 (the years 1970 to 2105).
   time-zone offset. #cmd("mktime()") is therefore the inverse of
   #cmd("gmtime()"), not of #cmd("localtime()"). To convert local time,
   subtract #cmd("__tzget()") from the result.
-- *For UTC, call #cmd("timegm()") (@ext-timegm).* It does what
+- *For UTC, call #cmd("timegm()") (@std-time-timegm).* It does what
   #cmd("mktime()") does today. A later release makes #cmd("mktime()") read
   the fields as local time, as C99 says\; code that means UTC and calls
   #cmd("timegm()") is not affected by that change, code that calls
@@ -302,7 +302,7 @@ or greater than 205 (the years 1970 to 2105).
 
 === Related
 
-#cmd("timegm()") (@ext-timegm), #cmd("gmtime()") (@std-time-gmtime),
+#cmd("timegm()") (@std-time-timegm), #cmd("gmtime()") (@std-time-gmtime),
 #cmd("__tzget()") (@std-time-tzset).
 
 == strftime <std-time-strftime>
@@ -432,6 +432,56 @@ The calendar time.
 
 #cmd("localtime()") (@std-time-localtime), #cmd("difftime()")
 (@std-time-difftime).
+
+== timegm <std-time-timegm>
+
+#idx("timegm")
+#idx("UTC")
+=== Format
+
+```
+#include <time.h>
+
+time_t timegm(struct tm *tm);
+```
+
+=== Description
+
+#cmd("timegm()") converts the broken-down time #var("tm"), taken as UTC
+(GMT), into seconds since 1 January 1970, in a 32-bit #cmd("time_t"). It is
+the inverse of #cmd("gmtime()"). It uses #cmd("tm_year"), #cmd("tm_mon"),
+#cmd("tm_mday"), #cmd("tm_hour"), #cmd("tm_min") and #cmd("tm_sec")\;
+#cmd("tm_wday"), #cmd("tm_yday") and #cmd("tm_isdst") are ignored. On success
+it replaces the whole structure with the broken-down form of the result, as
+#cmd("gmtime_r()") produces it: #cmd("tm_wday") and #cmd("tm_yday") are set,
+#cmd("tm_isdst") is -1, and the other members are brought into their ranges.
+
+=== Returns
+
+The time, or #cmd("(time_t)-1") if #cmd("tm_year") is less than 70 or
+greater than 205 (the years 1970 to 2105). #var("tm") is then left as it was.
+
+=== Notes
+
+- Values of #cmd("tm_mday"), #cmd("tm_hour"), #cmd("tm_min") and
+  #cmd("tm_sec") outside their ranges are carried by the arithmetic:
+  #cmd("tm_mon") = 0 with #cmd("tm_mday") = 292 gives the 292nd day of the
+  year, and #cmd("tm_sec") = 45296 gives 12:34:56. #cmd("tm_mon") must lie
+  in the range 0 to 11.
+- #cmd("timegm()") does the arithmetic that #cmd("mktime()") does today,
+  which applies no time zone (@std-time-mktime). Code that means UTC calls
+  #cmd("timegm()")\; it keeps its results when a later release makes
+  #cmd("mktime()") read #var("tm") as local time, as C99 says.
+- #cmd("timegm()") needs no storage of the task, unlike #cmd("gmtime()").
+- #cmd("timegm()") is not in C99. C23 declares it in #cmd("<time.h>"), and
+  LIBC/370 declares it there too\; #cmd("<ext/time64.h>") includes
+  #cmd("<time.h>"), so it is visible there as well.
+- For a year after 2105, use #cmd("timegm64()") (@ext-mktime64).
+
+=== Related
+
+#cmd("mktime()") (@std-time-mktime), #cmd("gmtime_r()") (@std-time-gmtime),
+@ext-mktime64
 
 == tzset, \_\_tzset, \_\_tzget <std-time-tzset>
 
