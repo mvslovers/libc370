@@ -51,6 +51,15 @@
  *                     Only this part goes through the library, so only its
  *                     result differs between the G and R steps.
  *
+ * MEASURED (2026-10-20, own MVS/CE containers, 10 select rounds each):
+ *   emulator as released, library before #161:  61 x5, 48 x5
+ *   emulator as released, this library:         38 x10
+ *   emulator clearing Cerr on SOCKET/ACCEPT/CLOSE (mvslovers/hyperion
+ *   fix/x75-cerr-reset), library before #161:   0 x5, 48 x5
+ *   that emulator, this library:                38 x10
+ * stale_slot was 98 (and 100 in the second step, two reads inherited from
+ * the first step's job) on the released emulator, 0 on the clearing one.
+ *
  * MODES (PARM):
  *   (none)      single address space, ROUNDS rounds of A + B + C.
  *   GEN=n       C only, for two concurrent jobs: provoke global error n
