@@ -142,12 +142,20 @@ Each fix gets a red/green test in a container, then a PR and a merge.
     while tskey()/svkey0.h hold a switched key leaves that key in the PSW
     (retry key not measured); malloc() inside a window stays key 0 by
     design (documented under __super()).
+- **2.25.0, released 2026-10-20** (tag `v2.25.0` on `5db86a2`, PR #699; MBT
+  sweep 15/15 on the swept tree, identical to the tag's; OFTPD TSTKSDS 18/18
+  on 2.24.1 and 2.25.0, SYSPRINT byte-identical):
+  - #623 (PR #698): `__vsopenx()` with `VSOPTS` (BUFND/BUFNI/BUFSP, password,
+    VSOPT_RST/SKP/SIS/AIX) and `__vsinfo()`; `VSTYPE_ANY` is a macro outside
+    `enum vstype` (-Wswitch). Probe 40/40 in an own container. Not tested:
+    the refusal of a wrong password (RAKF marks clusters RACF-indicated, so
+    VSAM checks no password).
 - **Still open from the decisions:**
   - #392 step 2: `mktime()` and `mktime64()` read local time, the JES
     conversion moves to `timegm64()`; timed with an mvsMF release
     (consapi.c switches to `timegm()`); LUA/370's `os.time()` is fixed by
     it.
-  - VSAM #623, then #624, additive, one minor each.
+  - VSAM #624 (per-call OPTCD), additive, its own minor.
   - #161 Hercules side: waits for upstream (SDL-Hercules-390/hyperion#894, PR #895).
   - Small: `@@listds.c`/`@@fmtisp.c` can include `<time.h>` for
     `timegm()`; `@@listds.c` can read `struct dscb4` instead of `work[20]`.
