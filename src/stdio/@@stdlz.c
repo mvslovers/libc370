@@ -17,6 +17,9 @@
 **   2.15.0 the TRY bit was tested before the lock, and the second thread
 **   could get NULL - fixed in 2.16.0.)
 ** - Once __exit() closes the files (GRTFLAG1_STDEND) nothing is opened.
+** - The stream is opened in the task's PSW key (#693).  Opened inside a
+**   caller's key-0 window, its FILE and buffer were key-0 storage, and
+**   the program's next write in its own key ended S0C4 (2.15.0-2.24.0).
 ** - What is opened is what __rtinit() opened: "*SYSPRINT" and "*SYSTERM"
 **   (the DD, else a SYSOUT data set), "dd:SYSIN" else 'NULLFILE'.  It is
 **   opened through __fpopn(), fopen() without the handlers for new and
@@ -29,6 +32,7 @@
 #include "mvs/crt.h"
 #include "mvs/lock.h"
 #include "mvs/wto.h"
+#include "src/internal/tskey.h"
 
 static void lost(const char *dd)
 {
@@ -50,6 +54,7 @@ __stdlz(int which)
     void        **slot;
     char        bit;
     int         owned;
+    unsigned    st;
 
     if (!grt || (grt->grtflag1 & GRTFLAG1_STDEND)) return;
 
@@ -69,6 +74,7 @@ __stdlz(int which)
     owned = (lock(grt, 0) == 0);    /* 8: this task holds it already */
     if (!*slot && !(grt->grtflag1 & bit)) {
         grt->grtflag1 |= bit;
+        st = tskey();               /* the FILE in the task's key (#693) */
         switch (which) {
         case 0:
             *slot = __fpopn("dd:SYSIN", "r", 0, 0);
@@ -89,6 +95,7 @@ __stdlz(int which)
             }
             break;
         }
+        tsrestore(st);
     }
     if (owned) unlock(grt, 0);
 }

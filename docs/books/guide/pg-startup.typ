@@ -90,6 +90,19 @@ a time function needs it. A program that uses none of them reads no
 #cmd("main()") is 14.8 KB, against 72.7 KB before. The start-up itself
 then takes 0.2 ms of processor time.
 
+#idx("PSW key", "state created on first use")
+What is opened or loaded on first use belongs to the program, in its own
+storage key, also when the first use comes in an authorized program
+between #cmd("__super(PSWKEY0, ...)") and #cmd("__prob()"): there the
+library switches to the key of the task for the open or the load, since
+storage obtained in supervisor state with PSW key 0 would be key 0, and the
+program could not change it any more in its own key. The same holds for
+the list of open files, which is created by the first #cmd("fopen()") and
+grows with later ones. From LIBC/370 2.15.0 to 2.24.0 a program whose
+first #cmd("fopen()"), first use of a standard stream or first
+#cmd("getenv()") came in key 0 ended with abend #cmd("S0C4") (or
+#cmd("S30A")) at the next such call in its own key.
+
 #idx("U0801 abend")
 One thing can stop a program before #cmd("main()"):
 

@@ -22,6 +22,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   anything else (measured on MVS: a `select()` whose socket was closed
   and re-created under it gave errno 61, 48 or 0 in 10 of 10 rounds
   before, `ENOTSOCK` in 10 of 10 after).
+- **What the library creates on first use is created in the program's own
+  storage key, also inside a key-0 window (#693).** Since 2.15.0 the list of
+  open files and the standard streams, and since 2.16.0 the `SYSENV`
+  environment, are created the first time they are used. An authorized program
+  whose first `fopen()` (for example the one inside `__loadhi()`), first use
+  of a standard stream or first `getenv()` came in supervisor state with PSW
+  key 0 got them in key-0 storage, and ended with abend S0C4 (or S30A in
+  `setenv()`) at the next such call in its own key (measured on MVS). A
+  `fopen()` in such a window that grew the list past 20 open files failed the
+  same way, in earlier releases too. Now the list is created and grows, and a
+  stream or the environment first used in such a window is opened, in the
+  task's key; all of it stays lazy. An empty `main()` is unchanged; a program
+  that uses a stream or the environment links about 300-600 bytes more.
 
 ## [2.24.0] - 2026-10-20
 
