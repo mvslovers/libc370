@@ -270,6 +270,13 @@ into. The ones that most often matter:
   (@pg-startup-env), not from a parent process.
 - *The exit status is a return code.* JCL tests values from 0 to 4095, and
   by convention 0 is success, 4 a warning, 8 an error, 12 and 16 severe.
+- *Dynamic allocation from z/OS.* A program that allocates through
+  #cmd("<dynit.h>") -- #cmd("dyninit()"), #cmd("dynalloc()"),
+  #cmd("dynfree()") and the structure #cmd("__dyn_t") -- compiles
+  unchanged. What MVS 3.8j lacks (SMS classes, VSAM attributes, UNIX
+  paths, the request block extension) is ignored or refused with -2\; the
+  _LIBC/370 Library Reference_ lists every field in Chapter 25, “Dynamic
+  Allocation and IDCAMS”.
 - *#cmd("errno") values* are the library's own, and a function that fails
   in an MVS service may return the service's code. Check each function's
   description.

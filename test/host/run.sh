@@ -125,6 +125,11 @@ tstdsnmt() {
        -D'__asm__(...)=' -D'asm(x)=' -D__32BIT__ \
        -I $R/include -I $R -o "$B/t" tstdsnmt.c && "$B/t"
 }
+tstdynit() {
+    "$CC" -std=gnu99 -Wall -fsanitize=address -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast \
+       -D'__asm__(...)=' -D'asm(x)=' -D__32BIT__ \
+       -I $R/include -I $R -o "$B/t" tstdynit.c && "$B/t"
+}
 tstfpunit() {
     "$CC" -std=gnu99 -Wall -fsanitize=address -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast \
        -D'__asm__(...)=' -D'asm(x)=' -D__32BIT__ \
@@ -335,7 +340,7 @@ tstwpos() {
 
 # The tests a plain run covers: all of them.  A test that stops building is
 # not dropped from here - fix it, or say which issue it waits on.
-ALL="tst75sel tst75snd tstacee tstaradf tstardel tstblank tstcmtt tstdblcv tstdblrb tstdirck tstdsnmt tstemptl
+ALL="tst75sel tst75snd tstacee tstaradf tstardel tstblank tstcmtt tstdblcv tstdblrb tstdirck tstdsnmt tstdynit tstemptl
      tstenqdq tsterrfl tstfabnd tstfcls tstfloor tstfpapp tstfprls tstfpunit tstgmain tstidcam tstidcrec tstinet tstiolk tstjesop
      tstjesprb tstjestx tstl tstll tstlspd tstlstds tstpfarg tstpfflt tstpfval tstplus tstraclo tstrand tstrldwk tstrseek tstscnll tstssvt tststrer tstsubsy tsttimegm tsttm64vec tsttodsc tstinstall tstsvckey tsttxdsn tstvsnp
      tstwchar tstwpos tstwto"
