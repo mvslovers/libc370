@@ -103,8 +103,9 @@ Each fix gets a red/green test in a container, then a PR and a merge.
   #68 (PR #654, format(printf) on the wto functions) merged after httpd#310.
 - **Decision round, done 2026-10-20** (decision page of 2026-10-19 and a
   second one of 2026-10-20; each issue carries a "Decision" comment). All
-  merged, red/green in own MVS/CE containers or at compile time; the 2.24.0
-  candidate:
+  merged, red/green in own MVS/CE containers or at compile time; released
+  as 2.24.0 on 2026-10-20 (tag `v2.24.0` on `881ac24`, PR #690; MBT sweep
+  15/15 and a send() canary; assets, `pair`, tap checked):
   - Plain work: #246 naming rule in internals/naming.md (PR #662); #17,
     #72, #400 (PR #664); #178 fseek/rewind (PR #663); #394 (PR #667); #413
     (PR #668); #417 (PR #666); #340 the `l` aliases (PR #670); #173 dscb4
@@ -130,8 +131,8 @@ Each fix gets a red/green test in a container, then a PR and a merge.
     (consapi.c switches to `timegm()`); LUA/370's `os.time()` is fixed by
     it.
   - VSAM #623, then #624, additive, one minor each.
-  - #161 after 2.24.0: red/green, the fix in the mvslovers Hercules fork,
-    then an upstream issue and PR.
+  - #161 (2.24.0 is out, next): red/green, the fix in the mvslovers
+    Hercules fork, then an upstream issue and PR.
   - Small: `@@listds.c`/`@@fmtisp.c` can include `<time.h>` for
     `timegm()`; `@@listds.c` can read `struct dscb4` instead of `work[20]`.
   - Build: a CI check fails when the library build shows a warning, rather
