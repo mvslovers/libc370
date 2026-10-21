@@ -150,6 +150,13 @@ Each fix gets a red/green test in a container, then a PR and a merge.
     `enum vstype` (-Wswitch). Probe 40/40 in an own container. Not tested:
     the refusal of a wrong password (RAKF marks clusters RACF-indicated, so
     VSAM checks no password).
+- **On main, unreleased:**
+  - #700 (PR #703): a thread pool of 1-3 workers gets its first worker
+    (pending check outside `if (count)` in @@cminit.c); MVS probe tstpool
+    red 1-3 / green 1-4. FTPD's pool-size >= 4 workaround (ftpd#168) can go
+    once released. Open: refuse a pool of 0?
+  - Docs (PR #702): VSAM checks passwords unless the catalog is
+    RACF-indicated (measured).
 - **Still open from the decisions:**
   - #392 step 2: `mktime()` and `mktime64()` read local time, the JES
     conversion moves to `timegm64()`; timed with an mvsMF release
