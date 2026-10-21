@@ -150,11 +150,14 @@ Each fix gets a red/green test in a container, then a PR and a merge.
     `enum vstype` (-Wswitch). Probe 40/40 in an own container. Not tested:
     the refusal of a wrong password (RAKF marks clusters RACF-indicated, so
     VSAM checks no password).
-- **On main, unreleased:**
+- **2.25.1, released 2026-10-21** (tag `v2.25.1` on `fcde4e8`, PR #706; MBT
+  sweep 15/15 from the PR's sysroot artifact; FTPD red/green at consumer
+  level with MAXSESSIONS=2 and ftpd#168's workaround off: 2.25.0 serves no
+  session, 2.25.1 serves both; HTTPD/mvsMF unchanged):
   - #700 (PR #703): a thread pool of 1-3 workers gets its first worker
     (pending check outside `if (count)` in @@cminit.c); MVS probe tstpool
     red 1-3 / green 1-4. FTPD's pool-size >= 4 workaround (ftpd#168) can go
-    once released. Open: refuse a pool of 0?
+    once FTPD requires >= 2.25.1. Open: refuse a pool of 0?
   - Docs (PR #702): VSAM checks passwords unless the catalog is
     RACF-indicated (measured).
 - **Still open from the decisions:**
