@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.25.1] - 2026-10-21
+
 ### Fixed
 - **The manuals say correctly when VSAM checks a password (#623).** The
   2.25.0 text said a password is checked only for a cluster that is not
