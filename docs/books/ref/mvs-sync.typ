@@ -1104,8 +1104,9 @@ Creates a thread manager with at most #var("count") workers, each running
 #var("func") with #var("udata") on a stack of #var("stacksize") bytes (0
 means 64 KB). The dispatcher thread is created at once, with a stack of
 32 KB, and starts a minimum number of workers: 3 when #var("count") is more
-than 5, 1 when it is 4 or 5, and none otherwise. Further workers are started
-when items are waiting.
+than 5, 1 when it is 4 or 5, and none otherwise. Further workers, and the
+first one of a pool of 1 to 3, are started when items are waiting\; the pool
+never holds more than #var("count") workers.
 
 === Returns
 The manager handle, or #cmd("NULL") when no storage is available or the

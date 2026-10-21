@@ -459,10 +459,12 @@ dispatch_thread_work(CTHDMGR *mgr, int timer)
         for(n=0; n < mgr->start; n++) {
             dispatch_work(mgr, mgr->worker[n]);
         }
-
-		/* see if we have anything pending in the queue */
-        if (arraycount(&mgr->queue)) rc = 1;
 	}
+
+	/* see if we have anything pending in the queue.  Also with no worker
+	 * at all: a pool of 1 to 3 starts empty (mintask 0) and gets its first
+	 * worker only through this, in dispatch_thread_timed_wait() (#700). */
+    if (arraycount(&mgr->queue)) rc = 1;
 
 quit:	
     unlock(mgr,0);
