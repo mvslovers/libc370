@@ -548,6 +548,12 @@ What later 2.x releases ask of a program or a build:
       with #cmd("VSTYPE_ANY") without knowing its type;
       #cmd("__vsinfo()") reports the type and attributes after OPEN.
       #cmd("vsopen()") and the other VSAM functions are unchanged.],
-      [Nothing.]
+      [Nothing.],
+    [2.25.1], [A worker pool of 1, 2 or 3 workers
+      (#cmd("cthread_manager_init()")) hands out its queued items; it never
+      started a worker. The manuals say correctly when VSAM checks a
+      password: the catalog's RACF indication decides.],
+      [Nothing. A caller that asked for 4 or more workers only to get the
+      pool going can ask for the number it needs.]
   )
 ] <pg-migrate-since-tab>
