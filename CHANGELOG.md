@@ -15,6 +15,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `EVSOPEN` (ACB error code X'98', message IEC161I 040), also for a
   cluster that is RACF-indicated itself, and the right password opened it
   (measured on MVS). The library is unchanged.
+- **A worker pool of 1, 2 or 3 workers now processes its queue (#700).**
+  `cthread_manager_init()` starts no worker for a pool of 3 or fewer and
+  leaves the first one until work arrives, but the dispatcher started a
+  worker on demand only when the pool already had one. Items queued with
+  `cthread_queue_add()` were accepted and never handed out; only a pool of
+  4 or more worked. Such a pool now starts its first worker when an item is
+  waiting, also again after its last worker ended, and never holds more
+  workers than the count (measured on MVS).
 
 ## [2.25.0] - 2026-10-20
 

@@ -209,6 +209,7 @@ CHANGELOG has everything else.
 
 | Release | Change | What to do |
 |---|---|---|
+| Unreleased | A worker pool of 1, 2 or 3 workers (`cthread_manager_init()`) hands out its queued items; it never started a worker (#700) | A caller that asked for 4 or more workers only to get the pool going can ask for the number it needs |
 | 2.24.1 | An authorized program's first `fopen()`, standard stream or `getenv()` inside a key-0 window (`__super(PSWKEY0, ...)`, `__loadhi()`) no longer leaves the library's state in key-0 storage (#693); 2.15.0 to 2.24.0 ended S0C4 or S30A at the next such call in the program's key | Nothing. A workaround that opened and closed a file before the first key-0 window can go |
 | 2.24.1 | A failed `select()` always sets `ENOTSOCK`; a failed `socket()` sets `ENOBUFS` for any error other than `EMFILE`, `ENFILE`, `ENOBUFS`, `ENOMEM`, `EACCES`, `EAFNOSUPPORT`, `EPROTONOSUPPORT`, `EPROTOTYPE`, `EINVAL` (#161) | Nothing, unless code tested `select()`'s errno for a particular network error; treat any `select()` failure as a socket that is gone |
 | 2.24.0 | After a failed VSAM request the handle's `rc` is 8 or 12 and `component` the real component code; up to 2.23.0 both stayed 0 (#680) | Code that tested `vs->rc == 0` to mean "no error" or ignored `rc` now sees the return code; test `vserror()` or `vs->rc != 0` for a failure. `rsn` is unchanged |
