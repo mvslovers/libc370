@@ -1,6 +1,7 @@
 /* @@CMINIT.C - cthread_init()
 */
 #include <mvs/wto.h>
+#include <errno.h>
 #include <stdio.h>
 #include "time.h"
 #include "ext/time64.h"
@@ -24,11 +25,18 @@ __asm__("\n&FUNC    SETC 'cthread_manager_init'");
 CTHDMGR *
 cthread_manager_init(unsigned count, void *func, void *udata, unsigned stacksize)
 {
-    CTHDMGR         *mgr    = calloc(1, sizeof(CTHDMGR));
+    CTHDMGR         *mgr    = NULL;
     unsigned        *psa    = (unsigned *)0;
     unsigned        *ascb   = (unsigned *)psa[0x224/4];
     unsigned        asid    = ((ascb[0x24/4]) >> 16);
 
+    /* a pool without workers would never serve its queue (#708) */
+    if (count == 0) {
+        errno = EINVAL;
+        goto quit;
+    }
+
+    mgr = calloc(1, sizeof(CTHDMGR));
     if (!mgr) goto quit;
 
     strcpy(mgr->eye, CTHDMGR_EYE);
