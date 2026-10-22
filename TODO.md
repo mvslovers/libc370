@@ -160,6 +160,15 @@ Each fix gets a red/green test in a container, then a PR and a merge.
     once FTPD requires >= 2.25.1. Open: refuse a pool of 0?
   - Docs (PR #702): VSAM checks passwords unless the catalog is
     RACF-indicated (measured).
+- **On main, unreleased (next minor):**
+  - #708 (PR #709): `cthread_manager_init(0, ...)` returns NULL, errno
+    EINVAL; tstpool red/green with the count-0 case.
+  - #705 (PR #710): `__fabandon()` returns -2 whenever the DD is still
+    allocated (checked before the abend); `@@ACLOSE` clears ZBUFF1/ZBUFF2
+    before each FREEMAIN (double FREEMAIN after an abended CLOSE, SA0A on
+    2.10.3); `__adisc()` sets DCBCNSTO, so abandoning stores no PDS member.
+    Probe tstfab705 red/green; KB inbox note written. ftpd#232: FTPD should
+    report "DD still held" only for -2.
 - **Still open from the decisions:**
   - #392 step 2: `mktime()` and `mktime64()` read local time, the JES
     conversion moves to `timegm64()`; timed with an mvsMF release
