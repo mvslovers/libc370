@@ -24,6 +24,14 @@ SUBPOOL  EQU   0                                                      *
 *  IOFLSDW   spanned record incomplete       -> no continuation       *
 *  BUFFCURR  current record in the block     -> block is empty        *
 *  KEPTREC   record kept for UPDAT rewrite   -> nothing to rewrite    *
+*  DCBCNSTO  member STOW already done        -> CLOSE STOWs nothing   *
+*                                                                     *
+*  The last one is the member a PDS write had started: blocks already *
+*  on DASD would otherwise go into the directory as the member at     *
+*  CLOSE - a new member with part of its data, or an old one          *
+*  replaced by it.  Same bit, same reason as @@ACLOSE's (#524), and   *
+*  here because "write nothing more" includes the directory (#705).   *
+*  __fabandon() is the only caller.                                   *
 *                                                                     *
 *  Touches no MVS service, so it needs no save area of its own.       *
 *  void __adisc(void *handle)                                         *
@@ -33,6 +41,7 @@ SUBPOOL  EQU   0                                                      *
          NI    IOPFLAGS,255-IOFLDATA-IOFLSDW  NOTHING IS PENDING
          XC    BUFFCURR,BUFFCURR   THE BLOCK IS EMPTY
          XC    KEPTREC(8),KEPTREC  NO RECORD KEPT FOR REWRITE
+         OI    DCBCIND2,DCBCNSTO   NO MEMBER STOW BY CLOSE (#705)
          FUNEXIT RC=0
 *
          LTORG ,
