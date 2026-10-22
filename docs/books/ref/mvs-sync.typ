@@ -1109,8 +1109,14 @@ first one of a pool of 1 to 3, are started when items are waiting\; the pool
 never holds more than #var("count") workers.
 
 === Returns
-The manager handle, or #cmd("NULL") when no storage is available or the
-dispatcher thread cannot be created.
+The manager handle, or #cmd("NULL") when #var("count") is 0, no storage is
+available or the dispatcher thread cannot be created.
+
+=== Errors
+#deflist(width: 1.1in,
+  [#cmd("EINVAL")], [#var("count") is 0: a pool without workers would never
+    serve its queue. No dispatcher thread is created.],
+)
 
 === Example
 #code(read("../ex/mvs-sync/pool.c"))

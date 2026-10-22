@@ -304,8 +304,8 @@ work than with a thread created for each item. The thread manager keeps such
 a pool:
 
 + Create the manager with #cmd("cthread_manager_init()"), giving the
-  largest number of workers, the worker function, a pointer the workers
-  receive, and the stack size of a worker (0 for 64 KB).
+  largest number of workers (at least 1), the worker function, a pointer
+  the workers receive, and the stack size of a worker (0 for 64 KB).
 + Write the worker function as a loop around #cmd("cthread_worker_wait()").
   It returns #cmd("CTHDWORK_POST_REQUEST") with the next item,
   #cmd("CTHDWORK_POST_TIMER") without one, and

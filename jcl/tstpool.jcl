@@ -2,6 +2,7 @@
 //             MSGLEVEL=(1,1)
 //*
 //* libc370 #700 - a pool of 1-3 workers gets a worker.
+//* #708 - a pool of 0 workers is refused (NULL, EINVAL).
 //* See test/mvs/tstpool.c.  GREEN is this tree, RED the library
 //* built from main before the fix.
 //*

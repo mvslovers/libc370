@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+- **`cthread_manager_init()` refuses a pool of 0 workers (#708).** A count
+  of 0 used to return a manager that accepted items with
+  `cthread_queue_add()` and never started a worker, so every queued item
+  waited forever. It now returns `NULL` with `errno` set to `EINVAL` and
+  creates no dispatcher thread, so the wrong configuration shows at once
+  (measured on MVS).
+
 ## [2.25.1] - 2026-10-21
 
 ### Fixed
