@@ -23,11 +23,17 @@
  * an ABEND is not a SYNAD condition, so _FILE_FLAG_ERROR is never set and the
  * FILE looks healthy.
  *
- *    0   nothing written, CLOSE completed, the DD released
- *   >0   CLOSE abended; the 0x00sssuuu code (a D37 reads 0x00D37000).  The
- *        FILE is gone, the DD is not - the failed CLOSE still holds it
+ * Nothing more is written, and a member of a PDS is not stored: a new member
+ * does not appear and an existing one keeps its old content (#705).  Also
+ * for a FILE whose fclose() abended inside CLOSE (SB14 when the directory has
+ * no room) and was recovered.
+ *
+ *    0   CLOSE completed, the DD released
+ *   >0   CLOSE abended; the 0x00sssuuu code (an SB14 reads 0x00B14000).
+ *        The FILE is gone and the DD released all the same (#705)
  *   -1   not a FILE
- *   -2   CLOSE completed but the DD could not be unallocated
+ *   -2   the DD could not be unallocated and is still held, whether or not
+ *        CLOSE abended
  *   -3   ESTAE CREATE failed, CLOSE was not attempted, the FILE is untouched
  */
 extern int __fabandon(FILE *fp);

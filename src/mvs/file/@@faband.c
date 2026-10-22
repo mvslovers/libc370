@@ -27,7 +27,10 @@
 **     the abend shape above @@ATROUT has already cleared IOFLDATA (it resets
 **     the flag BEFORE the WRITE), but that is a property of one failure and
 **     not a contract; a caller that abandons with a good partial block
-**     pending means "write nothing more".
+**     pending means "write nothing more".  That includes the directory:
+**     __adisc() also marks the member STOW done, so CLOSE does not store
+**     a PDS member from the blocks already on DASD (#705, as #524 does
+**     for a failed write).
 **  3. CLOSE may abend anyway and must be reported, not propagated.  BSAM
 **     CLOSE writes the EOF mark and can reach EOV - and a _FILE_FLAG_RECORD
 **     caller has no C buffer at all, so CLOSE is the only place it can fail.
@@ -38,14 +41,20 @@
 ** ESTAE recovers the FILE looks healthy to the library.  Only the caller
 ** knows, which is why this is an API and not a smarter fclose().
 **
-** RETURNS
-**    0   nothing was written, CLOSE completed, the DD was released
-**   >0   CLOSE abended: ___try()'s 0x00sssuuu code (D37 reads 0x00D37000).
-**        The FILE, its buffer and its heap are gone; the DD is NOT - the
-**        failed CLOSE still holds the allocation, and only ending the
-**        address space releases it
+** RETURNS (#705)
+**    0   CLOSE completed, the DD was released
+**   >0   CLOSE abended: ___try()'s 0x00sssuuu code (an SB14 reads
+**        0x00B14000).  Nothing more was written, no member was stored,
+**        the FILE is gone and the DD WAS released - the SVC 99 behind it
+**        answered 0, or this would be -2.  Measured on MVS 3.8j (#705,
+**        test/mvs/tstfab705.c): an SB14 from IGG0201Z's STOW comes after
+**        the close itself is done (the DCB reads closed, its DDNAME is
+**        restored), and the unallocation succeeds.  #168 wrote ">0: the
+**        DD is still held" without a measurement; none was ever found
 **   -1   not a FILE (NULL, or the eye catcher does not match)
-**   -2   CLOSE completed but the DD could not be unallocated
+**   -2   the DD could not be unallocated, so it is still held - whether
+**        or not CLOSE abended.  The DD's state outranks the abend: -2 is
+**        the one answer that says "still allocated"
 **   -3   ESTAE CREATE failed, so CLOSE was NOT attempted.  Nothing was torn
 **        down and the FILE is untouched - the caller may retry
 */
@@ -106,8 +115,8 @@ __fabandon(FILE *fp)
     /* buffer, DD, grtfile, FILE, lock - shared with fclose() */
     rc = __fpterm(fp, 1);
 
-    if (abend) return abend;        /* the DD is still there; say why    */
-    if (rc)    return -2;           /* CLOSE was clean, SVC 99 was not   */
+    if (rc)    return -2;           /* the DD is still there (#705)      */
+    if (abend) return abend;        /* CLOSE abended, the DD went        */
 
     return 0;
 }

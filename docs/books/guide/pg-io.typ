@@ -461,7 +461,11 @@ A program that catches an x37 abend with its own recovery routine is left
 with a stream that looks healthy to the library, and #cmd("fclose()") would
 drive the failing write again and abend inside the close. Close such a
 stream with #cmd("__fabandon()") from #cmd("<mvs/file.h>"), which discards
-the buffer and closes it under protection. It is needed only after an
+the buffer and closes it under protection, and does the same for a stream
+whose #cmd("fclose()") abended inside the close -- B14 when the directory
+of a partitioned data set has no room for the member. It writes nothing
+more and stores no member, and it frees the DD statement\; only a return
+of -2 means that the DD is still allocated. It is needed only after an
 abend; a stream that reported #cmd("ENOSPC") is closed with
 #cmd("fclose()").
 
