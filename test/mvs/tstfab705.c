@@ -2,8 +2,19 @@
  * tstfab705.c - libc370 #705 on MVS: what __fabandon() returns, and
  * whether the DD is really still held, when the CLOSE it issues abends.
  *
- * MEASUREMENT ONLY.  There is no green or red: every case WTOs what it
- * saw, and the step ends RC 0 unless a case could not be set up.
+ * Written to measure #705, and then the regression probe for its three
+ * fixes.  Every case WTOs what it saw; the checks (PASS/FAIL lines) are
+ * the verdict, and the step ends RC 0 green, RC 8 when a check failed or
+ * a case could not be set up:
+ *
+ *   - the return agrees with the DD: -2 exactly when the DD is still in
+ *     the DSAB chain, >= 0 when it went (every round of every case)
+ *   - C: no stale buffer pointer in the work area after the abended
+ *     CLOSE, and a block claimed where a freed buffer was is not freed
+ *     a second time by __fabandon() (a verdict only when GETMAIN places
+ *     the block there)
+ *   - M: __fabandon() on a member with blocks written stores no member
+ *     and leaves an existing one alone
  *
  * The consumer shape (mvslovers/ftpd): fopen("'PDS(MEMBER)'","wb") on a
  * PDS whose directory is full, fwrite, fflush, fclose().  The STOW inside
@@ -15,7 +26,9 @@
  * result for the first and the second occurrence per address space.
  *
  *   C  consumer: fclose() under try() abends SB14, then __fabandon()
- *   D  direct:   __fabandon() instead of fclose() - its own CLOSE STOWs
+ *   D  direct:   __fabandon() instead of fclose() on the full directory
+ *   M  member:   __fabandon() on a member with room in the directory and
+ *                two blocks on DASD; M2 over an existing member
  *   E  E37:      a member of a TRK(1,1,1) PDS written until the secondary
  *                space is used up (SE37-04, which no exit catches, #543),
  *                under try(); then __fabandon()
@@ -82,11 +95,47 @@
 #define LIMIT   60000L          /* records; E37 needs 16 tracks of them   */
 
 static int   unmeasured;
+static int   bad;               /* checks that failed                     */
+static int   memexists;         /* after(): the member was found          */
 static FILE *thefp;
 static long  written;
 static int   nrecs = 10;        /* records the C and D rounds write       */
 
 int main(int argc, char **argv);
+
+static void check(int cond, const char *tag, const char *what)
+{
+    wtof("TF705 %s %s: %s", tag, cond ? "PASS" : "FAIL", what);
+    if (!cond) bad++;
+}
+
+/* GETMAIN/FREEMAIN RC in subpool 0, without getmain()'s prefix and
+ * rounding: the probe asks for exactly what @@ACLOSE gave back, so the
+ * block can land where a freed buffer was */
+static void *gm0(unsigned lv)
+{
+    int     rc;
+    void    *a;
+
+    __asm__ __volatile__("LR\t0,%2\n\t"
+            "GETMAIN RC,LV=(0),SP=0\n\t"
+            "LR\t%0,15\n\t"
+            "LR\t%1,1"
+            : "=r"(rc), "=r"(a) : "r"(lv) : "0", "1", "14", "15", "memory");
+    return rc ? 0 : a;
+}
+
+static int fm0(void *a, unsigned lv)
+{
+    int     rc;
+
+    __asm__ __volatile__("LR\t0,%1\n\t"
+            "LR\t1,%2\n\t"
+            "FREEMAIN RC,LV=(0),A=(1),SP=0\n\t"
+            "LR\t%0,15"
+            : "=r"(rc) : "r"(lv), "r"(a) : "0", "1", "14", "15", "memory");
+    return rc;
+}
 
 static void writer(FILE *fp)
 {
@@ -111,6 +160,18 @@ static void fewrecs(FILE *fp)
 static void closer(FILE *fp)
 {
     fclose(fp);
+}
+
+/* fopen(fn, "wb"), or say why not and count the case as unmeasured */
+static FILE *opened(const char *tag, const char *fn)
+{
+    FILE    *fp = fopen(fn, "wb");
+
+    if (!fp) {
+        wtof("TF705 %s fopen %s NULL", tag, fn);
+        unmeasured++;
+    }
+    return fp;
 }
 
 /* ------------------------------------------------------------------------ */
@@ -146,7 +207,7 @@ static int filldir(const char *dsn)
     for (;;) {
         char name[9];
 
-        sprintf(name, "F%04d   ", n);
+        snprintf(name, sizeof(name), "F%04d   ", n);
         memset(ent, 0, sizeof(ent));
         memcpy(ent, name, 8);
         ent[10] = 1;                        /* TTR 000001, never read      */
@@ -170,7 +231,7 @@ static void dcbdump(const char *tag, FILE *fp)
         wtof("TF705 %s dcb=0", tag);
         return;
     }
-    for (i = 0; i < 0x34; i++) sprintf(hex + 2 * i, "%02X", d[i]);
+    for (i = 0; i < 0x34; i++) snprintf(hex + 2 * i, 3, "%02X", d[i]);
     wtof("TF705 %s dcb=%08X flags=%08X", tag, (unsigned)d,
          (unsigned)fp->flags);
     wtof("TF705 %s +00 %.40s", tag, hex);
@@ -184,8 +245,9 @@ static void dcbdump(const char *tag, FILE *fp)
          (unsigned)fp, (unsigned)fp->buf);
 }
 
-/* What __fabandon() answered, and the DD and member afterwards */
-static void after(const char *tag, int arc, const char *dd,
+/* What __fabandon() answered, and the DD and member afterwards.  Returns
+ * 1 when the DD was still allocated. */
+static int after(const char *tag, int arc, const char *dd,
                   const char *dsn, const char *mem)
 {
 #ifndef OLDLIB
@@ -218,27 +280,43 @@ static void after(const char *tag, int arc, const char *dd,
         wtof("TF705 %s __dsfree(%s) rc=%d", tag, dd, frc);
     }
 
+    /* the contract of #705: -2 when the DD is still there, never
+       otherwise; anything >= 0 says the DD went */
+    check(dsab ? arc == -2 : arc >= 0, tag,
+          "the return agrees with the DD (#705)");
+
+    memexists = 0;
     if (mem) {
-        sprintf(fn, "'%s(%s)'", dsn, mem);
+        snprintf(fn, sizeof(fn), "'%s(%s)'", dsn, mem);
         rf = fopen(fn, "rb");
+        memexists = rf != 0;
         wtof("TF705 %s member %s %s", tag, mem, rf ? "EXISTS" : "absent");
         if (rf) fclose(rf);
     }
+    return dsab != 0;
 }
 
 /* ---- C: fclose() under try(), then __fabandon() ------------------------ */
 static void round_c(const char *tag, const char *dsn, const char *mem)
 {
     char    fn[60], dd[9];
-    int     abend, arc;
+    int     abend, arc, i, frc;
+    const unsigned *w;
+    unsigned ba[2], bl[2];
+    void    *claim[2];
 
-    sprintf(fn, "'%s(%s)'", dsn, mem);
-    thefp = fopen(fn, "wb");
-    if (!thefp) { wtof("TF705 %s fopen %s NULL", tag, fn); unmeasured++; return; }
+    snprintf(fn, sizeof(fn), "'%s(%s)'", dsn, mem);
+    thefp = opened(tag, fn);
+    if (!thefp) return;
     strcpy(dd, thefp->ddname);
     abend = try(fewrecs, thefp);
     wtof("TF705 %s fopen dd=%s write try=%08X", tag, dd, abend);
     dcbdump(tag, thefp);
+    w = (const unsigned *)thefp->dcb;
+    for (i = 0; i < 2; i++) {
+        ba[i] = w[(0xA4 + 8 * i) / 4];
+        bl[i] = (w[(0xA8 + 8 * i) / 4] + 7) & ~7u;
+    }
     abend = try(closer, thefp);
     wtof("TF705 %s fclose under try=%08X", tag, abend);
     if (abend == 0) {
@@ -248,8 +326,37 @@ static void round_c(const char *tag, const char *dsn, const char *mem)
         return;
     }
     dcbdump(tag, thefp);
+
+    /* (#705) The CLOSE abended, the work area lives on, and __fabandon()
+       runs @@ACLOSE on it a second time.  Buffer pointers still set here
+       are what that second run FREEMAINs again. */
+    check(w[0xA8 / 4] == 0 && w[0xB0 / 4] == 0, tag,
+          "no stale buffer pointer after the abended CLOSE");
+
+    /* ... and whether that second FREEMAIN hits live storage.  Claim the
+       storage the buffers occupied, the way any GETMAIN in between could:
+       a block that lands exactly on a freed buffer must still be ours
+       after __fabandon().  Where GETMAIN places it is not the probe's to
+       choose, so a block that lands elsewhere decides nothing. */
+    for (i = 0; i < 2; i++) {
+        claim[i] = gm0(bl[i]);
+        if (claim[i] && (unsigned)claim[i] != ba[i]) {
+            fm0(claim[i], bl[i]);
+            claim[i] = 0;
+        }
+        wtof("TF705 %s buffer %d %08X,%X claimed %s", tag, i + 1, ba[i],
+             bl[i], claim[i] ? "in place" : "elsewhere - no verdict");
+    }
+
     arc = __fabandon(thefp);
     after(tag, arc, dd, dsn, mem);
+
+    for (i = 0; i < 2; i++) {
+        if (!claim[i]) continue;
+        frc = fm0(claim[i], bl[i]);
+        wtof("TF705 %s claimed block %d FREEMAIN rc=%d", tag, i + 1, frc);
+        check(frc == 0, tag, "the claimed block was not freed a second time");
+    }
 }
 
 /* ---- A: C, but the second CLOSE without any ESTAE ---------------------- */
@@ -262,9 +369,9 @@ static void round_a(const char *tag, const char *dsn, const char *mem)
     char    fn[60], dd[9];
     int     abend, rc;
 
-    sprintf(fn, "'%s(%s)'", dsn, mem);
-    thefp = fopen(fn, "wb");
-    if (!thefp) { wtof("TF705 %s fopen %s NULL", tag, fn); unmeasured++; return; }
+    snprintf(fn, sizeof(fn), "'%s(%s)'", dsn, mem);
+    thefp = opened(tag, fn);
+    if (!thefp) return;
     strcpy(dd, thefp->ddname);
     abend = try(fewrecs, thefp);
     dcbdump(tag, thefp);
@@ -295,14 +402,59 @@ static void round_d(const char *tag, const char *dsn, const char *mem)
     char    fn[60], dd[9];
     int     abend, arc;
 
-    sprintf(fn, "'%s(%s)'", dsn, mem);
-    thefp = fopen(fn, "wb");
-    if (!thefp) { wtof("TF705 %s fopen %s NULL", tag, fn); unmeasured++; return; }
+    snprintf(fn, sizeof(fn), "'%s(%s)'", dsn, mem);
+    thefp = opened(tag, fn);
+    if (!thefp) return;
     strcpy(dd, thefp->ddname);
     abend = try(fewrecs, thefp);
     wtof("TF705 %s fopen dd=%s write try=%08X", tag, dd, abend);
     arc = __fabandon(thefp);
     after(tag, arc, dd, dsn, mem);
+}
+
+/* ---- M: __fabandon() on a member, with room in the directory ---------- */
+/* Blocks are on DASD already: 25 records of 80 in blocks of 800 are two
+ * full blocks written and five records pending.  Before #705 the CLOSE
+ * in __fabandon() STOWed what was on DASD as the member - a new member
+ * with part of its data, or (M2) an existing one replaced by it. */
+static void round_m(const char *tag, const char *dsn, const char *mem,
+                    int replace)
+{
+    char    fn[60], dd[9], rec[80];
+    FILE    *rf;
+    int     abend, arc;
+
+    snprintf(fn, sizeof(fn), "'%s(%s)'", dsn, mem);
+    if (replace) {
+        rf = opened(tag, fn);
+        if (!rf) return;
+        memset(rec, 'O', sizeof(rec));
+        fwrite(rec, 1, sizeof(rec), rf);
+        wtof("TF705 %s old member written, fclose rc=%d", tag, fclose(rf));
+    }
+    thefp = opened(tag, fn);
+    if (!thefp) return;
+    strcpy(dd, thefp->ddname);
+    nrecs = 25;
+    abend = try(fewrecs, thefp);
+    nrecs = 10;
+    wtof("TF705 %s fopen dd=%s 25 records try=%08X", tag, dd, abend);
+    arc = __fabandon(thefp);
+    after(tag, arc, dd, dsn, mem);
+    check(arc == 0, tag, "__fabandon() rc=0");
+    if (!replace) {
+        check(!memexists, tag, "no member stored by __fabandon()'s CLOSE");
+        return;
+    }
+    /* the old member must be untouched: one record of 'O' */
+    memset(rec, 0, sizeof(rec));
+    rf = fopen(fn, "rb");
+    if (rf) {
+        if (fread(rec, 1, sizeof(rec), rf) != sizeof(rec)) rec[0] = 0;
+        fclose(rf);
+    }
+    wtof("TF705 %s old member first byte %02X", tag, (unsigned char)rec[0]);
+    check(rf && rec[0] == 'O', tag, "the old member was not replaced");
 }
 
 /* ---- E / S: write until full, then __fabandon() ------------------------ */
@@ -312,8 +464,8 @@ static void round_w(const char *tag, const char *fn, const char *dsn,
     char    dd[9];
     int     abend, arc;
 
-    thefp = fopen(fn, "wb");
-    if (!thefp) { wtof("TF705 %s fopen %s NULL", tag, fn); unmeasured++; return; }
+    thefp = opened(tag, fn);
+    if (!thefp) return;
     strcpy(dd, thefp->ddname);
     abend = try(writer, thefp);
 #ifndef OLDLIB
@@ -345,9 +497,12 @@ int main(int argc, char **argv)
     case 'A':
         /* a second PARM letter names the library, so a step that
            abended and left its data set behind does not block the next */
-        sprintf(d1, "IBMUSER.TF705.%c%s", mode,
+        snprintf(d1, sizeof(d1), "IBMUSER.TF705.%c%s", mode,
                 (argc > 1 && argv[1][0]) ? argv[1] + 1 : "");
-        if (create(PDS, d1, "5,1,1") || filldir(d1) <= 0) { unmeasured++; break; }
+        if (create(PDS, d1, "5,1,1") || filldir(d1) <= 0) {
+            unmeasured++;
+            break;
+        }
         if (mode == 'C') {
             round_c("C1", d1, "NEW1");
             round_c("C2", d1, "NEW2");
@@ -363,38 +518,50 @@ int main(int argc, char **argv)
         scratch(d1);
         break;
 
+    case 'M':
+        snprintf(d1, sizeof(d1), "IBMUSER.TF705.M%s",
+                (argc > 1 && argv[1][0]) ? argv[1] + 1 : "");
+        if (create(PDS, d1, "5,1,1")) { unmeasured++; break; }
+        round_m("M1", d1, "NEW1", 0);
+        round_m("M2", d1, "OLD1", 1);
+        scratch(d1);
+        break;
+
     case 'E':
-        sprintf(d1, "IBMUSER.TF705.E1");
-        sprintf(d2, "IBMUSER.TF705.E2");
+        snprintf(d1, sizeof(d1), "IBMUSER.TF705.E1");
+        snprintf(d2, sizeof(d2), "IBMUSER.TF705.E2");
         if (create(PDS, d1, "1,1,1") || create(PDS, d2, "1,1,1")) {
             unmeasured++;
             break;
         }
-        sprintf(fn, "'%s(BIG)'", d1);
+        snprintf(fn, sizeof(fn), "'%s(BIG)'", d1);
         round_w("E1", fn, d1, "BIG");
-        sprintf(fn, "'%s(BIG)'", d2);
+        snprintf(fn, sizeof(fn), "'%s(BIG)'", d2);
         round_w("E2", fn, d2, "BIG");
         scratch(d1);
         scratch(d2);
         break;
 
     case 'S':
-        sprintf(d1, "IBMUSER.TF705.S1");
-        sprintf(d2, "IBMUSER.TF705.S2");
-        if (create(SEQ, d1, "1,0") || create(SEQ, d2, "1,0")) { unmeasured++; break; }
-        sprintf(fn, "'%s'", d1);
+        snprintf(d1, sizeof(d1), "IBMUSER.TF705.S1");
+        snprintf(d2, sizeof(d2), "IBMUSER.TF705.S2");
+        if (create(SEQ, d1, "1,0") || create(SEQ, d2, "1,0")) {
+            unmeasured++;
+            break;
+        }
+        snprintf(fn, sizeof(fn), "'%s'", d1);
         round_w("S1", fn, d1, NULL);
-        sprintf(fn, "'%s'", d2);
+        snprintf(fn, sizeof(fn), "'%s'", d2);
         round_w("S2", fn, d2, NULL);
         scratch(d1);
         scratch(d2);
         break;
 
     default:
-        wtof("TF705 unknown PARM - use C, D, E or S");
+        wtof("TF705 unknown PARM - use C, D, M, E, S or A");
         unmeasured++;
         break;
     }
-    wtof("TF705 END mode %c unmeasured=%d", mode, unmeasured);
-    return unmeasured ? 8 : 0;
+    wtof("TF705 END mode %c failed=%d unmeasured=%d", mode, bad, unmeasured);
+    return (bad || unmeasured) ? 8 : 0;
 }
