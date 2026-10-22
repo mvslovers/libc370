@@ -41,9 +41,10 @@
  *       @@ACLOSE's opening FIXWRITE has nothing to write even when the
  *       DCB, not the C buffer, is what holds the pending block.
  *   (D) __aclose() is reached THROUGH ___try(), never directly.
- *   (E) return codes: 0 clean / >0 the abend code / -2 the DD stayed /
- *       -3 ESTAE CREATE failed, and in that last case NOTHING is torn
- *       down - the FILE is still registered and still has its DCB.
+ *   (E) return codes: 0 clean / >0 the abend code, the DD released /
+ *       -2 the DD stayed, whether or not CLOSE abended (#705) / -3 ESTAE
+ *       CREATE failed, and in that last case NOTHING is torn down - the
+ *       FILE is still registered and still has its DCB.
  *   (F) the stale ENQ.  The abended fwrite() held the FILE lock and the
  *       ESTAE retry never DEQ'd it, so lock() answers 8.  fclose()
  *       treats that as "an outer caller owns it" and leaves it held -
@@ -327,6 +328,17 @@ int main(void)
     fpfree_rc = 4;                      /* the DD would not unallocate   */
     rc = __fabandon(fp);
     CHECK_EQ(rc, -2, "(E) rc=-2 when the DD could not be unallocated");
+
+    /* #705: the DD's state outranks the abend.  A CLOSE that abended and
+       a DD that stayed allocated is -2, not the abend code: -2 is the
+       one answer that says "still held", and >0 promises it is not */
+    reset_shims();
+    fp = make_file(1);
+    try_abend = 0x00B14000;             /* CLOSE abended ...             */
+    fpfree_rc = 4;                      /* ... and the DD stayed         */
+    rc = __fabandon(fp);
+    CHECK_EQ(rc, -2, "(E) abend + DD not unallocated is -2 (#705)");
+    CHECK_EQ(freed_fp, 1, "(E) ... and the FILE is gone all the same");
 
     reset_shims();
     fp = make_file(1);

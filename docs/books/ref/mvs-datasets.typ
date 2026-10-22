@@ -1284,6 +1284,7 @@ The positive values are the return codes of STOW.
 
 == \_\_fabandon <mvs-datasets-fabandon>
 #idx("__fabandon")#idx("x37 abend", "closing after")#idx("D37 abend")
+#idx("B14 abend")
 
 === Format
 ```
@@ -1297,28 +1298,35 @@ int __fabandon(FILE *fp);
 still in its buffer, and frees it, with the DD statement that
 #cmd("fopen()") allocated for it.
 
-It is meant for one situation. When a write runs out of space and MVS ends
-it with an x37 abend (B37, D37 or E37), a program that recovers from the
-abend with its own ESTAE is left with a stream that looks healthy, because
-to the library an abend is not an I/O error. #cmd("fclose()") would flush
-the buffer, drive the failing write again, and abend inside the close. That
-leaves the DD allocated to the end of the job step, so the data set can be
-deleted neither by the program nor by its user.
+It is meant for a program that recovers from an abend with its own ESTAE
+while a stream is being written. To the library an abend is not an I/O
+error, so the stream looks healthy, and #cmd("fclose()") would flush the
+buffer and drive the failing write again. Two abends leave a stream in
+that state: an x37 abend in a write that the library could not turn
+into #cmd("ENOSPC") -- E37-04 on a member of a partitioned data set whose
+secondary space is used up -- and an abend inside the close of
+#cmd("fclose()") itself, such as B14 when the directory of a partitioned
+data set has no room for the member.
 
 #cmd("__fabandon()") discards the buffer instead, marks the DCB as having
 nothing to write, and closes it under an ESTAE of its own, so that a close
-that fails anyway is returned rather than propagated. The data set can then
-be deleted.
+that fails anyway is returned rather than propagated. Nothing more is
+written, and the close does not store a member of a partitioned data set:
+a new member does not appear, and an existing one keeps its old content.
+The blocks already written stay in the data set unused until it is
+compressed. The DD statement is then freed, and the data set can be
+deleted.
 
 === Returns
 #deflist(width: 0.6in,
-  [0], [Nothing was written, the close completed, and the DD was freed.],
+  [0], [The close completed, and the DD was freed.],
   [\> 0], [The close abended. The value is the completion code as
     #cmd("0x00sssuuu"), with the system code in #cmd("sss") and the user
-    code in #cmd("uuu"): a D37 is #cmd("0x00D37000"). The stream is freed,
-    but the DD is not: the failed close still holds it.],
+    code in #cmd("uuu"): a B14 is #cmd("0x00B14000"). The stream is freed,
+    and so is the DD.],
   [-1], [#var("fp") is #cmd("NULL") or not a stream.],
-  [-2], [The close completed, but the DD could not be freed.],
+  [-2], [The DD could not be freed and is still allocated, whether the
+    close completed or abended.],
   [-3], [The ESTAE could not be established, and the close was not
     attempted. The stream is unchanged and may be passed again.],
 )
@@ -1326,10 +1334,13 @@ be deleted.
 === Notes
 - After any return except -1 and -3, #var("fp") no longer exists.
 - Data written to the buffer after the last block went out is lost.
+- Only -2 means that the DD is still allocated. A close that abends after
+  MVS has closed the data set, as for B14, does not hold it: up to LIBC/370
+  2.25.1 such a return was described as a DD still held.
 - A write that runs out of space without an abend, which the library
   reports as an error with #cmd("errno") #cmd("ENOSPC"), leaves a stream
   that #cmd("fclose()") closes normally. #cmd("__fabandon()") is needed only
-  when a write did abend.
+  when a write or a close did abend.
 
 === Related
 @mvs-datasets-fx37, @mvs-datasets-ropen

@@ -41,13 +41,22 @@ SUBPOOL  EQU   0                                                      *
 CLOSSYN  TM    IOSFLAGS,IOFSYNAD  I/O error on the final block?
          BZ    FREEBUFF           No
          LA    R9,8               Yes; EIO to the C layer
+*
+*  Each buffer pointer is cleared before its FREEMAIN.  A CLOSE that
+*  abends (SB14 from the STOW, say) leaves this work area alive, and
+*  __fabandon() runs @@ACLOSE on it a second time: stale pointers
+*  made that a second FREEMAIN of storage that could belong to
+*  someone else by then - its own save area, measured: SA0A (#705).
+*
 FREEBUFF LM    R1,R2,ZBUFF1       Look at first buffer
          LTR   R0,R2              Any ?
          BZ    FREEDBF1           No
+         XC    ZBUFF1(8),ZBUFF1   Freed: nothing left to free again
          FREEMAIN RC,LV=(0),A=(1),SP=SUBPOOL  Free BLOCK buffer
 FREEDBF1 LM    R1,R2,ZBUFF2       Look at first buffer
          LTR   R0,R2              Any ?
          BZ    FREEDBF2           No
+         XC    ZBUFF2(8),ZBUFF2   Freed: nothing left to free again
          FREEMAIN RC,LV=(0),A=(1),SP=SUBPOOL  Free RECRD buffer
 FREEDBF2 TM    IOMFLAGS,IOFTERM   TERMINAL I/O MODE?
          BNZ   NOPOOL             YES; SKIP CLOSE/FREEPOOL

@@ -198,8 +198,9 @@ Some related services cover particular cases:
   [#cmd("estae()")], [establishes a C function as a recovery routine of the
     program's own, for a program that needs more control than
     #cmd("try()") gives.],
-  [#cmd("__fabandon()")], [closes a stream whose write abended with an x37
-    code, after the program has recovered (@pg-io-errors).],
+  [#cmd("__fabandon()")], [closes a stream whose write or close abended,
+    with an x37 or a B14 code, after the program has recovered
+    (@pg-io-errors).],
 )
 
 All of them are described in the _LIBC/370 Library Reference_, Chapter
