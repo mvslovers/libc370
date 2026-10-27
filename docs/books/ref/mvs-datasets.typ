@@ -1334,9 +1334,11 @@ deleted.
 === Notes
 - After any return except -1 and -3, #var("fp") no longer exists.
 - Data written to the buffer after the last block went out is lost.
-- Only -2 means that the DD is still allocated. A close that abends after
-  MVS has closed the data set, as for B14, does not hold it: up to LIBC/370
-  2.25.1 such a return was described as a DD still held.
+- -2 means that the stream is gone and the DD is still allocated\; with -3
+  nothing was closed, so the DD is allocated and the stream still exists.
+  A close that abends after MVS has closed the data set, as for B14, does
+  not hold the DD: up to LIBC/370 2.25.1 such a return was described as a
+  DD still held.
 - A write that runs out of space without an abend, which the library
   reports as an error with #cmd("errno") #cmd("ENOSPC"), leaves a stream
   that #cmd("fclose()") closes normally. #cmd("__fabandon()") is needed only

@@ -554,6 +554,21 @@ What later 2.x releases ask of a program or a build:
       started a worker. The manuals say correctly when VSAM checks a
       password: the catalog's RACF indication decides.],
       [Nothing. A caller that asked for 4 or more workers only to get the
-      pool going can ask for the number it needs.]
+      pool going can ask for the number it needs.],
+    [2.26.0], [#cmd("__fabandon()") returns -2 when the DD statement
+      could not be freed, whether or not the close abended, closes nothing
+      twice and stores no member of a partitioned data set. #cmd("cthread_manager_init()") with
+      a count of 0 returns #cmd("NULL") with #cmd("errno") #cmd("EINVAL").
+      A cancelled job no longer fills the console with recovery lines:
+      #cmd("try()") writes nothing when its routine runs only to clean up,
+      and #cmd("__linkds()") and #cmd("__linkdsx()") add no line of their
+      own. New flag #cmd("ABRPT_QUIET_TERM") for #cmd("abendrpt()").],
+      [A caller that took a value above 0 from #cmd("__fabandon()") for
+      "DD still held" tests for -2 (and -3, where nothing was closed). Pass a pool size of at least 1.
+      Nothing is needed for the console lines\; ORing
+      #cmd("ABRPT_QUIET_TERM") into the second argument of
+      #cmd("abendrpt()") drops that routine's line as well, and a log
+      scanner that looked for the text of #cmd("try()")'s line no longer
+      sees it.]
   )
 ] <pg-migrate-since-tab>
