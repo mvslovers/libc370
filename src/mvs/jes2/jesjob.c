@@ -507,11 +507,11 @@ make_time(unsigned int t, unsigned int d)
 	/* we don't know if DST is in effect */
 	tm.tm_isdst = -1;
 
-    /* convert to time64_t format date and time */
-    result = mktime64(&tm);
-	/* fprintf(stderr, "mktime64 result=%llu, 0x%016llX\n", result, result); */
+    /* convert to time64_t format date and time; the JES clock is UTC as the
+       fields stand, so timegm64(), not the local-time mktime64() (#392) */
+    result = timegm64(&tm);
 
-	/* if mktime64() failed, return 0 */
+	/* if timegm64() failed, return 0 */
     if (result.u32[0] == 0xFFFFFFFF && result.u32[1] == 0xFFFFFFFF) __64_init(&result);
 
 quit:

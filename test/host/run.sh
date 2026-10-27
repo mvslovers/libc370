@@ -166,9 +166,21 @@ tststrer() {
 tsttimegm() {
     "$CC" -std=gnu99 -Wall -Wextra -U__LP64__ -D'__asm__(...)=' \
        -D'asm(...)=' -D__volatile__= -D__32BIT__ -Dtimegm=lc_timegm \
-       -Dmktime=lc_mktime -Dgmtime_r=lc_gmtime_r -I $R/include \
+       -Dgmtime_r=lc_gmtime_r -I $R/include \
        -I $R -o "$B/t" tsttimegm.c "$R/src/ext/time64/timegm.c" \
-       "$R/src/time/mktime.c" "$R/src/time/gmtimer.c" \
+       "$R/src/time/gmtimer.c" \
+       "$R/src/time/@@ymdts.c" "$R/src/time/@@stymd.c" \
+       "$R/src/time/@@mtd.c" "$R/src/time/@@ytd.c" \
+       "$R/src/time/@@isleap.c" && "$B/t"
+}
+tstmktime() {
+    "$CC" -std=gnu99 -Wall -Wextra -U__LP64__ -D'__asm__(...)=' \
+       -D'asm(...)=' -D__volatile__= -D__32BIT__ -Dtimegm=lc_timegm \
+       -Dmktime=lc_mktime -Dgmtime_r=lc_gmtime_r \
+       -Dlocaltime_r=lc_localtime_r -D__tzget=lc_tzget -I $R/include \
+       -I $R -o "$B/t" tstmktime.c "$R/src/time/mktime.c" \
+       "$R/src/ext/time64/timegm.c" "$R/src/time/gmtimer.c" \
+       "$R/src/time/localtmr.c" \
        "$R/src/time/@@ymdts.c" "$R/src/time/@@stymd.c" \
        "$R/src/time/@@mtd.c" "$R/src/time/@@ytd.c" \
        "$R/src/time/@@isleap.c" && "$B/t"
@@ -347,7 +359,7 @@ tstwpos() {
 # not dropped from here - fix it, or say which issue it waits on.
 ALL="tst75sel tst75snd tst75sok tstacee tstaradf tstardel tstblank tstcmtt tstdblcv tstdblrb tstdirck tstdsnmt tstdynit tstemptl
      tstenqdq tsterrfl tstfabnd tstfcls tstfloor tstfpapp tstfprls tstfpunit tstgmain tstidcam tstidcrec tstinet tstiolk tstjesop
-     tstjesprb tstjestx tstl tstll tstlspd tstlstds tstpfarg tstpfflt tstpfval tstplus tstraclo tstrand tstrldwk tstrseek tstscnll tstssvt tststrer tstsubsy tsttimegm tsttm64vec tsttodsc tstinstall tstsvckey tsttxdsn tstvsnp
+     tstjesprb tstjestx tstl tstll tstlspd tstlstds tstpfarg tstpfflt tstpfval tstplus tstraclo tstrand tstrldwk tstrseek tstscnll tstssvt tststrer tstsubsy tstmktime tsttimegm tsttm64vec tsttodsc tstinstall tstsvckey tsttxdsn tstvsnp
      tstwchar tstwpos tstwto"
 
 [ $# -gt 0 ] && ALL="$*"
