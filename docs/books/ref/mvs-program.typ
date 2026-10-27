@@ -1366,7 +1366,7 @@ save areas.
   [#cmd("DUMP_SDUMP")], [the same as #cmd("DUMP_DEFAULT").],
 )
 
-#cmd("ABRPT_QUIET_TERM") (X'100') can be ORed into #var("dump"), as in
+#cmd("ABRPT_QUIET_TERM") (#cmd("X'100'")) can be ORed into #var("dump"), as in
 #cmd("DUMP_DEFAULT | ABRPT_QUIET_TERM"). It leaves out the message the
 routine writes when the task is being ended (see Notes). The dump options
 are unchanged by it.
