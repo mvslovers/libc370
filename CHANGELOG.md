@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.26.0] - 2026-10-27
+
 ### Changed
 - **`cthread_manager_init()` refuses a pool of 0 workers (#708).** A count
   of 0 used to return a manager that accepted items with
