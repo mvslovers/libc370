@@ -28,6 +28,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   that `__tzset()` called before the first time function is overwritten by the
   `tzset()` that the first `__tzget()` runs; call `tzset()` first.
 
+### Fixed
+- **`cthread_create()` could fail, or free a running thread, when the new
+  thread ended at once on a machine with two or more CPUs (#465).** ATTACH
+  starts the subtask immediately; on a second CPU it can run, and finish,
+  before the creating task has stored ATTACH's results. `cthread_create_ex()`
+  kept the ATTACH return code in `task->rc`, the field the thread driver
+  uses for the thread function's return code, so a quick thread made it see
+  a failed ATTACH and free the handle (stack and termination ECB included)
+  under a subtask that was still ending. The result was a sporadic
+  ABEND S43E (invalid ATTACH ECB), SA03, S0C4 or a bad return code from
+  `cthread_wait()`. The ATTACH return code now has its own variable, and the
+  driver stores its own TCB address before it calls the thread function, so
+  `cthread_self()` no longer returns `NULL` inside a thread that starts
+  fast. Measured on MVS with two CPUs: 300 create/wait/delete rounds in
+  three steps ran clean; the library from before the fix ended S43E in two
+  of three steps. A machine with one CPU cannot show the race.
+
 ## [2.26.0] - 2026-10-27
 
 ### Changed
