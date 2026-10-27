@@ -584,7 +584,8 @@ What later 2.x releases ask of a program or a build:
       [Nothing where the program meant local time. Code that built a UTC
       time with #cmd("mktime()") calls #cmd("timegm()") (or
       #cmd("timegm64()")) instead. A correction that subtracted the offset
-      after #cmd("mktime()") can go. Nothing for the declarations and for
-      #cmd("cthread_create()").]
+      after #cmd("mktime()") must go: #cmd("mktime()") subtracts it now, and
+      the offset would be subtracted twice. Nothing for the declarations
+      and for #cmd("cthread_create()").]
   )
 ] <pg-migrate-since-tab>

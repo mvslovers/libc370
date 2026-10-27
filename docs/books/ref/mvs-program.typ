@@ -1810,8 +1810,8 @@ int ikjct441(int ecode, const char *name, char *value, int value_size);
 CLIST variables. It finds the entry point through the
 TSO vector table that the CVT points to, passes #var("ecode"),
 #var("name") (its length is 0 when #var("name") is #cmd("NULL")),
-#var("value") and #var("value_size") to it, and gives it no token and no
-environment control table.
+#var("value") and #var("value_size") to it, and gives it a token of 0 and
+the address X'FFFFFFFF' in place of an environment control table.
 
 #var("ecode") selects the request. #cmd("<mvs/tso.h>") defines its values:
 
