@@ -25,17 +25,14 @@ failed(SDWA *sdwa, void *udata)
 
     /* Check SDWACLUP first.  When RTM enters this exit only to clean up
      * (the task is terminating) a retry is invalid - requesting one asks
-     * RTM to resume a task it is tearing down.  Emit a single WTO from a
-     * pre-formatted buffer and tell RTM to continue with termination.
+     * RTM to resume a task it is tearing down.  Tell RTM to continue with
+     * termination, silently: the system's own abend messages say the task
+     * ended, and one line per try() level in flight repeated them (#712).
      * Do NO C-runtime work here (no try()/__crtget()/malloc): under a
-     * terminating TCB this task's libc370 CRT may already be gone, and
-     * wto() is CRT-free (SVC 35 only).
+     * terminating TCB this task's libc370 CRT may already be gone.
      *
      * (#9) */
     if (sdwa->SDWAERRD & SDWACLUP) {
-        char    msg[] = "libc370 @@@try.c failed(): recovery cleanup-only, retry suppressed";
-
-        wto(msg);
         SETRP(sdwa, 0, 0, 0);   /* RC=0, continue with termination */
         return 0;
     }
