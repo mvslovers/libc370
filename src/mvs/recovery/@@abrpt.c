@@ -333,7 +333,7 @@ __asm__("\n"
 
 __asm__("\n&FUNC    SETC 'term_cleanup'");
 static int
-term_cleanup(SDWA *sdwa, PARAM *param)
+term_cleanup(SDWA *sdwa, const PARAM *param)
 {
     /* RTM entered this exit only to clean up while the task terminates.
      * Crucially, under a terminating TCB this task's libc370 CRT is often
