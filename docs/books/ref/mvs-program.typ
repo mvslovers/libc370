@@ -1368,8 +1368,8 @@ save areas.
 
 #cmd("ABRPT_QUIET_TERM") (#cmd("X'100'")) can be ORed into #var("dump"), as in
 #cmd("DUMP_DEFAULT | ABRPT_QUIET_TERM"). It leaves out the message the
-routine writes when the task is being ended (see Notes). The dump options
-are unchanged by it.
+routine writes when the task is being ended (see Notes). The routine takes
+the dump option from the low byte of #var("dump").
 
 === Returns
 The value #cmd("estae()") returns, or -1 when #var("op") is not valid.
@@ -1381,8 +1381,13 @@ MVS runs the routine only to clean up, the routine writes the single message
 does nothing else. With #cmd("ABRPT_QUIET_TERM") it writes nothing then.
 A server with many tasks would otherwise fill the console with such lines
 when it is cancelled. The routine of #cmd("try()") writes no
-message in this case; up to release 2.25.1 it wrote one line per
-nested #cmd("try()") level.
+message in this case; up to release 2.25.1 it wrote the line
+#cmd("libc370 @@@try.c failed(): recovery cleanup-only, retry suppressed")
+once for each nested #cmd("try()") level.
+
+A routine that the library establishes itself with #cmd("abendrpt()"), as
+#cmd("__linkds()") and #cmd("__linkdsx()") do, is established without
+#cmd("ABRPT_QUIET_TERM"). It writes its line when the task is being ended.
 
 #cmd("DUMP_SDUMP") takes no SVC dump, which would need APF authorization\;
 it keeps its value and behaves exactly as #cmd("DUMP_DEFAULT"). Up to

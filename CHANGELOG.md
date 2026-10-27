@@ -25,9 +25,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   that does not want it ORs the new `ABRPT_QUIET_TERM` into the second
   argument, `abendrpt(ESTAE_CREATE, DUMP_DEFAULT | ABRPT_QUIET_TERM)`. The
   signature of `abendrpt()` is unchanged, and a call without the flag
-  behaves as before. Measured on MVS with a real `C jobname`: a task with
-  the flag writes no line, a task in two nested `try()` calls went from two
-  lines to none, and a task with plain `abendrpt(ESTAE_CREATE,
+  behaves as before. The report routine that `__linkds()` and
+  `__linkdsx()` establish for the program they call is created without the
+  flag and keeps its line. Measured on MVS with a real `C jobname`: a task
+  with the flag writes no line, a task in two nested `try()` calls went from
+  two lines to none, and a task with plain `abendrpt(ESTAE_CREATE,
   DUMP_DEFAULT)` still writes its one line.
 
 ### Fixed
