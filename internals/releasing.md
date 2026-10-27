@@ -95,9 +95,9 @@ first cc370 release after 1.5.0 (cc370 4d1fca9).
    what a caller notices. A PR that changed documented behaviour has already
    updated the books or named the stale section in its body; a release that
    changes no documented behaviour needs no book change. After the merge, an
-   annotated tag `vX.Y.Z` ("libc370 X.Y.Z") on the merge commit. The project
-   board checks the release before the tag and the maintainer creates it;
-   nobody else tags.
+   annotated tag `vX.Y.Z` ("libc370 X.Y.Z") on the merge commit. The
+   maintainer checks the release before the tag and creates it; nobody
+   else tags.
 7. **Check what `release.yml` attached** before announcing:
    `libc370-<v>-sysroot.tar.gz`, `libc370-dev_<v>_all.deb`,
    `libc370-devel-<v>.noarch.rpm`, `libc370-<v>-metadata.json` (its
