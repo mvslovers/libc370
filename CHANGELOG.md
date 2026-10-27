@@ -14,9 +14,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   five hours in the past). They now subtract the zone offset
   (`__tzget()`), and write back the normalised local fields, so
   `mktime(localtime(&t)) == t` and `mktime64(localtime64(&t)) == t` for every
-  zone offset. A result before 1970 or past 2**32-2 (`mktime()`), a year
-  outside 1970 to 9999 or a result before 1970 (`mktime64()`) gives -1 and
-  leaves the structure as it was. Code that means UTC calls `timegm()` or `timegm64()`, as 2.24.0 asked:
+  zone offset. A year outside 1970 to 2105 (`mktime()`) or 1970 to 9999
+  (`mktime64()`), or a time the zone offset alone moves before 1970 or past
+  2**32-2, gives -1 and leaves the structure as it was. Fields that carry
+  out of range by themselves (1970-01-01 with `tm_hour = -5`) still wrap
+  (#736). Code that means UTC calls `timegm()` or `timegm64()`, as 2.24.0 asked:
   the library's own UTC conversions (the JES job times, the data set lists)
   already do, with unchanged results. Measured on MVS at zone UTC-5 and
   UTC+1: before, `mktime()` of the local 16:58 gave t minus 5 hours; now it
