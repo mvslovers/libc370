@@ -1,4 +1,5 @@
 #include <string.h>
+#include "mvs/tso.h"
 /* TSO Clist variable access z/OS (not for MVS 3.8) */
 typedef struct ikjct441_plist IKJCT441;
 
@@ -13,13 +14,6 @@ struct ikjct441_plist {
     int         *retcode;
     IKJCT441    *next;
 };
-
-/* ECODE values */
-#define ECODE_TSVERETR    1
-#define ECODE_TSVEUPDT    2
-#define ECODE_TSVELOC     3
-#define ECODE_TSVERSVD    4
-#define ECODE_TSVNOIMP    18
 
 int ikjct441(int ecode, const char *name, char *value, int value_size)
 {

@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- **`on_exit()` and `ikjct441()` have declarations (#420).** Both were in
+  `libc.a` but declared nowhere, so a call compiled only through an implicit
+  declaration. `<stdlib.h>` now declares `int on_exit(void (*func)(int, void
+  *), void *arg)` next to `atexit()`, and `<mvs/tso.h>` declares
+  `int ikjct441(int ecode, const char *name, char *value, int value_size)`
+  with its `ECODE_TSV...` values. No existing signature changes.
+
 ## [2.26.0] - 2026-10-27
 
 ### Changed

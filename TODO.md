@@ -848,6 +848,8 @@ metadata and links a program against it (checked end to end on macOS).
       functions.
    9. **#416, #417** — `<ctype.h>` and the socket calls fail a consumer's
       `-Werror` build; #418-#420 the remaining header defects.
+      (#420: strerror and signatures in 2.23.0; the missing declarations of
+      `on_exit()` and `ikjct441()` follow in 2.27.0.)
    10. **#406, #408-#413** — the MVS services: JES2 SSI return codes,
        `__dsalc` UNCATLG, `__dscbav`, `__listc`, the rest of #411 (OPEN rc 4,
        DD name case, `__vsclos`), osio DCBs, `tsocmd`.

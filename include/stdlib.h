@@ -94,6 +94,8 @@ ldiv_t ldiv(long int numer, long int denom);
 long long int llabs(long long int j);
 lldiv_t lldiv(long long int numer, long long int denom);
 int atexit(void (*func)(void));
+/* on_exit() - like atexit(); the function gets exit()'s status and arg */
+int on_exit(void (*func)(int, void *), void *arg);
 char *getenv(const char *name);
 extern int      setenv(const char *name, const char *value, int rewrite);
 extern int      putenv(const char *str);
