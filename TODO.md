@@ -175,12 +175,13 @@ Each fix gets a red/green test in a container, then a PR and a merge.
   - #714 (PR #715): `__linkds()`/`__linkdsx()` create their report routine
     with `DUMP_DEFAULT | ABRPT_QUIET_TERM`.
 - **On main, unreleased (next minor, milestone 2.27.0):**
-  - #717 (PR #720, open): `release.yml` titles the release with the bare
-    tag; `releasing.md` corrected.
+  - #717 (PR #720, merged): `release.yml` titles the release with the bare
+    tag; `releasing.md` corrected, the maintainer tags.
   - #718: the header comment of `src/mvs/file/@@faband.c` names a private
     system, a date and messages of a consumer; to be reworded.
   - Docs only, merged: PR #719 (`__linkds()`/`__linkdsx()` take no dump
-    themselves; `try()` clears the dump request).
+    themselves; `try()` clears the dump request), PR #723 (#721,
+    `DUMP_SUPPRESS` alone does not suppress the dump).
 - **Still open from the decisions:**
   - #392 step 2: `mktime()` and `mktime64()` read local time, the JES
     conversion moves to `timegm64()`; timed with an mvsMF release
