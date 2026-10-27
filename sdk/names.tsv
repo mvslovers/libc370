@@ -1143,6 +1143,11 @@ ECB_POSTED_BIT	mvs/ecb.h
 ECB_VALUE_MASK	mvs/ecb.h
 ECB_WAITING_BIT	mvs/ecb.h
 ECHILD	errno.h
+ECODE_TSVELOC	mvs/tso.h
+ECODE_TSVERETR	mvs/tso.h
+ECODE_TSVERSVD	mvs/tso.h
+ECODE_TSVEUPDT	mvs/tso.h
+ECODE_TSVNOIMP	mvs/tso.h
 ECONNABORTED	errno.h
 ECONNREFUSED	errno.h
 ECONNRESET	errno.h
@@ -4398,6 +4403,7 @@ ieecdcm	ibm/mvs/ieecdcm.h
 iefssreq	mvs/subsys.h
 iezjscb	ibm/mvs/iezjscb.h
 ikjcppl	ibm/mvs/ikjcppl.h
+ikjct441	mvs/tso.h
 ikject	ibm/mvs/ikject.h
 ikjpscb	ibm/mvs/ikjpscb.h
 ikjupt	ibm/mvs/ikjupt.h
@@ -4576,6 +4582,7 @@ not_eq	iso646.h
 ntohl	netinet/in.h
 ntohs	netinet/in.h
 offsetof	stddef.h
+on_exit	stdlib.h
 or	iso646.h
 or_eq	iso646.h
 osbclose	mvs/osio.h

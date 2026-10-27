@@ -13,7 +13,8 @@
  *
  *     R=../..
  *     cc -std=gnu99 -Wall -Wextra -Werror \
- *        -Wno-int-to-pointer-cast -U__LP64__ -D'__asm__(...)=' \
+ *        -Wno-int-to-pointer-cast -Wno-asm-operand-widths -U__LP64__ \
+ *        -D'__asm__(...)=' \
  *        -D'asm(...)=' -D__volatile__= -D__32BIT__ \
  *        -I $R/include -I $R -o t tstdecl.c && ./t
  *
