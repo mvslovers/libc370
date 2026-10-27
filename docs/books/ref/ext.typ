@@ -893,24 +893,35 @@ time64_t timegm64(const struct tm *tm);
 === Description
 
 Both functions convert a broken-down time to seconds since 1970.
-#cmd("mktime64()") takes #var("tm") as UTC (GMT), as #cmd("timegm()")
-does\; #cmd("timegm64()") takes it as GMT too and uses
-#cmd("tm_year"), #cmd("tm_mon"), #cmd("tm_mday"), #cmd("tm_hour"),
-#cmd("tm_min") and #cmd("tm_sec").
+#cmd("mktime64()") takes #var("tm") as local time, as #cmd("mktime()")
+does\; it subtracts the time-zone offset #cmd("__tzget()") returns
+(@std-time-tz) and, on success, replaces #var("tm") with the broken-down
+local time of the result, as #cmd("localtime64_r()") produces it, so that
+#cmd("mktime64(localtime64(&t))") is #var("t"). #cmd("timegm64()") takes
+#var("tm") as UTC (GMT) and uses #cmd("tm_year"), #cmd("tm_mon"),
+#cmd("tm_mday"), #cmd("tm_hour"), #cmd("tm_min") and #cmd("tm_sec").
 
 === Returns
 
 The time, or a value with all 64 bits set when the year is before 1970,
-or, for #cmd("mktime64()"), after 9999.
+or, for #cmd("mktime64()"), after 9999, or when the time-zone offset alone
+moves the time before 1970. For #cmd("mktime64()") #var("tm") is then left
+as it was.
 
 === Notes
 
-- For a year from 1970 to 2037 #cmd("mktime64()") is #cmd("timegm()")
-  (@std-time-timegm), and changes #var("tm") as #cmd("timegm()") does. For a
-  later year it fills #var("tm") again from the result, as
-  #cmd("gmtime64()") would.
+- Up to release 2.26.0 #cmd("mktime64()") took #var("tm") as UTC. Code that
+  means UTC calls #cmd("timegm64()"), which reads the fields as UTC under
+  every release. With an offset of 0 the two agree.
+- #cmd("mktime64()") reads the fields of a year from 1970 to 2037 as
+  #cmd("timegm()") does (@std-time-timegm) before it applies the offset.
 - #cmd("timegm64()") does not normalize #var("tm")\; the fields must be in
   their ranges.
+
+#note[*A defect* (libc370\#736): #cmd("mktime64()") checks the year only.
+Fields that carry out of range by themselves, such as 1 January 1970 with
+#cmd("tm_hour") = -5, give a wrapped value instead of all 64 bits set, and
+#var("tm") is replaced.]
 
 === Related
 

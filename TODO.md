@@ -192,7 +192,8 @@ Each fix gets a red/green test in a container, then a PR and a merge.
     conversion moved to `timegm64()` (PR #727, MVS/CE red/green); mvsMF's
     consapi.c already calls `timegm()`; LUA/370's `os.time()` is fixed by
     it after a rebuild. The manuals (`std-time.typ`, `ext.typ`,
-    `pg-migrate.typ`) still say "a later release"; Technical Writer.
+    `pg-migrate.typ`) describe it from the 2.27.0 books PR on, with defect
+    notes for #736 and #728.
     Found on the way: #728 (`__tzset()` before the first time function is
     overwritten).
   - VSAM #624 (per-call OPTCD), additive, its own minor.

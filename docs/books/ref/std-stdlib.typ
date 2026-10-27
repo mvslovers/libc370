@@ -207,7 +207,7 @@ storage for the registration could not be obtained.
 
 === Related
 
-#cmd("exit()") (@std-stdlib-exit).
+#cmd("on_exit()") (@std-stdlib-on-exit), #cmd("exit()") (@std-stdlib-exit).
 
 == atof <std-stdlib-atof>
 
@@ -413,8 +413,8 @@ void _Exit(int status);
 
 #cmd("exit()") ends the program normally:
 
-+ It calls the functions registered with #cmd("atexit()"), the last
-  registered first.
++ It calls the functions registered with #cmd("atexit()") and
+  #cmd("on_exit()"), the last registered first.
 + It flushes and closes all open streams, including #cmd("stdout") and
   #cmd("stderr").
 + It releases the storage of the C run-time environment, including the
@@ -650,6 +650,43 @@ See the example in @std-wchar.
 === Related
 
 #cmd("mbtowc()") and #cmd("wctomb()") (@std-stdlib-mblen).
+
+== on_exit <std-stdlib-on-exit>
+
+#idx("on_exit")
+
+=== Format
+
+```
+#include <stdlib.h>
+
+int on_exit(void (*func)(int, void *), void *arg);
+```
+
+=== Description
+
+#cmd("on_exit()") registers the function #var("func") to be called when the
+program ends normally, as #cmd("atexit()") does. The function receives the
+status of #cmd("exit()") (or the value #cmd("main()") returns) and
+#var("arg"), the pointer given at registration. #cmd("on_exit()") and
+#cmd("atexit()") share one list: the functions are called in the reverse
+order of their registration, before the streams are closed.
+
+=== Returns
+
+0 if the function was registered\; -1 if #var("func") is #cmd("NULL"), the
+task has no C run-time environment, or the storage for the registration could
+not be obtained.
+
+=== Notes
+
+- #cmd("on_exit()") is not in C99. Up to release 2.26.0 it was in the
+  library, but no header declared it.
+- The registered functions are not called by #cmd("_Exit()").
+
+=== Related
+
+#cmd("atexit()") (@std-stdlib-atexit), #cmd("exit()") (@std-stdlib-exit).
 
 == qsort <std-stdlib-qsort>
 
