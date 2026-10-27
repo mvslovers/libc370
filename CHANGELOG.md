@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.27.0] - 2026-10-27
+
 ### Added
 - **`on_exit()` and `ikjct441()` have declarations (#420).** Both were in
   `libc.a` but declared nowhere, so a call compiled only through an implicit
@@ -18,7 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - **`mktime()` and `mktime64()` read `struct tm` as local time (#392).** C99
   says so; until now both treated the fields as UTC, so on a system whose
   time zone is not UTC `mktime(localtime(&t))` was `t` plus the zone offset (5
-  hours too much at UTC-5, which put a start time built from `localtime_r()`
+  hours too little at UTC-5, which put a start time built from `localtime_r()`
   five hours in the past). They now subtract the zone offset
   (`__tzget()`), and write back the normalised local fields, so
   `mktime(localtime(&t)) == t` and `mktime64(localtime64(&t)) == t` for every
