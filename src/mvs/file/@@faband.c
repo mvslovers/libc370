@@ -2,12 +2,12 @@
 **
 ** fclose() flushes before it closes.  When the pending block is exactly what
 ** could not be written, that re-drives the failing WRITE and the close abends
-** in turn - and it takes the DD with it.  Measured on mvsdev 2026-09-09 with
-** an FTP upload into SPACE=TRK(1,0) (mvslovers/ftpd#129):
+** in turn - and it takes the DD with it.  The sequence: a WRITE runs out of
+** space and abends in the I/O routine (__awrite()), the caller's recovery
+** routine unwinds, and fclose() flushes the block that failed and abends
+** again.  The one system message is
 **
-**     IEC031I D37-04,IFG0554T,FTPDT,FTPDT,SYS00006,...
-**     FTPD070E ABEND SD37 RECOVERED CMD=STOR SOCKET=3 TOTAL=1
-**     FTPD076W CLOSE ABENDED AFTER STOR, DD=SYS00006 FREE RC=4
+**     IEC031I D37-04,...
 **
 ** fclose() enters and does not return, so __fpfree() never runs; __dsfree()
 ** on that DD by name answers 4 because the DCB the failed CLOSE left open
@@ -19,7 +19,7 @@
 ** Three things have to be true for the close to go through:
 **
 **  1. the C buffer is DISCARDED, not flushed.  This is the half that bites
-**     ftpd: the D37 fires inside __awrite(), the caller's ESTAE unwinds
+**     a server: the D37 fires inside __awrite(), the caller's ESTAE unwinds
 **     through libc370, __fflush()'s reset: label never runs, and fp->upto
 **     still points past the block that failed.  fclose() then re-drives the
 **     identical WRITE.
