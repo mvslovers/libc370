@@ -9,13 +9,12 @@
  * allocated for the life of the job.  The data set can then be
  * scratched neither by the program that created it nor by its user.
  *
- * Measured on mvsdev 2026-09-09, mvslovers/ftpd#129:
+ * The failure was seen on a real system.  A program wrote to a data set
+ * until it was full; the system reported IEC031I D37-04, the program's
+ * ESTAE recovered, and the program then closed the FILE.  That close
+ * abended in turn and left the DD allocated.
  *
- *     IEC031I D37-04,IFG0554T,FTPDT,FTPDT,SYS00006,251,WORK00,...
- *     FTPD070E ABEND SD37 RECOVERED CMD=STOR SOCKET=3 TOTAL=1
- *     FTPD076W CLOSE ABENDED AFTER STOR, DD=SYS00006 FREE RC=4
- *
- * ftpd opens with fopen(dsn,"wb") - the buffered __fputc path.  The
+ * The program opens with fopen(dsn,"wb") - the buffered __fputc path.  The
  * D37 fires inside __awrite(); the caller's ESTAE unwinds THROUGH
  * libc370, so @@fflush.c's reset: label never runs and fp->upto still
  * points past the block that failed.  That is the state this test

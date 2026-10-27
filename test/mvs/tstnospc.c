@@ -39,9 +39,10 @@
  * line also goes to the console, because an abend discards whatever SYSOUT
  * is still sitting in the QSAM buffer.
  *
- * SHAPE.  mvslovers/ftpd's (ftpd#129), same as tstx37.c: __dsalcf() creates
- * with SPACE=TRK(1,0) - no secondary, so the first overflow is a D37 and not
- * an extend - __dsfree() catalogs, fopen(dsn,"wb") reopens by name.
+ * SHAPE.  A file-transfer upload into a full data set, same as tstx37.c:
+ * __dsalcf() creates with SPACE=TRK(1,0) - no secondary, so the first
+ * overflow is a D37 and not an extend - __dsfree() catalogs, fopen(dsn,"wb")
+ * reopens by name.
  *
  * CHECKS - these are the ones a green run must satisfy whatever the numbers
  * turn out to be; the numbers themselves are reported, not asserted.
@@ -74,12 +75,12 @@
  * upload probe.xmit to IBMUSER.MBT.XMIT.IN, run jcl/recvnosp.jcl, then
  * jcl/tstnospc.jcl.
  *
- * MEASURED TWICE on mvsdev 2026-09-13, before and after the #149 fix.  The
+ * MEASURED TWICE on the reference system, before and after the #149 fix.  The
  * checks below are written so that BOTH runs are green - they pin the shape
  * (no abend, no drift to EIO, clearerr() works), not the policy.  What the
  * fix changed is the map, and the map is the evidence.
  *
- * AFTER the fix, JOB00254: CC 0000, 9/9, no IEC031I.
+ * AFTER the fix: CC 0000, 9/9, no IEC031I.
  *
  *   map   XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
  *         0 full, 50 short.  Every write after the error is refused at
@@ -92,9 +93,9 @@
  *         the buffer refills, the eleventh flush fails, and the twelfth
  *         is refused.
  *
- * BEFORE the fix, JOB00252: CC 0000, 9/9 PASS, and no
- * IEC031I line in the job log.  TRK(1,0) on WORK00 took the same 200 records
- * of 80 that tstx37 fills it with.  The three answers:
+ * BEFORE the fix: CC 0000, 9/9 PASS, and no IEC031I line in the job log.
+ * TRK(1,0) took the same 200 records of 80 that tstx37 fills it with.  The
+ * three answers:
  *
  *   (a) THE MAP.  ..........X..........X..........X..........X......
  *       46 of 50 retries returned the full 80 bytes.  Not one of those 46
@@ -204,7 +205,7 @@ int main(int argc, char **argv)
         wtof("TSTNOSPC SETUP FAILED __dsalcf rc=%d", rc);
         return 8;
     }
-    __dsfree(dd);                   /* the free catalogs it - ftpd's step 1 */
+    __dsfree(dd);                   /* the free catalogs it */
 
     sprintf(fname, "'%s'", dsn);
     fp = fopen(fname, "wb");
