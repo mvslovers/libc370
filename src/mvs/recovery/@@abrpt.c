@@ -331,6 +331,26 @@ __asm__("\n"
 "SNAPDCB  DCB   DDNAME=SNAP,DSORG=PS,LRECL=125,BLKSIZE=1632,            @\n"
 "               RECFM=VBA,MACRF=(W)");
 
+__asm__("\n&FUNC    SETC 'term_cleanup'");
+static int
+term_cleanup(SDWA *sdwa, PARAM *param)
+{
+    /* RTM entered this exit only to clean up while the task terminates.
+     * Crucially, under a terminating TCB this task's libc370 CRT is often
+     * already gone: emit a single WTO from a pre-formatted buffer and
+     * continue with termination.  wto() is CRT-free (SVC 35); do no other
+     * C-runtime work on this path.  ABRPT_QUIET_TERM (#712) leaves out
+     * that line: it is a plain read of the option word, no CRT involved.
+     */
+    if (!(param && (param->u[1] & ABRPT_QUIET_TERM))) {
+        char    msg[] = "libc370 recovery: abend during task termination, cleanup only";
+
+        wto(msg);
+    }
+    SETRP(sdwa, 0, 0, 0);   /* RC=0, continue with termination */
+    return 0;
+}
+
 __asm__("\n&FUNC    SETC 'recovery'");
 static int
 recovery(SDWA *sdwa, void *udata)
@@ -349,25 +369,11 @@ recovery(SDWA *sdwa, void *udata)
     char        abend[24];
     char        buf[80];
 
-    /* Check SDWACLUP first.  When it is on, RTM entered this exit only to
-     * clean up while the task terminates: no retry, and a full dump is
-     * pointless.  Crucially, under a terminating TCB this task's libc370
-     * CRT is often already gone, so the register/save-area walk below
-     * (each probe goes through try() -> __crtget()) would fault or spew
-     * "CRT ... not found" for every line.  Emit a single WTO from a
-     * pre-formatted buffer and continue with termination.  wto() is
-     * CRT-free (SVC 35); do no other C-runtime work on this path.
-     * ABRPT_QUIET_TERM (#712) leaves out that line: it is a plain read of
-     * the option word, no CRT involved.
-     */
+    /* Check SDWACLUP first.  When it is on, no retry is possible and a
+     * full dump is pointless; the register/save-area walk below goes
+     * through try() -> __crtget() and must not run under a terminating TCB. */
     if (sdwa->SDWAERRD & SDWACLUP) {
-        if (!(param && (param->u[1] & ABRPT_QUIET_TERM))) {
-            char    msg[] = "libc370 recovery: abend during task termination, cleanup only";
-
-            wto(msg);
-        }
-        SETRP(sdwa, 0, 0, 0);   /* RC=0, continue with termination */
-        return 0;
+        return term_cleanup(sdwa, param);
     }
 
 #if 0
@@ -493,6 +499,8 @@ recovery(SDWA *sdwa, void *udata)
         break;
     case DUMP_SNAP:
         snap_dump(sdwa);
+        break;
+    default:
         break;
     }
 
