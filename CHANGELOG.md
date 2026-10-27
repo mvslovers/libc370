@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- **`on_exit()` and `ikjct441()` have declarations (#420).** Both were in
+  `libc.a` but declared nowhere, so a call compiled only through an implicit
+  declaration. `<stdlib.h>` now declares `int on_exit(void (*func)(int, void
+  *), void *arg)` next to `atexit()`, and `<mvs/tso.h>` declares
+  `int ikjct441(int ecode, const char *name, char *value, int value_size)`
+  with its `ECODE_TSV...` values. No existing signature changes.
+
 ### Changed
 - **`mktime()` and `mktime64()` read `struct tm` as local time (#392).** C99
   says so; until now both treated the fields as UTC, so on a system whose
