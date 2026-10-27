@@ -24,7 +24,8 @@ TSO commands. The headers are:
   [#cmd("<mvs/apf.h>")], [APF authorization, supervisor state and the PSW
     key (@mvs-program-apf).],
   [#cmd("<mvs/tso.h>")], [calling a TSO command processor
-    (@mvs-program-tso).],
+    (@mvs-program-tso) and the TSO variable service
+    (@mvs-program-ikjct441).],
 )
 
 #idx("start-up", "of a C program")
@@ -1791,3 +1792,44 @@ A program started in batch with #cmd("EXEC PGM=") or under TSO with the
 
 === Related
 @mvs-program-__link
+
+== ikjct441 <mvs-program-ikjct441>
+#idx("ikjct441")
+#idx("IKJCT441")
+#idx("CLIST variable")
+
+=== Format
+```
+#include <mvs/tso.h>
+
+int ikjct441(int ecode, const char *name, char *value, int value_size);
+```
+
+=== Description
+#cmd("ikjct441()") calls the TSO service IKJCT441, which reads and writes
+CLIST variables. It finds the entry point through the
+TSO vector table that the CVT points to, passes #var("ecode"),
+#var("name") (its length is 0 when #var("name") is #cmd("NULL")),
+#var("value") and #var("value_size") to it, and gives it a token of 0 and
+the address X'FFFFFFFF' in place of an environment control table.
+
+#var("ecode") selects the request. #cmd("<mvs/tso.h>") defines its values:
+
+#tab(caption: [ECODE values of ikjct441()])[
+  #table(columns: (1.6in, 0.6in), align: left,
+    [*Name*], [*Value*],
+    [#cmd("ECODE_TSVERETR")], [1],
+    [#cmd("ECODE_TSVEUPDT")], [2],
+    [#cmd("ECODE_TSVELOC")], [3],
+    [#cmd("ECODE_TSVERSVD")], [4],
+    [#cmd("ECODE_TSVNOIMP")], [18],
+  )
+]
+
+=== Returns
+The return code of IKJCT441.
+
+=== Notes
+- The function is for z/OS and not for MVS 3.8.
+- Up to release 2.26.0 the function was in the library but no header
+  declared it.

@@ -569,6 +569,23 @@ What later 2.x releases ask of a program or a build:
       #cmd("ABRPT_QUIET_TERM") into the second argument of
       #cmd("abendrpt()") drops that routine's line as well, and a log
       scanner that looked for the text of #cmd("try()")'s line no longer
-      sees it.]
+      sees it.],
+    [2.27.0], [#cmd("mktime()") and #cmd("mktime64()") read
+      #cmd("struct tm") as local time, as C99 says: they subtract the
+      time-zone offset of the task and write back the local
+      fields, so #cmd("mktime(localtime(&t))") is #var("t"). Up to 2.26.0
+      both read the fields as UTC, and on a system whose zone is not UTC
+      that result was #var("t") plus the offset. #cmd("on_exit()") is
+      declared in #cmd("<stdlib.h>") and #cmd("ikjct441()") in
+      #cmd("<mvs/tso.h>"); both were in the library before, and no
+      signature changes. #cmd("cthread_create()") no longer fails, or frees
+      a running thread, when the new thread ends at once on a machine with
+      two or more CPUs.],
+      [Nothing where the program meant local time. Code that built a UTC
+      time with #cmd("mktime()") calls #cmd("timegm()") (or
+      #cmd("timegm64()")) instead. A correction that subtracted the offset
+      after #cmd("mktime()") must go: #cmd("mktime()") subtracts it now, and
+      the offset would be subtracted twice. Nothing for the declarations
+      and for #cmd("cthread_create()").]
   )
 ] <pg-migrate-since-tab>
