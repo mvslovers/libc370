@@ -678,7 +678,8 @@ is stored in #var("prc") when that is not #cmd("NULL").
 === Returns
 0 when the program returned, the abend code in the form #cmd("X'00sssuuu'")
 when it ended abnormally (see @mvs-program-try), or a negative value when
-the ESTAE could not be created. No dump is taken.
+the ESTAE could not be created. The recovery routine of #cmd("try()")
+clears the dump request before the retry.
 
 === Notes
 When a called C program ends abnormally, its own termination code does not
@@ -705,10 +706,10 @@ int __linkdsx(const char *pgm, void *dcb, void *r1, int *prc,
 
 === Description
 Calls the program #var("pgm") as #cmd("__linkds()") does: under the
-protection of #cmd("try()"), with an abend report to the operator and no
-dump. Like #cmd("__linkx()"), it stores the completion code of a failed
-#cmd("LINK") in #var("abcode") when that is not #cmd("NULL"), and 0 in
-every other case.
+protection of #cmd("try()"), with an abend report to the operator. As for
+#cmd("__linkds()"), #cmd("try()") clears the dump request. Like
+#cmd("__linkx()"), it stores the completion code of a failed #cmd("LINK") in
+#var("abcode") when that is not #cmd("NULL"), and 0 in every other case.
 
 The return code of the called program, or -1 when it could not be called,
 is stored in #var("prc") when that is not #cmd("NULL").
