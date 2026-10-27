@@ -160,7 +160,7 @@ Each fix gets a red/green test in a container, then a PR and a merge.
     once FTPD requires >= 2.25.1. Open: refuse a pool of 0?
   - Docs (PR #702): VSAM checks passwords unless the catalog is
     RACF-indicated (measured).
-- **On main, unreleased (next minor):**
+- **2.26.0, released 2026-10-27** (tag `v2.26.0` on `3aa3b28`, PR #716):
   - #708 (PR #709): `cthread_manager_init(0, ...)` returns NULL, errno
     EINVAL; tstpool red/green with the count-0 case.
   - #705 (PR #710): `__fabandon()` returns -2 whenever the DD is still
@@ -169,6 +169,19 @@ Each fix gets a red/green test in a container, then a PR and a merge.
     2.10.3); `__adisc()` sets DCBCNSTO, so abandoning stores no PDS member.
     Probe tstfab705 red/green; KB inbox note written. ftpd#232: FTPD should
     report "DD still held" only for -2.
+  - #712 (PR #713): `try()` writes no cleanup-only line when a job is
+    cancelled; `ABRPT_QUIET_TERM` ORed into the second argument of
+    `abendrpt()` silences the line of its report routine.
+  - #714 (PR #715): `__linkds()`/`__linkdsx()` create their report routine
+    with `DUMP_DEFAULT | ABRPT_QUIET_TERM`.
+- **On main, unreleased (next minor, milestone 2.27.0):**
+  - #717 (PR #720, merged): `release.yml` titles the release with the bare
+    tag; `releasing.md` corrected, the maintainer tags.
+  - #718: the header comment of `src/mvs/file/@@faband.c` names a private
+    system, a date and messages of a consumer; to be reworded.
+  - Docs only, merged: PR #719 (`__linkds()`/`__linkdsx()` take no dump
+    themselves; `try()` clears the dump request), PR #723 (#721,
+    `DUMP_SUPPRESS` alone does not suppress the dump).
 - **Still open from the decisions:**
   - #392 step 2: `mktime()` and `mktime64()` read local time, the JES
     conversion moves to `timegm64()`; timed with an mvsMF release
