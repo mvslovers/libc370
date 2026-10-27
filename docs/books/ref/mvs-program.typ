@@ -1360,7 +1360,10 @@ save areas.
 #var("dump") selects what happens to the dump afterwards:
 
 #deflist(width: 1.35in,
-  [#cmd("DUMP_SUPPRESS")], [no dump is taken.],
+  [#cmd("DUMP_SUPPRESS")], [has the value 0, and the routine takes 0 for
+    "no option given" and uses #cmd("DUMP_DEFAULT"). Passed alone it does
+    not suppress the dump. Only when #cmd("ABRPT_QUIET_TERM") is ORed in does
+    the value reach the code that clears the dump request.],
   [#cmd("DUMP_DEFAULT")], [the dump is left as MVS would take it.],
   [#cmd("DUMP_SNAP")], [a SNAP dump is written to the DD #cmd("SNAP"), and
     the system dump is suppressed. When the DD cannot be opened, the dump
