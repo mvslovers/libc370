@@ -183,10 +183,13 @@ Each fix gets a red/green test in a container, then a PR and a merge.
     themselves; `try()` clears the dump request), PR #723 (#721,
     `DUMP_SUPPRESS` alone does not suppress the dump).
 - **Still open from the decisions:**
-  - #392 step 2: `mktime()` and `mktime64()` read local time, the JES
-    conversion moves to `timegm64()`; timed with an mvsMF release
-    (consapi.c switches to `timegm()`); LUA/370's `os.time()` is fixed by
-    it.
+  - ~~#392 step 2~~: `mktime()` and `mktime64()` read local time, the JES
+    conversion moved to `timegm64()` (PR #727, MVS/CE red/green); mvsMF's
+    consapi.c already calls `timegm()`; LUA/370's `os.time()` is fixed by
+    it after a rebuild. The manuals (`std-time.typ`, `ext.typ`,
+    `pg-migrate.typ`) still say "a later release"; Technical Writer.
+    Found on the way: #728 (`__tzset()` before the first time function is
+    overwritten).
   - VSAM #624 (per-call OPTCD), additive, its own minor.
   - #161 Hercules side: waits for upstream (SDL-Hercules-390/hyperion#894, PR #895).
   - Small: `@@listds.c`/`@@fmtisp.c` can include `<time.h>` for
