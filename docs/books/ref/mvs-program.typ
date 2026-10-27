@@ -1366,12 +1366,23 @@ save areas.
   [#cmd("DUMP_SDUMP")], [the same as #cmd("DUMP_DEFAULT").],
 )
 
+#cmd("ABRPT_QUIET_TERM") (X'100') can be ORed into #var("dump"), as in
+#cmd("DUMP_DEFAULT | ABRPT_QUIET_TERM"). It leaves out the message the
+routine writes when the task is being ended (see Notes). The dump options
+are unchanged by it.
+
 === Returns
 The value #cmd("estae()") returns, or -1 when #var("op") is not valid.
 
 === Notes
-When the task is being ended, the routine writes a single message and does
-nothing else.
+When the task is being ended, for example because the job was cancelled and
+MVS runs the routine only to clean up, the routine writes the single message
+#cmd("libc370 recovery: abend during task termination, cleanup only") and
+does nothing else. With #cmd("ABRPT_QUIET_TERM") it writes nothing then.
+A server with many tasks would otherwise fill the console with such lines
+when it is cancelled. The routine of #cmd("try()") writes no
+message in this case; up to release 2.25.1 it wrote one line per
+nested #cmd("try()") level.
 
 #cmd("DUMP_SDUMP") takes no SVC dump, which would need APF authorization\;
 it keeps its value and behaves exactly as #cmd("DUMP_DEFAULT"). Up to

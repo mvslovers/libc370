@@ -23,6 +23,12 @@ typedef enum {
     DUMP_SDUMP          /* the same as DUMP_DEFAULT (#413) */
 } DUMP_OP;
 
+/* ORed into the DUMP_OP argument of abendrpt() (#712): the report routine
+** writes no "libc370 recovery: ... cleanup only" line when the task is
+** being terminated (cancel, or the job step ending) and RTM runs it only
+** to clean up. Every other report is unchanged. */
+#define ABRPT_QUIET_TERM 0x100
+
 #define SETRP(sdwa,rc,retry,regs) \
     ((sdwa)->SDWARCDE=(rc), \
     (sdwa)->SDWARTYA=(retry), \

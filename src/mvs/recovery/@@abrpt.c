@@ -357,11 +357,15 @@ recovery(SDWA *sdwa, void *udata)
      * "CRT ... not found" for every line.  Emit a single WTO from a
      * pre-formatted buffer and continue with termination.  wto() is
      * CRT-free (SVC 35); do no other C-runtime work on this path.
+     * ABRPT_QUIET_TERM (#712) leaves out that line: it is a plain read of
+     * the option word, no CRT involved.
      */
     if (sdwa->SDWAERRD & SDWACLUP) {
-        char    msg[] = "libc370 recovery: abend during task termination, cleanup only";
+        if (!(param && (param->u[1] & ABRPT_QUIET_TERM))) {
+            char    msg[] = "libc370 recovery: abend during task termination, cleanup only";
 
-        wto(msg);
+            wto(msg);
+        }
         SETRP(sdwa, 0, 0, 0);   /* RC=0, continue with termination */
         return 0;
     }
@@ -478,7 +482,7 @@ recovery(SDWA *sdwa, void *udata)
         wto(msg);
     }
 
-    switch(dump) {
+    switch(dump & 0xFF) {        /* the low byte is the DUMP_OP, #712 */
     case DUMP_SUPPRESS:
         suppress_dump(sdwa);
         break;

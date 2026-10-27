@@ -13,6 +13,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   waited forever. It now returns `NULL` with `errno` set to `EINVAL` and
   creates no dispatcher thread, so the wrong configuration shows at once
   (measured on MVS).
+- **A cancelled program no longer fills the console with recovery lines
+  (#712).** When a job is cancelled, MVS ends its tasks and calls their
+  recovery routines only to clean up. `try()` wrote one line,
+  `libc370 @@@try.c failed(): recovery cleanup-only, retry suppressed`, for
+  every `try()` level a task was in at that moment, repeating what the
+  system's own `IEF450I ... ABEND S222` already says; a server with eight
+  requests in flight wrote 22 of them. `try()` now writes nothing in this
+  case. The report routine of `abendrpt()` keeps its line
+  `libc370 recovery: abend during task termination, cleanup only`; a program
+  that does not want it ORs the new `ABRPT_QUIET_TERM` into the second
+  argument, `abendrpt(ESTAE_CREATE, DUMP_DEFAULT | ABRPT_QUIET_TERM)`. The
+  signature of `abendrpt()` is unchanged, and a call without the flag
+  behaves as before. Measured on MVS with a real `C jobname`: a task with
+  the flag writes no line, a task in two nested `try()` calls went from two
+  lines to none, and a task with plain `abendrpt(ESTAE_CREATE,
+  DUMP_DEFAULT)` still writes its one line.
 
 ### Fixed
 - **`__fabandon()` stores no member, frees nothing twice, and returns -2
