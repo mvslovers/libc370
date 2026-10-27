@@ -11,7 +11,7 @@ static int trylink(const char *pgm, void *dcb, void *r1, int *prc)
 	// wtof("%s: pgm=\"%s\"", __func__, pgm);
 
     /* create ESTAE for abend report, suppress the dump */
-    abendrpt(ESTAE_CREATE, DUMP_SUPPRESS);
+    abendrpt(ESTAE_CREATE, DUMP_DEFAULT | ABRPT_QUIET_TERM);
 
     /* LINK of pgm, rc==0 success */
     rc = __link(pgm, dcb, r1, prc);

@@ -668,8 +668,9 @@ of #cmd("try()"). When the called program ends abnormally, the caller
 continues.
 
 #cmd("__linkds()") also writes an abend report to the operator, as
-#cmd("abendrpt(ESTAE_CREATE, DUMP_SUPPRESS)") does, before the abend is
-caught.
+#cmd("abendrpt()") does, before the abend is caught. When the task is being
+ended, for example because the job was cancelled, it writes no line (see
+@mvs-program-abendrpt).
 
 The return code of the called program, or -1 when it could not be called,
 is stored in #var("prc") when that is not #cmd("NULL").
@@ -1385,9 +1386,10 @@ message in this case; up to release 2.25.1 it wrote the line
 #cmd("libc370 @@@try.c failed(): recovery cleanup-only, retry suppressed")
 once for each nested #cmd("try()") level.
 
-A routine that the library establishes itself with #cmd("abendrpt()"), as
-#cmd("__linkds()") and #cmd("__linkdsx()") do, is established without
-#cmd("ABRPT_QUIET_TERM"). It writes its line when the task is being ended.
+#cmd("__linkds()") and #cmd("__linkdsx()") establish their routine with
+#cmd("DUMP_DEFAULT | ABRPT_QUIET_TERM"). A task that is inside a called
+program when the job is cancelled therefore writes no line for it. Up to
+release 2.25.1 that routine wrote its line.
 
 #cmd("DUMP_SDUMP") takes no SVC dump, which would need APF authorization\;
 it keeps its value and behaves exactly as #cmd("DUMP_DEFAULT"). Up to
