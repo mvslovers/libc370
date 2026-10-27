@@ -28,6 +28,12 @@ CTHREAD  DS    0H
          LA    R11,0(,R1)
          USING CTHDTASK,R11
 *
+* Publish our own TCB address.  The owner stores it after ATTACH
+* returns, which a subtask on another CPU can outrun.  The same value
+* goes in either way; cthread_self() finds the handle from here (#465).
+         L     R0,PSATOLD        => our TCB
+         ST    R0,CTHDTCB        ... in the handle
+*
 * Chain stack with callers save area
          LA    R1,CTHDSTK        => stack for function
          ST    R13,4(,R1)        ... chain stack areas
