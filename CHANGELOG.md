@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.27.0] - 2026-10-27
+
 ### Added
 - **`on_exit()` and `ikjct441()` have declarations (#420).** Both were in
   `libc.a` but declared nowhere, so a call compiled only through an implicit
