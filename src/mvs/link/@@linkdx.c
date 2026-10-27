@@ -9,7 +9,7 @@ static int linkdx(const char *pgm, void *dcb, void *r1, int *prc,
 {
     int         rc;
 
-    abendrpt(ESTAE_CREATE, DUMP_SUPPRESS);
+    abendrpt(ESTAE_CREATE, DUMP_DEFAULT | ABRPT_QUIET_TERM);
     rc = __linkx(pgm, dcb, r1, prc, abcode);
     abendrpt(ESTAE_DELETE, DUMP_DEFAULT);
 

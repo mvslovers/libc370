@@ -25,12 +25,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   that does not want it ORs the new `ABRPT_QUIET_TERM` into the second
   argument, `abendrpt(ESTAE_CREATE, DUMP_DEFAULT | ABRPT_QUIET_TERM)`. The
   signature of `abendrpt()` is unchanged, and a call without the flag
-  behaves as before. The report routine that `__linkds()` and
-  `__linkdsx()` establish for the program they call is created without the
-  flag and keeps its line. Measured on MVS with a real `C jobname`: a task
+  behaves as before. Measured on MVS with a real `C jobname`: a task
   with the flag writes no line, a task in two nested `try()` calls went from
   two lines to none, and a task with plain `abendrpt(ESTAE_CREATE,
   DUMP_DEFAULT)` still writes its one line.
+- **A cancelled task inside `__linkds()` or `__linkdsx()` no longer writes
+  the cleanup-only line (#714).** `__linkds()` and `__linkdsx()` set up their
+  own abend report around the program they call. When a job was cancelled
+  while a task was inside such a call, that report routine wrote
+  `libc370 recovery: abend during task termination, cleanup only` once more,
+  in addition to the line of the caller's own `abendrpt()`, so each task
+  inside a called program still cost one line after #712. They now create the
+  routine with `DUMP_DEFAULT | ABRPT_QUIET_TERM`: the line is gone, and the
+  abend report of a program that abends inside the call is unchanged. Measured
+  on MVS with a real `C jobname`: a task inside `__linkds()` and one inside
+  `__linkdsx()` of a waiting program went from one line each to none, and the
+  abend report of a called program that ends S0C1 is line for line the same
+  as before.
 
 ### Fixed
 - **`__fabandon()` stores no member, frees nothing twice, and returns -2
