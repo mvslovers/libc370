@@ -95,13 +95,14 @@ first cc370 release after 1.5.0 (cc370 4d1fca9).
    what a caller notices. A PR that changed documented behaviour has already
    updated the books or named the stale section in its body; a release that
    changes no documented behaviour needs no book change. After the merge, an
-   annotated tag `vX.Y.Z` ("libc370 X.Y.Z") on the merge commit -- only after
-   checking with the coordinating mbt session.
+   annotated tag `vX.Y.Z` ("libc370 X.Y.Z") on the merge commit. The project
+   board checks the release before the tag and the maintainer creates it;
+   nobody else tags.
 7. **Check what `release.yml` attached** before announcing:
    `libc370-<v>-sysroot.tar.gz`, `libc370-dev_<v>_all.deb`,
    `libc370-devel-<v>.noarch.rpm`, `libc370-<v>-metadata.json` (its
-   `"requires"` ranges, cc370 and maclib370), the two manuals `ml01-0003-E.pdf` and
-   `ml01-0004-E.pdf` (built from the tag by build.yml's `books` job) and
+   `"requires"` ranges, cc370 and maclib370), the two manuals `ml01-0003-0.pdf` and
+   `ml01-0004-0.pdf` (built from the tag by build.yml's `books` job) and
    `SHA256SUMS` (`sha256sum -c`, the PDFs included); the build log names
    the cc370 tag it built with. The release's `pair` job must be green: it
    installs the new packages beside cc370's and maclib370's under apt and
@@ -110,6 +111,8 @@ first cc370 release after 1.5.0 (cc370 4d1fca9).
    version and the tarball's sha256 and pushes it to `mvslovers/homebrew-tap`
    (commit `libc370 <version>`); edit the template there, never the tap's copy.
 8. **Rework the release page** (`gh release edit vX.Y.Z --notes-file …`).
+   The title is the bare tag (`vX.Y.Z`), which `release.yml` sets; the product
+   name and the version open the lead paragraph instead.
    `release.yml` pastes the CHANGELOG section; a reader of the page has
    never heard of the ecosystem. Give it a lead paragraph (what the release
    is, whether it is a drop-in, the cc370 range), "Read this first" for the
