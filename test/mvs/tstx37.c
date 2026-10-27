@@ -7,7 +7,7 @@
  * with an ESTAE could recover, but the abend unwound THROUGH @@fflush.c
  * before its reset: label, so fp->upto still pointed past the block that
  * failed and the next flush re-drove the identical WRITE.  Measured on
- * mvsdev JOB00235/241/245: that second attempt does not fail cleanly, it
+ * a real system: that second attempt does not fail cleanly, it
  * PROGRAM-CHECKS - 0x0C4 on one run and 0x0C6 on another for identical
  * code.  And one path reaches it with no API call at all: @@exit.c walks
  * grt->grtfile at program termination and fclose()s every survivor with no
@@ -29,9 +29,10 @@
  * it is CC 0000.  Every check is also written to the console, because an
  * abend discards whatever SYSOUT is still sitting in the QSAM buffer.
  *
- * SHAPE.  mvslovers/ftpd's (ftpd#129): __dsalcf() creates the data set with
- * SPACE=TRK(1,0) - no secondary, so the first overflow is a D37 and not an
- * extend - __dsfree() catalogs it, and fopen(dsn,"wb") reopens it by name.
+ * SHAPE.  A file-transfer upload into a full data set: __dsalcf() creates the
+ * data set with SPACE=TRK(1,0) - no secondary, so the first overflow is a
+ * D37 and not an extend - __dsfree() catalogs it, and fopen(dsn,"wb")
+ * reopens it by name.
  *
  * CHECKS
  *   (1) fwrite() stops short of the limit         - the write did fail
@@ -68,14 +69,14 @@
  * upload probe.xmit to IBMUSER.MBT.XMIT.IN, run jcl/recvx37.jcl, then
  * jcl/tstx37.jcl.
  *
- * MEASURED 2026-09-13 on mvsdev, JOB00247: CC 0000, 5/5 PASS, and - the
- * check no return code can make - NO IEC031I LINE IN THE JOB LOG AT ALL.
- * TRK(1,0) on WORK00 took the same 200 records of 80 that produced the D37
- * in JOB00245; this time fwrite() stopped at 200 with ferror() set and
+ * MEASURED on the reference system: CC 0000, 5/5 PASS, and - the check no
+ * return code can make - NO IEC031I LINE IN THE JOB LOG AT ALL.  TRK(1,0)
+ * took the same 200 records of 80 that produced the D37 before the exit
+ * was planted; this time fwrite() stopped at 200 with ferror() set and
  * errno 28 (ENOSPC), fclose() returned, and remove() answered 0.
  *
- * Cross-checked the same day by JOB00249: test/mvs/tstfabnd.c, whose three
- * steps each produced a D37 in JOB00245, now report try()=0x00000000 and
+ * Cross-checked: test/mvs/tstfabnd.c, whose three steps each produced a
+ * D37 before the exit was planted, now reports try()=0x00000000 and
  * "nothing to measure" in all three - the same shape, no abend.
  *
  * RC: 0 = every check passed, 8 = at least one did not (it is the COND CODE).
@@ -125,7 +126,7 @@ int main(int argc, char **argv)
         wtof("TSTX37 SETUP FAILED __dsalcf rc=%d", rc);
         return 8;
     }
-    __dsfree(dd);                       /* the free catalogs it - ftpd's step 1 */
+    __dsfree(dd);                       /* the free catalogs it */
 
     sprintf(fname, "'%s'", dsn);
     fp = fopen(fname, "wb");
