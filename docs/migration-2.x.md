@@ -209,7 +209,7 @@ CHANGELOG has everything else.
 
 | Release | Change | What to do |
 |---|---|---|
-| 2.26.0 | `__fabandon()`: -2 now means the DD is still allocated even when the close abended; a value above 0 means the close abended and the DD was freed; no PDS member is stored (#705) | A caller that reported "DD still held" for a return above 0 tests for -2 instead |
+| 2.26.0 | `__fabandon()`: -2 now means the DD could not be freed and is still allocated, whether or not the close abended; a value above 0 means the close abended and the DD was freed; no PDS member is stored (#705) | A caller that reported "DD still held" for a return above 0 tests for -2 instead |
 | 2.26.0 | `cthread_manager_init()` with a count of 0 returns `NULL` with `errno` `EINVAL`; before, it returned a pool that never served its queue (#708) | A caller passing 0 now gets `NULL`; pass at least 1 |
 | 2.26.0 | A cancelled job no longer fills the console with recovery lines: `try()` writes nothing when its routine runs only to clean up, and `__linkds()`/`__linkdsx()` no longer add the `abend during task termination, cleanup only` line of their own routine; new flag `ABRPT_QUIET_TERM`, ORed into the second argument of `abendrpt()`, leaves out that line of the `abendrpt()` routine (#712, #714) | Nothing. A program whose operator or log scanner looked for `recovery cleanup-only, retry suppressed` no longer sees it; to drop the `abendrpt()` line as well, call `abendrpt(ESTAE_CREATE, DUMP_DEFAULT \| ABRPT_QUIET_TERM)` |
 | 2.25.1 | A worker pool of 1, 2 or 3 workers (`cthread_manager_init()`) hands out its queued items; it never started a worker (#700) | A caller that asked for 4 or more workers only to get the pool going can ask for the number it needs |

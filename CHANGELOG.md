@@ -47,20 +47,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 - **`__fabandon()` stores no member, frees nothing twice, and returns -2
-  exactly when the DD statement is still allocated (#705).** Three faults in
+  when the DD statement could not be freed, whether or not the close
+  abended (#705).** Three faults in
   closing a stream after an abend the program recovered. A close that abended
   returned its abend code, documented as "the DD statement is still
   allocated", although MVS had already closed the data set and the DD
-  statement was freed; -2 now means that the DD statement is still allocated,
-  whether or not the close abended, and a value above 0 means the close
-  abended and the DD statement was freed. When `fclose()` abended inside the
+  statement was freed; -2 now means that the DD statement could not be freed and
+  is still allocated, whether or not the close abended, and a value above 0
+  means the close abended and the DD statement was freed. (-3, where the
+  close was not attempted because the ESTAE could not be created, also
+  leaves the DD statement allocated, with the stream untouched.) When `fclose()` abended inside the
   close, for example B14 because the directory of a partitioned data set had
   no room for the member, the following `__fabandon()` released the stream's
   two buffers a second time; storage obtained in between could be freed under
   its owner, and the program could end in abend A0A. And `__fabandon()` on
   a member of a partitioned data set with room in its directory stored the
-  blocks already written as the member, replacing an existing member with
-  them. Now the buffers are freed once and no member is stored (measured on
+  blocks already written as the member, as a new member or in place of an
+  existing one. Now the buffers are freed once and no member is stored (measured on
   MVS).
 
 ## [2.25.1] - 2026-10-21
