@@ -17,7 +17,7 @@
 #    v1.0.7 was), its notes are left exactly as they are; the artifacts are
 #    attached either way.
 #    The manuals (ML01-0003, ML01-0004) are built from the tag by build.yml's
-#    `books` job and attached beside the packages as ml01-000N-E.pdf, with
+#    `books` job and attached beside the packages as ml01-000N-0.pdf, with
 #    their lines added to SHA256SUMS.
 # 6. Then pair.yml installs this release beside cc370's latest, as packages,
 #    under apt and dnf, and builds a program with the pair.
@@ -83,7 +83,7 @@ jobs:
           path: dist
 
       # the manuals, built from the tag by build.yml's books job, beside the
-      # packages and in SHA256SUMS (ml01-0003-E.pdf, ml01-0004-E.pdf)
+      # packages and in SHA256SUMS (ml01-0003-0.pdf, ml01-0004-0.pdf)
       - name: The manuals
         uses: actions/download-artifact@v4
         with:
@@ -114,7 +114,7 @@ jobs:
             echo "Release $GITHUB_REF_NAME exists; its notes are left as they are."
           else
             gh release create "$GITHUB_REF_NAME" \
-              --title "LIBC/370 $GITHUB_REF_NAME" --notes-file notes.md
+              --title "$GITHUB_REF_NAME" --notes-file notes.md
           fi
           gh release upload "$GITHUB_REF_NAME" --clobber dist/*
 
