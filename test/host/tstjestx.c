@@ -139,7 +139,7 @@ void *memcpyp(void *target, int tlen, void *source, int slen, int pad)
 
 int __patmat(const char *str, const char *pat) { (void)str; (void)pat; return 0; }
 
-time64_t mktime64(struct tm *tm) { time64_t r; (void)tm; r.u32[0] = r.u32[1] = 0; return r; }
+time64_t timegm64(const struct tm *tm) { time64_t r; (void)tm; r.u32[0] = r.u32[1] = 0; return r; }
 
 void __64_init(__64 *n) { n->u32[0] = n->u32[1] = 0; }
 
