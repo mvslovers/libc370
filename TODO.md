@@ -175,6 +175,11 @@ Each fix gets a red/green test in a container, then a PR and a merge.
   - #714 (PR #715): `__linkds()`/`__linkdsx()` create their report routine
     with `DUMP_DEFAULT | ABRPT_QUIET_TERM`.
 - **On main, unreleased (next minor, milestone 2.27.0):**
+  - #465 (branch `fix/ctdel-s43e-465`, PR open): `cthread_create_ex()` kept
+    ATTACH's R15 in `task->rc`, which the driver also writes; on 2 CPUs a
+    fast subtask looked like a failed ATTACH and the live handle was freed
+    (S43E). Own variable for the ATTACH rc; `CTHREAD` stores its TCB itself.
+    `tstct465` red/green, 2-CPU container only.
   - #717 (PR #720, merged): `release.yml` titles the release with the bare
     tag; `releasing.md` corrected, the maintainer tags.
   - #718: the header comment of `src/mvs/file/@@faband.c` names a private
@@ -183,10 +188,13 @@ Each fix gets a red/green test in a container, then a PR and a merge.
     themselves; `try()` clears the dump request), PR #723 (#721,
     `DUMP_SUPPRESS` alone does not suppress the dump).
 - **Still open from the decisions:**
-  - #392 step 2: `mktime()` and `mktime64()` read local time, the JES
-    conversion moves to `timegm64()`; timed with an mvsMF release
-    (consapi.c switches to `timegm()`); LUA/370's `os.time()` is fixed by
-    it.
+  - ~~#392 step 2~~: `mktime()` and `mktime64()` read local time, the JES
+    conversion moved to `timegm64()` (PR #727, MVS/CE red/green); mvsMF's
+    consapi.c already calls `timegm()`; LUA/370's `os.time()` is fixed by
+    it after a rebuild. The manuals (`std-time.typ`, `ext.typ`,
+    `pg-migrate.typ`) still say "a later release"; Technical Writer.
+    Found on the way: #728 (`__tzset()` before the first time function is
+    overwritten).
   - VSAM #624 (per-call OPTCD), additive, its own minor.
   - #161 Hercules side: waits for upstream (SDL-Hercules-390/hyperion#894, PR #895).
   - Small: `@@listds.c`/`@@fmtisp.c` can include `<time.h>` for
@@ -196,7 +204,7 @@ Each fix gets a red/green test in a container, then a PR and a merge.
   - Not doing: #75 closed (clock() stays -1); #461 and #607 parked; `%p`
     keeps `00001234` (documented).
 - **Research, parked or real stands only:**
-  - #529, #465, #462;
+  - #529, #462;
   - #341;
   - #295, #206, #204, #30, #27;
 

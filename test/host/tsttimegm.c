@@ -1,9 +1,9 @@
 /*
  * tsttimegm.c - libc370 #392: timegm(), the 32-bit UTC inverse of gmtime().
  *
- * Links the REAL src/ext/time64/timegm.c, src/time/mktime.c, gmtimer.c and
+ * Links the REAL src/ext/time64/timegm.c, gmtimer.c and
  * the scalar date helpers, renamed on the command line so they do not meet
- * the host's own timegm(), mktime() and gmtime_r().  Red before #392:
+ * the host's own timegm() and gmtime_r().  Red before #392:
  * src/ext/time64/timegm.c does not exist and <ext/time64.h> declares no
  * timegm(), so the build fails.
  *
@@ -19,11 +19,11 @@
  *     tm_yday filled in, tm_isdst -1
  *   4 out of range: years 1969 and 2106 give -1 and leave every field as it
  *     was
- *   5 the moved callers keep their results: timegm() and today's mktime()
- *     equal, and both equal the arithmetic mktime() had before #392 (copied
- *     below as old_mktime()), result and every field, over a grid that
- *     includes the DSLIST and JES inputs (year + day of the year, seconds
- *     since midnight)
+ *   5 the moved callers keep their results: timegm() equals the arithmetic
+ *     mktime() had before #392 (copied below as old_mktime()), result and
+ *     every field, over a grid that includes the DSLIST and JES inputs
+ *     (year + day of the year, seconds since midnight).  mktime() itself
+ *     reads local time now and is tested in tstmktime.c
  *
  * time_t is 32 bits on MVS and 64 on the host.  Every result is compared as
  * uint32_t, and the inputs stay inside 1970..2105, where both agree.
@@ -32,9 +32,9 @@
  *
  *     cc -std=gnu99 -Wall -Wextra -U__LP64__ -D'__asm__(...)=' \
  *        -D'asm(...)=' -D__volatile__= -D__32BIT__ -Dtimegm=lc_timegm \
- *        -Dmktime=lc_mktime -Dgmtime_r=lc_gmtime_r -I ../../include \
+ *        -Dgmtime_r=lc_gmtime_r -I ../../include \
  *        -I ../.. -o t tsttimegm.c ../../src/ext/time64/timegm.c \
- *        ../../src/time/mktime.c ../../src/time/gmtimer.c \
+ *        ../../src/time/gmtimer.c \
  *        ../../src/time/@@ymdts.c ../../src/time/@@stymd.c \
  *        ../../src/time/@@mtd.c ../../src/time/@@ytd.c \
  *        ../../src/time/@@isleap.c
@@ -269,11 +269,11 @@ static void outofrange(void)
     }
 }
 
-/* 1 when old_mktime(), timegm() and mktime() disagree on one input */
+/* 1 when old_mktime() and timegm() disagree on one input */
 static int differs(int year, int mon, int mday, int sec)
 {
-    struct tm t0, t1, t2;
-    uint32_t r0, r1, r2;
+    struct tm t0, t1;
+    uint32_t r0, r1;
 
     t0 = tm_zero;
     t0.tm_year = year;
@@ -281,12 +281,10 @@ static int differs(int year, int mon, int mday, int sec)
     t0.tm_mday = mday;
     t0.tm_sec  = sec;
     t0.tm_isdst = -1;
-    t1 = t2 = t0;
+    t1 = t0;
     r0 = (uint32_t)old_mktime(&t0);
     r1 = (uint32_t)timegm(&t1);
-    r2 = (uint32_t)mktime(&t2);
-    return r0 != r1 || r0 != r2 || memcmp(&t0, &t1, sizeof(t0)) != 0
-        || memcmp(&t0, &t2, sizeof(t0)) != 0;
+    return r0 != r1 || memcmp(&t0, &t1, sizeof(t0)) != 0;
 }
 
 static void equivalence(void)
@@ -308,7 +306,7 @@ static void equivalence(void)
                 n++;
             }
     snprintf(msg, sizeof(msg),
-             "5 timegm() == mktime() == old mktime() on %u inputs, %u differ",
+             "5 timegm() == old mktime() on %u inputs, %u differ",
              n, bad);
     CHECK(bad == 0, msg);
     printf("  5 equivalence: %u inputs, %u differ\n", n, bad);

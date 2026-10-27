@@ -14,6 +14,45 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `int ikjct441(int ecode, const char *name, char *value, int value_size)`
   with its `ECODE_TSV...` values. No existing signature changes.
 
+### Changed
+- **`mktime()` and `mktime64()` read `struct tm` as local time (#392).** C99
+  says so; until now both treated the fields as UTC, so on a system whose
+  time zone is not UTC `mktime(localtime(&t))` was `t` plus the zone offset (5
+  hours too much at UTC-5, which put a start time built from `localtime_r()`
+  five hours in the past). They now subtract the zone offset
+  (`__tzget()`), and write back the normalised local fields, so
+  `mktime(localtime(&t)) == t` and `mktime64(localtime64(&t)) == t` for every
+  zone offset. A year outside 1970 to 2105 (`mktime()`) or 1970 to 9999
+  (`mktime64()`), or a time the zone offset alone moves before 1970 or past
+  2**32-2, gives -1 and leaves the structure as it was. Fields that carry
+  out of range by themselves (1970-01-01 with `tm_hour = -5`) still wrap
+  (#736). Code that means UTC calls `timegm()` or `timegm64()`, as 2.24.0 asked:
+  the library's own UTC conversions (the JES job times, the data set lists)
+  already do, with unchanged results. Measured on MVS at zone UTC-5 and
+  UTC+1: before, `mktime()` of the local 16:58 gave t minus 5 hours; now it
+  gives t, and `mktime64()` agrees with `timegm64()` plus the offset for 2026,
+  2050 and 2200. A program that built a UTC time with `mktime()` on a zone
+  other than UTC now gets the local reading; it switches to `timegm()`. Note
+  that `__tzset()` called before the first time function is overwritten by the
+  `tzset()` that the first `__tzget()` runs; call `tzset()` first.
+
+### Fixed
+- **`cthread_create()` could fail, or free a running thread, when the new
+  thread ended at once on a machine with two or more CPUs (#465).** ATTACH
+  starts the subtask immediately; on a second CPU it can run, and finish,
+  before the creating task has stored ATTACH's results. `cthread_create_ex()`
+  kept the ATTACH return code in `task->rc`, the field the thread driver
+  uses for the thread function's return code, so a quick thread made it see
+  a failed ATTACH and free the handle (stack and termination ECB included)
+  under a subtask that was still ending. The result was a sporadic
+  ABEND S43E (invalid ATTACH ECB), SA03, S0C4 or a bad return code from
+  `cthread_wait()`. The ATTACH return code now has its own variable, and the
+  driver stores its own TCB address before it calls the thread function, so
+  `cthread_self()` no longer returns `NULL` inside a thread that starts
+  fast. Measured on MVS with two CPUs: 300 create/wait/delete rounds in
+  three steps ran clean; the library from before the fix ended S43E in two
+  of three steps. A machine with one CPU cannot show the race.
+
 ## [2.26.0] - 2026-10-27
 
 ### Changed

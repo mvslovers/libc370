@@ -59,7 +59,6 @@ cthread_create_ex(void *func, void *arg1, void *arg2, unsigned stacksize)
 #else
     rc = attach(task);
 #endif
-    if (rc==0) rc = task->rc;
 #if 0   /* debug code */
     if (rc==0) {
         wtof("%s NEWTCB(%06X)", __func__, task->tcb);
@@ -85,20 +84,29 @@ static int
 attach(CTHDTASK *task)
 {
     unsigned    work[16]    = {0};
+    int         arc;
 
     /* attach our subtask driver module.
     ** the task->tcb is created here if the attach was a success.
+    **
+    ** The subtask starts at once and, with a second CPU, can run to its end
+    ** before this code has stored ATTACH's results.  Its function's return
+    ** code lands in task->rc (CTHDRC), so ATTACH's own return code must not
+    ** go there: stored over it, it erased the thread's return code, and read
+    ** back, it made a thread that returned nonzero look like a failed ATTACH
+    ** -- whose cleanup frees the CTHDTASK, ECB and stack under a subtask
+    ** that is still ending (S43E, SA03, S0C4; #465).
     */
     __asm__(
         "LA\t1,0(,%2)\n\t"
         "ATTACH EP=CTHREAD,ECB=(%3),DPMOD=-1,SF=(E,(%4))\n\t"
         "ST\t1,%0\n\t"
         "ST\t15,%1"
-        : "=m"(task->tcb), "=m"(task->rc)
+        : "=m"(task->tcb), "=m"(arc)
         : "r"(task), "r"(&task->termecb), "r"(work)
         : "0", "1", "14", "15" , "memory");
 
-    return task->rc;
+    return arc;
 }
 
 __asm__("\n&FUNC    SETC 'newthread'");
