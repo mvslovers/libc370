@@ -26,10 +26,11 @@
  * return code that comes back through cthread_wait(&task->termecb) /
  * task->rc is 9, and cthread_delete() frees the handle.
  *
- * It can fail only with two CPUs (MVS/CE stock has two; the mvsce-target
- * image runs one unless started with MVSCE_NUMCPU=2).  On one CPU it
- * passes with or without the fix: the subtask is dispatched only when the
- * owner waits.
+ * It can fail only with two CPUs.  The mvsce-target image runs one, and
+ * mvsce-target does not pass MVSCE_NUMCPU on to the container: check for
+ * "NUMCPU 2" in /MVSCE/conf/local.cnf before trusting a green run.  On one
+ * CPU it passes with or without the fix: the subtask is dispatched only
+ * when the owner waits.
  *
  * Built twice: TSTC465 against this tree's libc.a, TSTC465R against a
  * libc.a built from main before the fix - the red control.
