@@ -175,7 +175,7 @@ Each fix gets a red/green test in a container, then a PR and a merge.
   - #714 (PR #715): `__linkds()`/`__linkdsx()` create their report routine
     with `DUMP_DEFAULT | ABRPT_QUIET_TERM`.
 - **On main, unreleased (next minor, milestone 2.27.0):**
-  - #465 (branch `fix/ctdel-s43e-465`, PR open): `cthread_create_ex()` kept
+  - #465 (PR #735, merged): `cthread_create_ex()` kept
     ATTACH's R15 in `task->rc`, which the driver also writes; on 2 CPUs a
     fast subtask looked like a failed ATTACH and the live handle was freed
     (S43E). Own variable for the ATTACH rc; `CTHREAD` stores its TCB itself.
