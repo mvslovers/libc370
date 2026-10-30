@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.28.0] - 2026-10-31
+
 ### Changed
 - **`racf_login()` returns only the ACEE of the user it was asked for.** After
   RACINIT answers 0, the name in the ACEE is compared with the requested user
