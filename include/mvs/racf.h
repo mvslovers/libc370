@@ -26,10 +26,11 @@ extern ACEE *   racf_get_acee(void)                                     asm("RAC
 ** if pass is NULL then password checking is bypassed for this user.
 ** if racf_rc is not NULL then the RACF return code is returned.
 **
-** The ACEE returned belongs to user.  When RACINIT answers 0 but the ACEE
-** carries another name (user and ACEE name compared blank padded to 8, in
-** upper case), the ACEE is deleted, NULL is returned and *racf_rc is 8, the
-** "password is not authorized" code.  This holds with and without a password.
+** The ACEE returned carries the name of user.  When RACINIT answers 0 but
+** the ACEE carries another name (user and ACEE name compared blank padded to
+** 8, in upper case), or there is no ACEE, the ACEE is deleted, NULL is
+** returned and *racf_rc is 8, the "password is not authorized" code.  This
+** holds with and without a password.
 ** user NULL (the default user) is not compared.  Test the return value
 ** against NULL; *racf_rc is for the reason.
 */

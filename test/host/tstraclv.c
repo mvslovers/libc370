@@ -139,8 +139,18 @@ int main(void)
         mkuser(userid, "IBMUSER");
         rc = verify_acee(&got, userid, 0);
     }
-    check(rc == 0 && got == NULL && logouts == 0,
-          "rc 0 and no ACEE: unchanged");
+    check(rc == 8 && got == NULL && logouts == 0,
+          "rc 0 and no ACEE: refused with rc 8, nothing to delete");
+
+    {
+        char userid[9];
+        mkuser(userid, "IBMUSER");
+        got = NULL;
+        logouts = 0;
+        rc = verify_acee(&got, userid, 4);
+        check(rc == 4 && got == NULL && logouts == 0,
+              "RACINIT said 4 and no ACEE: rc kept");
+    }
 
     printf("tstraclv: %d checks, %d failed\n", run, failed);
     return failed ? 1 : 0;

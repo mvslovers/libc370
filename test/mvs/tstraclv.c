@@ -15,7 +15,8 @@
  *                        case, blank padded), racf_rc 0; it is logged out
  *     OKNP   USER        the same without a password (PASSCHK=NO)
  *     FAIL   RC USER PW  login must give NULL and racf_rc RC (RC = * means
- *                        any value but 0)
+ *                        any value but 0); the address space's resting
+ *                        ACEE (ASXBSENV) must be the same afterwards
  *     FAILNP RC USER     the same without a password
  *     DFLT   [PW]        racf_login(NULL, ...), the default user: printed, no
  *                        verdict (it is not compared)
@@ -101,7 +102,7 @@ int main(int argc, char **argv)
     char    *t[MAXTOK];
     char    *p;
     int     n, rc, want, bad = 0, cases = 0, i;
-    ACEE    *acee;
+    ACEE    *acee, *senv;
     FILE    *in;
     char    probe_user[9], probe_pw[9];
     int     have_probe = 0, have_pw = 0;
@@ -153,6 +154,7 @@ int main(int argc, char **argv)
             if (n < (np ? 3 : 4)) { bad += fail(orig, "bad case line"); continue; }
             want = (t[1][0] == '*') ? -1 : atoi(t[1]);
             rc = -99;
+            senv = racf_get_acee();
             acee = racf_login(t[2], np ? NULL : t[3], NULL, &rc);
             printf("  %-8s %-10s -> %s, racf_rc=%d\n", t[0], t[2],
                    acee ? "ACEE" : "NULL", rc);
@@ -162,6 +164,8 @@ int main(int argc, char **argv)
             }
             else if (rc == 0 || rc == -99 || (want >= 0 && rc != want))
                 bad += fail(orig, "racf_rc is not the expected failure");
+            if (racf_get_acee() != senv)
+                bad += fail(orig, "ASXBSENV changed by the refused login");
         }
         else if (!strcmp(t[0], "DFLT")) {
             rc = -99;

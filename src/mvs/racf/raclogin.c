@@ -1,13 +1,14 @@
 /* RACLOGIN.C - racf_login()
 ** returns ACEE if successful.
 **
-** The ACEE returned is the one of the user asked for: after RACINIT has
-** answered 0 the name in the ACEE (ACEEUSRI) is compared with the userid
+** The ACEE returned carries the name of the user asked for: after RACINIT
+** has answered 0 the name in the ACEE (ACEEUSRI) is compared with the userid
 ** RACINIT was given, both blank padded to 8 and in upper case.  When they
-** differ the ACEE is deleted again, NULL is returned and *racf_rc is 8 (the
-** password is not authorized), so no caller reads the new case as a success
-** by testing only the return code.  This holds with a password and with
-** PASSCHK=NO.  user NULL (the default user "*") is not compared.
+** differ, or RACINIT answered 0 without an ACEE, the ACEE is deleted again,
+** NULL is returned and *racf_rc is 8 (the password is not authorized), so no
+** caller reads the new case as a success by testing only the return code.
+** This holds with a password and with PASSCHK=NO.  user NULL (the default
+** user "*") is not compared.
 **
 ** If racf_rc points to an int it receives the RACF return code:
 ** Hex Dec  Meaning
@@ -45,16 +46,19 @@
 /* userid is the length-prefixed, blank padded, upper case name RACINIT got.
 ** Returns rc unchanged unless RACINIT said 0 and the ACEE it made is not for
 ** that user; then the ACEE is deleted (*acee becomes NULL) and 8 returned.
-** A failed delete leaves the ACEE allocated; the refusal stands regardless,
-** a leaked ACEE being the lesser harm than one handed to the caller. */
+** RACINIT saying 0 without an ACEE is refused the same way (nothing to
+** delete).  A failed delete leaves the ACEE allocated; the refusal stands
+** regardless, a leaked ACEE being the lesser harm than one handed to the
+** caller. */
 static int
 verify_acee(ACEE **acee, const char *userid, int rc)
 {
-    if (rc != 0 || !*acee) return rc;
+    if (rc != 0) return rc;
 
-    if (userid[0] > 0 && memcmp((*acee)->aceeusri, userid + 1, 8) == 0) return 0;
+    if (*acee && userid[0] > 0 && memcmp((*acee)->aceeusri, userid + 1, 8) == 0)
+        return 0;
 
-    racf_logout(acee);
+    if (*acee) racf_logout(acee);
     *acee = (ACEE*)0;
     return RACF_RC_NOTAUTH;
 }
