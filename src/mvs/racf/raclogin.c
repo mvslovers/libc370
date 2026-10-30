@@ -50,16 +50,9 @@
 static int
 verify_acee(ACEE **acee, const char *userid, int rc)
 {
-    int     i;
-    int     same;
-
     if (rc != 0 || !*acee) return rc;
 
-    same = userid[0] > 0;
-    for (i = 0; same && i < 8; i++) {
-        if ((*acee)->aceeusri[i] != userid[1 + i]) same = 0;
-    }
-    if (same) return 0;
+    if (userid[0] > 0 && memcmp((*acee)->aceeusri, userid + 1, 8) == 0) return 0;
 
     racf_logout(acee);
     *acee = (ACEE*)0;
@@ -71,7 +64,7 @@ ACEE *
 racf_login(const char *user, const char *pass, const char *group, int *racf_rc)
 {
     volatile int    rc          = 0;
-    volatile ACEE   *acee       = 0;
+    ACEE * volatile acee        = 0;
     int             sup         = 0;
     int             len;
     int             named       = (user != 0);
@@ -187,14 +180,14 @@ racf_login(const char *user, const char *pass, const char *group, int *racf_rc)
     }
 
     if (named) {
-        ACEE    *got = (ACEE*)acee;
+        ACEE    *got = acee;
 
         rc   = verify_acee(&got, userid, rc);
         acee = got;
     }
 
     if (racf_rc) *racf_rc = rc;
-    return (ACEE*)acee;
+    return acee;
 }
 #if 0
         __asm__("\n"
