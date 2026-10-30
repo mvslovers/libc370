@@ -25,6 +25,14 @@ extern ACEE *   racf_get_acee(void)                                     asm("RAC
 /* racf_login() - create a new ACEE for user.
 ** if pass is NULL then password checking is bypassed for this user.
 ** if racf_rc is not NULL then the RACF return code is returned.
+**
+** The ACEE returned carries the name of user.  When RACINIT answers 0 but
+** the ACEE carries another name (user and ACEE name compared blank padded to
+** 8, in upper case), or there is no ACEE, the ACEE is deleted, NULL is
+** returned and *racf_rc is 8, the "password is not authorized" code.  This
+** holds with and without a password.
+** user NULL (the default user) is not compared.  Test the return value
+** against NULL; *racf_rc is for the reason.
 */
 extern ACEE *   raclogin(const char *user, const char *pass,
                          const char *group, int *racf_rc);
@@ -50,6 +58,11 @@ extern int      racf_logout(ACEE **acee)                                asm("RAC
 **       reads it as a denial.  Test rc <= 4 for "may proceed".
 **    8  not authorized
 **   12+ see the table at the top of src/mvs/racf/racauth.c
+**
+** racf_auth(NULL, ...) checks against the ACEE of the address space.  The
+** answer is as reliable as the SAF system under it: where SAF gives no
+** verdict a 0 is not told from a real permit.  That 0 is not corrected here;
+** what keeps a wrong ACEE from reaching the caller is racf_login().
 **
 ** Which of 0 and 4 an unprotected resource answers depends on the LOG bit in
 ** the RACHECK parameter list.  Since #63 libc370 sets LOG=NONE and the answer

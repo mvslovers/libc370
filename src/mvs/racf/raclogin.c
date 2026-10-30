@@ -1,6 +1,15 @@
 /* RACLOGIN.C - racf_login()
 ** returns ACEE if successful.
 **
+** The ACEE returned carries the name of the user asked for: after RACINIT
+** has answered 0 the name in the ACEE (ACEEUSRI) is compared with the userid
+** RACINIT was given, both blank padded to 8 and in upper case.  When they
+** differ, or RACINIT answered 0 without an ACEE, the ACEE is deleted again,
+** NULL is returned and *racf_rc is 8 (the password is not authorized), so no
+** caller reads the new case as a success by testing only the return code.
+** This holds with a password and with PASSCHK=NO.  user NULL (the default
+** user "*") is not compared.
+**
 ** If racf_rc points to an int it receives the RACF return code:
 ** Hex Dec  Meaning
 ** 00    0  RACINIT has completed successfully.
@@ -32,6 +41,28 @@
 #include <string.h>
 #include "mvs/racf.h"
 
+#define RACF_RC_NOTAUTH 8
+
+/* userid is the length-prefixed, blank padded, upper case name RACINIT got.
+** Returns rc unchanged unless RACINIT said 0 and the ACEE it made is not for
+** that user; then the ACEE is deleted (*acee becomes NULL) and 8 returned.
+** RACINIT saying 0 without an ACEE is refused the same way (nothing to
+** delete).  A failed delete leaves the ACEE allocated; the refusal stands
+** regardless, a leaked ACEE being the lesser harm than one handed to the
+** caller. */
+static int
+verify_acee(ACEE **acee, const char *userid, int rc)
+{
+    if (rc != 0) return rc;
+
+    if (*acee && userid[0] > 0 && memcmp((*acee)->aceeusri, userid + 1, 8) == 0)
+        return 0;
+
+    if (*acee) racf_logout(acee);
+    *acee = (ACEE*)0;
+    return RACF_RC_NOTAUTH;
+}
+
 __asm__("\n&FUNC    SETC 'racf_login'");
 ACEE *
 racf_login(const char *user, const char *pass, const char *group, int *racf_rc)
@@ -40,6 +71,7 @@ racf_login(const char *user, const char *pass, const char *group, int *racf_rc)
     volatile ACEE   *acee       = 0;
     int             sup         = 0;
     int             len;
+    int             named       = (user != 0);
     char            userid[9];
     char            password[9];
     char            groupid[9];
@@ -149,6 +181,15 @@ racf_login(const char *user, const char *pass, const char *group, int *racf_rc)
 "*\n"
 "         MODESET KEY=NZERO,MODE=PROB\n"
         : : : "0", "1", "14", "15", "memory");
+    }
+
+    if (named) {
+        ACEE    *got;
+
+        memcpy(&got, &acee, sizeof(got));
+
+        rc   = verify_acee(&got, userid, rc);
+        acee = got;
     }
 
     if (racf_rc) *racf_rc = rc;
