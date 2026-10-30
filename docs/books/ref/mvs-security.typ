@@ -80,13 +80,24 @@ folded to uppercase.
   used.
 - When #var("user") is #cmd("NULL"), the user ID #cmd("*") is passed.
 
+The ACEE that #cmd("racf_login()") returns is the ACEE of the user it was
+asked for. After RACINIT answers 0, the function compares the user name in
+the ACEE with #var("user"), both in uppercase and padded with blanks to
+eight characters. If the names differ, or RACINIT answered 0 without an ACEE,
+the function deletes the ACEE, returns #cmd("NULL") and sets
+#var("racf_rc") to 8. This holds with a password and without one
+(#cmd("PASSCHK=NO")). A #var("user") of #cmd("NULL") is not compared.
+
 The new ACEE is not made the default of the address space. Pass it to
 #cmd("racf_auth()"), or install it with #cmd("racf_set_acee()").
 
 === Returns
-The address of the new ACEE, or #cmd("NULL") when RACINIT failed. When
+The address of the new ACEE, or #cmd("NULL") when RACINIT failed or when
+the ACEE it created is not the one of the requested user. When
 #var("racf_rc") is not #cmd("NULL"), the return code of RACINIT is stored
-there, as @mvs-security-racinit-tab lists.
+there, as @mvs-security-racinit-tab lists. The refusal described above is
+reported as 8, the code for a password that is not authorized, together
+with #cmd("NULL").
 
 #tab(caption: [RACINIT return codes stored by racf\_login()])[
   #table(columns: (0.5in, 0.5in, 1fr),
@@ -112,6 +123,11 @@ there, as @mvs-security-racinit-tab lists.
 - The caller must be APF-authorized or in supervisor state (see
   @mvs-security-auth-tab).
 - The password is folded to uppercase before it is checked.
+- Test the return value against #cmd("NULL")\; a non-#cmd("NULL") ACEE is
+  the success. #var("racf_rc") gives the reason for a #cmd("NULL").
+- #cmd("racf_auth()") is not changed by this check. It returns the answer of
+  the security product, for the ACEE it is given or for the ACEE of the
+  address space.
 - Delete every ACEE that #cmd("racf_login()") creates with
   #cmd("racf_logout()") when it is no longer needed.
 

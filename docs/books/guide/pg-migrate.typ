@@ -586,6 +586,18 @@ What later 2.x releases ask of a program or a build:
       #cmd("timegm64()")) instead. A correction that subtracted the offset
       after #cmd("mktime()") must go: #cmd("mktime()") subtracts it now, and
       the offset would be subtracted twice. Nothing for the declarations
-      and for #cmd("cthread_create()").]
+      and for #cmd("cthread_create()").],
+    [2.28.0], [#cmd("racf_login()") returns only the ACEE of the user it was
+      asked for. After RACINIT answers 0 the name in the ACEE is compared
+      with #var("user") (uppercase, padded to eight). On a mismatch, or when
+      no ACEE came back, the ACEE is deleted, the function returns
+      #cmd("NULL") and #var("racf_rc") is 8. This holds with and without a
+      password\; a #var("user") of #cmd("NULL") is not compared.
+      #cmd("racf_auth()") is unchanged. Up to 2.27.0 the function returned
+      whatever ACEE RACINIT had made.],
+      [Nothing for a caller that tests the return value against
+      #cmd("NULL"). A caller that used the return value without testing it
+      must test it: where it got an ACEE before, it can now get
+      #cmd("NULL").]
   )
 ] <pg-migrate-since-tab>
