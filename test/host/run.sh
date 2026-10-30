@@ -287,6 +287,11 @@ tstplus() {
        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
        -I $R/include -I $R -o "$B/t" tstplus.c && "$B/t"
 }
+tstraclv() {
+    "$CC" -std=gnu99 -Wall -Wextra \
+       -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
+       -I $R/include -I $R -o "$B/t" tstraclv.c && "$B/t"
+}
 tstraclo() {
     "$CC" -std=gnu99 -Wall -Wextra \
        -U__LP64__ -D'__asm__(...)=' -D__volatile__= -D__32BIT__ \
@@ -365,7 +370,7 @@ tstwpos() {
 # not dropped from here - fix it, or say which issue it waits on.
 ALL="tst75sel tst75snd tst75sok tstacee tstaradf tstardel tstblank tstcmtt tstdblcv tstdblrb tstdecl tstdirck tstdsnmt tstdynit tstemptl
      tstenqdq tsterrfl tstfabnd tstfcls tstfloor tstfpapp tstfprls tstfpunit tstgmain tstidcam tstidcrec tstinet tstiolk tstjesop
-     tstjesprb tstjestx tstl tstll tstlspd tstlstds tstpfarg tstpfflt tstpfval tstplus tstraclo tstrand tstrldwk tstrseek tstscnll tstssvt tststrer tstsubsy tstmktime tsttimegm tsttm64vec tsttodsc tstinstall tstsvckey tsttxdsn tstvsnp
+     tstjesprb tstjestx tstl tstll tstlspd tstlstds tstpfarg tstpfflt tstpfval tstplus tstraclo tstraclv tstrand tstrldwk tstrseek tstscnll tstssvt tststrer tstsubsy tstmktime tsttimegm tsttm64vec tsttodsc tstinstall tstsvckey tsttxdsn tstvsnp
      tstwchar tstwpos tstwto"
 
 [ $# -gt 0 ] && ALL="$*"
