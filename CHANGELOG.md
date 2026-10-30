@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+- **`racf_login()` returns only the ACEE of the user it was asked for.** After
+  RACINIT answers 0, the name in the ACEE is compared with the requested user
+  (upper case, blank padded). On a mismatch, or if no ACEE came back, the ACEE
+  is deleted, `racf_login()` returns `NULL` and `*racf_rc` is 8. This holds with
+  and without a password; the default user (`user == NULL`) is not compared.
+  `racf_auth()` is unchanged.
+
 ## [2.27.0] - 2026-10-27
 
 ### Added
