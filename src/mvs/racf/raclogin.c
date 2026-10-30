@@ -68,7 +68,7 @@ ACEE *
 racf_login(const char *user, const char *pass, const char *group, int *racf_rc)
 {
     volatile int    rc          = 0;
-    ACEE * volatile acee        = 0;
+    volatile ACEE   *acee       = 0;
     int             sup         = 0;
     int             len;
     int             named       = (user != 0);
@@ -184,14 +184,16 @@ racf_login(const char *user, const char *pass, const char *group, int *racf_rc)
     }
 
     if (named) {
-        ACEE    *got = acee;
+        ACEE    *got;
+
+        memcpy(&got, &acee, sizeof(got));
 
         rc   = verify_acee(&got, userid, rc);
         acee = got;
     }
 
     if (racf_rc) *racf_rc = rc;
-    return acee;
+    return (ACEE*)acee;
 }
 #if 0
         __asm__("\n"
