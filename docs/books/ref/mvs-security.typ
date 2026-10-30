@@ -87,6 +87,9 @@ eight characters. If the names differ, or RACINIT answered 0 without an ACEE,
 the function deletes the ACEE, returns #cmd("NULL") and sets
 #var("racf_rc") to 8. This holds with a password and without one
 (#cmd("PASSCHK=NO")). A #var("user") of #cmd("NULL") is not compared.
+An empty #var("user") (#cmd("\"\"")) never passes the check: where RACINIT
+answers 0 for it, the function returns #cmd("NULL") and sets #var("racf_rc")
+to 8.
 
 The new ACEE is not made the default of the address space. Pass it to
 #cmd("racf_auth()"), or install it with #cmd("racf_set_acee()").
@@ -104,7 +107,7 @@ with #cmd("NULL").
     [Hex], [Dec], [Meaning],
     [00], [0], [The user was signed on.],
     [04], [4], [The user is not defined.],
-    [08], [8], [The password is not valid.],
+    [08], [8], [The password is not authorized.],
     [0C], [12], [The password has expired.],
     [10], [16], [The new password is not valid.],
     [14], [20], [The user is not defined to the group.],
