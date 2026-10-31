@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- **`__frtx9a()` frees every SVC 99 text unit at the address it was
+  allocated at (#751).** The fourteen routines that build a text-unit list
+  mark its last pointer with the high-order bit, as SVC 99 wants, and free
+  the list with `FreeTXT99Array()` while the bit is still on, so the last
+  unit's `free()` was given its address with bit 0 set. FREEMAIN on MVS 3.8j
+  takes the low 24 bits and never minded; an allocator that keeps freed
+  blocks would hand one out again with the bit on. `__frtx9a()` now clears
+  the bit before each `FreeTXT99()`.
+
 ## [2.28.0] - 2026-10-31
 
 ### Changed
