@@ -612,12 +612,57 @@ CCFUNC   CCALL CFUNC                    COBOL: CALL 'CCFUNC' USING N
 | Subtasks | `PRV=0` teilt globale Daten | eigene Umgebung je Subtask, C-Threads abgelehnt |
 | Key, Subpool, Stack pro Einstieg | ja | Stack global (`@@STKLEN`) |
 
-CCALL ist für COBOL ↔ C heute bequemer: kein Handle, Verschachtelung geht,
-die SPIE-Falle ist gelöst. Dignus kann zusätzlich eine Umgebung **unabhängig
-vom Task** führen (Handle in R0 oder über einen Exit). Das braucht man, sobald
-C in einem Exit oder Subsystem läuft, das von wechselnden Tasks gerufen wird.
-Außerdem kann es pro Aufruf auf- und abbauen, und es teilt globale Daten mit
-Subtasks.
+#### Wo CCALL heute stärker ist
+
+- **Kein Handle zu verwalten.** Der Aufrufer muss sich nichts merken und
+  nichts weiterreichen. Für COBOL, wo man Register nicht direkt setzen kann,
+  ist das der entscheidende Punkt.
+- **Verschachtelung funktioniert.** C → COBOL → C auf demselben Stack ist
+  ausdrücklich unterstützt (#502). Dignus verbietet das bei `SUPPLIED`.
+- **Die SPIE-Falle ist gelöst.** Ohne das Aussetzen von COBOLs SPIE landet ein
+  Program Check in C bei COBOL (U30xx, falsche Zeilennummer). Das ist bei
+  uns gemessen (#502). Dignus erwähnt das Thema nicht.
+- **Keine Compiler-Änderung.** Der Mechanismus liegt komplett in LIBC/370
+  und funktioniert mit jedem CC/370.
+- **Bestehende C-Funktionen ohne Änderung aufrufbar.** Der Stub kann jede
+  C-Funktion einer Bibliothek von außen erreichbar machen, ohne ihren
+  Quelltext anzufassen.
+- **Initialisierung erst bei Gebrauch.** Streams, `SYSENV` und Zeitzone kosten
+  nur, wenn sie benutzt werden. Dignus braucht dafür `NOSTDIO=1` von Hand.
+- **Klare Fehler.** U3101 bis U3105 statt eines beschädigten Stacks.
+
+#### Wo Dignus stärker ist
+
+- **Umgebung unabhängig vom Task.** Ein Handle in R0, im Parameter oder über
+  einen `FINDENV`-Exit. Das braucht man, sobald C in einem Exit oder
+  Subsystem läuft, das von wechselnden Tasks gerufen wird, oder wenn die
+  Umgebung in einem eigenen Kontrollblock leben soll. Die TCB-Verankerung von
+  CCALL greift dort nicht.
+- **Auf- und Abbau pro Aufruf** (`DCALL=YES`). Für einmalige Aufrufe ohne
+  `CCTERM`-Pflicht. Bei uns geht gepufferte Ausgabe verloren, wenn ein
+  COBOL-Programm `CCTERM` vergisst (gemessen, im Guide dokumentiert).
+- **Explizite Lebensdauer.** `ALLOCATE`/`DESTROY` machen sichtbar, wann die
+  Umgebung entsteht und vergeht, statt an Task-Ende oder `exit()` zu hängen.
+- **Geteilte globale Daten für Subtasks** (`PRV=0`). Ein neuer Stack für einen
+  mit `ATTACH` gestarteten Subtask, aber dieselben Globalen. Bei uns baut ein
+  Subtask eine eigene Umgebung, C-Threads werden abgelehnt.
+- **Einstellungen pro Einstieg.** Stackgröße, Subpool, Key und
+  Program-Check-Behandlung je Funktion statt global.
+- **Die Absicht steht an der Funktion.** Wer die C-Funktion liest, sieht, dass
+  sie für Aufrufe von außen gedacht ist und wie.
+
+#### Schwächen von Dignus, die wir nicht übernehmen sollten
+
+- Die Verschachtelungsgrenze bei `SUPPLIED`: Der Stack beginnt neu, ein
+  zweiter Aufruf beschädigt den ersten.
+- `DCALL=YES` ist teuer, wenn die Funktion oft gerufen wird. Ohne Hinweis
+  darauf wird es leicht zur Falle.
+- Ein explizites Handle verlangt Disziplin vom Aufrufer: abbauen nicht
+  vergessen, nach dem Abbau nicht mehr benutzen, nicht aus einem fremden Task
+  benutzen. Fehler darin zeigen sich spät und schwer zu finden.
+- Der `FINDENV`-Exit hat strenge Regeln (R9–R13 erhalten, keine Save Area). Für
+  den häufigen Fall „Umgebung steht im ersten Parameter" ist das zu viel
+  Aufwand.
 
 ### Variante A: CCALL-Makro erweitern
 
@@ -650,10 +695,23 @@ Kontrollblock hält:
          BALR  14,15
 ```
 
-Vorteile: kein Eingriff in CC/370, rückwärtskompatibel, alles in LIBC/370.
-Nachteile: Die C-Seite weiß nicht, wie sie gerufen wird. Pro Funktion ist ein
-zusätzliches Assembler-Member nötig, und der Name des Stubs und der
-C-Funktion müssen von Hand zusammenpassen.
+**Pro**
+
+- Kein Eingriff in CC/370, läuft mit der heutigen Toolchain.
+- Vollständig rückwärtskompatibel: `CCALL CFUNC` ohne Operanden verhält sich wie heute.
+- Alles in LIBC/370, eine Release reicht.
+- Funktioniert auch für C-Funktionen, deren Quelltext man nicht ändern kann oder will.
+- Die Semantik steht dort, wo der Aufrufer sie braucht: im Assembler.
+
+**Contra**
+
+- Die C-Seite weiß nicht, wie sie gerufen wird. Wer nur den C-Code liest, sieht
+  nicht, dass die Funktion eine Umgebung in R0 erwartet.
+- Pro Funktion ein zusätzliches Assembler-Member (oder eine Sammlung von Stubs).
+- Stub-Name und C-Funktion müssen von Hand zusammenpassen. Ein Tippfehler
+  zeigt sich erst beim Linken oder als fehlender Einstieg.
+- Die Parameterliste ist auf 16 Adressen begrenzt, und die Prüfung der Typen
+  findet nicht statt.
 
 ### Variante B: `#pragma ccall` in CC/370
 
@@ -747,6 +805,52 @@ Weil Variante B die Laufzeit von Variante A verwendet, lassen sich beide
 nacheinander einführen: zuerst die Laufzeitroutinen für `ENV=NEW`/`R0`/`TERM`
 in LIBC/370 mit Makro-Operanden, danach das Pragma in CC/370, das denselben
 Einstieg erzeugt.
+
+#### Pro und Contra
+
+**Pro**
+
+- **Die Absicht steht an der Funktion.** Wer eine Funktion für Aufrufe aus
+  Assembler oder COBOL schreibt, sagt das dort, wo sie definiert ist. Das ist
+  der Grund, aus dem der Maintainer diesen Ansatz bevorzugt.
+- Kein separates Assembler-Member, kein Abgleich von Stub- und Funktionsnamen.
+- Der Compiler kennt die Signatur: Er kann mehr als 16 Parameter zulassen, das
+  Hochbit gezielt behandeln und warnen, wenn ein Parameter von COBOL als Wert
+  statt als Zeiger deklariert ist.
+- Die Optionen stehen im Quelltext und werden mit dem Code versioniert und
+  überprüft.
+- Vertraut für alle, die IBM C, SAS/C oder Dignus kennen (`#pragma linkage`,
+  `#pragma prolkey`).
+- Mit der Attribut-Form kann die Markierung in einem Header an der
+  Deklaration stehen. Aufrufer und Implementierung sehen dieselbe Information.
+
+**Contra**
+
+- **Compiler-Änderung nötig.** Arbeit im S/370-Backend eines GCC 3.4.6, mit
+  eigenen Tests, und Arbeit an einer Stelle, die jeden Prolog betrifft.
+- **Versionskopplung.** Ein Programm mit `#pragma ccall` braucht ein CC/370 ab
+  Version x und eine LIBC/370 ab Version y. CC/370 und LIBC/370 werden ohnehin
+  gemeinsam versioniert, aber die Spanne muss stimmen.
+- **Stille Fehler mit fremden Compilern.** Ein unbekanntes `#pragma` wird von
+  anderen Compilern ignoriert, die Funktion bekäme dann still die normale
+  Linkage. Das Attribut fällt dagegen auf. Ein Grund, die Attribut-Form
+  zumindest zusätzlich anzubieten.
+- Die Semantik ist aus dem Assembler-Aufrufer nicht mehr direkt ersichtlich,
+  sie steht im C-Quelltext oder Header.
+- Bestehende C-Funktionen, deren Quelltext man nicht ändert, brauchen weiter
+  den Stub. Variante A bleibt also auf jeden Fall nötig.
+
+#### Wann welche Variante
+
+| Fall | Variante |
+|---|---|
+| Eine Funktion wird eigens für Aufrufe aus Assembler, COBOL oder einem Exit geschrieben | B (Pragma/Attribut) |
+| Eine vorhandene C-Funktion, deren Quelltext unverändert bleibt, soll von außen erreichbar sein | A (Stub) |
+| COBOL-Hauptprogramm ruft gelegentlich C | A oder B mit Vorgabe `ENV=TASK` |
+| Exit oder Subsystem, von wechselnden Tasks gerufen | B mit `ENV=PARM1` bzw. A mit `ENV=R0` |
+| Einmaliger Aufruf ohne Aufräumen | `TERM=YES` in beiden Varianten |
+
+Beide Varianten nutzen dieselbe Laufzeit und schließen sich nicht aus.
 
 #### Verbesserung gegenüber Dignus
 
