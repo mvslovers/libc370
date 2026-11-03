@@ -61,6 +61,7 @@ AMODE 31) fallen weg.
 | 8 | Übersetzung: Kopieren beim Übersetzen, Code Page wählbar | `__bcopy_etoa`, Tabelle 1047 | – | ergänzt W3 | mittel |
 | 9 | Regeln für fehlende DCB-Attribute | `open()`-Attribute, `preopen` | Modus-Optionen | – | prüfen |
 | 10 | Koroutinen | `getcontext`, `makecontext`, `swapcontext` | fehlen | – | optional |
+| 11 | C aus Fremdcode aufrufen: Pragma statt Stub | Direct-CALL, `#pragma prolkey(f,"DCALL=…")` | `CCALL`-Stub, `@@CCALL` | – | zur Diskussion |
 | – | Compiler-Notizen | Optionen, Pragmas, PLINK | – | ergänzt W-Compiler | – |
 
 Vorschlag für die Reihenfolge: **1** (macht Waterloo-Punkt 2 zu einer
@@ -542,6 +543,229 @@ Subtask anzulegen, und für Generatoren in Interpretern. Bei LIBC/370 hängt
 der Stack an der Kette der Save Areas mit NAB. Jeder Kontext bräuchte ein
 eigenes Stück davon. Bei knappem Speicher unter 16 MB ist das teuer.
 **Optional**, erst wenn ein konkretes Projekt es braucht.
+
+---
+
+## 11 · C aus Fremdcode aufrufen: Pragma statt Stub
+
+Status: zur Diskussion. Beide Ansätze stehen hier nebeneinander. Die Vorliebe
+des Maintainers geht zum Pragma: Wer eine Funktion für den Aufruf aus
+Assembler schreibt, sagt das an der Funktion selbst.
+
+### Dignus: Direct-CALL
+
+Der Compiler erzeugt für eine markierte Funktion einen eigenen Prolog, der
+die C-Umgebung bereitstellt (Handbuch „Using the Systems/C Direct-CALL
+interface"):
+
+```c
+#pragma prolkey(MYFUNC, "DCALL=YES")
+int MYFUNC(int one, int two) { printf("%d %d\n", one, two); return 0; }
+```
+
+| Schlüssel | Wirkung |
+|---|---|
+| `DCALL=YES` | Umgebung beim Aufruf bauen, bei der Rückkehr abbauen |
+| `DCALL=ALLOCATE` | Umgebung bauen und behalten; Adresse in R1 zurück, auch über `__dcall_env()` |
+| `DCALL=SUPPLIED` | vorhandene Umgebung aus R0 nutzen |
+| `FINDENV=exit` | eine Assembler-Routine legt die Umgebung in R0, z. B. aus der Parameterliste |
+| `DCALL=DESTROY` | Umgebung aus R0 nutzen, danach abbauen |
+| `PRV=0` | mit `ALLOCATE`: neuer Stack, aber die globalen Daten (PRV) aus R0 teilen, für `ATTACH` |
+| `NOSTDIO=1` | Umgebung ohne I/O-Initialisierung |
+| `SP=`, `KEY=`, `TRAP=`, `ISTK=`, `ESTK=` | Subpool, Speicherschlüssel, Program-Check-Behandlung, Stackgrößen |
+
+Einschränkungen laut Handbuch: Zwei `SUPPLIED`-Funktionen dürfen sich auf
+derselben Umgebung nicht verschachteln (der Stack beginnt neu). Die Umgebung
+gilt nur im eigenen Load Module (PRV). Kein argv, `TZ` wird nicht gesetzt.
+
+### LIBC/370 heute: CCALL-Stub
+
+Das Makro `CCALL` erzeugt pro C-Funktion einen Stub, der die Adresse der
+C-Funktion in R0 an `@@CCALL` übergibt. Die C-Funktion bleibt unverändert
+(`pg-asm.typ`, `src/mvs/crt/@@ccall.asm`):
+
+```
+CCFUNC   CCALL CFUNC                    COBOL: CALL 'CCFUNC' USING N
+```
+
+- **Unter einem C-Programm** (C → COBOL → C, #502): die Save-Area-Kette zurück
+  bis zum C-Stack, ein eigener Frame an der NAB des letzten C-Frames.
+- **Ohne C-Programm** (#507): Der erste Aufruf baut die Umgebung wie `@@CRT0`
+  und verankert sie am TCB. Spätere Aufrufe nutzen sie. Abbau mit `CCTERM`
+  oder `exit()`.
+- Parameterliste kopiert, Hochbit gelöscht, höchstens 16 Einträge. Rückgabe in R15.
+- COBOLs SPIE wird für den Aufruf ausgesetzt.
+- Fehler als U3101–U3105. C-Threads und Subtasks eines C-Programms werden abgelehnt (U3101).
+
+### Gegenüberstellung
+
+| Aspekt | Dignus DCALL | LIBC/370 CCALL |
+|---|---|---|
+| Wer markiert | Pragma an der C-Funktion | Stub-Makro im Assembler |
+| Compiler-Änderung | ja | nein |
+| Lebensdauer | pro Aufruf oder explizit | pro Task, bis `CCTERM`/`exit()` |
+| Umgebung finden | R0, `FINDENV`-Exit | Save-Area-Kette, PPA, TCB |
+| C → Fremdcode → C | `SUPPLIED` nicht verschachtelbar | unterstützt |
+| COBOL-SPIE | nicht erwähnt | ausgesetzt |
+| Parameter | nach C-Signatur | höchstens 16 |
+| I/O-Kosten | `NOSTDIO=1` | Initialisierung beim ersten Gebrauch |
+| Subtasks | `PRV=0` teilt globale Daten | eigene Umgebung je Subtask, C-Threads abgelehnt |
+| Key, Subpool, Stack pro Einstieg | ja | Stack global (`@@STKLEN`) |
+
+CCALL ist für COBOL ↔ C heute bequemer: kein Handle, Verschachtelung geht,
+die SPIE-Falle ist gelöst. Dignus kann zusätzlich eine Umgebung **unabhängig
+vom Task** führen (Handle in R0 oder über einen Exit). Das braucht man, sobald
+C in einem Exit oder Subsystem läuft, das von wechselnden Tasks gerufen wird.
+Außerdem kann es pro Aufruf auf- und abbauen, und es teilt globale Daten mit
+Subtasks.
+
+### Variante A: CCALL-Makro erweitern
+
+Ohne Compiler-Änderung, über Operanden am Makro:
+
+```
+CCFUNC   CCALL CFUNC                     wie heute: Umgebung des Tasks finden oder bauen
+CCFUNV   CCALL CFUNC,ENV=R0              Umgebung aus R0 (wie SUPPLIED)
+CCINIT   CCALL CINIT,ENV=NEW             Umgebung bauen, Adresse in R1 zurück (wie ALLOCATE)
+CCDONE   CCALL CDONE,ENV=R0,TERM=YES     ausführen, dann abbauen (wie DESTROY)
+CCONCE   CCALL CFUNC,TERM=YES            bauen, aufrufen, abbauen (wie DCALL=YES)
+```
+
+Aufruf aus Assembler, z. B. in einem Exit, der die Umgebung in seinem
+Kontrollblock hält:
+
+```
+         LA    1,PLIST
+         L     15,=V(CCINIT)       Umgebung anlegen, C-Initialisierung
+         BALR  14,15
+         ST    1,MYCB_ENV          Adresse merken
+         ...
+         L     0,MYCB_ENV          bei jedem Ereignis
+         LA    1,PLIST
+         L     15,=V(CCFUNV)
+         BALR  14,15
+         ...
+         L     0,MYCB_ENV          am Ende
+         L     15,=V(CCDONE)
+         BALR  14,15
+```
+
+Vorteile: kein Eingriff in CC/370, rückwärtskompatibel, alles in LIBC/370.
+Nachteile: Die C-Seite weiß nicht, wie sie gerufen wird. Pro Funktion ist ein
+zusätzliches Assembler-Member nötig, und der Name des Stubs und der
+C-Funktion müssen von Hand zusammenpassen.
+
+### Variante B: `#pragma ccall` in CC/370
+
+Dignus' Idee, angepasst an CC/370 und die Laufzeit von LIBC/370. Die
+Markierung steht an der C-Funktion, der Compiler erzeugt den Einstieg selbst.
+
+```c
+#include <mvs/ccall.h>
+
+#pragma ccall(cfunc)                                   /* Umgebung des Tasks (heutiges CCALL) */
+#pragma ccall(cinit, "ENV=NEW")                        /* bauen, Adresse in R1 und __ccenv()  */
+#pragma ccall(cfunv, "ENV=R0")                         /* Umgebung aus R0                     */
+#pragma ccall(cfunp, "ENV=PARM1")                      /* Umgebung im ersten Parameter        */
+#pragma ccall(cfunx, "ENV=EXIT(FINDME)")               /* Exit legt sie in R0 (wie FINDENV)   */
+#pragma ccall(cdone, "ENV=R0,TERM=YES")                /* ausführen, dann abbauen             */
+#pragma ccall(conce, "TERM=YES")                       /* bauen, aufrufen, abbauen            */
+```
+
+Gleichwertig als GCC-Attribut, damit die Markierung auch in einem Header an
+der Deklaration stehen kann:
+
+```c
+int cfunv(int *n) __attribute__((ccall("ENV=R0")));
+```
+
+Weitere Optionen, an Dignus angelehnt:
+
+| Option | Wirkung | Dignus |
+|---|---|---|
+| `STACK=n` | Stackgröße einer neu gebauten Umgebung | `ISTK=` |
+| `NOSTDIO` | Streams nie einrichten, I/O endet mit Abend | `NOSTDIO=1` |
+| `GLOBALS=SHARE` | mit `ENV=NEW`: neuer Stack, globale Daten und Heap der Umgebung aus R0 | `PRV=0` |
+| `SPIE=KEEP` | die SPIE des Aufrufers nicht aussetzen (Vorgabe: aussetzen wie heute) | – |
+| `VL=KEEP` | Hochbit im letzten Parameter nicht löschen | – |
+
+`KEY=` und `SP=` erst, wenn ein autorisierter Anwendungsfall da ist.
+
+Beispiel eines Exits mit eigener, langlebiger Umgebung, alles auf der C-Seite:
+
+```c
+#include <mvs/ccall.h>
+
+typedef struct mycb { void *env; long count; } MYCB;
+
+#pragma ccall(exinit, "ENV=NEW,STACK=65536")
+int exinit(MYCB *cb)
+{
+    cb->env = __ccenv();          /* auch in R1 */
+    cb->count = 0;
+    return 0;
+}
+
+#pragma ccall(exevent, "ENV=PARM1")
+int exevent(MYCB *cb, EVENT *ev)  /* cb->env liefert die Umgebung */
+{
+    cb->count++;
+    return handle(ev);
+}
+
+#pragma ccall(exterm, "ENV=PARM1,TERM=YES")
+int exterm(MYCB *cb)
+{
+    printf("%ld Ereignisse\n", cb->count);
+    return 0;                     /* danach wird die Umgebung abgebaut */
+}
+```
+
+`ENV=PARM1` deckt den häufigsten Fall von Dignus' `FINDENV` ab, ohne eigenen
+Exit: Der erste Parameter zeigt auf einen Block, dessen erstes Wort die
+Umgebung ist.
+
+#### Umsetzung
+
+Der Kern von Variante B ist, dass **beide Varianten dieselbe Laufzeit
+nutzen**. Der Compiler erzeugt genau das, was heute das Makro erzeugt:
+
+- Der externe Name (`cfunc`) wird zum Einstieg: `STM`, R0 mit der Adresse des
+  eigentlichen Rumpfs laden, Sprung in die passende Laufzeitroutine
+  (`@@CCALL` und neue Geschwister für `ENV=NEW`, `ENV=R0`, `TERM=YES`).
+- Der Rumpf bekommt ein internes Label in derselben Sektion. Keine zusätzlichen
+  externen Namen, also keine neuen Probleme mit 8 Zeichen.
+- Die Optionen werden als Konstanten im Einstieg abgelegt, die die
+  Laufzeitroutine liest.
+
+In CC/370 braucht das: ein Pragma über `c_register_pragma` (wie `pack`, `weak`)
+bzw. ein Attribut, und im S/370-Backend einen alternativen Prolog für so
+markierte Funktionen. `#pragma map` und `#pragma linkage` werden heute schon
+erkannt (Warnung ohne Wirkung), das zeigt die Stelle.
+
+Weil Variante B die Laufzeit von Variante A verwendet, lassen sich beide
+nacheinander einführen: zuerst die Laufzeitroutinen für `ENV=NEW`/`R0`/`TERM`
+in LIBC/370 mit Makro-Operanden, danach das Pragma in CC/370, das denselben
+Einstieg erzeugt.
+
+#### Verbesserung gegenüber Dignus
+
+Die Verschachtelung, die Dignus bei `SUPPLIED` verbietet, kann LIBC/370
+erlauben: `@@CCALL` sucht schon heute über die Save-Area-Kette, ob auf dem
+Stack der Umgebung ein C-Frame aktiv ist, und legt den neuen Frame dann an
+dessen NAB, statt den Stack neu zu beginnen.
+
+#### Offen
+
+- Pragma, Attribut oder beides? Das Attribut passt zu GCC, das Pragma zu
+  Dignus und IBM C.
+- Wie verhält sich `ENV=R0` bei Aufruf aus einem anderen Task als dem, der die
+  Umgebung gebaut hat (Heap, offene DCBs gehören zu Task-Speicher)?
+- Parameter: Bei bekannter C-Signatur könnte der Compiler mehr als 16
+  Parameter erlauben und das Hochbit nur bei einem Zeiger löschen.
+- Nebenbei die Gegenrichtung: `#pragma linkage(name, OS)` könnte bei Aufrufen
+  *von* C *nach* Assembler das Hochbit im letzten Parameter setzen. Heute ist
+  das Handarbeit (`pg-asm-oslink`).
 
 ---
 
