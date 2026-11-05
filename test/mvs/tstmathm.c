@@ -81,10 +81,41 @@ static int call(int (*f)(void), double a, double b)
     return try(f, 0);
 }
 
+/* the squaring loop of ipow() (#754), without any size check */
+static double sq(double x, int n)
+{
+    double          base   = n < 0 ? 1.0 / x : x;
+    double          result = 1.0;
+    unsigned int    k      = n < 0 ? -n : n;
+
+    while (k) {
+        if (k & 1) result = result * base;
+        k >>= 1;
+        if (k) base = base * base;
+    }
+    return result;
+}
+
+/* pow(10, n) for n = lo..hi against sq(), compared with == */
+static int pow10_range(int lo, int hi)
+{
+    int     n, rc, badn = 0;
+
+    for (n = lo; n <= hi; n++) {
+        rc = call(f_pow, 10.0, (double)n);
+        if (rc != 0 || err != 0 || res != sq(10.0, n)) {
+            wtof("TSTMATHM   pow(10,%d): try rc %08X err %d", n,
+                 (unsigned)rc, err);
+            badn++;
+        }
+    }
+    return badn;
+}
+
 int main(void)
 {
     int     rc, e = 99;
-    double  v;
+    double  v, w;
 
     rc = call(f_exp, 1.0, 0);
     want(rc == 0 && near(res, 2.718281828459045), "exp(1)");
@@ -139,5 +170,33 @@ int main(void)
 
     rc = call(f_pow, 1.0, 2e9);
     want(rc == 0 && res == 1.0, "pow(1, 2e9) without 2e9 multiplications");
+
+    /* #754: no log() for a result far below the HFP maximum; n = 51..75
+       still takes it (|y| * (|e| + 1) >= 252 for 10 = 0.625 * 2**4) */
+    want(pow10_range(1, 75) == 0, "pow(10, n), n = 1..75, equals the squaring loop");
+    want(pow10_range(-77, -1) == 0, "pow(10, n), n = -77..-1, equals the squaring loop");
+    rc = call(f_pow, 10.0, 76.0);
+    want(rc == 0 && res == HUGE_VAL && err == ERANGE, "pow(10, 76) is HUGE_VAL, ERANGE");
+    rc = call(f_pow, 10.0, 75.0);
+    v = res;
+    rc |= call(f_pow, -10.0, 75.0);
+    w = res;
+    want(rc == 0 && v > 0 && w == -v, "pow(-10, 75) is -pow(10, 75)");
+    rc = call(f_pow, -10.0, 76.0);
+    want(rc == 0 && res == HUGE_VAL && err == ERANGE, "pow(-10, 76) is HUGE_VAL, ERANGE");
+    rc = call(f_pow, -10.0, 77.0);
+    want(rc == 0 && res == -HUGE_VAL && err == ERANGE, "pow(-10, 77) is -HUGE_VAL, ERANGE");
+    rc = call(f_pow, 2.0, 251.0);
+    want(rc == 0 && err == 0 && res == sq(2.0, 251), "pow(2, 251), no S0CC");
+    rc = call(f_pow, 2.0, 253.0);
+    want(rc == 0 && res == HUGE_VAL && err == ERANGE, "pow(2, 253) is HUGE_VAL, ERANGE");
+    rc = call(f_pow, 0.5, 250.0);
+    want(rc == 0 && err == 0 && res == sq(0.5, 250), "pow(0.5, 250)");
+    rc = call(f_pow, 0.5, -251.0);
+    want(rc == 0 && err == 0 && res == sq(2.0, 251), "pow(0.5, -251), no S0CC");
+    rc = call(f_pow, 1.0, -2e9);
+    want(rc == 0 && res == 1.0, "pow(1, -2e9)");
+    rc = call(f_pow, 1e-70, -1.0);
+    want(rc == 0 && err == 0 && near(res, 1e70), "pow(1e-70, -1)");
     return bad ? 8 : 0;
 }

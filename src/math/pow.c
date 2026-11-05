@@ -26,19 +26,27 @@ static const double ln2 = 0.69314718055994530941723212145818 ;
 #endif
 
 /* integral y with |y| < 2**31: x**y by squaring, x not 0 (#389).  The
-   result's size is checked first through y * log|x|, so no product can
-   pass the HFP maximum; a negative y works on 1/x, whose powers only get
-   smaller.  It multiplied |y| times, 2e9 multiplications for
-   pow(1.0, 2e9), and 1/x**|y| overflowed before the division. */
+   result's size is checked first, so no product can pass the HFP maximum;
+   a negative y works on 1/x, whose powers only get smaller.  It multiplied
+   |y| times, 2e9 multiplications for pow(1.0, 2e9), and 1/x**|y|
+   overflowed before the division.
+
+   |x| = m * 2**e with m in [0.5, 1) gives 2**(e-1) <= |x| < 2**e, so
+   |x|**|y| and |1/x|**|y| stay below 2**(|y| * (|e| + 1)).  Below 2**252,
+   under the HFP maximum, that settles it without log(), which cost more
+   than the squaring itself (#754); only near the limit is the size
+   taken from y * log|x|. */
 static double
 ipow(double x, double y)
 {
     double          base    = (y < 0) ? 1.0 / x : x;
     double          result  = 1.0;
-    double          ly      = y * log(fabs(x));
     unsigned long   k       = (unsigned long)fabs(y);
+    int             e;
 
-    if (ly > 174.6731) {
+    frexp(fabs(x), &e);
+    if (fabs(y) * (double)((e < 0 ? -e : e) + 1) >= 252.0
+        && y * log(fabs(x)) > 174.6731) {
         errno = ERANGE;
         return (x < 0 && (k & 1)) ? -HUGE_VAL : HUGE_VAL;
     }
