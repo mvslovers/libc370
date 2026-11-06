@@ -598,6 +598,23 @@ What later 2.x releases ask of a program or a build:
       [Nothing for a caller that tests the return value against
       #cmd("NULL"). A caller that used the return value without testing it
       must test it: where it got an ACEE before, it can now get
-      #cmd("NULL").]
+      #cmd("NULL").],
+    [2.29.0], [#cmd("jesjob()") fills #cmd("stepname") and #cmd("procstep")
+      of a #cmd("JESDD") by what the EXEC statement is. A DD statement in a
+      step of a procedure gets the name of the calling #cmd("EXEC")
+      statement in #cmd("stepname") and the name of its own step in
+      #cmd("procstep")\; any other step sets #cmd("stepname") and clears
+      #cmd("procstep"), and a #cmd("PROC") statement sets neither. Up to
+      2.28.0 a step in a procedure had its own name in #cmd("stepname") and
+      the name of the procedure in #cmd("procstep"), and #cmd("procstep")
+      stayed set for every later step of the job. The layout of
+      #cmd("JESDD") does not change. New: #cmd("jesprtcc()") and
+      #cmd("jesccsp()"), which give the carriage control of a SYSOUT
+      record\; #cmd("jesprint()") is unchanged.],
+      [A caller that read #cmd("procstep") as the name of the procedure
+      reads the name of the step in the procedure now, and the name of the
+      calling step is in #cmd("stepname"). A workaround for the
+      #cmd("procstep") left over in a later step can go: #cmd("procstep")
+      is empty for a step that is not in a procedure. Nothing for the new functions.]
   )
 ] <pg-migrate-since-tab>
