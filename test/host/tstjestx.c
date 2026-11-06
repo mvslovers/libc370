@@ -387,6 +387,48 @@ int main(void)
     }
     free(a); free(b);
 
+    /* ------------------------------------------------------------------
+     * (10a) A step in a procedure: the outer step stays, the step in the
+     * procedure is the procstep, and the next plain step has none.
+     * ---------------------------------------------------------------- */
+    printf("\n(10a) intxt_emit, the steps of a procedure:\n");
+    {
+        INTXTCTX *ctx = calloc(1, sizeof(INTXTCTX));
+        JESJOB   *job = calloc(1, sizeof(JESJOB));
+        unsigned char *t;
+
+        ctx->job = job;
+        ctx->count = 1;
+
+        t = make_execstr(EXECK, 2, "S1", 2);        /* //S1 EXEC GEN */
+        t[3] = ETXPRCV;
+        intxt_emit((char *)t, (unsigned)(txt_eob(t, 4, 2) - (char *)t), ctx);
+        free(t);
+        CHECK_STR(ctx->stepname, "S1", "(10a) the outer step");
+        CHECK_STR(ctx->procstep, "", "(10a) no step in the procedure yet");
+
+        t = make_txt(4, PROCSTR, EXECK, 3, "GEN", 3); /* //GEN PROC */
+        t[3] = ETXPROC;
+        intxt_emit((char *)t, (unsigned)(txt_eob(t, 4, 3) - (char *)t), ctx);
+        free(t);
+        CHECK_STR(ctx->stepname, "S1", "(10a) PROC leaves the outer step");
+        CHECK_STR(ctx->procstep, "", "(10a) PROC is no step");
+
+        t = make_execstr(EXECK, 1, "G", 1);         /* //G EXEC PGM= */
+        t[3] = ETXPROC;
+        intxt_emit((char *)t, (unsigned)(txt_eob(t, 4, 1) - (char *)t), ctx);
+        free(t);
+        CHECK_STR(ctx->stepname, "S1", "(10a) the outer step stays");
+        CHECK_STR(ctx->procstep, "G", "(10a) the step in the procedure");
+
+        t = make_execstr(EXECK, 2, "S2", 2);        /* //S2 EXEC PGM= */
+        intxt_emit((char *)t, (unsigned)(txt_eob(t, 4, 2) - (char *)t), ctx);
+        free(t);
+        CHECK_STR(ctx->stepname, "S2", "(10a) the next step");
+        CHECK_STR(ctx->procstep, "", "(10a) it has no procstep");
+        free(job); free(ctx);
+    }
+
     printf("\n(11) intxt_emit, STRLTH lies, linelen is the bound (#126):\n");
     {
         /* The exact storm shape from mvsmf#282: a stray 0xFF (the JES2
