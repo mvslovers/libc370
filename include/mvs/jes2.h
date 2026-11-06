@@ -268,9 +268,10 @@ int jesprtcc(JES *jes, JESJOB *job, unsigned dsid,
        no byte             after 1
 
    When neither is negative, the blank lines between two lines are the first
-   one's *after plus the second one's *before, minus 1.  A byte that is no carriage code, and
-   one of no stated kind, counts as a record without a byte; an invalid ASA code
-   counts as ' '.                                                            */
+   one's *after plus the second one's *before, minus 1.
+
+   A machine code that is not a carriage code, and a byte of no stated kind,
+   count as a record without a byte.  An invalid ASA code counts as ' '.     */
 void jesccsp(unsigned cc, int *before, int *after);
 
 /* jesdelj() - delete job output by job name and/or job id */
