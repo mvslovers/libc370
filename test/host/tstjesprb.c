@@ -52,7 +52,9 @@
  * What it does NOT add is the memory-safety verdict - there is no sanitizer on
  * MVS 3.8j, so the host ASan run stays the gate for #23 and #24.
  *
- * RC: 0 = all checks passed, 1 = a check failed.  #25, #23, #24.
+ * Cases (13) to (19) are #760: the control byte the walk reports.
+ *
+ * RC: 0 = all checks passed, 1 = a check failed.  #25, #23, #24, #760.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -130,6 +132,33 @@ static int cap_emit(char *line, unsigned linelen, void *arg)
         caplen[ncap] = linelen;
     }
     ncap++;
+    return 0;
+}
+
+/* Cases (13) to (18), #760: what the walk says about the control byte.  Unlike
+ * cap_emit this keeps an empty call that has a byte, because that is how a page
+ * eject arrives; an empty one without a byte is dropped as esc_print() drops it,
+ * since the zeroes behind the last record of a block walk 3 bytes at a time
+ * into exactly that.  arg is the JESPRB of the walk.                         */
+static unsigned ccval[MAXCAP];
+static unsigned cclen[MAXCAP];
+static char     cctxt[MAXCAP][16];
+static int      ncc;
+
+static int cc_emit(char *line, unsigned linelen, void *arg)
+{
+    JESPRB *pb = (JESPRB *)arg;
+
+    if (!linelen && !pb->cc) return 0;
+
+    if (ncc < MAXCAP) {
+        ccval[ncc] = pb->cc;
+        cclen[ncc] = linelen;
+        memset(cctxt[ncc], 0, sizeof(cctxt[0]));
+        memcpy(cctxt[ncc], line,
+               linelen < sizeof(cctxt[0]) ? linelen : sizeof(cctxt[0]) - 1);
+    }
+    ncc++;
     return 0;
 }
 
@@ -244,6 +273,35 @@ static void put_trunc(char *blk, unsigned off, unsigned len)
     l->len   = (unsigned char)len;
     l->flags = 0;
     l->len2  = (unsigned char)len;
+}
+
+/* a plain record with the flags of a real one (#760): the walk reads the byte
+ * when FLAG_HASCC is on, and the other two bits say what kind it is         */
+static unsigned put_ccl(char *blk, unsigned off, const char *text,
+                        unsigned flags, unsigned char cc)
+{
+    PRLINE  *l = (PRLINE *)&blk[off];
+    unsigned len = (unsigned)strlen(text);
+    unsigned n = 0;
+
+    l->len   = (unsigned char)len;
+    l->flags = (unsigned char)flags;
+    l->len2  = (unsigned char)len;
+    if (flags & FLAG_HASCC) l->data[n++] = cc;
+    memcpy(&l->data[n], text, len);
+
+    return off + sizeof(PRLINE) + n + len;
+}
+
+/* what jesccsp() says for one value */
+static void check_sp(unsigned cc, int before, int after, const char *msg)
+{
+    int b = 99, a = 99;
+
+    jesccsp(cc, &b, &a);
+    CHECK(b == before && a == after, msg);
+    if (b != before || a != after)
+        printf("        got before=%d after=%d, want %d, %d\n", b, a, before, after);
 }
 
 static void put_eob(char *blk, unsigned off)
@@ -677,6 +735,223 @@ int main(void)
 
         free(b1);
         free(b2);
+    }
+
+    /* ------------------------------------------------------------------
+     * (13) THE JOB LOG, shaped as measured on MVS 3.8j (#760): an empty record
+     *      with an immediate skip to channel 1, the heading with write and
+     *      space 3, then records without a byte.
+     * ---------------------------------------------------------------- */
+    printf("(13) machine control bytes, plain records\n");
+    {
+        ncc = 0;
+        pb_reset(&pb);
+        blk = blk_renew(blk);
+        off = put_ccl(blk, 10,  "",     0xA0, 0x8B);
+        off = put_ccl(blk, off, "HEAD", 0xA0, 0x19);
+        off = put_ccl(blk, off, "NEXT", 0x00, 0);
+        put_eob(blk, off);
+
+        rc = __jesprb(blk, BLKSIZE, &pb, cc_emit, &pb);
+
+        CHECK_EQ(rc, 0, "(13) rc 0");
+        CHECK_EQ(ncc, 3, "(13) three calls, the empty record included");
+        CHECK_EQ(cclen[0], 0, "(13) the eject has no text");
+        CHECK_EQ(ccval[0], JESCC_HAS | JESCC_MACH | 0x8B, "(13) eject: X'8B', machine");
+        CHECK_STR(cctxt[1], cclen[1], "HEAD", "(13) the text does not hold the byte");
+        CHECK_EQ(ccval[1], JESCC_HAS | JESCC_MACH | 0x19, "(13) heading: X'19', machine");
+        CHECK_STR(cctxt[2], cclen[2], "NEXT", "(13) record without a byte");
+        CHECK_EQ(ccval[2], 0, "(13) no byte, and no stale value from the record before");
+        CHECK_EQ(pb.lines, 2, "(13) lines counts those with text");
+    }
+
+    /* ------------------------------------------------------------------
+     * (14) ASA, plain, as IDCAMS SYSPRINT has it: flags X'C0'.  The literals
+     *      are the host's characters here and EBCDIC on the target.
+     * ---------------------------------------------------------------- */
+    printf("(14) ASA control bytes, plain records\n");
+    {
+        ncc = 0;
+        pb_reset(&pb);
+        blk = blk_renew(blk);
+        off = put_ccl(blk, 10,  "TITLE", 0xC0, '1');
+        off = put_ccl(blk, off, " ",     0xC0, '0');
+        off = put_ccl(blk, off, "TEXT",  0xC0, ' ');
+        put_eob(blk, off);
+
+        rc = __jesprb(blk, BLKSIZE, &pb, cc_emit, &pb);
+
+        CHECK_EQ(ncc, 3, "(14) three lines");
+        CHECK_EQ(ccval[0], JESCC_HAS | JESCC_ASA | (unsigned char)'1', "(14) '1', ASA");
+        CHECK_EQ(ccval[1], JESCC_HAS | JESCC_ASA | (unsigned char)'0', "(14) '0', ASA");
+        CHECK_EQ(ccval[2], JESCC_HAS | JESCC_ASA | (unsigned char)' ', "(14) blank, ASA");
+        CHECK_STR(cctxt[0], cclen[0], "TITLE", "(14) the text starts behind the byte");
+        CHECK_STR(cctxt[2], cclen[2], "TEXT", "(14) the next record is found");
+        CHECK_EQ(rc, 0, "(14) rc 0");
+    }
+
+    /* ------------------------------------------------------------------
+     * (15) a byte whose kind the record does not state.  Not seen on the
+     *      spool; the caller gets the byte and can look at the RECFM.
+     * ---------------------------------------------------------------- */
+    printf("(15) control byte of no stated kind\n");
+    {
+        ncc = 0;
+        pb_reset(&pb);
+        blk = blk_renew(blk);
+        off = put_ccl(blk, 10, "X", FLAG_HASCC, 0x09);
+        put_eob(blk, off);
+
+        rc = __jesprb(blk, BLKSIZE, &pb, cc_emit, &pb);
+
+        CHECK_EQ(rc, 0, "(15) rc 0");
+        CHECK_EQ(ccval[0], JESCC_HAS | 0x09, "(15) the byte, with neither kind");
+    }
+
+    /* ------------------------------------------------------------------
+     * (16) spanned WITHOUT a byte: every spanned record measured on MVS 3.8j.
+     *      One part with X'1E', then FIRST + LAST across a block.  A plain
+     *      record with a byte before them must not leak into them.
+     * ---------------------------------------------------------------- */
+    printf("(16) spanned, no control byte (as measured)\n");
+    {
+        ncc = 0;
+        pb_reset(&pb);
+        blk  = blk_renew(blk);
+        blk2 = blk_renew(blk2);
+        off = put_ccl(blk, 10, "P", 0xC0, '0');
+        off = put_span(blk, off, "ONE", FLAG_FIRST | FLAG_MIDDLE | FLAG_LAST, 3, 0);
+        off = put_span(blk, off, "AB",  FLAG_FIRST, 4, 0);
+
+        rc = __jesprb(blk, BLKSIZE, &pb, cc_emit, &pb);
+        CHECK_EQ(rc, 0, "(16) first block rc 0");
+
+        off = put_span(blk2, 10, "CD", FLAG_LAST, 0, 0);
+        put_eob(blk2, off);
+        rc = __jesprb(blk2, BLKSIZE, &pb, cc_emit, &pb);
+        CHECK_EQ(rc, 0, "(16) second block rc 0");
+
+        CHECK_EQ(ncc, 3, "(16) three lines");
+        CHECK_EQ(ccval[1], 0, "(16) one-part span: no byte");
+        CHECK_STR(cctxt[1], cclen[1], "ONE", "(16) one-part span: text");
+        CHECK_EQ(ccval[2], 0, "(16) two-part span: no byte");
+        CHECK_STR(cctxt[2], cclen[2], "ABCD", "(16) two-part span: text");
+    }
+
+    /* ------------------------------------------------------------------
+     * (17) spanned WITH a byte.  SYNTHETIC: FLAG_HASCC on a FIRST part has not
+     *      been seen on the spool.  This pins the walk's contract: the byte
+     *      comes from the FIRST part, is not part of the text, survives a
+     *      block boundary and a plain record in between, and does not leak
+     *      into the next line.
+     * ---------------------------------------------------------------- */
+    printf("(17) spanned, with a control byte (synthetic)\n");
+    {
+        unsigned o2;
+
+        ncc = 0;
+        pb_reset(&pb);
+        blk  = blk_renew(blk);
+        blk2 = blk_renew(blk2);
+        o2  = 10;
+        off = put_span(blk, o2, "AB", FLAG_FIRST, 4, '0');
+        ((SPLINE *)&blk[o2])->flags |= FLAG_ASA;
+        off = put_ccl(blk, off, "P", 0xA0, 0x11);
+
+        rc = __jesprb(blk, BLKSIZE, &pb, cc_emit, &pb);
+        CHECK_EQ(rc, 0, "(17) first block rc 0");
+
+        off = put_span(blk2, 10, "CD", FLAG_LAST, 0, 0);
+        off = put_span(blk2, off, "EF", FLAG_FIRST | FLAG_LAST, 2, 0);
+        put_eob(blk2, off);
+        rc = __jesprb(blk2, BLKSIZE, &pb, cc_emit, &pb);
+        CHECK_EQ(rc, 0, "(17) second block rc 0");
+
+        CHECK_EQ(ncc, 3, "(17) three lines");
+        CHECK_EQ(ccval[0], JESCC_HAS | JESCC_MACH | 0x11, "(17) the plain record has its own");
+        CHECK_STR(cctxt[1], cclen[1], "ABCD", "(17) the byte is not in the text");
+        CHECK_EQ(ccval[1], JESCC_HAS | JESCC_ASA | (unsigned char)'0',
+                 "(17) the FIRST part's byte reaches the LAST part");
+        CHECK_EQ(ccval[2], 0, "(17) and not the line after it");
+    }
+
+    /* ------------------------------------------------------------------
+     * (18) a fragment keeps its byte, and a FIRST part whose byte would lie
+     *      behind the end of the block is not read (run under ASan).
+     * ---------------------------------------------------------------- */
+    printf("(18) spanned, cut short\n");
+    {
+        unsigned o2;
+
+        ncc = 0;
+        pb_reset(&pb);
+        blk = blk_renew(blk);
+        o2  = 10;
+        off = put_span(blk, o2, "AB", FLAG_FIRST, 8, '-');
+        ((SPLINE *)&blk[o2])->flags |= FLAG_ASA;
+        put_trunc(blk, off, 0);
+        ((SPLINE *)&blk[off])->flags = FLAG_SPAN | FLAG_MIDDLE;
+        ((SPLINE *)&blk[off])->len2  = BLKSIZE;
+
+        rc = __jesprb(blk, BLKSIZE, &pb, cc_emit, &pb);
+        CHECK_EQ(rc, 0, "(18) the block is given up, not the walk");
+        CHECK_EQ(pb.reason, JESPRB_TRUNC, "(18) reason TRUNC");
+        CHECK_EQ(ncc, 1, "(18) the fragment goes out");
+        CHECK_EQ(ccval[0], JESCC_HAS | JESCC_ASA | (unsigned char)'-', "(18) with its byte");
+
+        ncc = 0;
+        pb_reset(&pb);
+        blk = blk_renew(blk);
+        off = BLKSIZE - sizeof(SPLINE) - 2;     /* the total is the last thing */
+        ((SPLINE *)&blk[off])->flags = FLAG_SPAN | FLAG_FIRST | FLAG_HASCC | FLAG_ASA;
+        ((SPLINE *)&blk[off])->len2  = 1;
+        *(unsigned short *)&blk[off + sizeof(SPLINE)] = 1;
+        ((PRLINE *)&blk[10])->len    = (unsigned char)(off - 10 - sizeof(PRLINE));
+        ((PRLINE *)&blk[10])->flags  = 0;
+
+        rc = __jesprb(blk, BLKSIZE, &pb, cc_emit, &pb);
+        CHECK_EQ(rc, 0, "(18) no byte behind the block: rc 0");
+        CHECK_EQ(pb.reason, JESPRB_TRUNC, "(18) no byte behind the block: TRUNC");
+    }
+
+    /* ------------------------------------------------------------------
+     * (19) jesccsp(): the paper movement of every class of value
+     * ---------------------------------------------------------------- */
+    printf("(19) jesccsp()\n");
+    {
+#define A_(c) (JESCC_HAS | JESCC_ASA | (unsigned char)(c))
+#define M_(b) (JESCC_HAS | JESCC_MACH | (b))
+        check_sp(0,            0, 1,   "(19) no byte: write, then space 1");
+        check_sp(JESCC_HAS | 0x09, 0, 1, "(19) no stated kind: the same");
+
+        check_sp(A_(' '),      1, 0,   "(19) ASA blank: space 1 before");
+        check_sp(A_('0'),      2, 0,   "(19) ASA 0: space 2 before");
+        check_sp(A_('-'),      3, 0,   "(19) ASA -: space 3 before");
+        check_sp(A_('+'),      0, 0,   "(19) ASA +: overprint");
+        check_sp(A_('1'),     -1, 0,   "(19) ASA 1: new page");
+        check_sp(A_('2'),     -2, 0,   "(19) ASA 2: channel 2");
+        check_sp(A_('9'),     -9, 0,   "(19) ASA 9: channel 9");
+        check_sp(A_('A'),    -10, 0,   "(19) ASA A: channel 10");
+        check_sp(A_('C'),    -12, 0,   "(19) ASA C: channel 12");
+        check_sp(A_('X'),      1, 0,   "(19) ASA invalid: space 1 before");
+
+        check_sp(M_(0x01),     0, 0,   "(19) X'01': write, no space");
+        check_sp(M_(0x09),     0, 1,   "(19) X'09': write, space 1");
+        check_sp(M_(0x11),     0, 2,   "(19) X'11': write, space 2");
+        check_sp(M_(0x19),     0, 3,   "(19) X'19': write, space 3");
+        check_sp(M_(0x89),     0, -1,  "(19) X'89': write, new page");
+        check_sp(M_(0x91),     0, -2,  "(19) X'91': write, channel 2");
+        check_sp(M_(0xE1),     0, -12, "(19) X'E1': write, channel 12");
+        check_sp(M_(0x03),     0, 0,   "(19) X'03': no operation");
+        check_sp(M_(0x0B),     1, 0,   "(19) X'0B': space 1 at once");
+        check_sp(M_(0x1B),     3, 0,   "(19) X'1B': space 3 at once");
+        check_sp(M_(0x8B),    -1, 0,   "(19) X'8B': new page at once");
+        check_sp(M_(0xE3),   -12, 0,   "(19) X'E3': channel 12 at once");
+        check_sp(M_(0x00),     0, 1,   "(19) machine invalid: as if no byte");
+        check_sp(M_(0x21),     0, 1,   "(19) X'21' is no carriage code: as if no byte");
+        check_sp(M_(0xE9),     0, 1,   "(19) X'E9' is past channel 12: as if no byte");
+#undef A_
+#undef M_
     }
 
     if (pb.prbuf) free(pb.prbuf);

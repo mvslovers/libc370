@@ -21,6 +21,11 @@ static int giveup(JESPRB *pb, int reason,
                   int (*emit)(char *line, unsigned linelen, void *arg),
                   void *arg);
 
+/* JESCC_* of a record: its flags say what the control byte is, see jesprb.h */
+#define ccval(flags, byte) \
+    ((((unsigned)(flags) & (FLAG_HASCC | FLAG_ASA | FLAG_MACH)) << 8) \
+     | (unsigned char)(byte))
+
 int
 __jesprb(char *blk, unsigned blklen, JESPRB *pb,
          int (*emit)(char *line, unsigned linelen, void *arg), void *arg)
@@ -79,7 +84,13 @@ __jesprb(char *blk, unsigned blklen, JESPRB *pb,
                 pb->total      = newblock;  /* THIS line's announcement */
                 pb->linelen    = 0;
                 pb->assembling = 1;         /* a line is open from here */
-                if (sp->flags & FLAG_HASCC) d++;
+                pb->spancc     = 0;
+                if (sp->flags & FLAG_HASCC) {
+                    /* not read when it would lie behind the block; the bounds
+                       check below then ends the block as it always did */
+                    if (d < end) pb->spancc = ccval(sp->flags, *d);
+                    d++;
+                }
             }
 
             /* A MIDDLE/LAST part with no FIRST opening the line.  prbuf may
@@ -108,6 +119,7 @@ __jesprb(char *blk, unsigned blklen, JESPRB *pb,
                the clamp above it can no longer happen. */
             if (sp->flags & FLAG_LAST) {
                 if (pb->linelen) pb->lines++;
+                pb->cc = pb->spancc;
                 rc = emit(pb->prbuf, pb->linelen, arg);
                 if (rc < 0) {
                     pb->reason = JESPRB_STOPPED;
@@ -126,6 +138,9 @@ __jesprb(char *blk, unsigned blklen, JESPRB *pb,
         if (line->flags & FLAG_HASCC) d++;  /* skip over carriage control character */
 
         if (d + line->len > end) return giveup(pb, JESPRB_TRUNC, emit, arg);
+
+        /* d is at most end here, so the byte in front of it is in the block */
+        pb->cc = (line->flags & FLAG_HASCC) ? ccval(line->flags, d[-1]) : 0;
 
         if (line->len) pb->lines++;
         rc = emit(d, line->len, arg);
@@ -160,6 +175,7 @@ giveup(JESPRB *pb, int reason,
 
     if (pb->assembling && pb->linelen) {
         pb->lines++;
+        pb->cc = pb->spancc;
         rc = emit(pb->prbuf, pb->linelen, arg);
     }
 
@@ -174,4 +190,51 @@ giveup(JESPRB *pb, int reason,
 
     pb->reason = reason;
     return 0;
+}
+
+/* The paper movement of one record, see mvs/jes2.h.
+ *
+ * The ASA codes are compared as characters, so this is right in EBCDIC on the
+ * target and in ASCII under the host test.  A machine code is a bit pattern in
+ * either: the low three bits say write (001) or immediate (011), the high five
+ * what the paper does: 00000 nothing, 00001 to 00011 space 1 to 3, 10001 to
+ * 11100 skip to channel 1 to 12.                                             */
+void
+jesccsp(unsigned cc, int *before, int *after)
+{
+    int     c   = (int)JESCC_BYTE(cc);
+    int     n   = 1;
+
+    if ((cc & JESCC_HAS) && (cc & JESCC_ASA)) {
+        *after = 0;
+        if (c == ' ')                   n = 1;
+        else if (c == '0')              n = 2;
+        else if (c == '-')              n = 3;
+        else if (c == '+')              n = 0;
+        else if (c >= '1' && c <= '9')  n = -(c - '0');
+        else if (c == 'A')              n = -10;
+        else if (c == 'B')              n = -11;
+        else if (c == 'C')              n = -12;
+        *before = n;
+        return;
+    }
+
+    *before = 0;
+    *after  = 1;
+
+    if ((cc & JESCC_HAS) && (cc & JESCC_MACH)
+        && ((c & 7) == 1 || (c & 7) == 3)) {
+        int op = c >> 3;
+
+        if (op <= 3)                        n = op;
+        else if (op >= 0x11 && op <= 0x1C)  n = -(op - 0x10);
+        else return;                        /* no carriage code */
+
+        if ((c & 7) == 1) {
+            *after  = n;
+        } else {
+            *before = n;
+            *after  = 0;
+        }
+    }
 }

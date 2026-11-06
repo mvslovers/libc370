@@ -228,6 +228,51 @@ int jesprint(JES *jes, JESJOB *job, unsigned dsid,
              int(*prt)(const char *line, unsigned linelen, void *arg),
              void *arg, JESPRST *st);
 
+/* jesprtcc() - jesprint() that also says how each line sits on the paper.
+
+   The callback gets cc next to the text, taken from the record and not from
+   the RECFM of the data set, because the two differ: JESYSMSG is RECFM=VA and
+   has no control bytes, and the "JOB DELETED" line of JESJCLIN (RECFM=F) has one.
+
+       0                 the record has no control byte
+       JESCC_HAS         it has one, JESCC_BYTE(cc) gives it
+       JESCC_ASA         ... and it is an ASA code
+       JESCC_MACH        ... and it is a machine code
+
+   A record with a byte and no text is passed on with linelen 0: that is what
+   JES2 keeps of an immediate command, such as the page eject in front of a job
+   log.  st->lines does not count those.  Otherwise the text is what jesprint()
+   passes, and a record of more than 254 data bytes never has a byte, because
+   JES2 does not keep it.                                                    */
+int jesprtcc(JES *jes, JESJOB *job, unsigned dsid,
+             int(*prt)(const char *line, unsigned linelen, unsigned cc, void *arg),
+             void *arg, JESPRST *st);
+
+#define JESCC_HAS       0x8000u
+#define JESCC_ASA       0x4000u
+#define JESCC_MACH      0x2000u
+#define JESCC_BYTE(cc)  ((unsigned)(cc) & 0xFFu)
+
+/* jesccsp() - how the paper moves around one record.
+
+   Think of a print position that writing does not move: move *before, write
+   the text if there is any, move *after.  Zero or more is a number of lines; a
+   negative value -n is a skip to carriage control channel n, so -1 is a new
+   page, and how to show channels 2 to 12 is up to the caller.
+
+       ASA ' ' '0' '-'     before 1, 2, 3
+       ASA '+'             before 0 (overprint)
+       ASA '1'             before -1 (new page)
+       machine X'09' ...   after 1, ... (write, then move)
+       machine X'0B' ...   before 1, ... (move at once, the record has no text)
+       no byte             after 1
+
+   When neither is negative, the blank lines between two lines are the first
+   one's *after plus the second one's *before, minus 1.  A byte that is no carriage code, and
+   one of no stated kind, counts as a record without a byte; an invalid ASA code
+   counts as ' '.                                                            */
+void jesccsp(unsigned cc, int *before, int *after);
+
 /* jesdelj() - delete job output by job name and/or job id */
 int jesdelj(const char *jobname, const char *jobid);
 #define DELJ_OK     0               /* EVERYTHING IS OK                     */
