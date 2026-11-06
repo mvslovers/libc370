@@ -21,6 +21,11 @@ static int giveup(JESPRB *pb, int reason,
                   int (*emit)(char *line, unsigned linelen, void *arg),
                   void *arg);
 
+/* JESCC_* of a record: its flags say what the control byte is, see jesprb.h */
+#define ccval(flags, byte) \
+    ((((unsigned)(flags) & (FLAG_HASCC | FLAG_ASA | FLAG_MACH)) << 8) \
+     | (unsigned char)(byte))
+
 int
 __jesprb(char *blk, unsigned blklen, JESPRB *pb,
          int (*emit)(char *line, unsigned linelen, void *arg), void *arg)
@@ -79,6 +84,11 @@ __jesprb(char *blk, unsigned blklen, JESPRB *pb,
                 pb->total      = newblock;  /* THIS line's announcement */
                 pb->linelen    = 0;
                 pb->assembling = 1;         /* a line is open from here */
+                pb->spancc     = 0;
+                /* not read when it would lie behind the block; the bounds
+                   check below then ends the block as it always did */
+                if ((sp->flags & FLAG_HASCC) && d < end)
+                    pb->spancc = ccval(sp->flags, *d);
                 if (sp->flags & FLAG_HASCC) d++;
             }
 
@@ -108,6 +118,7 @@ __jesprb(char *blk, unsigned blklen, JESPRB *pb,
                the clamp above it can no longer happen. */
             if (sp->flags & FLAG_LAST) {
                 if (pb->linelen) pb->lines++;
+                pb->cc = pb->spancc;
                 rc = emit(pb->prbuf, pb->linelen, arg);
                 if (rc < 0) {
                     pb->reason = JESPRB_STOPPED;
@@ -126,6 +137,9 @@ __jesprb(char *blk, unsigned blklen, JESPRB *pb,
         if (line->flags & FLAG_HASCC) d++;  /* skip over carriage control character */
 
         if (d + line->len > end) return giveup(pb, JESPRB_TRUNC, emit, arg);
+
+        /* d is at most end here, so the byte in front of it is in the block */
+        pb->cc = (line->flags & FLAG_HASCC) ? ccval(line->flags, d[-1]) : 0;
 
         if (line->len) pb->lines++;
         rc = emit(d, line->len, arg);
@@ -160,6 +174,7 @@ giveup(JESPRB *pb, int reason,
 
     if (pb->assembling && pb->linelen) {
         pb->lines++;
+        pb->cc = pb->spancc;
         rc = emit(pb->prbuf, pb->linelen, arg);
     }
 

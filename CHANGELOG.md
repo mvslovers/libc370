@@ -12,6 +12,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   and `procstep` the procedure's name `GEN`, and `procstep` stayed for every
   later step of the job. Now `stepname` is `S1`, `procstep` is `G`, and a later
   step has an empty `procstep`.
+### Added
+- **`jesprtcc()` and `jesccsp()`: the carriage control of a SYSOUT record
+  (#760).** `jesprint()` drops the control character, so a program that shows a
+  job's output could not reproduce its blank lines and page ejects.
+  `jesprtcc()` takes the same arguments and passes `cc` to the callback as well:
+  the character, and whether it is an ASA or a machine code, taken from the
+  record. A record that is only a control character (a page eject in front of a
+  job log) arrives with length 0. `jesccsp()` turns `cc` into the lines or the
+  channel skip before and after the text. `jesprint()` and its callback do not
+  change. JES2 keeps no control character for a record of more than 254 data
+  bytes, so such a record has none here either.
 
 ### Changed
 - **`pow()` with an integral exponent no longer calls `log()` for every call

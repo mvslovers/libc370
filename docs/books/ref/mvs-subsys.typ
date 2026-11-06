@@ -884,7 +884,8 @@ and without its carriage-control character. Trailing blanks are removed,
 the line is cut to 255 characters, and characters that cannot be printed
 (below #cmd("X'40'"), and #cmd("X'FF'")) are replaced by blanks. A record
 that JES2 wrote in several parts is passed as one line. The callback
-returns 0 to go on, or a negative value to stop.
+returns 0 to go on, or a negative value to stop. To get the carriage control
+as well, use #cmd("jesprtcc()"), @mvs-subsys-jesprtcc.
 
 The data set is read block by block along the chain of spool addresses.
 Every block is checked against the job key and the data set ID, and the
@@ -966,7 +967,98 @@ See @mvs-subsys-ex-joblist.
 
 === Related
 
-@mvs-subsys-jesjob, @mvs-subsys-jsopen
+@mvs-subsys-jesjob, @mvs-subsys-jesprtcc, @mvs-subsys-jsopen
+
+== jesprtcc, jesccsp <mvs-subsys-jesprtcc>
+
+#idx("jesprtcc")
+#idx("jesccsp")
+#idx("JES2", "carriage control of a SYSOUT data set")
+#idx("carriage control", "of a SYSOUT data set")
+=== Format
+
+```
+#include <mvs/jes2.h>
+
+int jesprtcc(JES *jes, JESJOB *job, unsigned dsid,
+             int (*prt)(const char *line, unsigned linelen, unsigned cc,
+                        void *arg),
+             void *arg, JESPRST *st);
+
+void jesccsp(unsigned cc, int *before, int *after);
+```
+
+=== Description
+
+#cmd("jesprtcc()") does what #cmd("jesprint()") does, with the same
+arguments, return values and text of the lines, and also passes the carriage
+control of each line in #var("cc"):
+
+#deflist(width: 1.1in,
+  [0], [The record has no control character.],
+  [#cmd("JESCC_HAS")], [It has one, and #cmd("JESCC_BYTE(cc)") gives it.
+    One of the next two bits says what kind it is.],
+  [#cmd("JESCC_ASA")], [The character is an ASA code.],
+  [#cmd("JESCC_MACH")], [The character is a machine code.],
+)
+
+The value comes from the record, not from the record format of the data set,
+because the two do not always agree. A job's #cmd("JESYSMSG") has the record
+format VA and no control characters at all. In #cmd("JESMSGLG"), with the
+record format UM, only the first two records have one.
+
+JES2 keeps no text for a machine code that moves the paper at once, such as
+#cmd("X'8B'"). #var("prt") gets such a record with #var("linelen") 0.
+#cmd("st->lines") does not count these records.
+
+#cmd("jesccsp()") tells how the paper moves around a line. Think of a print
+position that writing does not move: move by #var("before"), write the text if
+there is any, move by #var("after"). A value of 0 or more is a number of lines.
+A negative value #var("-n") is a skip to channel #var("n") of the carriage
+control tape, so -1 is a new page; what channels 2 to 12 mean for a program
+that shows the output is up to the program.
+
+#tab(caption: [jesccsp() results])[
+  #table(columns: (1.6in, 0.7in, 0.7in, 1fr),
+    [Control character], [before], [after], [Meaning],
+    [ASA blank, #cmd("0"), #cmd("-")], [1, 2, 3], [0], [Move, then write.],
+    [ASA #cmd("+")], [0], [0], [Write over the line before.],
+    [ASA #cmd("1") to #cmd("9"), #cmd("A") to #cmd("C")], [-1 to -12], [0],
+      [Skip to the channel, then write.],
+    [#cmd("X'01'"), #cmd("X'09'"), #cmd("X'11'"), #cmd("X'19'")], [0],
+      [0, 1, 2, 3], [Write, then move.],
+    [#cmd("X'89'"), #cmd("X'91'") to #cmd("X'E1'")], [0], [-1, -2 to -12],
+      [Write, then skip to the channel.],
+    [#cmd("X'03'"), #cmd("X'0B'"), #cmd("X'13'"), #cmd("X'1B'")], [0, 1, 2, 3],
+      [0], [Move at once, no text.],
+    [#cmd("X'8B'"), #cmd("X'93'") to #cmd("X'E3'")], [-1, -2 to -12], [0],
+      [Skip to the channel at once, no text.],
+    [None], [0], [1], [Write, then move one line.],
+  )
+] <mvs-subsys-jesccsp-tab>
+
+An invalid ASA code counts as a blank, as far as #cmd("jesccsp()") is
+concerned. A machine code that is not a carriage code, and a character of no
+stated kind, count as no character.
+
+=== Returns
+
+#cmd("jesprtcc()") returns what #cmd("jesprint()") returns.
+
+=== Notes
+
+A record of more than 254 data bytes has no control character, even in a data
+set with control characters, because JES2 does not keep it: on the spool it
+is gone, and the record is one byte shorter than the logical record length.
+Measured on MVS 3.8j with the record lengths 255 (kept), 256, 300 and 4000
+(gone).
+
+When neither value is negative, the number of blank lines between two lines is
+#var("after") of the first plus #var("before") of the second, minus 1.
+
+=== Related
+
+@mvs-subsys-jesprint, @mvs-subsys-jesjob
 
 == The JES2 Checkpoint Data Set <mvs-subsys-cp>
 

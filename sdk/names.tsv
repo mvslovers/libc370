@@ -1680,6 +1680,10 @@ JCTTSCAN	ibm/jes2/jct.h
 JCTTSUJB	ibm/jes2/jct.h
 JCTXBACH	ibm/jes2/jct.h
 JES	mvs/jes2.h
+JESCC_ASA	mvs/jes2.h
+JESCC_BYTE	mvs/jes2.h
+JESCC_HAS	mvs/jes2.h
+JESCC_MACH	mvs/jes2.h
 JESCT	ibm/mvs/iefjesct.h
 JESDD	mvs/jes2.h
 JESDD_EYE	mvs/jes2.h
@@ -4458,6 +4462,7 @@ isupper	ctype.h
 isxdigit	ctype.h
 jes	mvs/jes2.h
 jescanj	mvs/jes2.h
+jesccsp	mvs/jes2.h
 jesclose	mvs/jes2.h
 jesct	ibm/mvs/iefjesct.h
 jesdd	mvs/jes2.h
@@ -4474,6 +4479,7 @@ jesopen	mvs/jes2.h
 jesopen_ex	mvs/jes2.h
 jesprint	mvs/jes2.h
 jesprst	mvs/jes2.h
+jesprtcc	mvs/jes2.h
 jesreque	mvs/jes2.h
 jesxdone	mvs/jes2.h
 jesxwrtr	mvs/jes2.h

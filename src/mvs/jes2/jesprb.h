@@ -21,6 +21,8 @@ typedef struct prline {
 
     unsigned char   flags;      /* processing flags for data */
 #define FLAG_HASCC  0x80        /* ... first data byte is carriage control char */
+#define FLAG_ASA    0x40        /* ... that byte is an ASA code (measured below) */
+#define FLAG_MACH   0x20        /* ... that byte is a machine code (measured below) */
 #define FLAG_SPAN   0x10        /* ... spanned line/record */
 #define FLAG_FIRST  0x08        /* ... first part of spanned line */
 #define FLAG_MIDDLE 0x04        /* ... middle part of spanned line */
@@ -38,6 +40,33 @@ typedef struct spline {
     unsigned short  len2;       /* length of this line part */
     unsigned char   data[0];    /* start of spanned print line */
 } SPLINE;
+
+/* What the control byte looks like on the spool, measured on MVS 3.8j (#760)
+ * by dumping the records of data sets written with known bytes:
+ *
+ *   FBA, VBA        flags X'C0', the byte as written, also an invalid one
+ *   FBM, UM         flags X'A0', the byte as written; for an immediate command
+ *                   (X'0B', X'8B', ...) JES2 keeps no data, so len is 0
+ *   FB, VB          flags X'00', no byte
+ *   JESMSGLG (UM)   the first two records have a byte (X'8B', then X'19'), the
+ *                   rest have none
+ *   JESYSMSG (VA)   no record has a byte, although RECFM says ASA
+ *   JESJCLIN (F)    its "JOB DELETED" line is flags X'C8' with an ASA X'60'
+ *
+ * So the record decides, not the RECFM of the data set.  A record of more than
+ * 254 data bytes is spanned and has NO byte, whatever the RECFM: JES2 drops it
+ * (flags X'1E', or X'18' + X'12' across blocks; total is LRECL - 1).  FLAG_HASCC
+ * on a FIRST part has not been seen on the spool; the walk handles it because
+ * the flag is defined for every record.                                     */
+
+/* A record's control information as jesprtcc() reports it: 0 when the record
+ * has no control byte, else the top three bits of flags in the high byte and
+ * the control byte in the low one.  The same values are public in mvs/jes2.h;
+ * jesprint.c includes both, so a difference does not compile.               */
+#define JESCC_HAS       0x8000u
+#define JESCC_ASA       0x4000u
+#define JESCC_MACH      0x2000u
+#define JESCC_BYTE(cc)  ((unsigned)(cc) & 0xFFu)
 
 /* Block header; the first record starts at offset 10.                       */
 typedef struct prblock {
@@ -68,6 +97,10 @@ typedef struct jesprb {
                                    closed it: only then may a MIDDLE/LAST be
                                    appended, and only then is prbuf sized for
                                    the line now arriving (#24)              */
+    unsigned    cc;             /* JESCC_* of the line being handed to emit():
+                                   valid during that call (#760)             */
+    unsigned    spancc;         /* JESCC_* a FIRST part announced, kept until
+                                   its LAST part, perhaps a block later      */
 } JESPRB;
 
 /* Why the record walk of ONE block ended.  jesprint() maps these onto the
@@ -102,5 +135,8 @@ typedef struct jesprb {
  * whose middle this block could not read (#24).                            */
 int __jesprb(char *blk, unsigned blklen, JESPRB *pb,
              int (*emit)(char *line, unsigned linelen, void *arg), void *arg);
+
+/* Turn JESCC_* into paper movement (jesccsp.c) - see mvs/jes2.h.            */
+void jesccsp(unsigned cc, int *before, int *after);
 
 #endif /* JESPRB_H */

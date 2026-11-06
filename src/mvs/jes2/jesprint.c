@@ -17,14 +17,40 @@
    record walk hands it a single void *arg                                  */
 typedef struct prctx {
     int     (*prt)(const char *line, unsigned linelen, void *arg);
+    int     (*prtcc)(const char *line, unsigned linelen, unsigned cc, void *arg);
     void    *arg;
+    JESPRB  *pb;                    /* the walk, for the control byte        */
 } PRCTX;
 
 static int esc_print(char *line, unsigned linelen, void *arg);
+static int prwalk(JES *jes, JESJOB *job, unsigned dsid, PRCTX *ctx, JESPRST *st);
 
 int jesprint(JES *jes, JESJOB *job, unsigned dsid,
              int(*prt)(const char *line, unsigned linelen, void *arg),
              void *arg, JESPRST *st)
+{
+    PRCTX       ctx;
+
+    ctx.prt   = prt;
+    ctx.prtcc = NULL;
+    ctx.arg   = arg;
+    return prwalk(jes, job, dsid, &ctx, st);
+}
+
+int jesprtcc(JES *jes, JESJOB *job, unsigned dsid,
+             int(*prt)(const char *line, unsigned linelen, unsigned cc, void *arg),
+             void *arg, JESPRST *st)
+{
+    PRCTX       ctx;
+
+    ctx.prt   = NULL;
+    ctx.prtcc = prt;
+    ctx.arg   = arg;
+    return prwalk(jes, job, dsid, &ctx, st);
+}
+
+static int
+prwalk(JES *jes, JESJOB *job, unsigned dsid, PRCTX *ctx, JESPRST *st)
 {
     int         rc      = 503;      /* service unavailable */
     JESPRST     stat;               /* used when the caller passes st = NULL */
@@ -34,7 +60,6 @@ int jesprint(JES *jes, JESJOB *job, unsigned dsid,
     __HCT       *hct    = NULL;
     char        *buf    = NULL;
     PRBLOCK     *block;
-    PRCTX       ctx;
     JESPRB      pb;                 /* record-walk state, spans the blocks   */
     unsigned    bufsize;
     unsigned    mttr;
@@ -46,8 +71,7 @@ int jesprint(JES *jes, JESJOB *job, unsigned dsid,
     memset(&pb, 0, sizeof(JESPRB));
     st->reason = JESPR_EMPTY;       /* nothing walked yet                    */
 
-    ctx.prt = prt;
-    ctx.arg = arg;
+    ctx->pb = &pb;
 
     if (!jes) goto quit;
     if (!job) goto quit;
@@ -137,7 +161,7 @@ int jesprint(JES *jes, JESJOB *job, unsigned dsid,
         wtodumpf(buf, sizeof(PRBLOCK), "PRBLOCK");
 #endif
         /* unwind the print lines in the block */
-        if (__jesprb(buf, bufsize, &pb, esc_print, &ctx) < 0) {
+        if (__jesprb(buf, bufsize, &pb, esc_print, ctx) < 0) {
             if (pb.reason == JESPRB_NOMEM) {
                 wtof("Unable to allocate storage for %u byte buffer", pb.blksize + 4);
                 st->reason = JESPR_NOMEM;
@@ -167,6 +191,7 @@ int jesprint(JES *jes, JESJOB *job, unsigned dsid,
     }
 
 quit:
+    ctx->pb = NULL;                 /* pb ends with this function            */
     st->lines = pb.lines;
     if (pb.prbuf) free(pb.prbuf);
     if (buf) free(buf);
@@ -180,7 +205,14 @@ esc_print(char *line, unsigned linelen, void *arg)
     int         rc = 0;
     PRCTX       *ctx = (PRCTX*)arg;
 
-    if (!linelen) goto quit;
+    /* An empty record is passed on only with a control byte: that is how JES2
+       keeps an immediate command such as a page eject (#760).  Without one it
+       is nothing, or the zeroes behind the last record of a block.          */
+    if (!linelen) {
+        if (ctx->prtcc && ctx->pb->cc)
+            rc = ctx->prtcc(line, 0, ctx->pb->cc, ctx->arg);
+        goto quit;
+    }
 
     /* wtodumpf(line, linelen, "esc_print()"); */
 
@@ -198,7 +230,8 @@ esc_print(char *line, unsigned linelen, void *arg)
           : :"r"(line), "r"(linelen) : "14", "1", "memory");
 
     /* print the translated buffer */
-    rc = ctx->prt(line, linelen, ctx->arg);
+    if (ctx->prtcc) rc = ctx->prtcc(line, linelen, ctx->pb->cc, ctx->arg);
+    else            rc = ctx->prt(line, linelen, ctx->arg);
 quit:
     return rc;
 }

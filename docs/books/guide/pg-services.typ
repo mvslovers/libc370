@@ -597,7 +597,8 @@ Points to watch:
   data set of the job to a function of yours. Its return value does not say
   whether the data set was read in full: pass a #cmd("JESPRST") and look at
   its #cmd("reason"). The _LIBC/370 Library Reference_ lists the reasons in
-  Chapter 33, “Subsystems, JES2 and ISPF”.
+  Chapter 33, “Subsystems, JES2 and ISPF”. To reproduce blank lines and page
+  ejects as well, use #cmd("jesprtcc()"), described there too.
 - *The pause.* The example waits two seconds between looks, with a timed
   wait on an ECB that nothing else posts (line 67), and stops waiting if
   the timer cannot be set.
