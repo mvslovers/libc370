@@ -136,7 +136,7 @@ typedef struct jesprb {
 int __jesprb(char *blk, unsigned blklen, JESPRB *pb,
              int (*emit)(char *line, unsigned linelen, void *arg), void *arg);
 
-/* Turn JESCC_* into paper movement - see mvs/jes2.h.                        */
+/* Turn JESCC_* into paper movement (jesccsp.c) - see mvs/jes2.h.            */
 void jesccsp(unsigned cc, int *before, int *after);
 
 #endif /* JESPRB_H */

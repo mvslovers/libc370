@@ -38,11 +38,13 @@
  *
  * Build / run (host; no libc370 headers needed, the parser has none):
  *     cc -std=gnu99 -Wall -Wextra -I ../../src/jes \
- *        -o t tstjesprb.c ../../src/mvs/jes2/jesprb.c && ./t
+ *        -o t tstjesprb.c ../../src/mvs/jes2/jesprb.c \
+ *        ../../src/mvs/jes2/jesccsp.c && ./t
  *
  * And the one that actually gates #23/#24:
  *     cc -std=gnu99 -Wall -Wextra -fsanitize=address -I ../../src/jes \
- *        -o t tstjesprb.c ../../src/mvs/jes2/jesprb.c && ./t
+ *        -o t tstjesprb.c ../../src/mvs/jes2/jesprb.c \
+ *        ../../src/mvs/jes2/jesccsp.c && ./t
  *
  * THE SAME SOURCE RUNS ON THE TARGET.  Since #25 the walk needs no assembler
  * and no I/O, so cc370 compiles this file as it stands and a batch job drives

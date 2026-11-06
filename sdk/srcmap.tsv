@@ -687,6 +687,7 @@ src/internal/printf.h	src/internal/printf.h	shared private header, stays
 src/internal/x75.h	src/net/dyn75/x75.h	private to the DYN75 provider
 src/jes/jescanj.c	src/mvs/jes2/jescanj.c	declared in <mvs/jes2.h>
 src/jes/jesclose.c	src/mvs/jes2/jesclose.c	declared in <mvs/jes2.h>
+src/mvs/jes2/jesccsp.c	src/mvs/jes2/jesccsp.c	new after 2.28.0 (#760): jesccsp(), the paper movement of a SYSOUT record; declared in <mvs/jes2.h>
 src/jes/jesdelj.c	src/mvs/jes2/jesdelj.c	declared in <mvs/jes2.h>
 src/jes/jesircl2.c	src/mvs/jes2/jesircl2.c	declared in <mvs/jes2.h>
 src/jes/jesircls.c	src/mvs/jes2/jesircls.c	declared in <mvs/jes2.h>

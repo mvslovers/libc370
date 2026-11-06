@@ -236,7 +236,8 @@ tstjesop() {
 }
 tstjesprb() {
     "$CC" -std=gnu99 -Wall -Wextra -I $R \
-       -o "$B/t" tstjesprb.c $R/src/mvs/jes2/jesprb.c && "$B/t"
+       -o "$B/t" tstjesprb.c $R/src/mvs/jes2/jesprb.c \
+       $R/src/mvs/jes2/jesccsp.c && "$B/t"
 }
 tstjestx() {
     "$CC" -std=gnu99 -Wall -Wextra -fsanitize=address \
