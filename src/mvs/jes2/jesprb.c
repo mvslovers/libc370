@@ -85,12 +85,11 @@ __jesprb(char *blk, unsigned blklen, JESPRB *pb,
                 pb->linelen    = 0;
                 pb->assembling = 1;         /* a line is open from here */
                 pb->spancc     = 0;
-                if (sp->flags & FLAG_HASCC) {
-                    /* not read when it would lie behind the block; the bounds
-                       check below then ends the block as it always did */
-                    if (d < end) pb->spancc = ccval(sp->flags, *d);
-                    d++;
-                }
+                /* not read when it would lie behind the block; the bounds
+                   check below then ends the block as it always did */
+                if ((sp->flags & FLAG_HASCC) && d < end)
+                    pb->spancc = ccval(sp->flags, *d);
+                if (sp->flags & FLAG_HASCC) d++;
             }
 
             /* A MIDDLE/LAST part with no FIRST opening the line.  prbuf may

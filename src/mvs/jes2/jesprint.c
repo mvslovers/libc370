@@ -191,6 +191,7 @@ prwalk(JES *jes, JESJOB *job, unsigned dsid, PRCTX *ctx, JESPRST *st)
     }
 
 quit:
+    ctx->pb = NULL;                 /* pb ends with this function            */
     st->lines = pb.lines;
     if (pb.prbuf) free(pb.prbuf);
     if (buf) free(buf);
