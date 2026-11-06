@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- **`jesjob()` names the steps of a procedure correctly (#758).** For
+  `//S1 EXEC GEN` with `//G EXEC` in the procedure, `JESDD.stepname` was `G`
+  and `procstep` the procedure's name `GEN`, and `procstep` stayed for every
+  later step of the job. Now `stepname` is `S1`, `procstep` is `G`, and a later
+  step has an empty `procstep`.
+
 ### Changed
 - **`pow()` with an integral exponent no longer calls `log()` for every call
   (#754).** Since 2.23.0 `pow(x, y)` computed `y * log(fabs(x))` first, to

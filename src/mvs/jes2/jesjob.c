@@ -574,9 +574,24 @@ intxt_emit(char *line, unsigned linelen, void *arg)
         if (!ctx->count) return -1;     /* no JESDD so we're done: negative
                                            rc stops the whole record walk  */
         break;
-    case EXECSTR:       /* ... EXEC STATEMENT TEXT STRING           */
-        process_exec(line, eob, ctx->stepname, ctx->procstep, ctx->program);
+    case EXECSTR: {     /* ... EXEC STATEMENT TEXT STRING           */
+        /* From a procedure it names the procstep and the step that invoked
+           the procedure stays; any other EXEC starts a step of the job and
+           ends the procstep of the one before (#758). */
+        char    name[12];
+        char    proc[12];
+
+        if (linelen < sizeof(__EXECSTR)) return 0;
+        process_exec(line, eob, name, proc, ctx->program);
+        if (((__EXECSTR*)line)->STREINDC & ETXPROC) {
+            strcpy(ctx->procstep, name);
+        }
+        else {
+            strcpy(ctx->stepname, name);
+            ctx->procstep[0] = 0;
+        }
         break;
+    }
     case DDSTR:         /* ... DD STATEMENT TEXT STRING             */
         process_dd(line, eob, ctx->ddname, ctx->dsname, ctx->sysout, &ctx->sysin);
         if (ctx->sysout[0]) {
@@ -591,7 +606,7 @@ intxt_emit(char *line, unsigned linelen, void *arg)
         }
         break;
     case PROCSTR:       /* ... PROC STATEMENT TEXT STRING           */
-        process_exec(line, eob, ctx->procstep, ctx->program, ctx->program);
+        /* its name is the procedure's, which is no step (#758) */
         break;
     }
 
