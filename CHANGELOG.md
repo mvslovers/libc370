@@ -6,20 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
-### Fixed
-- **`jesjob()` names the steps of a procedure correctly (#758).** For
-  `//S1 EXEC GEN` with `//G EXEC` in the procedure, `JESDD.stepname` was `G`
-  and `procstep` the procedure's name `GEN`, and `procstep` stayed for every
-  later step of the job. Now `stepname` is `S1`, `procstep` is `G`, and a later
-  step has an empty `procstep`.
-- **`__frtx9a()` frees every SVC 99 text unit at the address it was
-  allocated at (#751).** The fourteen routines that build a text-unit list
-  mark its last pointer with the high-order bit, as SVC 99 wants, and free
-  the list with `FreeTXT99Array()` while the bit is still on, so the last
-  unit's `free()` was given its address with bit 0 set. FREEMAIN on MVS 3.8j
-  takes the low 24 bits and never minded; an allocator that keeps freed
-  blocks would hand one out again with the bit on. `__frtx9a()` now clears
-  the bit before each `FreeTXT99()`.
+## [2.29.0] - 2026-11-07
 
 ### Added
 - **`jesprtcc()` and `jesccsp()`: the carriage control of a SYSOUT record
@@ -42,6 +29,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   is now bounded from the binary exponent of `x` (`frexp()`), and `log()` is
   called only when `|y| * (|e| + 1)` reaches 252, close to the limit. Results,
   `ERANGE` and `HUGE_VAL` are bit for bit the same as in 2.28.0.
+
+### Fixed
+- **`jesjob()` names the steps of a procedure correctly (#758).** For
+  `//S1 EXEC GEN` with `//G EXEC` in the procedure, `JESDD.stepname` was `G`
+  and `procstep` the procedure's name `GEN`, and `procstep` stayed for every
+  later step of the job. Now `stepname` is `S1`, `procstep` is `G`, and a later
+  step has an empty `procstep`.
+- **`__frtx9a()` frees every SVC 99 text unit at the address it was
+  allocated at (#751).** The fourteen routines that build a text-unit list
+  mark its last pointer with the high-order bit, as SVC 99 wants, and free
+  the list with `FreeTXT99Array()` while the bit is still on, so the last
+  unit's `free()` was given its address with bit 0 set. FREEMAIN on MVS 3.8j
+  takes the low 24 bits and never minded; an allocator that keeps freed
+  blocks would hand one out again with the bit on. `__frtx9a()` now clears
+  the bit before each `FreeTXT99()`.
 
 ## [2.28.0] - 2026-10-31
 
