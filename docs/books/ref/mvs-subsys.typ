@@ -584,8 +584,23 @@ not convert them with #cmd("localtime64()").
       whose DD name cannot be found is named #cmd("UNK")#var("nnnn"), and
       the data sets of the system log #cmd("JES")#var("nnnnn"), after the
       data set ID.],
-    [#cmd("stepname"), #cmd("procstep")], [The step and procedure step that
-      allocated the data set, where known.],
+    [#cmd("stepname"), #cmd("procstep")], [For the data set of a
+      #cmd("SYSOUT") or #cmd("SYSIN") DD statement, the step that allocated
+      it. A DD statement in a step of a procedure has the name of that step
+      in #cmd("procstep") and, in #cmd("stepname"), the name of the
+      #cmd("EXEC") statement that called the procedure. A DD statement in
+      any other step has the name of the step in #cmd("stepname") and an
+      empty #cmd("procstep"). A #cmd("PROC") statement sets neither. Both
+      fields are empty for the data sets of JES2 and for a data set whose DD
+      statement cannot be found. Take a procedure #cmd("GEN") with a step
+      #cmd("G"), called by #cmd("//S1 EXEC GEN"), and then
+      #cmd("//S2 EXEC PGM=IDCAMS"). A #cmd("SYSOUT") DD statement in
+      #cmd("G") has #cmd("stepname") #cmd("S1") and #cmd("procstep")
+      #cmd("G")\; one in #cmd("S2") has #cmd("S2") and an empty
+      #cmd("procstep"). Up to LIBC/370 2.28.0 the first had #cmd("G") and
+      #cmd("GEN"), and the second #cmd("S2") and #cmd("GEN"). The
+      _LIBC/370 Programmer's Guide_ lists the change in its chapter on
+      migration.],
     [#cmd("dsname")], [The data set name, or a name built from the job
       identifier and the data set ID, such as
       #cmd("JES2.JOB01234.SO0002").],
@@ -1041,6 +1056,11 @@ An invalid ASA code counts as a blank, as far as #cmd("jesccsp()") is
 concerned. A machine code that is not a carriage code, and a character of no
 stated kind, count as no character.
 
+#cmd("jesprint()") does not pass a record that has no text.
+#cmd("jesprtcc()") passes it, with #var("linelen") 0, when it has a control
+character\; a record with neither text nor control character is passed by
+neither.
+
 === Returns
 
 #cmd("jesprtcc()") returns what #cmd("jesprint()") returns.
@@ -1054,7 +1074,8 @@ Measured on MVS 3.8j with the record lengths 255 (kept), 256, 300 and 4000
 (gone).
 
 When neither value is negative, the number of blank lines between two lines is
-#var("after") of the first plus #var("before") of the second, minus 1.
+#var("after") of the first plus #var("before") of the second, minus 1. A
+result of -1 means that the second line is written over the first.
 
 === Related
 
