@@ -756,7 +756,7 @@ PARM8    DS    A              NEXT PARM
 *    b) all others - default to values passed to AOPEN                *
 *                                                                     *
 *    For FB, if LRECL > BLKSIZE, make LRECL=BLKSIZE                   *
-*    For VB, if LRECL+3 > BLKSIZE, set spanned                        *
+*    For VB, if LRECL+4 > BLKSIZE, set spanned                        *
 *                                                                     *
 *                                                                     *
 *    So, what this means is that if the DCBLRECL etc fields are set   *
