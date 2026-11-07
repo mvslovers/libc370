@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+- **A record written across a block boundary of a spanned data set keeps all
+  of its segments (#757).** On `RECFM=VBS`, and on `RECFM=VB` with
+  `BLKSIZE < LRECL+4` (which the open makes spanned), a record that did not fit
+  the space left in the block lost everything after its first segment, and that
+  segment was flagged as the last one. `fwrite()`, `rwrite()` and `fflush()`
+  reported success; from that record on the data set was unreadable, for this
+  library (`ABEND U1234`) and for IDCAMS alike (`ABEND S002`). The branch that
+  decides between the first and the last segment skipped one instruction too
+  many, so the continuation path below it had never run and had further
+  defects of its own; that path is now corrected as a whole. A record is split
+  into a first, any number of middle and a last segment, each with its own
+  segment descriptor word, and a segment is never shorter than five bytes.
+  Measured in a disposable container: records placed over one, two and three
+  blocks, including a last segment of one data byte, read back intact with
+  `rread()`, `fread()`, IDCAMS `PRINT` and IEBGENER; before, every group ended
+  in `ABEND U1234` reading back. Data sets written before this fix have lost
+  the tail of every split record; the records after the bad segment are still
+  on disk and can be reached by reading the blocks as `RECFM=U`
+  (`DCB=(RECFM=U,BLKSIZE=32760)` on the DD).
+
 ## [2.29.0] - 2026-11-07
 
 ### Added

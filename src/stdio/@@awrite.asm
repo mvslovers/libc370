@@ -20,11 +20,15 @@ SUBPOOL  EQU   0                                                      *
 ***********************************************************************
 @@AWRITE FUNHEAD IO=YES,AM=YES,SAVE=SAVEADCB,US=NO   WRITE / PUT
          LR    R11,R1             SAVE PARM LIST
+         NI    IOPFLAGS,255-IOFLSDW  A NEW CALL IS A NEW RECORD (#757)
 WRITMORE NI    IOPFLAGS,255-IOFCURSE   RESET RECURSION
          L     R4,4(,R11)         R4 points to the record address
          L     R4,0(,R4)          Get record address
          L     R5,8(,R11)         R5 points to length of data to write
          L     R5,0(,R5)          Length of data to write
+         TM    IOPFLAGS,IOFLSDW   Rest of a spanned record (#757)?
+         BZ    *+8                No; the caller's record
+         LM    R4,R5,KEPTREC      Yes; WRITEWAY left address, length
          TM    IOMFLAGS,IOFTERM   PUTLIN request?
          BNZ   TPUTWRIT           Yes
 *
@@ -49,9 +53,11 @@ WRITUPMV MVCL  R2,R4              REPLACE DATA IN BUFFER
 WRITENEW CLI   RECFMIX,4          V-FORMAT ?
          BH    WRITBLK            U - WRITE BLOCK AS IS
          BL    WRITEFIX           F - ADD RECORD TO BLOCK
+         TM    IOPFLAGS,IOFLSDW   REST OF A SPANNED RECORD (#757)?
+         BNZ   WRITEVAB           YES; NO RDW IN FRONT OF IT
          CH    R5,0(,R4)          RDW LENGTH = REQUESTED LEN?
          BNE   WRITEBAD           NO; FAIL
-         L     R8,BUFFADDR        GET BUFFER
+WRITEVAB L     R8,BUFFADDR        GET BUFFER
          ICM   R6,15,BUFFCURR     Get next record address
          BNZ   WRITEVAT
          LA    R0,4
@@ -75,27 +81,41 @@ WRITEVAW CH    R9,=H'5'           AT LEAST FIVE BYTES LEFT ?
          CR    R7,R5              ROOM FOR ENTIRE SEGMENT ?
          BL    *+4+2              NO
          LR    R7,R5              USE ONLY WHAT'S AVAILABLE
+         LR    R2,R7              SEGMENT LENGTH, SDW INCLUDED (#757)
          MVCL  R6,R4              COPY RDW + DATA
          ST    R6,BUFFCURR        UPDATE NEXT AVAILABLE
          SR    R6,R8              LESS START
          STH   R6,0(,R8)          UPDATE BDW
-         STH   R9,0(,R3)          FIX RDW LENGTH
+         STH   R2,0(,R3)          SDW: THE SEGMENT'S LENGTH (#757)
          MVC   2(2,R3),=X'0100'   SET FLAGS FOR START SEGMENT
          TM    IOPFLAGS,IOFLSDW   DID START ?
-         BZ    *+4+6              NO; FIRST SEGMENT
+         BZ    *+8                NO; FIRST SEGMENT (SKIP THE MVI ONLY)
          MVI   2(R3),3            SHOW MIDDLE SEGMENT
          LTR   R5,R5              DID WE FINISH THE RECORD ?
          BP    WRITEWAY           NO
          MVI   2(R3),2            SHOW LAST SEGMENT
          NI    IOPFLAGS,255-IOFLSDW-IOFCURSE  RCD COMPLETE
          OI    IOPFLAGS,IOFLDATA  SHOW WRITE DATA IN BUFFER
+         TM    DCBRECFM,DCBRECBR  BLOCKED?
+         BNZ   WRITEEX            YES; THE NEXT RECORD MAY FOLLOW
+         FIXWRITE ,               RECFM=VS: ONE SEGMENT PER BLOCK
          B     WRITEEX            DONE
-WRITEWAY SH    R9,=H'4'           ALLOW FOR EXTRA RDW
-         AR    R4,R9
-         SR    R5,R9
-         STM   R4,R5,KEPTREC      MAKE FAKE PARM LIST
-         LA    R11,KEPTREC-4      SET FOR RECURSION
+*  The rest of the record goes out as the next segment, once this
+*  block is written (#757).  MVCL has moved R4 past the bytes copied
+*  and taken them off R5.  The next segment needs an SDW in front of
+*  its data, so it starts 4 bytes back, on the last 4 bytes just
+*  copied; their copy in the buffer is overwritten by the SDW built
+*  above, the caller's record is never written to.  The block goes
+*  out through WRITEVNU, and WRITMORE picks address and length up
+*  from KEPTREC.
+*  Before this, BZ *+4+6 above skipped the LTR as well, so every
+*  first segment was flagged as the last one and the rest of the
+*  record was dropped; this path had never run.
+WRITEWAY SH    R4,=H'4'           BACK UP OVER THE NEXT SDW'S PLACE
+         LA    R5,4(,R5)          REST OF THE DATA PLUS ITS SDW
+         STM   R4,R5,KEPTREC      FOR THE NEXT PASS
          OI    IOPFLAGS,IOFLSDW   SHOW RECORD INCOMPLETE
+         L     R6,BUFFCURR        END OF THE BLOCK, FOR WRITPREP
          B     WRITEVNU           GO FOR MORE
          SPACE 1
 WRITEVAR LA    R1,4(,R5)          GET RECORD + BDW LENGTH
