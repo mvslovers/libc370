@@ -47,14 +47,23 @@
  *         (11) the read-back returns 100 records
  *         (12) every record is intact
  *              (RED: 30 records, then ABEND U1234)
+ *   VS     on <prefix>.VS (VS 255/100, unblocked spanned): the seven
+ *          records of VBS again; one record or segment per block, so a
+ *          last segment is written at once and the next record starts
+ *          a block of its own: r4 and r5 are not split here, the seven
+ *          records take 9 blocks (the IDCAMS PRINT of the raw blocks in
+ *          jcl/tstspan.jcl shows it: no block holds two segments)
+ *         (13) every rwrite() answers 0
+ *         (14) the read-back returns 7 records
+ *         (15) every record is intact
  *
  * Every record's bytes are a pattern of its number (pattern()), so a
  * segment stitched to the wrong record, a lost tail or a doubled byte at
- * a segment boundary all show as a FAIL in (3), (6), (9) or (12).
+ * a segment boundary all show as a FAIL in (3), (6), (9), (12) or (15).
  *
  * jcl/tstspan.jcl also hands every data set to IDCAMS PRINT (IBM's own
- * reader, not libc370's) and dumps the raw blocks of <prefix>.VBS as
- * RECFM=U, so the SDWs can be read in the job output.
+ * reader, not libc370's) and dumps the raw blocks of <prefix>.VBS and
+ * <prefix>.VS as RECFM=U, so the SDWs can be read in the job output.
  *
  * BUILD (host).  -L build/sdk is LOAD-BEARING - it links the branch libc:
  *
@@ -302,6 +311,20 @@ static void group_big(const char *pfx)
     check(n == NREC && intact, "(12) BIG: every record is intact");
 }
 
+static void group_vs(const char *pfx)
+{
+    char    dsn[64];
+    int     n, intact;
+
+    sprintf(dsn, "%s.VS", pfx);
+    printf("--- VS %s\n", dsn);
+    n = rput(dsn, seven, 0, 7);
+    check(n == 7, "(13) VS: every rwrite() answers 0");
+    n = rget(dsn, seven, 0, 7, &intact);
+    check(n == 7, "(14) VS: the read-back returns 7 records");
+    check(n == 7 && intact, "(15) VS: every record is intact");
+}
+
 int main(int argc, char **argv)
 {
     const char  *pfx   = argc > 1 ? argv[1] : "IBMUSER.TSTSPAN";
@@ -315,6 +338,7 @@ int main(int argc, char **argv)
     if (all || strcmp(group, "FWRITE") == 0) group_fwrite(pfx);
     if (all || strcmp(group, "VB") == 0)     group_vb(pfx);
     if (all || strcmp(group, "BIG") == 0)    group_big(pfx);
+    if (all || strcmp(group, "VS") == 0)     group_vs(pfx);
 
     printf("\n=== tstspan: %d check(s) failed ===\n", bad);
     wtof("TSTSPAN VERDICT %s failed=%d", group, bad);

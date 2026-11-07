@@ -8,10 +8,11 @@
 //*   GREEN  = step GREEN runs TSTSPAN, linked against build/sdk, all
 //*            four groups: ends CC 0000, no FAIL line.  Then IBM's own
 //*            readers take the data sets GREEN wrote: IDCAMS PRINT of
-//*            VBS and VB (every record listed, CC 0000), IEBGENER of
-//*            FWR and BIG (CC 0000), and a DUMP of the raw blocks of
-//*            VBS as RECFM=U, where the SDWs can be read (flags 01,
-//*            03, 02 on the three segments of the 247-byte record).
+//*            VBS, VB and VS (every record listed, CC 0000), IEBGENER
+//*            of FWR and BIG (CC 0000), and a DUMP of the raw blocks
+//*            of VBS and VS as RECFM=U, where the SDWs can be read
+//*            (flags 01, 03, 02 on the three segments of the 247-byte
+//*            record; on VS no block holds more than one segment).
 //*   RED    = the RED* steps run TSTSPAND, the same source linked
 //*            against the installed sysroot, one group per step
 //*            because each ends in ABEND U1234 (@@AREAD BADBLOCK) in
@@ -44,7 +45,8 @@
 //* The work data sets, in a step of their own.  VBS and FWR have a
 //* block of 100 bytes so that a 247-byte record spans three blocks;
 //* VB has BLKSIZE < LRECL+4, which the OPEN exit turns into spanned;
-//* BIG is the issue's 100 x 200 bytes into 6233-byte blocks.
+//* BIG is the issue's 100 x 200 bytes into 6233-byte blocks; VS is
+//* the unblocked form, one record or segment per block.
 //*
 //SETUP    EXEC PGM=IEFBR14,COND=(0,NE,RECV)
 //VBS      DD  DSN=IBMUSER.TSTSPAN.VBS,DISP=(NEW,CATLG,DELETE),
@@ -59,6 +61,9 @@
 //BIG      DD  DSN=IBMUSER.TSTSPAN.BIG,DISP=(NEW,CATLG,DELETE),
 //             UNIT=SYSDA,SPACE=(TRK,(5,2)),
 //             DCB=(DSORG=PS,RECFM=VBS,LRECL=255,BLKSIZE=6233)
+//VS       DD  DSN=IBMUSER.TSTSPAN.VS,DISP=(NEW,CATLG,DELETE),
+//             UNIT=SYSDA,SPACE=(TRK,(2,1)),
+//             DCB=(DSORG=PS,RECFM=VS,LRECL=255,BLKSIZE=100)
 //*
 //GREEN    EXEC PGM=TSTSPAN,REGION=4096K,COND=(0,NE,SETUP),
 //             PARM='IBMUSER.TSTSPAN ALL'
@@ -67,19 +72,25 @@
 //SYSTERM  DD  SYSOUT=*
 //SYSUDUMP DD  SYSOUT=*
 //*
-//* IBM's readers on what GREEN wrote.  PRINT lists every record of VBS
-//* and VB; the RAW DD reads the blocks of VBS as RECFM=U.
+//* IBM's readers on what GREEN wrote.  PRINT lists every record of
+//* VBS, VB and VS; the RAW DDs read the blocks of VBS and VS as
+//* RECFM=U.
 //*
 //IBMPRINT EXEC PGM=IDCAMS,COND=(0,NE,SETUP)
 //SYSPRINT DD  SYSOUT=*
 //VBS      DD  DSN=IBMUSER.TSTSPAN.VBS,DISP=SHR
 //VB       DD  DSN=IBMUSER.TSTSPAN.VB,DISP=SHR
+//VS       DD  DSN=IBMUSER.TSTSPAN.VS,DISP=SHR
 //RAW      DD  DSN=IBMUSER.TSTSPAN.VBS,DISP=SHR,
+//             DCB=(RECFM=U,BLKSIZE=32760)
+//RAWVS    DD  DSN=IBMUSER.TSTSPAN.VS,DISP=SHR,
 //             DCB=(RECFM=U,BLKSIZE=32760)
 //SYSIN    DD  *
   PRINT INFILE(VBS) CHARACTER
   PRINT INFILE(VB) CHARACTER
+  PRINT INFILE(VS) CHARACTER
   PRINT INFILE(RAW) DUMP
+  PRINT INFILE(RAWVS) DUMP
 /*
 //*
 //IBMFWR   EXEC PGM=IEBGENER,COND=(0,NE,SETUP)
@@ -125,6 +136,13 @@
 //SYSTERM  DD  SYSOUT=*
 //SYSUDUMP DD  DUMMY
 //*
+//REDVS    EXEC PGM=TSTSPAND,REGION=4096K,COND=((0,NE,SETUP),EVEN),
+//             PARM='IBMUSER.TSTSPAN VS'
+//STEPLIB  DD  DISP=SHR,DSN=IBMUSER.LIBC370.SPNSCR
+//SYSPRINT DD  SYSOUT=*
+//SYSTERM  DD  SYSOUT=*
+//SYSUDUMP DD  DUMMY
+//*
 //SCRATCH  EXEC PGM=IDCAMS,COND=EVEN
 //SYSPRINT DD  SYSOUT=*
 //SYSIN    DD  *
@@ -132,6 +150,7 @@
   DELETE IBMUSER.TSTSPAN.FWR PURGE
   DELETE IBMUSER.TSTSPAN.VB PURGE
   DELETE IBMUSER.TSTSPAN.BIG PURGE
+  DELETE IBMUSER.TSTSPAN.VS PURGE
   SET MAXCC=0
 /*
 //

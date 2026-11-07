@@ -96,6 +96,9 @@ WRITEVAW CH    R9,=H'5'           AT LEAST FIVE BYTES LEFT ?
          MVI   2(R3),2            SHOW LAST SEGMENT
          NI    IOPFLAGS,255-IOFLSDW-IOFCURSE  RCD COMPLETE
          OI    IOPFLAGS,IOFLDATA  SHOW WRITE DATA IN BUFFER
+         TM    DCBRECFM,DCBRECBR  BLOCKED?
+         BNZ   WRITEEX            YES; THE NEXT RECORD MAY FOLLOW
+         FIXWRITE ,               RECFM=VS: ONE SEGMENT PER BLOCK
          B     WRITEEX            DONE
 *  The rest of the record goes out as the next segment, once this
 *  block is written (#757).  MVCL has moved R4 past the bytes copied
