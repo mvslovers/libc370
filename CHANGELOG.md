@@ -29,13 +29,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   on disk and can be reached by reading the blocks as `RECFM=U`
   (`DCB=(RECFM=U,BLKSIZE=32760)` on the DD).
 - **On an unblocked spanned data set (`RECFM=VS`) the last segment of a split
-  record is a block of its own (#770).** The exit for the last segment kept the
-  block open, so the next record joined the block of that segment when it fit;
-  a reader of an unblocked data set expects one record or segment per block.
-  Found in the review of the fix above and corrected with it: the exit now
+  record is a block of its own (#770).** Found by reading the code in the
+  review of the fix above, and corrected with it. No earlier release showed
+  it: the first fault dropped the rest of a split record before its last
+  segment was written, so this one was never observed on its own. The exit
+  for the last segment keeps the block open, so the next record would have
+  joined the block of that segment when it fit, while a reader of an
+  unblocked data set expects one record or segment per block. The exit now
   writes the block at once when the data set is unblocked, as a record that
-  fits its block already did. Measured with the same test: a `RECFM=U` dump of
-  the data set shows one record or segment per block.
+  fits its block already did. Measured with the same test: a `RECFM=U` dump
+  of the data set written by 2.29.1 shows one record or segment per block.
 
 ## [2.29.0] - 2026-11-07
 
