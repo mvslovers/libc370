@@ -24,9 +24,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - **`pow()` with an integral exponent no longer calls `log()` for every call
   (#754).** Since 2.23.0 `pow(x, y)` computed `y * log(fabs(x))` first, to
   refuse a result above the HFP maximum before the squaring loop could end in
-  S0CC. 100000 calls of `pow(10.0, 3)` took 2.7 s of CPU time (median of five
-  runs), now 0.4 s. The size
-  is now bounded from the binary exponent of `x` (`frexp()`), and `log()` is
+  S0CC. 100000 calls of `pow(10.0, 3)` are about five times faster: 2.3 to
+  2.5 s of CPU time before, 0.48 s now (median of five runs, one MVS/CE system).
+  The size is now bounded from the binary exponent of `x` (`frexp()`), and `log()` is
   called only when `|y| * (|e| + 1)` reaches 252, close to the limit. Results,
   `ERANGE` and `HUGE_VAL` are bit for bit the same as in 2.28.0.
 
