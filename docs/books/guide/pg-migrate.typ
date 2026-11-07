@@ -615,6 +615,18 @@ What later 2.x releases ask of a program or a build:
       reads the name of the step in the procedure now, and the name of the
       calling step is in #cmd("stepname"). A workaround for the
       #cmd("procstep") left over in a later step can go: #cmd("procstep")
-      is empty for a step that is not in a procedure. Nothing for the new functions.]
+      is empty for a step that is not in a procedure. Nothing for the new functions.],
+    [2.29.1], [A record that does not fit the space left in the block of a
+      spanned data set (#cmd("RECFM=VBS"), or #cmd("RECFM=VB") with a block
+      size below #cmd("LRECL") + 4) is written in all its segments.
+      Up to 2.29.0 only its first segment was written, flagged as the last
+      one, while #cmd("fwrite()"), #cmd("rwrite()") and #cmd("fflush()")
+      reported success: from that record on the data set could not be read,
+      by this library or by IDCAMS.],
+      [Nothing for a program that writes new data sets. A data set written
+      with 2.29.0 or earlier has lost the rest of every record that was
+      split: write it again. The records after the first bad segment are
+      still on disk and can be read as #cmd("RECFM=U")
+      (#cmd("DCB=(RECFM=U,BLKSIZE=32760)") on the DD).]
   )
 ] <pg-migrate-since-tab>

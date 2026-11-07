@@ -1403,6 +1403,16 @@ binary stream returned #var("nmemb") for a #var("size") of 0
   [#cmd("EIO")], [A permanent I/O error, now or earlier.],
 )
 
+=== Notes
+
+- On a spanned data set (RECFM=VS or VBS, or RECFM=V or VB opened with a
+  block size smaller than #cmd("LRECL") + 4), a record that does not fit the space
+  left in the block is written as several segments in successive blocks, and
+  #cmd("fread()") returns it whole. @mvs-datasets-ropen describes the
+  segments. Up to release 2.29.0 only the first segment was written, and
+  #cmd("fwrite()") still returned 1: the data set could not be read from
+  that record on.
+
 === Related
 
 @std-stdio-fread, @std-stdio-records.

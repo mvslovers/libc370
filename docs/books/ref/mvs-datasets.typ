@@ -1512,7 +1512,19 @@ DD could not be freed\; the handle is freed in either case.
 === Notes
 - #cmd("rread()") does not tell the end of the data from an error.
 - On a spanned data set (RECFM=VS or VBS) a record can be at most
-  #cmd("lrecl") - 4 bytes long.
+  #cmd("lrecl") - 4 bytes long. A RECFM=V or VB data set is opened as spanned
+  when its block size is smaller than #cmd("lrecl") + 4.
+- On a spanned data set, a record that does not fit the space left in the
+  block is split across blocks. The first segment takes what is left of the
+  block, each middle segment fills a block, and the last segment holds the
+  rest. Every segment has a segment descriptor word of four bytes in front of
+  its data, and a segment is never shorter than five bytes: a block with less
+  space than that is written first, and the record starts the next block.
+  On RECFM=VS a block holds one record or one segment. #cmd("rread()")
+  puts the segments together and returns the record whole. Up to release
+  2.29.0 only the first segment was written, flagged as the last one, and
+  #cmd("rwrite()") still returned 0: the data set could not be read from that
+  record on.
 - A handle has no lock. Do not use one handle in two tasks at the same
   time.
 
