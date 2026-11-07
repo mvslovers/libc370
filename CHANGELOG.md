@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.29.1] - 2026-11-07
+
 ### Fixed
 - **A record written across a block boundary of a spanned data set keeps all
   of its segments (#757).** On `RECFM=VBS`, and on `RECFM=VB` with
@@ -26,6 +28,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   the tail of every split record; the records after the bad segment are still
   on disk and can be reached by reading the blocks as `RECFM=U`
   (`DCB=(RECFM=U,BLKSIZE=32760)` on the DD).
+- **On an unblocked spanned data set (`RECFM=VS`) the last segment of a split
+  record is a block of its own (#770).** The exit for the last segment kept the
+  block open, so the next record joined the block of that segment when it fit;
+  a reader of an unblocked data set expects one record or segment per block.
+  Found in the review of the fix above and corrected with it: the exit now
+  writes the block at once when the data set is unblocked, as a record that
+  fits its block already did. Measured with the same test: a `RECFM=U` dump of
+  the data set shows one record or segment per block.
 
 ## [2.29.0] - 2026-11-07
 
