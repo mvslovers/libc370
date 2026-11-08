@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.29.2] - 2026-11-08
+
 ### Changed
 - **`racf_login()` hands back no ACEE that `ASXBSENV` points at, and does not
   release it.** `ASXBSENV` (what `racf_get_acee()` returns) is read before and
