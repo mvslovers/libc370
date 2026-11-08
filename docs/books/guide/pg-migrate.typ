@@ -627,6 +627,15 @@ What later 2.x releases ask of a program or a build:
       with 2.29.0 or earlier has lost the rest of every record that was
       split: write it again. The records after the first bad segment are
       still on disk and can be read as #cmd("RECFM=U")
-      (#cmd("DCB=(RECFM=U,BLKSIZE=32760)") on the DD).]
+      (#cmd("DCB=(RECFM=U,BLKSIZE=32760)") on the DD).],
+    [2.29.2], [#cmd("racf_login()") hands back no ACEE that #cmd("ASXBSENV")
+      points at (what #cmd("racf_get_acee()") returns, read before and
+      after RACINIT) and does not release it\; the result is #cmd("NULL")
+      with #cmd("racf_rc") 8, for a #cmd("user") of #cmd("NULL") as well.
+      Up to 2.29.1 such an ACEE was handed back when its name matched.],
+      [Nothing for a caller that tests the return value against
+      #cmd("NULL"). A caller that relies on getting the address space's own
+      ACEE back from #cmd("racf_login()") cannot\; use
+      #cmd("racf_get_acee()") for that.]
   )
 ] <pg-migrate-since-tab>
