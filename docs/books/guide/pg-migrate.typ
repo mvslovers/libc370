@@ -632,7 +632,9 @@ What later 2.x releases ask of a program or a build:
       points at (what #cmd("racf_get_acee()") returns, read before and
       after RACINIT) and does not release it\; the result is #cmd("NULL")
       with #cmd("racf_rc") 8, for a #cmd("user") of #cmd("NULL") as well.
-      Up to 2.29.1 such an ACEE was handed back when its name matched.],
+      Up to 2.29.1 such an ACEE was handed back: after the name check when
+      a #cmd("user") was given, without any check for a #cmd("user") of
+      #cmd("NULL").],
       [Nothing for a caller that tests the return value against
       #cmd("NULL"). A caller that relies on getting the address space's own
       ACEE back from #cmd("racf_login()") cannot\; use
