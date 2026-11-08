@@ -10,6 +10,11 @@
 ** This holds with a password and with PASSCHK=NO.  user NULL (the default
 ** user "*") is not compared.
 **
+** The ACEE handed back is never the one ASXBSENV points at.  ASXBSENV is
+** read before RACINIT and again after it; an ACEE equal to either value is
+** neither returned nor released, the result is NULL and *racf_rc is 8.  This
+** holds for user NULL as well.
+**
 ** If racf_rc points to an int it receives the RACF return code:
 ** Hex Dec  Meaning
 ** 00    0  RACINIT has completed successfully.
@@ -43,17 +48,30 @@
 
 #define RACF_RC_NOTAUTH 8
 
-/* userid is the length-prefixed, blank padded, upper case name RACINIT got.
-** Returns rc unchanged unless RACINIT said 0 and the ACEE it made is not for
-** that user; then the ACEE is deleted (*acee becomes NULL) and 8 returned.
-** RACINIT saying 0 without an ACEE is refused the same way (nothing to
+/* userid is the length-prefixed, blank padded, upper case name RACINIT got,
+** or NULL when the name is not compared (user NULL).  own is what ASXBSENV
+** held before RACINIT ran.
+**
+** rc != 0 is returned as it is, with *acee as RACINIT left it.  For rc 0:
+** an ACEE equal to own or to ASXBSENV now is not handed out and not
+** released: *acee becomes NULL and 8 is returned.  Any other ACEE is kept
+** when the name is not compared or is the one asked for; otherwise it is
+** deleted, *acee becomes NULL and 8 is returned.  RACINIT saying 0 without
+** an ACEE is refused the same way when a name was given (nothing to
 ** delete).  A failed delete leaves the ACEE allocated; the refusal stands
 ** regardless, a leaked ACEE being the lesser harm than one handed to the
 ** caller. */
 static int
-verify_acee(ACEE **acee, const char *userid, int rc)
+verify_acee(ACEE **acee, const char *userid, int rc, ACEE *own)
 {
     if (rc != 0) return rc;
+
+    if (*acee && (*acee == own || *acee == racf_get_acee())) {
+        *acee = (ACEE*)0;
+        return RACF_RC_NOTAUTH;
+    }
+
+    if (!userid) return 0;
 
     if (*acee && userid[0] > 0 && memcmp((*acee)->aceeusri, userid + 1, 8) == 0)
         return 0;
@@ -72,20 +90,26 @@ racf_login(const char *user, const char *pass, const char *group, int *racf_rc)
     int             sup         = 0;
     int             len;
     int             named       = (user != 0);
+    ACEE            *own;
+    ACEE            *got;
     char            userid[9];
     char            password[9];
     char            groupid[9];
     RACINIT         plist;
 
     /* No ENQ: RACINIT ENVIR=CREATE returns the new ACEE through the ACEE=
-    ** pointer in the parameter list and this routine never reads or writes
-    ** ASXBSENV, so there is nothing address-space-wide to serialize.  The
-    ** lock that used to bracket the whole function only cost every login an
-    ** address-space-wide serialization point (#64). */
+    ** pointer in the parameter list and this routine never writes ASXBSENV
+    ** (it only reads it, for the compare in verify_acee()), so there is
+    ** nothing address-space-wide to serialize.  The lock that used to
+    ** bracket the whole function only cost every login an address-space-wide
+    ** serialization point (#64). */
 
     __asm__("XC\t0(0,%0),0(%0)      clear plist *** executed ***\n\t"
             "EX\t%1,*-6" : : "r"(&plist), "r"(sizeof(plist)-1) : "memory");
     plist.len   = sizeof(plist);
+
+    /* ASXBSENV as it is now; verify_acee() reads it once more afterwards */
+    own = racf_get_acee();
 
     /* provide default for user */
     if (!user) user = "*";
@@ -183,14 +207,9 @@ racf_login(const char *user, const char *pass, const char *group, int *racf_rc)
         : : : "0", "1", "14", "15", "memory");
     }
 
-    if (named) {
-        ACEE    *got;
-
-        memcpy(&got, &acee, sizeof(got));
-
-        rc   = verify_acee(&got, userid, rc);
-        acee = got;
-    }
+    memcpy(&got, &acee, sizeof(got));
+    rc   = verify_acee(&got, named ? userid : (const char *)0, rc, own);
+    acee = got;
 
     if (racf_rc) *racf_rc = rc;
     return (ACEE*)acee;

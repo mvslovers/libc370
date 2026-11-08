@@ -33,6 +33,9 @@ extern ACEE *   racf_get_acee(void)                                     asm("RAC
 ** holds with and without a password.
 ** user NULL (the default user) is not compared.  Test the return value
 ** against NULL; *racf_rc is for the reason.
+** No ACEE that ASXBSENV points at (what racf_get_acee() returns, read before
+** and after RACINIT) is handed back or released: the result is NULL and
+** *racf_rc is 8, for user NULL as well.
 */
 extern ACEE *   raclogin(const char *user, const char *pass,
                          const char *group, int *racf_rc);
