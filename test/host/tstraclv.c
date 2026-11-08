@@ -8,9 +8,17 @@
  * return code 8.  The comparison and the delete are verify_acee() in
  * raclogin.c; this #includes the real file with the inline assembler compiled
  * out and drives that function with made-up ACEEs, racf_logout() being a
- * recorder.  The RACINIT call itself, the fold to upper case and the
+ * recorder and racf_get_acee() answering with whatever the test puts in
+ * asxbsenv.  The RACINIT call itself, the fold to upper case and the
  * password and PASSCHK=NO paths are asm and are measured on MVS
  * (test/mvs/tstraclv.c).
+ *
+ * No ACEE that ASXBSENV points at is handed back or deleted: ASXBSENV is
+ * read before RACINIT (the `own` argument) and again after it; an ACEE equal
+ * to either value gives NULL and rc 8 without a racf_logout(), whatever its
+ * name and also when no name is compared (user NULL).  The cases at the end
+ * cover that decision by the pointer: the ACEE equal to the value before,
+ * equal to the value after, equal to neither, and ASXBSENV empty.
  *
  * BUILD / RUN (host, from test/host):
  *
@@ -26,6 +34,7 @@
 
 static int  logouts = 0;
 static ACEE *logged_out = NULL;
+static ACEE *asxbsenv = NULL;   /* what racf_get_acee() answers */
 
 int racf_logout(ACEE **acee)
 {
@@ -33,6 +42,11 @@ int racf_logout(ACEE **acee)
     logged_out = *acee;
     *acee = NULL;
     return 0;
+}
+
+ACEE *racf_get_acee(void)
+{
+    return asxbsenv;
 }
 
 static int run = 0, failed = 0;
@@ -66,18 +80,21 @@ static void mkacee(ACEE *a, const char *padded8)
     a->aceeusrl = 8;
 }
 
-/* one call: returns the rc, leaves *got, logouts and logged_out for checks */
+static ACEE *own = NULL;        /* the `own` argument: ASXBSENV before RACINIT */
+
+/* one call: returns the rc, leaves *got, logouts and logged_out for checks.
+** want NULL: the name is not compared (user NULL). */
 static int verify(const char *want, const char *aceename, int rc_in,
                   ACEE *acee, ACEE **got)
 {
     char userid[9];
 
-    mkuser(userid, want);
+    if (want) mkuser(userid, want);
     mkacee(acee, aceename);
     *got = acee;
     logouts = 0;
     logged_out = NULL;
-    return verify_acee(got, userid, rc_in);
+    return verify_acee(got, want ? userid : NULL, rc_in, own);
 }
 
 int main(void)
@@ -137,7 +154,7 @@ int main(void)
     {
         char userid[9];
         mkuser(userid, "IBMUSER");
-        rc = verify_acee(&got, userid, 0);
+        rc = verify_acee(&got, userid, 0, NULL);
     }
     check(rc == 8 && got == NULL && logouts == 0,
           "rc 0 and no ACEE: refused with rc 8, nothing to delete");
@@ -147,9 +164,92 @@ int main(void)
         mkuser(userid, "IBMUSER");
         got = NULL;
         logouts = 0;
-        rc = verify_acee(&got, userid, 4);
+        rc = verify_acee(&got, userid, 4, NULL);
         check(rc == 4 && got == NULL && logouts == 0,
               "RACINIT said 4 and no ACEE: rc kept");
+    }
+
+    /* no name compared (user NULL): the ACEE is kept as it is */
+    rc = verify(NULL, "STC     ", 0, &a, &got);
+    check(rc == 0 && got == &a && logouts == 0,
+          "user NULL: any name kept, rc 0, no delete");
+
+    got = NULL;
+    logouts = 0;
+    rc = verify_acee(&got, NULL, 0, NULL);
+    check(rc == 0 && got == NULL && logouts == 0,
+          "user NULL, rc 0 and no ACEE: returned as it is");
+
+    /* an ACEE that ASXBSENV points at, before or after RACINIT, is neither
+    ** handed back nor deleted: NULL, rc 8, no racf_logout() */
+    {
+        ACEE    b;
+
+        /* ASXBSENV after RACINIT is the ACEE */
+        own = NULL; asxbsenv = &a;
+        rc = verify("IBMUSER", "IBMUSER ", 0, &a, &got);
+        check(rc == 8 && got == NULL && logouts == 0,
+              "same name, ACEE is ASXBSENV's after: NULL, rc 8, no delete");
+
+        own = NULL; asxbsenv = &a;
+        rc = verify("IBMUSER", "STC     ", 0, &a, &got);
+        check(rc == 8 && got == NULL && logouts == 0,
+              "other name, ACEE is ASXBSENV's after: NULL, rc 8, no delete");
+
+        own = NULL; asxbsenv = &a;
+        rc = verify("", "        ", 0, &a, &got);
+        check(rc == 8 && got == NULL && logouts == 0,
+              "empty user, ACEE is ASXBSENV's after: NULL, rc 8, no delete");
+
+        own = NULL; asxbsenv = &a;
+        rc = verify(NULL, "STC     ", 0, &a, &got);
+        check(rc == 8 && got == NULL && logouts == 0,
+              "user NULL, ACEE is ASXBSENV's after: NULL, rc 8, no delete");
+
+        /* ASXBSENV before RACINIT was the ACEE, after it is something else */
+        own = &a; asxbsenv = &b;
+        rc = verify("IBMUSER", "IBMUSER ", 0, &a, &got);
+        check(rc == 8 && got == NULL && logouts == 0,
+              "same name, ACEE is ASXBSENV's before: NULL, rc 8, no delete");
+
+        own = &a; asxbsenv = NULL;
+        rc = verify("IBMUSER", "STC     ", 0, &a, &got);
+        check(rc == 8 && got == NULL && logouts == 0,
+              "other name, ACEE is ASXBSENV's before: NULL, rc 8, no delete");
+
+        own = &a; asxbsenv = &b;
+        rc = verify(NULL, "STC     ", 0, &a, &got);
+        check(rc == 8 && got == NULL && logouts == 0,
+              "user NULL, ACEE is ASXBSENV's before: NULL, rc 8, no delete");
+
+        /* ASXBSENV points elsewhere or at nothing: as before */
+        own = &b; asxbsenv = &b;
+        rc = verify("IBMUSER", "IBMUSER ", 0, &a, &got);
+        check(rc == 0 && got == &a && logouts == 0,
+              "same name, ASXBSENV elsewhere: kept");
+
+        own = &b; asxbsenv = &b;
+        rc = verify("IBMUSER", "STC     ", 0, &a, &got);
+        check(rc == 8 && got == NULL && logouts == 1 && logged_out == &a,
+              "other name, ASXBSENV elsewhere: that ACEE deleted");
+
+        own = NULL; asxbsenv = NULL;
+        rc = verify("IBMUSER", "STC     ", 0, &a, &got);
+        check(rc == 8 && got == NULL && logouts == 1 && logged_out == &a,
+              "other name, ASXBSENV empty: that ACEE deleted");
+
+        own = &b; asxbsenv = NULL;
+        rc = verify(NULL, "STC     ", 0, &a, &got);
+        check(rc == 0 && got == &a && logouts == 0,
+              "user NULL, ASXBSENV elsewhere before, empty after: kept");
+
+        /* rc != 0: returned as it is, nothing compared, nothing deleted */
+        own = &a; asxbsenv = &a;
+        rc = verify("IBMUSER", "STC     ", 8, &a, &got);
+        check(rc == 8 && got == &a && logouts == 0,
+              "RACINIT said 8, ACEE is ASXBSENV's: rc kept, nothing deleted");
+
+        own = NULL; asxbsenv = NULL;
     }
 
     printf("tstraclv: %d checks, %d failed\n", run, failed);

@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+- **`racf_login()` hands back no ACEE that `ASXBSENV` points at, and does not
+  release it.** `ASXBSENV` (what `racf_get_acee()` returns) is read before and
+  after RACINIT; an ACEE equal to either value gives `NULL` with `racf_rc` 8,
+  for a `user` of `NULL` as well. Host test `test/host/tstraclv.c`.
+
 ## [2.29.1] - 2026-11-07
 
 ### Fixed
